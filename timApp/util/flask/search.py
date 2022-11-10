@@ -1082,7 +1082,20 @@ def search():
             }
         )
 
+    title_items = {}
     for line in title_output:
+        if line and len(line) > 10:
+            try:
+                line = json.loads(line)
+                title_items[line["doc_id"]] = line
+            except Exception as e:
+                log_search_error(get_error_message(e), query, current_doc, title=True)
+
+    doc_infos: list[DocInfo] = DocEntry.query.filter(
+        (DocEntry.id.in_(title_items.keys())) & (DocEntry.name.like(folder + "%"))
+    ).options(joinedload(DocEntry._block).joinedload(Block.relevance))
+
+    for doc_info in doc_infos:
         try:
             if is_timeouted(start_time, timeout):
                 incomplete_search_reason = (
@@ -1090,51 +1103,37 @@ def search():
                 )
                 raise TimeoutError("title search timeout")
 
-            # Any line shorter than this is broken.
-            if line and len(line) > 10:
-                # TODO: Combine with repeating parts from content loop.
-                line_info = json.loads(line)
-                doc_id = line_info["doc_id"]
-                # TODO: Handle aliases and translated documents.
-                doc_info = (
-                    DocEntry.query.filter(
-                        (DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))
-                    )
-                    .options(joinedload(DocEntry._block).joinedload(Block.relevance))
-                    .first()
-                )
-                if not doc_info:
+            # If not allowed to view, continue to the next one.
+            if not has_view_access(doc_info):
+                continue
+            # Skip if searching only owned and it's not owned.
+            if search_owned_docs:
+                if not user.has_ownership(doc_info, allow_admin=False):
                     continue
-                # If not allowed to view, continue to the next one.
-                if not has_view_access(doc_info):
-                    continue
-                # Skip if searching only owned and it's not owned.
-                if search_owned_docs:
-                    if not user.has_ownership(doc_info, allow_admin=False):
+            # If relevance is ignored or not found from search file, skip check.
+            line_info = title_items[doc_info.id]
+            if not ignore_relevance:
+                try:
+                    relevance = line_info["d_r"]
+                except KeyError:
+                    pass
+                else:
+                    # Leave documents with excluded relevance out of the results.
+                    if is_excluded(relevance, relevance_threshold):
                         continue
-                # If relevance is ignored or not found from search file, skip check.
-                if not ignore_relevance:
-                    try:
-                        relevance = line_info["d_r"]
-                    except KeyError:
-                        pass
-                    else:
-                        # Leave documents with excluded relevance out of the results.
-                        if is_excluded(relevance, relevance_threshold):
-                            continue
-                doc_result = DocResult(doc_info)
+            doc_result = DocResult(doc_info)
 
-                doc_title = line_info["doc_title"]
-                title_matches = list(term_regex.finditer(doc_title))
-                if title_matches:
-                    title_match_count = len(title_matches)
-                    doc_result.add_title_result(
-                        TitleResult(alt_num_results=title_match_count)
-                    )
-                    title_result_count += title_match_count
+            title_matches = list(term_regex.finditer(line_info["doc_title"]))
+            if title_matches:
+                title_match_count = len(title_matches)
+                doc_result.add_title_result(
+                    TitleResult(alt_num_results=title_match_count)
+                )
+                title_result_count += title_match_count
 
-                if doc_result.has_results():
-                    title_results.append(doc_result)
+            if doc_result.has_results():
+                title_results.append(doc_result)
+
         except TimeoutError as e:
             log_search_error(get_error_message(e), query, current_doc, title=True)
             return json_response(
@@ -1150,7 +1149,20 @@ def search():
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, title=True)
 
+    content_items = {}
     for line in content_output:
+        if line and len(line) > 10:
+            try:
+                line = json.loads(line)
+                content_items[line["doc_id"]] = line
+            except Exception as e:
+                log_search_error(get_error_message(e), query, current_doc, title=True)
+
+    doc_infos: list[DocInfo] = DocEntry.query.filter(
+        (DocEntry.id.in_(content_items.keys())) & (DocEntry.name.like(folder + "%"))
+    ).options(joinedload(DocEntry._block).joinedload(Block.relevance))
+
+    for doc_info in doc_infos:
         try:
             if is_timeouted(start_time, timeout):
                 incomplete_search_reason = (
@@ -1158,123 +1170,108 @@ def search():
                 )
                 raise TimeoutError("content search timeout")
 
-            # Any line shorter than this is broken.
-            if line and len(line) > 10:
+            # If not allowed to view, continue to the next one.
+            if not has_view_access(doc_info):
+                continue
 
-                # The file is supposed to contain doc_id and pars in a list for each document.
-                line_info = json.loads(line)
-                doc_id = line_info["doc_id"]
-
-                # TODO: Handle aliases.
-                doc_info = (
-                    DocEntry.query.filter(
-                        (DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))
-                    )
-                    .options(joinedload(DocEntry._block).joinedload(Block.relevance))
-                    .first()
-                )
-                if not doc_info:
-                    continue
-                # If not allowed to view, continue to the next one.
-                if not has_view_access(doc_info):
+            # Skip if searching only owned and it's not owned.
+            if search_owned_docs:
+                if not user.has_ownership(doc_info, allow_admin=False):
                     continue
 
-                # Skip if searching only owned and it's not owned.
-                if search_owned_docs:
-                    if not user.has_ownership(doc_info, allow_admin=False):
-                        continue
+            # If relevance is ignored or not found from search file, skip check.
+            line_info = content_items[doc_info.id]
+            if not ignore_relevance:
+                relevance = line_info.get("d_r")
+                if relevance is not None and is_excluded(
+                    relevance, relevance_threshold
+                ):
+                    continue
+            pars = line_info["pars"]
+            doc_result = DocResult(doc_info)
+            edit_access = None
 
-                # If relevance is ignored or not found from search file, skip check.
-                if not ignore_relevance:
-                    try:
-                        relevance = line_info["d_r"]
-                    except KeyError:
-                        # TODO: Add message to user about skipped relevances.
-                        pass
-                    else:
-                        if is_excluded(relevance, relevance_threshold):
-                            continue
-                pars = line_info["pars"]
-                doc_result = DocResult(doc_info)
+            def check_edit_acc():
+                nonlocal edit_access
+                if edit_access:
+                    return edit_access
                 edit_access = has_edit_access(doc_info)
-                # is_owner = user.has_ownership(doc_info, allow_admin=True)
+                return edit_access
 
-                for i, par in enumerate(pars):
-                    par_id = par["id"]
-                    md = par["md"]
+            for i, par in enumerate(pars):
+                par_id = par["id"]
+                md = par["md"]
 
-                    # If par has visibility condition and user can't see markdown (lower than edit), skip it.
+                # If par has visibility condition and user can't see markdown (lower than edit), skip it.
+                try:
+                    visibility = par["attrs"]["visible"]
+                    if visibility and not check_edit_acc():
+                        continue
+                except KeyError:
+                    pass
+
+                # Tries to get plugin and settings key values from dict;
+                # if par isn't either, gives KeyError and does nothing.
+                try:
+                    plugin = par["attrs"]["plugin"]
+                    # If ignore_plugins or no edit access, leave out plugin and setting results.
+                    if ignore_plugins or not check_edit_acc():
+                        continue
+                except KeyError:
+                    pass
+                try:
+                    settings = par["attrs"]["settings"]
+                    if ignore_plugins or not check_edit_acc():
+                        continue
+                except KeyError:
+                    pass
+                if search_attrs and check_edit_acc() and not ignore_plugins:
                     try:
-                        visibility = par["attrs"]["visible"]
-                        if visibility and not edit_access:
-                            continue
+                        rd = str(par["attrs"])
+                        md = rd.replace("'", '"') + " " + md
                     except KeyError:
                         pass
 
-                    # Tries to get plugin and settings key values from dict;
-                    # if par isn't either, gives KeyError and does nothing.
-                    try:
-                        plugin = par["attrs"]["plugin"]
-                        # If ignore_plugins or no edit access, leave out plugin and setting results.
-                        if ignore_plugins or not edit_access:
-                            continue
-                    except KeyError:
-                        pass
-                    try:
-                        settings = par["attrs"]["settings"]
-                        if ignore_plugins or not edit_access:
-                            continue
-                    except KeyError:
-                        pass
-                    if search_attrs and edit_access and not ignore_plugins:
-                        try:
-                            rd = str(par["attrs"])
-                            md = rd.replace("'", '"') + " " + md
-                        except KeyError:
-                            pass
+                par_result = ParResult(par_id)
+                par_matches = list(term_regex.finditer(md))
 
-                    par_result = ParResult(par_id)
-                    par_matches = list(term_regex.finditer(md))
+                if par_matches:
+                    # Word results aren't used for anything currently,
+                    # so to save time and bandwidth they are replaced by a number.
+                    par_result.alt_num_results = len(par_matches)
+                    # for m in matches:
+                    #     result = WordResult(match_word=m.group(0),
+                    #                         match_start=m.start(),
+                    #                         match_end=m.end())
+                    #     par_result.add_result(result)
+                    par_result.preview = preview_result(md, query, par_matches[0])
 
-                    if par_matches:
-                        # Word results aren't used for anything currently,
-                        # so to save time and bandwidth they are replaced by a number.
-                        par_result.alt_num_results = len(par_matches)
-                        # for m in matches:
-                        #     result = WordResult(match_word=m.group(0),
-                        #                         match_start=m.start(),
-                        #                         match_end=m.end())
-                        #     par_result.add_result(result)
-                        par_result.preview = preview_result(md, query, par_matches[0])
+                # Don't add empty par result (in error cases).
+                if par_result.has_results():
+                    doc_result.add_par_result(par_result)
 
-                    # Don't add empty par result (in error cases).
-                    if par_result.has_results():
-                        doc_result.add_par_result(par_result)
-
-                    # End paragraph match search if limit has been reached, but
-                    # don't break and mark as incomplete if this was the last paragraph.
-                    if (
-                        doc_result.get_par_match_count() > max_doc_results
-                        and i != len(pars) - 1
-                    ):
-                        incomplete_search_reason = (
-                            f"one or more document has over the maximum "
-                            f"of {max_doc_results} results"
-                        )
-                        doc_result.incomplete = True
-                        break
-
-                # If no valid paragraph results, skip document.
-                if doc_result.has_results():
-                    word_result_count += doc_result.get_par_match_count()
-                    content_results.append(doc_result)
-
-                # End search if the limit is reached.
-                if word_result_count > max_results:
+                # End paragraph match search if limit has been reached, but
+                # don't break and mark as incomplete if this was the last paragraph.
+                if (
+                    doc_result.get_par_match_count() > max_doc_results
+                    and i != len(pars) - 1
+                ):
                     incomplete_search_reason = (
-                        f"more than maximum of {max_results} results"
+                        f"one or more document has over the maximum "
+                        f"of {max_doc_results} results"
                     )
+                    doc_result.incomplete = True
                     break
+
+            # If no valid paragraph results, skip document.
+            if doc_result.has_results():
+                word_result_count += doc_result.get_par_match_count()
+                content_results.append(doc_result)
+
+            # End search if the limit is reached.
+            if word_result_count > max_results:
+                incomplete_search_reason = f"more than maximum of {max_results} results"
+                break
         except TimeoutError as e:
             log_search_error(get_error_message(e), query, current_doc, title=True)
             return json_response(
