@@ -1096,17 +1096,17 @@ def search():
     log_info(f"Title output lines: {len(title_output)}")
     search_duration = time.time_ns()
 
-    title_items = []
+    title_items = {}
     for line in title_output:
         if line and len(line) > 10:
             try:
-                title_items.append(json.loads(line))
+                line = json.loads(line)
+                title_items[line["doc_id"]] = line
             except Exception as e:
                 log_search_error(get_error_message(e), query, current_doc, title=True)
 
     doc_infos: list[DocInfo] = DocEntry.query.filter(
-        (DocEntry.id.in_([item["doc_id"] for item in title_items]))
-        & (DocEntry.name.like(folder + "%"))
+        (DocEntry.id.in_(title_items.keys())) & (DocEntry.name.like(folder + "%"))
     ).options(joinedload(DocEntry._block).joinedload(Block.relevance))
 
     for doc_info in doc_infos:
@@ -1125,9 +1125,10 @@ def search():
                 if not user.has_ownership(doc_info, allow_admin=False):
                     continue
             # If relevance is ignored or not found from search file, skip check.
+            line_info = title_items[doc_info.id]
             if not ignore_relevance:
                 try:
-                    relevance = doc_info.relevance
+                    relevance = line_info["d_r"]
                 except KeyError:
                     pass
                 else:
@@ -1136,7 +1137,7 @@ def search():
                         continue
             doc_result = DocResult(doc_info)
 
-            title_matches = list(term_regex.finditer(doc_info.title))
+            title_matches = list(term_regex.finditer(line_info["doc_title"]))
             if title_matches:
                 title_match_count = len(title_matches)
                 doc_result.add_title_result(
@@ -1199,16 +1200,16 @@ def search():
                     continue
 
             # If relevance is ignored or not found from search file, skip check.
+            line_info = content_items[doc_info.id]
             if not ignore_relevance:
                 try:
-                    relevance = doc_info.relevance
+                    relevance = line_info["d_r"]
                 except KeyError:
                     # TODO: Add message to user about skipped relevances.
                     pass
                 else:
                     if is_excluded(relevance, relevance_threshold):
                         continue
-            line_info = content_items[doc_info.id]
             pars = line_info["pars"]
             doc_result = DocResult(doc_info)
             edit_access = has_edit_access(doc_info)
