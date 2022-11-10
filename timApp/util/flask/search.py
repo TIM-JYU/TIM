@@ -1202,18 +1202,21 @@ def search():
             # If relevance is ignored or not found from search file, skip check.
             line_info = content_items[doc_info.id]
             if not ignore_relevance:
-                try:
-                    relevance = line_info["d_r"]
-                except KeyError:
-                    # TODO: Add message to user about skipped relevances.
-                    pass
-                else:
-                    if is_excluded(relevance, relevance_threshold):
-                        continue
+                relevance = line_info.get("d_r")
+                if relevance is not None and is_excluded(
+                    relevance, relevance_threshold
+                ):
+                    continue
             pars = line_info["pars"]
             doc_result = DocResult(doc_info)
-            edit_access = has_edit_access(doc_info)
-            # is_owner = user.has_ownership(doc_info, allow_admin=True)
+            edit_access = None
+
+            def check_edit_acc():
+                nonlocal edit_access
+                if edit_access:
+                    return edit_access
+                edit_access = has_edit_access(doc_info)
+                return edit_access
 
             for i, par in enumerate(pars):
                 par_id = par["id"]
@@ -1222,7 +1225,7 @@ def search():
                 # If par has visibility condition and user can't see markdown (lower than edit), skip it.
                 try:
                     visibility = par["attrs"]["visible"]
-                    if visibility and not edit_access:
+                    if visibility and not check_edit_acc():
                         continue
                 except KeyError:
                     pass
@@ -1232,17 +1235,17 @@ def search():
                 try:
                     plugin = par["attrs"]["plugin"]
                     # If ignore_plugins or no edit access, leave out plugin and setting results.
-                    if ignore_plugins or not edit_access:
+                    if ignore_plugins or not check_edit_acc():
                         continue
                 except KeyError:
                     pass
                 try:
                     settings = par["attrs"]["settings"]
-                    if ignore_plugins or not edit_access:
+                    if ignore_plugins or not check_edit_acc():
                         continue
                 except KeyError:
                     pass
-                if search_attrs and edit_access and not ignore_plugins:
+                if search_attrs and check_edit_acc() and not ignore_plugins:
                     try:
                         rd = str(par["attrs"])
                         md = rd.replace("'", '"') + " " + md
