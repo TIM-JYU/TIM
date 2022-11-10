@@ -63,6 +63,7 @@ from timApp.util.flask.responsehelper import (
     add_csp_header,
     safe_redirect,
 )
+from timApp.util.logger import log_warning
 from timApp.util.pdftools import (
     StampDataInvalidError,
     default_stamp_format,
@@ -294,7 +295,11 @@ def _downsample_image_canvas(img_path: Path) -> None:
         # TODO: Split overly large images if necessary, warn users about large downsampling after upload
         img_format = ext_mapping.get(ext) or img.format
         img.thumbnail((2048, 8192))
-        img = PIL.ImageOps.exif_transpose(img)
+        # TODO: Figure out why this can fail with TypeError
+        try:
+            img = PIL.ImageOps.exif_transpose(img)
+        except Exception as e:
+            log_warning(f"Failed to transpose image {img_path}: {e}")
         # Ensure that JPEG does not have alpha channel
         if img_format == "JPEG" and img.mode != "RGB":
             img = img.convert("RGB")
