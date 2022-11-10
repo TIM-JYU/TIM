@@ -237,10 +237,7 @@
             }
         };
 
-        var globaldata = null;
         window.onload = function () {
-            if (TIMJS.initData) globaldata = TIMJS.initData;
-            setData(globaldata);
             load();
         }
 
@@ -255,7 +252,7 @@
             if (!data) {
                 return;
             }
-            if (!data.c || Object.entries(data.c).length === 0) {
+            if (!data.c) {
                 // "undo" call in plugin might call setData with undefined c so we need separate check
                 document.getElementById('diagram').innerHTML = null;
                 return;

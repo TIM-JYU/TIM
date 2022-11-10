@@ -12,6 +12,7 @@ JSREADYOPTIONS = {}
 
 class JSframe(Language):
     ttype = "jsframe"
+    load_original_data = True
 
     def get_default_before_open(self):
         return '<div class="defBeforeOpen"><p>Open JS-frame</p></div>'
@@ -113,12 +114,13 @@ class JSframe(Language):
 
         src = src.replace("##HOST_URL##", ma.get("hosturl", os.environ["TIM_HOST"]))
 
-        original_data = get_by_id(ma, "data", None)
-        if original_data:
-            src = src.replace(
-                "//ORIGINALDATA",
-                self.jsobject + "originalData = " + json.dumps(original_data) + ";",
-            )
+        if self.load_original_data:
+            original_data = get_by_id(ma, "data", None)
+            if original_data:
+                src = src.replace(
+                    "//ORIGINALDATA",
+                    self.jsobject + "originalData = " + json.dumps(original_data) + ";",
+                )
 
         javascript = get_by_id(ma, "javascript", None)
         if javascript:
@@ -185,6 +187,7 @@ SVGTEXT_PROG = re.compile(">([^>]*)</text")
 
 class DrawIO(JSframe):
     ttype = "drawio"
+    load_original_data = False
 
     def modify_query(self):
         """
