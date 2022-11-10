@@ -49,6 +49,12 @@ def _get_idp_metadata_from_url(url: str) -> bytes:
         raise RouteException(f"Could not fetch IDP metadata from {url}: {e}")
 
 
+def _haka_metadata_cache_key() -> str:
+    return _get_idp_metadata_from_url.make_cache_key(
+        _get_idp_metadata_from_url, app.config["HAKA_METADATA_URL"]
+    )
+
+
 def _get_haka_metadata() -> bytes:
     return _get_idp_metadata_from_url(app.config["HAKA_METADATA_URL"])
 
@@ -212,13 +218,14 @@ def get_metadata() -> Response:
     return resp
 
 
-@saml.get("/feed")
-def get_idps() -> Response:
-    """
-    Get a list of IdPs available for login based on active metadata.
+def _should_update_idp_list() -> bool:
+    # Sync cache refresh for IdP list with metadata cache refresh
+    k = _haka_metadata_cache_key()
+    return cache.get(k) is None
 
-    :return: JSON list of IdPs usable for login.
-    """
+
+@cache.memoize(timeout=3600 * 24, forced_update=_should_update_idp_list)
+def _get_idps() -> list[dict]:
     config = _get_saml_config()
     meta: MetadataStore = config.metadata
     idps = meta.with_descriptor("idpsso")
@@ -262,5 +269,14 @@ def get_idps() -> Response:
                 "scopes": scopes,
             }
         )
+    return feed
 
-    return json_response(feed)
+
+@saml.get("/feed")
+def get_idp_feed() -> Response:
+    """
+    Get a list of IdPs available for login based on active metadata.
+
+    :return: JSON list of IdPs usable for login.
+    """
+    return json_response(_get_idps())
