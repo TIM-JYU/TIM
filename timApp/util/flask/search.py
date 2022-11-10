@@ -14,6 +14,7 @@ from flask import Blueprint, json
 from flask import request
 from sqlalchemy.orm import joinedload, lazyload, defaultload
 
+from cli.util.logging import log_info
 from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -1052,6 +1053,8 @@ def search():
     cmd.append("--")
     cmd.append(query)
 
+    search_duration = time.time_ns()
+
     if search_content:
         try:
             s = subprocess.Popen(
@@ -1062,6 +1065,11 @@ def search():
         except Exception as e:
             raise RouteException(get_error_message(e))
 
+    search_duration = (time.time_ns() - search_duration) / 1000000  # ns -> ms
+    log_info(f"Content search took: {search_duration} ms")
+
+    search_duration = time.time_ns()
+
     if search_titles:
         try:
             s = subprocess.Popen(cmd + [title_search_file_path], stdout=subprocess.PIPE)
@@ -1069,6 +1077,9 @@ def search():
             title_output = title_output_str.splitlines()
         except Exception as e:
             raise RouteException(get_error_message(e))
+
+    search_duration = (time.time_ns() - search_duration) / 1000000
+    log_info(f"Title search took: {search_duration} ms")
 
     if not content_output and not title_output:
         return json_response(
