@@ -1053,8 +1053,6 @@ def search():
     cmd.append("--")
     cmd.append(query)
 
-    search_duration = time.time_ns()
-
     if search_content:
         try:
             s = subprocess.Popen(
@@ -1065,11 +1063,6 @@ def search():
         except Exception as e:
             raise RouteException(get_error_message(e))
 
-    search_duration = (time.time_ns() - search_duration) / 1000000  # ns -> ms
-    log_info(f"Content search took: {search_duration} ms")
-
-    search_duration = time.time_ns()
-
     if search_titles:
         try:
             s = subprocess.Popen(cmd + [title_search_file_path], stdout=subprocess.PIPE)
@@ -1077,9 +1070,6 @@ def search():
             title_output = title_output_str.splitlines()
         except Exception as e:
             raise RouteException(get_error_message(e))
-
-    search_duration = (time.time_ns() - search_duration) / 1000000
-    log_info(f"Title search took: {search_duration} ms")
 
     if not content_output and not title_output:
         return json_response(
@@ -1092,9 +1082,6 @@ def search():
                 "content_results": content_results,
             }
         )
-
-    log_info(f"Title output lines: {len(title_output)}")
-    search_duration = time.time_ns()
 
     title_items = {}
     for line in title_output:
@@ -1162,12 +1149,6 @@ def search():
             )
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, title=True)
-
-    search_duration = (time.time_ns() - search_duration) / 1000000
-    log_info(f"Title output processing took: {search_duration} ms")
-
-    log_info(f"Content output lines: {len(content_output)}")
-    search_duration = time.time_ns()
 
     content_items = {}
     for line in content_output:
@@ -1306,9 +1287,6 @@ def search():
             )
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, par=current_par)
-
-    search_duration = (time.time_ns() - search_duration) / 1000000
-    log_info(f"Content output processing took: {search_duration} ms")
 
     return json_response(
         {
