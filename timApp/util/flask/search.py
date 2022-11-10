@@ -1095,7 +1095,7 @@ def search():
 
     for line in title_output:
         log_info(f"Title output lines: {len(title_output)}")
-        search_duration = time.time
+        search_duration = time.time_ns()
         try:
             if is_timeouted(start_time, timeout):
                 incomplete_search_reason = (
@@ -1162,6 +1162,7 @@ def search():
             )
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, title=True)
+
         search_duration = (time.time_ns() - search_duration) / 1000000
         log_info(f"Title output processing took: {search_duration} ms")
 
