@@ -14,7 +14,6 @@ from flask import Blueprint, json
 from flask import request
 from sqlalchemy.orm import joinedload, lazyload, defaultload
 
-from cli.util.logging import log_info
 from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
