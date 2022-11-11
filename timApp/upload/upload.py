@@ -276,6 +276,30 @@ def pluginupload_file(doc_id: int, task_id: str):
     return json_response(returninfo)
 
 
+def simple_exif_transpose(image: Image):
+    """
+    Attempts to rotate an image according to exif data.
+
+    ..note:: This method does not update the exif data
+
+    """
+    exif = image.getexif()
+    orientation = exif.get(0x0112)
+    method = {
+        2: Image.Transpose.FLIP_LEFT_RIGHT,
+        3: Image.Transpose.ROTATE_180,
+        4: Image.Transpose.FLIP_TOP_BOTTOM,
+        5: Image.Transpose.TRANSPOSE,
+        6: Image.Transpose.ROTATE_270,
+        7: Image.Transpose.TRANSVERSE,
+        8: Image.Transpose.ROTATE_90,
+    }.get(orientation)
+    if method is not None:
+        transposed_image = image.transpose(method)
+        return transposed_image
+    return image.copy()
+
+
 def _downsample_image_canvas(img_path: Path) -> None:
     """
     Downsamples an image to fit into JS canvas area.
@@ -299,7 +323,10 @@ def _downsample_image_canvas(img_path: Path) -> None:
         try:
             img = PIL.ImageOps.exif_transpose(img)
         except Exception as e:
-            log_warning(f"Failed to transpose image {img_path}: {e}")
+            # some exif datas cause PIL to fail when updating image's exif after transpose
+            # in that case rotate the image and remove the exif data
+            img = simple_exif_transpose(img)
+            img.getexif().clear()
         # Ensure that JPEG does not have alpha channel
         if img_format == "JPEG" and img.mode != "RGB":
             img = img.convert("RGB")
