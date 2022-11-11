@@ -643,11 +643,11 @@ def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: i
         filetype = img.format  # lost at rotate
         if img.mode == "RGBA":
             use_raw = False
-            img = PIL.ImageOps.exif_transpose(img)
+            img = simple_exif_transpose(img)
             img = img.convert("RGB")
-        if rotation:
+        if rotation != 0:
             use_raw = False
-            img = PIL.ImageOps.exif_transpose(img)
+            img = simple_exif_transpose(img)
             img = img.rotate(rotation * (-90), expand=True)
         if use_raw:
             byte_images.append(block.data)
@@ -655,7 +655,7 @@ def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: i
             img_byte_arr = io.BytesIO()
             img.save(img_byte_arr, format=filetype)
             byte_images.append(img_byte_arr.getvalue())
-    pdf = convert([w for w in byte_images])
+    pdf = convert(byte_images)
     return send_file(
         io.BytesIO(pdf), download_name=f"{user_name}_{doc_id}_{task_id}_{answer_id}.pdf"
     )
