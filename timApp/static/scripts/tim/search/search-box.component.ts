@@ -103,7 +103,7 @@ export interface ITagSearchResult {
                    type="text" focusMe
                    title="Search documents with a keyword"
                    placeholder="Input a search word"
-                   class="form-control" autocomplete="on" i18n-title>
+                   class="form-control" autocomplete="on" i18n-title i18n-placeholder>
             <span class="input-group-addon btn" (click)="search()">
                 <tim-loading *ngIf="loading"></tim-loading>
                 <span *ngIf="!loading" class="glyphicon glyphicon-search"></span>
