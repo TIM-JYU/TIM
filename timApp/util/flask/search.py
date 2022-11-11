@@ -23,6 +23,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
+from timApp.item.routes_tags import get_tags
 from timApp.item.tag import Tag
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import InvalidReferenceException
@@ -46,6 +47,8 @@ PREVIEW_MAX_LENGTH = 160
 SEARCH_CACHE_FOLDER = cache_folder_path / "searchcache"
 PROCESSED_CONTENT_FILE_PATH = SEARCH_CACHE_FOLDER / "content_all_processed.log"
 PROCESSED_TITLE_FILE_PATH = SEARCH_CACHE_FOLDER / "titles_all_processed.log"
+PROCESSED_PATHS_FILE_PATH = SEARCH_CACHE_FOLDER / "paths_all_processed.log"
+PROCESSED_TAGS_FILE_PATH = SEARCH_CACHE_FOLDER / "tags_all_processed.log"
 RAW_CONTENT_FILE_PATH = SEARCH_CACHE_FOLDER / "all.log"
 DEFAULT_RELEVANCE = 10
 
@@ -525,6 +528,51 @@ def add_doc_info_content_line(
         )
 
 
+def add_doc_info_path_line(doc_id: int) -> str | None:
+    """
+    Forms a JSON-compatible string with doc id, relevance and path.
+
+    :param doc_id: Document id.
+    :return: String with doc data.
+    """
+    doc_info = DocEntry.find_by_id(
+        doc_id, docentry_load_opts=docentry_eager_relevance_opt
+    )
+    if not doc_info:
+        return None
+    doc_relevance = get_document_relevance(doc_info)
+    return (
+        json.dumps(
+            {"doc_id": doc_id, "d_r": doc_relevance, "doc_path": doc_info.path},
+            ensure_ascii=False,
+        )
+        + "\n"
+    )
+
+
+def add_doc_info_tags_line(doc_id: int) -> str | None:
+    """
+    Forms a JSON-compatible string with doc id, relevance and tags.
+
+    :param doc_id: Document id.
+    :return: String with doc data.
+    """
+    doc_info = DocEntry.find_by_id(
+        doc_id, docentry_load_opts=docentry_eager_relevance_opt
+    )
+    if not doc_info:
+        return None
+    doc_relevance = get_document_relevance(doc_info)
+    doc_tags = get_tags(doc_info.path).json
+    return (
+        json.dumps(
+            {"doc_id": doc_id, "d_r": doc_relevance, "doc_tags": doc_tags},
+            ensure_ascii=False,
+        )
+        + "\n"
+    )
+
+
 def get_doc_par_id(line: str) -> tuple[int, str, str] | None:
     """
     Takes doc id, par id and par data from one grep search result line.
@@ -558,6 +606,10 @@ def create_search_files(remove_deleted_pars=True):
     temp_title_file_name = (
         SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_TITLE_FILE_PATH.name}"
     )
+    temp_paths_file_name = (
+        SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_PATHS_FILE_PATH.name}"
+    )
+    temp_tags_file_name = SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_TAGS_FILE_PATH.name}"
     index_log_file_name = SEARCH_CACHE_FOLDER / "index_log.log"
     f: Path = RAW_CONTENT_FILE_PATH.parent
     f.mkdir(exist_ok=True)
@@ -582,7 +634,11 @@ def create_search_files(remove_deleted_pars=True):
             "w+", encoding="utf-8"
         ) as temp_content_file, temp_title_file_name.open(
             "w+", encoding="utf-8"
-        ) as temp_title_file, index_log_file_name.open(
+        ) as temp_title_file, temp_paths_file_name.open(
+            "w+", encoding="utf-8"
+        ) as temp_paths_file, temp_tags_file_name.open(
+            "w+", encoding="utf-8"
+        ) as temp_tags_file, index_log_file_name.open(
             "w+", encoding="utf-8"
         ) as index_log_file:
 
@@ -604,10 +660,16 @@ def create_search_files(remove_deleted_pars=True):
                             current_doc, current_pars, remove_deleted_pars
                         )
                         new_title_line = add_doc_info_title_line(current_doc)
+                        new_paths_line = add_doc_info_path_line(current_doc)
+                        new_tags_line = add_doc_info_tags_line(current_doc)
                         if new_content_line:
                             temp_content_file.write(new_content_line)
                         if new_title_line:
                             temp_title_file.write(new_title_line)
+                        if new_paths_line:
+                            temp_paths_file.write(new_paths_line)
+                        if new_tags_line:
+                            temp_tags_file.write(new_tags_line)
                         current_doc = doc_id
                         current_pars.clear()
                         current_pars.append(par)
@@ -626,24 +688,42 @@ def create_search_files(remove_deleted_pars=True):
                     temp_content_file.write(new_content_line)
                 if new_title_line:
                     temp_title_file.write(new_title_line)
+                if new_paths_line:
+                    temp_paths_file.write(new_paths_line)
+                if new_tags_line:
+                    temp_tags_file.write(new_tags_line)
 
             temp_content_file.flush()
             temp_title_file.flush()
+            temp_paths_file.flush()
+            temp_tags_file.flush()
             os.fsync(temp_content_file)
             os.fsync(temp_title_file)
+            os.fsync(temp_paths_file)
+            os.fsync(temp_tags_file)
 
         temp_content_file_name.rename(PROCESSED_CONTENT_FILE_PATH)
         temp_title_file_name.rename(PROCESSED_TITLE_FILE_PATH)
+        temp_paths_file_name.rename(PROCESSED_PATHS_FILE_PATH)
+        temp_tags_file_name.rename(PROCESSED_TAGS_FILE_PATH)
 
         return (
             200,
-            f"Combined and processed paragraph files created to "
-            f"{PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH}",
+            f"Combined and processed index files created to "
+            f"  {PROCESSED_CONTENT_FILE_PATH}, "
+            f"  {PROCESSED_TITLE_FILE_PATH}, "
+            f"  {PROCESSED_PATHS_FILE_PATH} and "
+            f"  {PROCESSED_TAGS_FILE_PATH}",
         )
     except Exception as e:
         return (
             400,
-            f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed: {get_error_message(e)}!",
+            f"Creating files to "
+            f"  {PROCESSED_CONTENT_FILE_PATH}, "
+            f"  {PROCESSED_TITLE_FILE_PATH}, "
+            f"  {PROCESSED_PATHS_FILE_PATH} and "
+            f"  {PROCESSED_TAGS_FILE_PATH}",
+            f"failed: {get_error_message(e)}!",
         )
 
 
