@@ -563,7 +563,7 @@ def add_doc_info_tags_line(doc_id: int) -> str | None:
     if not doc_info:
         return None
     doc_relevance = get_document_relevance(doc_info)
-    doc_tags = get_tags(doc_info.path).json
+    doc_tags = [tag.name for tag in doc_info.block.tags]
     return (
         json.dumps(
             {"doc_id": doc_id, "d_r": doc_relevance, "doc_tags": doc_tags},
