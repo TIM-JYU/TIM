@@ -103,31 +103,34 @@ export interface ITagSearchResult {
                    type="text" focusMe
                    title="Search documents with a keyword"
                    placeholder="Input a search word"
-                   class="form-control" autocomplete="on">
+                   class="form-control" autocomplete="on" i18n-title>
             <span class="input-group-addon btn" (click)="search()">
                 <tim-loading *ngIf="loading"></tim-loading>
                 <span *ngIf="!loading" class="glyphicon glyphicon-search"></span>
-        </span>
+            </span>
             <span class="input-group-addon btn" (click)="advancedSearch = !advancedSearch"
-                  title="Toggle advanced search">
+                  title="Toggle advanced search" i18n-title>
                 <span class="glyphicon glyphicon-menu-hamburger"></span>
-        </span>
+            </span>
+        </div>
+        <div class="small-note">
+            <span i18n>Press <span class="text-italic">Ctrl-F / &#8984;-F</span> to search for text on the current page.</span>
         </div>
         <tim-alert *ngIf="errorMessage" severity="danger">
             {{errorMessage}}
         </tim-alert>
-        <div *ngIf="advancedSearch" title="Advanced search options">
-            <h5>Advanced search options</h5>
+        <div *ngIf="advancedSearch" title="Advanced search options" i18n-title>
+            <h5 i18n>Advanced search options</h5>
             <div class="form-horizontal">
-                <div class="form-group" title="Write folder path to search from">
+                <div class="form-group" title="Write folder path to search from" i18n-title>
                     <label for="folder-selector" class="col-sm-4 control-label font-weight-normal"
-                           style="text-align:left;">Search folder:</label>
+                           style="text-align:left;" i18n>Search folder:</label>
                     <div class="col-sm-8">
                         <input [(ngModel)]="folder" name="folder-selector"
                                type="text" class="form-control" id="folder-selector"
                                placeholder="Input a folder to search"
                                [typeahead]="folderSuggestions"
-                               [typeaheadMinLength]="1">
+                               [typeaheadMinLength]="1" i18n-placeholder>
                         <div class="small folder-links">
                             <a [tooltip]="defaultFolderLocation" (click)="folder = defaultFolderLocation" i18n>Default folder</a>
                             <a [tooltip]="currentFolderLocation" (click)="folder = currentFolderLocation" i18n>Current folder</a>
@@ -136,14 +139,14 @@ export interface ITagSearchResult {
                 </div>
                 <div class="form-group">
                     <label for="max-doc-results-selector" class="col-sm-4 control-label font-weight-normal"
-                           style="text-align:left;">Max results / doc:</label>
-                    <div class="col-sm-3" title="Input maximum number of results to get from a single document">
+                           style="text-align:left;" i18n>Max results / doc: </label>
+                    <div class="col-sm-3" title="Input maximum number of results to get from a single document" i18n-title>
                         <input [(ngModel)]="maxDocResults" name="max-doc-results-selector"
                                type="number" class="form-control" id="max-doc-results-selector">
                     </div>
                     <label for="min-relevance-selector" class="col-sm-2 control-label font-weight-normal"
-                           style="text-align:left;">Relevance:</label>
-                    <div class="col-sm-3" title="Input minimum relevance value to include in results">
+                           style="text-align:left;" i18n>Relevance: </label>
+                    <div class="col-sm-3" title="Input minimum relevance value to include in results" i18n-title>
                         <ng-template #customItemTemplate let-model="item">
                             {{ model.name }}
                         </ng-template>
@@ -164,29 +167,29 @@ export interface ITagSearchResult {
                 <div class="flex rw space-between">
                     <div class="flex cl">
                         <label class="font-weight-normal"
-                               title="Distinguish between upper and lower case letters">
+                               title="Distinguish between upper and lower case letters" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="caseSensitive"> Case sensitive</label>
-                        <label class="font-weight-normal" title="Allow regular expressions">
+                        <label class="font-weight-normal" title="Allow regular expressions" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="regex"> Regex</label>
-                        <label class="font-weight-normal" title="Leave plugin and setting contents out of the results">
+                        <label class="font-weight-normal" title="Leave plugin and setting contents out of the results" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="ignorePlugins"> Ignore plugins and settings</label>
-                        <label class="font-weight-normal" title="Search only whole words with one or more character">
+                        <label class="font-weight-normal" title="Search only whole words with one or more character" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="searchWholeWords"> Search whole words</label>
-                        <label class="font-weight-normal dropdown-item" title="Search from documents you own">
+                        <label class="font-weight-normal dropdown-item" title="Search from documents you own" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="searchOwned"> Search owned documents</label>
-                        <label class="font-weight-normal" title="Show result of each search in new window">
+                        <label class="font-weight-normal" title="Show result of each search in new window" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="createNewWindow"> Open new window for each
                             search</label>
                     </div>
                     <div class="flex cl">
-                        <p>Search scope:</p>
-                        <label class="font-weight-normal" title="Search document content">
+                        <p i18n>Search scope:</p>
+                        <label class="font-weight-normal" title="Search document content" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="searchContent"> Contents</label>
-                        <label class="font-weight-normal" title="Search document titles">
+                        <label class="font-weight-normal" title="Search document titles" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="searchTitles"> Titles</label>
-                        <label class="font-weight-normal" title="Search document tags">
+                        <label class="font-weight-normal" title="Search document tags" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="searchTags"> Tags</label>
-                        <label class="font-weight-normal" title="Search document paths">
+                        <label class="font-weight-normal" title="Search document paths" i18n i18n-title>
                             <input type="checkbox" [(ngModel)]="searchPaths"> Paths</label>
                     </div>
                 </div>

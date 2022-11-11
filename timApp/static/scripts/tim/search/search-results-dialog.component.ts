@@ -42,10 +42,10 @@ enum SortOption {
                     <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
                 </div>
                 <div *ngIf="displayResults.length == 0 && !errorMessage">
-                    <h5>Your search <i>{{searchWord}}</i> did not match any documents in <i>{{folder}}</i></h5>
+                    <h5 i18n>Your search <i>{{searchWord}}</i> did not match any documents in <i>{{folder}}</i></h5>
                 </div>
                 <div *ngIf="displayResults.length > 0">
-                    <h5>Your search <i>{{searchWord}}</i> was found {{totalResults}}
+                    <h5 i18n>Your search <i>{{searchWord}}</i> was found {{totalResults}}
                         <ng-container
                                 [ngPlural]="totalResults">
                             <ng-template ngPluralCase="=1">time</ng-template>
@@ -70,11 +70,11 @@ enum SortOption {
                             <a class="cursor-pointer" (click)="r.closed = !r.closed"
                                *ngIf="collapsibles && !limitedDisplay && (r.result.num_par_results + r.num_tag_results) > 0">
                                 <i class="glyphicon" [ngClass]="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
-                                   title="Toggle preview" style="width:1.3em;"></i></a>
-                            <span title="Note: hidden elements can affect the result count">
+                                   title="Toggle preview" style="width:1.3em;" i18n-title></i></a>
+                            <span title="Note: hidden elements can affect the result count" i18n-title>
                 <a href="/view/{{r.result.doc.path}}"
-                   title="Open {{r.result.doc.title}}"> {{r.result.doc.title}}</a> {{r.result.doc.path}}
-                                <i> ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <span
+                   title="Open {{r.result.doc.title}}" i18n-title> {{r.result.doc.title}}</a> {{r.result.doc.path}}
+                                <i i18n> ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <span
                                         *ngIf="r.result.incomplete">or more matches</span>
                 <ng-container *ngIf="!r.result.incomplete"
                               [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.num_tag_results">
@@ -87,7 +87,7 @@ enum SortOption {
                                 <ng-container *ngFor="let p of r.result.par_results">
                                     <li *ngIf="p.preview">
                                         <a href="/view/{{r.result.doc.path}}#{{p.par_id}}"
-                                           title="Open paragraph">{{p.preview}}</a>
+                                           title="Open paragraph" i18n-title>{{p.preview}}</a>
                                         <ng-container *ngFor="let tag of r.tags">
                                             <span *ngIf="!r.closed"
                                                   class="btn-xs"
@@ -109,7 +109,7 @@ enum SortOption {
                             [(ngModel)]="orderByOption"
                             (ngModelChange)="resortResults()"
                             title="Select the result sorting order"
-                            name="order-selector">
+                            name="order-selector" i18n-title>
                         <option *ngFor="let s of sortingOptions" [ngValue]="s">{{s.name}}</option>
                     </select>
                 </div>
