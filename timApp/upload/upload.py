@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
 
-import PIL.ImageOps
+from PIL import UnidentifiedImageError
 from PIL import Image
 from PIL.Image import registered_extensions
 from flask import Blueprint, request, send_file, Response, url_for
@@ -63,7 +63,6 @@ from timApp.util.flask.responsehelper import (
     add_csp_header,
     safe_redirect,
 )
-from timApp.util.logger import log_warning
 from timApp.util.pdftools import (
     StampDataInvalidError,
     default_stamp_format,
@@ -335,7 +334,7 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
     if f.content_mimetype.startswith("image/"):
         try:
             _downsample_image_canvas(p)
-        except PIL.UnidentifiedImageError:
+        except UnidentifiedImageError:
             raise RouteException(
                 f"Unable to process image {f.filename}, image may be corrupt"
             )
@@ -371,7 +370,7 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
                 # TODO: Some pdfs have only one, very large page. Downsampling them to 2048px can make
                 #   them unreadable, and should in some cases be split into smaller images instead
                 _downsample_image_canvas(file)
-            except PIL.UnidentifiedImageError:
+            except UnidentifiedImageError:
                 raise RouteException(
                     f"Unable to process pdf {f.filename}, some pages may be corrupt"
                 )
