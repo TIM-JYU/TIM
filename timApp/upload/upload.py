@@ -319,13 +319,10 @@ def _downsample_image_canvas(img_path: Path) -> None:
         # TODO: Split overly large images if necessary, warn users about large downsampling after upload
         img_format = ext_mapping.get(ext) or img.format
         img.thumbnail((2048, 8192))
-        try:
-            img = PIL.ImageOps.exif_transpose(img)
-        except Exception as e:
-            # some exif datas cause PIL to fail when updating image's exif after transpose
-            # in that case rotate the image and remove the exif data
-            img = simple_exif_transpose(img)
-            img.getexif().clear()
+        # some exif datas cause PIL.ImageOps.exif_transpose to fail,
+        # so we just do the rotation part and remove the exif data
+        img = simple_exif_transpose(img)
+        img.getexif().clear()
         # Ensure that JPEG does not have alpha channel
         if img_format == "JPEG" and img.mode != "RGB":
             img = img.convert("RGB")
