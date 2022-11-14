@@ -58,7 +58,7 @@ from timApp.note.routes import notes
 from timApp.notification.notify import notify
 from timApp.plugin.calendar.calendar import calendar_plugin
 from timApp.plugin.group_join.group_join import group_join_plugin
-from timApp.plugin.importdata.importData import importData_plugin
+from timApp.plugin.importdata.importData import import_data_plugin
 from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.reviewcanvas.reviewcanvas import reviewcanvas_plugin
 from timApp.plugin.routes import plugin_bp
@@ -143,7 +143,7 @@ blueprints = [
     user_sessions,
     # plugins
     calendar_plugin,
-    importData_plugin,
+    import_data_plugin,
     qst_plugin,
     reviewcanvas_plugin,
     tableForm_plugin,

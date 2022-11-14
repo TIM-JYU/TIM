@@ -17,7 +17,11 @@ class TypedBlueprint(Blueprint):
     """
 
     def get(
-        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
+        self,
+        rule: str,
+        model: type[ModelType] | None = None,
+        manual_typing: bool = False,
+        **kwargs: Any,
     ) -> Callable:
         """
         Define a GET route.
@@ -27,10 +31,14 @@ class TypedBlueprint(Blueprint):
         :param kwargs: Additional arguments passed to Flask.
         :return: Wrapped function.
         """
-        return self.route(rule, model, **(kwargs | {"methods": ["get"]}))
+        return self.route(rule, model, manual_typing, **(kwargs | {"methods": ["get"]}))
 
     def post(
-        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
+        self,
+        rule: str,
+        model: type[ModelType] | None = None,
+        manual_typing: bool = False,
+        **kwargs: Any,
     ) -> Callable:
         """
         Define a POST route.
@@ -40,10 +48,16 @@ class TypedBlueprint(Blueprint):
         :param kwargs: Additional arguments passed to Flask.
         :return: Wrapped function.
         """
-        return self.route(rule, model, **(kwargs | {"methods": ["post"]}))
+        return self.route(
+            rule, model, manual_typing, **(kwargs | {"methods": ["post"]})
+        )
 
     def put(
-        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
+        self,
+        rule: str,
+        model: type[ModelType] | None = None,
+        manual_typing: bool = False,
+        **kwargs: Any,
     ) -> Callable:
         """
         Define a PUT route.
@@ -53,10 +67,14 @@ class TypedBlueprint(Blueprint):
         :param kwargs: Additional arguments passed to Flask.
         :return: Wrapped function.
         """
-        return self.route(rule, model, **(kwargs | {"methods": ["put"]}))
+        return self.route(rule, model, manual_typing, **(kwargs | {"methods": ["put"]}))
 
     def patch(
-        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
+        self,
+        rule: str,
+        model: type[ModelType] | None = None,
+        manual_typing: bool = False,
+        **kwargs: Any,
     ) -> Callable:
         """
         Define a PATCH route.
@@ -66,10 +84,16 @@ class TypedBlueprint(Blueprint):
         :param kwargs: Additional arguments passed to Flask.
         :return: Wrapped function.
         """
-        return self.route(rule, model, **(kwargs | {"methods": ["patch"]}))
+        return self.route(
+            rule, model, manual_typing, **(kwargs | {"methods": ["patch"]})
+        )
 
     def delete(
-        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
+        self,
+        rule: str,
+        model: type[ModelType] | None = None,
+        manual_typing: bool = False,
+        **kwargs: Any,
     ) -> Callable:
         """
         Define a DELETE route.
@@ -79,10 +103,16 @@ class TypedBlueprint(Blueprint):
         :param kwargs: Additional arguments passed to Flask.
         :return: Wrapped function.
         """
-        return self.route(rule, model, **(kwargs | {"methods": ["delete"]}))
+        return self.route(
+            rule, model, manual_typing, **(kwargs | {"methods": ["delete"]})
+        )
 
     def route(
-        self, rule: str, model: type[ModelType] | None = None, **options: Any
+        self,
+        rule: str,
+        model: type[ModelType] | None = None,
+        manual_typing: bool = False,
+        **options: Any,
     ) -> Callable:
         """
         Define a generic Flask route.
@@ -94,7 +124,10 @@ class TypedBlueprint(Blueprint):
         """
 
         def decorator(f: Callable) -> Callable:
-            wrapped = use_typed_params(sum(1 for c in rule if c == "<"), model)(f)
+            if not manual_typing:
+                wrapped = use_typed_params(sum(1 for c in rule if c == "<"), model)(f)
+            else:
+                wrapped = f
             return super(TypedBlueprint, self).route(rule, **options)(wrapped)
 
         return decorator

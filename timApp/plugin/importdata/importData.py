@@ -8,27 +8,31 @@ from enum import Enum
 from typing import DefaultDict, Generator, Any
 
 import requests
-from flask import render_template_string
+from flask import render_template_string, jsonify, Response
 from marshmallow.utils import missing
+from webargs.flaskparser import use_args
 
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import widen_fields
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
     GenericAnswerModel,
-    create_blueprint,
     value_or_default,
     PluginAnswerResp,
     PluginReqs,
     EditorTab,
+    register_html_routes,
 )
 from tim_common.utils import Missing
+
+import_data_plugin = TypedBlueprint("importData", __name__, url_prefix="/importData")
 
 
 @dataclass
@@ -43,6 +47,11 @@ class ImportDataStateModel:
 @dataclass
 class AplusData:
     course: int
+
+
+@dataclass
+class StudentInfoImport:
+    enable: bool
 
 
 @dataclass
@@ -71,6 +80,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
     nextRunner: str | Missing = missing
 
     aplus: AplusData | Missing = missing
+    studentInfo: StudentInfoImport | Missing = missing
 
 
 @dataclass
@@ -291,6 +301,13 @@ class ImportDataAnswerResp(PluginAnswerResp, total=False):
     groups: dict[str, dict[str, list[str]]] | None
     createMissingUsers: bool
     missingUsers: list[MissingUser]
+
+
+@import_data_plugin.put("/answer", manual_typing=True)
+@use_args(class_schema(ImportDataAnswerModel)(), locations=("json",))
+@csrf.exempt
+def answer_route(args: ImportDataAnswerModel) -> Response:
+    return jsonify(answer(args))
 
 
 def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
@@ -539,13 +556,11 @@ buttonText: Import
     }
 
 
-importData_plugin = create_blueprint(
-    __name__,
-    "importData",
-    ImportDataHtmlModel,
-    ImportDataAnswerModel,
-    answer,
-    reqs,
-    csrf,
+register_html_routes(
+    import_data_plugin,
+    class_schema(ImportDataHtmlModel),
+    reqs_handler=reqs,
+    csrf=csrf,
 )
+
 MissingUserSchema = class_schema(MissingUser)
