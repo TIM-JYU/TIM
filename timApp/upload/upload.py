@@ -319,7 +319,6 @@ def _downsample_image_canvas(img_path: Path) -> None:
         # TODO: Split overly large images if necessary, warn users about large downsampling after upload
         img_format = ext_mapping.get(ext) or img.format
         img.thumbnail((2048, 8192))
-        # TODO: Figure out why this can fail with TypeError
         try:
             img = PIL.ImageOps.exif_transpose(img)
         except Exception as e:
@@ -643,15 +642,14 @@ def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: i
         filetype = img.format  # lost at rotate
         if img.mode == "RGBA":
             use_raw = False
-            img = simple_exif_transpose(img)
             img = img.convert("RGB")
         if rotation != 0:
             use_raw = False
-            img = simple_exif_transpose(img)
             img = img.rotate(rotation * (-90), expand=True)
         if use_raw:
             byte_images.append(block.data)
         else:
+            img = simple_exif_transpose(img)
             img_byte_arr = io.BytesIO()
             img.save(img_byte_arr, format=filetype)
             byte_images.append(img_byte_arr.getvalue())
