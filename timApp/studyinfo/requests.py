@@ -40,8 +40,10 @@ class CASSession(Session):
     def _refresh_ticket_granting_token(self) -> None:
         # https://apereo.github.io/cas/6.5.x/protocol/REST-Protocol-Request-TicketGrantingTicket.html
         tickets_url = f"{self.base_url}/cas/v1/tickets"
-        resp = self.post(
-            tickets_url, data={"username": self.username, "password": self.password}
+        resp = super().request(
+            "post",
+            tickets_url,
+            data={"username": self.username, "password": self.password},
         )
         match resp.status_code:
             case 401:
@@ -61,7 +63,8 @@ class CASSession(Session):
             self._refresh_ticket_granting_token()
         max_tries = 4
         for _ in range(max_tries):
-            resp = self.post(
+            resp = super().request(
+                "post",
                 self._tgt,
                 data={"service": f"{service_info.base_url}/{service_info.auth_path}"},
             )
@@ -81,7 +84,7 @@ class CASSession(Session):
         # https://apereo.github.io/cas/6.5.x/protocol/REST-Protocol-Logout.html
         if self._tgt is None:
             return
-        self.delete(self._tgt)
+        super().request("delete", self._tgt)
         self._tgt = None
 
     def close(self) -> None:
@@ -90,7 +93,7 @@ class CASSession(Session):
 
     def request(self, method: str, url: str, *args: Any, **kwargs: Any) -> Response:
         url_path = urlparse(url).path.strip("/")
-        service, _ = url_path.split("/", 1)
+        service, api_path = url_path.split("/", 1)
         service_info = self.service_map.get(service)
         if service_info is None:
             raise CASException(
@@ -100,8 +103,9 @@ class CASSession(Session):
         service_ticket = self._get_service_ticket(service_info)
         params = kwargs.get("params", {})
         params["ticket"] = service_ticket
+        kwargs["params"] = params
         return super().request(
-            method, f"{service_info.base_url}/{url_path}", *args, **kwargs
+            method, f"{service_info.base_url}/{api_path}", *args, **kwargs
         )
 
 

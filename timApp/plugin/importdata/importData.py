@@ -13,11 +13,11 @@ from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
+from timApp.studyinfo.importing import get_student_applications
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
-from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import widen_fields
@@ -314,42 +314,10 @@ def answer_route(args: ImportDataAnswerModel) -> Response:
 
 @import_data_plugin.post("/studentInfo/import")
 def import_student_info(username: str, password: str) -> Response:
-    # Get CAS ticket granting ticket
-    session = requests.Session()
-    r = session.post(
-        "https://virkailija.testiopintopolku.fi/cas/v1/tickets",
-        data={
-            "username": username,
-            "password": password,
-        },
+    res = get_student_applications(
+        "1.2.246.562.29.00000000000000002821", "16383535117446383119907563335870"
     )
-    if r.status_code != 201:
-        raise RouteException("Failed to get ticket granting ticket")
-    service = r.headers["location"]
-
-    # Get CAS service ticket
-    r = session.post(
-        service,
-        data={
-            "service": "https://virkailija.testiopintopolku.fi/valintalaskentakoostepalvelu/j_spring_cas_security_check",
-        },
-    )
-
-    if r.status_code != 200:
-        raise RouteException("Failed to get service ticket")
-
-    st = r.text
-
-    r = session.get(
-        f"https://virkailija.testiopintopolku.fi/valintalaskentakoostepalvelu/resources/hakemukset/valinnanvaihe?hakuOid=1.2.246.562.29.00000000000000002821&valinnanvaiheOid=16383535117446383119907563335870&ticket={st}"
-    )
-
-    if r.status_code != 200:
-        raise RouteException("Failed to get student info")
-
-    session.close()
-
-    return json_response({})
+    return json_response(res)
 
 
 def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
