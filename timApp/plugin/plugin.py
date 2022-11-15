@@ -67,6 +67,7 @@ NEVERLAZY_PLUGINS = {
     "userSelect",
     "calendar",
     "groupJoin",
+    "drag",
 }
 
 NO_ANSWERBROWSER_PLUGINS = {
