@@ -13,7 +13,7 @@ from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
-from timApp.studyinfo.importing import get_student_applications
+from timApp.studyinfo.applications import get_student_applications
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
