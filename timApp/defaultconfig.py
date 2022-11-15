@@ -479,3 +479,12 @@ preferred_languages: List of languages in order of preference for contacting.
 extra_canonical_hosts: List of extra canonical hosts for the instance. Used to specify canonical URLs for security.txt
 security_policy_url: URL to the security policy page.
 """
+
+# Authentication for StudyInfo API
+
+STUDYINFO_BASE_URL = "https://virkailija.testiopintopolku.fi"
+"""Base URL for StudyInfo API."""
+STUDYINFO_USERNAME = None
+"""Username for StudyInfo API user"""
+STUDYINFO_PASSWORD = None
+"""Password for StudyInfo API user"""

@@ -9,7 +9,7 @@ import {FormsModule} from "@angular/forms";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {IUser} from "tim/user/IUser";
-import {TimStorage} from "tim/util/utils";
+import {TimStorage, toPromise} from "tim/util/utils";
 import {
     GenericPluginMarkup,
     Info,
@@ -18,6 +18,10 @@ import {
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CommonModule} from "@angular/common";
+
+const StudentInfoImport = t.type({
+    enable: t.boolean,
+});
 
 const ImportDataMarkup = t.intersection([
     t.partial({
@@ -33,6 +37,7 @@ const ImportDataMarkup = t.intersection([
         aplus: t.type({
             course: t.number,
         }),
+        studentInfo: StudentInfoImport,
     }),
     GenericPluginMarkup,
     t.type({
@@ -104,6 +109,13 @@ interface IFieldSaveResult {
             <ng-container body>
                 <tim-close-button *ngIf="!header" (click)="isOpen = false"></tim-close-button>
                 <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
+                <div *ngIf="markup.studentInfo" class="form-group form-group-sm">
+                    <label for="studentInfoUsername">Username</label>
+                    <input id="studentInfoUsername" name="studentInfoUsername" type="text" class="form-control" [(ngModel)]="studentInfoData.username" />
+                    <label for="studentInfoPassword">Password</label>
+                    <input id="studentInfoPassword" name="studentInfoPassword" type="password" class="form-control" [(ngModel)]="studentInfoData.password" />
+                    <button class="btn btn-primary" (click)="importStudentInfo()">Load</button>
+                </div>
                 <div *ngIf="useurl || useurltoken" class="form">
                     <div *ngIf="useurl" class="form-group form-group-sm">
                         <label for="url" class="small">{{markup.urlstem}}</label>
@@ -200,6 +212,10 @@ export class ImportDataComponent extends AngularPluginBase<
     urlToken: string = "";
     fetchingData = false;
     createMissingUsers = false;
+    studentInfoData = {
+        username: "",
+        password: "",
+    };
     private storage = new TimStorage(
         "importData",
         t.type({importToken: t.string, importUrl: t.string})
@@ -230,6 +246,16 @@ export class ImportDataComponent extends AngularPluginBase<
         if (this.markup.aplus) {
             this.url = `https://plus.cs.aalto.fi/api/v2/courses/${this.markup.aplus.course}/aggregatedata/`;
         }
+    }
+
+    async importStudentInfo() {
+        const r = await toPromise(
+            this.http.post("/importData/studentInfo/import", {
+                username: this.studentInfoData.username,
+                password: this.studentInfoData.password,
+            })
+        );
+        console.log(r.result);
     }
 
     getAttributeType() {
