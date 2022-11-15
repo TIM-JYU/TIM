@@ -19,9 +19,13 @@ import type {SearchResultsDialogComponent} from "tim/search/search-results-dialo
 export interface ISearchResultsInfo {
     content_results: IDocSearchResult[];
     title_results: IDocSearchResult[];
+    tags_results: ITagSearchResult[];
+    paths_results: IDocSearchResult[];
     incomplete_search_reason: string; // Tells the reason why when the search is incomplete.
     word_result_count: number;
     title_result_count: number;
+    tags_result_count: number;
+    paths_result_count: number;
     errors: ISearchError[];
 }
 
@@ -285,15 +289,16 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         const start = new Date().getTime();
 
         // Each search type has separate route.
-        if (this.searchTags) {
-            await this.tagSearch();
-        }
-        if (this.searchPaths) {
-            await this.pathSearch();
-        }
-        if (this.searchContent || this.searchTitles) {
-            await this.wordSearch();
-        }
+        // if (this.searchTags) {
+        //     await this.tagSearch();
+        // }
+        // if (this.searchPaths) {
+        //     await this.pathSearch();
+        // }
+        // if (this.searchContent || this.searchTitles) {
+        //     await this.wordSearch();
+        // }
+        await this.combinedSearch();
         this.loading = false;
         if (
             this.results.length === 0 &&
@@ -562,6 +567,47 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
             this.tagResults = [];
             return;
         }
+    }
+
+    private async combinedSearch() {
+        const r = await to(
+            $http<ISearchResultsInfo>({
+                method: "GET",
+                params: {
+                    ignorePlugins: this.ignorePlugins,
+                    maxDocResults: this.maxDocResults,
+                    searchContent: this.searchContent,
+                    searchTitles: this.searchTitles,
+                    searchTags: this.searchTags,
+                    searchPaths: this.searchPaths,
+                    searchAttrs: true,
+                    ...this.getCommonSearchOptions(),
+                },
+                url: "/search",
+            })
+        );
+        if (!r.ok) {
+            this.errorMessage = r.result.data.error;
+            this.results = [];
+            this.titleResults = [];
+            this.tagResults = [];
+            this.pathResults = [];
+            return;
+        }
+        const response = r.result;
+        this.results = response.data.content_results;
+        this.titleResults = response.data.title_results;
+        this.tagResults = response.data.tags_results;
+        this.pathResults = response.data.paths_results;
+
+        if (response.data.incomplete_search_reason) {
+            this.incompleteSearchReason =
+                response.data.incomplete_search_reason;
+        }
+        this.wordMatchCount = response.data.word_result_count;
+        this.titleMatchCount = response.data.title_result_count;
+        this.tagMatchCount = response.data.tags_result_count;
+        this.pathMatchCount = response.data.paths_result_count;
     }
 
     /**
