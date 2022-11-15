@@ -1143,6 +1143,28 @@ def check_with_common_search_params(
     return True
 
 
+def grep_search_file(
+    cmd: list[str], search_file_path: str, search_type: str
+) -> list[str]:
+    """
+    Helper function to grep the specified (text) file
+    :param cmd: command to process, along with its arguments
+    :param search_file_path: (text) file to process
+    :param search_type: type of search to perform, dictated by a Request from the UI
+    :return: list of matches
+    """
+    if not search_file_path.exists():
+        raise NotExist(
+            f"Combined {search_type} file '{search_file_path}' not found, unable to perform {search_type} search!"
+        )
+    try:
+        s = subprocess.Popen(cmd + [search_file_path], stdout=subprocess.PIPE)
+        output_str = s.communicate()[0].decode("utf-8").strip()
+        return output_str.splitlines()
+    except Exception as e:
+        raise RouteException(get_error_message(e))
+
+
 @search_routes.get("")
 def search():
     """
@@ -1214,58 +1236,16 @@ def search():
     cmd.append(query)
 
     if should_search_content:
-        if not content_search_file_path.exists():
-            raise NotExist(
-                f"Combined content file '{content_search_file_path}' not found, unable to perform content search!"
-            )
-        try:
-            s = subprocess.Popen(
-                cmd + [content_search_file_path], stdout=subprocess.PIPE
-            )
-            content_output_str = s.communicate()[0].decode("utf-8").strip()
-            content_output = content_output_str.splitlines()
-            log_info(f"Content matches found: {len(content_output)}")
-        except Exception as e:
-            raise RouteException(get_error_message(e))
+        content_output = grep_search_file(cmd, content_search_file_path, "content")
 
     if should_search_titles:
-        if not title_search_file_path.exists():
-            raise NotExist(
-                f"Combined title file '{title_search_file_path}' not found, unable to perform title search!"
-            )
-        try:
-            s = subprocess.Popen(cmd + [title_search_file_path], stdout=subprocess.PIPE)
-            title_output_str = s.communicate()[0].decode("utf-8").strip()
-            title_output = title_output_str.splitlines()
-            log_info(f"Title matches found: {len(title_output)}")
-        except Exception as e:
-            raise RouteException(get_error_message(e))
+        title_output = grep_search_file(cmd, title_search_file_path, "title")
 
     if should_search_tags:
-        if not tags_search_file_path.exists():
-            raise NotExist(
-                f"Combined title file '{tags_search_file_path}' not found, unable to perform title search!"
-            )
-        try:
-            s = subprocess.Popen(cmd + [tags_search_file_path], stdout=subprocess.PIPE)
-            tags_output_str = s.communicate()[0].decode("utf-8").strip()
-            tags_output = tags_output_str.splitlines()
-            log_info(f"Tag matches found: {len(tags_output)}")
-        except Exception as e:
-            raise RouteException(get_error_message(e))
+        tags_output = grep_search_file(cmd, tags_search_file_path, "tags")
 
     if should_search_paths:
-        if not paths_search_file_path.exists():
-            raise NotExist(
-                f"Combined title file '{paths_search_file_path}' not found, unable to perform title search!"
-            )
-        try:
-            s = subprocess.Popen(cmd + [paths_search_file_path], stdout=subprocess.PIPE)
-            paths_output_str = s.communicate()[0].decode("utf-8").strip()
-            paths_output = paths_output_str.splitlines()
-            log_info(f"Path matches found: {len(paths_output)}")
-        except Exception as e:
-            raise RouteException(get_error_message(e))
+        paths_output = grep_search_file(cmd, paths_search_file_path, "paths")
 
     if not content_output and not title_output and not tags_output and not paths_output:
         return json_response(
