@@ -167,30 +167,29 @@ export interface ITagSearchResult {
                 <div class="flex rw space-between">
                     <div class="flex cl">
                         <label class="font-weight-normal"
-                               title="Distinguish between upper and lower case letters" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="caseSensitive"> Case sensitive</label>
-                        <label class="font-weight-normal" title="Allow regular expressions" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="regex"> Regex</label>
-                        <label class="font-weight-normal" title="Leave plugin and setting contents out of the results" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="ignorePlugins"> Ignore plugins and settings</label>
-                        <label class="font-weight-normal" title="Search only whole words with one or more character" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="searchWholeWords"> Search whole words</label>
-                        <label class="font-weight-normal dropdown-item" title="Search from documents you own" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="searchOwned"> Search owned documents</label>
-                        <label class="font-weight-normal" title="Show result of each search in new window" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="createNewWindow"> Open new window for each
-                            search</label>
+                               title="Distinguish between upper and lower case letters" i18n-title>
+                            <input type="checkbox" [(ngModel)]="caseSensitive"><ng-container i18n> Case sensitive</ng-container></label>
+                        <label class="font-weight-normal" title="Allow regular expressions" i18n-title>
+                            <input type="checkbox" [(ngModel)]="regex"><ng-container i18n> Regex</ng-container></label>
+                        <label class="font-weight-normal" title="Leave plugin and setting contents out of the results" i18n-title>
+                            <input type="checkbox" [(ngModel)]="ignorePlugins"><ng-container i18n> Ignore plugins and settings</ng-container></label>
+                        <label class="font-weight-normal" title="Search only whole words with one or more character" i18n-title>
+                            <input type="checkbox" [(ngModel)]="searchWholeWords"><ng-container i18n> Search whole words</ng-container></label>
+                        <label class="font-weight-normal dropdown-item" title="Search from documents you own" i18n-title>
+                            <input type="checkbox" [(ngModel)]="searchOwned"><ng-container i18n> Search owned documents</ng-container></label>
+                        <label class="font-weight-normal" title="Show result of each search in new window" i18n-title>
+                            <input type="checkbox" [(ngModel)]="createNewWindow"><ng-container i18n> Open new window for each search</ng-container></label>
                     </div>
                     <div class="flex cl">
                         <p i18n>Search scope:</p>
-                        <label class="font-weight-normal" title="Search document content" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="searchContent"> Contents</label>
-                        <label class="font-weight-normal" title="Search document titles" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="searchTitles"> Titles</label>
-                        <label class="font-weight-normal" title="Search document tags" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="searchTags"> Tags</label>
-                        <label class="font-weight-normal" title="Search document paths" i18n i18n-title>
-                            <input type="checkbox" [(ngModel)]="searchPaths"> Paths</label>
+                        <label class="font-weight-normal" title="Search document content" i18n-title>
+                            <input type="checkbox" [(ngModel)]="searchContent"><ng-container i18n> Contents</ng-container></label>
+                        <label class="font-weight-normal" title="Search document titles" i18n-title>
+                            <input type="checkbox" [(ngModel)]="searchTitles"><ng-container i18n> Titles</ng-container></label>
+                        <label class="font-weight-normal" title="Search document tags" i18n-title>
+                            <input type="checkbox" [(ngModel)]="searchTags"><ng-container> Tags</ng-container></label>
+                        <label class="font-weight-normal" title="Search document paths" i18n-title>
+                            <input type="checkbox" [(ngModel)]="searchPaths"><ng-container i18n> Paths</ng-container></label>
                     </div>
                 </div>
             </div>

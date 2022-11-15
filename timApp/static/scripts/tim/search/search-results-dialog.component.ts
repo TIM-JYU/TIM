@@ -42,25 +42,25 @@ enum SortOption {
                     <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
                 </div>
                 <div *ngIf="displayResults.length == 0 && !errorMessage">
-                    <h5 i18n>Your search <i>{{searchWord}}</i> did not match any documents in <i>{{folder}}</i></h5>
+                    <h5><ng-container i18n>Your search </ng-container><i>{{searchWord}}</i> <ng-container i18n>did not match any documents in</ng-container> <i>{{folder}}</i></h5>
                 </div>
                 <div *ngIf="displayResults.length > 0">
-                    <h5 i18n>Your search <i>{{searchWord}}</i> was found {{totalResults}}
+                    <h5><ng-container i18n>Your search </ng-container><i>{{searchWord}}</i><ng-container i18n> was found </ng-container>{{totalResults}}
                         <ng-container
                                 [ngPlural]="totalResults">
-                            <ng-template ngPluralCase="=1">time</ng-template>
-                            <ng-template ngPluralCase="other">times</ng-template>
+                            <ng-template ngPluralCase="=1" i18n>time</ng-template>
+                            <ng-template ngPluralCase="other" i18n>times</ng-template>
                         </ng-container>
-                        from {{displayResults.length}}
+                        <ng-container i18n="@@searchResultFrom"> from </ng-container>{{displayResults.length}}
                         <ng-container
                                 [ngPlural]="displayResults.length">
-                            <ng-template ngPluralCase="=1">document</ng-template>
-                            <ng-template ngPluralCase="other">documents</ng-template>
+                            <ng-template ngPluralCase="=1" i18n>document</ng-template>
+                            <ng-template ngPluralCase="other" i18n>documents</ng-template>
                         </ng-container>
-                        in <i *ngIf="folder">{{folder}}</i>
-                        <i *ngIf="!folder">root</i>&ngsp;
+                        <ng-container i18n> in </ng-container><i *ngIf="folder">{{folder}}</i>
+                        <i *ngIf="!folder" i18n>root</i>&ngsp;
                         <a *ngIf="collapsibles && !limitedDisplay" title="Toggle results collapse"
-                           (click)="toggleCollapseAll()">
+                           (click)="toggleCollapseAll()" i18n-title>
                             <i class="glyphicon"
                                [ngClass]="allClosed ? 'glyphicon-plus-sign' : 'glyphicon-minus-sign'"></i>
                         </a>
@@ -74,12 +74,12 @@ enum SortOption {
                             <span title="Note: hidden elements can affect the result count" i18n-title>
                 <a href="/view/{{r.result.doc.path}}"
                    title="Open {{r.result.doc.title}}" i18n-title> {{r.result.doc.title}}</a> {{r.result.doc.path}}
-                                <i i18n> ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <span
-                                        *ngIf="r.result.incomplete">or more matches</span>
+                                <i> ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <span
+                                        *ngIf="r.result.incomplete" i18n>or more matches</span>
                 <ng-container *ngIf="!r.result.incomplete"
                               [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.num_tag_results">
-                            <ng-template ngPluralCase="=1">match</ng-template>
-                            <ng-template ngPluralCase="other">matches</ng-template>
+                            <ng-template ngPluralCase="=1" i18n>match</ng-template>
+                            <ng-template ngPluralCase="other" i18n>matches</ng-template>
                 </ng-container>)
                                 </i>
                 </span>

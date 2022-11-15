@@ -7538,22 +7538,6 @@
           <context context-type="linenumber">193</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8520061490962093467" datatype="html">
-        <source>Your search <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/><x id="INTERPOLATION" equiv-text="{{searchWord}}"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> did not match any documents in <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/><x id="INTERPOLATION_1" equiv-text="{{folder}}"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/></source>
-        <target state="translated">Hakusanaa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/><x id="INTERPOLATION" equiv-text="{{searchWord}}"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> ei löytynyt kohteesta <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/><x id="INTERPOLATION_1" equiv-text="{{folder}}"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
-          <context context-type="linenumber">45</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3185260137528019136" datatype="html">
-        <source>Your search <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/><x id="INTERPOLATION" equiv-text="{{searchWord}}"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> was found <x id="INTERPOLATION_1" equiv-text="{{totalResults}}"/> <x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container                                 [ngPlural]=&quot;totalResults&quot;>"/><x id="START_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;ng-template ngPluralCase=&quot;=1&quot;>"/>time<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="START_TAG_NG_TEMPLATE_1" ctype="x-ng_template_1" equiv-text="&lt;ng-template ngPluralCase=&quot;other&quot;>"/>times<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/> from <x id="INTERPOLATION_2" equiv-text="{{displayResults.length}}"/> <x id="START_TAG_NG_CONTAINER_1" ctype="x-ng_container_1" equiv-text="&lt;ng-container                                 [ngPlural]=&quot;displayResults.length&quot;>"/><x id="START_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;ng-template ngPluralCase=&quot;=1&quot;>"/>document<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="START_TAG_NG_TEMPLATE_1" ctype="x-ng_template_1" equiv-text="&lt;ng-template ngPluralCase=&quot;other&quot;>"/>documents<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/> in <x id="START_ITALIC_TEXT_1" equiv-text="&lt;i *ngIf=&quot;folder&quot;>"/><x id="INTERPOLATION_3" equiv-text="{{folder}}"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/><x id="START_ITALIC_TEXT_2" equiv-text="&lt;i *ngIf=&quot;!folder&quot;>"/>root<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> <x id="START_LINK" ctype="x-a" equiv-text="&lt;a *ngIf=&quot;collapsibles &amp;&amp; !limitedDisplay&quot; title=&quot;Toggle results collapse&quot;                            (click)=&quot;toggleCollapseAll()&quot;>"/><x id="START_ITALIC_TEXT_3" equiv-text="&lt;i class=&quot;glyphicon&quot;                                [ngClass]=&quot;allClosed ? 'glyphicon-plus-sign' : 'glyphicon-minus-sign'&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
-        <target state="translated">Hakusana <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/><x id="INTERPOLATION" equiv-text="{{searchWord}}"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> löytyi <x id="INTERPOLATION_1" equiv-text="{{totalResults}}"/> <x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container                                 [ngPlural]=&quot;totalResults&quot;>"/><x id="START_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;ng-template ngPluralCase=&quot;=1&quot;>"/>kerran<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="START_TAG_NG_TEMPLATE_1" ctype="x-ng_template_1" equiv-text="&lt;ng-template ngPluralCase=&quot;other&quot;>"/>kertaa<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/> <x id="INTERPOLATION_2" equiv-text="{{displayResults.length}}"/> <x id="START_TAG_NG_CONTAINER_1" ctype="x-ng_container_1" equiv-text="&lt;ng-container                                 [ngPlural]=&quot;displayResults.length&quot;>"/><x id="START_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;ng-template ngPluralCase=&quot;=1&quot;>"/>dokumentista<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="START_TAG_NG_TEMPLATE_1" ctype="x-ng_template_1" equiv-text="&lt;ng-template ngPluralCase=&quot;other&quot;>"/>dokumentista<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/>kansion <x id="START_ITALIC_TEXT_1" equiv-text="&lt;i *ngIf=&quot;folder&quot;>"/><x id="INTERPOLATION_3" equiv-text="{{folder}}"/> juuresta<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/><x id="START_ITALIC_TEXT_2" equiv-text="&lt;i *ngIf=&quot;!folder&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> <x id="START_LINK" ctype="x-a" equiv-text="&lt;a *ngIf=&quot;collapsibles &amp;&amp; !limitedDisplay&quot; title=&quot;Toggle results collapse&quot;                            (click)=&quot;toggleCollapseAll()&quot;>"/><x id="START_ITALIC_TEXT_3" equiv-text="&lt;i class=&quot;glyphicon&quot;                                [ngClass]=&quot;allClosed ? 'glyphicon-plus-sign' : 'glyphicon-minus-sign'&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
-          <context context-type="linenumber">48,66</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6826548210323232097" datatype="html">
         <source>Toggle preview</source>
         <target state="translated">Esikatsele</target>
@@ -7576,14 +7560,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
           <context context-type="linenumber">76</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1045371756048508248" datatype="html">
-        <source> (<x id="INTERPOLATION" equiv-text="{{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}}"/> <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span                                         *ngIf=&quot;r.result.incomplete&quot;>"/>or more matches<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;!r.result.incomplete&quot;                               [ngPlural]=&quot;r.result.num_par_results + r.result.num_title_results + r.num_tag_results&quot;>"/><x id="START_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;ng-template ngPluralCase=&quot;=1&quot;>"/>match<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="START_TAG_NG_TEMPLATE_1" ctype="x-ng_template_1" equiv-text="&lt;ng-template ngPluralCase=&quot;other&quot;>"/>matches<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/>) </source>
-        <target state="translated"> (<x id="INTERPOLATION" equiv-text="{{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}}"/> <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span                                         *ngIf=&quot;r.result.incomplete&quot;>"/>tai useampia osumia<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;!r.result.incomplete&quot;                               [ngPlural]=&quot;r.result.num_par_results + r.result.num_title_results + r.num_tag_results&quot;>"/><x id="START_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;ng-template ngPluralCase=&quot;=1&quot;>"/>osuma<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="START_TAG_NG_TEMPLATE_1" ctype="x-ng_template_1" equiv-text="&lt;ng-template ngPluralCase=&quot;other&quot;>"/>osumaa<x id="CLOSE_TAG_NG_TEMPLATE" ctype="x-ng_template" equiv-text="&lt;/ng-template>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/>) </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
-          <context context-type="linenumber">77,84</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7831785311638552636" datatype="html">
@@ -7626,92 +7602,200 @@
           <context context-type="linenumber">148,149</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4705394099206918274" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;caseSensitive&quot;>"/> Case sensitive</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;caseSensitive&quot;>"/> Huomioi kirjainkoko</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">171,172</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1723606667346825999" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;regex&quot;>"/> Regex</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;regex&quot;>"/> Käytä lausekesääntöjä (regex)</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">173,174</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3413794811259774372" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;ignorePlugins&quot;>"/> Ignore plugins and settings</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;ignorePlugins&quot;>"/> Älä huomioi plugineja tai dokumenttiasetuksia</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">175,176</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8481239139357175406" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchWholeWords&quot;>"/> Search whole words</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchWholeWords&quot;>"/> Etsi kokonaisia sanoja</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">177,178</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8837293321872827325" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchOwned&quot;>"/> Search owned documents</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchOwned&quot;>"/> Etsi omistetuista dokumenteista</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">179,180</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8554115645431572613" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;createNewWindow&quot;>"/> Open new window for each search</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;createNewWindow&quot;>"/> Avaa uusi ikkuna jokaiselle haulle</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">181,182</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5923850643391543981" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchContent&quot;>"/> Contents</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchContent&quot;>"/> Sisältö</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">187,188</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2538864983948434583" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchTitles&quot;>"/> Titles</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchTitles&quot;>"/> Nimet</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">189,190</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5432700212504354191" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchTags&quot;>"/> Tags</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchTags&quot;>"/> Merkinnät</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">191,192</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5516001498763112624" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchPaths&quot;>"/> Paths</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;searchPaths&quot;>"/> Polut</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
-          <context context-type="linenumber">193,194</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="8834850989332664480" datatype="html">
         <source>Input a search word</source>
         <target state="translated">Syötä hakusana</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
           <context context-type="linenumber">105,106</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8442384344402935663" datatype="html">
+        <source>did not match any documents in</source>
+        <target state="translated">ei löytynyt yhtään dokumenttia kansiosta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6804394984309949769" datatype="html">
+        <source> was found </source>
+        <target state="translated"> löytyi </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3695251475145999588" datatype="html">
+        <source>time</source>
+        <target state="translated">osuma</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7074388989229825051" datatype="html">
+        <source>times</source>
+        <target state="translated">osumaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2797527932365132552" datatype="html">
+        <source>document</source>
+        <target state="translated">dokumentista</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2243616287587279704" datatype="html">
+        <source>documents</source>
+        <target state="translated">dokumentista</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="searchResultFrom" datatype="html">
+        <source>from</source>
+        <target state="translated"> </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">54</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1738754971342764597" datatype="html">
+        <source> Case sensitive</source>
+        <target state="translated"> Huomioi kirjainkoko</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">171</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1796507316298062118" datatype="html">
+        <source> Regex</source>
+        <target state="translated"> Regex</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">173</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="877338673921351186" datatype="html">
+        <source> Search owned documents</source>
+        <target state="translated"> Etsi omistetuista dokumenteista</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">179</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8072682237003206616" datatype="html">
+        <source> Titles</source>
+        <target state="translated"> Otsikot</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">188</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7631314713818874234" datatype="html">
+        <source>Your search </source>
+        <target state="translated">Hakusanalla </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7014671861564632337" datatype="html">
+        <source> in </source>
+        <target state="translated"> kansiossa </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">60</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5773272191572353800" datatype="html">
+        <source>root</source>
+        <target state="translated">juurikansio</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">61</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="760616196557113989" datatype="html">
+        <source>Toggle results collapse</source>
+        <target state="translated">Piilota tulokset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2416355470215428625" datatype="html">
+        <source>or more matches</source>
+        <target state="translated">tai enemmän osumaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">78</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4159292573927266008" datatype="html">
+        <source>match</source>
+        <target state="translated">osuma</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3217830042880509138" datatype="html">
+        <source>matches</source>
+        <target state="translated">osumaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">82</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2450237093696121570" datatype="html">
+        <source> Ignore plugins and settings</source>
+        <target state="translated"> Älä huomioi plugineja tai dokumenttiasetuksia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">175</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8068248148818723377" datatype="html">
+        <source> Search whole words</source>
+        <target state="translated"> Etsi kokonaisia sanoja</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">177</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8895755540762800596" datatype="html">
+        <source> Open new window for each search</source>
+        <target state="translated"> Avaa uusi ikkuna jokaiselle haulle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">181</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1156162064077633039" datatype="html">
+        <source> Contents</source>
+        <target state="translated"> Sisällöt</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">186</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2791184486176070317" datatype="html">
+        <source> Paths</source>
+        <target state="translated"> Polut</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">192</context>
         </context-group>
       </trans-unit>
     </body>
