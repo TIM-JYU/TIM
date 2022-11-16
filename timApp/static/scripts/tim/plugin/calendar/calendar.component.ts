@@ -288,6 +288,9 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     *ngIf="!advancedUI">
             </tim-calendar-minimal-header>
         </div>
+        <div class="progress" *ngIf="loadingEvents">
+            <div class="progress-bar progress-bar-striped active" role="progressbar" [style.width.%]="100"></div>    
+        </div>
         <div [ngSwitch]="viewMode">
             <mwl-calendar-month-view
                     *ngSwitchCase="'month'"
@@ -381,6 +384,7 @@ export class CalendarComponent
 
     eventTypes: string[] = [];
     selectedEvent: string = "";
+    loadingEvents = false;
 
     /*
     TODO: Checkbox values
@@ -680,6 +684,7 @@ export class CalendarComponent
      * @private
      */
     private refresh() {
+        this.loadingEvents = true;
         this.events = [...this.events]; // TODO: Find out what is the purpose of this line
         const now = Date.now();
         this.events.forEach((event) => {
@@ -712,6 +717,7 @@ export class CalendarComponent
             }
             event.color = colors.blue;
         });
+        this.loadingEvents = false;
         this.cdr.detectChanges();
     }
 
@@ -804,6 +810,7 @@ export class CalendarComponent
      * @private
      */
     private async loadEvents() {
+        this.loadingEvents = true;
         const result = await toPromise(
             this.http.get<TIMCalendarEvent[]>("/calendar/events", {
                 params: this.filterParams,
