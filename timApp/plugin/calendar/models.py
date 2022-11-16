@@ -294,6 +294,10 @@ class Event(db.Model):
             "description": self.message,
             "send_notifications": self.send_notifications,
             "important": self.important,
+            "owner": {
+                "name": self.creator.pretty_full_name,
+                "email": self.creator.email,
+            },
         }
 
         user_group_ids = []

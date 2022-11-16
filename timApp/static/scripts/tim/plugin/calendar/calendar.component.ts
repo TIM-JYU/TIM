@@ -198,6 +198,10 @@ export type TIMEventMeta = {
     isExtra: boolean;
     send_notifications: boolean;
     important: boolean;
+    owner?: {
+        name: string;
+        email: string;
+    };
     booker_groups: {
         name: string;
         message: string;
@@ -563,6 +567,12 @@ export class CalendarComponent
                 isExtra: false,
                 maxSize: 1, // TODO: temporary solution
                 booker_groups: [],
+                owner: {
+                    name: `${Users.getCurrent().real_name ?? ""} (${
+                        Users.getCurrent().last_name ?? ""
+                    })`,
+                    email: Users.getCurrent().email ?? "",
+                },
                 editEnabled: this.editEnabled,
                 send_notifications: true,
                 important: false,
@@ -817,6 +827,7 @@ export class CalendarComponent
                     editEnabled: this.editEnabled,
                     send_notifications: event.meta!.send_notifications,
                     important: event.meta!.important,
+                    owner: event.meta!.owner,
                     signup_before: new Date(event.meta!.signup_before),
                 };
                 event.resizable = {
@@ -907,6 +918,7 @@ export class CalendarComponent
                         send_notifications: event.meta!.send_notifications,
                         important: event.meta!.important,
                         booker_groups: [],
+                        owner: event.meta!.owner,
                         signup_before: new Date(event.meta!.signup_before),
                     },
                     resizable: {
