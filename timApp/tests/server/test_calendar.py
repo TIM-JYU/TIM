@@ -67,6 +67,10 @@ class CalendarModificationTest(CalendarTest):
                         "isExtra": False,
                         "send_notifications": True,
                         "signup_before": "2022-05-18T07:20:00+00:00",
+                        "owner": {
+                            "name": self.test_user_1.pretty_full_name,
+                            "email": self.test_user_1.email,
+                        },
                     },
                 }
             ],
@@ -120,6 +124,10 @@ class CalendarModificationTest(CalendarTest):
                         "location": "eri sijainti",
                         "important": False,
                         "maxSize": 1,
+                        "owner": {
+                            "name": self.test_user_1.pretty_full_name,
+                            "email": self.test_user_1.email,
+                        },
                         "signup_before": "2022-05-18T07:20:00+00:00",
                     },
                 }
@@ -201,6 +209,10 @@ class CalendarBookTest(CalendarTest):
                         "important": False,
                         "send_notifications": True,
                         "signup_before": "2023-05-18T07:20:00+00:00",
+                        "owner": {
+                            "name": self.test_user_2.pretty_full_name,
+                            "email": self.test_user_2.email,
+                        },
                     },
                 }
             ],
