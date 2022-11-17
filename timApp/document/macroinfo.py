@@ -186,7 +186,7 @@ def get_url_macros(
         try:
             uvalue = None
             try:
-                uvalue = float(urlvalue)
+                uvalue = float(urlvalue)  # type: ignore
             except ValueError:
                 pass
             if uvalue is not None:
