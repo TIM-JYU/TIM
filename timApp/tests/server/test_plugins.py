@@ -1321,7 +1321,11 @@ a
 ```
         """
         )
-        self.get(d.url)
+        e = self.get(d.url, as_tree=True)
+        err = e.cssselect('[attrs=\'{"plugin": "asdasd"}\'] .error')
+        self.assertEqual(
+            "Plugin asdasd error:Plugin does not exist.", err[0].text_content().strip()
+        )
 
     def test_no_need_browser(self):
         self.login_test1()

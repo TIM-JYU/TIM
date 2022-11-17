@@ -67,6 +67,7 @@ NEVERLAZY_PLUGINS = {
     "userSelect",
     "calendar",
     "groupJoin",
+    "drag",
 }
 
 NO_ANSWERBROWSER_PLUGINS = {
@@ -182,6 +183,7 @@ class Plugin:
         self.par = par
         self.output = None
         self.plugin_lazy = None
+        self.lazy = None
         self.access_end_for_user = None
         self.hidden: None | bool = None
 
@@ -419,7 +421,7 @@ class Plugin:
             "taskIDExt": self.task_id.extended_or_doc_task
             if self.task_id
             else self.fake_task_id,
-            "doLazy": (options.do_lazy and self.type not in NEVERLAZY_PLUGINS)
+            "doLazy": (options.do_lazy and self.is_lazy())
             if isinstance(options.do_lazy, bool)
             else options.do_lazy,
             "userPrint": options.user_print,
@@ -477,30 +479,38 @@ class Plugin:
         )  # Graphviz is cached by default
 
     def is_lazy(self) -> bool:
-        if self.type in NEVERLAZY_PLUGINS:
-            return False
-        # Question paragraphs are not lazy
-        if self.par.is_question():
-            return False
-        do_lazy = self.options.do_lazy
-        plugin_lazy = self.plugin_lazy
-        html = self.output
-        if do_lazy == NEVERLAZY:
-            return False
-        markup_lazy = self.known.lazy
-        if markup_lazy == False:
-            return False  # user do not want lazy
-        if self.is_cached():
-            return False  # cache never lazy
-        if not do_lazy and markup_lazy != True:
-            return False
-        if html is not None and html.find(NOLAZY) >= 0:
-            return False  # not allowed to make lazy
-        if markup_lazy == True:
-            return True  # user wants lazy
-        if plugin_lazy == False:
-            return False
-        return True
+        if self.lazy is not None:
+            return self.lazy
+
+        def determine_lazy() -> bool:
+            if self.type in NEVERLAZY_PLUGINS:
+                return False
+            # Question paragraphs are not lazy
+            if self.par.is_question():
+                return False
+            do_lazy = self.options.do_lazy
+            plugin_lazy = self.plugin_lazy
+            html = self.output
+            if do_lazy == NEVERLAZY:
+                return False
+            markup_lazy = self.known.lazy
+            if markup_lazy == False:
+                return False  # user do not want lazy
+            if self.is_cached():
+                return False  # cache never lazy
+            if not do_lazy and markup_lazy != True:
+                return False
+            if html is not None and html.find(NOLAZY) >= 0:
+                return False  # not allowed to make lazy
+            if markup_lazy == True:
+                return True  # user wants lazy
+            if plugin_lazy == False:
+                return False
+            return True
+
+        lazy = determine_lazy()
+        self.lazy = lazy
+        return lazy
 
     def is_automd_enabled(self, default=False):
         if self.known.automd is not missing:
@@ -887,6 +897,7 @@ class InlinePlugin(Plugin):
     ):
         super().__init__(task_id, values, plugin_type, par)
         self.range = p_range
+        self.lazy = False
 
     def get_container_class(self):
         return f"{super().get_container_class()} inlineplugin"
