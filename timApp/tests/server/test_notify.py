@@ -380,7 +380,7 @@ type: text
             {
                 "mail_from": mail_from,
                 "msg": "Answer posted by user 1 Test: "
-                "http://localhost/answers/users/test-user-1/doc1?task=t&user=testuser1&answerNumber=1",
+                "http://localhost/answers/users/test-user-1/doc1?task=t&answerNumber=1&user=testuser1",
                 "rcpt": "test2@example.com",
                 "reply_to": "test1@example.com",
                 "subject": "user 1 Test posted an answer to the document document 2",
