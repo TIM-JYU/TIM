@@ -566,7 +566,7 @@ def add_doc_info_tags_line(doc_id: int) -> str | None:
     if not doc_info:
         return None
     doc_relevance = get_document_relevance(doc_info)
-    doc_tags = [tag.name for tag in doc_info.block.tags]
+    doc_tags = " ".join([tag.name for tag in doc_info.block.tags])
     if doc_tags:
         return (
             json.dumps(
@@ -1074,7 +1074,7 @@ def is_timeouted(start_time: float, timeout: float) -> bool:
 
 def parse_search_items(output_file: list) -> dict | str:
     """
-    Parses a list of search items and
+    Parses a list of search items
     :param output_file: list of search items
     :return: dictionary of the search items, or an error message
     """
@@ -1093,7 +1093,7 @@ def parse_search_items(output_file: list) -> dict | str:
 def fetch_search_items(search_items: dict, search_folder: str) -> list[DocInfo]:
     """
     Fetches entries from the database based on the keys of search items.
-    :param search_items:
+    :param search_items: dictionary of the search items
     :param search_folder: folder path that the search is limited to
     :return:
     """
@@ -1376,6 +1376,11 @@ def search_metadata(
             line_info = search_items[doc_info.id]
 
             doc_result = DocResult(doc_info)
+
+            # Join tag names in collating function (add_doc_info_tags_line) so we don't have to have this special case
+            # line_item = line_info[f"doc_{target}"]
+            # if target == "tags":
+            #     line_item = " ".join(line_info["doc_tags"])
 
             search_matches = list(term_regex.finditer(line_info[f"doc_{target}"]))
             if search_matches:
