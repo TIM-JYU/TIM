@@ -1276,7 +1276,7 @@ def search():
     if should_search_content:
         (
             content_results,
-            content_result_count,
+            word_result_count,
             incomplete_search_reason,
         ) = search_content(
             request, content_output, start_time, timeout, user, term_regex
