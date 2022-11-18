@@ -21,6 +21,7 @@ export interface ISearchResultDisplay {
     closed: boolean; // Whether this is shown collapsed or not.
     tags: ITag[];
     num_tag_results: number; // Same tag may contain the search word more than once.
+    num_path_results?: number;
 }
 
 enum SortOption {
@@ -287,6 +288,7 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                         incomplete: false,
                         num_par_results: 0,
                         num_title_results: t.num_title_results,
+                        num_path_results: t.num_path_results,
                         par_results: [],
                         title_results: t.title_results,
                     },
@@ -317,6 +319,7 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                         incomplete: false,
                         num_par_results: 0,
                         num_title_results: 0,
+                        num_path_results: 0,
                         par_results: [],
                         title_results: [],
                     },
