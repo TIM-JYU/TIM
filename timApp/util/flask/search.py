@@ -1265,10 +1265,9 @@ def search():
 
     if should_search_titles:
         title_results, title_result_count, incomplete_search_reason = search_metadata(
-            title_output,
-            "title",
             request,
             title_output,
+            "title",
             start_time,
             timeout,
             user,
@@ -1284,10 +1283,9 @@ def search():
         )
     if should_search_tags:
         tags_results, tags_result_count, incomplete_search_reason = search_metadata(
-            tags_output,
-            "tags",
             request,
             tags_output,
+            "tags",
             start_time,
             timeout,
             user,
@@ -1295,10 +1293,9 @@ def search():
         )
     if should_search_paths:
         paths_results, paths_result_count, incomplete_search_reason = search_metadata(
-            paths_output,
-            "path",
             request,
             paths_output,
+            "path",
             start_time,
             timeout,
             user,
