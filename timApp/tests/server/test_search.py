@@ -66,6 +66,10 @@ class SearchTest(TimRouteTest):
                 "title_results": [],
                 "title_result_count": 0,
                 "word_result_count": 1,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -103,8 +107,12 @@ class SearchTest(TimRouteTest):
                 "incomplete_search_reason": "",
                 "errors": [],
                 "title_results": [],
+                "tags_results": [],
+                "paths_results": [],
                 "title_result_count": 0,
                 "word_result_count": 0,
+                "tags_result_count": 0,
+                "paths_result_count": 0,
             },
         )
 
@@ -126,8 +134,12 @@ class SearchTest(TimRouteTest):
                 "incomplete_search_reason": "",
                 "errors": [],
                 "title_results": [],
+                "tags_results": [],
+                "paths_results": [],
                 "title_result_count": 0,
                 "word_result_count": 0,
+                "tags_result_count": 0,
+                "paths_result_count": 0,
             },
         )
 
@@ -152,6 +164,10 @@ class SearchTest(TimRouteTest):
                 "title_results": [],
                 "title_result_count": 0,
                 "word_result_count": 0,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -225,6 +241,10 @@ class SearchTest(TimRouteTest):
                 "title_results": [],
                 "title_result_count": 0,
                 "word_result_count": 1,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
         self.login_test2()
@@ -239,6 +259,10 @@ class SearchTest(TimRouteTest):
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 0,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -310,6 +334,10 @@ class SearchTest(TimRouteTest):
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 1,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -323,6 +351,10 @@ class SearchTest(TimRouteTest):
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 0,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -339,6 +371,10 @@ class SearchTest(TimRouteTest):
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 0,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -359,6 +395,10 @@ class SearchTest(TimRouteTest):
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
                 "title_result_count": 1,
                 "title_results": [
                     {
@@ -403,6 +443,7 @@ class SearchTest(TimRouteTest):
         )
 
     def test_tag_search(self):
+        self.make_admin(self.test_user_1)
         u = self.test_user_1
         self.login_test1()
         d = self.create_doc()
@@ -417,11 +458,9 @@ class SearchTest(TimRouteTest):
                 ]
             },
         )
-
+        self.get(f"search/createContentFile")
         tag_to_search = "dog"
-        url = (
-            f"search/tags?caseSensitive=true&folder=&query={tag_to_search}&regex=false"
-        )
+        url = f"search?caseSensitive=true&folder=&query={tag_to_search}&regex=false&searchContent=false&searchTitles=false&searchTags=true&searchPaths=false"
         self.get(
             url,
             expect_status=200,
@@ -498,11 +537,14 @@ class SearchTest(TimRouteTest):
         )
 
     def test_path_search(self):
+        self.make_admin(self.test_user_1)
         u = self.test_user_1
         self.login_test1()
         search_word = "dog"
-        d = self.create_doc(path="a/b/dogs-like-bones/c/d")
-        url = f"search/paths?folder=&query={search_word}"
+        uf = f"{self.current_user.get_personal_folder().path}"
+        d = self.create_doc(path=f"{uf}/a/b/dogs-like-bones/c/d")
+        self.get(f"search/createContentFile")
+        url = f"search?folder=&query={search_word}&regex=false&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
         self.get(
             url,
             expect_status=200,
