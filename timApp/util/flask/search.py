@@ -1349,8 +1349,8 @@ def search_metadata(
             search_items,
             query,
             current_doc,
-            title=(target is "title"),
-            path=(target is "path"),
+            title=(target == "title"),
+            path=(target == "path"),
         )
 
     doc_infos: list[DocInfo] = fetch_search_items(search_items, folder)
@@ -1393,8 +1393,8 @@ def search_metadata(
                 get_error_message(e),
                 query,
                 current_doc,
-                title=(target is "title"),
-                path=(target is "path"),
+                title=(target == "title"),
+                path=(target == "path"),
             )
             return search_results, search_result_count, incomplete_search_reason
             # return json_response(
@@ -1410,8 +1410,8 @@ def search_metadata(
                 get_error_message(e),
                 query,
                 current_doc,
-                title=(target is "title"),
-                path=(target is "path"),
+                title=(target == "title"),
+                path=(target == "path"),
             )
 
     return search_results, search_result_count, incomplete_search_reason
