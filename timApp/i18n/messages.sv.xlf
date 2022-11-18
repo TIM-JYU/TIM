@@ -7272,6 +7272,422 @@
           <context context-type="linenumber">133,134</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4131836734403396829" datatype="html">
+        <source>Search documents with a keyword</source>
+        <target state="translated">Sök dokument med nyckelordet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">104,105</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5587617714725091072" datatype="html">
+        <source>Toggle advanced search</source>
+        <target state="translated">Växla till avancerad sökning</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">112</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7618759426279224592" datatype="html">
+        <source>Advanced search options</source>
+        <target state="translated">Avancerade sökalternativ</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">123</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">124,125</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2165908665202628650" datatype="html">
+        <source>Write folder path to search from</source>
+        <target state="translated">Skriv mappsökväg att söka från</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">126</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="921274167399164395" datatype="html">
+        <source>Search folder:</source>
+        <target state="translated">Sök mapp:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">128,129</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2370893764525583720" datatype="html">
+        <source>Input a folder to search</source>
+        <target state="translated">Skriv mappsökväg att söka från</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">132,133</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5764469231025584811" datatype="html">
+        <source>Input maximum number of results to get from a single document</source>
+        <target state="translated">Mata in maximalt antal resultat att få från ett enda dokument</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">144</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7515804670718148156" datatype="html">
+        <source>Input minimum relevance value to include in results</source>
+        <target state="translated">Ange lägsta relevansvärde som ska inkluderas i resultaten</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">150</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2086407936804076317" datatype="html">
+        <source>Distinguish between upper and lower case letters</source>
+        <target state="translated">Skilj mellan stora och små bokstäver</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">171</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="268021803682179616" datatype="html">
+        <source>Allow regular expressions</source>
+        <target state="translated">Använda uttrycksregler</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">173</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1954846308118837572" datatype="html">
+        <source>Leave plugin and setting contents out of the results</source>
+        <target state="translated">Lämna plugininnehåll och dokumentinställningar utanför resultaten</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">175</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="505684801084672845" datatype="html">
+        <source>Search only whole words with one or more character</source>
+        <target state="translated">Sök endast efter hela ord</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">177</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3214209139377376546" datatype="html">
+        <source>Search from documents you own</source>
+        <target state="translated">Sök från dina egna dokument</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">179</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4355831456207709135" datatype="html">
+        <source>Show result of each search in new window</source>
+        <target state="translated">Visa resultatet av varje sökning i nytt fönster</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">181</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4440521697781275225" datatype="html">
+        <source>Search scope:</source>
+        <target state="translated">Sökomfång:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">186,187</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8436213681600744144" datatype="html">
+        <source>Search document content</source>
+        <target state="translated">Sök från dokumentinnehåll</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">187</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1898068232547694124" datatype="html">
+        <source>Search document titles</source>
+        <target state="translated">Sök från dokumenttitlar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">189</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1136168149949570439" datatype="html">
+        <source>Search document tags</source>
+        <target state="translated">Sök från dokumenttagga</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">191</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5125511599962184106" datatype="html">
+        <source>Search document paths</source>
+        <target state="translated">Sök från dokumentvägar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">193</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6826548210323232097" datatype="html">
+        <source>Toggle preview</source>
+        <target state="translated">Växla förhandsvisning</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">73</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2207721656031204982" datatype="html">
+        <source>Note: hidden elements can affect the result count</source>
+        <target state="translated">Obs: dolda element kan påverka resultaträkningen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3845078135101348106" datatype="html">
+        <source>Open <x id="INTERPOLATION" equiv-text="{{r.result.doc.title}}"/></source>
+        <target state="translated">Öppna <x id="INTERPOLATION" equiv-text="{{r.result.doc.title}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">76</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7831785311638552636" datatype="html">
+        <source>Open paragraph</source>
+        <target state="translated">Öppna stycke</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">90</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8916096252437175358" datatype="html">
+        <source>Select the result sorting order</source>
+        <target state="translated">Välj resultatets sorteringsordning</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">111</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3515714258847417727" datatype="html">
+        <source>Press <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;text-italic&quot;>"/>Ctrl-F / ⌘-F<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/> to search for text on the current page.</source>
+        <target state="translated">Tryck <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;text-italic&quot;>"/>Ctrl-F / ⌘-F<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/> för att söka text på den aktuella sidan.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">117,118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6344264511105435768" datatype="html">
+        <source>Max results / doc: </source>
+        <target state="translated">Max resultat / dok.: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">142,143</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5059989697620979153" datatype="html">
+        <source>Relevance: </source>
+        <target state="translated">Relevans: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">148,149</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8834850989332664480" datatype="html">
+        <source>Input a search word</source>
+        <target state="translated">Ange ett sökord</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">105,106</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8442384344402935663" datatype="html">
+        <source>did not match any documents in</source>
+        <target state="translated">matchade inte några dokument i</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6804394984309949769" datatype="html">
+        <source> was found </source>
+        <target state="translated"> hittades </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3695251475145999588" datatype="html">
+        <source>time</source>
+        <target state="translated">gång</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7074388989229825051" datatype="html">
+        <source>times</source>
+        <target state="translated">gånger</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2797527932365132552" datatype="html">
+        <source>document</source>
+        <target state="translated">dokument</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2243616287587279704" datatype="html">
+        <source>documents</source>
+        <target state="translated">dokumenten</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="searchResultFrom" datatype="html">
+        <source>from</source>
+        <target state="translated"> från </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">54</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1738754971342764597" datatype="html">
+        <source> Case sensitive</source>
+        <target state="translated"> Skiftlägeskänsliga</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">171</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1796507316298062118" datatype="html">
+        <source> Regex</source>
+        <target state="translated"> Regex</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">173</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="877338673921351186" datatype="html">
+        <source> Search owned documents</source>
+        <target state="translated"> Sök i ägda dokument</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">179</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8072682237003206616" datatype="html">
+        <source> Titles</source>
+        <target state="translated"> Titlar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">188</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7631314713818874234" datatype="html">
+        <source>Your search </source>
+        <target state="translated">Din sökning </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7014671861564632337" datatype="html">
+        <source> in </source>
+        <target state="translated"> i </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">60</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5773272191572353800" datatype="html">
+        <source>root</source>
+        <target state="translated">root</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">61</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="760616196557113989" datatype="html">
+        <source>Toggle results collapse</source>
+        <target state="translated">Bläddra ner resultaten</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2416355470215428625" datatype="html">
+        <source>or more matches</source>
+        <target state="translated">eller fler matcher</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">78</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4159292573927266008" datatype="html">
+        <source>match</source>
+        <target state="translated">match</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3217830042880509138" datatype="html">
+        <source>matches</source>
+        <target state="translated">matcher</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
+          <context context-type="linenumber">82</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2450237093696121570" datatype="html">
+        <source> Ignore plugins and settings</source>
+        <target state="translated"> Ignorera plugins och inställningar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">175</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8068248148818723377" datatype="html">
+        <source> Search whole words</source>
+        <target state="translated"> Sök hela ord</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">177</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8895755540762800596" datatype="html">
+        <source> Open new window for each search</source>
+        <target state="translated"> Öppna nytt fönster för varje sökning</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">181</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1156162064077633039" datatype="html">
+        <source> Contents</source>
+        <target state="translated"> Innehåll</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">186</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2791184486176070317" datatype="html">
+        <source> Paths</source>
+        <target state="translated"> Vägar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">192</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

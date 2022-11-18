@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
 
-import PIL.ImageOps
+from PIL import UnidentifiedImageError
 from PIL import Image
 from PIL.Image import registered_extensions
 from flask import Blueprint, request, send_file, Response, url_for
@@ -275,6 +275,30 @@ def pluginupload_file(doc_id: int, task_id: str):
     return json_response(returninfo)
 
 
+def simple_exif_transpose(image: Image):
+    """
+    Attempts to rotate an image according to exif data.
+
+    ..note:: This method does not update the exif data
+
+    """
+    exif = image.getexif()
+    orientation = exif.get(0x0112)
+    method = {
+        2: Image.Transpose.FLIP_LEFT_RIGHT,
+        3: Image.Transpose.ROTATE_180,
+        4: Image.Transpose.FLIP_TOP_BOTTOM,
+        5: Image.Transpose.TRANSPOSE,
+        6: Image.Transpose.ROTATE_270,
+        7: Image.Transpose.TRANSVERSE,
+        8: Image.Transpose.ROTATE_90,
+    }.get(orientation)
+    if method is not None:
+        transposed_image = image.transpose(method)
+        return transposed_image
+    return image.copy()
+
+
 def _downsample_image_canvas(img_path: Path) -> None:
     """
     Downsamples an image to fit into JS canvas area.
@@ -294,7 +318,10 @@ def _downsample_image_canvas(img_path: Path) -> None:
         # TODO: Split overly large images if necessary, warn users about large downsampling after upload
         img_format = ext_mapping.get(ext) or img.format
         img.thumbnail((2048, 8192))
-        img = PIL.ImageOps.exif_transpose(img)
+        # some exif datas cause PIL.ImageOps.exif_transpose to fail,
+        # so we just do the rotation part and remove the exif data
+        img = simple_exif_transpose(img)
+        img.getexif().clear()
         # Ensure that JPEG does not have alpha channel
         if img_format == "JPEG" and img.mode != "RGB":
             img = img.convert("RGB")
@@ -307,7 +334,7 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
     if f.content_mimetype.startswith("image/"):
         try:
             _downsample_image_canvas(p)
-        except PIL.UnidentifiedImageError:
+        except UnidentifiedImageError:
             raise RouteException(
                 f"Unable to process image {f.filename}, image may be corrupt"
             )
@@ -343,7 +370,7 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
                 # TODO: Some pdfs have only one, very large page. Downsampling them to 2048px can make
                 #   them unreadable, and should in some cases be split into smaller images instead
                 _downsample_image_canvas(file)
-            except PIL.UnidentifiedImageError:
+            except UnidentifiedImageError:
                 raise RouteException(
                     f"Unable to process pdf {f.filename}, some pages may be corrupt"
                 )
@@ -611,19 +638,18 @@ def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: i
         filetype = img.format  # lost at rotate
         if img.mode == "RGBA":
             use_raw = False
-            img = PIL.ImageOps.exif_transpose(img)
             img = img.convert("RGB")
-        if rotation:
+        if rotation != 0:
             use_raw = False
-            img = PIL.ImageOps.exif_transpose(img)
             img = img.rotate(rotation * (-90), expand=True)
         if use_raw:
             byte_images.append(block.data)
         else:
+            img = simple_exif_transpose(img)
             img_byte_arr = io.BytesIO()
             img.save(img_byte_arr, format=filetype)
             byte_images.append(img_byte_arr.getvalue())
-    pdf = convert([w for w in byte_images])
+    pdf = convert(byte_images)
     return send_file(
         io.BytesIO(pdf), download_name=f"{user_name}_{doc_id}_{task_id}_{answer_id}.pdf"
     )

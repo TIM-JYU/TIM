@@ -20,7 +20,7 @@ function read(path, translationsList) {
             return `<source>${i.toString()}</source>`;
         })
         .replace(
-            /<target state="([^"]*)">((.|\s)+?)<\/target>/g,
+            /<target state="([^"]*)">((.|\s)*?)<\/target>/g,
             (match, m1, m2) => {
                 const i = tl.push(m2) - 1;
                 return `<target state="${m1}">${i.toString()}</target>`;

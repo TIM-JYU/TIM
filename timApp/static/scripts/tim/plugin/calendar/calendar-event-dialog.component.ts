@@ -48,6 +48,17 @@ import {CommonModule} from "@angular/common";
                                    placeholder="Set title"
                                    [disabled]="!isEditEnabled()"/>
                         </div>
+                        <div class="col-sm-3 control-label">
+                            <label i18n for="owner">Owner</label>
+                            <a class="mail-icon" href="mailto:{{ownerEmail}}"><i class="glyphicon glyphicon-envelope"></i></a>
+                        </div>
+                        <div class="col-sm-8">
+                            <input i18n type="text"
+                                   [(ngModel)]="ownerName"
+                                   id="owner" name="owner"
+                                   class="form-control"
+                                   [disabled]="true"/>
+                        </div>
                         <label i18n for="location" class="col-sm-3 control-label">Location</label>
                         <div class="col-sm-8">
                             <input type="text"
@@ -304,6 +315,8 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     protected dialogName = "CalendarEventEdit";
 
     title = "";
+    ownerName = "";
+    ownerEmail = "";
     location = "";
     maxSize = 0;
     sendNotifications = true;
@@ -443,6 +456,8 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         this.description = this.data.meta!.description;
         this.sendNotifications = this.data.meta!.send_notifications;
         this.important = this.data.meta!.important;
+        this.ownerName = this.data.meta!.owner?.name ?? "";
+        this.ownerEmail = this.data.meta!.owner?.email ?? "";
         const startOffset = this.data.start.getTimezoneOffset();
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000

@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from html import escape
 from typing import TYPE_CHECKING, Any, Mapping
 
+from marshmallow import missing
+
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.markdown.markdownconverter import (
@@ -177,13 +179,14 @@ def get_url_macros(
             continue
 
         # TODO: if already value and urlmacros.get(um) then old value wins
-        urlvalue = urlargs.get(um, urlmacros.get(um))
-        if not urlvalue:
+        urlmacro_value = urlmacros.get(um, missing)
+        urlvalue = urlargs.get(um, urlmacro_value)
+        if urlvalue is missing:
             continue
         try:
             uvalue = None
             try:
-                uvalue = float(urlvalue)
+                uvalue = float(urlvalue)  # type: ignore
             except ValueError:
                 pass
             if uvalue is not None:

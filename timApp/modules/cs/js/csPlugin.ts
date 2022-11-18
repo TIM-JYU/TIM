@@ -3490,7 +3490,7 @@ ${fhtml}
             return;
         }
         this.firstTime = false;
-        if (this.type.includes("truthtable")) {
+        if (this.origLanguageType.includes("truthtable")) {
             const truthTable = (await import("./truthTable")).truthTable;
             this.result = truthTable(this.userargs);
             return;

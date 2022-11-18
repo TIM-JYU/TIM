@@ -195,7 +195,8 @@ def get_message_for(
         if s is None:
             continue
 
-        url = f'{d.url}{"#" + par if par else ""}'
+        par_anchor = f"#{par}" if par else ""
+        url = f"{d.url}{par_anchor}"
         if show_names:
             s += f" by {name_str}"
             d.document.insert_preamble_pars()
@@ -205,13 +206,21 @@ def get_message_for(
                 except TimDbException:
                     pass
                 else:
+                    params_dict = {}
+                    url_to_answer = p.notify_type == NotificationType.AnswerAdded
                     if pobj.is_task():
+                        url_to_answer = True
                         task_id = pobj.get_attr("taskId")
-                        params_dict = {"task": task_id, "user": p.user.name}
+                        params_dict |= {"task": task_id}
                         if isinstance(p, AnswerNotification):
                             params_dict |= {"answerNumber": p.answer_number}
+
+                    if url_to_answer:
+                        params_dict |= {"user": p.user.name}
                         params = urllib.parse.urlencode(params_dict)
                         url = f'{d.get_url_for_view("answers")}?{params}'
+                        if "task" not in params_dict:
+                            url += par_anchor
 
         msg += f"{s}: {url}"
 

@@ -198,6 +198,10 @@ export type TIMEventMeta = {
     isExtra: boolean;
     send_notifications: boolean;
     important: boolean;
+    owner?: {
+        name: string;
+        email: string;
+    };
     booker_groups: {
         name: string;
         message: string;
@@ -283,6 +287,9 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     [(viewDate)]="viewDate" 
                     *ngIf="!advancedUI">
             </tim-calendar-minimal-header>
+        </div>
+        <div class="progress" *ngIf="loadingEvents">
+            <div class="progress-bar progress-bar-striped active" role="progressbar" [style.width.%]="100"></div>    
         </div>
         <div [ngSwitch]="viewMode">
             <mwl-calendar-month-view
@@ -377,6 +384,7 @@ export class CalendarComponent
 
     eventTypes: string[] = [];
     selectedEvent: string = "";
+    loadingEvents = false;
 
     /*
     TODO: Checkbox values
@@ -563,6 +571,12 @@ export class CalendarComponent
                 isExtra: false,
                 maxSize: 1, // TODO: temporary solution
                 booker_groups: [],
+                owner: {
+                    name: `${Users.getCurrent().real_name ?? ""} (${
+                        Users.getCurrent().last_name ?? ""
+                    })`,
+                    email: Users.getCurrent().email ?? "",
+                },
                 editEnabled: this.editEnabled,
                 send_notifications: true,
                 important: false,
@@ -670,6 +684,7 @@ export class CalendarComponent
      * @private
      */
     private refresh() {
+        this.loadingEvents = true;
         this.events = [...this.events]; // TODO: Find out what is the purpose of this line
         const now = Date.now();
         this.events.forEach((event) => {
@@ -702,6 +717,7 @@ export class CalendarComponent
             }
             event.color = colors.blue;
         });
+        this.loadingEvents = false;
         this.cdr.detectChanges();
     }
 
@@ -794,6 +810,7 @@ export class CalendarComponent
      * @private
      */
     private async loadEvents() {
+        this.loadingEvents = true;
         const result = await toPromise(
             this.http.get<TIMCalendarEvent[]>("/calendar/events", {
                 params: this.filterParams,
@@ -817,6 +834,7 @@ export class CalendarComponent
                     editEnabled: this.editEnabled,
                     send_notifications: event.meta!.send_notifications,
                     important: event.meta!.important,
+                    owner: event.meta!.owner,
                     signup_before: new Date(event.meta!.signup_before),
                 };
                 event.resizable = {
@@ -907,6 +925,7 @@ export class CalendarComponent
                         send_notifications: event.meta!.send_notifications,
                         important: event.meta!.important,
                         booker_groups: [],
+                        owner: event.meta!.owner,
                         signup_before: new Date(event.meta!.signup_before),
                     },
                     resizable: {
