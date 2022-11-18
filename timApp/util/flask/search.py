@@ -1264,8 +1264,15 @@ def search():
         )
 
     if should_search_titles:
-        title_results, title_result_count, incomplete_search_reason = search_titles(
-            request, title_output, start_time, timeout, user, term_regex
+        title_results, title_result_count, incomplete_search_reason = search_metadata(
+            title_output,
+            "title",
+            request,
+            title_output,
+            start_time,
+            timeout,
+            user,
+            term_regex,
         )
     if should_search_content:
         (
@@ -1276,12 +1283,26 @@ def search():
             request, content_output, start_time, timeout, user, term_regex
         )
     if should_search_tags:
-        tags_results, tags_result_count, incomplete_search_reason = search_tags(
-            request, tags_output, start_time, timeout, user, term_regex
+        tags_results, tags_result_count, incomplete_search_reason = search_metadata(
+            tags_output,
+            "tags",
+            request,
+            tags_output,
+            start_time,
+            timeout,
+            user,
+            term_regex,
         )
     if should_search_paths:
-        paths_results, paths_result_count, incomplete_search_reason = search_paths(
-            request, paths_output, start_time, timeout, user, term_regex
+        paths_results, paths_result_count, incomplete_search_reason = search_metadata(
+            paths_output,
+            "path",
+            request,
+            paths_output,
+            start_time,
+            timeout,
+            user,
+            term_regex,
         )
 
     return json_response(
@@ -1298,6 +1319,105 @@ def search():
             "paths_results": paths_results,
         }
     )
+
+
+def search_metadata(
+    req: Request,
+    grep_output: list,
+    target: str,
+    start_time: float,
+    timeout: float,
+    user: User,
+    term_regex: Pattern[str],
+) -> (list[DocResult], int, str):
+    (
+        query,
+        folder,
+        regex,
+        case_sensitive,
+        search_whole_words,
+        search_owned_docs,
+    ) = get_common_search_params(req)
+
+    relevance_threshold = get_option(req, "relevanceThreshold", default=1, cast=int)
+    ignore_relevance = get_option(req, "ignoreRelevance", default=False, cast=bool)
+    current_doc = ""
+    incomplete_search_reason = ""
+    search_result_count = 0
+    search_results = []
+
+    search_items = parse_search_items(grep_output)
+    if search_items.__class__ is str:
+        log_search_error(
+            search_items,
+            query,
+            current_doc,
+            title=(target is "title"),
+            path=(target is "path"),
+        )
+
+    doc_infos: list[DocInfo] = fetch_search_items(search_items, folder)
+
+    for doc_info in doc_infos:
+        current_doc = doc_info.title
+        try:
+            if is_timeouted(start_time, timeout):
+                incomplete_search_reason = (
+                    f"{target} search exceeded the timeout ({timeout} seconds)."
+                )
+                raise TimeoutError(f"{target} search timeout")
+
+            if not check_with_common_search_params(
+                doc_info,
+                search_owned_docs,
+                user,
+                search_items,
+                ignore_relevance,
+                relevance_threshold,
+            ):
+                continue
+            line_info = search_items[doc_info.id]
+
+            doc_result = DocResult(doc_info)
+
+            search_matches = list(term_regex.finditer(line_info[f"doc_{target}"]))
+            if search_matches:
+                search_match_count = len(search_matches)
+                doc_result.add_title_result(
+                    TitleResult(alt_num_results=search_match_count)
+                )
+                search_result_count += search_match_count
+
+            if doc_result.has_results():
+                search_results.append(doc_result)
+
+        except TimeoutError as e:
+            log_search_error(
+                get_error_message(e),
+                query,
+                current_doc,
+                title=(target is "title"),
+                path=(target is "path"),
+            )
+            return search_results, search_result_count, incomplete_search_reason
+            # return json_response(
+            #     {
+            #         f"{target}_result_count": search_result_count,
+            #         "errors": [],
+            #         "incomplete_search_reason": incomplete_search_reason,
+            #         f"{target}_results": search_results,
+            #     }
+            # )
+        except Exception as e:
+            log_search_error(
+                get_error_message(e),
+                query,
+                current_doc,
+                title=(target is "title"),
+                path=(target is "path"),
+            )
+
+    return search_results, search_result_count, incomplete_search_reason
 
 
 def search_titles(
