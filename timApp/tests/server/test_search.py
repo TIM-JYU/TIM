@@ -446,7 +446,7 @@ class SearchTest(TimRouteTest):
         self.make_admin(self.test_user_1)
         u = self.test_user_1
         self.login_test1()
-        d = self.create_doc()
+        d = self.create_doc(initial_par="Tag test")
         tags = ["dog", "dog2", "cat"]
         self.json_post(
             f"/tags/add/{d.path}",
@@ -464,21 +464,94 @@ class SearchTest(TimRouteTest):
         self.get(
             url,
             expect_status=200,
+            #     expect_content={
+            #         "errors": [],
+            #         "incomplete_search_reason": "",
+            #         "results": [
+            #             {
+            #                 "doc": {
+            #                     "id": d.id,
+            #                     "isFolder": False,
+            #                     "location": d.location,
+            #                     "modified": "just now",
+            #                     "name": d.short_name,
+            #                     "owners": [
+            #                         {"id": self.get_test_user_1_group_id(), "name": u.name}
+            #                     ],
+            #                     "path": d.path,
+            #                     "public": True,
+            #                     "relevance": None,
+            #                     "rights": {
+            #                         "browse_own_answers": True,
+            #                         "can_comment": True,
+            #                         "can_mark_as_read": True,
+            #                         "copy": True,
+            #                         "editable": True,
+            #                         "manage": True,
+            #                         "owner": True,
+            #                         "see_answers": True,
+            #                         "teacher": True,
+            #                     },
+            #                     "tags": [
+            #                         {
+            #                             "block_id": d.id,
+            #                             "expires": None,
+            #                             "name": tags[0],
+            #                             "type": TagType.Regular.value,
+            #                         },
+            #                         {
+            #                             "block_id": d.id,
+            #                             "expires": None,
+            #                             "name": tags[1],
+            #                             "type": TagType.Regular.value,
+            #                         },
+            #                         {
+            #                             "block_id": d.id,
+            #                             "expires": None,
+            #                             "name": tags[2],
+            #                             "type": TagType.Regular.value,
+            #                         },
+            #                     ],
+            #                     "title": d.title,
+            #                     "unpublished": True,
+            #                 },
+            #                 "matching_tags": [
+            #                     {
+            #                         "block_id": d.id,
+            #                         "expires": None,
+            #                         "name": tags[0],
+            #                         "type": TagType.Regular.value,
+            #                     },
+            #                     {
+            #                         "block_id": d.id,
+            #                         "expires": None,
+            #                         "name": tags[1],
+            #                         "type": TagType.Regular.value,
+            #                     },
+            #                 ],
+            #                 "num_results": 2,
+            #             }
+            #         ],
+            #         "tag_result_count": 2,
+            #     },
+            # )
             expect_content={
+                "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
-                "results": [
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 2,
+                "tags_results": [
                     {
                         "doc": {
-                            "id": d.id,
+                            "id": 14,
                             "isFolder": False,
-                            "location": d.location,
+                            "location": "users/test-user-1",
                             "modified": "just now",
-                            "name": d.short_name,
-                            "owners": [
-                                {"id": self.get_test_user_1_group_id(), "name": u.name}
-                            ],
-                            "path": d.path,
+                            "name": "doc7",
+                            "owners": [{"id": 6, "name": "testuser1"}],
+                            "path": "users/test-user-1/doc7",
                             "public": True,
                             "relevance": None,
                             "rights": {
@@ -492,47 +565,19 @@ class SearchTest(TimRouteTest):
                                 "see_answers": True,
                                 "teacher": True,
                             },
-                            "tags": [
-                                {
-                                    "block_id": d.id,
-                                    "expires": None,
-                                    "name": tags[0],
-                                    "type": TagType.Regular.value,
-                                },
-                                {
-                                    "block_id": d.id,
-                                    "expires": None,
-                                    "name": tags[1],
-                                    "type": TagType.Regular.value,
-                                },
-                                {
-                                    "block_id": d.id,
-                                    "expires": None,
-                                    "name": tags[2],
-                                    "type": TagType.Regular.value,
-                                },
-                            ],
-                            "title": d.title,
+                            "title": "document 8",
                             "unpublished": True,
                         },
-                        "matching_tags": [
-                            {
-                                "block_id": d.id,
-                                "expires": None,
-                                "name": tags[0],
-                                "type": TagType.Regular.value,
-                            },
-                            {
-                                "block_id": d.id,
-                                "expires": None,
-                                "name": tags[1],
-                                "type": TagType.Regular.value,
-                            },
-                        ],
-                        "num_results": 2,
+                        "incomplete": False,
+                        "num_par_results": 0,
+                        "num_title_results": 2,
+                        "par_results": [],
+                        "title_results": [{"num_results": 2, "results": []}],
                     }
                 ],
-                "tag_result_count": 2,
+                "title_result_count": 0,
+                "title_results": [],
+                "word_result_count": 0,
             },
         )
 
@@ -542,7 +587,7 @@ class SearchTest(TimRouteTest):
         self.login_test1()
         search_word = "dog"
         uf = f"{self.current_user.get_personal_folder().path}"
-        d = self.create_doc(path=f"{uf}/a/b/dogs-like-bones/c/d")
+        d = self.create_doc(initial_par="Test", path=f"{uf}/a/b/dogs-like-bones/c/d")
         self.get(f"search/createContentFile")
         url = f"search?folder=&query={search_word}&regex=false&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
         self.get(
@@ -552,8 +597,8 @@ class SearchTest(TimRouteTest):
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
-                "title_result_count": 1,
-                "title_results": [
+                "paths_result_count": 1,
+                "paths_results": [
                     {
                         "doc": {
                             "id": d.id,
@@ -582,16 +627,20 @@ class SearchTest(TimRouteTest):
                             "unpublished": True,
                         },
                         "incomplete": False,
-                        "num_par_results": 0,
+                        "title_results": [{"results": [], "num_results": 1}],
                         "num_title_results": 1,
                         "par_results": [],
-                        "title_results": [{"num_results": 1, "results": []}],
-                    }
+                        "num_par_results": 0,
+                    },
                 ],
+                "tags_result_count": 0,
+                "tags_results": [],
+                "title_result_count": 0,
+                "title_results": [],
                 "word_result_count": 0,
             },
         )
-        url = f"search/paths?folder=&query={search_word}&searchWholeWords=True"
+        url = f"search?folder=&query={search_word}&searchWholeWords=True&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
         self.get(
             url,
             expect_status=200,
@@ -599,13 +648,17 @@ class SearchTest(TimRouteTest):
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 0,
             },
         )
         search_word_2 = "dogs"
-        url = f"search/paths?folder=&query={search_word_2}&searchWholeWords=True"
+        url = f"search?folder=&query={search_word_2}&searchWholeWords=True&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
         self.get(
             url,
             expect_status=200,
@@ -613,8 +666,8 @@ class SearchTest(TimRouteTest):
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
-                "title_result_count": 1,
-                "title_results": [
+                "paths_result_count": 1,
+                "paths_results": [
                     {
                         "doc": {
                             "id": d.id,
@@ -643,12 +696,16 @@ class SearchTest(TimRouteTest):
                             "unpublished": True,
                         },
                         "incomplete": False,
-                        "num_par_results": 0,
+                        "title_results": [{"results": [], "num_results": 1}],
                         "num_title_results": 1,
                         "par_results": [],
-                        "title_results": [{"num_results": 1, "results": []}],
-                    }
+                        "num_par_results": 0,
+                    },
                 ],
+                "tags_result_count": 0,
+                "tags_results": [],
+                "title_result_count": 0,
+                "title_results": [],
                 "word_result_count": 0,
             },
         )
