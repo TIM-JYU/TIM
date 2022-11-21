@@ -1,6 +1,6 @@
 """Routes for editing a document."""
 import re
-from dataclasses import dataclass
+from dataclasses import field
 
 from flask import Blueprint, render_template
 from flask import current_app
@@ -17,6 +17,7 @@ from timApp.auth.accesshelper import (
     verify_ownership,
     verify_seeanswers_access,
     has_edit_access,
+    verify_route_access,
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import (
@@ -66,6 +67,7 @@ from timApp.util.flask.requesthelper import (
 )
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.util.utils import get_error_html
+from tim_common.marshmallow_dataclass import dataclass
 
 edit_page = Blueprint("edit_page", __name__, url_prefix="")  # TODO: Better URL prefix.
 
@@ -462,6 +464,7 @@ def par_response(
     filter_return: GlobalParId | None = None,
     partial_doc_pars: bool = False,
     extra_doc_settings: YamlBlock | None = None,
+    for_view: ViewRoute | None = None,
 ):
     """Return a JSON response containing updated paragraphs and updated HTMLs.
 
@@ -477,6 +480,7 @@ def par_response(
     :param partial_doc_pars: If True, assumes that pars list includes partial document (e.g. areas may be incomplete).
                              The option disables some checks that would be otherwise done for full paragraphs.
     :param extra_doc_settings: Extra settings to apply to the paragraph.
+    :param for_view: The view route for which to generate the response. Affects what paragraphs to show.
     :return: JSON object containing HTMLs, JS and CSS dependencies of changed paragraphs.
     """
     user_ctx = user_context_with_logged_in(None)
@@ -493,14 +497,14 @@ def par_response(
         preview = bool(edit_request and edit_request.preview)
     if edit_request:
         view_ctx = ViewContext(
-            edit_request.viewname or ViewRoute.View,
+            for_view or edit_request.viewname or ViewRoute.View,
             preview,
             hide_names_requested=is_hide_names(),
             partial=partial_doc_pars,
         )
     else:
         view_ctx = ViewContext(
-            ViewRoute.View,
+            for_view or ViewRoute.View,
             preview,
             hide_names_requested=is_hide_names(),
             partial=partial_doc_pars,
@@ -923,18 +927,30 @@ def delete_paragraph(doc_id):
     )
 
 
+@dataclass
+class GetUpdatedParsModel:
+    view: ViewRoute = field(default=ViewRoute.View, metadata={"by_value": True})
+
+
 @edit_page.get("/getUpdatedPars/<int:doc_id>")
-def get_updated_pars(doc_id):
+@use_model(GetUpdatedParsModel)
+def get_updated_pars(m: GetUpdatedParsModel, doc_id: int):
     """Gets updated paragraphs that were changed e.g. as the result of adding headings or modifying macros.
 
     :param doc_id: The document id.
+    :param m: Model for arguments
 
     """
     d = get_doc_or_abort(doc_id)
-    verify_view_access(d)
+    verify_route_access(d, m.view)
     d.document.preload_option = PreloadOption.all
     return par_response(
-        [], d, spellcheck=False, update_cache=True, partial_doc_pars=True
+        [],
+        d,
+        spellcheck=False,
+        update_cache=True,
+        partial_doc_pars=True,
+        for_view=m.view,
     )
 
 
