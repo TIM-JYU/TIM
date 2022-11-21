@@ -29,11 +29,12 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import ViewContext, OriginInfo
+from timApp.document.viewcontext import ViewContext, OriginInfo, ViewRoute
 from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
 from timApp.item.item import Item
 from timApp.notification.send_email import send_email
+from timApp.peerreview.util.peerreview_utils import is_peerreview_enabled
 from timApp.plugin.plugin import (
     Plugin,
     find_plugin_from_document,
@@ -711,6 +712,24 @@ def verify_answer_access(
         if not any(a.id == user_id for a in answer.users_all):
             raise AccessDenied("You don't have access to this answer.")
     return answer, tid.doc_id
+
+
+def verify_route_access(
+    doc_info: DocInfo, route: ViewRoute, require: bool = True
+) -> BlockAccess | None:
+    match route:
+        case ViewRoute.Teacher:
+            return verify_teacher_access(doc_info, require=require)
+        case ViewRoute.Answers:
+            return verify_seeanswers_access(doc_info, require=require)
+        case ViewRoute.Review:
+            if not is_peerreview_enabled(doc_info):
+                return None
+            return verify_view_access(doc_info, require=require, check_duration=True)
+        case ViewRoute.View | ViewRoute.Lecture | ViewRoute.Slide | ViewRoute.ShowSlide | ViewRoute.Velp:
+            return verify_view_access(doc_info, require=require, check_duration=True)
+        case _:
+            raise ValueError(f"Unknown route {route}")
 
 
 def check_access_from_field(

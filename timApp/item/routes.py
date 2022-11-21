@@ -22,12 +22,12 @@ from timApp.answer.answers import add_missing_users_from_group, get_points_by_ru
 from timApp.auth.accesshelper import (
     verify_view_access,
     verify_teacher_access,
-    verify_seeanswers_access,
     get_doc_or_abort,
     verify_manage_access,
     AccessDenied,
     ItemLockedException,
     verify_edit_access,
+    verify_route_access,
 )
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
@@ -90,11 +90,10 @@ from timApp.messaging.messagelist.messagelist_utils import (
     MESSAGE_LIST_DOC_PREFIX,
     MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX,
 )
-from timApp.peerreview.peerreview_utils import (
-    generate_review_groups,
+from timApp.peerreview.util.groups import generate_review_groups, PeerReviewException
+from timApp.peerreview.util.peerreview_utils import (
     get_reviews_for_user,
     check_review_grouping,
-    PeerReviewException,
     is_peerreview_enabled,
 )
 from timApp.plugin.plugin import find_task_ids
@@ -502,35 +501,22 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     if m.hide_names is not None:
         session["hide_names"] = m.hide_names
 
-    should_hide_names = False
-
-    if route == ViewRoute.Teacher:
-        if not verify_teacher_access(doc_info, require=False):
-            verify_view_access(doc_info)
-            return redirect(f"/view/{item_path}")
-    elif route == ViewRoute.Answers:
-        if not verify_seeanswers_access(doc_info, require=False):
-            verify_view_access(doc_info)
-            return redirect(f"/view/{item_path}")
-        if not verify_teacher_access(doc_info, require=False):
-            should_hide_names = True
-    elif route == ViewRoute.Review:
-        if not is_peerreview_enabled(doc_info):
-            verify_view_access(doc_info)
-            return redirect(f"/view/{item_path}")
-        if not verify_teacher_access(doc_info, require=False):
-            should_hide_names = True
-
-    access = verify_view_access(doc_info, require=False, check_duration=True)
+    access = verify_route_access(doc_info, route, require=False)
     if not access:
+        if route != ViewRoute.View:
+            verify_view_access(doc_info)
+            return redirect(f"/view/{item_path}")
         if not logged_in():
             return render_login(doc_info.document)
-        else:
-            adm = doc_info.document.get_settings().access_denied_message()
-            raise AccessDenied(*((adm,) if adm else ()))
+        adm = doc_info.document.get_settings().access_denied_message()
+        raise AccessDenied(*((adm,) if adm else ()))
 
     if vp.login and not logged_in():
         return render_login(doc_info.document)
+
+    should_hide_names = False
+    if route == ViewRoute.Review and not verify_teacher_access(doc_info, require=False):
+        should_hide_names = True
 
     current_user = get_current_user_object()
     ug = current_user.get_personal_group()
