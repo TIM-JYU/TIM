@@ -56,7 +56,7 @@ type: text/tiny
 ```
 
 #- {defaultplugin="csPlugin"}
-{#inline1 type: text/tiny #} {#inlinelazy type: text/tiny, lazy: true #} {#inlinelazy2 type: text/tiny, lazy: true #}
+{#inline1 type: text/tiny #} {#inlinelazy1 type: text/tiny, lazy: true #} {#inlinelazy2 type: text/tiny, lazy: true #}
         """
         )
         with self.temp_config({"PLUGIN_COUNT_LAZY_LIMIT": 1}):
@@ -64,26 +64,24 @@ type: text/tiny
             self.wait_until_present_and_vis(
                 f'tim-plugin-loader[task-id="{d.id}.normal"]'
             )
+
+            def check_lazy_plugin(tid: str):
+                self.should_not_exist(
+                    f'tim-plugin-loader[task-id="{d.id}.{tid}"] cs-text-runner'
+                )
+                self.find_element_and_move_to(
+                    f'tim-plugin-loader[task-id="{d.id}.{tid}"]'
+                )
+                self.wait_until_present_and_vis(
+                    f'tim-plugin-loader[task-id="{d.id}.{tid}"] cs-text-runner'
+                )
+
             # Regular plugin is lazy because of the count limit
-            self.should_not_exist(
-                f'tim-plugin-loader[task-id="{d.id}.normal"] cs-text-runner'
-            )
-            self.find_element_and_move_to(f'tim-plugin-loader[task-id="{d.id}.normal"]')
-            self.wait_until_present_and_vis(
-                f'tim-plugin-loader[task-id="{d.id}.normal"] cs-text-runner'
-            )
+            check_lazy_plugin("normal")
             # Inlineplugin is not lazy by default despite the count limit
             self.find_element(
                 f'tim-plugin-loader[task-id="{d.id}.inline1"] cs-text-runner'
             )
             # Explicit lazy: true overrides loading inlineplugins as non-lazy
-            # lazy inlineplugins are currently broken, so we have to use the 2nd lazy plugin in an inline paragraph
-            self.should_not_exist(
-                f'tim-plugin-loader[task-id="{d.id}.inlinelazy2"] cs-text-runner'
-            )
-            self.find_element_and_move_to(
-                f'tim-plugin-loader[task-id="{d.id}.inlinelazy2"]'
-            )
-            self.wait_until_present_and_vis(
-                f'tim-plugin-loader[task-id="{d.id}.inlinelazy2"] cs-text-runner'
-            )
+            check_lazy_plugin("inlinelazy1")
+            check_lazy_plugin("inlinelazy2")

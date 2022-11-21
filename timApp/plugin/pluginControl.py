@@ -756,6 +756,10 @@ def pluginify(
             par = html_pars[idx]
             for plugin_key, plugin_html in par.plugin_htmls.items():
                 h = h.replace(plugin_key, plugin_html)
+            if h.startswith("<p>") and h.endswith("</p>"):
+                # dumbo wraps inline block with <p>-element, but the plugins may be lazy and have <div>-elements,
+                # breaking the <p> and preventing pluginloader from loading the lazy plugins correctly
+                h = h[3:-4]
             par.plugin_htmls = None
             par.output = sanitize_html(h)
     elif output_format == PluginOutputFormat.MD:
