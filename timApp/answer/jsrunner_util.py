@@ -23,7 +23,7 @@ from timApp.messaging.messagelist.messagelist_utils import (
     UserGroupDiff,
     sync_usergroup_messagelist_members,
 )
-from timApp.peerreview.peerreview_utils import change_peerreviewers_for_user
+from timApp.peerreview.util.peerreview_utils import change_peerreviewers_for_user
 from timApp.plugin.importdata.importData import MissingUser, MissingUserSchema
 from timApp.plugin.plugin import TaskNotFoundException, CachedPluginFinder
 from timApp.plugin.pluginexception import PluginException

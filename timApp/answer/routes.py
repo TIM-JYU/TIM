@@ -85,7 +85,7 @@ from timApp.markdown.markdownconverter import md_to_html
 from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
 from timApp.notification.send_email import multi_send_email
-from timApp.peerreview.peerreview_utils import (
+from timApp.peerreview.util.peerreview_utils import (
     has_review_access,
     get_reviews_for_user,
     is_peerreview_enabled,
