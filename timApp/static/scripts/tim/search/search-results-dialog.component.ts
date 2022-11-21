@@ -73,17 +73,18 @@ enum SortOption {
                                 <i class="glyphicon" [ngClass]="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
                                    title="Toggle preview" style="width:1.3em;" i18n-title></i></a>
                             <span title="Note: hidden elements can affect the result count" i18n-title>
-                <a href="/view/{{r.result.doc.path}}"
-                   title="Open {{r.result.doc.title}}" i18n-title> {{r.result.doc.title}}</a> {{r.result.doc.path}}
-                                <i> ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <span
-                                        *ngIf="r.result.incomplete" i18n>or more matches</span>
-                <ng-container *ngIf="!r.result.incomplete"
-                              [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.num_tag_results">
-                            <ng-template ngPluralCase="=1" i18n>match</ng-template>
-                            <ng-template ngPluralCase="other" i18n>matches</ng-template>
-                </ng-container>)
+                                <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}" i18n-title> {{r.result.doc.title}}</a>
+                                {{r.result.doc.path}}
+                                <i> ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results + r.num_path_results}}
+                                    <span *ngIf="r.result.incomplete" i18n>or more matches</span>
+                                    <ng-container *ngIf="!r.result.incomplete"
+                                                  [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.num_tag_results + r.num_path_results">
+                                    <ng-template ngPluralCase="=1" i18n>match</ng-template>
+                                    <ng-template ngPluralCase="other" i18n>matches</ng-template>
+                                    </ng-container>
+                                    )
                                 </i>
-                </span>
+                            </span>
                             <ul *ngIf="!r.closed">
                                 <ng-container *ngFor="let p of r.result.par_results">
                                     <li *ngIf="p.preview">
