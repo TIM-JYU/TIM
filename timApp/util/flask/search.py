@@ -538,6 +538,7 @@ def add_doc_info_path_line(doc_id: int) -> str | None:
     :param doc_id: Document id.
     :return: String with doc data.
     """
+    target = "path"
     doc_info = DocEntry.find_by_id(
         doc_id, docentry_load_opts=docentry_eager_relevance_opt
     )
@@ -546,7 +547,15 @@ def add_doc_info_path_line(doc_id: int) -> str | None:
     doc_relevance = get_document_relevance(doc_info)
     return (
         json.dumps(
-            {"doc_id": doc_id, "d_r": doc_relevance, "doc_path": doc_info.path},
+            {
+                "doc_id": doc_id,
+                "d_r": doc_relevance,
+                "doc_path": doc_info.path
+                if target == "path"
+                else doc_info.title
+                if target == "title"
+                else doc_info,
+            },
             ensure_ascii=False,
         )
         + "\n"
@@ -579,6 +588,43 @@ def add_doc_info_tags_line(doc_id: int) -> str | None:
         return None
 
 
+def add_doc_info_metadata_line(doc_id: int, target: str) -> str | None:
+    """
+    Forms a JSON-compatible string with doc id, relevance and metadata.
+
+    :param doc_id: Document id.
+    :param target: Search target (title, path, tags)
+    :return: String with doc data.
+    """
+    doc_info = DocEntry.find_by_id(
+        doc_id, docentry_load_opts=docentry_eager_relevance_opt
+    )
+    if not doc_info:
+        return None
+    doc_relevance = get_document_relevance(doc_info)
+
+    match target:
+        case "title":
+            metadata = doc_info.title
+        case "path":
+            metadata = doc_info.path
+        case "tags":
+            metadata = " ".join([tag.name for tag in doc_info.block.tags])
+        case _:
+            metadata = None
+
+    if metadata is not None:
+        return (
+            json.dumps(
+                {"doc_id": doc_id, "d_r": doc_relevance, f"doc_{target}": metadata},
+                ensure_ascii=False,
+            )
+            + "\n"
+        )
+    else:
+        return None
+
+
 def get_doc_par_id(line: str) -> tuple[int, str, str] | None:
     """
     Takes doc id, par id and par data from one grep search result line.
@@ -597,7 +643,7 @@ def get_doc_par_id(line: str) -> tuple[int, str, str] | None:
         return None
 
 
-def create_search_files(remove_deleted_pars=True):
+def create_search_files(remove_deleted_pars=True) -> tuple[int, str]:
     """
     Groups all TIM-paragraphs under documents and combines them into a single file.
     Creates also a similar file for title searches and a raw file without grouping.
@@ -717,21 +763,21 @@ def create_search_files(remove_deleted_pars=True):
 
         return (
             200,
-            f"Combined and processed index files created to "
-            f"  {PROCESSED_CONTENT_FILE_PATH}, "
-            f"  {PROCESSED_TITLE_FILE_PATH}, "
-            f"  {PROCESSED_PATHS_FILE_PATH} and "
+            f"Combined and processed index files created to \n"
+            f"  {PROCESSED_CONTENT_FILE_PATH}, \n"
+            f"  {PROCESSED_TITLE_FILE_PATH}, \n"
+            f"  {PROCESSED_PATHS_FILE_PATH} and \n"
             f"  {PROCESSED_TAGS_FILE_PATH}",
         )
     except Exception as e:
         return (
             400,
-            f"Creating files to "
-            f"  {PROCESSED_CONTENT_FILE_PATH}, "
-            f"  {PROCESSED_TITLE_FILE_PATH}, "
-            f"  {PROCESSED_PATHS_FILE_PATH} and "
-            f"  {PROCESSED_TAGS_FILE_PATH}",
-            f"failed: {get_error_message(e)}!",
+            f"Creating files to \n"
+            f"  {PROCESSED_CONTENT_FILE_PATH}, \n"
+            f"  {PROCESSED_TITLE_FILE_PATH}, \n"
+            f"  {PROCESSED_PATHS_FILE_PATH} and \n"
+            f"  {PROCESSED_TAGS_FILE_PATH} \n"
+            f" failed: {get_error_message(e)}!",
         )
 
 
