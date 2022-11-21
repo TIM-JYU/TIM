@@ -648,14 +648,14 @@ def create_search_files(remove_deleted_pars=True):
             "w+", encoding="utf-8"
         ) as index_log_file:
 
-            current_doc, current_pars = -1, []
+            current_doc, current_pars = None, []
 
             for line in raw_file:
                 try:
                     doc_id, par_id, par = get_doc_par_id(line)
                     if not doc_id:
                         continue
-                    if not current_doc:
+                    if current_doc is None:
                         current_doc = doc_id
                     # If same doc as previous line or the first, just add par data to list.
                     if current_doc == doc_id:
@@ -690,6 +690,8 @@ def create_search_files(remove_deleted_pars=True):
                     current_doc, current_pars, remove_deleted_pars
                 )
                 new_title_line = add_doc_info_title_line(current_doc)
+                new_paths_line = add_doc_info_path_line(current_doc)
+                new_tags_line = add_doc_info_tags_line(current_doc)
                 if new_content_line:
                     temp_content_file.write(new_content_line)
                 if new_title_line:
@@ -1304,16 +1306,16 @@ def search():
 
     return json_response(
         {
-            "title_result_count": title_result_count,
-            "word_result_count": word_result_count,
-            "tags_result_count": tags_result_count,
-            "paths_result_count": paths_result_count,
+            "content_results": content_results,
             "errors": [],
             "incomplete_search_reason": incomplete_search_reason,
-            "title_results": title_results,
-            "content_results": content_results,
-            "tags_results": tags_results,
+            "paths_result_count": paths_result_count,
             "paths_results": paths_results,
+            "tags_result_count": tags_result_count,
+            "tags_results": tags_results,
+            "title_result_count": title_result_count,
+            "title_results": title_results,
+            "word_result_count": word_result_count,
         }
     )
 
@@ -1402,14 +1404,7 @@ def search_metadata(
                 path=(target == "path"),
             )
             return search_results, search_result_count, incomplete_search_reason
-            # return json_response(
-            #     {
-            #         f"{target}_result_count": search_result_count,
-            #         "errors": [],
-            #         "incomplete_search_reason": incomplete_search_reason,
-            #         f"{target}_results": search_results,
-            #     }
-            # )
+
         except Exception as e:
             log_search_error(
                 get_error_message(e),
@@ -1810,10 +1805,10 @@ def search_paths(
             log_search_error(get_error_message(e), query, current_doc, path=True)
             return json_response(
                 {
-                    "tags_result_count": paths_result_count,
+                    "path_result_count": paths_result_count,
                     "errors": [],
                     "incomplete_search_reason": incomplete_search_reason,
-                    "tags_results": paths_results,
+                    "path_results": paths_results,
                 }
             )
         except Exception as e:
