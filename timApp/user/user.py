@@ -180,6 +180,7 @@ class UserOrigin(Enum):
     Facebook = 7
     Google = 8
     Twitter = 9
+    StudyInfo = 10
 
     def to_contact_origin(self):
         if self == UserOrigin.Email:
@@ -188,6 +189,8 @@ class UserOrigin(Enum):
             return ContactOrigin.Haka
         elif self == UserOrigin.Sisu:
             return ContactOrigin.Sisu
+        elif self == UserOrigin.StudyInfo:
+            return ContactOrigin.StudyInfo
         return ContactOrigin.Custom
 
 

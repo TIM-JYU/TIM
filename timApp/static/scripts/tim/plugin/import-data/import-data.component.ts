@@ -18,6 +18,7 @@ import {
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CommonModule} from "@angular/common";
+import {documentglobals} from "tim/util/globals";
 
 const StudentInfoImport = t.type({
     enable: t.boolean,
@@ -251,8 +252,7 @@ export class ImportDataComponent extends AngularPluginBase<
     async importStudentInfo() {
         const r = await toPromise(
             this.http.post("/importData/studentInfo/import", {
-                username: this.studentInfoData.username,
-                password: this.studentInfoData.password,
+                doc_id: documentglobals().curr_item.id.toString(),
             })
         );
         console.log(r.result);

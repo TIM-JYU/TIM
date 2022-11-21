@@ -12,13 +12,14 @@ from flask import render_template_string, jsonify, Response
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
+from timApp.document.docinfo import DocInfo
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
-from timApp.studyinfo.applications import get_student_applications
+from timApp.studyinfo.applications import import_students, ImportRequest
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import widen_fields
 from tim_common.markupmodels import GenericMarkupModel
@@ -313,11 +314,17 @@ def answer_route(args: ImportDataAnswerModel) -> Response:
 
 
 @import_data_plugin.post("/studentInfo/import")
-def import_student_info(username: str, password: str) -> Response:
-    res = get_student_applications(
-        "1.2.246.562.29.00000000000000002821", "16383535117446383119907563335870"
+def import_student_info(doc_id: str) -> Response:
+    import_students(
+        DocInfo.find_by_id(doc_id),
+        [
+            ImportRequest(
+                applications_oid="1.2.246.562.29.00000000000000002821",
+                selection_phase_oid="16383535117446383119907563335870",
+            )
+        ],
     )
-    return json_response(res)
+    return ok_response()
 
 
 def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:

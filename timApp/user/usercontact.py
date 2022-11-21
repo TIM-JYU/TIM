@@ -13,6 +13,7 @@ class ContactOrigin(Enum):
     Custom = 1
     Sisu = 2
     Haka = 3
+    StudyInfo = 4
 
 
 NO_AUTO_VERIFY_ORIGINS = {ContactOrigin.Custom}
