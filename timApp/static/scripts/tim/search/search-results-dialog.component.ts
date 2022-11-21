@@ -21,7 +21,7 @@ export interface ISearchResultDisplay {
     closed: boolean; // Whether this is shown collapsed or not.
     tags: ITag[];
     num_tag_results: number; // Same tag may contain the search word more than once.
-    num_path_results?: number;
+    num_path_results: number;
 }
 
 enum SortOption {
@@ -245,10 +245,11 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
         // Combine title and tag results with existing content results.
         for (const r of this.results) {
             const newDisplayResult: ISearchResultDisplay = {
-                closed: true,
-                num_tag_results: 0,
                 result: r,
+                closed: true,
                 tags: [],
+                num_tag_results: 0,
+                num_path_results: 0,
             };
             // Add tags to existing word search result objects.
             for (const t of this.tagResults) {
@@ -375,7 +376,8 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                     let matches = -(
                         r.result.num_par_results +
                         r.num_tag_results +
-                        r.result.num_title_results
+                        r.result.num_title_results +
+                        r.num_path_results
                     );
                     // Show "x or more matches" before "x matches".
                     if (r.result.incomplete) {
@@ -389,7 +391,8 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                     let matches = -(
                         r.result.num_par_results +
                         r.num_tag_results +
-                        r.result.num_title_results
+                        r.result.num_title_results +
+                        r.num_path_results
                     );
                     // Show "x or more matches" before "x matches".
                     if (r.result.incomplete) {
