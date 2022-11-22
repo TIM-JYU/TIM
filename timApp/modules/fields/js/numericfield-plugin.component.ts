@@ -119,7 +119,7 @@ const NumericfieldAll = t.intersection([
     </button>
     <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event);">{{undoButton}}</a>
     <p class="savedtext" *ngIf="!hideSavedText && hasButton()">Saved!</p>
-    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </div> `,
     styleUrls: ["./numericfield-plugin.component.scss"],
 })

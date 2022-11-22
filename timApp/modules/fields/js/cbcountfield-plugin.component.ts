@@ -92,7 +92,7 @@ const CbcountfieldAll = t.intersection([
         {{buttonText()}}
         </button>
     <!-- <p class="savedtext" *ngIf="!hideSavedText && buttonText()">Saved!</p> -->
-    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </div>
 `,
     styleUrls: ["./cbcountfield-plugin.component.scss"],

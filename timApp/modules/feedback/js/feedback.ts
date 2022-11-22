@@ -144,7 +144,7 @@ const FeedbackAll = t.intersection([
         <p>Feedback: <span [innerHtml]="attrsall.state.feedback | purify"></span></p>
         <p>Correct answer: <span [innerHtml]="attrsall.state.correct_answer | purify"></span></p>
     </div>
-    <p *ngIf="footer" [innerText]="footer | purify"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify"></p>
 </div>
 `,
 })
