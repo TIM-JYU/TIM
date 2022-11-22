@@ -82,21 +82,36 @@ class TextfieldAnswerModel(
 def render_static_textfield(m: TextfieldHtmlModel) -> str:
     return render_template_string(
         """
-<div>
-<h4>{{ header or '' }}</h4>
-<p class="stem">{{ stem or '' }}</p>
-<div><label>{{ inputstem or '' }} <span>
-<input type="text"
-class="form-control"
-placeholder="{{ inputplaceholder or '' }}"
-size="{{cols}}"></span></label>
-</div>
-<button class="timButton">
-{{ buttonText or button or "Save" }}
-</button>
-<a>{{ resetText }}</a>
-<p class="plgfooter">{{ '' }}</p>
-</div>""".strip(),
+<div class="textfieldNoSaveDiv inline-form">
+    {% if header %}<h4>{{ header }}</h4>{% endif %}
+    {% if stem %}<p class="stem" style="margin-left: auto; {% if not textarea %} margin-bottom: 0em;{% endif %}" >{{stem}}</p>{% endif %}
+    <form #f class="form-inline">
+     <label><span>
+        {% if inputstem %}<span>{{inputstem}}</span> {% endif %}
+        {% if not textarea %}
+        <input type="text"
+            class="form-control"
+            placeholder="{{inputplaceholder or ''}}"
+            style="width:{{cols or 6}}em; height: 2em">
+        {% endif %}
+        {% if textarea %}
+        <textarea
+            class="form-control"
+            placeholder="{{ inputplaceholder or '' }}"
+            rows="{{rows or 1}}"
+            style="width:{{cols or 6}}em; height: 2em;">
+        </textarea>
+        {% endif %}
+     </span></label>
+    </form>
+    {% if buttonText or button %}
+    <button class="timButton">
+    {{ buttonText or button or "Save" }}
+    </button>
+    {% endif %}
+    {% if footer %}<p class="plgfooter">{{ footer }}</p>{% endif %}
+ </div>
+""".strip(),
         **asdict(m.markup),
     )
 
