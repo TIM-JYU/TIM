@@ -92,7 +92,7 @@ const CbfieldAll = t.intersection([
             (click)="saveText()">
         {{buttonText()}}
         </button>
-    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </div>
 `,
     styleUrls: ["./cbfield-plugin.component.scss"],

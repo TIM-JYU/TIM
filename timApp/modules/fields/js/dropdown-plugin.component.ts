@@ -108,7 +108,7 @@ const DropdownAll = t.intersection([
             (click)="save()">
         {{buttonText()}}
     </button>
-    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </div>`,
     styleUrls: ["./dropdown-plugin.component.scss"],
 })

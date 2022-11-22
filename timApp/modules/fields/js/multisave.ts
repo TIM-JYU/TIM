@@ -28,6 +28,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 import {slugify} from "tim/util/slugify";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {PurifyModule} from "tim/util/purify.module";
 import {
     GroupType,
     SisuAssessmentExportModule,
@@ -113,7 +114,7 @@ const multisaveAll = t.intersection([
     </button>
     <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
     </div>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </span>
     `,
     styleUrls: ["./multisave.component.scss"],
@@ -469,6 +470,7 @@ export class MultisaveComponent
         FormsModule,
         TimUtilityModule,
         SisuAssessmentExportModule,
+        PurifyModule,
     ],
 })
 export class MultisaveModule implements DoBootstrap {

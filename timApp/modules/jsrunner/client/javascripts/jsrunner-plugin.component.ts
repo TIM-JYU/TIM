@@ -61,7 +61,7 @@ import {
     </p>
     <pre >{{output}}</pre>
     </div>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
     <div *ngIf="isFieldHelper()">
     <p *ngIf="!isopen" (click)="toggleFieldHelper()" >+ Show field list</p>
     <p *ngIf="isopen" (click)="toggleFieldHelper()">- Hide field list</p>
