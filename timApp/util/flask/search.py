@@ -79,7 +79,7 @@ def get_subfolders(m: GetFoldersModel):
     return json_response(folders_viewable)
 
 
-def get_common_search_params(req) -> tuple[str, str, bool, bool, bool, bool]:
+def get_common_search_params(req: Request) -> tuple[str, str, bool, bool, bool, bool]:
     """
     Picks parameters that are common in the search routes from a request.
 
@@ -136,7 +136,7 @@ def log_search_error(
 
 def preview_result(
     md: str,
-    query,
+    query: str,
     m: Match[str],
     snippet_length: int = PREVIEW_LENGTH,
     max_length: int = PREVIEW_MAX_LENGTH,
@@ -1123,6 +1123,7 @@ def is_timeouted(start_time: float, timeout: float) -> bool:
 def parse_search_items(output_file: list) -> dict | str:
     """
     Parses a list of search items
+
     :param output_file: list of search items
     :return: dictionary of the search items, or an error message
     """
@@ -1141,9 +1142,10 @@ def parse_search_items(output_file: list) -> dict | str:
 def fetch_search_items(search_items: dict, search_folder: str) -> list[DocInfo]:
     """
     Fetches entries from the database based on the keys of search items.
+
     :param search_items: dictionary of the search items
     :param search_folder: folder path that the search is limited to
-    :return:
+    :return: list of DocInfo objects
     """
     doc_infos: list[DocInfo] = DocEntry.query.filter(
         (DocEntry.id.in_(search_items.keys()))
@@ -1162,6 +1164,7 @@ def check_with_common_search_params(
 ) -> bool:
     """
     Checks for common search parameters/options
+
     :param doc: The current DocInfo object being checked
     :param search_owned: Whether search should only search in the user's own documents
     :param user: The current user
@@ -1196,6 +1199,7 @@ def grep_search_file(
 ) -> list[str]:
     """
     Helper function to grep the specified (text) file
+
     :param cmd: command to process, along with its arguments
     :param search_file_path: (text) file to process
     :param search_type: type of search to perform, dictated by a Request from the UI
@@ -1375,6 +1379,19 @@ def search_metadata(
     user: User,
     term_regex: Pattern[str],
 ) -> (list[DocResult], int, str):
+    """
+    Collates search results for a type of search in a search index
+
+    :param req: search request containing search options
+    :param grep_output: temporary in-memory search index
+    :param target: type of search ("content", "title", "path" or "tags")
+    :param start_time: start time of the search process in seconds
+    :param timeout: timeout limit for the search process
+    :param user: current user object
+    :param term_regex: regular expression pattern to use for the search
+    :return: search results as a tuple: results, result count and search abort reason, if search was aborted or timed out
+    """
+
     (
         query,
         folder,
@@ -1549,6 +1566,18 @@ def search_content(
     user: User,
     term_regex: Pattern[str],
 ) -> (list[DocResult], int, str):
+    """
+    Collates search results for document content search
+
+    :param req: search request containing search options
+    :param content_output: temporary in-memory content search index
+    :param start_time: start time of the search process in seconds
+    :param timeout: timeout limit for the search process
+    :param user: current user object
+    :param term_regex: regular expression pattern to use for the search
+    :return: search results as a tuple: results, result count and search abort reason, if search was aborted or timed out
+    """
+
     (
         query,
         folder,
@@ -1578,9 +1607,22 @@ def search_content(
             except Exception as e:
                 log_search_error(get_error_message(e), query, current_doc)
 
-    doc_infos: list[DocInfo] = DocEntry.query.filter(
-        (DocEntry.id.in_(content_items.keys())) & (DocEntry.name.like(folder + "%"))
-    ).options(joinedload(DocEntry._block).joinedload(Block.relevance))
+    # doc_infos: list[DocInfo] = DocEntry.query.filter(
+    #     (DocEntry.id.in_(content_items.keys())) & (DocEntry.name.like(folder + "%")) & DocEntry.
+    # ).options(joinedload(DocEntry._block).joinedload(Block.relevance))
+
+    doc_infos: list[DocInfo] = fetch_search_items(content_items, folder)
+    # filter content search documents by view access and ownership (if that option was specified) here
+    # instead of doing database accesses inside the search loop
+    if search_owned_docs:
+        doc_infos = list(
+            doc_info
+            for doc_info in doc_infos
+            if has_view_access(doc_info)
+            and user.has_ownership(doc_info, allow_admin=False)
+        )
+    else:
+        doc_infos = list(filter(has_view_access, doc_infos))
 
     for doc_info in doc_infos:
         current_doc = doc_info.title
@@ -1592,13 +1634,13 @@ def search_content(
                 raise TimeoutError("content search timeout")
 
             # If not allowed to view, continue to the next one.
-            if not has_view_access(doc_info):
-                continue
+            # if not has_view_access(doc_info):
+            #     continue
 
             # Skip if searching only owned and it's not owned.
-            if search_owned_docs:
-                if not user.has_ownership(doc_info, allow_admin=False):
-                    continue
+            # if search_owned_docs:
+            #     if not user.has_ownership(doc_info, allow_admin=False):
+            #         continue
 
             # If relevance is ignored or not found from search file, skip check.
             line_info = content_items[doc_info.id]
