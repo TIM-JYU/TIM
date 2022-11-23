@@ -7798,6 +7798,14 @@
           <context context-type="linenumber">192</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4444788610071063402" datatype="html">
+        <source>Browse TIM messages</source>
+        <target state="translated">Selaa TIM-viestejä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">242,243</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
