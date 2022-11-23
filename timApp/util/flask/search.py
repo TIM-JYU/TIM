@@ -1253,6 +1253,7 @@ def search():
     timeout = get_option(request, "timeout", default=120, cast=int)
 
     start_time = time.time()
+    total_search_time = time.time_ns()
 
     validate_query(query, search_whole_words)
 
@@ -1353,6 +1354,10 @@ def search():
             user,
             term_regex,
         )
+
+    log_info(
+        f"Search for '{query}' took {(total_search_time - time.time_ns()) / 1000000} milliseconds."
+    )
 
     return json_response(
         {
