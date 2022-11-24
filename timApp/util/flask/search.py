@@ -1356,7 +1356,7 @@ def search():
         )
 
     log_info(
-        f"Search for '{query}' took {(total_search_time - time.time_ns()) / 1000000} milliseconds."
+        f"Search for '{query}' took {(time.time_ns() - total_search_time) / 1000000} milliseconds."
     )
 
     return json_response(
