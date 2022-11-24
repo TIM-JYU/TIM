@@ -711,9 +711,11 @@ def create_search_files(remove_deleted_pars=True) -> tuple[int, str]:
                         new_content_line = add_doc_info_content_line(
                             current_doc, current_pars, remove_deleted_pars
                         )
-                        new_title_line = add_doc_info_title_line(current_doc)
-                        new_paths_line = add_doc_info_path_line(current_doc)
-                        new_tags_line = add_doc_info_tags_line(current_doc)
+                        new_title_line = add_doc_info_metadata_line(
+                            current_doc, "title"
+                        )
+                        new_paths_line = add_doc_info_metadata_line(current_doc, "path")
+                        new_tags_line = add_doc_info_metadata_line(current_doc, "tags")
                         if new_content_line:
                             temp_content_file.write(new_content_line)
                         if new_title_line:
@@ -735,9 +737,9 @@ def create_search_files(remove_deleted_pars=True) -> tuple[int, str]:
                 new_content_line = add_doc_info_content_line(
                     current_doc, current_pars, remove_deleted_pars
                 )
-                new_title_line = add_doc_info_title_line(current_doc)
-                new_paths_line = add_doc_info_path_line(current_doc)
-                new_tags_line = add_doc_info_tags_line(current_doc)
+                new_title_line = add_doc_info_metadata_line(current_doc, "title")
+                new_paths_line = add_doc_info_metadata_line(current_doc, "path")
+                new_tags_line = add_doc_info_metadata_line(current_doc, "tags")
                 if new_content_line:
                     temp_content_file.write(new_content_line)
                 if new_title_line:
@@ -1120,12 +1122,12 @@ def is_timeouted(start_time: float, timeout: float) -> bool:
     return elapsed_time > timeout
 
 
-def parse_search_items(output_file: list) -> dict | str:
+def parse_search_items(output_file: list) -> dict:
     """
-    Parses a list of search items
+    Parses a list of search items.
 
-    :param output_file: list of search items
-    :return: dictionary of the search items, or an error message
+    :param output_file: list of search items.
+    :return: dictionary of the search items.
     """
     output_items = {}
     for line in output_file:
@@ -1134,8 +1136,9 @@ def parse_search_items(output_file: list) -> dict | str:
                 line = json.loads(line)
                 output_items[line["doc_id"]] = line
             except Exception as e:
-                return f"Exception while parsing output items: {get_error_message(e)}"
-                # return get_error_message(e)
+                raise Exception(
+                    f"Exception while parsing search items: {get_error_message(e)}"
+                )
     return output_items
 
 
@@ -1154,44 +1157,73 @@ def fetch_search_items(search_items: dict, search_folder: str) -> list[DocInfo]:
     return doc_infos
 
 
-def check_with_common_search_params(
-    doc: DocInfo,
-    search_owned: bool,
-    user: User,
-    search_items: dict,
-    ignore_relevance: bool,
-    relevance_threshold: int,
-) -> bool:
+def is_relevant(doc: DocInfo, search_items: dict, relevance_threshold: int) -> bool:
     """
-    Checks for common search parameters/options
+    Checks that document relevance value is above the minimum defined in search options
 
     :param doc: The current DocInfo object being checked
-    :param search_owned: Whether search should only search in the user's own documents
-    :param user: The current user
     :param search_items: Dictionary of pre-indexed search items
-    :param ignore_relevance: Whether documents' relevance values should be ignored
     :param relevance_threshold: Minimum relevance value for the document to be included in search results
-    :return: Boolean indicating whether all checks passed, or timeout message
+    :return: True if relevance was above minimum, False otherwise
     """
-    # If not allowed to view, continue to the next one.
-    if not has_view_access(doc):
-        return False
-    # Skip if searching only owned and it's not owned.
-    if search_owned:
-        if not user.has_ownership(doc, allow_admin=False):
-            return False
+
     # If relevance is ignored or not found from search file, skip check.
     line_info = search_items[doc.id]
-    if not ignore_relevance:
-        try:
-            relevance = line_info["d_r"]
-        except KeyError:
-            pass
-        else:
-            # Leave documents with excluded relevance out of the results.
-            if is_excluded(relevance, relevance_threshold):
-                return False
+    try:
+        relevance = line_info["d_r"]
+        return relevance >= relevance_threshold
+    except KeyError:
+        pass
+    # if document doesn't have a relevance value set, include it in search results
     return True
+
+
+def filter_search_documents(
+    doc_infos: list[DocInfo],
+    search_items: dict,
+    user: User,
+    search_owned_docs: bool,
+    ignore_relevance: bool,
+    relevance_threshold: int,
+) -> list[DocInfo]:
+    """
+    Filters a list of DocInfo objects based on view access, ownership (if specified) and relevance value
+    :param doc_infos: list of DocInfo objects to filter
+    :param search_items: dictionary of pre-indexed search items
+    :param user: current user
+    :param search_owned_docs: whether the user's own documents should be included in the search process
+    :param ignore_relevance: whether documents' relevance values should affect search results
+    :param relevance_threshold: threshold value for document relevance check
+    :return: list of filtered DocInfo objects
+    """
+    docs = []
+    if search_owned_docs:
+        if not ignore_relevance:
+            docs = list(
+                doc_info
+                for doc_info in doc_infos
+                if has_view_access(doc_info)
+                and user.has_ownership(doc_info, allow_admin=False)
+                and is_relevant(doc_info, search_items, relevance_threshold)
+            )
+        else:
+            docs = list(
+                doc_info
+                for doc_info in doc_infos
+                if has_view_access(doc_info)
+                and user.has_ownership(doc_info, allow_admin=False)
+            )
+    else:
+        if not ignore_relevance:
+            docs = list(
+                doc_info
+                for doc_info in doc_infos
+                if has_view_access(doc_info)
+                and is_relevant(doc_info, search_items, relevance_threshold)
+            )
+        else:
+            docs = list(filter(has_view_access, doc_infos))
+    return docs
 
 
 def grep_search_file(
@@ -1413,10 +1445,12 @@ def search_metadata(
     search_result_count = 0
     search_results = []
 
-    search_items = parse_search_items(grep_output)
-    if search_items.__class__ is str:
+    search_items = {}
+    try:
+        search_items = parse_search_items(grep_output)
+    except Exception as e:
         log_search_error(
-            search_items,
+            get_error_message(e),
             query,
             current_doc,
             title=(target == "title"),
@@ -1424,6 +1458,14 @@ def search_metadata(
         )
 
     doc_infos: list[DocInfo] = fetch_search_items(search_items, folder)
+    doc_infos = filter_search_documents(
+        doc_infos,
+        search_items,
+        user,
+        search_owned_docs,
+        ignore_relevance,
+        relevance_threshold,
+    )
 
     for doc_info in doc_infos:
         current_doc = doc_info.title
@@ -1434,23 +1476,8 @@ def search_metadata(
                 )
                 raise TimeoutError(f"{target} search timeout")
 
-            if not check_with_common_search_params(
-                doc_info,
-                search_owned_docs,
-                user,
-                search_items,
-                ignore_relevance,
-                relevance_threshold,
-            ):
-                continue
             line_info = search_items[doc_info.id]
-
             doc_result = DocResult(doc_info)
-
-            # Join tag names in collating function (add_doc_info_tags_line) so we don't have to have this special case
-            # line_item = line_info[f"doc_{target}"]
-            # if target == "tags":
-            #     line_item = " ".join(line_info["doc_tags"])
 
             search_matches = list(term_regex.finditer(line_info[f"doc_{target}"]))
             if search_matches:
@@ -1483,84 +1510,6 @@ def search_metadata(
             )
 
     return search_results, search_result_count, incomplete_search_reason
-
-
-def search_titles(
-    req: Request,
-    title_output: list,
-    start_time: float,
-    timeout: float,
-    user: User,
-    term_regex: Pattern[str],
-) -> (list[DocResult], int, str):
-    (
-        query,
-        folder,
-        regex,
-        case_sensitive,
-        search_whole_words,
-        search_owned_docs,
-    ) = get_common_search_params(req)
-    relevance_threshold = get_option(req, "relevanceThreshold", default=1, cast=int)
-    ignore_relevance = get_option(req, "ignoreRelevance", default=False, cast=bool)
-    current_doc = ""
-    incomplete_search_reason = ""
-    title_result_count = 0
-    title_results = []
-
-    title_items = parse_search_items(title_output)
-    if title_items.__class__ is str:
-        log_search_error(title_items, query, current_doc, title=True)
-
-    doc_infos: list[DocInfo] = fetch_search_items(title_items, folder)
-
-    for doc_info in doc_infos:
-        current_doc = doc_info.title
-        try:
-            if is_timeouted(start_time, timeout):
-                incomplete_search_reason = (
-                    f"title search exceeded the timeout ({timeout} seconds)"
-                )
-                raise TimeoutError("title search timeout")
-
-            if not check_with_common_search_params(
-                doc_info,
-                search_owned_docs,
-                user,
-                title_items,
-                ignore_relevance,
-                relevance_threshold,
-            ):
-                continue
-            line_info = title_items[doc_info.id]
-
-            doc_result = DocResult(doc_info)
-
-            title_matches = list(term_regex.finditer(line_info["doc_title"]))
-            if title_matches:
-                title_match_count = len(title_matches)
-                doc_result.add_title_result(
-                    TitleResult(alt_num_results=title_match_count)
-                )
-                title_result_count += title_match_count
-
-            if doc_result.has_results():
-                title_results.append(doc_result)
-
-        except TimeoutError as e:
-            log_search_error(get_error_message(e), query, current_doc, title=True)
-            return json_response(
-                {
-                    "title_result_count": title_result_count,
-                    "errors": [],
-                    "incomplete_search_reason": incomplete_search_reason,
-                    "title_results": title_results,
-                }
-            )
-        except Exception as e:
-            log_search_error(get_error_message(e), query, current_doc, title=True)
-
-    return title_results, title_result_count, incomplete_search_reason
 
 
 def search_content(
@@ -1604,30 +1553,39 @@ def search_content(
     content_results = []
 
     content_items = {}
-    for line in content_output:
-        if line and len(line) > 10:
-            try:
-                line = json.loads(line)
-                content_items[line["doc_id"]] = line
-            except Exception as e:
-                log_search_error(get_error_message(e), query, current_doc)
+    try:
+        content_items = parse_search_items(content_output)
+    except Exception as e:
+        log_search_error(get_error_message(e), query, current_doc)
 
-    # doc_infos: list[DocInfo] = DocEntry.query.filter(
-    #     (DocEntry.id.in_(content_items.keys())) & (DocEntry.name.like(folder + "%")) & DocEntry.
-    # ).options(joinedload(DocEntry._block).joinedload(Block.relevance))
+    # for line in content_output:
+    #     if line and len(line) > 10:
+    #         try:
+    #             line = json.loads(line)
+    #             content_items[line["doc_id"]] = line
+    #         except Exception as e:
+    #             log_search_error(get_error_message(e), query, current_doc)
 
     doc_infos: list[DocInfo] = fetch_search_items(content_items, folder)
     # filter content search documents by view access and ownership (if that option was specified) here
     # instead of doing database accesses inside the search loop
-    if search_owned_docs:
-        doc_infos = list(
-            doc_info
-            for doc_info in doc_infos
-            if has_view_access(doc_info)
-            and user.has_ownership(doc_info, allow_admin=False)
-        )
-    else:
-        doc_infos = list(filter(has_view_access, doc_infos))
+    doc_infos = filter_search_documents(
+        doc_infos,
+        content_items,
+        user,
+        search_owned_docs,
+        ignore_relevance,
+        relevance_threshold,
+    )
+    # if search_owned_docs:
+    #     doc_infos = list(
+    #         doc_info
+    #         for doc_info in doc_infos
+    #         if has_view_access(doc_info)
+    #         and user.has_ownership(doc_info, allow_admin=False)
+    #     )
+    # else:
+    #     doc_infos = list(filter(has_view_access, doc_infos))
 
     for doc_info in doc_infos:
         current_doc = doc_info.title
@@ -1649,12 +1607,12 @@ def search_content(
 
             # If relevance is ignored or not found from search file, skip check.
             line_info = content_items[doc_info.id]
-            if not ignore_relevance:
-                relevance = line_info.get("d_r")
-                if relevance is not None and is_excluded(
-                    relevance, relevance_threshold
-                ):
-                    continue
+            # if not ignore_relevance:
+            #     relevance = line_info.get("d_r")
+            #     if relevance is not None and is_excluded(
+            #         relevance, relevance_threshold
+            #     ):
+            #         continue
             pars = line_info["pars"]
 
             doc_result = DocResult(doc_info)
@@ -1755,156 +1713,3 @@ def search_content(
             log_search_error(get_error_message(e), query, current_doc, par=current_par)
 
     return content_results, word_result_count, incomplete_search_reason
-
-
-def search_tags(
-    req: Request,
-    tags_output: list,
-    start_time: float,
-    timeout: float,
-    user: User,
-    term_regex: Pattern[str],
-) -> (list[DocResult], int, str):
-    (
-        query,
-        folder,
-        regex,
-        case_sensitive,
-        search_whole_words,
-        search_owned_docs,
-    ) = get_common_search_params(req)
-    relevance_threshold = get_option(req, "relevanceThreshold", default=1, cast=int)
-    ignore_relevance = get_option(req, "ignoreRelevance", default=False, cast=bool)
-    current_doc = ""
-    incomplete_search_reason = ""
-    tags_results = []
-    tags_result_count = 0
-
-    tags_items = parse_search_items(tags_output)
-    if tags_items.__class__ is str:
-        log_search_error(tags_items, query, current_doc)
-
-    doc_infos: list[DocInfo] = fetch_search_items(tags_items, folder)
-
-    for doc_info in doc_infos:
-        current_doc = doc_info.title
-        try:
-            if is_timeouted(start_time, timeout):
-                incomplete_search_reason = (
-                    f"tags search exceeded the timeout ({timeout} seconds)"
-                )
-                raise TimeoutError("tags search timeout")
-
-            if not check_with_common_search_params(
-                doc_info,
-                search_owned_docs,
-                user,
-                tags_items,
-                ignore_relevance,
-                relevance_threshold,
-            ):
-                continue
-            line_info = tags_items[doc_info.id]
-            doc_result = DocResult(doc_info)
-            tags_matches = list(term_regex.finditer(" ".join(line_info["doc_tags"])))
-            if tags_matches:
-                tags_match_count = len(tags_matches)
-                doc_result.add_title_result(
-                    TitleResult(alt_num_results=tags_match_count)
-                )
-                tags_result_count += tags_match_count
-
-            if doc_result.has_results():
-                tags_results.append(doc_result)
-
-        except TimeoutError as e:
-            log_search_error(get_error_message(e), query, current_doc, tag=True)
-            return json_response(
-                {
-                    "tags_result_count": tags_result_count,
-                    "errors": [],
-                    "incomplete_search_reason": incomplete_search_reason,
-                    "tags_results": tags_results,
-                }
-            )
-        except Exception as e:
-            log_search_error(get_error_message(e), query, current_doc, tag=True)
-
-    return tags_results, tags_result_count, incomplete_search_reason
-
-
-def search_paths(
-    req: Request,
-    paths_output: list,
-    start_time: float,
-    timeout: float,
-    user: User,
-    term_regex: Pattern[str],
-) -> (list[DocResult], int, str):
-    (
-        query,
-        folder,
-        regex,
-        case_sensitive,
-        search_whole_words,
-        search_owned_docs,
-    ) = get_common_search_params(req)
-    relevance_threshold = get_option(req, "relevanceThreshold", default=1, cast=int)
-    ignore_relevance = get_option(req, "ignoreRelevance", default=False, cast=bool)
-    current_doc = ""
-    incomplete_search_reason = ""
-    paths_results = []
-    paths_result_count = 0
-
-    paths_items = parse_search_items(paths_output)
-    if paths_items.__class__ is str:
-        log_search_error(paths_items, query, current_doc)
-
-    doc_infos: list[DocInfo] = fetch_search_items(paths_items, folder)
-
-    for doc_info in doc_infos:
-        current_doc = doc_info.title
-        try:
-            if is_timeouted(start_time, timeout):
-                incomplete_search_reason = (
-                    f"paths search exceeded the timeout ({timeout} seconds)"
-                )
-                raise TimeoutError("paths search timeout")
-
-            if not check_with_common_search_params(
-                doc_info,
-                search_owned_docs,
-                user,
-                paths_items,
-                ignore_relevance,
-                relevance_threshold,
-            ):
-                continue
-            line_info = paths_items[doc_info.id]
-            doc_result = DocResult(doc_info)
-
-            paths_matches = list(term_regex.finditer(line_info["doc_path"]))
-            if paths_matches:
-                paths_match_count = len(paths_matches)
-                doc_result.add_title_result(
-                    TitleResult(alt_num_results=paths_match_count)
-                )
-                paths_result_count += paths_match_count
-
-            if doc_result.has_results():
-                paths_results.append(doc_result)
-
-        except TimeoutError as e:
-            log_search_error(get_error_message(e), query, current_doc, path=True)
-            return json_response(
-                {
-                    "path_result_count": paths_result_count,
-                    "errors": [],
-                    "incomplete_search_reason": incomplete_search_reason,
-                    "path_results": paths_results,
-                }
-            )
-        except Exception as e:
-            log_search_error(get_error_message(e), query, current_doc, path=True)
-
-    return paths_results, paths_result_count, incomplete_search_reason
