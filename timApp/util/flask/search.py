@@ -1308,16 +1308,21 @@ def search():
 
     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
 
-    cmd = ["grep"]
-    if not case_sensitive:
-        cmd.append("-i")
-    if regex:
-        cmd.append("-E")
+    cmd = ["rg"]
+    # disable printing line numbers into output
+    cmd.append("-N")
+    # TODO implement option for using PCRE2 regex syntax
+    # if pcre2:
+    #     cmd.append("-P")
+    if case_sensitive:
+        cmd.append("-s")
     else:
+        cmd.append("-i")
+    if not regex:
         cmd.append("-F")
     if search_whole_words:
-        cmd.append("-sw")
-    cmd.append("--")
+        cmd.append("-w")
+    # cmd.append("--")
     cmd.append(query)
 
     if should_search_content:
