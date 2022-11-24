@@ -241,7 +241,8 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         // Toggle open menu closed and back again when clicking.
         if (
             this.previouslyClicked &&
-            (this.previouslyClicked === item || item.open)
+            (this.previouslyClicked === item || item.open) &&
+            clicked
         ) {
             item.open = !item.open;
             this.previouslyClicked = item;
