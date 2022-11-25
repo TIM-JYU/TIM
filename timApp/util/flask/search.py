@@ -4,7 +4,7 @@ import re
 import sre_constants
 import subprocess
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from io import StringIO
@@ -167,22 +167,15 @@ def preview_result(
     return prefix + md[start_index:end_index] + postfix
 
 
+@dataclass()
 class WordResult:
     """
     One match word with location and match word.
     """
 
-    def __init__(self, match_word: str, match_start: int, match_end: int):
-        """
-        Title or paragraph word result object constructor.
-
-        :param match_word: String that matched query.
-        :param match_start: Match start index.
-        :param match_end: Match end index.
-        """
-        self.match_word = match_word
-        self.match_start = match_start
-        self.match_end = match_end
+    match_word: str
+    match_start: int
+    match_end: int
 
     def to_json(self):
         """
@@ -195,84 +188,14 @@ class WordResult:
         }
 
 
-class ParResult:
+@dataclass()
+class SearchResult:
     """
-    Paragraph search results.
-    """
-
-    def __init__(
-        self, par_id: str = "", preview: str = "", word_results=None, alt_num_results=0
-    ):
-        """
-        Paragraph result object constructor.
-
-        :param par_id: Paragrapg id.
-        :param preview: A snippet from paragraph markdown.
-        :param word_results: List of word search results in the paragraph.
-        :param alt_num_results: Alternative to listing word results.
-        """
-        if word_results is None:
-            word_results = []
-        self.par_id = par_id
-        self.preview = preview
-        self.word_results = word_results
-        self.alt_num_results = alt_num_results
-
-    def add_result(self, result: WordResult) -> None:
-        """
-        Add new word result.
-
-        :param result: New word result from paragraph markdown.
-        :return: None.
-        """
-        self.word_results.append(result)
-
-    def has_results(self) -> bool:
-        """
-        :return: True if the object contains results.
-        """
-        return len(self.word_results) > 0 or self.alt_num_results > 0
-
-    def to_json(self):
-        """
-        :return: A dictionary of attributes and derived attributes.
-        """
-        results_dicts = []
-        for r in self.word_results:
-            results_dicts.append(r)
-        return {
-            "par_id": self.par_id,
-            "preview": self.preview,
-            "results": results_dicts,
-            "num_results": self.get_match_count(),
-        }
-
-    def get_match_count(self) -> int:
-        """
-        :return: How many matches there are in this paragraph.
-        """
-        if len(self.word_results) > 0:
-            return len(self.word_results)
-        else:
-            return self.alt_num_results
-
-
-class TitleResult:
-    """
-    Title search result containing a list of match data.
+    Common superclass for different search results.
     """
 
-    def __init__(self, word_results=None, alt_num_results: int = 0):
-        """
-        Title result object constructor.
-
-        :param word_results: List of word results from the title string.
-        :param alt_num_results: Alternative to listing word results.
-        """
-        if word_results is None:
-            word_results = []
-        self.word_results = word_results
-        self.alt_num_results = alt_num_results
+    word_results: list[WordResult] = field(default_factory=list)
+    alt_num_results: int = 0
 
     def add_result(self, result: WordResult) -> None:
         """
@@ -289,25 +212,53 @@ class TitleResult:
         """
         return len(self.word_results) > 0 or self.alt_num_results > 0
 
-    def to_json(self):
-        """
-        :return: A dictionary of attributes and derived attributes, suitable for JSON-conversion.
-        """
-        results = []
-        for r in self.word_results:
-            results.append(r)
-        return {"results": results, "num_results": self.get_match_count()}
-
     def get_match_count(self) -> int:
         """
         :return: How many match words the title has.
         """
-        if len(self.word_results) > 0:
-            return len(self.word_results)
-        else:
+        if not self.word_results:
             return self.alt_num_results
+        return len(self.word_results)
+
+    def to_json(self):
+        """
+        :return: A dictionary of attributes and derived attributes, suitable for JSON-conversion.
+        """
+        return {"results": self.word_results, "num_results": self.get_match_count()}
 
 
+@dataclass()
+class ParResult(SearchResult):
+    """
+    Document paragraph search results.
+    """
+
+    par_id: str = ""
+    preview: str = ""
+
+    def to_json(self):
+        """
+        :return: A dictionary of attributes and derived attributes.
+        """
+        return {
+            "par_id": self.par_id,
+            "preview": self.preview,
+            "results": self.word_results,
+            "num_results": self.get_match_count(),
+        }
+
+
+@dataclass()
+class TitleResult(SearchResult):
+    """
+    Document title search result containing a list of match data.
+    """
+
+    # All necessary methods are implemented by the superclass
+    pass
+
+
+@dataclass()
 class DocResult:
     """
     Contains one document's title and word search information.
@@ -353,18 +304,12 @@ class DocResult:
         """
         :return: A dictionary of the object, suitable for JSON-conversion.
         """
-        par_result_dicts = []
-        for r in self.par_results:
-            par_result_dicts.append(r)
-        title_result_dicts = []
-        for r in self.title_results:
-            title_result_dicts.append(r)
         return {
             "doc": self.doc_info,
             "incomplete": self.incomplete,
-            "title_results": title_result_dicts,
+            "title_results": self.title_results,
             "num_title_results": self.get_title_match_count(),
-            "par_results": par_result_dicts,
+            "par_results": self.par_results,
             "num_par_results": self.get_par_match_count(),
         }
 
@@ -372,42 +317,37 @@ class DocResult:
         """
         :return: Total document count for paragraph word matches.
         """
-        count = 0
-        for p in self.par_results:
-            count += p.get_match_count()
-        return count
+        return sum(p.get_match_count() for p in self.par_results)
 
     def get_title_match_count(self) -> int:
         """
         :return: Total document count for title matches.
         """
-        count = 0
-        for p in self.title_results:
-            count += p.get_match_count()
-        return count
+        return sum(p.get_match_count() for p in self.title_results)
 
 
-def result_response(
-    results,
-    title_result_count: int = 0,
-    word_result_count: int = 0,
-    incomplete_search_reason="",
-):
-    """
-    Formats result data for JSON-response.
-    :param results: List of result dictionaries.
-    :param title_result_count: Number of title results.
-    :param word_result_count: Number of paragraph word results.
-    :param incomplete_search_reason: Whether search was cut short.
-    :return: Dictionary containing search results.
-    """
-    return {
-        "title_result_count": title_result_count,
-        "word_result_count": word_result_count,
-        "errors": [],
-        "incomplete_search_reason": incomplete_search_reason,
-        "results": results,
-    }
+# TODO dead code, remove this
+# def result_response(
+#     results,
+#     title_result_count: int = 0,
+#     word_result_count: int = 0,
+#     incomplete_search_reason="",
+# ):
+#     """
+#     Formats result data for JSON-response.
+#     :param results: List of result dictionaries.
+#     :param title_result_count: Number of title results.
+#     :param word_result_count: Number of paragraph word results.
+#     :param incomplete_search_reason: Whether search was cut short.
+#     :return: Dictionary containing search results.
+#     """
+#     return {
+#         "title_result_count": title_result_count,
+#         "word_result_count": word_result_count,
+#         "errors": [],
+#         "incomplete_search_reason": incomplete_search_reason,
+#         "results": results,
+#     }
 
 
 def validate_query(query: str, search_whole_words: bool) -> None:
@@ -437,26 +377,27 @@ docentry_eager_relevance_opt = (
 )
 
 
-def add_doc_info_title_line(doc_id: int) -> str | None:
-    """
-    Forms a JSON-compatible string with doc id, title and path.
-
-    :param doc_id: Document id.
-    :return: String with doc data.
-    """
-    doc_info = DocEntry.find_by_id(
-        doc_id, docentry_load_opts=docentry_eager_relevance_opt
-    )
-    if not doc_info:
-        return None
-    doc_relevance = get_document_relevance(doc_info)
-    return (
-        json.dumps(
-            {"doc_id": doc_id, "d_r": doc_relevance, "doc_title": doc_info.title},
-            ensure_ascii=False,
-        )
-        + "\n"
-    )
+# TODO dead code, remove this
+# def add_doc_info_title_line(doc_id: int) -> str | None:
+#     """
+#     Forms a JSON-compatible string with doc id, title and path.
+#
+#     :param doc_id: Document id.
+#     :return: String with doc data.
+#     """
+#     doc_info = DocEntry.find_by_id(
+#         doc_id, docentry_load_opts=docentry_eager_relevance_opt
+#     )
+#     if not doc_info:
+#         return None
+#     doc_relevance = get_document_relevance(doc_info)
+#     return (
+#         json.dumps(
+#             {"doc_id": doc_id, "d_r": doc_relevance, "doc_title": doc_info.title},
+#             ensure_ascii=False,
+#         )
+#         + "\n"
+#     )
 
 
 def add_doc_info_content_line(
@@ -531,61 +472,63 @@ def add_doc_info_content_line(
         )
 
 
-def add_doc_info_path_line(doc_id: int) -> str | None:
-    """
-    Forms a JSON-compatible string with doc id, relevance and path.
+# TODO dead code, remove this
+# def add_doc_info_path_line(doc_id: int) -> str | None:
+#     """
+#     Forms a JSON-compatible string with doc id, relevance and path.
+#
+#     :param doc_id: Document id.
+#     :return: String with doc data.
+#     """
+#     target = "path"
+#     doc_info = DocEntry.find_by_id(
+#         doc_id, docentry_load_opts=docentry_eager_relevance_opt
+#     )
+#     if not doc_info:
+#         return None
+#     doc_relevance = get_document_relevance(doc_info)
+#     return (
+#         json.dumps(
+#             {
+#                 "doc_id": doc_id,
+#                 "d_r": doc_relevance,
+#                 "doc_path": doc_info.path
+#                 if target == "path"
+#                 else doc_info.title
+#                 if target == "title"
+#                 else doc_info,
+#             },
+#             ensure_ascii=False,
+#         )
+#         + "\n"
+#     )
 
-    :param doc_id: Document id.
-    :return: String with doc data.
-    """
-    target = "path"
-    doc_info = DocEntry.find_by_id(
-        doc_id, docentry_load_opts=docentry_eager_relevance_opt
-    )
-    if not doc_info:
-        return None
-    doc_relevance = get_document_relevance(doc_info)
-    return (
-        json.dumps(
-            {
-                "doc_id": doc_id,
-                "d_r": doc_relevance,
-                "doc_path": doc_info.path
-                if target == "path"
-                else doc_info.title
-                if target == "title"
-                else doc_info,
-            },
-            ensure_ascii=False,
-        )
-        + "\n"
-    )
 
-
-def add_doc_info_tags_line(doc_id: int) -> str | None:
-    """
-    Forms a JSON-compatible string with doc id, relevance and tags.
-
-    :param doc_id: Document id.
-    :return: String with doc data.
-    """
-    doc_info = DocEntry.find_by_id(
-        doc_id, docentry_load_opts=docentry_eager_relevance_opt
-    )
-    if not doc_info:
-        return None
-    doc_relevance = get_document_relevance(doc_info)
-    doc_tags = " ".join([tag.name for tag in doc_info.block.tags])
-    if doc_tags:
-        return (
-            json.dumps(
-                {"doc_id": doc_id, "d_r": doc_relevance, "doc_tags": doc_tags},
-                ensure_ascii=False,
-            )
-            + "\n"
-        )
-    else:
-        return None
+# TODO dead code, remove this
+# def add_doc_info_tags_line(doc_id: int) -> str | None:
+#     """
+#     Forms a JSON-compatible string with doc id, relevance and tags.
+#
+#     :param doc_id: Document id.
+#     :return: String with doc data.
+#     """
+#     doc_info = DocEntry.find_by_id(
+#         doc_id, docentry_load_opts=docentry_eager_relevance_opt
+#     )
+#     if not doc_info:
+#         return None
+#     doc_relevance = get_document_relevance(doc_info)
+#     doc_tags = " ".join([tag.name for tag in doc_info.block.tags])
+#     if doc_tags:
+#         return (
+#             json.dumps(
+#                 {"doc_id": doc_id, "d_r": doc_relevance, "doc_tags": doc_tags},
+#                 ensure_ascii=False,
+#             )
+#             + "\n"
+#         )
+#     else:
+#         return None
 
 
 def add_doc_info_metadata_line(doc_id: int, target: str) -> str | None:
@@ -801,177 +744,179 @@ def create_search_files_route():
     return json_response(status_code=status, jsondata=msg)
 
 
-@search_routes.get("/titles")
-def title_search():
-    """
-    Performs search on document titles.
-    :return: Title search results.
-    """
-    (
-        query,
-        folder,
-        regex,
-        case_sensitive,
-        search_whole_words,
-        search_owned_docs,
-    ) = get_common_search_params(request)
+# TODO dead code, remove this
+# @search_routes.get("/titles")
+# def title_search():
+#     """
+#     Performs search on document titles.
+#     :return: Title search results.
+#     """
+#     (
+#         query,
+#         folder,
+#         regex,
+#         case_sensitive,
+#         search_whole_words,
+#         search_owned_docs,
+#     ) = get_common_search_params(request)
+#
+#     results = []
+#     title_result_count = 0
+#
+#     validate_query(query, search_whole_words)
+#
+#     if search_owned_docs:
+#         custom_filter = DocEntry.id.in_(
+#             get_current_user_object()
+#             .get_personal_group()
+#             .accesses.filter_by(type=AccessType.owner.value)
+#             .with_entities(BlockAccess.block_id)
+#         )
+#     else:
+#         custom_filter = None
+#     docs = get_documents(
+#         filter_user=get_current_user_object(),
+#         filter_folder=folder,
+#         query_options=lazyload(DocEntry._block),
+#         custom_filter=custom_filter,
+#         search_recursively=True,
+#     )
+#
+#     if not docs:
+#         if not folder:
+#             folder = "root"
+#         raise RouteException(f"Folder '{folder}' not found or not accessible")
+#
+#     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
+#
+#     if term_regex:
+#         for d in docs:
+#             current_doc = d.path
+#             try:
+#                 title_result = TitleResult()
+#                 d_title = d.title
+#                 matches = list(term_regex.finditer(d_title))
+#                 if matches:
+#                     title_result.alt_num_results = len(matches)
+#                     # for m in matches:
+#                     #     result = WordResult(match_word=m.group(0),
+#                     #                         match_start=m.start(),
+#                     #                         match_end=m.end())
+#                     #     title_result.add_result(result)
+#
+#                 if title_result.has_results():
+#                     r = DocResult(d)
+#                     r.add_title_result(title_result)
+#                     results.append(r)
+#                     title_result_count += r.get_title_match_count()
+#             except Exception as e:
+#                 log_search_error(get_error_message(e), query, current_doc, par="")
+#
+#     return json_response(result_response(results, title_result_count))
 
-    results = []
-    title_result_count = 0
 
-    validate_query(query, search_whole_words)
-
-    if search_owned_docs:
-        custom_filter = DocEntry.id.in_(
-            get_current_user_object()
-            .get_personal_group()
-            .accesses.filter_by(type=AccessType.owner.value)
-            .with_entities(BlockAccess.block_id)
-        )
-    else:
-        custom_filter = None
-    docs = get_documents(
-        filter_user=get_current_user_object(),
-        filter_folder=folder,
-        query_options=lazyload(DocEntry._block),
-        custom_filter=custom_filter,
-        search_recursively=True,
-    )
-
-    if not docs:
-        if not folder:
-            folder = "root"
-        raise RouteException(f"Folder '{folder}' not found or not accessible")
-
-    term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
-
-    if term_regex:
-        for d in docs:
-            current_doc = d.path
-            try:
-                title_result = TitleResult()
-                d_title = d.title
-                matches = list(term_regex.finditer(d_title))
-                if matches:
-                    title_result.alt_num_results = len(matches)
-                    # for m in matches:
-                    #     result = WordResult(match_word=m.group(0),
-                    #                         match_start=m.start(),
-                    #                         match_end=m.end())
-                    #     title_result.add_result(result)
-
-                if title_result.has_results():
-                    r = DocResult(d)
-                    r.add_title_result(title_result)
-                    results.append(r)
-                    title_result_count += r.get_title_match_count()
-            except Exception as e:
-                log_search_error(get_error_message(e), query, current_doc, par="")
-
-    return json_response(result_response(results, title_result_count))
-
-
-@search_routes.get("/tags")
-def tag_search():
-    """
-    A route for document tag search.
-    :return: Tag search results response.
-    """
-    (
-        query,
-        folder,
-        regex,
-        case_sensitive,
-        search_whole_words,
-        search_owned_docs,
-    ) = get_common_search_params(request)
-    relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
-    results = []
-
-    # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
-    # from the database and then apply regex search on them.
-    any_tag = "%%"
-    if search_owned_docs:
-        custom_filter = DocEntry.id.in_(
-            get_current_user_object()
-            .get_personal_group()
-            .accesses.filter_by(type=AccessType.owner.value)
-            .with_entities(BlockAccess.block_id)
-        ) & DocEntry.id.in_(
-            Tag.query.filter(
-                Tag.name.ilike(any_tag)
-                & ((Tag.expires > datetime.now()) | (Tag.expires == None))
-            ).with_entities(Tag.block_id)
-        )
-    else:
-        custom_filter = DocEntry.id.in_(
-            Tag.query.filter(
-                Tag.name.ilike(any_tag)
-                & ((Tag.expires > datetime.now()) | (Tag.expires == None))
-            ).with_entities(Tag.block_id)
-        )
-    query_options = joinedload(DocEntry._block).joinedload(Block.tags)
-    docs = get_documents(
-        filter_user=get_current_user_object(),
-        filter_folder=folder,
-        search_recursively=True,
-        custom_filter=custom_filter,
-        query_options=query_options,
-    )
-
-    tag_result_count = 0
-    error_list = []
-    current_doc = "before search"
-    current_tag = "before search"
-    term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
-
-    try:
-        for d in docs:
-            try:
-                if is_excluded(get_document_relevance(d), relevance_threshold):
-                    continue
-                current_doc = d.path
-                m_tags = []
-                m_num = 0
-                for tag in d.block.tags:
-                    current_tag = tag.name
-                    matches = list(term_regex.finditer(tag.name))
-                    if matches:
-                        match_count = len(matches)
-                        if not query:
-                            match_count = 1
-                        m_num += match_count
-                        tag_result_count += match_count
-                        m_tags.append(tag)
-
-                if m_num > 0:
-                    results.append(
-                        {"doc": d, "matching_tags": m_tags, "num_results": m_num}
-                    )
-            except Exception as e:
-                error = get_error_message(e)
-                error_list.append(
-                    {"error": error, "doc_path": current_doc, "tag_name": current_tag}
-                )
-                log_search_error(error, query, current_doc, tag=current_tag)
-    except Exception as e:
-        raise RouteException(get_error_message(e))
-    else:
-        try:
-            return json_response(
-                {
-                    "results": results,
-                    "incomplete_search_reason": "",
-                    "tag_result_count": tag_result_count,
-                    "errors": error_list,
-                }
-            )
-        except MemoryError:
-            raise RouteException("MemoryError: results too large")
-        except Exception as e:
-            raise RouteException(
-                f"Error encountered while formatting JSON-response: {e}"
-            )
+# TODO dead code, remove this
+# @search_routes.get("/tags")
+# def tag_search():
+#     """
+#     A route for document tag search.
+#     :return: Tag search results response.
+#     """
+#     (
+#         query,
+#         folder,
+#         regex,
+#         case_sensitive,
+#         search_whole_words,
+#         search_owned_docs,
+#     ) = get_common_search_params(request)
+#     relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
+#     results = []
+#
+#     # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
+#     # from the database and then apply regex search on them.
+#     any_tag = "%%"
+#     if search_owned_docs:
+#         custom_filter = DocEntry.id.in_(
+#             get_current_user_object()
+#             .get_personal_group()
+#             .accesses.filter_by(type=AccessType.owner.value)
+#             .with_entities(BlockAccess.block_id)
+#         ) & DocEntry.id.in_(
+#             Tag.query.filter(
+#                 Tag.name.ilike(any_tag)
+#                 & ((Tag.expires > datetime.now()) | (Tag.expires == None))
+#             ).with_entities(Tag.block_id)
+#         )
+#     else:
+#         custom_filter = DocEntry.id.in_(
+#             Tag.query.filter(
+#                 Tag.name.ilike(any_tag)
+#                 & ((Tag.expires > datetime.now()) | (Tag.expires == None))
+#             ).with_entities(Tag.block_id)
+#         )
+#     query_options = joinedload(DocEntry._block).joinedload(Block.tags)
+#     docs = get_documents(
+#         filter_user=get_current_user_object(),
+#         filter_folder=folder,
+#         search_recursively=True,
+#         custom_filter=custom_filter,
+#         query_options=query_options,
+#     )
+#
+#     tag_result_count = 0
+#     error_list = []
+#     current_doc = "before search"
+#     current_tag = "before search"
+#     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
+#
+#     try:
+#         for d in docs:
+#             try:
+#                 if is_excluded(get_document_relevance(d), relevance_threshold):
+#                     continue
+#                 current_doc = d.path
+#                 m_tags = []
+#                 m_num = 0
+#                 for tag in d.block.tags:
+#                     current_tag = tag.name
+#                     matches = list(term_regex.finditer(tag.name))
+#                     if matches:
+#                         match_count = len(matches)
+#                         if not query:
+#                             match_count = 1
+#                         m_num += match_count
+#                         tag_result_count += match_count
+#                         m_tags.append(tag)
+#
+#                 if m_num > 0:
+#                     results.append(
+#                         {"doc": d, "matching_tags": m_tags, "num_results": m_num}
+#                     )
+#             except Exception as e:
+#                 error = get_error_message(e)
+#                 error_list.append(
+#                     {"error": error, "doc_path": current_doc, "tag_name": current_tag}
+#                 )
+#                 log_search_error(error, query, current_doc, tag=current_tag)
+#     except Exception as e:
+#         raise RouteException(get_error_message(e))
+#     else:
+#         try:
+#             return json_response(
+#                 {
+#                     "results": results,
+#                     "incomplete_search_reason": "",
+#                     "tag_result_count": tag_result_count,
+#                     "errors": error_list,
+#                 }
+#             )
+#         except MemoryError:
+#             raise RouteException("MemoryError: results too large")
+#         except Exception as e:
+#             raise RouteException(
+#                 f"Error encountered while formatting JSON-response: {e}"
+#             )
 
 
 def compile_regex(
@@ -1006,108 +951,110 @@ def compile_regex(
         return term_regex
 
 
-@search_routes.get("paths")
-def path_search():
-    """
-    Document path search. Path results are treated as title results and use
-    TitleResult objects and content & title search interface.
+# TODO dead code, remove this
+# @search_routes.get("paths")
+# def path_search():
+#     """
+#     Document path search. Path results are treated as title results and use
+#     TitleResult objects and content & title search interface.
+#
+#     :return: Path results.
+#     """
+#     (
+#         query,
+#         folder,
+#         regex,
+#         case_sensitive,
+#         search_whole_words,
+#         search_owned_docs,
+#     ) = get_common_search_params(request)
+#     validate_query(query, search_whole_words)
+#     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
+#     relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
+#
+#     db_term = f"%{query}%"
+#     custom_filter = None
+#     if regex:
+#         if search_owned_docs:
+#             custom_filter = DocEntry.id.in_(
+#                 get_current_user_object()
+#                 .get_personal_group()
+#                 .accesses.filter_by(type=AccessType.owner.value)
+#                 .with_entities(BlockAccess.block_id)
+#             )
+#     else:
+#         if case_sensitive:
+#             if search_owned_docs:
+#                 custom_filter = DocEntry.id.in_(
+#                     get_current_user_object()
+#                     .get_personal_group()
+#                     .accesses.filter_by(type=AccessType.owner.value)
+#                     .with_entities(BlockAccess.block_id)
+#                 ) & DocEntry.name.like(db_term)
+#             else:
+#                 custom_filter = DocEntry.name.like(db_term)
+#         else:
+#             if search_owned_docs:
+#                 custom_filter = DocEntry.id.in_(
+#                     get_current_user_object()
+#                     .get_personal_group()
+#                     .accesses.filter_by(type=AccessType.owner.value)
+#                     .with_entities(BlockAccess.block_id)
+#                 ) & DocEntry.name.ilike(db_term)
+#             else:
+#                 custom_filter = DocEntry.name.ilike(db_term)
+#
+#     docs = get_documents(
+#         filter_user=get_current_user_object(),
+#         filter_folder=folder,
+#         query_options=lazyload(DocEntry._block),
+#         custom_filter=custom_filter,
+#         search_recursively=True,
+#     )
+#     path_results = []
+#     path_result_count = 0
+#     for d in docs:
+#         current_doc = d.path
+#         try:
+#             if is_excluded(get_document_relevance(d), relevance_threshold):
+#                 continue
+#             path_result = TitleResult()
+#             matches = list(term_regex.finditer(d.path))
+#             if matches:
+#                 path_result.alt_num_results = len(matches)
+#
+#             if path_result.has_results():
+#                 r = DocResult(d)
+#                 r.add_title_result(path_result)
+#                 path_results.append(r)
+#                 path_result_count += r.get_title_match_count()
+#         except Exception as e:
+#             log_search_error(get_error_message(e), query, current_doc, par="")
+#
+#     return json_response(
+#         {
+#             "title_result_count": path_result_count,
+#             "word_result_count": 0,
+#             "errors": [],
+#             "incomplete_search_reason": "",
+#             "title_results": path_results,
+#             "content_results": [],
+#         }
+#     )
 
-    :return: Path results.
-    """
-    (
-        query,
-        folder,
-        regex,
-        case_sensitive,
-        search_whole_words,
-        search_owned_docs,
-    ) = get_common_search_params(request)
-    validate_query(query, search_whole_words)
-    term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
-    relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
 
-    db_term = f"%{query}%"
-    custom_filter = None
-    if regex:
-        if search_owned_docs:
-            custom_filter = DocEntry.id.in_(
-                get_current_user_object()
-                .get_personal_group()
-                .accesses.filter_by(type=AccessType.owner.value)
-                .with_entities(BlockAccess.block_id)
-            )
-    else:
-        if case_sensitive:
-            if search_owned_docs:
-                custom_filter = DocEntry.id.in_(
-                    get_current_user_object()
-                    .get_personal_group()
-                    .accesses.filter_by(type=AccessType.owner.value)
-                    .with_entities(BlockAccess.block_id)
-                ) & DocEntry.name.like(db_term)
-            else:
-                custom_filter = DocEntry.name.like(db_term)
-        else:
-            if search_owned_docs:
-                custom_filter = DocEntry.id.in_(
-                    get_current_user_object()
-                    .get_personal_group()
-                    .accesses.filter_by(type=AccessType.owner.value)
-                    .with_entities(BlockAccess.block_id)
-                ) & DocEntry.name.ilike(db_term)
-            else:
-                custom_filter = DocEntry.name.ilike(db_term)
-
-    docs = get_documents(
-        filter_user=get_current_user_object(),
-        filter_folder=folder,
-        query_options=lazyload(DocEntry._block),
-        custom_filter=custom_filter,
-        search_recursively=True,
-    )
-    path_results = []
-    path_result_count = 0
-    for d in docs:
-        current_doc = d.path
-        try:
-            if is_excluded(get_document_relevance(d), relevance_threshold):
-                continue
-            path_result = TitleResult()
-            matches = list(term_regex.finditer(d.path))
-            if matches:
-                path_result.alt_num_results = len(matches)
-
-            if path_result.has_results():
-                r = DocResult(d)
-                r.add_title_result(path_result)
-                path_results.append(r)
-                path_result_count += r.get_title_match_count()
-        except Exception as e:
-            log_search_error(get_error_message(e), query, current_doc, par="")
-
-    return json_response(
-        {
-            "title_result_count": path_result_count,
-            "word_result_count": 0,
-            "errors": [],
-            "incomplete_search_reason": "",
-            "title_results": path_results,
-            "content_results": [],
-        }
-    )
-
-
-def is_excluded(relevance: int, relevance_threshold: int) -> bool:
-    """
-    Exclude if relevance is less than relevance threshold.
-
-    :param relevance: Document relevance value.
-    :param relevance_threshold: Min included relevance.
-    :return: True if document relevance is less than relevance threshold.
-    """
-    if relevance < relevance_threshold:
-        return True
-    return False
+# TODO dead code, remove this
+# def is_excluded(relevance: int, relevance_threshold: int) -> bool:
+#     """
+#     Exclude if relevance is less than relevance threshold.
+#
+#     :param relevance: Document relevance value.
+#     :param relevance_threshold: Min included relevance.
+#     :return: True if document relevance is less than relevance threshold.
+#     """
+#     if relevance < relevance_threshold:
+#         return True
+#     return False
 
 
 def is_timeouted(start_time: float, timeout: float) -> bool:
@@ -1422,7 +1369,7 @@ def search_metadata(
     term_regex: Pattern[str],
 ) -> (list[DocResult], int, str):
     """
-    Collates search results for a type of search in a search index
+    Performs a search and collates search results for a type of search in a search index
 
     :param req: search request containing search options
     :param grep_output: temporary in-memory search index
@@ -1487,6 +1434,8 @@ def search_metadata(
             search_matches = list(term_regex.finditer(line_info[f"doc_{target}"]))
             if search_matches:
                 search_match_count = len(search_matches)
+                # TODO implement common logic for adding search results
+                # doc_result.add_search_result(target, alt_num_results=search_match_count)
                 doc_result.add_title_result(
                     TitleResult(alt_num_results=search_match_count)
                 )
@@ -1526,7 +1475,7 @@ def search_content(
     term_regex: Pattern[str],
 ) -> (list[DocResult], int, str):
     """
-    Collates search results for document content search
+    Performs a document content search and collates the search results
 
     :param req: search request containing search options
     :param content_output: temporary in-memory content search index
@@ -1563,6 +1512,7 @@ def search_content(
     except Exception as e:
         log_search_error(get_error_message(e), query, current_doc)
 
+    # TODO clean up
     # for line in content_output:
     #     if line and len(line) > 10:
     #         try:
@@ -1582,6 +1532,7 @@ def search_content(
         ignore_relevance,
         relevance_threshold,
     )
+    # TODO clean up
     # if search_owned_docs:
     #     doc_infos = list(
     #         doc_info
@@ -1601,6 +1552,7 @@ def search_content(
                 )
                 raise TimeoutError("content search timeout")
 
+            # TODO clean up
             # If not allowed to view, continue to the next one.
             # if not has_view_access(doc_info):
             #     continue
@@ -1612,6 +1564,7 @@ def search_content(
 
             # If relevance is ignored or not found from search file, skip check.
             line_info = content_items[doc_info.id]
+            # TODO clean up
             # if not ignore_relevance:
             #     relevance = line_info.get("d_r")
             #     if relevance is not None and is_excluded(
