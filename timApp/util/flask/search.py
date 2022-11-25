@@ -5,28 +5,22 @@ import sre_constants
 import subprocess
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
 from io import StringIO
 from pathlib import Path
 from re import Pattern
 from typing import Match
 
-from flask import Blueprint, json, Request, Response
+from flask import Blueprint, json, Request
 from flask import request
-from sqlalchemy.orm import joinedload, lazyload, defaultload
+from sqlalchemy.orm import joinedload, defaultload
 
 from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
-from timApp.auth.accesstype import AccessType
-from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.docentry import DocEntry, get_documents
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
-from timApp.item.routes_tags import get_tags
-from timApp.item.tag import Tag
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.user.user import User
@@ -37,7 +31,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_error, log_warning, log_info
+from timApp.util.logger import log_error, log_info
 from timApp.util.utils import get_error_message, cache_folder_path
 
 search_routes = Blueprint("search", __name__, url_prefix="/search")
@@ -326,30 +320,6 @@ class DocResult:
         return sum(p.get_match_count() for p in self.title_results)
 
 
-# TODO dead code, remove this
-# def result_response(
-#     results,
-#     title_result_count: int = 0,
-#     word_result_count: int = 0,
-#     incomplete_search_reason="",
-# ):
-#     """
-#     Formats result data for JSON-response.
-#     :param results: List of result dictionaries.
-#     :param title_result_count: Number of title results.
-#     :param word_result_count: Number of paragraph word results.
-#     :param incomplete_search_reason: Whether search was cut short.
-#     :return: Dictionary containing search results.
-#     """
-#     return {
-#         "title_result_count": title_result_count,
-#         "word_result_count": word_result_count,
-#         "errors": [],
-#         "incomplete_search_reason": incomplete_search_reason,
-#         "results": results,
-#     }
-
-
 def validate_query(query: str, search_whole_words: bool) -> None:
     """
     Abort if query is too short.
@@ -375,29 +345,6 @@ def validate_query(query: str, search_whole_words: bool) -> None:
 docentry_eager_relevance_opt = (
     defaultload(DocEntry._block).joinedload(Block.relevance),
 )
-
-
-# TODO dead code, remove this
-# def add_doc_info_title_line(doc_id: int) -> str | None:
-#     """
-#     Forms a JSON-compatible string with doc id, title and path.
-#
-#     :param doc_id: Document id.
-#     :return: String with doc data.
-#     """
-#     doc_info = DocEntry.find_by_id(
-#         doc_id, docentry_load_opts=docentry_eager_relevance_opt
-#     )
-#     if not doc_info:
-#         return None
-#     doc_relevance = get_document_relevance(doc_info)
-#     return (
-#         json.dumps(
-#             {"doc_id": doc_id, "d_r": doc_relevance, "doc_title": doc_info.title},
-#             ensure_ascii=False,
-#         )
-#         + "\n"
-#     )
 
 
 def add_doc_info_content_line(
@@ -470,65 +417,6 @@ def add_doc_info_content_line(
             )
             + "\n"
         )
-
-
-# TODO dead code, remove this
-# def add_doc_info_path_line(doc_id: int) -> str | None:
-#     """
-#     Forms a JSON-compatible string with doc id, relevance and path.
-#
-#     :param doc_id: Document id.
-#     :return: String with doc data.
-#     """
-#     target = "path"
-#     doc_info = DocEntry.find_by_id(
-#         doc_id, docentry_load_opts=docentry_eager_relevance_opt
-#     )
-#     if not doc_info:
-#         return None
-#     doc_relevance = get_document_relevance(doc_info)
-#     return (
-#         json.dumps(
-#             {
-#                 "doc_id": doc_id,
-#                 "d_r": doc_relevance,
-#                 "doc_path": doc_info.path
-#                 if target == "path"
-#                 else doc_info.title
-#                 if target == "title"
-#                 else doc_info,
-#             },
-#             ensure_ascii=False,
-#         )
-#         + "\n"
-#     )
-
-
-# TODO dead code, remove this
-# def add_doc_info_tags_line(doc_id: int) -> str | None:
-#     """
-#     Forms a JSON-compatible string with doc id, relevance and tags.
-#
-#     :param doc_id: Document id.
-#     :return: String with doc data.
-#     """
-#     doc_info = DocEntry.find_by_id(
-#         doc_id, docentry_load_opts=docentry_eager_relevance_opt
-#     )
-#     if not doc_info:
-#         return None
-#     doc_relevance = get_document_relevance(doc_info)
-#     doc_tags = " ".join([tag.name for tag in doc_info.block.tags])
-#     if doc_tags:
-#         return (
-#             json.dumps(
-#                 {"doc_id": doc_id, "d_r": doc_relevance, "doc_tags": doc_tags},
-#                 ensure_ascii=False,
-#             )
-#             + "\n"
-#         )
-#     else:
-#         return None
 
 
 def add_doc_info_metadata_line(doc_id: int, target: str) -> str | None:
@@ -744,181 +632,6 @@ def create_search_files_route():
     return json_response(status_code=status, jsondata=msg)
 
 
-# TODO dead code, remove this
-# @search_routes.get("/titles")
-# def title_search():
-#     """
-#     Performs search on document titles.
-#     :return: Title search results.
-#     """
-#     (
-#         query,
-#         folder,
-#         regex,
-#         case_sensitive,
-#         search_whole_words,
-#         search_owned_docs,
-#     ) = get_common_search_params(request)
-#
-#     results = []
-#     title_result_count = 0
-#
-#     validate_query(query, search_whole_words)
-#
-#     if search_owned_docs:
-#         custom_filter = DocEntry.id.in_(
-#             get_current_user_object()
-#             .get_personal_group()
-#             .accesses.filter_by(type=AccessType.owner.value)
-#             .with_entities(BlockAccess.block_id)
-#         )
-#     else:
-#         custom_filter = None
-#     docs = get_documents(
-#         filter_user=get_current_user_object(),
-#         filter_folder=folder,
-#         query_options=lazyload(DocEntry._block),
-#         custom_filter=custom_filter,
-#         search_recursively=True,
-#     )
-#
-#     if not docs:
-#         if not folder:
-#             folder = "root"
-#         raise RouteException(f"Folder '{folder}' not found or not accessible")
-#
-#     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
-#
-#     if term_regex:
-#         for d in docs:
-#             current_doc = d.path
-#             try:
-#                 title_result = TitleResult()
-#                 d_title = d.title
-#                 matches = list(term_regex.finditer(d_title))
-#                 if matches:
-#                     title_result.alt_num_results = len(matches)
-#                     # for m in matches:
-#                     #     result = WordResult(match_word=m.group(0),
-#                     #                         match_start=m.start(),
-#                     #                         match_end=m.end())
-#                     #     title_result.add_result(result)
-#
-#                 if title_result.has_results():
-#                     r = DocResult(d)
-#                     r.add_title_result(title_result)
-#                     results.append(r)
-#                     title_result_count += r.get_title_match_count()
-#             except Exception as e:
-#                 log_search_error(get_error_message(e), query, current_doc, par="")
-#
-#     return json_response(result_response(results, title_result_count))
-
-
-# TODO dead code, remove this
-# @search_routes.get("/tags")
-# def tag_search():
-#     """
-#     A route for document tag search.
-#     :return: Tag search results response.
-#     """
-#     (
-#         query,
-#         folder,
-#         regex,
-#         case_sensitive,
-#         search_whole_words,
-#         search_owned_docs,
-#     ) = get_common_search_params(request)
-#     relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
-#     results = []
-#
-#     # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
-#     # from the database and then apply regex search on them.
-#     any_tag = "%%"
-#     if search_owned_docs:
-#         custom_filter = DocEntry.id.in_(
-#             get_current_user_object()
-#             .get_personal_group()
-#             .accesses.filter_by(type=AccessType.owner.value)
-#             .with_entities(BlockAccess.block_id)
-#         ) & DocEntry.id.in_(
-#             Tag.query.filter(
-#                 Tag.name.ilike(any_tag)
-#                 & ((Tag.expires > datetime.now()) | (Tag.expires == None))
-#             ).with_entities(Tag.block_id)
-#         )
-#     else:
-#         custom_filter = DocEntry.id.in_(
-#             Tag.query.filter(
-#                 Tag.name.ilike(any_tag)
-#                 & ((Tag.expires > datetime.now()) | (Tag.expires == None))
-#             ).with_entities(Tag.block_id)
-#         )
-#     query_options = joinedload(DocEntry._block).joinedload(Block.tags)
-#     docs = get_documents(
-#         filter_user=get_current_user_object(),
-#         filter_folder=folder,
-#         search_recursively=True,
-#         custom_filter=custom_filter,
-#         query_options=query_options,
-#     )
-#
-#     tag_result_count = 0
-#     error_list = []
-#     current_doc = "before search"
-#     current_tag = "before search"
-#     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
-#
-#     try:
-#         for d in docs:
-#             try:
-#                 if is_excluded(get_document_relevance(d), relevance_threshold):
-#                     continue
-#                 current_doc = d.path
-#                 m_tags = []
-#                 m_num = 0
-#                 for tag in d.block.tags:
-#                     current_tag = tag.name
-#                     matches = list(term_regex.finditer(tag.name))
-#                     if matches:
-#                         match_count = len(matches)
-#                         if not query:
-#                             match_count = 1
-#                         m_num += match_count
-#                         tag_result_count += match_count
-#                         m_tags.append(tag)
-#
-#                 if m_num > 0:
-#                     results.append(
-#                         {"doc": d, "matching_tags": m_tags, "num_results": m_num}
-#                     )
-#             except Exception as e:
-#                 error = get_error_message(e)
-#                 error_list.append(
-#                     {"error": error, "doc_path": current_doc, "tag_name": current_tag}
-#                 )
-#                 log_search_error(error, query, current_doc, tag=current_tag)
-#     except Exception as e:
-#         raise RouteException(get_error_message(e))
-#     else:
-#         try:
-#             return json_response(
-#                 {
-#                     "results": results,
-#                     "incomplete_search_reason": "",
-#                     "tag_result_count": tag_result_count,
-#                     "errors": error_list,
-#                 }
-#             )
-#         except MemoryError:
-#             raise RouteException("MemoryError: results too large")
-#         except Exception as e:
-#             raise RouteException(
-#                 f"Error encountered while formatting JSON-response: {e}"
-#             )
-
-
 def compile_regex(
     query: str, regex: bool, case_sensitive: bool, search_whole_words: bool
 ):
@@ -949,112 +662,6 @@ def compile_regex(
         if not term_regex:
             raise RouteException(f"Regex compiling failed")
         return term_regex
-
-
-# TODO dead code, remove this
-# @search_routes.get("paths")
-# def path_search():
-#     """
-#     Document path search. Path results are treated as title results and use
-#     TitleResult objects and content & title search interface.
-#
-#     :return: Path results.
-#     """
-#     (
-#         query,
-#         folder,
-#         regex,
-#         case_sensitive,
-#         search_whole_words,
-#         search_owned_docs,
-#     ) = get_common_search_params(request)
-#     validate_query(query, search_whole_words)
-#     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
-#     relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
-#
-#     db_term = f"%{query}%"
-#     custom_filter = None
-#     if regex:
-#         if search_owned_docs:
-#             custom_filter = DocEntry.id.in_(
-#                 get_current_user_object()
-#                 .get_personal_group()
-#                 .accesses.filter_by(type=AccessType.owner.value)
-#                 .with_entities(BlockAccess.block_id)
-#             )
-#     else:
-#         if case_sensitive:
-#             if search_owned_docs:
-#                 custom_filter = DocEntry.id.in_(
-#                     get_current_user_object()
-#                     .get_personal_group()
-#                     .accesses.filter_by(type=AccessType.owner.value)
-#                     .with_entities(BlockAccess.block_id)
-#                 ) & DocEntry.name.like(db_term)
-#             else:
-#                 custom_filter = DocEntry.name.like(db_term)
-#         else:
-#             if search_owned_docs:
-#                 custom_filter = DocEntry.id.in_(
-#                     get_current_user_object()
-#                     .get_personal_group()
-#                     .accesses.filter_by(type=AccessType.owner.value)
-#                     .with_entities(BlockAccess.block_id)
-#                 ) & DocEntry.name.ilike(db_term)
-#             else:
-#                 custom_filter = DocEntry.name.ilike(db_term)
-#
-#     docs = get_documents(
-#         filter_user=get_current_user_object(),
-#         filter_folder=folder,
-#         query_options=lazyload(DocEntry._block),
-#         custom_filter=custom_filter,
-#         search_recursively=True,
-#     )
-#     path_results = []
-#     path_result_count = 0
-#     for d in docs:
-#         current_doc = d.path
-#         try:
-#             if is_excluded(get_document_relevance(d), relevance_threshold):
-#                 continue
-#             path_result = TitleResult()
-#             matches = list(term_regex.finditer(d.path))
-#             if matches:
-#                 path_result.alt_num_results = len(matches)
-#
-#             if path_result.has_results():
-#                 r = DocResult(d)
-#                 r.add_title_result(path_result)
-#                 path_results.append(r)
-#                 path_result_count += r.get_title_match_count()
-#         except Exception as e:
-#             log_search_error(get_error_message(e), query, current_doc, par="")
-#
-#     return json_response(
-#         {
-#             "title_result_count": path_result_count,
-#             "word_result_count": 0,
-#             "errors": [],
-#             "incomplete_search_reason": "",
-#             "title_results": path_results,
-#             "content_results": [],
-#         }
-#     )
-
-
-# TODO dead code, remove this
-# def is_excluded(relevance: int, relevance_threshold: int) -> bool:
-#     """
-#     Exclude if relevance is less than relevance threshold.
-#
-#     :param relevance: Document relevance value.
-#     :param relevance_threshold: Min included relevance.
-#     :return: True if document relevance is less than relevance threshold.
-#     """
-#     if relevance < relevance_threshold:
-#         return True
-#     return False
 
 
 def is_timeouted(start_time: float, timeout: float) -> bool:
@@ -1217,18 +824,12 @@ def search():
         search_whole_words,
         search_owned_docs,
     ) = get_common_search_params(request)
-    # max_results = get_option(request, "maxResults", default=1000000, cast=int)
-    # max_doc_results = get_option(request, "maxDocResults", default=10000, cast=int)
-    # ignore_plugins = get_option(request, "ignorePlugins", default=False, cast=bool)
     should_search_titles = get_option(request, "searchTitles", default=True, cast=bool)
     should_search_content = get_option(
         request, "searchContent", default=True, cast=bool
     )
     should_search_tags = get_option(request, "searchTags", default=True, cast=bool)
     should_search_paths = get_option(request, "searchPaths", default=True, cast=bool)
-    # search_attrs = get_option(request, "searchAttrs", default=False, cast=bool)
-    # relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
-    # ignore_relevance = get_option(request, "ignoreRelevance", default=False, cast=bool)
     timeout = get_option(request, "timeout", default=120, cast=int)
 
     start_time = time.time()
@@ -1237,8 +838,6 @@ def search():
     validate_query(query, search_whole_words)
 
     incomplete_search_reason = ""
-    # current_doc = ""
-    # current_par = ""
     content_output = []
     title_output = []
     tags_output = []
@@ -1512,15 +1111,6 @@ def search_content(
     except Exception as e:
         log_search_error(get_error_message(e), query, current_doc)
 
-    # TODO clean up
-    # for line in content_output:
-    #     if line and len(line) > 10:
-    #         try:
-    #             line = json.loads(line)
-    #             content_items[line["doc_id"]] = line
-    #         except Exception as e:
-    #             log_search_error(get_error_message(e), query, current_doc)
-
     doc_infos: list[DocInfo] = fetch_search_items(content_items, folder)
     # filter content search documents by view access and ownership (if that option was specified) here
     # instead of doing database accesses inside the search loop
@@ -1532,16 +1122,6 @@ def search_content(
         ignore_relevance,
         relevance_threshold,
     )
-    # TODO clean up
-    # if search_owned_docs:
-    #     doc_infos = list(
-    #         doc_info
-    #         for doc_info in doc_infos
-    #         if has_view_access(doc_info)
-    #         and user.has_ownership(doc_info, allow_admin=False)
-    #     )
-    # else:
-    #     doc_infos = list(filter(has_view_access, doc_infos))
 
     for doc_info in doc_infos:
         current_doc = doc_info.title
@@ -1552,25 +1132,7 @@ def search_content(
                 )
                 raise TimeoutError("content search timeout")
 
-            # TODO clean up
-            # If not allowed to view, continue to the next one.
-            # if not has_view_access(doc_info):
-            #     continue
-
-            # Skip if searching only owned and it's not owned.
-            # if search_owned_docs:
-            #     if not user.has_ownership(doc_info, allow_admin=False):
-            #         continue
-
-            # If relevance is ignored or not found from search file, skip check.
             line_info = content_items[doc_info.id]
-            # TODO clean up
-            # if not ignore_relevance:
-            #     relevance = line_info.get("d_r")
-            #     if relevance is not None and is_excluded(
-            #         relevance, relevance_threshold
-            #     ):
-            #         continue
             pars = line_info["pars"]
 
             doc_result = DocResult(doc_info)
