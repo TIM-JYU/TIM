@@ -4,8 +4,13 @@
 import * as t from "io-ts";
 import $ from "jquery";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    NgModule,
+} from "@angular/core";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {OnClickArg} from "tim/document/eventhandlers";
 import {onClick} from "tim/document/eventhandlers";
@@ -25,6 +30,7 @@ import {
 } from "tim/plugin/attributes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {DomSanitizer} from "@angular/platform-browser";
 
 const TimMenuMarkup = t.intersection([
     t.partial({
@@ -166,6 +172,15 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         return {};
     }
 
+    constructor(
+        el: ElementRef,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private cdr: ChangeDetectorRef
+    ) {
+        super(el, http, domSanitizer);
+    }
+
     ngOnInit() {
         super.ngOnInit();
         this.vctrl = vctrlInstance!;
@@ -247,7 +262,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         // Toggle open menu closed and back again when clicking.
         if (
             this.previouslyClicked &&
-            (this.previouslyClicked === item || item.open) &&
+            this.previouslyClicked === item &&
             clicked
         ) {
             item.open = !item.open;
@@ -513,6 +528,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         for (const t1 of this.menu) {
             this.closeAllInMenuItem(t1);
         }
+        this.cdr.detectChanges();
     }
 }
 
