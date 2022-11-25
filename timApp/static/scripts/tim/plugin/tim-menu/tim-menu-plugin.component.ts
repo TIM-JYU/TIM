@@ -299,7 +299,12 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         const placeholder = this.element.find(".tim-menu-placeholder")[0];
         const scrollY = $(window).scrollTop();
 
-        if (!menu || !placeholder || !this.topMenuTriggerHeight || !scrollY) {
+        if (
+            !menu ||
+            !placeholder ||
+            !this.topMenuTriggerHeight ||
+            scrollY == undefined
+        ) {
             return;
         }
         if (!this.previousScroll) {
