@@ -156,6 +156,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
     private openAbove: boolean = false;
     keepLinkColors: boolean = false;
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
+    private previousItem: ITimMenuItem | undefined;
     private previouslyClicked: ITimMenuItem | undefined;
     barStyle: string = "";
     private mouseInside: boolean = false; // Whether mouse cursor is inside the menu.
@@ -260,17 +261,18 @@ export class TimMenuPluginComponent extends AngularPluginBase<
             return;
         }
         // Toggle open menu closed and back again when clicking.
-        if (
-            this.previouslyClicked &&
-            this.previouslyClicked === item &&
-            clicked
-        ) {
+        if (this.previousItem && this.previousItem === item && clicked) {
             item.open = !item.open;
+            this.previousItem = item;
             this.previouslyClicked = item;
             return;
         }
+        if (this.previouslyClicked === item && !clicked) {
+            return;
+        }
+        this.previouslyClicked = undefined;
         // Close all menus when clicking menu that isn't child of previously clicked.
-        if (parent1 && parent1 !== this.previouslyClicked) {
+        if (parent1 && parent1 !== this.previousItem) {
             for (const menu of this.menu) {
                 this.closeAllInMenuItem(menu);
             }
@@ -280,14 +282,14 @@ export class TimMenuPluginComponent extends AngularPluginBase<
             }
         }
         // A first level menu doesn't have a parent; close all other menus.
-        if (!parent1 && item !== this.previouslyClicked) {
+        if (!parent1 && item !== this.previousItem) {
             for (const menu of this.menu) {
                 this.closeAllInMenuItem(menu);
             }
         }
         // Unless already open, clicked item always opens.
         item.open = true;
-        this.previouslyClicked = item;
+        this.previousItem = item;
     }
 
     /**
@@ -510,6 +512,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
     mouseLeave() {
         // console.log("mouseLeave");
         this.mouseInside = false;
+        this.previouslyClicked = undefined;
         // Only close menus on mouseleave, if hoverOpen is enabled and menu hasn't been clicked.
         if (!this.clickedInside && this.hoverOpen) {
             this.closeMenus();
