@@ -101,19 +101,19 @@ const TimMenuAll = t.intersection([
              style="{{barStyle}}" (mouseleave)="mouseLeave()" (mouseenter)="mouseEnter()">
     <span class="tim-menu-links" *ngFor="let t1 of menu; let last = last">
         <span *ngIf="t1.items && t1.items.length > 0 && hasRights(t1)" class="btn-group" style="{{setStyle(t1)}}">
-          <span [innerHtml]="t1.text+openingSymbol" (pointerdown)="toggleSubmenu(t1, undefined, undefined, true, $event)"
+          <span [innerHtml]="t1.text+openingSymbol" (click)="toggleSubmenu(t1, undefined, undefined, true)"
                 (pointerover)="toggleSubmenu(t1, undefined, undefined, false, $event)"></span>
           <ul class="tim-menu-dropdown" *ngIf="t1.open" [ngClass]="openDirection(t1.id)" id="{{t1.id}}">
             <li class="tim-menu-list-item" *ngFor="let t2 of t1.items" style="{{setStyle(t2)}}">
                 <span class="tim-menu-item" *ngIf="t2.items && t2.items.length > 0 && hasRights(t2)">
                     <span class="tim-menu-item" [innerHtml]="t2.text+openingSymbol"
-                          (pointerdown)="toggleSubmenu(t2, t1, undefined, true, $event)"
+                          (click)="toggleSubmenu(t2, t1, undefined, true)"
                           (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"></span>
                     <ul class="tim-menu-dropdown" id="{{t2.id}}" [ngClass]="openDirection(t2.id)" *ngIf="t2.open">
                         <li class="tim-menu-list-item" *ngFor="let t3 of t2.items" style="{{setStyle(t3)}}">
                             <span class="tim-menu-item" *ngIf="t3.items && t3.items.length > 0 && hasRights(t3)">
                                 <span class="tim-menu-item" [innerHtml]="t3.text+openingSymbol"
-                                      (pointerdown)="toggleSubmenu(t3, t2, t1, true, $event)"
+                                      (click)="toggleSubmenu(t3, t2, t1, true)"
                                       (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"></span>
                                 <ul class="tim-menu-dropdown" id="{{t3.id}}" [ngClass]="openDirection(t3.id)"
                                     *ngIf="t3.open">
@@ -250,10 +250,10 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         parent1: ITimMenuItem | undefined,
         parent2: ITimMenuItem | undefined,
         clicked: boolean,
-        event: PointerEvent
+        event?: PointerEvent
     ) {
         // ignore touch-based hover, because direct touch press raises both hover and click events
-        if (event.pointerType === "touch" && !clicked) {
+        if (event?.pointerType === "touch" && !clicked) {
             return;
         }
         // If called by mouseenter and either hover open is off or touch mode is on, do nothing.
