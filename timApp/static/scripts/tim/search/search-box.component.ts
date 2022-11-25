@@ -291,16 +291,6 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
 
         const start = new Date().getTime();
 
-        // Each search type has separate route.
-        // if (this.searchTags) {
-        //     await this.tagSearch();
-        // }
-        // if (this.searchPaths) {
-        //     await this.pathSearch();
-        // }
-        // if (this.searchContent || this.searchTitles) {
-        //     await this.wordSearch();
-        // }
         await this.combinedSearch();
         this.loading = false;
         if (
@@ -333,10 +323,10 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
 
         // Show results in result dialog.
         if (this.createNewWindow) {
-            showSearchResultDialog(this);
+            await showSearchResultDialog(this);
         } else {
             if (!this.resultsDialog) {
-                showSearchResultDialog(this);
+                await showSearchResultDialog(this);
             } else {
                 this.resultsDialog.updateAttributes(this);
             }
@@ -460,116 +450,6 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
             searchWholeWords: this.searchWholeWords,
             timeout: this.timeout,
         };
-    }
-
-    /**
-     * Document path search.
-     */
-    private async pathSearch() {
-        const r = await to(
-            $http<ISearchResultsInfo>({
-                method: "GET",
-                params: {...this.getCommonSearchOptions()},
-                url: "/search/paths",
-            })
-        );
-        if (!r.ok) {
-            this.errorMessage = r.result.data.error;
-            this.pathResults = [];
-            return;
-        }
-        // Path results use title interface.
-        this.pathResults.push(...r.result.data.title_results);
-        if (r.result.data.incomplete_search_reason) {
-            this.incompleteSearchReason =
-                r.result.data.incomplete_search_reason;
-        }
-        this.pathMatchCount = r.result.data.title_result_count;
-    }
-
-    /**
-     * Document title search (unused).
-     */
-    private async titleSearch() {
-        const r = await to(
-            $http<ISearchResultsInfo>({
-                method: "GET",
-                params: {...this.getCommonSearchOptions()},
-                url: "/search/titles",
-            })
-        );
-        if (!r.ok) {
-            this.errorMessage = r.result.data.error;
-            this.titleResults = [];
-            return;
-        }
-        this.titleResults = r.result.data.title_results;
-        if (r.result.data.incomplete_search_reason) {
-            this.incompleteSearchReason =
-                r.result.data.incomplete_search_reason;
-        }
-        this.titleMatchCount = r.result.data.title_result_count;
-    }
-
-    /**
-     * Document paragraph word and title search.
-     */
-    private async wordSearch() {
-        const r = await to(
-            $http<ISearchResultsInfo>({
-                method: "GET",
-                params: {
-                    ignorePlugins: this.ignorePlugins,
-                    maxDocResults: this.maxDocResults,
-                    searchContent: this.searchContent,
-                    searchTitles: this.searchTitles,
-                    searchAttrs: true,
-                    ...this.getCommonSearchOptions(),
-                },
-                url: "/search",
-            })
-        );
-        if (!r.ok) {
-            this.errorMessage = r.result.data.error;
-            this.results = [];
-            this.titleResults = [];
-            return;
-        }
-        const response = r.result;
-        this.results = response.data.content_results;
-        this.titleResults = response.data.title_results;
-        if (response.data.incomplete_search_reason) {
-            this.incompleteSearchReason =
-                response.data.incomplete_search_reason;
-        }
-        this.wordMatchCount = response.data.word_result_count;
-        this.titleMatchCount = response.data.title_result_count;
-    }
-
-    /**
-     * Search document tags.
-     */
-    private async tagSearch() {
-        const r = await to(
-            $http<ITagSearchResultsInfo>({
-                method: "GET",
-                params: {...this.getCommonSearchOptions()},
-                url: "/search/tags",
-            })
-        );
-        if (r.ok) {
-            const response = r.result;
-            this.tagResults = response.data.results;
-            this.tagMatchCount = response.data.tag_result_count;
-            if (response.data.incomplete_search_reason) {
-                this.incompleteSearchReason =
-                    response.data.incomplete_search_reason;
-            }
-        } else {
-            this.errorMessage = r.result.data.error;
-            this.tagResults = [];
-            return;
-        }
     }
 
     private async combinedSearch() {
