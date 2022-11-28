@@ -20,6 +20,7 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
     max-width: calc(#{$left-ratio} - #{$grid-gutter-per2});
     min-width: 0;
     margin-left: -$grid-gutter-per2;
+    z-index: 10;
 
     @media (max-width: $screen-md-max) {
         max-width: calc(#{$left-ratio-lg} - #{$grid-gutter-per2});
@@ -31,7 +32,6 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
 
     &.show {
         min-width: 20em;
-        z-index: 10;
         @media (min-width: $screen-md-min) {
             min-width: 18em;
         }
