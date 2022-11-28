@@ -89,7 +89,7 @@ const multisaveAll = t.intersection([
             {{unsavedText}}
             <ul>
                 <li *ngFor="let tag of unsavedTasksWithAliases">
-                    <a href="" (click)="scrollTo(tag.component); $event.preventDefault()">{{tag.alias}}</a>
+                    <a (click)="scrollTo(tag.component); $event.preventDefault()">{{tag.alias}}</a>
                 </li>
             </ul>
         </div>
@@ -131,6 +131,7 @@ export class MultisaveComponent
     savedFields: number = 0;
     private unsavedTimComps: Set<string> = new Set<string>();
     private hasUnsavedTargets: boolean = false;
+    unsavedTasksWithAliases: {component: ITimComponent; alias?: string}[] = [];
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -170,27 +171,6 @@ export class MultisaveComponent
 
     get livefeed() {
         return this.markup.livefeed;
-    }
-
-    /**
-     * Return parsed list unsaved tasks with aliases
-     * If multiple tasks have same alias, only add first one to the returned list
-     */
-    get unsavedTasksWithAliases(): {
-        component: ITimComponent;
-        alias: string | undefined;
-    }[] {
-        const ret: {component: ITimComponent; alias: string | undefined}[] = [];
-        for (const name of this.unsavedTimComps) {
-            const c = this.vctrl.getTimComponentByName(name);
-            if (c) {
-                const alias = this.getUnsavedAlias(c);
-                if (!alias || !ret.find((r) => r.alias === alias)) {
-                    ret.push({component: c, alias});
-                }
-            }
-        }
-        return ret;
     }
 
     /**
@@ -380,9 +360,24 @@ export class MultisaveComponent
         return this.markup.tags;
     }
 
+    private refreshUnsavedList() {
+        const newUnsaved: typeof this.unsavedTasksWithAliases = [];
+        for (const name of this.unsavedTimComps) {
+            const c = this.vctrl.getTimComponentByName(name);
+            if (c) {
+                const alias = this.getUnsavedAlias(c);
+                if (!alias || !newUnsaved.find((r) => r.alias === alias)) {
+                    newUnsaved.push({component: c, alias});
+                }
+            }
+        }
+        this.unsavedTasksWithAliases = newUnsaved;
+    }
+
     private addNewUnsaved(taskId: string) {
         this.unsavedTimComps.add(taskId);
         this.hasUnsavedTargets = true;
+        this.refreshUnsavedList();
         this.isSaved = false;
     }
 
@@ -402,6 +397,7 @@ export class MultisaveComponent
                 if (this.unsavedTimComps.size == 0) {
                     this.hasUnsavedTargets = false;
                 }
+                this.refreshUnsavedList();
             }
             return;
         }
