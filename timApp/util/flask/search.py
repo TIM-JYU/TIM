@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from io import StringIO
 from pathlib import Path
 from re import Pattern
-from typing import Match
+from typing import Match, Type
 
 from flask import Blueprint, json, Request
 from flask import request
@@ -208,7 +208,7 @@ class SearchResult:
 
     def get_match_count(self) -> int:
         """
-        :return: How many match words the title has.
+        :return: How many match words the search result has.
         """
         if not self.word_results:
             return self.alt_num_results
@@ -253,6 +253,34 @@ class TitleResult(SearchResult):
 
 
 @dataclass()
+class PathResult(SearchResult):
+    """
+    Document path search result
+    """
+
+    pass
+
+
+@dataclass()
+class TagResult(SearchResult):
+    """
+    Document tag search result
+    """
+
+    pass
+
+
+def get_search_match_count(results: list[SearchResult], rt: Type[SearchResult]) -> int:
+    """
+    Returns the total number of matches found for a specific type of search
+    :return: total number of matches found for the search
+    """
+    if results and not type(results[0]) is rt:
+        results = list(result for result in results if result.__class__ is rt)
+    return sum(r.get_match_count() for r in results)
+
+
+@dataclass()
 class DocResult:
     """
     Contains one document's title and word search information.
@@ -260,57 +288,53 @@ class DocResult:
 
     doc_info: DocInfo
     incomplete: bool = False
-    par_results: list[ParResult] = field(default_factory=list)
-    title_results: list[TitleResult] = field(default_factory=list)
+    search_results: list[SearchResult] = field(default_factory=list)
 
-    def add_par_result(self, result: ParResult) -> None:
+    def add_search_result(self, result: SearchResult) -> None:
         """
-        Add new paragraph search result to the list.
-
-        :param result: New paragraph result.
-        :return: None.
+        Add a new search result to document results
+        :param result: Search result to add
+        :return: None
         """
-        self.par_results.append(result)
-
-    def add_title_result(self, result: TitleResult) -> None:
-        """
-        Add new title search result to the list.
-
-        :param result: New title result.
-        :return: None.
-        """
-        self.title_results.append(result)
+        self.search_results.append(result)
 
     def has_results(self) -> bool:
         """
         :return: Whether the document has any results in it.
         """
-        return len(self.par_results) > 0 or len(self.title_results) > 0
+        return len(self.search_results) > 0
 
     def to_json(self):
         """
         :return: A dictionary of the object, suitable for JSON-conversion.
         """
+        title_results = list(
+            title_res
+            for title_res in self.search_results
+            if title_res.__class__ is TitleResult
+        )
+        par_results = list(
+            par_res for par_res in self.search_results if par_res.__class__ is ParResult
+        )
+        path_results = list(
+            path_res
+            for path_res in self.search_results
+            if path_res.__class__ is PathResult
+        )
+        tag_results = list(
+            tag_res for tag_res in self.search_results if tag_res.__class__ is TagResult
+        )
+
         return {
             "doc": self.doc_info,
             "incomplete": self.incomplete,
-            "title_results": self.title_results,
-            "num_title_results": self.get_title_match_count(),
-            "par_results": self.par_results,
-            "num_par_results": self.get_par_match_count(),
+            "title_results": title_results,
+            "num_title_results": get_search_match_count(
+                self.search_results, TitleResult
+            ),
+            "par_results": par_results,
+            "num_par_results": get_search_match_count(self.search_results, ParResult),
         }
-
-    def get_par_match_count(self) -> int:
-        """
-        :return: Total document count for paragraph word matches.
-        """
-        return sum(p.get_match_count() for p in self.par_results)
-
-    def get_title_match_count(self) -> int:
-        """
-        :return: Total document count for title matches.
-        """
-        return sum(p.get_match_count() for p in self.title_results)
 
 
 def validate_query(query: str, search_whole_words: bool) -> None:
@@ -735,6 +759,7 @@ def filter_search_documents(
 ) -> list[DocInfo]:
     """
     Filters a list of DocInfo objects based on view access, ownership (if specified) and relevance value
+
     :param doc_infos: list of DocInfo objects to filter
     :param search_items: dictionary of pre-indexed search items
     :param user: current user
@@ -743,6 +768,7 @@ def filter_search_documents(
     :param relevance_threshold: threshold value for document relevance check
     :return: list of filtered DocInfo objects
     """
+
     docs = []
     if search_owned_docs:
         if not ignore_relevance:
@@ -891,7 +917,8 @@ def search():
                 "paths_results": paths_results,
             }
         )
-
+    # TODO optimize search to perform database fetches and filtering for search docs only once
+    #      by joining search item keys dicts before use
     if should_search_titles:
         title_results, title_result_count, incomplete_search_reason = search_metadata(
             request,
@@ -949,6 +976,26 @@ def search():
             "word_result_count": word_result_count,
         }
     )
+
+
+def get_result_instance(result_type: str, alt_num_results: int) -> SearchResult:
+    """
+    Returns an instance of the specified SearchResult type, parameterised with a value for alt_num_results
+    :param result_type: Type of SearchResult to instantiate and return
+    :param alt_num_results: value for alt_num_results property of SearchResult
+    :return: Instance of (a subclass of) SearchResult
+    """
+    match result_type:
+        case "title":
+            return TitleResult(alt_num_results=alt_num_results)
+        case "par":
+            return ParResult(alt_num_results=alt_num_results)
+        case "path":
+            return PathResult(alt_num_results=alt_num_results)
+        case "tags":
+            return TagResult(alt_num_results=alt_num_results)
+        case _:
+            return TitleResult(alt_num_results=alt_num_results)
 
 
 def search_metadata(
@@ -1026,11 +1073,8 @@ def search_metadata(
             search_matches = list(term_regex.finditer(line_info[f"doc_{target}"]))
             if search_matches:
                 search_match_count = len(search_matches)
-                # TODO implement common logic for adding search results
-                # doc_result.add_search_result(target, alt_num_results=search_match_count)
-                doc_result.add_title_result(
-                    TitleResult(alt_num_results=search_match_count)
-                )
+                search_res = get_result_instance(target, search_match_count)
+                doc_result.add_search_result(search_res)
                 search_result_count += search_match_count
 
             if doc_result.has_results():
@@ -1189,12 +1233,14 @@ def search_content(
 
                 # Don't add empty par result (in error cases).
                 if par_result.has_results():
-                    doc_result.add_par_result(par_result)
+                    # doc_result.add_par_result(par_result)
+                    doc_result.add_search_result(par_result)
 
                 # End paragraph match search if limit has been reached, but
                 # don't break and mark as incomplete if this was the last paragraph.
                 if (
-                    doc_result.get_par_match_count() > max_doc_results
+                    get_search_match_count(doc_result.search_results, ParResult)
+                    > max_doc_results
                     and i != len(pars) - 1
                 ):
                     incomplete_search_reason = (
@@ -1206,7 +1252,10 @@ def search_content(
 
             # If no valid paragraph results, skip document.
             if doc_result.has_results():
-                word_result_count += doc_result.get_par_match_count()
+                # word_result_count += doc_result.get_par_match_count()
+                word_result_count += get_search_match_count(
+                    doc_result.search_results, ParResult
+                )
                 content_results.append(doc_result)
 
             # End search if the limit is reached.
