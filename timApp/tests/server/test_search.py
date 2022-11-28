@@ -464,77 +464,6 @@ class SearchTest(TimRouteTest):
         self.get(
             url,
             expect_status=200,
-            #     expect_content={
-            #         "errors": [],
-            #         "incomplete_search_reason": "",
-            #         "results": [
-            #             {
-            #                 "doc": {
-            #                     "id": d.id,
-            #                     "isFolder": False,
-            #                     "location": d.location,
-            #                     "modified": "just now",
-            #                     "name": d.short_name,
-            #                     "owners": [
-            #                         {"id": self.get_test_user_1_group_id(), "name": u.name}
-            #                     ],
-            #                     "path": d.path,
-            #                     "public": True,
-            #                     "relevance": None,
-            #                     "rights": {
-            #                         "browse_own_answers": True,
-            #                         "can_comment": True,
-            #                         "can_mark_as_read": True,
-            #                         "copy": True,
-            #                         "editable": True,
-            #                         "manage": True,
-            #                         "owner": True,
-            #                         "see_answers": True,
-            #                         "teacher": True,
-            #                     },
-            #                     "tags": [
-            #                         {
-            #                             "block_id": d.id,
-            #                             "expires": None,
-            #                             "name": tags[0],
-            #                             "type": TagType.Regular.value,
-            #                         },
-            #                         {
-            #                             "block_id": d.id,
-            #                             "expires": None,
-            #                             "name": tags[1],
-            #                             "type": TagType.Regular.value,
-            #                         },
-            #                         {
-            #                             "block_id": d.id,
-            #                             "expires": None,
-            #                             "name": tags[2],
-            #                             "type": TagType.Regular.value,
-            #                         },
-            #                     ],
-            #                     "title": d.title,
-            #                     "unpublished": True,
-            #                 },
-            #                 "matching_tags": [
-            #                     {
-            #                         "block_id": d.id,
-            #                         "expires": None,
-            #                         "name": tags[0],
-            #                         "type": TagType.Regular.value,
-            #                     },
-            #                     {
-            #                         "block_id": d.id,
-            #                         "expires": None,
-            #                         "name": tags[1],
-            #                         "type": TagType.Regular.value,
-            #                     },
-            #                 ],
-            #                 "num_results": 2,
-            #             }
-            #         ],
-            #         "tag_result_count": 2,
-            #     },
-            # )
             expect_content={
                 "content_results": [],
                 "errors": [],
@@ -570,9 +499,9 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 0,
-                        "num_title_results": 2,
+                        "num_title_results": 0,
                         "par_results": [],
-                        "title_results": [{"num_results": 2, "results": []}],
+                        "title_results": [],
                     }
                 ],
                 "title_result_count": 0,
@@ -601,15 +530,13 @@ class SearchTest(TimRouteTest):
                 "paths_results": [
                     {
                         "doc": {
-                            "id": d.id,
+                            "id": 9,
                             "isFolder": False,
-                            "location": d.location,
+                            "location": "users/test-user-1/a/b/dogs-like-bones/c",
                             "modified": "just now",
                             "name": "d",
-                            "owners": [
-                                {"id": self.get_test_user_1_group_id(), "name": u.name}
-                            ],
-                            "path": d.path,
+                            "owners": [{"id": 6, "name": "testuser1"}],
+                            "path": "users/test-user-1/a/b/dogs-like-bones/c/d",
                             "public": True,
                             "relevance": None,
                             "rights": {
@@ -623,15 +550,15 @@ class SearchTest(TimRouteTest):
                                 "see_answers": True,
                                 "teacher": True,
                             },
-                            "title": d.title,
+                            "title": "document 3",
                             "unpublished": True,
                         },
                         "incomplete": False,
-                        "title_results": [{"results": [], "num_results": 1}],
-                        "num_title_results": 1,
-                        "par_results": [],
                         "num_par_results": 0,
-                    },
+                        "num_title_results": 0,
+                        "par_results": [],
+                        "title_results": [],
+                    }
                 ],
                 "tags_result_count": 0,
                 "tags_results": [],
@@ -670,15 +597,13 @@ class SearchTest(TimRouteTest):
                 "paths_results": [
                     {
                         "doc": {
-                            "id": d.id,
+                            "id": 9,
                             "isFolder": False,
-                            "location": d.location,
+                            "location": "users/test-user-1/a/b/dogs-like-bones/c",
                             "modified": "just now",
                             "name": "d",
-                            "owners": [
-                                {"id": self.get_test_user_1_group_id(), "name": u.name}
-                            ],
-                            "path": d.path,
+                            "owners": [{"id": 6, "name": "testuser1"}],
+                            "path": "users/test-user-1/a/b/dogs-like-bones/c/d",
                             "public": True,
                             "relevance": None,
                             "rights": {
@@ -692,15 +617,15 @@ class SearchTest(TimRouteTest):
                                 "see_answers": True,
                                 "teacher": True,
                             },
-                            "title": d.title,
+                            "title": "document 3",
                             "unpublished": True,
                         },
                         "incomplete": False,
-                        "title_results": [{"results": [], "num_results": 1}],
-                        "num_title_results": 1,
-                        "par_results": [],
                         "num_par_results": 0,
-                    },
+                        "num_title_results": 0,
+                        "par_results": [],
+                        "title_results": [],
+                    }
                 ],
                 "tags_result_count": 0,
                 "tags_results": [],
