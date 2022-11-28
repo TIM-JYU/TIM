@@ -1359,6 +1359,33 @@ tools.println(tools.getValue("t2.count"));
             },
         )
 
+    def test_answerlimit_override(self):
+        self.login_test1()
+        d = self.create_jsrun(
+            """
+groups: []
+fields:
+ - counter
+program: |!!
+let val = tools.getDouble('counter')
+tools.setDouble('counter',val+1)
+!!
+        """
+        )
+        d.document.add_text(
+            """
+``` {#counter plugin="numericfield"}
+answerLimit: 0
+```
+        """
+        )
+        self.post_answer("numericfield", f"{d.id}.counter", user_input={"c": "3"})
+        self.do_jsrun(d)
+        self.post_answer("numericfield", f"{d.id}.counter", user_input={"c": "4"})
+        self.do_jsrun(d)
+        # Tasks with answerlimit 0 are currently used as fields where valid input can only be done via jsrunner
+        self.verify_answer_content(f"{d.id}.counter", "c", 2, self.test_user_1, 4)
+
 
 class JsRunnerGroupTest(JsRunnerTestBase):
     def test_jsrunner_group(self):

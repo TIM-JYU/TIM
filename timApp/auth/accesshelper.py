@@ -740,7 +740,11 @@ def check_access_from_field(
     tid = TaskId.parse(field_to_check, require_doc_id=False)
     if not tid.doc_id:
         tid = TaskId.parse(str(task_id.doc_id) + "." + field_to_check)
-    prev = current_user.get_answers_for_task(tid.doc_task).first()
+    prev = (
+        current_user.answers.filter_by(task_id=tid.doc_task, valid=True)
+        .order_by(Answer.id.desc())
+        .first()
+    )
     if not prev:
         return True
     try:
