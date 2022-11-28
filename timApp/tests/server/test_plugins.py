@@ -2387,15 +2387,9 @@ accessField:
         resp = self.post_answer(
             "textfield", f"{d.id}.question", user_input={"c": "testuser2@d.2"}
         )
-        self.assertEqual(
-            {
-                "web": {"result": "saved"},
-                "savedNew": 5,
-                "valid": False,
-                "error": access_error_default,
-            },
-            resp,
-        )
+        self.assertEqual(access_error_default, resp["error"])
+        self.assertFalse(resp["valid"])
+        self.assertEqual(3, len(self.get_task_answers(f"{d.id}.question")))
         # int 1 is not valid answer via cbfield answer route, but might be set by jsrunner
         save_answer(
             [self.test_user_2],
@@ -2409,14 +2403,10 @@ accessField:
             f"{d.id}.question_ext_accessfield",
             user_input={"c": "testuser2@d_ext"},
         )
+        self.assertEqual("You already locked your access to this task", resp["error"])
+        self.assertFalse(resp["valid"])
         self.assertEqual(
-            {
-                "web": {"result": "saved"},
-                "savedNew": 7,
-                "valid": False,
-                "error": "You already locked your access to this task",
-            },
-            resp,
+            1, len(self.get_task_answers(f"{d.id}.question_ext_accessfield"))
         )
 
     def test_accessfield_invalid_answer(self):
@@ -2449,26 +2439,13 @@ accessField:
         resp = self.post_answer(
             "textfield", f"{d.id}.question", user_input={"c": "fail"}
         )
-        self.assertEqual(
-            {
-                "web": {"result": "saved"},
-                "savedNew": 4,
-                "valid": False,
-                "error": access_error_default,
-            },
-            resp,
-        )
+        self.assertEqual(access_error_default, resp["error"])
+        self.assertFalse(resp["valid"])
         self.post_answer("textfield", f"{d.id}.access", user_input={"c": "0"})
         # latest invalid answer 0 on access source does not override valid answer 1
         resp = self.post_answer(
             "textfield", f"{d.id}.question", user_input={"c": "fail again"}
         )
-        self.assertEqual(
-            {
-                "web": {"result": "saved"},
-                "savedNew": 6,
-                "valid": False,
-                "error": access_error_default,
-            },
-            resp,
-        )
+        self.assertEqual(access_error_default, resp["error"])
+        self.assertFalse(resp["valid"])
+        self.assertEqual(3, len(self.get_task_answers(f"{d.id}.question")))
