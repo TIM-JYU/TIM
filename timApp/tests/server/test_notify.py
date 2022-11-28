@@ -379,7 +379,7 @@ type: text
         self.assertEqual(
             {
                 "mail_from": mail_from,
-                "msg": "Answer posted by user 1 Test: "
+                "msg": f"Answer posted by user 1 Test to '{d.id}.t': "
                 "http://localhost/answers/users/test-user-1/doc1?task=t&answerNumber=1&user=testuser1",
                 "rcpt": "test2@example.com",
                 "reply_to": "test1@example.com",

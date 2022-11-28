@@ -75,6 +75,7 @@ class AnswerNotification(PendingNotification):
     """A notification that an answer has been added, changed or deleted."""
 
     answer_number = db.Column(db.Integer)
+    task_id = db.Column(db.Text)
 
     @property
     def grouping_key(self) -> GroupingKey:
