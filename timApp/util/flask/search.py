@@ -188,8 +188,8 @@ class SearchResult:
     Common superclass for different search results.
     """
 
-    word_results: list[WordResult] = field(default_factory=list)
     alt_num_results: int = 0
+    word_results: list[WordResult] = field(default_factory=list)
 
     def add_result(self, result: WordResult) -> None:
         """
@@ -258,17 +258,10 @@ class DocResult:
     Contains one document's title and word search information.
     """
 
-    def __init__(
-        self, doc_info: DocInfo, par_results=None, title_results=None, incomplete=False
-    ):
-        if par_results is None:
-            par_results = []
-        if title_results is None:
-            title_results = []
-        self.doc_info = doc_info
-        self.par_results = par_results
-        self.title_results = title_results
-        self.incomplete = incomplete
+    doc_info: DocInfo
+    incomplete: bool = False
+    par_results: list[ParResult] = field(default_factory=list)
+    title_results: list[TitleResult] = field(default_factory=list)
 
     def add_par_result(self, result: ParResult) -> None:
         """
@@ -1179,7 +1172,8 @@ def search_content(
                     except KeyError:
                         pass
 
-                par_result = ParResult(par_id)
+                par_result = ParResult()
+                par_result.par_id = par_id
                 par_matches = list(term_regex.finditer(md))
 
                 if par_matches:
