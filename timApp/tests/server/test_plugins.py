@@ -2418,3 +2418,57 @@ accessField:
             },
             resp,
         )
+
+    def test_accessfield_invalid_answer(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par=(
+                """
+#- {#access plugin=textfield}
+ answerLimit: 0
+
+#- {#question plugin=textfield}
+accessField:
+ field: access
+ limit: 1
+"""
+            )
+        )
+        access_error_default = "You have expired your access to this task."
+        self.post_answer("textfield", f"{d.id}.access", user_input={"c": "1"})
+        resp = self.post_answer("textfield", f"{d.id}.question", user_input={"c": "ok"})
+        # only invalid answers on access source, answer is successful
+        self.assertNotIn("error", resp)
+        save_answer(
+            [self.test_user_1],
+            TaskId.parse(f"{d.id}.access"),
+            content={"c": 1},
+            points=None,
+        )
+        db.session.commit()
+        resp = self.post_answer(
+            "textfield", f"{d.id}.question", user_input={"c": "fail"}
+        )
+        self.assertEqual(
+            {
+                "web": {"result": "saved"},
+                "savedNew": 4,
+                "valid": False,
+                "error": access_error_default,
+            },
+            resp,
+        )
+        self.post_answer("textfield", f"{d.id}.access", user_input={"c": "0"})
+        # latest invalid answer 0 on access source does not override valid answer 1
+        resp = self.post_answer(
+            "textfield", f"{d.id}.question", user_input={"c": "fail again"}
+        )
+        self.assertEqual(
+            {
+                "web": {"result": "saved"},
+                "savedNew": 6,
+                "valid": False,
+                "error": access_error_default,
+            },
+            resp,
+        )
