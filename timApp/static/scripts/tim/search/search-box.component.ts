@@ -228,7 +228,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     searchContent = true; // Content search.
     searchWholeWords = true; // Whole word search.
     searchOwned = false; // Limit search to docs owned by the user.
-    searchPaths = false; // Search document paths.
+    searchPaths = true; // Search document paths.
     private ignoreRelevance = false; // Don't limit results by relevance.
     relevanceThreshold = 10; // Exclude documents with < X relevance.
     suggestions = relevanceSuggestions;
