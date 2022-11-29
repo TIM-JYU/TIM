@@ -46,6 +46,7 @@ from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import membership_current, UserGroupMember
+from timApp.user.userutils import ReplaceAccessAction
 from timApp.util.flask.requesthelper import (
     NotExist,
     RouteException,
@@ -84,6 +85,9 @@ class PermissionActionBase:
 class AddPermission(PermissionActionBase):
     time: TimeOpt
     confirm: bool = False
+    replaceAction: ReplaceAccessAction = field(
+        default=ReplaceAccessAction.UpdateDuration, metadata={"by_value": True}
+    )
 
 
 @dataclass
@@ -697,12 +701,13 @@ def apply_permission_actions(
     for to_add in add:
         doc_entry = doc_entries[to_add.doc_path]
         # Don't throw if we try to remove a permission from ourselves, just ignore it
+        # noinspection PyTypeChecker
         accs = add_perm(
             PermissionEditModel(
                 to_add.type, to_add.time, [user_group.name], to_add.confirm, True
             ),
             doc_entry,
-            replace_active_duration=False,
+            replace_active_duration=to_add.replace_action,
         )
         if accs:
             update_messages.append(
