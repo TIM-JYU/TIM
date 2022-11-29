@@ -707,7 +707,7 @@ def apply_permission_actions(
                 to_add.type, to_add.time, [user_group.name], to_add.confirm, True
             ),
             doc_entry,
-            replace_active_duration=to_add.replace_action,
+            replace_active_duration=to_add.replaceAction,
         )
         if accs:
             update_messages.append(
