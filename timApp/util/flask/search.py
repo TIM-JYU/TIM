@@ -130,7 +130,6 @@ def log_search_error(
 
 def preview_result(
     md: str,
-    query: str,
     m: Match[str],
     snippet_length: int = PREVIEW_LENGTH,
     max_length: int = PREVIEW_MAX_LENGTH,
@@ -145,20 +144,6 @@ def preview_result(
     :param max_length: The maximum allowed length of the preview.
     :return: Preview with set amount of characters around search word.
     """
-    # start_index = m.start() - snippet_length
-    # end_index = m.end() + snippet_length
-    # # If the match is longer than given threshold, limit its size.
-    # if end_index - start_index > max_length:
-    #     end_index = m.start() + len(query) + snippet_length
-    # prefix = "..."
-    # postfix = "..."
-    # if start_index < 0:
-    #     start_index = 0
-    #     prefix = ""
-    # if end_index > len(md):
-    #     end_index = len(md)
-    #     postfix = ""
-
     par_len: int = len(md)
     max_length = par_len if par_len < max_length else PREVIEW_MAX_LENGTH
     s: int = m.start() - snippet_length
@@ -1240,7 +1225,7 @@ def search_content(
                     #                         match_start=m.start(),
                     #                         match_end=m.end())
                     #     par_result.add_result(result)
-                    par_result.preview = preview_result(md, query, par_matches[0])
+                    par_result.preview = preview_result(md, par_matches[0])
 
                 # Don't add empty par result (in error cases).
                 if par_result.has_results():
