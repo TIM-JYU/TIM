@@ -145,19 +145,30 @@ def preview_result(
     :param max_length: The maximum allowed length of the preview.
     :return: Preview with set amount of characters around search word.
     """
-    start_index = m.start() - snippet_length
-    end_index = m.end() + snippet_length
-    # If the match is longer than given threshold, limit its size.
-    if end_index - start_index > max_length:
-        end_index = m.start() + len(query) + snippet_length
-    prefix = "..."
-    postfix = "..."
-    if start_index < 0:
-        start_index = 0
-        prefix = ""
-    if end_index > len(md):
-        end_index = len(md)
-        postfix = ""
+    # start_index = m.start() - snippet_length
+    # end_index = m.end() + snippet_length
+    # # If the match is longer than given threshold, limit its size.
+    # if end_index - start_index > max_length:
+    #     end_index = m.start() + len(query) + snippet_length
+    # prefix = "..."
+    # postfix = "..."
+    # if start_index < 0:
+    #     start_index = 0
+    #     prefix = ""
+    # if end_index > len(md):
+    #     end_index = len(md)
+    #     postfix = ""
+
+    par_len: int = len(md)
+    max_length = par_len if par_len < max_length else PREVIEW_MAX_LENGTH
+    s: int = m.start() - snippet_length
+    e: int = m.end() + snippet_length
+    start_index: int = s if s > 0 else 0
+    end_index: int = e if (e - s) <= max_length else par_len
+
+    prefix = "..." if start_index else ""
+    postfix = "..." if end_index < par_len else ""
+
     return prefix + md[start_index:end_index] + postfix
 
 
