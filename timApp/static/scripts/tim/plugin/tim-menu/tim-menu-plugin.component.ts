@@ -124,17 +124,20 @@ const TimMenuAll = t.intersection([
                                 </ul>
                             </span>
                             <span class="tim-menu-item" *ngIf="t3.items && t3.items.length < 1  && hasRights(t3)"
-                                  [innerHtml]="t3.text"></span>
+                                  [innerHtml]="t3.text" (click)="toggleSubmenu(t3, t2, t1, true)"
+                                  (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"></span>
                         </li>
                     </ul>
                 </span>
                 <span class="tim-menu-item" *ngIf="t2.items && t2.items.length < 1 && hasRights(t2)"
-                      [innerHtml]="t2.text"></span>
+                      [innerHtml]="t2.text" (click)="toggleSubmenu(t2, t1, undefined, true)"
+                      (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"></span>
             </li>
           </ul>
         </span>
         <span *ngIf="t1.items && t1.items.length < 1 && hasRights(t1)" class="btn-group" style="{{setStyle(t1)}}"
-              [innerHtml]="t1.text"></span>
+              [innerHtml]="t1.text" (click)="toggleSubmenu(t1, undefined, undefined, true)"
+              (pointerover)="toggleSubmenu(t1, undefined, undefined, false, $event)"></span>
         <span *ngIf="!last && hasRights(t1)" [innerHtml]="separator"></span>
     </span>
         </div>
