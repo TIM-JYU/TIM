@@ -229,6 +229,8 @@ def delete_answer(answer_id: int) -> Response:
     verify_teacher_access(get_doc_or_abort(doc_id))
     verify_admin()
     unames = [u.name for u in a.users_all]
+    if not unames:
+        raise RouteException("The answer has already been deleted from all users.")
     a.users_all = []
     db.session.commit()
     u = get_current_user_object()
