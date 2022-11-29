@@ -312,6 +312,8 @@ def get_current_time() -> datetime:
 
 
 def seq_to_str(lst: Sequence[str]) -> str:
+    if not lst:
+        return ""
     if len(lst) == 1:
         return lst[0]
     else:
