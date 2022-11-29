@@ -7696,6 +7696,14 @@
           <context context-type="linenumber">242,243</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1241310337105023910" datatype="html">
+        <source>Could not delete answer. Details: <x id="PH" equiv-text="r.result.error.error"/></source>
+        <target state="translated">Kunde inte radera svaret. Detaljer: <x id="PH" equiv-text="r.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1588,1587</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

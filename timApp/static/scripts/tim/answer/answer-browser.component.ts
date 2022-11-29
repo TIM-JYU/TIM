@@ -57,6 +57,7 @@ import {
     getViewName,
     to,
     to2,
+    toPromise,
 } from "tim/util/utils";
 import type {
     IAnswer,
@@ -64,6 +65,7 @@ import type {
     IModelAnswerSettings,
 } from "tim/answer/IAnswer";
 import {CommonModule} from "@angular/common";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
@@ -206,7 +208,8 @@ export class AnswerBrowserComponent
 
     constructor(
         private element: ElementRef<HTMLElement>,
-        public cdr: ChangeDetectorRef
+        public cdr: ChangeDetectorRef,
+        public http: HttpClient
     ) {
         this.loading = 0;
     }
@@ -1567,22 +1570,34 @@ export class AnswerBrowserComponent
         if (!this.selectedAnswer) {
             return;
         }
-        if (!window.confirm($localize`Delete this answer?`)) {
+        const shouldDelete = await showConfirm(
+            $localize`Delete this answer?`,
+            $localize`Delete this answer?`
+        );
+        if (!shouldDelete) {
             return;
         }
         const aid = this.selectedAnswer.id;
-        await to(
-            $http.post("/answer/delete", {
+        const r = await toPromise(
+            this.http.post("/answer/delete", {
                 answer_id: aid,
             })
         );
+        if (!r.ok) {
+            await showMessageDialog(
+                $localize`Could not delete answer. Details: ${r.result.error.error}`
+            );
+            return;
+        }
         const index = this.answers.findIndex((a) => a.id === aid);
         if (index < 0) {
             return;
         }
         this.answers.splice(index, 1);
         this.updateFiltered();
-        if (index < this.filteredAnswers.length) {
+        if (this.filteredAnswers.length == 0) {
+            this.selectedAnswer = undefined;
+        } else if (index < this.filteredAnswers.length) {
             this.selectedAnswer = this.filteredAnswers[index];
         } else if (this.filteredAnswers.length > 0) {
             this.selectedAnswer = this.filteredAnswers[0];
@@ -1646,6 +1661,7 @@ export class AnswerBrowserComponent
         TimUtilityModule,
         DrawCanvasModule,
         PurifyModule,
+        HttpClientModule,
     ],
     exports: [AnswerBrowserComponent],
 })
