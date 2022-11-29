@@ -106,30 +106,30 @@ const TimMenuAll = t.intersection([
           <ul class="tim-menu-dropdown" *ngIf="t1.open" [ngClass]="openDirection(t1.id)" id="{{t1.id}}">
             <li class="tim-menu-list-item" *ngFor="let t2 of t1.items" style="{{setStyle(t2)}}">
                 <span class="tim-menu-item" *ngIf="t2.items && t2.items.length > 0 && hasRights(t2)">
-                    <span class="tim-menu-item" [innerHtml]="t2.text+openingSymbol"
+                    <span class="tim-menu-item tim-menu-itemcontent" [innerHtml]="t2.text+openingSymbol"
                           (click)="toggleSubmenu(t2, t1, undefined, true)"
                           (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"></span>
-                    <ul class="tim-menu-dropdown" id="{{t2.id}}" [ngClass]="openDirection(t2.id)" *ngIf="t2.open">
+                    <ul class="tim-menu-dropdown tim-menu-innerlist" id="{{t2.id}}" [ngClass]="openDirection(t2.id)" *ngIf="t2.open">
                         <li class="tim-menu-list-item" *ngFor="let t3 of t2.items" style="{{setStyle(t3)}}">
                             <span class="tim-menu-item" *ngIf="t3.items && t3.items.length > 0 && hasRights(t3)">
-                                <span class="tim-menu-item" [innerHtml]="t3.text+openingSymbol"
+                                <span class="tim-menu-item tim-menu-itemcontent" [innerHtml]="t3.text+openingSymbol"
                                       (click)="toggleSubmenu(t3, t2, t1, true)"
                                       (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"></span>
-                                <ul class="tim-menu-dropdown" id="{{t3.id}}" [ngClass]="openDirection(t3.id)"
+                                <ul class="tim-menu-dropdown tim-menu-innerlist" id="{{t3.id}}" [ngClass]="openDirection(t3.id)"
                                     *ngIf="t3.open">
                                     <ng-container *ngFor="let t4 of t3.items">
-                                        <li class="tim-menu-list-item" [innerHtml]="t4.text" style="{{setStyle(t4)}}"
+                                        <li class="tim-menu-list-item tim-menu-itemcontent" [innerHtml]="t4.text" style="{{setStyle(t4)}}"
                                             *ngIf="hasRights(t4)"></li>
                                     </ng-container>
                                 </ul>
                             </span>
-                            <span class="tim-menu-item" *ngIf="t3.items && t3.items.length < 1  && hasRights(t3)"
+                            <span class="tim-menu-item tim-menu-itemcontent" *ngIf="t3.items && t3.items.length < 1  && hasRights(t3)"
                                   [innerHtml]="t3.text" (click)="toggleSubmenu(t3, t2, t1, true)"
                                   (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"></span>
                         </li>
                     </ul>
                 </span>
-                <span class="tim-menu-item" *ngIf="t2.items && t2.items.length < 1 && hasRights(t2)"
+                <span class="tim-menu-item tim-menu-itemcontent" *ngIf="t2.items && t2.items.length < 1 && hasRights(t2)"
                       [innerHtml]="t2.text" (click)="toggleSubmenu(t2, t1, undefined, true)"
                       (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"></span>
             </li>
