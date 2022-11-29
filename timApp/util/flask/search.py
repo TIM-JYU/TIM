@@ -883,7 +883,6 @@ def search():
         cmd.append("-F")
     if search_whole_words:
         cmd.append("-w")
-    # cmd.append("--")
     cmd.append(query)
 
     if should_search_content:
@@ -913,8 +912,7 @@ def search():
                 "paths_results": paths_results,
             }
         )
-    # TODO optimize search to perform database fetches and filtering for search docs only once
-    #      by joining search item keys dicts before use
+
     if should_search_titles:
         title_results, title_result_count, incomplete_search_reason = search_metadata(
             request,
@@ -1145,8 +1143,6 @@ def search_content(
         log_search_error(get_error_message(e), query, current_doc)
 
     doc_infos: list[DocInfo] = fetch_search_items(content_items, folder)
-    # filter content search documents by view access and ownership (if that option was specified) here
-    # instead of doing database accesses inside the search loop
     doc_infos = filter_search_documents(
         doc_infos,
         content_items,
@@ -1220,16 +1216,10 @@ def search_content(
                     # Word results aren't used for anything currently,
                     # so to save time and bandwidth they are replaced by a number.
                     par_result.alt_num_results = len(par_matches)
-                    # for m in matches:
-                    #     result = WordResult(match_word=m.group(0),
-                    #                         match_start=m.start(),
-                    #                         match_end=m.end())
-                    #     par_result.add_result(result)
                     par_result.preview = preview_result(md, par_matches[0])
 
                 # Don't add empty par result (in error cases).
                 if par_result.has_results():
-                    # doc_result.add_par_result(par_result)
                     doc_result.add_search_result(par_result)
 
                 # End paragraph match search if limit has been reached, but
@@ -1248,7 +1238,6 @@ def search_content(
 
             # If no valid paragraph results, skip document.
             if doc_result.has_results():
-                # word_result_count += doc_result.get_par_match_count()
                 word_result_count += get_search_match_count(
                     doc_result.search_results, ParResult
                 )
