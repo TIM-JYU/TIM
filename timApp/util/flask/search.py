@@ -453,11 +453,15 @@ def add_doc_info_metadata_line(doc_id: int, target: str) -> str | None:
         case "path":
             metadata = doc_info.path
         case "tags":
-            metadata = " ".join([tag.name for tag in doc_info.block.tags])
+            metadata = (
+                " ".join([tag.name for tag in doc_info.block.tags])
+                if doc_info.block.tags
+                else None
+            )
         case _:
             metadata = None
 
-    if metadata is not None:
+    if metadata:
         return (
             json.dumps(
                 {"doc_id": doc_id, "d_r": doc_relevance, f"doc_{target}": metadata},
