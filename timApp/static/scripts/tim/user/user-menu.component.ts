@@ -47,8 +47,8 @@ import {Users} from "tim/user/userService";
                         </a>
                     </li>
 
-                    <li role="menuitem" dropdown triggers="mouseover" placement="right" container="body">
-                        <a dropdownToggle class="dropdown-item dropdown-toggle" (click)="$event.preventDefault()">
+                    <li role="menuitem" dropdown #dropdown="bs-dropdown"  placement="right" container="body">
+                        <a (mouseenter)="dropdown.show()" (click)="$event.stopPropagation()" class="dropdown-item dropdown-toggle">
                             <ng-container i18n>Lock access</ng-container>
                             <span class="caret caret-right"></span>
                         </a>

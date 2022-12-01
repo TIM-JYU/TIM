@@ -26,11 +26,19 @@
     color: black;
 }
 
-.tim-menu-list-item {
-    position: relative;
+.tim-menu-itemcontent {
     padding: 5px;
     padding-left: 20px;
     padding-right: 20px;
+}
+
+.tim-menu-innerlist {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.tim-menu-list-item {
+    position: relative;
     white-space: nowrap;
     background: #FFFFFF;
 }
@@ -44,7 +52,6 @@
     float: left;
     z-index: 30;
     padding: 5px 0;
-    margin: 2px 0 0;
     list-style: none;
     font-size: 14px;
     text-align: left;

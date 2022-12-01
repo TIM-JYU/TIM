@@ -4,8 +4,13 @@
 import * as t from "io-ts";
 import $ from "jquery";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    NgModule,
+} from "@angular/core";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {OnClickArg} from "tim/document/eventhandlers";
 import {onClick} from "tim/document/eventhandlers";
@@ -25,6 +30,7 @@ import {
 } from "tim/plugin/attributes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {DomSanitizer} from "@angular/platform-browser";
 
 const TimMenuMarkup = t.intersection([
     t.partial({
@@ -96,39 +102,42 @@ const TimMenuAll = t.intersection([
     <span class="tim-menu-links" *ngFor="let t1 of menu; let last = last">
         <span *ngIf="t1.items && t1.items.length > 0 && hasRights(t1)" class="btn-group" style="{{setStyle(t1)}}">
           <span [innerHtml]="t1.text+openingSymbol" (click)="toggleSubmenu(t1, undefined, undefined, true)"
-                (mouseenter)="toggleSubmenu(t1, undefined, undefined, false)"></span>
+                (pointerover)="toggleSubmenu(t1, undefined, undefined, false, $event)"></span>
           <ul class="tim-menu-dropdown" *ngIf="t1.open" [ngClass]="openDirection(t1.id)" id="{{t1.id}}">
             <li class="tim-menu-list-item" *ngFor="let t2 of t1.items" style="{{setStyle(t2)}}">
                 <span class="tim-menu-item" *ngIf="t2.items && t2.items.length > 0 && hasRights(t2)">
-                    <span class="tim-menu-item" [innerHtml]="t2.text+openingSymbol"
+                    <span class="tim-menu-item tim-menu-itemcontent" [innerHtml]="t2.text+openingSymbol"
                           (click)="toggleSubmenu(t2, t1, undefined, true)"
-                          (mouseenter)="toggleSubmenu(t2, t1, undefined, false)"></span>
-                    <ul class="tim-menu-dropdown" id="{{t2.id}}" [ngClass]="openDirection(t2.id)" *ngIf="t2.open">
+                          (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"></span>
+                    <ul class="tim-menu-dropdown tim-menu-innerlist" id="{{t2.id}}" [ngClass]="openDirection(t2.id)" *ngIf="t2.open">
                         <li class="tim-menu-list-item" *ngFor="let t3 of t2.items" style="{{setStyle(t3)}}">
                             <span class="tim-menu-item" *ngIf="t3.items && t3.items.length > 0 && hasRights(t3)">
-                                <span class="tim-menu-item" [innerHtml]="t3.text+openingSymbol"
+                                <span class="tim-menu-item tim-menu-itemcontent" [innerHtml]="t3.text+openingSymbol"
                                       (click)="toggleSubmenu(t3, t2, t1, true)"
-                                      (mouseenter)="toggleSubmenu(t3, t2, t1, false)"></span>
-                                <ul class="tim-menu-dropdown" id="{{t3.id}}" [ngClass]="openDirection(t3.id)"
+                                      (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"></span>
+                                <ul class="tim-menu-dropdown tim-menu-innerlist" id="{{t3.id}}" [ngClass]="openDirection(t3.id)"
                                     *ngIf="t3.open">
                                     <ng-container *ngFor="let t4 of t3.items">
-                                        <li class="tim-menu-list-item" [innerHtml]="t4.text" style="{{setStyle(t4)}}"
+                                        <li class="tim-menu-list-item tim-menu-itemcontent" [innerHtml]="t4.text" style="{{setStyle(t4)}}"
                                             *ngIf="hasRights(t4)"></li>
                                     </ng-container>
                                 </ul>
                             </span>
-                            <span class="tim-menu-item" *ngIf="t3.items && t3.items.length < 1  && hasRights(t3)"
-                                  [innerHtml]="t3.text"></span>
+                            <span class="tim-menu-item tim-menu-itemcontent" *ngIf="t3.items && t3.items.length < 1  && hasRights(t3)"
+                                  [innerHtml]="t3.text" (click)="toggleSubmenu(t3, t2, t1, true)"
+                                  (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"></span>
                         </li>
                     </ul>
                 </span>
-                <span class="tim-menu-item" *ngIf="t2.items && t2.items.length < 1 && hasRights(t2)"
-                      [innerHtml]="t2.text"></span>
+                <span class="tim-menu-item tim-menu-itemcontent" *ngIf="t2.items && t2.items.length < 1 && hasRights(t2)"
+                      [innerHtml]="t2.text" (click)="toggleSubmenu(t2, t1, undefined, true)"
+                      (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"></span>
             </li>
           </ul>
         </span>
         <span *ngIf="t1.items && t1.items.length < 1 && hasRights(t1)" class="btn-group" style="{{setStyle(t1)}}"
-              [innerHtml]="t1.text"></span>
+              [innerHtml]="t1.text" (click)="toggleSubmenu(t1, undefined, undefined, true)"
+              (pointerover)="toggleSubmenu(t1, undefined, undefined, false, $event)"></span>
         <span *ngIf="!last && hasRights(t1)" [innerHtml]="separator"></span>
     </span>
         </div>
@@ -150,6 +159,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
     private openAbove: boolean = false;
     keepLinkColors: boolean = false;
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
+    private previousItem: ITimMenuItem | undefined;
     private previouslyClicked: ITimMenuItem | undefined;
     barStyle: string = "";
     private mouseInside: boolean = false; // Whether mouse cursor is inside the menu.
@@ -164,6 +174,15 @@ export class TimMenuPluginComponent extends AngularPluginBase<
 
     getDefaultMarkup() {
         return {};
+    }
+
+    constructor(
+        el: ElementRef,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private cdr: ChangeDetectorRef
+    ) {
+        super(el, http, domSanitizer);
     }
 
     ngOnInit() {
@@ -227,28 +246,36 @@ export class TimMenuPluginComponent extends AngularPluginBase<
      * @param parent1 Closest menu item parent.
      * @param parent2 Further menu item parent.
      * @param clicked Toggled by a mouse click.
+     * @param event Event that triggered the toggle
      */
     toggleSubmenu(
         item: ITimMenuItem,
         parent1: ITimMenuItem | undefined,
         parent2: ITimMenuItem | undefined,
-        clicked: boolean
+        clicked: boolean,
+        event?: PointerEvent
     ) {
+        // ignore touch-based hover, because direct touch press raises both hover and click events
+        if (event?.pointerType === "touch" && !clicked) {
+            return;
+        }
         // If called by mouseenter and either hover open is off or touch mode is on, do nothing.
         if (!clicked && (!this.hoverOpen || this.touchMode)) {
             return;
         }
         // Toggle open menu closed and back again when clicking.
-        if (
-            this.previouslyClicked &&
-            (this.previouslyClicked === item || item.open)
-        ) {
+        if (this.previousItem && this.previousItem === item && clicked) {
             item.open = !item.open;
+            this.previousItem = item;
             this.previouslyClicked = item;
             return;
         }
+        if (this.previouslyClicked === item && !clicked) {
+            return;
+        }
+        this.previouslyClicked = undefined;
         // Close all menus when clicking menu that isn't child of previously clicked.
-        if (parent1 && parent1 !== this.previouslyClicked) {
+        if (parent1 && parent1 !== this.previousItem) {
             for (const menu of this.menu) {
                 this.closeAllInMenuItem(menu);
             }
@@ -258,14 +285,14 @@ export class TimMenuPluginComponent extends AngularPluginBase<
             }
         }
         // A first level menu doesn't have a parent; close all other menus.
-        if (!parent1 && item !== this.previouslyClicked) {
+        if (!parent1 && item !== this.previousItem) {
             for (const menu of this.menu) {
                 this.closeAllInMenuItem(menu);
             }
         }
         // Unless already open, clicked item always opens.
         item.open = true;
-        this.previouslyClicked = item;
+        this.previousItem = item;
     }
 
     /**
@@ -292,7 +319,12 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         const placeholder = this.element.find(".tim-menu-placeholder")[0];
         const scrollY = $(window).scrollTop();
 
-        if (!menu || !placeholder || !this.topMenuTriggerHeight || !scrollY) {
+        if (
+            !menu ||
+            !placeholder ||
+            !this.topMenuTriggerHeight ||
+            scrollY == undefined
+        ) {
             return;
         }
         if (!this.previousScroll) {
@@ -483,6 +515,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
     mouseLeave() {
         // console.log("mouseLeave");
         this.mouseInside = false;
+        this.previouslyClicked = undefined;
         // Only close menus on mouseleave, if hoverOpen is enabled and menu hasn't been clicked.
         if (!this.clickedInside && this.hoverOpen) {
             this.closeMenus();
@@ -501,6 +534,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         for (const t1 of this.menu) {
             this.closeAllInMenuItem(t1);
         }
+        this.cdr.detectChanges();
     }
 }
 
