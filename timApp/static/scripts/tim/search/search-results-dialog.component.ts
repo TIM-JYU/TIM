@@ -15,13 +15,14 @@ import type {
     SearchBoxComponent,
 } from "tim/search/search-box.component";
 import {CommonModule} from "@angular/common";
+import {IPathSearchResult} from "tim/search/search-box.component";
 
 export interface ISearchResultDisplay {
-    result: IDocSearchResult;
     closed: boolean; // Whether this is shown collapsed or not.
-    tags: ITag[];
-    num_tag_results: number; // Same tag may contain the search word more than once.
-    num_path_results: number;
+    result: IDocSearchResult;
+    // tags: ITag[];
+    // num_tag_results: number; // Same tag may contain the search word more than once.
+    // num_path_results: number;
 }
 
 enum SortOption {
@@ -69,16 +70,16 @@ enum SortOption {
                     <ul class="list-unstyled">
                         <li *ngFor="let r of displayResults">
                             <a class="cursor-pointer" (click)="r.closed = !r.closed"
-                               *ngIf="collapsibles && !limitedDisplay && (r.result.num_par_results + r.num_tag_results) > 0">
+                               *ngIf="collapsibles && !limitedDisplay && (r.result.num_par_results + r.result.num_tag_results) > 0">
                                 <i class="glyphicon" [ngClass]="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
                                    title="Toggle preview" style="width:1.3em;" i18n-title></i></a>
                             <span title="Note: hidden elements can affect the result count" i18n-title>
                                 <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}" i18n-title> {{r.result.doc.title}}</a>
                                 {{r.result.doc.path}}
-                                <i> ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results + r.num_path_results}}
+                                <i> ({{r.result.num_par_results + r.result.num_title_results + r.result.num_tag_results + r.result.num_path_results}}
                                     <span *ngIf="r.result.incomplete" i18n>or more matches</span>
                                     <ng-container *ngIf="!r.result.incomplete"
-                                                  [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.num_tag_results + r.num_path_results">
+                                                  [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.result.num_tag_results + r.result.num_path_results">
                                     <ng-template ngPluralCase="=1" i18n>match</ng-template>
                                     <ng-template ngPluralCase="other" i18n>matches</ng-template>
                                     </ng-container>
@@ -90,13 +91,14 @@ enum SortOption {
                                     <li *ngIf="p.preview">
                                         <a href="/view/{{r.result.doc.path}}#{{p.par_id}}"
                                            title="Open paragraph" i18n-title>{{p.preview}}</a>
-                                        <ng-container *ngFor="let tag of r.tags">
+                                        <!-- We are not interested in the tags, but the search results -->
+                                        <!--<ng-container *ngFor="let tag of r.tags">
                                             <span *ngIf="!r.closed"
                                                   class="btn-xs"
                                                   [ngClass]="tagClass(tag)">
                                                 {{tag.name}}
                                             </span>
-                                        </ng-container>
+                                        </ng-container>-->
                                     </li>
                                 </ng-container>
                             </ul>
@@ -126,10 +128,10 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
     void
 > {
     protected dialogName = "SearchResults";
-    private results: IDocSearchResult[] = [];
     searchWord: string = "";
     displayResults: ISearchResultDisplay[] = [];
-    private tagResults: ITagSearchResult[] = [];
+    private results: IDocSearchResult[] = [];
+    private tagResults: IDocSearchResult[] = [];
     private titleResults: IDocSearchResult[] = [];
     private pathResults: IDocSearchResult[] = [];
     folder: string = "";
@@ -247,15 +249,13 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             const newDisplayResult: ISearchResultDisplay = {
                 result: r,
                 closed: true,
-                tags: [],
-                num_tag_results: 0,
-                num_path_results: 0,
+                // tags: [],
             };
             // Add tags to existing word search result objects.
             for (const t of this.tagResults) {
                 if (t.doc.id === r.doc.id) {
-                    newDisplayResult.tags = t.matching_tags;
-                    newDisplayResult.num_tag_results = t.num_results;
+                    // newDisplayResult.tags = t.matching_tags;
+                    newDisplayResult.result.num_tag_results = t.num_tag_results;
                 }
             }
             // Add titlematches to existing word search result objects.
@@ -282,19 +282,19 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             if (!found) {
                 const newDocResult = {
                     closed: true,
-                    num_path_results: 0,
-                    num_tag_results: 0,
-                    path_results: [],
                     result: {
                         doc: t.doc,
                         incomplete: false,
                         num_par_results: 0,
                         num_title_results: t.num_title_results,
                         num_path_results: t.num_path_results,
+                        num_tag_results: t.num_tag_results,
                         par_results: [],
                         title_results: t.title_results,
+                        path_results: [],
+                        tag_results: [],
                     },
-                    tags: [],
+                    // tags: [],
                 };
                 this.displayResults.push(newDocResult);
             }
@@ -304,8 +304,8 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             for (const r of this.displayResults) {
                 if (t.doc.path === r.result.doc.path) {
                     // Add tag results to existing content-title-path results.
-                    r.tags = t.matching_tags;
-                    r.num_tag_results = t.num_results;
+                    // r.tags = t.matching_tags;
+                    r.result.num_tag_results = t.num_tag_results;
                     found = true;
                 }
             }
@@ -313,19 +313,19 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             if (!found) {
                 const newDocResult = {
                     closed: true,
-                    num_path_results: 0,
-                    num_tag_results: t.num_results,
-                    path_results: [],
                     result: {
                         doc: t.doc,
                         incomplete: false,
                         num_par_results: 0,
                         num_title_results: 0,
+                        num_tag_results: 0,
                         num_path_results: 0,
                         par_results: [],
                         title_results: [],
+                        path_results: [],
+                        tag_results: [],
                     },
-                    tags: t.matching_tags,
+                    // tags: t.matching_tags,
                 };
                 this.displayResults.push(newDocResult);
             }
@@ -375,9 +375,9 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                     // Negative values to get ascending order.
                     let matches = -(
                         r.result.num_par_results +
-                        r.num_tag_results +
+                        r.result.num_tag_results +
                         r.result.num_title_results +
-                        r.num_path_results
+                        r.result.num_path_results
                     );
                     // Show "x or more matches" before "x matches".
                     if (r.result.incomplete) {
@@ -390,9 +390,9 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                 const getRelevance = (r: ISearchResultDisplay) => {
                     let matches = -(
                         r.result.num_par_results +
-                        r.num_tag_results +
+                        r.result.num_tag_results +
                         r.result.num_title_results +
-                        r.num_path_results
+                        r.result.num_path_results
                     );
                     // Show "x or more matches" before "x matches".
                     if (r.result.incomplete) {

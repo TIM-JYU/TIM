@@ -19,7 +19,7 @@ import type {SearchResultsDialogComponent} from "tim/search/search-results-dialo
 export interface ISearchResultsInfo {
     content_results: IDocSearchResult[];
     title_results: IDocSearchResult[];
-    tags_results: ITagSearchResult[];
+    tags_results: IDocSearchResult[];
     paths_results: IDocSearchResult[];
     incomplete_search_reason: string; // Tells the reason why when the search is incomplete.
     word_result_count: number;
@@ -56,9 +56,12 @@ export interface IDocSearchResult {
     doc: IItem;
     par_results: IParSearchResult[];
     title_results: ITitleSearchResult[];
+    path_results: IPathSearchResult[];
+    tag_results: ITagSearchResult[];
     num_par_results: number;
     num_title_results: number;
     num_path_results: number;
+    num_tag_results: number;
     incomplete: boolean;
 }
 
@@ -97,7 +100,11 @@ export interface ITagSearchResult {
     // Number of matches in the document's tags (not matching_tags length, because same tag may contain match
     // more than once.)
     num_results: number;
-    matching_tags: ITag[]; // List of tags that matched the query.
+    // matching_tags: ITag[]; // List of tags that matched the query.
+}
+
+export interface IPathSearchResult {
+    num_results: number;
 }
 
 @Component({
@@ -210,7 +217,8 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     public wordMatchCount = 0;
     public titleMatchCount = 0;
     public pathMatchCount = 0;
-    public tagResults: ITagSearchResult[] = [];
+    // TODO these shouldn't be necessary, since IDocSearchResult already includes these?
+    public tagResults: IDocSearchResult[] = [];
     public titleResults: IDocSearchResult[] = [];
     public pathResults: IDocSearchResult[] = [];
     public incompleteSearchReason: string | undefined;
