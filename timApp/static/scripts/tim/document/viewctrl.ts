@@ -1362,7 +1362,12 @@ export class ViewCtrl implements IController {
     private async updateDocumentImpl() {
         const response = await to(
             $http.get<{changed_pars: Record<string, string>}>(
-                "/getUpdatedPars/" + this.docId
+                `/getUpdatedPars/${this.docId}`,
+                {
+                    params: {
+                        view: getViewName(),
+                    },
+                }
             )
         );
         if (!response.ok) {

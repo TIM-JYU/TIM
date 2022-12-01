@@ -15,7 +15,7 @@ from sqlalchemy.orm import joinedload, contains_eager, Query
 from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
 from timApp.peerreview.peerreview import PeerReview
-from timApp.peerreview.peerreview_utils import (
+from timApp.peerreview.util.peerreview_utils import (
     get_reviews_for_user_query,
     is_peerreview_enabled,
 )

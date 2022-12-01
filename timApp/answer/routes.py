@@ -85,7 +85,7 @@ from timApp.markdown.markdownconverter import md_to_html
 from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
 from timApp.notification.send_email import multi_send_email
-from timApp.peerreview.peerreview_utils import (
+from timApp.peerreview.util.peerreview_utils import (
     has_review_access,
     get_reviews_for_user,
     is_peerreview_enabled,
@@ -229,6 +229,8 @@ def delete_answer(answer_id: int) -> Response:
     verify_teacher_access(get_doc_or_abort(doc_id))
     verify_admin()
     unames = [u.name for u in a.users_all]
+    if not unames:
+        raise RouteException("The answer has already been deleted from all users.")
     a.users_all = []
     db.session.commit()
     u = get_current_user_object()
@@ -1121,6 +1123,7 @@ def post_answer_impl(
                         NotificationType.AnswerAdded,
                         plugin.par,
                         answer_number=answerinfo.count + 1,
+                        task_id=task_id_ext,
                         curr_user=curr_user,
                     )
                     send_answer_backup_if_enabled(a)

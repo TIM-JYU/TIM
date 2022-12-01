@@ -617,7 +617,7 @@ class Plugin:
 
     def get_final_output(self):
         out = self.output
-        if self.is_lazy() and out.find(LAZYSTART) < 0:
+        if self.is_lazy() and out.find(LAZYSTART) < 0 and out.find(NOLAZY) < 0:
             header = self.known.header or self.known.headerText or ""
             stem = self.known.stem or "Open plugin"
             # Plugins are possibly not visible in lazy form at all if both header and stem are empty,

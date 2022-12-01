@@ -238,6 +238,8 @@ const DEFAULT_PIECE_SIZE = 20;
             <a href="/view/messagelists" i18n>Browse existing message lists</a>
             <br/>
             <a href="/view/archives" i18n>Browse archives</a>
+            <br/>
+            <a href="/view/messages/tim-messages" i18n>Browse TIM messages</a>
         </ng-container>
 
         <ng-container *ngIf="docSettings?.cache && item?.rights?.manage">

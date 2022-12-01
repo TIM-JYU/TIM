@@ -262,6 +262,7 @@ SCRIPT_SAFE_MIMETYPES = {
     "image/jpg",
     "image/png",
     "video/mp4",
+    "video/x-m4v",
     "video/webm",
     "application/msword",
     "text/plain",

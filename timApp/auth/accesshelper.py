@@ -29,11 +29,12 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import ViewContext, OriginInfo
+from timApp.document.viewcontext import ViewContext, OriginInfo, ViewRoute
 from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
 from timApp.item.item import Item
 from timApp.notification.send_email import send_email
+from timApp.peerreview.util.peerreview_utils import is_peerreview_enabled
 from timApp.plugin.plugin import (
     Plugin,
     find_plugin_from_document,
@@ -713,6 +714,24 @@ def verify_answer_access(
     return answer, tid.doc_id
 
 
+def verify_route_access(
+    doc_info: DocInfo, route: ViewRoute, require: bool = True
+) -> BlockAccess | None:
+    match route:
+        case ViewRoute.Teacher:
+            return verify_teacher_access(doc_info, require=require)
+        case ViewRoute.Answers:
+            return verify_seeanswers_access(doc_info, require=require)
+        case ViewRoute.Review:
+            if not is_peerreview_enabled(doc_info):
+                return None
+            return verify_view_access(doc_info, require=require, check_duration=True)
+        case ViewRoute.View | ViewRoute.Lecture | ViewRoute.Slide | ViewRoute.ShowSlide | ViewRoute.Velp:
+            return verify_view_access(doc_info, require=require, check_duration=True)
+        case _:
+            raise ValueError(f"Unknown route {route}")
+
+
 def check_access_from_field(
     context_user: UserContext, access_field: AccessField, task_id: TaskId
 ):
@@ -721,7 +740,11 @@ def check_access_from_field(
     tid = TaskId.parse(field_to_check, require_doc_id=False)
     if not tid.doc_id:
         tid = TaskId.parse(str(task_id.doc_id) + "." + field_to_check)
-    prev = current_user.get_answers_for_task(tid.doc_task).first()
+    prev = (
+        current_user.answers.filter_by(task_id=tid.doc_task, valid=True)
+        .order_by(Answer.id.desc())
+        .first()
+    )
     if not prev:
         return True
     try:

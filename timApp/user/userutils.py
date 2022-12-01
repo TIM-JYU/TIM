@@ -1,5 +1,6 @@
 import hashlib
 from datetime import datetime, timedelta
+from enum import Enum
 
 import bcrypt
 
@@ -68,6 +69,12 @@ def get_access_type_id(access_type: str) -> int:
     return access_type_map[access_type]
 
 
+class ReplaceAccessAction(Enum):
+    AlwaysPreserve = "always_preserve"
+    UpdateDuration = "update_duration"
+    AlwaysReplace = "always_replace"
+
+
 def grant_access(
     group: UserGroup,
     block: ItemBase | Block,
@@ -78,7 +85,8 @@ def grant_access(
     duration_to: datetime | None = None,
     duration: timedelta | None = None,
     require_confirm: bool | None = None,
-    replace_active_duration: bool = True,
+    replace_active_duration: bool
+    | ReplaceAccessAction = ReplaceAccessAction.AlwaysReplace,
 ) -> BlockAccess:
     """Grants access to a group for a block.
 
@@ -91,9 +99,10 @@ def grant_access(
     :param group: The group to which to grant view access.
     :param block: The block for which to grant view access.
     :param access_type: The kind of access. Possible values are listed in accesstype table.
-    :param replace_active_duration: If true, replaces any existing access with the new one.
-            If false and the access being granted is duration, modifies the end time of the permission
+    :param replace_active_duration: If true (or ReplaceAccessAction.AlwaysPreserve), replaces any existing access with the new one.
+            If false (or ReplaceAccessAction.UpdateDuration)  and the access being granted is duration, modifies the end time of the permission
             to account for new duration.
+            Also supports ReplaceAccessAction enum values.
     :return: The BlockAccess object.
 
     """
@@ -106,9 +115,22 @@ def grant_access(
     block = block if isinstance(block, Block) else block.block
     key = (block.id, access_id)
     b = group.accesses_alt.get(key)
+
+    replace_action = ReplaceAccessAction.AlwaysReplace
+    if isinstance(replace_active_duration, bool):
+        replace_action = (
+            ReplaceAccessAction.AlwaysReplace
+            if replace_active_duration
+            else ReplaceAccessAction.UpdateDuration
+        )
+    else:
+        replace_action = replace_active_duration
+
     if b:
+        if replace_action == ReplaceAccessAction.AlwaysPreserve:
+            return b
         if (
-            not replace_active_duration
+            replace_action == ReplaceAccessAction.UpdateDuration
             and not b.expired
             and not b.unlockable
             and b.accessible_from is not None

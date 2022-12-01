@@ -66,6 +66,7 @@ from timApp.user.userutils import (
     grant_access,
     grant_default_access,
     is_some_default_right_document,
+    ReplaceAccessAction,
 )
 from timApp.util.flask.requesthelper import (
     get_option,
@@ -541,7 +542,8 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
 def add_perm(
     p: PermissionEditModel,
     item: Item,
-    replace_active_duration: bool = True,
+    replace_active_duration: bool
+    | ReplaceAccessAction = ReplaceAccessAction.AlwaysReplace,
 ) -> list[BlockAccess]:
     if get_current_user_object().get_personal_folder().id == item.id:
         if p.type == AccessType.owner:

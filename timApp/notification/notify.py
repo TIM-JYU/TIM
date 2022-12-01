@@ -222,6 +222,9 @@ def get_message_for(
                         if "task" not in params_dict:
                             url += par_anchor
 
+        if isinstance(p, AnswerNotification):
+            s += f" to '{p.task_id}'"
+
         msg += f"{s}: {url}"
 
         if show_text and p.notify_type.is_document_modification:

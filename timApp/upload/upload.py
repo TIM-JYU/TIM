@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
 
-from PIL import UnidentifiedImageError
 from PIL import Image
+from PIL import UnidentifiedImageError
 from PIL.Image import registered_extensions
 from flask import Blueprint, request, send_file, Response, url_for
 from img2pdf import convert
@@ -120,7 +120,7 @@ def check_and_format_filename(relfilename: str) -> str:
 
 
 def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
-    from timApp.peerreview.peerreview_utils import is_peerreview_enabled
+    from timApp.peerreview.util.peerreview_utils import is_peerreview_enabled
 
     relfilename = check_and_format_filename(relfilename)
     block = (

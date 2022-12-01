@@ -26,7 +26,7 @@ from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
-from timApp.peerreview.peerreview_utils import (
+from timApp.peerreview.util.peerreview_utils import (
     has_review_access,
     get_reviews_to_user,
     is_peerreview_enabled,

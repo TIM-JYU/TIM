@@ -777,7 +777,7 @@ tags = [
 ]
 
 
-def get_heading(query: QueryClass, key: str, def_elem: str):
+def get_heading(query: QueryClass, key: str, def_elem: str, el_attrs: str = ""):
     if not query:
         return ""
     # return "kana"
@@ -786,7 +786,9 @@ def get_heading(query: QueryClass, key: str, def_elem: str):
     if not h:
         return ""
     h = tim_sanitize(str(h))
-    return "<" + def_elem + ">" + h + "</" + def_elem + ">\n"
+    if el_attrs:
+        el_attrs = f" {el_attrs}"
+    return "<" + def_elem + el_attrs + ">" + h + "</" + def_elem + ">\n"
 
 
 def get_md_heading(query: QueryClass, key: str, def_elem: str):
@@ -829,7 +831,7 @@ def get_surrounding_headers2(query: QueryClass):
     stem = allow_minimal(get_param(query, "stem", None))
     if stem:
         result += '<p class="stem" >' + stem + "</p>"
-    return result, get_heading(query, "footer", 'p class="plgfooter"')
+    return result, get_heading(query, "footer", "p", 'class="plgfooter"')
 
 
 def get_surrounding_md_headers2(query: QueryClass, header_style, footer_style):
