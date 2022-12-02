@@ -1718,13 +1718,12 @@ def get_answers(task_id: str, user_id: int) -> Response:
     if tid.is_global:
         verify_view_access(d)
         user_context = user_context_with_logged_in(curr_user)
-        aq = (
+        user_answers = (
             Answer.query.filter_by(task_id=tid.doc_task)
             .order_by(Answer.id.desc())
             .options(joinedload(Answer.users_all))
-            .first()
+            .all()
         )
-        user_answers = [aq] if aq else []
         user = curr_user
     else:
         user = User.get_by_id(user_id)

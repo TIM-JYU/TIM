@@ -326,7 +326,7 @@ export class AnswerBrowserComponent
         // Answer changes are handled by viewctrl, so don't bother querying them here
         // TODO: Make a route to handle getAnswers on global task. Currently global task has its' answerBrowser
         //  always hidden and queries as they are now do not handle global task correctly, causing useless plugin update
-        if (!this.formMode && !this.isGlobal()) {
+        if (!this.formMode) {
             const answs = await this.getAnswers();
             if (answs && answs.length > 0) {
                 this.answers = answs;
@@ -335,7 +335,9 @@ export class AnswerBrowserComponent
                     this.handleAnswerFetch(this.answers);
                 }
             }
-            await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
+            if (!this.isGlobal()) {
+                await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
+            }
             const el = this.loader.loaderElement;
             // Lazily wait before loading users. Allow tapping on plugin or the loader
             // (in case the plugin has iframes that capture events)
@@ -928,8 +930,7 @@ export class AnswerBrowserComponent
                     : undefined,
                 saveTeacher:
                     this.saveTeacher ||
-                    (this.viewctrl.teacherMode &&
-                        (this.loader.isInFormMode() || this.isGlobal())), // TODO: Check if correct
+                    (this.viewctrl.teacherMode && this.loader.isInFormMode()), // TODO: Check if correct
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: userId,
