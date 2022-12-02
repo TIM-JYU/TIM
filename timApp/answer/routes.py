@@ -12,7 +12,7 @@ from flask import request
 from marshmallow import validates_schema, ValidationError
 from marshmallow.utils import missing
 from sqlalchemy import func
-from sqlalchemy.orm import lazyload
+from sqlalchemy.orm import lazyload, joinedload
 from werkzeug.exceptions import NotFound
 
 from timApp.answer.answer import Answer
@@ -1721,6 +1721,7 @@ def get_answers(task_id: str, user_id: int) -> Response:
         aq = (
             Answer.query.filter_by(task_id=tid.doc_task)
             .order_by(Answer.id.desc())
+            .options(joinedload(Answer.users_all))
             .first()
         )
         user_answers = [aq] if aq else []
