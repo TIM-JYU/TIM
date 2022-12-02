@@ -1714,14 +1714,16 @@ def get_answers(task_id: str, user_id: int) -> Response:
         raise RouteException(str(e))
     d = get_doc_or_abort(tid.doc_id)
     curr_user = get_current_user_object()
+    user_answers: list[Answer]
     if tid.is_global:
         verify_view_access(d)
         user_context = user_context_with_logged_in(curr_user)
-        user_answers = (
+        aq = (
             Answer.query.filter_by(task_id=tid.doc_task)
             .order_by(Answer.id.desc())
-            .all()
+            .first()
         )
+        user_answers = [aq] if aq else []
         user = curr_user
     else:
         user = User.get_by_id(user_id)
@@ -1736,7 +1738,7 @@ def get_answers(task_id: str, user_id: int) -> Response:
 
         elif d.document.get_settings().get("need_view_for_answers", False):
             verify_view_access(d)
-        user_answers: list[Answer] = user.get_answers_for_task(tid.doc_task).all()
+        user_answers = user.get_answers_for_task(tid.doc_task).all()
         user_context = user_context_with_logged_in(user)
     try:
         p = find_plugin_from_document(d.document, tid, user_context, default_view_ctx)
