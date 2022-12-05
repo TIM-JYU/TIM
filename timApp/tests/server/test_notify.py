@@ -208,7 +208,7 @@ stem: test
             {
                 "mail_from": "no-reply@tim.jyu.fi",
                 "msg": "Comment posted by user 1 Test: "
-                f"http://localhost/answers/{d.path}?task=t&user=testuser1\n"
+                f"http://localhost/answers/{d.path}?task=t&user=testuser1&valid_answers_only=false\n"
                 "\n"
                 "Hello",
                 "rcpt": "test2@example.com",
@@ -380,7 +380,7 @@ type: text
             {
                 "mail_from": mail_from,
                 "msg": f"Answer posted by user 1 Test to '{d.id}.t': "
-                "http://localhost/answers/users/test-user-1/doc1?task=t&answerNumber=1&user=testuser1",
+                "http://localhost/answers/users/test-user-1/doc1?task=t&answerNumber=1&user=testuser1&valid_answers_only=false",
                 "rcpt": "test2@example.com",
                 "reply_to": "test1@example.com",
                 "subject": "user 1 Test posted an answer to the document document 2",

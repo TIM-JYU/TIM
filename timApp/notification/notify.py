@@ -216,7 +216,10 @@ def get_message_for(
                             params_dict |= {"answerNumber": p.answer_number}
 
                     if url_to_answer:
-                        params_dict |= {"user": p.user.name}
+                        params_dict |= {
+                            "user": p.user.name,
+                            "valid_answers_only": "false",
+                        }
                         params = urllib.parse.urlencode(params_dict)
                         url = f'{d.get_url_for_view("answers")}?{params}'
                         if "task" not in params_dict:
