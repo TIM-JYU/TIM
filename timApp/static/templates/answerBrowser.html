@@ -31,7 +31,7 @@
                 <a href="mailto:{{user?.email}}">email</a>
             </div>
         </div>
-        <div *ngIf="viewctrl.teacherMode && isGlobal()" class="flex">
+        <div *ngIf="isGlobal()" class="flex">
             Showing answers from all users
         </div>
         <div *ngIf="!hasUserChanged() || loading">
