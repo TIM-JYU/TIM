@@ -142,7 +142,7 @@
                             </div>
                             <span *ngIf="showTeacher()">
                                 <label class="checkbox-inline">
-                                    <input type="checkbox" (ngModelChange)="toggleInput()" [(ngModel)]="saveTeacher"><ng-container i18n>Save teacher's fix</ng-container>
+                                    <input type="checkbox" (change)="toggleInput()" [(ngModel)]="saveTeacher"><ng-container i18n>Save teacher's fix</ng-container>
                                 </label>
                             </span>
                             <div class="flex" *ngIf="selectedAnswer">
