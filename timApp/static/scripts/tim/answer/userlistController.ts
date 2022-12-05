@@ -16,6 +16,7 @@ import type {Binding, Require} from "tim/util/utils";
 import {
     copyToClipboard,
     getURLParameter,
+    getUrlParams,
     getViewName,
     to2,
 } from "tim/util/utils";
@@ -38,6 +39,12 @@ function numericSort(a: number | null, b: number | null) {
         return 1;
     }
     return Math.sign(a - b);
+}
+
+function toggleUrlParam(param: string, value: string) {
+    const urlParams = getUrlParams();
+    urlParams.set(param, value);
+    window.location.search = urlParams.toString();
 }
 
 export class UserListController implements IController {
@@ -369,6 +376,30 @@ export class UserListController implements IController {
                         );
                     },
                     order: 80,
+                },
+                {
+                    title: "Hide answerer names",
+                    shown: () => !documentglobals().hideNamesRequested,
+                    action: ($event: IAngularEvent) =>
+                        toggleUrlParam("hide_names", "true"),
+                },
+                {
+                    title: "Show answerer names",
+                    shown: () => documentglobals().hideNamesRequested,
+                    action: ($event: IAngularEvent) =>
+                        toggleUrlParam("hide_names", "false"),
+                },
+                {
+                    title: "Show only valid answers",
+                    shown: () => !documentglobals().showValidAnswersOnly,
+                    action: ($event: IAngularEvent) =>
+                        toggleUrlParam("valid_answers_only", "true"),
+                },
+                {
+                    title: "Show all answers",
+                    shown: () => documentglobals().showValidAnswersOnly,
+                    action: ($event: IAngularEvent) =>
+                        toggleUrlParam("valid_answers_only", "false"),
                 },
             ],
             rowTemplate: `

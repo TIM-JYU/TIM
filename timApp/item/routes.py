@@ -1043,6 +1043,7 @@ def render_doc_view(
         override_theme=override_theme,
         current_list_user=current_list_user,
         show_valid_answers_only=show_valid_only,
+        hide_names_requested=view_ctx.hide_names_requested,
     )
     # db.session.close()
     head, content = (
