@@ -7,7 +7,6 @@ from typing import Union, Any, ValuesView, Generator
 
 import attr
 import filelock
-import sass
 from flask import current_app
 from flask import flash
 from flask import redirect
@@ -18,6 +17,7 @@ from markupsafe import Markup
 from marshmallow import EXCLUDE
 from sqlalchemy.orm import joinedload, defaultload
 
+import sass
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import (
     verify_view_access,
@@ -701,7 +701,11 @@ def render_doc_view(
     usergroup = m.group
     peer_review_start = doc_settings.peer_review_start()
     peer_review_stop = doc_settings.peer_review_stop()
-    show_valid_only = m.valid_answers_only and doc_settings.show_valid_answers_only()
+    show_valid_only = (
+        m.valid_answers_only
+        if m.valid_answers_only is not None
+        else doc_settings.show_valid_answers_only()
+    )
     if teacher_or_see_answers:
         user_list = None
         ug = None
@@ -1038,6 +1042,7 @@ def render_doc_view(
         hide_readmarks=hide_readmarks,
         override_theme=override_theme,
         current_list_user=current_list_user,
+        show_valid_answers_only=show_valid_only,
     )
     # db.session.close()
     head, content = (

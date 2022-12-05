@@ -559,7 +559,7 @@ class DocSettings:
         return self.get_setting_or_default("show_scoreboard", False)
 
     def show_valid_answers_only(self) -> bool:
-        return self.get_setting_or_default("showValidAnswersOnly", True)
+        return self.get_setting_or_default("showValidAnswersOnly", False)
 
     def hide_browser(self) -> bool:
         return self.get_setting_or_default("hideBrowser", False)
