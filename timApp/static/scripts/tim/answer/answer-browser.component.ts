@@ -930,7 +930,10 @@ export class AnswerBrowserComponent
                     : undefined,
                 saveTeacher:
                     this.saveTeacher ||
-                    (this.viewctrl.teacherMode && this.loader.isInFormMode()), // TODO: Check if correct
+                    (this.viewctrl.teacherMode &&
+                        (this.loader.isInFormMode() ||
+                            (this.isGlobal() && this.hidden))),
+                // TODO: Check if saveTeacher should be enabled always when hidden browser and teachermode
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: userId,
