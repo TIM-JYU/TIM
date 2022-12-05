@@ -119,7 +119,7 @@
                     </span>
                             <span *ngIf="showTeacher()">
                         <label class="checkbox-inline">
-                            <input type="checkbox" [(ngModel)]="isValidAnswer"><ng-container i18n>Valid</ng-container>
+                            <input type="checkbox" [(ngModel)]="isValidAnswer"><ng-container i18n="@@abIsValidCheckbox">Valid</ng-container>
                         </label>
                         <button i18n-title title="Save validity"
                                 (click)="saveValidity()"
