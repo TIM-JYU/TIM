@@ -31,7 +31,7 @@
                 <a href="mailto:{{user?.email}}">email</a>
             </div>
         </div>
-        <div *ngIf="isGlobal()" class="flex">
+        <div i18n *ngIf="isGlobal()" class="flex">
             Showing answers from all users
         </div>
         <div *ngIf="!hasUserChanged() || loading">
@@ -82,7 +82,7 @@
              <div *ngIf="answers.length == 0 && viewctrl.teacherMode">
                  <ng-container *ngIf="!hasUserChanged()">
                     <span i18n *ngIf="!isGlobal()">(no answers from the selected user)</span>
-                    <span i18n *ngIf="isGlobal()">(no answers from any users)</span>
+                    <span i18n *ngIf="isGlobal()">(no answers)</span>
                  </ng-container>
                  <span *ngIf="hasUserChanged()"> <tim-loading></tim-loading> </span>
              </div>

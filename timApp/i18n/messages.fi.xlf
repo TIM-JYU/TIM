@@ -7822,6 +7822,22 @@
           <context context-type="linenumber">122,123</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2676706401198603854" datatype="html">
+        <source> Showing answers from all users </source>
+        <target state="translated"> Näytetään vastaukset kaikilta käyttäjiltä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5909030173248328323" datatype="html">
+        <source>(no answers)</source>
+        <target state="translated">(ei vastauksia)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">85,86</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
