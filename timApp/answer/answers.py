@@ -20,7 +20,7 @@ from typing import (
 # noinspection PyUnresolvedReferences
 from bs4 import UnicodeDammit
 from flask import current_app
-from sqlalchemy import func, Numeric, Float, true
+from sqlalchemy import func, Numeric, Float, true, case
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.orm import selectinload, defaultload, Query, joinedload, contains_eager
 
@@ -548,7 +548,7 @@ def get_users_for_tasks(
         .subquery()
     )
     subquery_answers = Answer.query.with_entities(
-        Answer.id, Answer.points, Answer.answered_on
+        Answer.id, Answer.points, Answer.answered_on, Answer.valid
     ).subquery()
     if answer_filter is None:
         answer_filter = true()
@@ -605,14 +605,23 @@ def get_users_for_tasks(
     # prevents error:
     # column "usergroup_1.id" must appear in the GROUP BY clause or be used in an aggregate function
     main = main.options(selectinload(User.groups))
-
     task_sum = (
-        func.round(func.sum(sub_joined.c.points).cast(Numeric), 4)
+        func.round(
+            func.sum(
+                case([(sub_joined.c.valid == True, sub_joined.c.points)], else_=0)
+            ).cast(Numeric),
+            4,
+        )
         .cast(Float)
         .label("task_points")
     )
     velp_sum = (
-        func.round(func.sum(sub_joined.c.velp_points).cast(Numeric), 4)
+        func.round(
+            func.sum(
+                case([(sub_joined.c.valid == True, sub_joined.c.velp_points)], else_=0)
+            ).cast(Numeric),
+            4,
+        )
         .cast(Float)
         .label("velp_points")
     )
