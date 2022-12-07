@@ -49,6 +49,8 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 1,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
                         "num_title_results": 0,
                         "par_results": [
                             {
@@ -58,6 +60,8 @@ class SearchTest(TimRouteTest):
                                 "results": [],
                             }
                         ],
+                        "path_results": [],
+                        "tag_results": [],
                         "title_results": [],
                     }
                 ],
@@ -222,6 +226,8 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 1,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
                         "num_title_results": 0,
                         "par_results": [
                             {
@@ -233,6 +239,8 @@ class SearchTest(TimRouteTest):
                                 "results": [],
                             }
                         ],
+                        "path_results": [],
+                        "tag_results": [],
                         "title_results": [],
                     }
                 ],
@@ -315,6 +323,8 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 1,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
                         "num_title_results": 0,
                         "par_results": [
                             {
@@ -326,6 +336,8 @@ class SearchTest(TimRouteTest):
                                 "results": [],
                             }
                         ],
+                        "path_results": [],
+                        "tag_results": [],
                         "title_results": [],
                     }
                 ],
@@ -433,8 +445,12 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 0,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
                         "num_title_results": 1,
                         "par_results": [],
+                        "path_results": [],
+                        "tag_results": [],
                         "title_results": [{"num_results": 1, "results": []}],
                     }
                 ],
@@ -499,8 +515,12 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 0,
+                        "num_path_results": 0,
+                        "num_tag_results": 2,
                         "num_title_results": 0,
                         "par_results": [],
+                        "path_results": [],
+                        "tag_results": [{"num_results": 2, "results": []}],
                         "title_results": [],
                     }
                 ],
@@ -555,8 +575,12 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 0,
+                        "num_path_results": 1,
+                        "num_tag_results": 0,
                         "num_title_results": 0,
                         "par_results": [],
+                        "path_results": [{"num_results": 1, "results": []}],
+                        "tag_results": [],
                         "title_results": [],
                     }
                 ],
@@ -622,8 +646,12 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 0,
+                        "num_path_results": 1,
+                        "num_tag_results": 0,
                         "num_title_results": 0,
                         "par_results": [],
+                        "path_results": [{"num_results": 1, "results": []}],
+                        "tag_results": [],
                         "title_results": [],
                     }
                 ],
