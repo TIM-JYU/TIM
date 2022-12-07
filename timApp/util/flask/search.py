@@ -31,7 +31,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_error, log_info
+from timApp.util.logger import log_error
 from timApp.util.utils import get_error_message, cache_folder_path
 
 search_routes = Blueprint("search", __name__, url_prefix="/search")
@@ -856,7 +856,6 @@ def search():
     timeout = get_option(request, "timeout", default=120, cast=int)
 
     start_time = time.time()
-    total_search_time = time.time_ns()
 
     validate_query(query, search_whole_words)
 
@@ -959,10 +958,6 @@ def search():
             user,
             term_regex,
         )
-
-    log_info(
-        f"Search for '{query}' took {(time.time_ns() - total_search_time) / 1000000} milliseconds."
-    )
 
     return json_response(
         {
