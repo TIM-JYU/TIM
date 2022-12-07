@@ -328,6 +328,10 @@ class DocResult:
             "num_title_results": get_search_match_count(
                 self.search_results, TitleResult
             ),
+            "tag_results": tag_results,
+            "num_tag_results": get_search_match_count(self.search_results, TagResult),
+            "path_results": path_results,
+            "num_path_results": get_search_match_count(self.search_results, PathResult),
             "par_results": par_results,
             "num_par_results": get_search_match_count(self.search_results, ParResult),
         }
