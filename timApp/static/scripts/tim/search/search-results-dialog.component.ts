@@ -217,7 +217,7 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                 if (t.doc.id === p.doc.id) {
                     const temp = t;
                     temp.num_title_results =
-                        t.num_title_results + p.num_title_results;
+                        t.num_title_results + p.num_path_results;
                     titleAndPathResults.push(temp);
                     pathResultsFound = true;
                     break;
@@ -289,8 +289,8 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                         num_title_results: t.num_title_results,
                         num_path_results: t.num_path_results,
                         num_tag_results: t.num_tag_results,
-                        par_results: [],
                         title_results: t.title_results,
+                        par_results: [],
                         path_results: [],
                         tag_results: [],
                     },
@@ -318,12 +318,12 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                         incomplete: false,
                         num_par_results: 0,
                         num_title_results: 0,
-                        num_tag_results: 0,
+                        num_tag_results: t.num_tag_results,
                         num_path_results: 0,
                         par_results: [],
                         title_results: [],
                         path_results: [],
-                        tag_results: [],
+                        tag_results: t.tag_results,
                     },
                     // tags: t.matching_tags,
                 };
