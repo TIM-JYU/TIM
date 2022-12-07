@@ -1204,11 +1204,7 @@ export class AnswerBrowserComponent
                     this.updatePoints();
                 }
             }
-            if (!this.selectedAnswer && !this.forceBrowser()) {
-                this.dimPlugin();
-            } else {
-                await this.changeAnswer();
-            }
+            await this.changeAnswer();
         } else {
             this.answers = data;
             if (this.answers.length === 0 && this.viewctrl.teacherMode) {
