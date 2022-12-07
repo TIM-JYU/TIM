@@ -211,16 +211,15 @@ export interface IPathSearchResult {
 })
 export class SearchBoxComponent implements OnInit, OnDestroy {
     // Results and variables search results dialog needs to know:
-    public results: IDocSearchResult[] = [];
-    public resultErrorMessage: string | undefined; // Message displayed only in results dialog.
+    public contentResults: IDocSearchResult[] = [];
+    public tagResults: IDocSearchResult[] = [];
+    public titleResults: IDocSearchResult[] = [];
+    public pathResults: IDocSearchResult[] = [];
     public tagMatchCount = 0;
     public wordMatchCount = 0;
     public titleMatchCount = 0;
     public pathMatchCount = 0;
-    // TODO these shouldn't be necessary, since IDocSearchResult already includes these?
-    public tagResults: IDocSearchResult[] = [];
-    public titleResults: IDocSearchResult[] = [];
-    public pathResults: IDocSearchResult[] = [];
+    public resultErrorMessage: string | undefined; // Message displayed only in results dialog.
     public incompleteSearchReason: string | undefined;
     public query: string = "";
     @Input() folder?: string;
@@ -302,7 +301,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         await this.combinedSearch();
         this.loading = false;
         if (
-            this.results.length === 0 &&
+            this.contentResults.length === 0 &&
             this.tagResults.length === 0 &&
             this.titleResults.length === 0 &&
             this.pathResults.length === 0 &&
@@ -479,14 +478,14 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         );
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
-            this.results = [];
+            this.contentResults = [];
             this.titleResults = [];
             this.tagResults = [];
             this.pathResults = [];
             return;
         }
         const response = r.result;
-        this.results = response.data.content_results;
+        this.contentResults = response.data.content_results;
         this.titleResults = response.data.title_results;
         this.tagResults = response.data.tags_results;
         this.pathResults = response.data.paths_results;
@@ -532,7 +531,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         this.tagResults = [];
         this.titleResults = [];
         this.pathResults = [];
-        this.results = [];
+        this.contentResults = [];
         this.errorMessage = undefined;
         this.resultErrorMessage = undefined;
     }

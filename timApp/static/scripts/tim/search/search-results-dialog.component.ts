@@ -130,7 +130,7 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
     protected dialogName = "SearchResults";
     searchWord: string = "";
     displayResults: ISearchResultDisplay[] = [];
-    private results: IDocSearchResult[] = [];
+    private contentResults: IDocSearchResult[] = [];
     private tagResults: IDocSearchResult[] = [];
     private titleResults: IDocSearchResult[] = [];
     private pathResults: IDocSearchResult[] = [];
@@ -173,7 +173,7 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
         this.collapsibles = false;
         this.limitedDisplay = false;
         this.searchComponent = ctrl;
-        this.results = ctrl.results;
+        this.contentResults = ctrl.contentResults;
         this.tagResults = ctrl.tagResults;
         this.titleResults = ctrl.titleResults;
         this.pathResults = ctrl.pathResults;
@@ -245,7 +245,7 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
         }
 
         // Combine title and tag results with existing content results.
-        for (const r of this.results) {
+        for (const r of this.contentResults) {
             const newDisplayResult: ISearchResultDisplay = {
                 result: r,
                 closed: true,
