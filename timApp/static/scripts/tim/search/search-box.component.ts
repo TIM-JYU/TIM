@@ -6,7 +6,7 @@ import type {OnDestroy, OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {showSearchResultDialog} from "tim/search/showSearchResultDialog";
 import * as t from "io-ts";
-import type {DocumentOrFolder, IItem, ITag, ITaggedItem} from "tim/item/IItem";
+import type {DocumentOrFolder, IItem, ITaggedItem} from "tim/item/IItem";
 import {relevanceSuggestions} from "tim/item/relevance-edit.component";
 import {someglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
@@ -97,10 +97,7 @@ export interface IWordSearchResult {
  */
 export interface ITagSearchResult {
     doc: ITaggedItem;
-    // Number of matches in the document's tags (not matching_tags length, because same tag may contain match
-    // more than once.)
     num_results: number;
-    // matching_tags: ITag[]; // List of tags that matched the query.
 }
 
 export interface IPathSearchResult {

@@ -11,18 +11,13 @@ import type {ITag} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
 import type {
     IDocSearchResult,
-    ITagSearchResult,
     SearchBoxComponent,
 } from "tim/search/search-box.component";
 import {CommonModule} from "@angular/common";
-import {IPathSearchResult} from "tim/search/search-box.component";
 
 export interface ISearchResultDisplay {
     closed: boolean; // Whether this is shown collapsed or not.
     result: IDocSearchResult;
-    // tags: ITag[];
-    // num_tag_results: number; // Same tag may contain the search word more than once.
-    // num_path_results: number;
 }
 
 enum SortOption {
@@ -249,7 +244,6 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             const newDisplayResult: ISearchResultDisplay = {
                 result: r,
                 closed: true,
-                // tags: [],
             };
             // Add tags to existing word search result objects.
             for (const t of this.tagResults) {
@@ -304,7 +298,6 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             for (const r of this.displayResults) {
                 if (t.doc.path === r.result.doc.path) {
                     // Add tag results to existing content-title-path results.
-                    // r.tags = t.matching_tags;
                     r.result.num_tag_results = t.num_tag_results;
                     found = true;
                 }
@@ -325,7 +318,6 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                         path_results: [],
                         tag_results: t.tag_results,
                     },
-                    // tags: t.matching_tags,
                 };
                 this.displayResults.push(newDocResult);
             }
