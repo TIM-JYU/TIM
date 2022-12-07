@@ -1,3 +1,4 @@
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
 
 from timApp.tests.browser.browsertest import BrowserTest
@@ -110,13 +111,24 @@ initword: empty
                 velp_hider.click()
             tu_2_selector = self.find_element('div[title = "Test user 2"]')
             tu_2_selector.click()
-            self.find_element_and_move_to(input_selector)
-            self.wait_until_present_and_vis("answerbrowser .onlyValid input")
-            valid_only = self.find_element("answerbrowser .onlyValid input")
-            self.assertTrue(valid_only.is_selected())
-            self.wait_until_hidden("answerbrowser .updating")
-            ele = self.find_element_and_move_to(input_selector)
-            self.assertEqual(ele.get_attribute("value"), "empty")
+
+            def focus_and_check_task():
+                self.find_element_and_move_to(input_selector)
+                self.wait_until_present_and_vis("answerbrowser .onlyValid input")
+                valid_only = self.find_element("answerbrowser .onlyValid input")
+                self.assertTrue(valid_only.is_selected())
+                self.wait_until_hidden("answerbrowser .loading")
+                ele = self.find_element_and_move_to(input_selector)
+                self.assertEqual(ele.get_attribute("value"), "empty")
+
+            try:
+                focus_and_check_task()
+            except (
+                StaleElementReferenceException,
+                TimeoutException,
+            ):
+                self.get_uninteractable_element().click()
+                focus_and_check_task()
 
         do_test(True)
         do_test(False)
