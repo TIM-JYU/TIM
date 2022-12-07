@@ -892,6 +892,8 @@ export class AnswerBrowserComponent
     async setNewest() {
         if (this.filteredAnswers.length > 0) {
             this.selectedAnswer = this.filteredAnswers[0];
+        } else {
+            this.selectedAnswer = undefined;
         }
         await this.changeAnswer();
     }
