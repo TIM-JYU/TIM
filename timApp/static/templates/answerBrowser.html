@@ -1,8 +1,8 @@
-<div>
+<div [class.updating]="updating">
     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="closeAlert(i)">
         <div [innerHTML]="alert.msg | purify"></div>
     </tim-alert>
-    <label *ngIf="hidden && anyInvalid && !formMode" class="checkbox-inline">
+    <label *ngIf="hidden && anyInvalid && !formMode" class="checkbox-inline onlyValid">
         <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
     <div *ngIf="!hidden">
         <div *ngIf="viewctrl.teacherMode && users && users.length > 0" class="flex">
@@ -59,7 +59,7 @@
                     <span class="answer-index-count">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a i18n-title tabindex="0"
                                                                                                   title="Newest answer"
                                                                                                   (click)="setNewest()">{{ filteredAnswers.length }}</a></span>
-                        <label class="checkbox-inline" *ngIf="anyInvalid">
+                        <label class="checkbox-inline onlyValid" *ngIf="anyInvalid">
                             <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
                         <span *ngIf="showTeacher()"> | <a i18n (click)="getAllAnswers()">All answers</a>
                     </span>
