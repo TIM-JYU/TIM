@@ -879,7 +879,6 @@ def search():
     cmd = ["rg"]
     # disable printing line numbers into output
     cmd.append("-N")
-    cmd.append("--engine auto")
     if case_sensitive:
         cmd.append("-s")
     else:
@@ -888,6 +887,11 @@ def search():
         cmd.append("-F")
     if search_whole_words:
         cmd.append("-w")
+    cmd.append("--auto-hybrid-regex")
+    # TODO auto-hybrid-regex option has been deprecated in up-to-date versions of ripgrep,
+    #  use the options below when ripgrep is updated
+    # cmd.append("--engine")
+    # cmd.append("auto")
     cmd.append(query)
 
     if should_search_content:
