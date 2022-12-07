@@ -7,7 +7,6 @@ from typing import Union, Any, ValuesView, Generator
 
 import attr
 import filelock
-import sass
 from flask import current_app
 from flask import flash
 from flask import redirect
@@ -18,6 +17,7 @@ from markupsafe import Markup
 from marshmallow import EXCLUDE
 from sqlalchemy.orm import joinedload, defaultload
 
+import sass
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import (
     verify_view_access,
@@ -701,6 +701,11 @@ def render_doc_view(
     usergroup = m.group
     peer_review_start = doc_settings.peer_review_start()
     peer_review_stop = doc_settings.peer_review_stop()
+    show_valid_only = (
+        m.valid_answers_only
+        if m.valid_answers_only is not None
+        else doc_settings.show_valid_answers_only()
+    )
     if teacher_or_see_answers:
         user_list = None
         ug = None
@@ -723,14 +728,20 @@ def render_doc_view(
                         can_add_missing = False
                 if ug:
                     user_list = [u.id for u in ug.users]
-        user_list = get_points_by_rule(points_sum_rule, task_ids, user_list)
+        user_list = get_points_by_rule(
+            points_sum_rule, task_ids, user_list, show_valid_only=show_valid_only
+        )
         if ug and can_add_missing:
             user_list = add_missing_users_from_group(user_list, ug)
         elif ug and not user_list and not can_add_missing:
             flash(f"You don't have access to group '{ug.name}'.")
     elif doc_settings.show_task_summary() and current_user.logged_in:
         info = get_points_by_rule(
-            points_sum_rule, task_ids, [current_user.id], force_user=current_user
+            points_sum_rule,
+            task_ids,
+            [current_user.id],
+            force_user=current_user,
+            show_valid_only=show_valid_only,
         )
         if info:
             total_points = info[0]["total_points"]
@@ -849,7 +860,12 @@ def render_doc_view(
             reviews = get_reviews_for_user(doc_info, current_user)
             for review in reviews:
                 user_list.append(review.reviewable_id)
-            user_list = get_points_by_rule(points_sum_rule, task_ids, user_list)
+            user_list = get_points_by_rule(
+                points_sum_rule,
+                task_ids,
+                user_list,
+                show_valid_only=show_valid_only,
+            )
 
     if index is None:
         index = get_index_from_html_list(t.output for t in post_process_result.texts)
@@ -1026,6 +1042,8 @@ def render_doc_view(
         hide_readmarks=hide_readmarks,
         override_theme=override_theme,
         current_list_user=current_list_user,
+        show_valid_answers_only=show_valid_only,
+        hide_names_requested=view_ctx.hide_names_requested,
     )
     # db.session.close()
     head, content = (

@@ -93,6 +93,7 @@ class DocSettingTypes:
     anonymize_reviewers: str
     answerBrowser: AnswerBrowserInfo
     groupSelfJoin: GroupSelfJoinSettings
+    showValidAnswersOnly: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -556,6 +557,9 @@ class DocSettings:
 
     def show_scoreboard(self) -> bool:
         return self.get_setting_or_default("show_scoreboard", False)
+
+    def show_valid_answers_only(self) -> bool:
+        return self.get_setting_or_default("showValidAnswersOnly", True)
 
     def hide_browser(self) -> bool:
         return self.get_setting_or_default("hideBrowser", False)

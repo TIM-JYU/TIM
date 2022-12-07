@@ -502,12 +502,15 @@ basic_tally_fields = [
 ]
 
 
-def valid_answers_query(task_ids: list[TaskId]) -> Query:
-    return Answer.query.filter(valid_taskid_filter(task_ids))
+def valid_answers_query(task_ids: list[TaskId], valid: bool | None = True) -> Query:
+    return Answer.query.filter(valid_taskid_filter(task_ids, valid))
 
 
-def valid_taskid_filter(task_ids: list[TaskId]) -> Query:
-    return Answer.task_id.in_(task_ids_to_strlist(task_ids)) & (Answer.valid == True)
+def valid_taskid_filter(task_ids: list[TaskId], valid: bool | None = True) -> Query:
+    res = Answer.task_id.in_(task_ids_to_strlist(task_ids))
+    if valid is not None:
+        res = res & (Answer.valid == valid)
+    return res
 
 
 class UserTaskEntry(TypedDict):
@@ -530,6 +533,7 @@ def get_users_for_tasks(
     group_by_doc: bool = False,
     answer_filter: Any | None = None,
     with_answer_time: bool = False,
+    show_valid_only: bool = True,
 ) -> list[UserTaskEntry]:
     if not task_ids:
         return []
@@ -557,7 +561,7 @@ def get_users_for_tasks(
         else []
     )
     subquery_user_answers = (
-        valid_answers_query(task_ids)
+        valid_answers_query(task_ids, True if show_valid_only else None)
         .filter(answer_filter)
         .join(UserAnswer, UserAnswer.answer_id == Answer.id)
         .group_by(UserAnswer.user_id, Answer.task_id)
@@ -720,6 +724,7 @@ def get_points_by_rule(
     answer_filter: Any | None = None,
     force_user: User | None = None,
     with_answer_time: bool = False,
+    show_valid_only: bool = True,
 ) -> (
     list[UserPoints] | list[UserTaskEntry]
 ):  # TODO: Would be better to return always same kind of list.
@@ -731,18 +736,25 @@ def get_points_by_rule(
     :param task_ids: The list of task ids to consider.
     :param user_ids: The list of users for which to compute the sum.
     :param with_answer_time: Whether to include the answer time data (last answer time, first answer time) in the result.
+    :param show_valid_only: Whether to show only valid answers.
 
     :return: The computed result.
 
     """
     if not rule:
-        return get_users_for_tasks(task_ids, user_ids, answer_filter=answer_filter)
+        return get_users_for_tasks(
+            task_ids,
+            user_ids,
+            answer_filter=answer_filter,
+            show_valid_only=show_valid_only,
+        )
     tasks_users = get_users_for_tasks(
         task_ids,
         user_ids,
         group_by_user=False,
         answer_filter=answer_filter,
         with_answer_time=with_answer_time,
+        show_valid_only=show_valid_only,
     )
     result: DefaultDict[int, UserPointInfo] = defaultdict(
         lambda: {

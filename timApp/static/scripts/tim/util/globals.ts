@@ -147,6 +147,8 @@ export interface IDocumentGlobals extends IItemGlobals {
     current_list_user?: IUser;
     show_unpublished_bg: boolean;
     requires_login?: boolean;
+    showValidAnswersOnly: boolean;
+    hideNamesRequested: boolean;
 }
 
 export enum NotificationType {
