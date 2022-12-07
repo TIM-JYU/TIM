@@ -879,9 +879,7 @@ def search():
     cmd = ["rg"]
     # disable printing line numbers into output
     cmd.append("-N")
-    # TODO implement option for using PCRE2 regex syntax
-    # if pcre2:
-    #     cmd.append("-P")
+    cmd.append("--engine auto")
     if case_sensitive:
         cmd.append("-s")
     else:
