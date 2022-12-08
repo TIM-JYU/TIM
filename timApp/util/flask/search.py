@@ -157,7 +157,7 @@ def preview_result(
     return prefix + md[start_index:end_index] + postfix
 
 
-@dataclass()
+@dataclass
 class WordResult:
     """
     One match word with location and match word.
