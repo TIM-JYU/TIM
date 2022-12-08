@@ -211,8 +211,8 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                 // If path and title result are from same doc, combine.
                 if (t.doc.id === p.doc.id) {
                     const temp = t;
-                    temp.num_title_results =
-                        t.num_title_results + p.num_path_results;
+                    temp.num_title_results = t.num_title_results;
+                    temp.num_path_results = p.num_path_results;
                     titleAndPathResults.push(temp);
                     pathResultsFound = true;
                     break;
@@ -248,7 +248,6 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             // Add tags to existing word search result objects.
             for (const t of this.tagResults) {
                 if (t.doc.id === r.doc.id) {
-                    // newDisplayResult.tags = t.matching_tags;
                     newDisplayResult.result.num_tag_results = t.num_tag_results;
                 }
             }
@@ -288,7 +287,6 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                         path_results: [],
                         tag_results: [],
                     },
-                    // tags: [],
                 };
                 this.displayResults.push(newDocResult);
             }
