@@ -7838,6 +7838,22 @@
           <context context-type="linenumber">85,86</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8674199162420664562" datatype="html">
+        <source>(no valid answers from the selected user)</source>
+        <target state="translated">(ei valideja vastauksia valitulta käyttäjältä)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3893232156030891915" datatype="html">
+        <source>(no valid answers)</source>
+        <target state="translated">(ei valideja vastauksia)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">63</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
