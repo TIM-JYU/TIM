@@ -147,7 +147,7 @@ def preview_result(
     max_length = min(par_len, max_length)
     s: int = m.start() - snippet_length
     e: int = m.end() + snippet_length
-    start_index: int = s if s > 0 else 0
+    start_index: int = max(s, 0)
     end_index: int = e if (e - s) <= max_length else par_len
 
     prefix = "..." if start_index else ""
