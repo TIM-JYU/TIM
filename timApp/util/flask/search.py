@@ -271,7 +271,7 @@ def get_search_match_count(results: list[SearchResult], rt: Type[SearchResult]) 
     :return: total number of matches found for the search
     """
     if results and not type(results[0]) is rt:
-        results = list(result for result in results if result.__class__ is rt)
+        results = list(result for result in results if isinstance(result, rt))
     return sum(r.get_match_count() for r in results)
 
 
@@ -306,18 +306,18 @@ class DocResult:
         title_results = list(
             title_res
             for title_res in self.search_results
-            if title_res.__class__ is TitleResult
+            if isinstance(title_res, TitleResult)
         )
         par_results = list(
-            par_res for par_res in self.search_results if par_res.__class__ is ParResult
+            par_res for par_res in self.search_results if isinstance(par_res, ParResult)
         )
         path_results = list(
             path_res
             for path_res in self.search_results
-            if path_res.__class__ is PathResult
+            if isinstance(path_res, PathResult)
         )
         tag_results = list(
-            tag_res for tag_res in self.search_results if tag_res.__class__ is TagResult
+            tag_res for tag_res in self.search_results if isinstance(tag_res, TagResult)
         )
 
         return {
