@@ -117,7 +117,7 @@ initword: empty
                 self.wait_until_present_and_vis("answerbrowser .onlyValid input")
                 valid_only = self.find_element("answerbrowser .onlyValid input")
                 self.assertTrue(valid_only.is_selected())
-                self.wait_until_hidden("answerbrowser .loading")
+                self.wait_until_hidden("answerbrowser .updating")
                 ele = self.find_element_and_move_to(input_selector)
                 self.assertEqual(ele.get_attribute("value"), "empty")
 

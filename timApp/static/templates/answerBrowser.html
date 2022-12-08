@@ -1,4 +1,4 @@
-<div [class.loading]="loading">
+<div [class.updating]="updating">
     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="closeAlert(i)">
         <div [innerHTML]="alert.msg | purify"></div>
     </tim-alert>

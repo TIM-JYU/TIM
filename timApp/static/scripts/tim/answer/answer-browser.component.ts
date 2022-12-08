@@ -156,6 +156,7 @@ export class AnswerBrowserComponent
     @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
     @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
     loading: number;
+    updating = false;
     viewctrl!: Require<ViewCtrl>;
     user: IUser | undefined;
     private fetchedUser: IUser | undefined;
@@ -1181,6 +1182,7 @@ export class AnswerBrowserComponent
     }
 
     private async handleAnswerFetch(data: IAnswer[], newSelectedId?: number) {
+        this.updating = true;
         if (
             (data.length > 0 &&
                 (this.hasUserChanged() ||
@@ -1213,6 +1215,7 @@ export class AnswerBrowserComponent
             }
             await this.updateFilteredAndSetNewest();
         }
+        this.updating = false;
         this.cdr.detectChanges();
     }
 
