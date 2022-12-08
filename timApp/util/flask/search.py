@@ -145,7 +145,7 @@ def preview_result(
     :return: Preview with set amount of characters around search word.
     """
     par_len: int = len(md)
-    max_length = par_len if par_len < max_length else PREVIEW_MAX_LENGTH
+    max_length = min(par_len, max_length)
     s: int = m.start() - snippet_length
     e: int = m.end() + snippet_length
     start_index: int = s if s > 0 else 0
