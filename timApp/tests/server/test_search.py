@@ -490,13 +490,15 @@ class SearchTest(TimRouteTest):
                 "tags_results": [
                     {
                         "doc": {
-                            "id": 14,
+                            "id": d.id,
                             "isFolder": False,
-                            "location": "users/test-user-1",
+                            "location": d.location,
                             "modified": "just now",
-                            "name": "doc7",
-                            "owners": [{"id": 6, "name": "testuser1"}],
-                            "path": "users/test-user-1/doc7",
+                            "name": d.short_name,
+                            "owners": [
+                                {"id": self.get_test_user_1_group_id(), "name": u.name}
+                            ],
+                            "path": d.path,
                             "public": True,
                             "relevance": None,
                             "rights": {
@@ -550,13 +552,15 @@ class SearchTest(TimRouteTest):
                 "paths_results": [
                     {
                         "doc": {
-                            "id": 9,
+                            "id": d.id,
                             "isFolder": False,
-                            "location": "users/test-user-1/a/b/dogs-like-bones/c",
+                            "location": d.location,
                             "modified": "just now",
-                            "name": "d",
-                            "owners": [{"id": 6, "name": "testuser1"}],
-                            "path": "users/test-user-1/a/b/dogs-like-bones/c/d",
+                            "name": d.short_name,
+                            "owners": [
+                                {"id": self.get_test_user_1_group_id(), "name": u.name}
+                            ],
+                            "path": d.path,
                             "public": True,
                             "relevance": None,
                             "rights": {
@@ -570,7 +574,7 @@ class SearchTest(TimRouteTest):
                                 "see_answers": True,
                                 "teacher": True,
                             },
-                            "title": "document 3",
+                            "title": d.title,
                             "unpublished": True,
                         },
                         "incomplete": False,
@@ -621,13 +625,15 @@ class SearchTest(TimRouteTest):
                 "paths_results": [
                     {
                         "doc": {
-                            "id": 9,
+                            "id": d.id,
                             "isFolder": False,
-                            "location": "users/test-user-1/a/b/dogs-like-bones/c",
+                            "location": d.location,
                             "modified": "just now",
-                            "name": "d",
-                            "owners": [{"id": 6, "name": "testuser1"}],
-                            "path": "users/test-user-1/a/b/dogs-like-bones/c/d",
+                            "name": d.short_name,
+                            "owners": [
+                                {"id": self.get_test_user_1_group_id(), "name": u.name}
+                            ],
+                            "path": d.path,
                             "public": True,
                             "relevance": None,
                             "rights": {
@@ -641,7 +647,7 @@ class SearchTest(TimRouteTest):
                                 "see_answers": True,
                                 "teacher": True,
                             },
-                            "title": "document 3",
+                            "title": d.title,
                             "unpublished": True,
                         },
                         "incomplete": False,
