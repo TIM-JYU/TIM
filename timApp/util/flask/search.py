@@ -138,7 +138,6 @@ def preview_result(
     Forms preview of the match paragraph.
 
     :param md: Paragraph markdown to preview.
-    :param query: Search word.
     :param m: Match object.
     :param snippet_length: The length of preview before and after search word.
     :param max_length: The maximum allowed length of the preview.
@@ -178,7 +177,7 @@ class WordResult:
         }
 
 
-@dataclass()
+@dataclass
 class SearchResult:
     """
     Common superclass for different search results.
@@ -217,7 +216,7 @@ class SearchResult:
         return {"results": self.word_results, "num_results": self.get_match_count()}
 
 
-@dataclass()
+@dataclass
 class ParResult(SearchResult):
     """
     Document paragraph search results.
@@ -238,7 +237,7 @@ class ParResult(SearchResult):
         }
 
 
-@dataclass()
+@dataclass
 class TitleResult(SearchResult):
     """
     Document title search result containing a list of match data.
@@ -248,7 +247,7 @@ class TitleResult(SearchResult):
     pass
 
 
-@dataclass()
+@dataclass
 class PathResult(SearchResult):
     """
     Document path search result
@@ -257,7 +256,7 @@ class PathResult(SearchResult):
     pass
 
 
-@dataclass()
+@dataclass
 class TagResult(SearchResult):
     """
     Document tag search result
@@ -276,7 +275,7 @@ def get_search_match_count(results: list[SearchResult], rt: Type[SearchResult]) 
     return sum(r.get_match_count() for r in results)
 
 
-@dataclass()
+@dataclass
 class DocResult:
     """
     Contains one document's title and word search information.
