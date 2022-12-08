@@ -41,6 +41,7 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
 .right-fixed-side {
     @extend .fixed-side;
     right: 0;
+    z-index: 100;
 }
 
 #menuTabs {
