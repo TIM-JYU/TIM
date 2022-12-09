@@ -155,8 +155,8 @@ export class AnswerBrowserComponent
     @Input() public taskId!: TaskId;
     @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
     @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
-    loading: number;
-    updating = false;
+    loading: number; // Answerbrowser is fetching data
+    updating = false; // Plugin html is reloading
     viewctrl!: Require<ViewCtrl>;
     user: IUser | undefined;
     private fetchedUser: IUser | undefined;
