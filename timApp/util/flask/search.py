@@ -31,7 +31,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_error
+from timApp.util.logger import log_error, log_info
 from timApp.util.utils import get_error_message, cache_folder_path, normalize_newlines
 
 search_routes = Blueprint("search", __name__, url_prefix="/search")
@@ -503,6 +503,7 @@ def create_search_files(remove_deleted_pars=True) -> tuple[int, str]:
     :param remove_deleted_pars: Check paragraph existence before adding.
     :return: Status code and a message confirming success of file creation.
     """
+    start_time = time.time()
 
     temp_content_file_name = (
         SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_CONTENT_FILE_PATH.name}"
@@ -614,6 +615,8 @@ def create_search_files(remove_deleted_pars=True) -> tuple[int, str]:
         temp_title_file_name.rename(PROCESSED_TITLE_FILE_PATH)
         temp_paths_file_name.rename(PROCESSED_PATHS_FILE_PATH)
         temp_tags_file_name.rename(PROCESSED_TAGS_FILE_PATH)
+
+        log_info(f"Search file indexing took: {start_time - time.time()} seconds")
 
         return (
             200,
