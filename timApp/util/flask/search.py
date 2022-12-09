@@ -32,7 +32,7 @@ from timApp.util.flask.requesthelper import (
 )
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
-from timApp.util.utils import get_error_message, cache_folder_path
+from timApp.util.utils import get_error_message, cache_folder_path, normalize_newlines
 
 search_routes = Blueprint("search", __name__, url_prefix="/search")
 
@@ -407,7 +407,8 @@ def add_doc_info_content_line(
         else:
             par_md_buf.write(doc_par.md)
 
-        par_md = par_md_buf.getvalue().replace("\r", " ").replace("\n", " ")
+        # par_md = par_md_buf.getvalue().replace("\r", " ").replace("\n", " ")
+        par_md = normalize_newlines(par_md_buf.getvalue())
         # Cherry pick attributes, because others are unnecessary for the search.
         par_attrs = par_dict["attrs"]
         par_json_list.append({"id": par_id, "attrs": par_attrs, "md": par_md})

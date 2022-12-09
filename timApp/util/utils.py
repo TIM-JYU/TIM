@@ -527,3 +527,15 @@ def partition(
     # Create two buffered iterators: values of i1 are cached for i2 to use
     i1, i2 = tee((pred(item), item) for item in iterable)
     return [item for t, item in i1 if t], [item for t, item in i2 if not t]
+
+
+def normalize_newlines(text: str) -> str:
+    """
+    Find and replace non-canonical separator characters with the canonical '\n' in the specified text.
+
+    :param text: Original text.
+    :return: Modified source text.
+    """
+    newlines = ["\r\n", "\r", "\n", "\u0085", "\u2028", "\u2029"]
+    pattern = "|".join(newlines)
+    return re.sub(pattern, " ", text)
