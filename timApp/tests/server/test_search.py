@@ -417,7 +417,7 @@ class SearchTest(TimRouteTest):
                         "doc": {
                             "id": d.id,
                             "isFolder": False,
-                            "location": "users/test-user-1",
+                            "location": d.location,
                             "modified": "just now",
                             "name": d.short_name,
                             "owners": [
@@ -512,7 +512,7 @@ class SearchTest(TimRouteTest):
                                 "see_answers": True,
                                 "teacher": True,
                             },
-                            "title": "document 8",
+                            "title": d.title,
                             "unpublished": True,
                         },
                         "incomplete": False,
