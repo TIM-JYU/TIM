@@ -1,4 +1,5 @@
-from dataclasses import field
+from dataclasses import field, dataclass
+from typing import Callable
 from xml.etree.ElementTree import ParseError
 
 import requests
@@ -33,46 +34,56 @@ from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_warning
 
-saml = TypedBlueprint("saml", __name__, url_prefix="/saml")
-"""
-Blueprint for SAML routes.
-"""
+
+@dataclass(frozen=True, slots=True)
+class IdpDescription:
+    display_names: dict[str, str]
+    scopes: list[str] = field(default_factory=list)
 
 
-@cache.memoize(timeout=3600 * 24)
-def _get_idp_metadata_from_url(url: str) -> bytes:
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
+@dataclass
+class SamlService:
+    name: str
+    metadata_url: str
+
+    get_idp_description: Callable[[str, dict], IdpDescription | None]
+
+    metadata_timeout: int = 60 * 60 * 24
+
+    @property
+    def metadata_cache_key(self) -> str:
+        return f"{self.name}_{self.metadata_url}_metadata"
+
+    @property
+    def metadata(self) -> bytes:
+        metadata = cache.get(self.metadata_cache_key)
+        if metadata:
+            return metadata
+        try:
+            response = requests.get(self.metadata_url)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise RouteException(
+                f"Could not fetch IDP metadata from {self.metadata_url}: {e}"
+            )
+        cache.set(
+            self.metadata_cache_key, response.content, timeout=self.metadata_timeout
+        )
         return response.content
-    except requests.exceptions.RequestException as e:
-        raise RouteException(f"Could not fetch IDP metadata from {url}: {e}")
+
+    def init_saml_client(self) -> Saml2Client:
+        return get_saml_client(self.name, lambda: self.metadata)
+
+    def init_saml_config(self) -> Saml2Config:
+        return get_saml_config(self.name, lambda: self.metadata)
 
 
-def _haka_metadata_cache_key() -> str:
-    return _get_idp_metadata_from_url.make_cache_key(
-        _get_idp_metadata_from_url, app.config["HAKA_METADATA_URL"]
-    )
-
-
-def _get_haka_metadata() -> bytes:
-    return _get_idp_metadata_from_url(app.config["HAKA_METADATA_URL"])
-
-
-def _get_saml_client() -> Saml2Client:
-    return get_saml_client(_get_haka_metadata)
-
-
-def _get_saml_config() -> Saml2Config:
-    return get_saml_config(_get_haka_metadata)
-
-
-@saml.get("/sso")
-def sso(
+def _handle_sso(
+    service: SamlService,
     return_to: str,
-    entity_id: str = field(metadata={"data_key": "entityID"}),
-    debug: bool = False,
-    add_user: bool = field(default=False, metadata={"data_key": "addUser"}),
+    entity_id: str,
+    debug: bool,
+    add_user: bool,
 ) -> Response:
     """
     Perform single sign-on to TIM via the SAML2 protocol.
@@ -87,7 +98,7 @@ def sso(
     if not logged_in() and add_user:
         raise AccessDenied("You must be logged in before adding users to session.")
 
-    client = _get_saml_client()
+    client = service.init_saml_client()
     req_id, info = client.prepare_for_authenticate(entity_id, relay_state=return_to)
     redirect_url = next(v for k, v in info["headers"] if k == "Location")
 
@@ -115,9 +126,7 @@ def _get_saml_response(
     )
 
 
-@csrf.exempt
-@saml.post("/acs")
-def acs() -> Response:
+def _handle_acs(service: SamlService) -> Response:
     """
     Handle Assertion Consumer Service (ACS) response from IdP.
     Finalise the SSO process and log the user in.
@@ -135,7 +144,7 @@ def acs() -> Response:
     if not request_id:
         raise RouteException("No requestID in session.")
 
-    client = _get_saml_client()
+    client = service.init_saml_client()
 
     try:
         resp = _get_saml_response(client, request_id, came_from)
@@ -200,83 +209,67 @@ def acs() -> Response:
     return redirect(url_for("start_page"))
 
 
-@saml.get("")
-def get_metadata() -> Response:
-    """
-    Get the SAML2 metadata for this service in XML format.
-
-    :return: SAML2 metadata of this service provider
-    """
-    saml_config = _get_saml_config()
-    try:
-        resp = make_response(create_metadata_string(None, config=saml_config), 200)
-        resp.headers["Content-Type"] = "text/xml"
-    except SAMLError as e:
-        log_warning(f"Could not create SAML metadata: {e}")
-        resp = make_response(f"Could not create SAML metadata: {e}", 400)
-
-    return resp
-
-
-def _should_update_idp_list() -> bool:
-    # Sync cache refresh for IdP list with metadata cache refresh
-    k = _haka_metadata_cache_key()
-    return cache.get(k) is None
-
-
-@cache.memoize(timeout=3600 * 24, forced_update=_should_update_idp_list)
-def _get_idps() -> list[dict]:
-    config = _get_saml_config()
+def _get_idps(service: SamlService) -> list[dict]:
+    cache_key = f"{service.metadata_cache_key}_feed_json"
+    feed = cache.get(cache_key)
+    if feed:
+        return feed
+    feed = []
+    config = service.init_saml_config()
     meta: MetadataStore = config.metadata
     idps = meta.with_descriptor("idpsso")
-    feed = []
     for entity_id, idp_info in idps.items():
-        sso_desc = idp_info.get("idpsso_descriptor")
-        if not sso_desc:
-            log_warning(f"SAML: Could not find SSO info for {entity_id}")
+        idp_desc = service.get_idp_description(entity_id, idp_info)
+        if not idp_desc:
             continue
-        ext_elems = sso_desc[0].get("extensions", {}).get("extension_elements", None)
-        if ext_elems is None:
-            log_warning(f"SAML: Could not find extension elements for {entity_id}")
-            continue
-        ui_info = next(
-            (d for d in ext_elems if d["__class__"].endswith("ui&UIInfo")), None
-        )
-        if ui_info is None:
-            log_warning(f"SAML: Could not find UIInfo for {entity_id}")
-            continue
-        if not isinstance(ui_info, dict):
-            log_warning(f"SAML: UIInfo is not a dict for {entity_id}")
-            continue
-        # get display names
-        display_names = [
-            {
-                "value": name_entry["text"],
-                "lang": name_entry["lang"],
-            }
-            for name_entry in ui_info["display_name"]
-        ]
-        # Check for scope extension
-        scopes = []
-        scope_elems = [e for e in ext_elems if e["__class__"].endswith("&Scope")]
-        for ext_elem in scope_elems:
-            scopes.append(ext_elem["text"])
 
         feed.append(
             {
                 "entityID": entity_id,
-                "displayNames": display_names,
-                "scopes": scopes,
+                "displayNames": [
+                    {
+                        "lang": lang,
+                        "value": name,
+                    }
+                    for lang, name in idp_desc.display_names.items()
+                ],
+                "scopes": idp_desc.scopes,
             }
         )
+
+    cache.set(cache_key, feed, timeout=service.metadata_timeout)
     return feed
 
 
-@saml.get("/feed")
-def get_idp_feed() -> Response:
-    """
-    Get a list of IdPs available for login based on active metadata.
+def add_saml_sp_routes(saml_bp: TypedBlueprint, service: SamlService) -> TypedBlueprint:
+    @saml_bp.get("")
+    def get_metadata() -> Response:
+        saml_config = service.init_saml_config()
+        try:
+            resp = make_response(create_metadata_string(None, config=saml_config), 200)
+            resp.headers["Content-Type"] = "text/xml"
+        except SAMLError as e:
+            log_warning(f"Could not create SAML metadata: {e}")
+            resp = make_response(f"Could not create SAML metadata: {e}", 400)
 
-    :return: JSON list of IdPs usable for login.
-    """
-    return json_response(_get_idps())
+        return resp
+
+    @saml_bp.get("/feed")
+    def get_idp_feed() -> Response:
+        return json_response(_get_idps(service))
+
+    @csrf.exempt
+    @saml_bp.post("/acs")
+    def acs() -> Response:
+        return _handle_acs(service)
+
+    @saml_bp.get("/sso")
+    def sso(
+        return_to: str,
+        entity_id: str = field(metadata={"data_key": "entityID"}),
+        debug: bool = False,
+        add_user: bool = field(default=False, metadata={"data_key": "addUser"}),
+    ) -> Response:
+        return _handle_sso(service, return_to, entity_id, debug, add_user)
+
+    return saml_bp

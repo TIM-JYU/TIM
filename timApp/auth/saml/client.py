@@ -37,7 +37,9 @@ def _metadatastore_load(self: MetadataStore, *args: list, **kwargs: dict) -> Non
 MetadataStore.load = _metadatastore_load
 
 
-def get_saml_config(metadata_loader: Callable[[], bytes]) -> Saml2Config:
+def get_saml_config(
+    service_name: str, metadata_loader: Callable[[], bytes]
+) -> Saml2Config:
     """
     Get the SAML2 configuration for the client.
 
@@ -46,7 +48,7 @@ def get_saml_config(metadata_loader: Callable[[], bytes]) -> Saml2Config:
     """
 
     def _do_get_saml_config(try_new_cert: bool, try_new_metadata: bool) -> Saml2Config:
-        saml_path = Path(app.config["SAML_PATH"])
+        saml_path = Path(app.config["SAML_PATH"]) / service_name
         if try_new_cert:
             saml_path /= "new"
 
@@ -96,7 +98,9 @@ def get_saml_config(metadata_loader: Callable[[], bytes]) -> Saml2Config:
                 }
             ]
         }
-        config_dict["attribute_map_dir"] = str(saml_path.parent / "attributemaps")
+        config_dict["attribute_map_dir"] = str(
+            saml_path.parent.parent / "attributemaps"
+        )
         config_dict["allow_unknown_attributes"] = True
         saml2_config.load(config_dict)
 
@@ -124,12 +128,14 @@ def get_saml_config(metadata_loader: Callable[[], bytes]) -> Saml2Config:
     )
 
 
-def get_saml_client(metadata_loader: Callable[[], bytes]) -> Saml2Client:
+def get_saml_client(
+    service_name: str, metadata_loader: Callable[[], bytes]
+) -> Saml2Client:
     """
     Get the SAML2 client used to make SAML requests.
 
     :param metadata_loader: Custom loader that provides the XML metadata.
     :return: SAML2 client
     """
-    saml2_client = Saml2Client(config=get_saml_config(metadata_loader))
+    saml2_client = Saml2Client(config=get_saml_config(service_name, metadata_loader))
     return saml2_client
