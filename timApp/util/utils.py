@@ -24,6 +24,10 @@ from lxml.html import HtmlElement
 
 from tim_common.html_sanitize import sanitize_html
 
+NORM_NEWLINES = ["\r\n", "\r", "\n", "\u0085", "\u2028", "\u2029"]
+NORM_NEWLINES_PATTERN = "|".join(NORM_NEWLINES)
+NORM_NEWLINES_COMPILED = re.compile(NORM_NEWLINES_PATTERN)
+
 
 def get_exception_code(
     ex: BaseException | None, tb: TracebackType | None = None
@@ -536,6 +540,4 @@ def normalize_newlines(text: str) -> str:
     :param text: Original text.
     :return: Modified source text.
     """
-    newlines = ["\r\n", "\r", "\n", "\u0085", "\u2028", "\u2029"]
-    pattern = "|".join(newlines)
-    return re.sub(pattern, " ", text)
+    return re.sub(NORM_NEWLINES_COMPILED, " ", text)
