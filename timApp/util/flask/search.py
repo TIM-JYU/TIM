@@ -148,7 +148,6 @@ def preview_result(
     s: int = m.start() - snippet_length
     e: int = m.end() + snippet_length
     start_index: int = max(s, 0)
-    # end_index: int = e if (e - s) <= max_length else par_len
     end_index: int = max(min(e, par_len), start_index + max_length)
 
     prefix = "..." if start_index else ""
@@ -272,7 +271,7 @@ def get_search_match_count(results: list[SearchResult], rt: Type[SearchResult]) 
     :return: total number of matches found for the search
     """
     if results and not type(results[0]) is rt:
-        results = list(result for result in results if isinstance(result, rt))
+        results = [result for result in results if isinstance(result, rt)]
     return sum(r.get_match_count() for r in results)
 
 
@@ -304,22 +303,22 @@ class DocResult:
         """
         :return: A dictionary of the object, suitable for JSON-conversion.
         """
-        title_results = list(
+        title_results = [
             title_res
             for title_res in self.search_results
             if isinstance(title_res, TitleResult)
-        )
-        par_results = list(
+        ]
+        par_results = [
             par_res for par_res in self.search_results if isinstance(par_res, ParResult)
-        )
-        path_results = list(
+        ]
+        path_results = [
             path_res
             for path_res in self.search_results
             if isinstance(path_res, PathResult)
-        )
-        tag_results = list(
+        ]
+        tag_results = [
             tag_res for tag_res in self.search_results if isinstance(tag_res, TagResult)
-        )
+        ]
 
         return {
             "doc": self.doc_info,
