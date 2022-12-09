@@ -616,7 +616,7 @@ def create_search_files(remove_deleted_pars=True) -> tuple[int, str]:
         temp_paths_file_name.rename(PROCESSED_PATHS_FILE_PATH)
         temp_tags_file_name.rename(PROCESSED_TAGS_FILE_PATH)
 
-        log_info(f"Search file indexing took: {start_time - time.time()} seconds")
+        log_info(f"Search file indexing took: {time.time() - start_time} seconds")
 
         return (
             200,
