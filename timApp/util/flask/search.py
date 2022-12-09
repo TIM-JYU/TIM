@@ -775,28 +775,30 @@ def filter_search_documents(
     docs = []
     if search_owned_docs:
         if not ignore_relevance:
-            docs = list(
+            docs = [
                 doc_info
                 for doc_info in doc_infos
+                # TODO checking for view access is redundant here, since we're checking for ownership?
                 if has_view_access(doc_info)
                 and user.has_ownership(doc_info, allow_admin=False)
                 and is_relevant(doc_info, search_items, relevance_threshold)
-            )
+            ]
         else:
-            docs = list(
+            docs = [
                 doc_info
                 for doc_info in doc_infos
+                # TODO checking for view access is redundant here, since we're checking for ownership?
                 if has_view_access(doc_info)
                 and user.has_ownership(doc_info, allow_admin=False)
-            )
+            ]
     else:
         if not ignore_relevance:
-            docs = list(
+            docs = [
                 doc_info
                 for doc_info in doc_infos
                 if has_view_access(doc_info)
                 and is_relevant(doc_info, search_items, relevance_threshold)
-            )
+            ]
         else:
             docs = list(filter(has_view_access, doc_infos))
     return docs
