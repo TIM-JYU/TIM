@@ -1,6 +1,6 @@
 .console {
-  font-family:Courier;
-  color: #ccc; 
+  font-family: Courier New,Courier,Lucida Sans Typewriter,Lucida Typewriter,monospace;
+  color: #f2f2f2;
   background: #000000;
   border: 3px double #ccc;
   padding: 10px;
