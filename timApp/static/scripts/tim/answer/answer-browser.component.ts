@@ -83,8 +83,8 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
  * - if globalField:
  *     - pick the answer from anybody (wins useCurrentUser)
  *     - save to current user
- *     - use hidden answerBrowser without changing users
- *     - TODO: if hideBrowser: false, then show browser
+ *     - show answers from everyone, never change user
+ *     - if hideBrowser, then save teacher's fix on by default
  *
  */
 
@@ -325,8 +325,6 @@ export class AnswerBrowserComponent
 
         // If task is in form_mode, only last (already loaded) answer should matter.
         // Answer changes are handled by viewctrl, so don't bother querying them here
-        // TODO: Make a route to handle getAnswers on global task. Currently global task has its' answerBrowser
-        //  always hidden and queries as they are now do not handle global task correctly, causing useless plugin update
         if (!this.formMode) {
             const answs = await this.getAnswers();
             if (answs && answs.length > 0) {
