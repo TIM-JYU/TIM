@@ -531,7 +531,7 @@ def partition(
 
 def normalize_newlines(text: str) -> str:
     """
-    Find and replace non-canonical separator characters with the canonical '\n' in the specified text.
+    Find and replace non-canonical separator characters with whitespace ' ' in the specified text.
 
     :param text: Original text.
     :return: Modified source text.
