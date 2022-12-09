@@ -335,6 +335,8 @@ export class AnswerBrowserComponent
                 if (!updated) {
                     this.handleAnswerFetch(this.answers);
                 }
+            } else if (this.viewctrl.teacherMode) {
+                this.dimPlugin();
             }
             if (!this.isGlobal()) {
                 await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
