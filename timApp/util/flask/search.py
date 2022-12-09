@@ -847,12 +847,12 @@ def search():
         search_whole_words,
         search_owned_docs,
     ) = get_common_search_params(request)
-    should_search_titles = get_option(request, "searchTitles", default=True, cast=bool)
+    should_search_titles = get_option(request, "searchTitles", default=False, cast=bool)
     should_search_content = get_option(
-        request, "searchContent", default=True, cast=bool
+        request, "searchContent", default=False, cast=bool
     )
-    should_search_tags = get_option(request, "searchTags", default=True, cast=bool)
-    should_search_paths = get_option(request, "searchPaths", default=True, cast=bool)
+    should_search_tags = get_option(request, "searchTags", default=False, cast=bool)
+    should_search_paths = get_option(request, "searchPaths", default=False, cast=bool)
     timeout = get_option(request, "timeout", default=120, cast=int)
 
     start_time = time.time()
