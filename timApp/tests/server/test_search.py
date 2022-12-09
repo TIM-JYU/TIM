@@ -14,7 +14,7 @@ class SearchTest(TimRouteTest):
         text_in_document = "House cats like to hunt too."
         d = self.create_doc(initial_par=text_in_document)
         self.get(f"search/createContentFile")
-        url = f"search?ignoreRelevance=true&caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false"
+        url = f"search?ignoreRelevance=true&caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
         self.get(
             url,
             expect_status=200,
@@ -84,7 +84,7 @@ class SearchTest(TimRouteTest):
         self.create_doc(initial_par="There's a match inside, but it can't be searched.")
         text_to_search = "a"
         self.get(f"search/createContentFile")
-        url = f"search?folder=&query={text_to_search}"
+        url = f"search?folder=&query={text_to_search}&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
         self.get(
             url,
             expect_status=400,
@@ -102,7 +102,7 @@ class SearchTest(TimRouteTest):
         )
         self.get(f"search/createContentFile")
         text_to_search = "Cannot be found anywhere"
-        url = f"search?folder=&query={text_to_search}"
+        url = f"search?folder=&query={text_to_search}&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
         self.get(
             url,
             expect_status=200,
@@ -129,7 +129,7 @@ class SearchTest(TimRouteTest):
         self.create_doc(initial_par=text_to_search)
         self.get(f"search/createContentFile")
         text_to_search_upper = "TEXT TO SEARCH"
-        url = f"search?caseSensitive={case_sensitive}&folder=&query={text_to_search_upper}"
+        url = f"search?caseSensitive={case_sensitive}&folder=&query={text_to_search_upper}&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
         self.get(
             url,
             expect_status=200,
@@ -149,7 +149,7 @@ class SearchTest(TimRouteTest):
 
     def test_search_without_view_rights(self):
         text_to_search = "secret"
-        url = f"search?folder=&query={text_to_search}"
+        url = f"search?folder=&query={text_to_search}&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
 
         self.make_admin(self.test_user_1)
         self.login_test1()
@@ -181,7 +181,7 @@ class SearchTest(TimRouteTest):
         :return:
         """
         text_to_search = "hidden"
-        url = f"search?folder=&query={text_to_search}"
+        url = f"search?folder=&query={text_to_search}&searchContent=true"
         u1 = self.test_user_1
         u1_name = u1.name
         self.login_test1()
@@ -287,7 +287,7 @@ class SearchTest(TimRouteTest):
         self.test_user_1.grant_access(d, AccessType.edit)
         db.session.commit()
         self.get(
-            f"search?ignoreRelevance=true&folder=&query={text_to_search}",
+            f"search?ignoreRelevance=true&folder=&query={text_to_search}&searchContent=true",
             expect_status=200,
             expect_content={
                 "content_results": [
@@ -354,7 +354,7 @@ class SearchTest(TimRouteTest):
         )
 
         self.get(
-            f"search?folder=&query={text_to_search}&ignorePlugins=True",
+            f"search?folder=&query={text_to_search}&ignorePlugins=True&searchContent=true",
             expect_status=200,
             expect_content={
                 "content_results": [],
@@ -374,7 +374,7 @@ class SearchTest(TimRouteTest):
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
         self.get(
-            f"search?folder=&query={text_to_search}",
+            f"search?folder=&query={text_to_search}&searchContent=true",
             expect_status=200,
             expect_content={
                 "content_results": [],
