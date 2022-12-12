@@ -6,6 +6,7 @@ import type {
 } from "tim/plugin/attributes";
 import type {Type} from "io-ts";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
+import type {AngularError, Failure} from "tim/util/utils";
 import {toPromise} from "tim/util/utils";
 import type {PluginMarkupErrors} from "tim/plugin/util";
 import {getDefaults, PluginBaseCommon, PluginMeta} from "tim/plugin/util";
@@ -193,7 +194,14 @@ export abstract class AngularPluginBase<
     ) {
         const tid = this.pluginMeta.getTaskId();
         if (!tid) {
-            throw Error("Task id missing.");
+            return {
+                ok: false,
+                result: {
+                    error: {
+                        error: "Task id missing.",
+                    },
+                },
+            } as Failure<AngularError>;
         }
         const dt = tid.docTaskIdFull();
         const {url, data} = prepareAnswerRequest(

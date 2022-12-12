@@ -343,7 +343,7 @@ interface Success<T> {
     result: T;
 }
 
-interface Failure<T> {
+export interface Failure<T> {
     ok: false;
     result: T;
 }
@@ -351,7 +351,7 @@ interface Failure<T> {
 export type Result<T, U> = Success<T> | Failure<U>;
 
 type AngularJSError = {data: {error: string}; status?: number};
-type AngularError = {error: {error: string}; status?: number};
+export type AngularError = {error: {error: string}; status?: number};
 
 export function mapSuccess<T, U, M>(
     r: Result<T, U>,
