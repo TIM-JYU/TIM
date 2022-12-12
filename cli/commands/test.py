@@ -13,6 +13,7 @@ class Arguments:
     target: str
     down: bool
     up: bool
+    new_screenshots: bool
 
 
 BROWSER_TEST_SCRIPT = """
@@ -80,13 +81,17 @@ def run(args: Arguments) -> None:
     test_command_joined = sh_join(test_command)
     log_debug(f"test_command: {test_command_joined}")
 
+    env = {
+        "TEST_COMMAND": test_command_joined,
+    }
+    if args.new_screenshots:
+        env["NEW_SCREENSHOTS"] = "1"
+
     res = run_compose(
         ["up", "--exit-code-from", "tests", "--abort-on-container-exit", "tests"],
         "test",
         override_profile=False,
-        extra_env={
-            "TEST_COMMAND": test_command_joined,
-        },
+        extra_env=env,
     )
     if args.down:
         run_compose(["down", "-t", "0"])
@@ -105,6 +110,12 @@ def init(parser: ArgumentParser) -> None:
         help="Don't stop the all containers after the tests have finished.",
         action="store_false",
         dest="down",
+    )
+    parser.add_argument(
+        "--new-screenshots",
+        help="Create new screenshots for all browser tests.",
+        action="store_true",
+        dest="new_screenshots",
     )
     parser.add_argument(
         "target",

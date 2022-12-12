@@ -295,8 +295,8 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             f"failed screenshot saved to screenshots/{f}{fail_suffix} "
             f"and difference to screenshots/{f}{fail_suffix}_DIFF"
         )
-        new_screenshots = 0  # change here 1 for generating new screenshots
-        if new_screenshots == 0:
+        new_screenshots = os.environ.get("NEW_SCREENSHOTS")
+        if new_screenshots != "1":
             self.assertTrue(False, msg=assert_msg)
 
     def should_not_exist(self, css_selector: str):
