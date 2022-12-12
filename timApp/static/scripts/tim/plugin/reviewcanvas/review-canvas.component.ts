@@ -128,7 +128,7 @@ const PluginFields = t.intersection([
         <a *ngIf="uploadedFiles.length > 0 && !isUnSaved() && downloadPDFUrl" [href]="downloadPDFUrl" target="_blank">{{downloadPDFText()}}</a>
         <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
         <div *ngIf="!inReviewView()">
-            <ng-container body>
+            <ng-container *ngIf="enabled" body>
                 <div class="form-inline small">
                     <div style="position: relative;" *ngFor="let item of uploadedFiles; let i = index">
                         <div class="uploadContainer" #wraps>
@@ -165,7 +165,7 @@ const PluginFields = t.intersection([
                 <span *ngIf="connectionErrorMessage" class="error" [innerHTML]="connectionErrorMessage"></span>
                 <span *ngIf="userErrorMessage" class="error" [innerHTML]="userErrorMessage"></span>
             </div>
-            <button class="timButton" (click)="save()" i18n>Save answer</button>
+            <button *ngIf="enabled" class="timButton" (click)="save()" i18n>Save answer</button>
         </div>
         <p footer *ngIf="footer" [textContent]="footer"></p>
     `,
@@ -196,6 +196,7 @@ export class ReviewCanvasComponent
     changes = false;
     private loadedImages = 0;
     private vctrl!: ViewCtrl;
+    enabled = true;
 
     fileSelect?: FileSelectManagerComponent;
     uploadUrl?: string;
@@ -236,6 +237,10 @@ export class ReviewCanvasComponent
         const taskId = this.pluginMeta.getTaskId();
         if (taskId?.docId) {
             this.uploadUrl = `/pluginUpload/${taskId.docId}/${taskId.name}/`;
+        } else {
+            this.userErrorMessage = "Task id is missing";
+            this.enabled = false;
+            return;
         }
 
         this.modelChangeSub = this.modelChanged
