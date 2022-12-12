@@ -24,7 +24,11 @@ import type {Subscription} from "rxjs";
 import {Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {PurifyModule} from "tim/util/purify.module";
-import {defaultErrorMessage, defaultTimeout} from "tim/util/utils";
+import {
+    defaultErrorMessage,
+    defaultTaskIdMissingMessage,
+    defaultTimeout,
+} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {
     ITimComponent,
@@ -238,7 +242,7 @@ export class ReviewCanvasComponent
         if (taskId?.docId) {
             this.uploadUrl = `/pluginUpload/${taskId.docId}/${taskId.name}/`;
         } else {
-            this.userErrorMessage = "Task id is missing";
+            this.userErrorMessage = defaultTaskIdMissingMessage;
             this.enabled = false;
             return;
         }

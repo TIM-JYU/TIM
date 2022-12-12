@@ -25,6 +25,7 @@ export const UnknownRecord = t.record(t.string, t.unknown);
 const UnknownRecordOrArray = t.union([UnknownRecord, t.array(t.unknown)]);
 
 export const defaultErrorMessage = "Syntax error or no reply from server?";
+export const defaultTaskIdMissingMessage = $localize`Task id missing and required to answer this task.`;
 export const defaultWuffMessage = $localize`Something went wrong. TIM admins have been notified about the issue.`;
 export const defaultTimeout = 20000;
 
