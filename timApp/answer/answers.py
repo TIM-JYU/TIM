@@ -568,23 +568,48 @@ def get_users_for_tasks(
         .with_entities(
             Answer.task_id,
             UserAnswer.user_id.label("uid"),
-            func.max(Answer.id).label("aid"),
+            func.max(Answer.id).filter(Answer.valid == True).label("aid_valid"),
+            func.max(Answer.id).label("aid_any"),
             *time_labels,
         )
         .subquery()
     )
+
     sub_joined = (
         db.session.query(subquery_user_answers, subquery_answers, subquery_annotantions)
-        .join(subquery_answers, subquery_user_answers.c.aid == subquery_answers.c.id)
+        .outerjoin(
+            subquery_answers,
+            # Pick the latest valid answer.
+            # If there is no valid answer, pick any latest answer.
+            (
+                (subquery_user_answers.c.aid_valid != None)
+                & (subquery_user_answers.c.aid_valid == subquery_answers.c.id)
+            )
+            | (
+                (subquery_user_answers.c.aid_valid == None)
+                & (subquery_user_answers.c.aid_any == subquery_answers.c.id)
+            ),
+        )
         .outerjoin(
             subquery_annotantions,
-            subquery_annotantions.c.annotation_answer_id == subquery_user_answers.c.aid,
+            subquery_annotantions.c.annotation_answer_id
+            == subquery_user_answers.c.aid_valid,
         )
         .subquery()
     )
     main = User.query.join(UserAnswer, UserAnswer.user_id == User.id).join(
         sub_joined,
-        (sub_joined.c.aid == UserAnswer.answer_id) & (User.id == sub_joined.c.uid),
+        (
+            (
+                (sub_joined.c.aid_valid != None)
+                & (sub_joined.c.aid_valid == UserAnswer.answer_id)
+            )
+            | (
+                (sub_joined.c.aid_valid == None)
+                & (sub_joined.c.aid_any == UserAnswer.answer_id)
+            )
+        )
+        & (User.id == sub_joined.c.uid),
     )
     group_by_cols = []
     cols = []
