@@ -83,8 +83,8 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
  * - if globalField:
  *     - pick the answer from anybody (wins useCurrentUser)
  *     - save to current user
- *     - use hidden answerBrowser without changing users
- *     - TODO: if hideBrowser: false, then show browser
+ *     - show answers from everyone, never change user
+ *     - if hideBrowser, then save teacher's fix on by default
  *
  */
 
@@ -155,7 +155,8 @@ export class AnswerBrowserComponent
     @Input() public taskId!: TaskId;
     @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
     @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
-    loading: number;
+    loading: number; // Answerbrowser is fetching data
+    updating = false; // Plugin html is reloading
     viewctrl!: Require<ViewCtrl>;
     user: IUser | undefined;
     private fetchedUser: IUser | undefined;
@@ -324,9 +325,7 @@ export class AnswerBrowserComponent
 
         // If task is in form_mode, only last (already loaded) answer should matter.
         // Answer changes are handled by viewctrl, so don't bother querying them here
-        // TODO: Make a route to handle getAnswers on global task. Currently global task has its' answerBrowser
-        //  always hidden and queries as they are now do not handle global task correctly, causing useless plugin update
-        if (!this.formMode && !this.isGlobal()) {
+        if (!this.formMode) {
             const answs = await this.getAnswers();
             if (answs && answs.length > 0) {
                 this.answers = answs;
@@ -334,8 +333,12 @@ export class AnswerBrowserComponent
                 if (!updated) {
                     this.handleAnswerFetch(this.answers);
                 }
+            } else if (this.viewctrl.teacherMode) {
+                this.dimPlugin();
             }
-            await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
+            if (!this.isGlobal()) {
+                await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
+            }
             const el = this.loader.loaderElement;
             // Lazily wait before loading users. Allow tapping on plugin or the loader
             // (in case the plugin has iframes that capture events)
@@ -890,6 +893,8 @@ export class AnswerBrowserComponent
     async setNewest() {
         if (this.filteredAnswers.length > 0) {
             this.selectedAnswer = this.filteredAnswers[0];
+        } else {
+            this.selectedAnswer = undefined;
         }
         await this.changeAnswer();
     }
@@ -929,7 +934,9 @@ export class AnswerBrowserComponent
                 saveTeacher:
                     this.saveTeacher ||
                     (this.viewctrl.teacherMode &&
-                        (this.loader.isInFormMode() || this.isGlobal())), // TODO: Check if correct
+                        (this.loader.isInFormMode() ||
+                            (this.isGlobal() && this.hidden))),
+                // TODO: Check if saveTeacher should be enabled always when hidden browser and teachermode
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: userId,
@@ -1175,6 +1182,7 @@ export class AnswerBrowserComponent
     }
 
     private async handleAnswerFetch(data: IAnswer[], newSelectedId?: number) {
+        this.updating = true;
         if (
             (data.length > 0 &&
                 (this.hasUserChanged() ||
@@ -1198,11 +1206,7 @@ export class AnswerBrowserComponent
                     this.updatePoints();
                 }
             }
-            if (!this.selectedAnswer && !this.forceBrowser()) {
-                this.dimPlugin();
-            } else {
-                await this.changeAnswer();
-            }
+            await this.changeAnswer();
         } else {
             this.answers = data;
             if (this.answers.length === 0 && this.viewctrl.teacherMode) {
@@ -1211,6 +1215,7 @@ export class AnswerBrowserComponent
             }
             await this.updateFilteredAndSetNewest();
         }
+        this.updating = false;
         this.cdr.detectChanges();
     }
 

@@ -2339,8 +2339,10 @@ useCurrentUser: true
         self.assertEqual({"c": "testuser2@GLO_d"}, get_plugin_answer(plugs[3]))
         self.assertEqual({"c": "testuser2@e"}, get_plugin_answer(plugs[4]))
 
+        # testuser1 did not answer b -> 0 answers despite useCurrentUser
         self.assertEqual(0, len(self.get_task_answers(f"{d.id}.b")))
-        self.assertEqual(0, len(self.get_task_answers(f"{d.id}.GLO_d")))
+        # testuser1 did not answer d -> getAnswers returns testuser2's answers too because task is global
+        self.assertEqual(1, len(self.get_task_answers(f"{d.id}.GLO_d")))
 
     def test_accessfield(self):
         """Invalidate answer if accessField target has answer c: 1"""
