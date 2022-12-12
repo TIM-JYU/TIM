@@ -215,7 +215,6 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
             m?.hideBrowser ||
             this.viewctrl?.docSettings.hideBrowser ||
             this.isUseCurrentUser() ||
-            this.isGlobal() ||
             this.isInFormMode()
         ) {
             this.hideBrowser = true;

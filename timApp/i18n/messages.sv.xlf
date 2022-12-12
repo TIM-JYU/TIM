@@ -7190,7 +7190,7 @@
       </trans-unit>
       <trans-unit id="3548964054422536140" datatype="html">
         <source>Unlock task. You will have <x id="INTERPOLATION" equiv-text="{{accessDuration}}"/> seconds to answer to this task.</source>
-        <target state="translated"> Lås upp uppgift. Du kommer att ha <x id="INTERPOLATION" equiv-text="{{accessDuration}}"/> sekunder på dig att svara på denna uppgift.</target>
+        <target state="translated">Lås upp uppgift. Du kommer att ha <x id="INTERPOLATION" equiv-text="{{accessDuration}}"/> sekunder på dig att svara på denna uppgift.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/plugin-loader.component.ts</context>
           <context context-type="linenumber">85,86</context>
@@ -7198,7 +7198,7 @@
       </trans-unit>
       <trans-unit id="7716919100863031420" datatype="html">
         <source>Unlock task</source>
-        <target state="translated">Lås upp uppgift.</target>
+        <target state="translated">Lås upp uppgift</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/plugin-loader.component.ts</context>
           <context context-type="linenumber">86</context>
@@ -7710,6 +7710,38 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/templates/answerBrowser.html</context>
           <context context-type="linenumber">122,123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2676706401198603854" datatype="html">
+        <source> Showing answers from all users </source>
+        <target state="translated"> Visar svar från alla användare </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5909030173248328323" datatype="html">
+        <source>(no answers)</source>
+        <target state="translated">(inga svar)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">85,86</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8674199162420664562" datatype="html">
+        <source>(no valid answers from the selected user)</source>
+        <target state="translated">(inga giltiga svar från den valda användaren)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3893232156030891915" datatype="html">
+        <source>(no valid answers)</source>
+        <target state="translated">(inga giltiga svar)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">63</context>
         </context-group>
       </trans-unit>
     </body>

@@ -12,7 +12,7 @@ from flask import request
 from marshmallow import validates_schema, ValidationError
 from marshmallow.utils import missing
 from sqlalchemy import func
-from sqlalchemy.orm import lazyload
+from sqlalchemy.orm import lazyload, joinedload
 from werkzeug.exceptions import NotFound
 
 from timApp.answer.answer import Answer
@@ -1713,21 +1713,33 @@ def get_answers(task_id: str, user_id: int) -> Response:
     except PluginException as e:
         raise RouteException(str(e))
     d = get_doc_or_abort(tid.doc_id)
-    user = User.get_by_id(user_id)
-    if user is None:
-        raise RouteException("Non-existent user")
     curr_user = get_current_user_object()
-    if user_id != get_current_user_id():
-        if not verify_seeanswers_access(d, require=False):
-            if not is_peerreview_enabled(d):
-                raise AccessDenied()
-            if not has_review_access(d, curr_user, None, user):
-                raise AccessDenied()
-
-    elif d.document.get_settings().get("need_view_for_answers", False):
+    user_answers: list[Answer]
+    if tid.is_global:
         verify_view_access(d)
-    user_answers: list[Answer] = user.get_answers_for_task(tid.doc_task).all()
-    user_context = user_context_with_logged_in(user)
+        user_context = user_context_with_logged_in(curr_user)
+        user_answers = (
+            Answer.query.filter_by(task_id=tid.doc_task)
+            .order_by(Answer.id.desc())
+            .options(joinedload(Answer.users_all))
+            .all()
+        )
+        user = curr_user
+    else:
+        user = User.get_by_id(user_id)
+        if user is None:
+            raise RouteException("Non-existent user")
+        if user_id != get_current_user_id():
+            if not verify_seeanswers_access(d, require=False):
+                if not is_peerreview_enabled(d):
+                    raise AccessDenied()
+                if not has_review_access(d, curr_user, None, user):
+                    raise AccessDenied()
+
+        elif d.document.get_settings().get("need_view_for_answers", False):
+            verify_view_access(d)
+        user_answers = user.get_answers_for_task(tid.doc_task).all()
+        user_context = user_context_with_logged_in(user)
     try:
         p = find_plugin_from_document(d.document, tid, user_context, default_view_ctx)
     except TaskNotFoundException:
