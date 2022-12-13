@@ -394,6 +394,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    TIM_SETTINGS: testconfig.py
    PYTHONPATH: /service
    CI: ${CI:-false}
+   NEW_SCREENSHOTS: ${NEW_SCREENSHOTS:-0}
   depends_on: ${"""
     - csplugin
     - pali

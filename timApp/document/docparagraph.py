@@ -261,8 +261,14 @@ class DocParagraph:
 
         """
         try:
-            with open(cls._get_path(doc, par_id, t)) as f:
-                return cls.from_dict(doc, json.loads(f.read()))
+            par_path = cls._get_path(doc, par_id, t)
+            with open(par_path) as f:
+                try:
+                    return cls.from_dict(doc, json.loads(f.read()))
+                except json.JSONDecodeError as ex:
+                    raise ValueError(
+                        f"Invalid JSON read from {par_path}: '{ex.doc}'"
+                    ) from ex
         except FileNotFoundError:
             doc._raise_not_found(par_id)
 

@@ -1,8 +1,8 @@
-<div>
+<div [class.updating]="updating" [class.loading]="loading">
     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="closeAlert(i)">
         <div [innerHTML]="alert.msg | purify"></div>
     </tim-alert>
-    <label *ngIf="hidden && anyInvalid && !formMode" class="checkbox-inline">
+    <label *ngIf="hidden && anyInvalid && !formMode" class="checkbox-inline onlyValid">
         <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
     <div *ngIf="!hidden">
         <div *ngIf="viewctrl.teacherMode && users && users.length > 0" class="flex">
@@ -31,11 +31,14 @@
                 <a href="mailto:{{user?.email}}">email</a>
             </div>
         </div>
+        <div i18n *ngIf="isGlobal()" class="flex">
+            Showing answers from all users
+        </div>
         <div *ngIf="!hasUserChanged() || loading">
                         <span class="flex align-center">
             <div *ngIf="answers.length > 0">
-                <div *ngIf="showBrowseAnswers" class="flex align-center">
-                    <div>
+                <div *ngIf="showBrowseAnswers" class="flex align-center ab-option-row">
+                    <div *ngIf="filteredAnswers.length > 0">
                         <div class="input-group input-group-xs">
                 <span class="input-group-btn">
                     <button i18n-title title="Previous answer" class="btn btn-primary prevAnswer"
@@ -53,18 +56,20 @@
                         </div>
                     </div>
                     <div class="no-shrink">
-                    <span class="answer-index-count">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a i18n-title tabindex="0"
-                                                                                                  title="Newest answer"
-                                                                                                  (click)="setNewest()">{{ filteredAnswers.length }}</a></span>
-                        <label class="checkbox-inline" *ngIf="anyInvalid">
+                    <span *ngIf="filteredAnswers.length > 0" class="answer-index-count">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a i18n-title tabindex="0"
+                                                                                                  title="Newest answer" (click)="setNewest()">{{ filteredAnswers.length }}</a></span>
+                        <span *ngIf="filteredAnswers.length == 0">
+                            <ng-container i18n *ngIf="!isGlobal()">(no valid answers from the selected user)</ng-container>
+                            <ng-container i18n *ngIf="isGlobal()">(no valid answers)</ng-container>
+                        </span>
+                        <label class="checkbox-inline onlyValid" *ngIf="anyInvalid">
                             <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
                         <span *ngIf="showTeacher()"> | <a i18n (click)="getAllAnswers()">All answers</a>
                     </span>
                         <button i18n-title class="timButton" *ngIf="showNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button>
-                        <span *ngIf="selectedAnswer">
-                        | <a i18n i18n-title title="Link to currently selected answer"
-                             (click)="$event.preventDefault()"
-                             href="{{ getAnswerLink() }}">Link</a>
+                        <span *ngIf="selectedAnswer">| <a i18n i18n-title title="Link to currently selected answer"
+                                                          (click)="$event.preventDefault()"
+                                                          href="{{ getAnswerLink() }}">Link</a>
                         (<a i18n-title title="Link to currently selected answer without other document content"
                             target="_blank"
                             href="{{ getAnswerLink(true) }}">only</a>)&nbsp;
@@ -77,7 +82,10 @@
                 href="{{ getReviewLink() }}">Review</a>
                 </span>
              <div *ngIf="answers.length == 0 && viewctrl.teacherMode">
-                <span i18n *ngIf="!hasUserChanged()">(no answers from the selected user)</span>
+                 <ng-container *ngIf="!hasUserChanged()">
+                    <span i18n *ngIf="!isGlobal()">(no answers from the selected user)</span>
+                    <span i18n *ngIf="isGlobal()">(no answers)</span>
+                 </ng-container>
                  <span *ngIf="hasUserChanged()"> <tim-loading></tim-loading> </span>
              </div>
                  <div class="flex ab-option-row">
@@ -121,6 +129,8 @@
                         <label class="checkbox-inline">
                             <input type="checkbox" [(ngModel)]="isValidAnswer"><ng-container i18n="@@abIsValidCheckbox">Valid</ng-container>
                         </label>
+                            </span>
+                    <span>
                         <button i18n-title title="Save validity"
                                 (click)="saveValidity()"
                                 class="timButton btn-xs"
@@ -136,7 +146,7 @@
                             </div>
                             <span *ngIf="showTeacher()">
                                 <label class="checkbox-inline">
-                                    <input type="checkbox" (ngModelChange)="toggleInput()" [(ngModel)]="saveTeacher"><ng-container i18n>Save teacher's fix</ng-container>
+                                    <input type="checkbox" (change)="toggleInput()" [(ngModel)]="saveTeacher"><ng-container i18n>Save teacher's fix</ng-container>
                                 </label>
                             </span>
                             <div class="flex" *ngIf="selectedAnswer">

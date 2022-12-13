@@ -138,8 +138,11 @@ class DocEntry(db.Model, DocInfo):
                 docentry_load_opts=docentry_load_opts,
             )
             if entry is not None:
-                tr = Translation.query.filter_by(
-                    src_docid=entry.id, lang_id=lang
+                # Match lang id using LIKE to allow for partial matches.
+                # This is a simple way to allow mapping /en to newer /en-US or /en-GB.
+                tr = Translation.query.filter(
+                    (Translation.src_docid == entry.id)
+                    & (Translation.lang_id.like(f"{lang}%"))
                 ).first()
                 if tr is not None:
                     tr.docentry = entry

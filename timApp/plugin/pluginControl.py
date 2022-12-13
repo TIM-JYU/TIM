@@ -584,7 +584,7 @@ def pluginify(
             plugin.values.pop("modelAnswer", None)
             if not plugin.task_id:
                 continue
-            if plugin.task_id.is_global:
+            if plugin.task_id.is_global and not custom_answer:
                 glb_task_ids.append(plugin.task_id)
                 glb_plugins_to_change.append(plugin)
             elif plugin.known.useCurrentUser and user_ctx.is_different:
