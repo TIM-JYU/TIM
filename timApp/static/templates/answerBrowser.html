@@ -59,8 +59,10 @@
                     <span *ngIf="filteredAnswers.length > 0" class="answer-index-count">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a i18n-title tabindex="0"
                                                                                                   title="Newest answer" (click)="setNewest()">{{ filteredAnswers.length }}</a></span>
                         <span *ngIf="filteredAnswers.length == 0">
-                            <ng-container i18n *ngIf="!isGlobal()">(no valid answers from the selected user)</ng-container>
-                            <ng-container i18n *ngIf="isGlobal()">(no valid answers)</ng-container>
+                                <ng-container i18n *ngIf="!isGlobal() && viewctrl.teacherMode; else emptyCurrentuser">(no valid answers from the selected user)</ng-container>
+                            <ng-template #emptyCurrentuser>
+                                <ng-container #emptyCurrentuser i18n *ngIf="isGlobal() || !viewctrl.teacherMode">(no valid answers)</ng-container>
+                            </ng-template>
                         </span>
                         <label class="checkbox-inline onlyValid" *ngIf="anyInvalid">
                             <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
