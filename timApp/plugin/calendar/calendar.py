@@ -26,11 +26,19 @@ from flask import Response, render_template_string, url_for
 from marshmallow import missing
 from sqlalchemy import false, true
 
-from timApp.auth.accesshelper import verify_logged_in, AccessDenied
+from timApp.auth.accesshelper import (
+    verify_logged_in,
+    AccessDenied,
+    verify_edit_access,
+    get_doc_or_abort,
+    verify_view_access,
+)
 from timApp.auth.sessioninfo import (
     get_current_user_id,
     get_current_user_object,
 )
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.notification.send_email import send_email
 from timApp.plugin.calendar.models import (
     Event,
@@ -42,6 +50,7 @@ from timApp.plugin.calendar.models import (
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_access
+from timApp.user.special_group_names import LOGGED_IN_GROUPNAME
 from timApp.user.user import User, edit_access_set, manage_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
@@ -85,6 +94,12 @@ class FilterOptions:
 
     includeOwned: bool = False
     """Whether to include events that the user owns"""
+
+    includeDocumentEvents: bool = True
+    """Whether to include events that are linked to the current document. Requires that the document ID is specified."""
+
+    docId: int | None = None
+    """The document ID to use for the includeDocumentEvents option. If None, no document filtering is done."""
 
     def __post_init__(self) -> None:
         # Special case: if the tags list has only one empty string, treat it as empty list
@@ -197,6 +212,7 @@ def reqs_handle() -> PluginReqs:
 #    showBooked: true      # Whether to *always* show events that the user has already booked
 #    showImportant: false  # Whether to *always* show events marked as important
 #    includeOwned: false   # Whether to include events that the user has created (i.e. "owns")
+#    includeDocumentEvents: true  # Whether to include events that are linked to the current document
 viewOptions:               # Default view options for the calendar
     dayStartHour: 8        # Time at which the day starts (0-24)
     dayEndHour: 20         # Time at which the day ends (0-24)
@@ -364,9 +380,12 @@ def export_ical(user: User) -> Response:
 
 
 @calendar_plugin.post("/import")
-def import_events(events: list[CalendarEvent]) -> Response:
+def import_events(
+    events: list[CalendarEvent], origin_doc_id: int | None = None
+) -> Response:
     verify_logged_in()
-    save_events(get_current_user_object(), events, True)
+    doc = get_doc_or_abort(origin_doc_id) if origin_doc_id else None
+    save_events(get_current_user_object(), events, True, save_origin=doc)
     db.session.commit()
     return ok_response()
 
@@ -446,6 +465,11 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     # 1. Events that are created by the user
     if filter_opts.includeOwned:
         event_filter |= Event.creator == u
+
+    if filter_opts.includeDocumentEvents and filter_opts.docId:
+        doc = DocEntry.find_by_id(filter_opts.docId)
+        if doc and verify_view_access(doc, require=False):
+            event_filter |= Event.origin_doc_id == doc.id
 
     # 2. Events that the user is either a booker or setter for
     subquery_event_groups_all = (
@@ -582,8 +606,18 @@ def get_event_bookers(event_id: int) -> str | Response:
     )
 
 
+def _replace_group_wildcards(groups: set[str]) -> set[str]:
+    if "*" in groups:
+        groups.remove("*")
+        groups.add(LOGGED_IN_GROUPNAME)
+    return groups
+
+
 def save_events(
-    user: User, events: list[CalendarEvent], modify_existing: bool = False
+    user: User,
+    events: list[CalendarEvent],
+    modify_existing: bool = False,
+    save_origin: DocInfo | None = None,
 ) -> list[Event]:
     event_ug_names = {
         *[ug for event in events if event.booker_groups for ug in event.booker_groups],
@@ -595,6 +629,9 @@ def save_events(
             for ug in event.extra_booker_groups
         ],
     }
+
+    _replace_group_wildcards(event_ug_names)
+
     # noinspection PyUnresolvedReferences
     event_ugs = UserGroup.query.filter(UserGroup.name.in_(event_ug_names)).all()
     event_ugs_dict = {ug.name: ug for ug in event_ugs}
@@ -610,19 +647,41 @@ def save_events(
     event_tags_dict = {tag.tag: tag for tag in EventTag.get_or_create(event_tags)}
 
     def get_event_groups(cal_event: CalendarEvent) -> list[EventGroup]:
-        bookers = set(cal_event.booker_groups or [])
-        setters = set(cal_event.setter_groups or [])
-        extra_bookers = set(cal_event.extra_booker_groups or [])
+        bookers = _replace_group_wildcards(set(cal_event.booker_groups or []))
+        setters = _replace_group_wildcards(set(cal_event.setter_groups or []))
+        extra_bookers = _replace_group_wildcards(
+            set(cal_event.extra_booker_groups or [])
+        )
         event_group_names = bookers | setters | extra_bookers
+
         event_groups = []
 
         for ug_name in event_group_names:
             if not (ug := event_ugs_dict.get(ug_name)):
                 raise NotExist(f"Group '{ug_name}' not found")
+
             manager = ug_name in setters
             extra = ug_name in extra_bookers
-            require_access = edit_access_set if manager else manage_access_set
-            verify_group_access(ug, require_access)
+
+            if ug_name == LOGGED_IN_GROUPNAME:
+                if not save_origin:
+                    raise AccessDenied(
+                        "Creating global events is not permitted for now."
+                    )
+                if not verify_edit_access(save_origin, require=False):
+                    raise AccessDenied(
+                        "You must have edit access to the document to create document events."
+                    )
+                if manager:
+                    raise RouteException(
+                        "Global setters are not allowed at the moment."
+                    )
+                if extra:
+                    raise RouteException("Global extras are not allowed at the moment.")
+            else:
+                require_access = edit_access_set if manager else manage_access_set
+                verify_group_access(ug, require_access)
+
             event_groups.append(
                 EventGroup(
                     user_group=ug,
@@ -649,6 +708,7 @@ def save_events(
             if cal_event.tags is not None
             else [],
             event_groups=event_groups,
+            origin_doc_id=save_origin.id if save_origin else None,
         )
         db.session.add(event_data)
         return event_data
@@ -696,15 +756,20 @@ def save_events(
 
 
 @calendar_plugin.post("/events")
-def add_events(events: list[CalendarEvent]) -> Response:
+def add_events(
+    events: list[CalendarEvent],
+    origin_doc_id: int | None = None,
+) -> Response:
     """Saves the calendar events.
     User must have at least manage rights to given booker groups and edit rights to given setter groups.
 
     :param events: List of events to be persisted
+    :param origin_doc_id: Document ID from which the events are created
     :return: Saved event information in JSON format
     """
     verify_logged_in()
-    result = save_events(get_current_user_object(), events)
+    doc = get_doc_or_abort(origin_doc_id) if origin_doc_id else None
+    result = save_events(get_current_user_object(), events, save_origin=doc)
     db.session.commit()
     return json_response(result)
 

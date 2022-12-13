@@ -125,6 +125,7 @@ const FilterOptions = t.type({
     showBooked: withDefault(t.boolean, true),
     showImportant: withDefault(t.boolean, false),
     includeOwned: withDefault(t.boolean, false),
+    includeDocumentEvents: withDefault(t.boolean, true),
 });
 
 const CalendarViewMode = t.union([
@@ -809,6 +810,9 @@ export class CalendarComponent
         res.showBooked = this.markup.filter.showBooked.toString();
         res.includeOwned = this.markup.filter.includeOwned.toString();
         res.showImportant = this.markup.filter.showImportant.toString();
+        res.docId = itemglobals().curr_item.id.toString();
+        res.includeDocumentEvents =
+            this.markup.filter.includeDocumentEvents.toString();
         return res;
     }
 
@@ -890,6 +894,7 @@ export class CalendarComponent
 
         const result = await toPromise(
             this.http.post<TIMCalendarEvent[]>("/calendar/events", {
+                origin_doc_id: itemglobals().curr_item.id,
                 events: eventsToAdd.map((event) => ({
                     title: event.title,
                     location: event.meta!.location,
