@@ -1,11 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {
-    Component,
-    ComponentFactoryResolver,
-    NgModule,
-    ViewChild,
-    ViewContainerRef,
-} from "@angular/core";
+import {Component, NgModule, ViewChild, ViewContainerRef} from "@angular/core";
 import {itemglobals, someglobals} from "tim/util/globals";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
@@ -43,10 +37,7 @@ export class TimMessageViewComponent implements OnInit {
         );
     }
 
-    constructor(
-        private http: HttpClient,
-        private cfr: ComponentFactoryResolver
-    ) {}
+    constructor(private http: HttpClient) {}
 
     timMessages?: TimMessageData[];
 
@@ -95,6 +86,7 @@ export enum DisplayType {
 export interface TimMessageData {
     // Information about the message retrieved from server
     id: number;
+    created: string;
     sender?: string;
     doc_path: string;
     can_mark_as_read: boolean;

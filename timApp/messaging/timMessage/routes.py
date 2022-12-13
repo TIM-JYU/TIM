@@ -58,7 +58,7 @@ from timApp.util.utils import (
     get_current_time,
 )
 
-timMessage = TypedBlueprint("timMessage", __name__, url_prefix="/timMessage")
+tim_message = TypedBlueprint("timMessage", __name__, url_prefix="/timMessage")
 
 
 @dataclass
@@ -97,6 +97,7 @@ class MessageBody:
 @dataclass
 class TimMessageData:
     id: int
+    created: datetime
     sender: str | None
     doc_path: str
     can_mark_as_read: bool
@@ -114,7 +115,7 @@ class TimMessageReadReceipt:
     can_mark_as_read: bool
 
 
-@timMessage.get("/get")
+@tim_message.get("/get")
 def get_global_messages() -> Response:
     """
     Retrieve global messages return them in json format.
@@ -124,7 +125,7 @@ def get_global_messages() -> Response:
     return json_response(get_tim_messages_as_list())
 
 
-@timMessage.get("/get/<int:item_id>")
+@tim_message.get("/get/<int:item_id>")
 def get_tim_messages(item_id: int) -> Response:
     """
     Retrieve messages displayed for current based on item id and return them in json format.
@@ -135,7 +136,7 @@ def get_tim_messages(item_id: int) -> Response:
     return json_response(get_tim_messages_as_list(item_id))
 
 
-@timMessage.post("/expire/<int:message_doc_id>")
+@tim_message.post("/expire/<int:message_doc_id>")
 def expire_tim_message(message_doc_id: int) -> Response:
     """
     Expire a TIM message.
@@ -227,6 +228,7 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
         )
         data = TimMessageData(
             id=message.id,
+            created=message.created,
             sender=sender,
             doc_path=document.path,
             can_mark_as_read=message.can_mark_as_read,
@@ -254,7 +256,7 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
     return full_messages
 
 
-@timMessage.get("/get_read_receipt/<int:doc_id>")
+@tim_message.get("/get_read_receipt/<int:doc_id>")
 def get_read_receipt(doc_id: int) -> Response:
     """
     Retrieve read receipt object for the current user and message related to the given document id
@@ -287,7 +289,7 @@ URL_PATTERN = re.compile(
 )
 
 
-@timMessage.post("/url_check")
+@tim_message.post("/url_check")
 def check_urls(urls: str) -> Response:
     """
     Checks if given URLS's exist in TIM and that user has right to post TIM message to them
@@ -334,7 +336,7 @@ def check_urls(urls: str) -> Response:
         return json_response({"shortened_urls": valid_urls_string}, 200)
 
 
-@timMessage.post("/send")
+@tim_message.post("/send")
 def send_tim_message(message: MessageBody, options: MessageOptions) -> Response:
     is_global = message.recipients is None
     if is_global:
@@ -443,7 +445,7 @@ def create_tim_message(
     return message_doc
 
 
-@timMessage.post("/reply")
+@tim_message.post("/reply")
 def reply_to_tim_message(options: ReplyOptions, message: MessageBody) -> Response:
     message_options = MessageOptions(
         options.messageChannel,
@@ -473,7 +475,7 @@ def reply_to_tim_message(options: ReplyOptions, message: MessageBody) -> Respons
     return send_message_or_reply(message, message_options)
 
 
-@timMessage.post("/mark_as_read")
+@tim_message.post("/mark_as_read")
 def mark_as_read(message_id: int) -> Response:
     """
     Marks given message as read in database.
@@ -502,7 +504,7 @@ def mark_as_read(message_id: int) -> Response:
     return ok_response()
 
 
-@timMessage.post("/cancel_read_receipt")
+@tim_message.post("/cancel_read_receipt")
 def cancel_read_receipt(message_id: int) -> Response:
     """
     Removes read receipt date and the user who marked it from the database entry.
@@ -529,7 +531,7 @@ class ReadReceiptFormat(Enum):
     TableFormQuery = "tableform-query"
 
 
-@timMessage.get("/readReceipts")
+@tim_message.get("/readReceipts")
 def get_read_receipts(
     message_doc: int,
     include_read: bool = False,
