@@ -1439,6 +1439,7 @@ export class AnswerBrowserComponent
         if (r.result.data.modelAnswer) {
             this.modelAnswer = r.result.data.modelAnswer;
             this.onlyValid = false;
+            this.onOnlyValidChanged();
         }
         this.showNewTask = this.isAndSetShowNewTask();
         if (this.taskInfo.buttonNewTask) {
