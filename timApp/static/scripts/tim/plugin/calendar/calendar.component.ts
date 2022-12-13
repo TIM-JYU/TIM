@@ -39,7 +39,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
-import {addDays, addMinutes, endOfWeek, setISOWeek} from "date-fns";
+import {addDays, addMinutes, endOfWeek, getISOWeek, setISOWeek} from "date-fns";
 import moment from "moment";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
@@ -139,6 +139,7 @@ const ViewOptions = t.type({
     segmentDuration: t.number,
     date: nullable(DateFromString),
     week: nullable(t.number),
+    minWeek: nullable(t.number),
     mode: CalendarViewMode,
     advancedUI: nullable(t.boolean),
 });
@@ -752,6 +753,12 @@ export class CalendarComponent
             this.viewDate = this.viewOptions.date;
         } else if (this.viewOptions.week) {
             this.viewDate = setISOWeek(new Date(), this.viewOptions.week);
+        } else if (this.viewOptions.minWeek) {
+            const now = new Date();
+            this.viewDate = setISOWeek(
+                now,
+                Math.max(this.viewOptions.minWeek, getISOWeek(now))
+            );
         } else {
             this.viewDate = new Date();
         }

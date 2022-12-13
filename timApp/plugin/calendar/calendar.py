@@ -128,6 +128,7 @@ class ViewOptions:
     segmentDuration: int = 60
     date: dtdate | None = None
     week: int | None = None
+    minWeek: int | None = None
     mode: Literal["day", "week", "month"] = "week"
     advancedUI: bool | None = None
 
@@ -201,6 +202,7 @@ viewOptions:               # Default view options for the calendar
     dayEndHour: 20         # Time at which the day ends (0-24)
     segmentDuration: 60    # Single segment duration in minutes. Allowed values: 15, 20, 30, 60, 120
     week: null             # Week number to show (if not specified, show current week)
+    minWeek: null          # Smallest week number to show. If the current week is smaller than this value, show this week. Has lower priority than week.
     date: null             # Date to show (if not specified, show current date). Has higher priority than week.
     mode: week             # Calendar mode to show (day, week, month)
     # advancedUI: false    # Show large UI (default) or minimal
