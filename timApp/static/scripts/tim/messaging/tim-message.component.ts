@@ -7,6 +7,7 @@ import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimMessageData} from "tim/messaging/tim-message-view.component";
 import {CommonModule} from "@angular/common";
+import * as moment from "moment";
 
 interface ReplyOptions {
     archive: boolean;
@@ -34,6 +35,10 @@ const MAX_DISPLAY_LENGTH = 210;
                     <!-- TODO Display what group the message is related to
                     <span class="group" *ngIf="messageToGroup">, {{group}}</span>
                     -->
+                </p>
+                <p class="messageDate">
+                    <span i18n>Sent: </span>
+                    <span class="sentDate">{{messageDate}}</span>
                 </p>
                 <p class="messageHeading">{{message.message_subject}}</p>
                 <div class="fullMessageContent" *ngIf="showFullContent">
@@ -83,6 +88,7 @@ export class TimMessageComponent implements OnInit {
     errorMessage?: string;
     @HostBinding("class.global-message") isGlobal: boolean = false;
 
+    messageDate!: string;
     messageOverMaxLength: boolean = false;
     showMessage: boolean = true;
     shownContent?: string;
@@ -191,6 +197,10 @@ export class TimMessageComponent implements OnInit {
                 MAX_DISPLAY_LENGTH
             )}...`;
         }
+
+        this.messageDate = moment(this.message.created)
+            .local()
+            .format("dddd, MMMM Do YYYY, HH:mm:ss");
     }
 }
 

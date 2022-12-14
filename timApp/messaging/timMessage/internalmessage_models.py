@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Any, Optional, TYPE_CHECKING
 
+from sqlalchemy import func
+
 from timApp.timdb.sqa import db
 
 if TYPE_CHECKING:
@@ -19,6 +21,9 @@ class InternalMessage(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     """Message identifier."""
+
+    created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    """Date and time when the message was created."""
 
     doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
     """Block identifier."""
@@ -50,6 +55,7 @@ class InternalMessage(db.Model):
     def to_json(self) -> dict[str, Any]:
         return {
             "id": self.id,
+            "created": self.created,
             "doc_id": self.doc_id,
             "par_id": self.par_id,
             "can_mark_as_read": self.can_mark_as_read,

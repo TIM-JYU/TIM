@@ -189,6 +189,12 @@ class Event(db.Model):
     )
     """User who created the event originally"""
 
+    origin_doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=True)
+    """Document that was used to create the event"""
+
+    origin_doc = db.relationship("Block", lazy="select")
+    """Document that was used to create the event"""
+
     enrolled_users: list[UserGroup] = db.relationship(
         UserGroup,
         Enrollment.__table__,
@@ -261,15 +267,23 @@ class Event(db.Model):
         :param user: User to get the right for
         :return: Information about the user's rights for enrolling in the event
         """
+        from timApp.auth.accesshelper import verify_view_access
+
         ug_ids = [ug.id for ug in user.groups]
         # noinspection PyUnresolvedReferences
         event_groups = EventGroup.query.filter(
             (EventGroup.event_id == self.event_id) & EventGroup.usergroup_id.in_(ug_ids)
         ).all()
-        is_creator = self.creator_user_id == user.id
+        can_view_event_doc = False
+        if self.origin_doc_id:
+            can_view_event_doc = verify_view_access(
+                self.origin_doc, require=False, user=user
+            )
+        is_creator = self.creator_user_id == user.id  # Creators can self-enroll
         if not event_groups:
-            # Creators can self-enroll
-            return EnrollmentRight(is_creator, False, False, is_creator)
+            return EnrollmentRight(
+                is_creator or can_view_event_doc, False, False, is_creator
+            )
         extra = False
         manager = False
         for event_group in event_groups:
