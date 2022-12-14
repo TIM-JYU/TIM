@@ -52,7 +52,7 @@ from timApp.messaging.messagelist.mailman_events import (
     has_valid_event_auth,
 )
 from timApp.messaging.messagelist.routes import messagelist
-from timApp.messaging.timMessage.routes import timMessage
+from timApp.messaging.timMessage.routes import tim_message
 from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
@@ -153,7 +153,7 @@ blueprints = [
     timTable_plugin,
     user_select_plugin,
     messagelist,
-    timMessage,
+    tim_message,
     verify,
 ]
 

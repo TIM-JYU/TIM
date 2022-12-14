@@ -7744,6 +7744,14 @@
           <context context-type="linenumber">63</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2724443994913836563" datatype="html">
+        <source>Sent: </source>
+        <target state="translated">Skickat: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
+          <context context-type="linenumber">40,41</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="875456296903848298" datatype="html">
         <source>Velp menu: use minimal (simplified) UI</source>
         <target state="translated">Velp meny: använd minimalt (förenklat) användargränssnitt</target>
