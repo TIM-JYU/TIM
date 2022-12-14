@@ -158,6 +158,7 @@ export class DraggableController implements IController {
     private sizeStorage!: TimStorage<t.TypeOf<typeof SizeType>>;
     private minStorage!: TimStorage<boolean>;
     private detachStorage!: TimStorage<boolean>;
+    private velpsDetachStorage!: TimStorage<boolean>;
     private canMinimize?: Binding<boolean, "<">;
 
     constructor(private scope: IScope, private element: JQLite) {}
@@ -178,7 +179,7 @@ export class DraggableController implements IController {
         this.sizeStorage = new TimStorage(this.posKey + "Size", SizeType);
         this.minStorage = new TimStorage(this.posKey + "min", t.boolean);
         this.detachStorage = new TimStorage(this.posKey + "detach", t.boolean);
-
+        this.velpsDetachStorage = new TimStorage("velpsDetached", t.boolean);
         // Move element towards an anchor point selected by the user.
         window.addEventListener("resize", () => {
             void this.restoreSizeAndPosition(VisibilityFix.Full);
@@ -235,6 +236,10 @@ export class DraggableController implements IController {
         this.element.css("z-index", this.getVisibleLayer());
 
         this.detachStorage.set(!canDrag);
+        const parentIsVelpList = this.element.parent(".velpArea");
+        if (parentIsVelpList) {
+            this.velpsDetachStorage.set(!this.velpsDetachStorage.get());
+        }
     }
 
     /**
