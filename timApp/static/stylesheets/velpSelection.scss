@@ -636,7 +636,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 velp-window.velp-edit-available {
-  z-index: 10;
+  z-index: 101;
   position: fixed;
 
   & > .velp {
