@@ -353,6 +353,14 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 <ng-container i18n>Side bar menu: remember the last open state</ng-container>
                             </label>
                         </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="use_minimal_velp_menu_ui"
+                                       [(ngModel)]="settings.use_minimal_velp_menu_ui"
+                                       [disabled]="saving">
+                                <ng-container i18n>Velp menu: use minimal (simplified) UI</ng-container>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <settings-button-panel [saved]="submit"></settings-button-panel>
