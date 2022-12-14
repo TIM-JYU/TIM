@@ -353,8 +353,8 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 }
 
 .velp .edit{
-    margin-top: -1em;
-    z-index: 10;
+    margin-top: 1em;
+    z-index: 101;
 }
 
 .velp .content{
@@ -600,6 +600,19 @@ $inactive: whitesmoke;
 
 .btn-set-vg-visible {
     font-size: 1.2rem;
+}
+
+.btn-add-velp-detached {
+    //background: transparent;
+    position: relative;
+    top: unset;
+    bottom: 2.5em;
+    right: -11.5em;
+    z-index: 100;
+    font-size: large;
+    padding: 2px 4px 2px 5px;
+    //color: $gray;
+    //text-shadow: #f5f5f5 0 0 20px;
 }
 
 input[type="color"]::-webkit-color-swatch-wrapper {
