@@ -1,5 +1,5 @@
 <div  tim-draggable-fixed="" class="velpFixed hidden-print" save="%%PAGEID%%velpMenu" click="true" caption="Velp menu" id="velpSelection">
-  <div class="velpMenu draggable-content" >
+  <div class="velpMenu draggable-content">
 
     <uib-tabset active="$ctrl.active" class="velpFill">
         <uib-tab index="0" heading="Select">
@@ -28,7 +28,16 @@
             <label><input type="checkbox" ng-model="$ctrl.advancedOn" ng-change="$ctrl.setAdvancedOnlocalStorage($ctrl.advancedOn)"> Advanced view</label>
             <div class="velpArea">
 
-                <velp-window class="velp" ng-style="{top: '2.2em'}"
+                <div save="%%PAGEID%%selectVelpsDiv"
+                     tim-draggable-fixed
+                     detachable="true"
+                     click="true"
+                     resize="false"
+                     caption="Available velps"
+                     >
+
+                    <!-- Edit window for velps -->
+                    <velp-window class="velp" ng-style="{top: '2.2em'}"
                                      ng-show="$ctrl.newVelp.edit"
                                      velp="$ctrl.newVelp"
                                      index="-1"
@@ -39,13 +48,7 @@
                                      vctrl="$ctrl.vctrl"
                                      advanced-on="$ctrl.advancedOn"></velp-window>
 
-                <div save="%%PAGEID%%selectVelpsDiv"
-                     tim-draggable-fixed
-                     detachable="true"
-                     click="true"
-                     resize="false"
-                     caption="Available velps">
-
+                    <!-- Actual velps -->
                     <div class="velp-stack draggable-content available-velps autoscroll">
                         <velp-window
                                 ng-repeat="velp in filteredVelps = ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn
@@ -60,6 +63,13 @@
                                 velp-groups="$ctrl.velpGroups"
                                 velp="velp"></velp-window>
                     </div>
+                    <!-- Plus sign for adding velps when available velps 'window' is detached -->
+                    <button class="btn-add-velp-detached timButton"
+                            ng-show="$ctrl.isDetached()"
+                            ng-click="$ctrl.openCreateNewVelpWindow()"
+                            name="create_new_velp">
+                        <span class="glyphicon glyphicon-plus"></span>
+                    </button>
                 </div>
 
                 <div class="btn-create-new-velp">
