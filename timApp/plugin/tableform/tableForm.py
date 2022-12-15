@@ -13,7 +13,6 @@ from webargs.flaskparser import use_args
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
-from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.item.block import Block
@@ -58,6 +57,7 @@ from tim_common.pluginserver_flask import (
     PluginReqs,
     EditorTab,
 )
+from tim_common.timjsonencoder import TimJsonEncoder
 from tim_common.utils import Missing
 
 
@@ -306,6 +306,7 @@ class GenerateCSVModel:
     reportFilter: str | Missing = missing
     filterFields: list[str] = field(default_factory=list)
     filterValues: list[str] = field(default_factory=list)
+    anonNames: bool = False
 
 
 GenerateCSVSchema = class_schema(GenerateCSVModel)
@@ -450,9 +451,16 @@ def gen_csv(args: GenerateCSVModel) -> Response | str:
         args.filterFields,
         args.filterValues,
     )
+
     if len(separator) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
+
+    if args.anonNames:
+        show_real_names = False
+        show_user_names = False
+        show_emails = False
+
     doc = get_doc_or_abort(docid)
     if not isinstance(remove_doc_ids, bool):
         remove_doc_ids = True
