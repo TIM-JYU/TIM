@@ -31,9 +31,11 @@ class AnswerBrowserTest(BrowserTest):
             initial_par="""
 ``` {#GLO_Y plugin="textfield"}
 form: false
+hideBrowser: false
 ```
 ``` {#GLO_N plugin="textfield"}
 form: false
+hideBrowser: false
 ```
 ``` {#normal_Y plugin="textfield"}
 form: false
