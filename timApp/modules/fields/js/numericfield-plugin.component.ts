@@ -10,11 +10,7 @@ import {
     NgZone,
     ViewChild,
 } from "@angular/core";
-import type {
-    ISetAnswerResult,
-    ITimComponent,
-    ViewCtrl,
-} from "tim/document/viewctrl";
+import type {ISetAnswerResult, ITimComponent} from "tim/document/viewctrl";
 import {ChangeType, FormModeOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -30,7 +26,6 @@ import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
@@ -141,7 +136,7 @@ export class NumericfieldPluginComponent
     private result?: string;
     isRunning = false;
     numericvalue?: number;
-    private vctrl!: ViewCtrl;
+
     private initialValue?: number;
     errormessage?: string;
     hideSavedText = true;
@@ -253,7 +248,7 @@ export class NumericfieldPluginComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         const state = this.attrsall.state?.c;
         if (state === undefined || state === null) {
             this.initCode();

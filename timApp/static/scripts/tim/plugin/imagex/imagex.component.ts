@@ -1431,7 +1431,7 @@ export class ImageXComponent
     private tries = 0;
     public previewColor = "";
     public isRunning: boolean = false;
-    private vctrl!: ViewCtrl;
+
     public replyImage?: string;
     public replyHTML?: string;
     private bgCanvas!: HTMLCanvasElement;
@@ -1485,7 +1485,7 @@ export class ImageXComponent
 
     async ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this, this.markup.tag);
         }

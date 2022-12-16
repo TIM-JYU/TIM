@@ -20,6 +20,8 @@ import {
 import type {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import type {ViewCtrl} from "tim/document/viewctrl";
 
 /**
  * Plugin with initialization data passed from the server via JSON.
@@ -47,6 +49,8 @@ export abstract class AngularPluginBase<
     @Input() readonly json!: string;
     @Input() readonly plugintype?: string;
     @Input() readonly taskid?: string;
+    protected vctrl!: ViewCtrl;
+    protected requiresTaskId = true;
 
     markupError?: PluginMarkupErrors;
     protected pluginMeta: PluginMeta;
@@ -140,6 +144,7 @@ export abstract class AngularPluginBase<
                 this.taskid
             );
         }
+        this.vctrl = vctrlInstance!;
     }
 
     async tryResetChanges(e?: Event) {

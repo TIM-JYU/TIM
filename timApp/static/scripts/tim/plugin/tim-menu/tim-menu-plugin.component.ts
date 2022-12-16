@@ -14,10 +14,8 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {OnClickArg} from "tim/document/eventhandlers";
 import {onClick} from "tim/document/eventhandlers";
-import type {ViewCtrl} from "tim/document/viewctrl";
 import type {IRights} from "tim/user/IRights";
 import {genericglobals} from "tim/util/globals";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
 import {PurifyModule} from "tim/util/purify.module";
@@ -150,7 +148,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
     typeof TimMenuAll
 > {
     menu: ITimMenuItem[] = [];
-    private vctrl!: ViewCtrl;
+
     openingSymbol: string = "";
     private hoverOpen: boolean = true;
     separator: string = "";
@@ -187,7 +185,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         if (this.vctrl == null || this.vctrl.isSlideOrShowSlideView()) {
             return;
         }

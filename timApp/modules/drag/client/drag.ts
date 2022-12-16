@@ -149,7 +149,7 @@ export class DragComponent
     effectAllowed: EffectAllowed = "copyMove";
     private forceSave = false;
     private shuffle?: boolean;
-    private vctrl = vctrlInstance;
+
     styles: Record<string, string> = {};
     saveFailed = false;
 

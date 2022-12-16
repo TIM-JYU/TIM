@@ -7,7 +7,6 @@ import {
     ViewChild,
     ViewEncapsulation,
 } from "@angular/core";
-import type {ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -19,7 +18,6 @@ import {valueDefu} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
@@ -156,7 +154,7 @@ export class ImagesComponent extends AngularPluginBase<
     @ViewChild("images") images?: ElementRef<HTMLImageElement>;
     width?: number;
     height?: number;
-    private vctrl?: ViewCtrl;
+
     imagesOn: boolean = true;
     fileIndex = 1;
     files: {name: string; caption: string; alt: string}[] = [];
@@ -167,7 +165,7 @@ export class ImagesComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance;
+
         this.width = this.markup.width;
         this.height = this.markup.height;
         this.noFlicker = this.markup.noFlicker || this.markup.autoplay != 0;

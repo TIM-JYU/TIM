@@ -30,12 +30,7 @@ import {
     defaultTimeout,
 } from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import type {
-    ITimComponent,
-    IVelpableComponent,
-    ViewCtrl,
-} from "tim/document/viewctrl";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
+import type {ITimComponent, IVelpableComponent} from "tim/document/viewctrl";
 import type {IUser} from "tim/user/IUser";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
@@ -199,7 +194,7 @@ export class ReviewCanvasComponent
     private modelChangeSub!: Subscription;
     changes = false;
     private loadedImages = 0;
-    private vctrl!: ViewCtrl;
+
     enabled = true;
 
     fileSelect?: FileSelectManagerComponent;
@@ -234,7 +229,7 @@ export class ReviewCanvasComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this, this.markup.tag);
         }

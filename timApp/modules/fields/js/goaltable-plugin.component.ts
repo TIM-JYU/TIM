@@ -135,7 +135,6 @@ export class GoalTablePluginComponent
     >
     implements ITimComponent
 {
-    private vctrl!: ViewCtrl;
     isRunning = false;
     private error: {message?: string; stacktrace?: string} = {};
     result: string = "";
@@ -178,7 +177,7 @@ export class GoalTablePluginComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         const aa = this.attrsall;
         const lang = this.markup.lang || "fi";
         this.lang = lang;
