@@ -252,8 +252,18 @@ export class AnswerBrowserComponent
             this.taskId.docTask().toString()
         )!;
         this.formMode = this.loader.isInFormMode() && !this.forceBrowser();
-        if (this.loader.hideBrowser || this.formMode) {
+        const markup = this.pluginMarkup();
+        if (this.isUseCurrentUser() || this.formMode) {
             this.hidden = true;
+        } else {
+            const hideBrowserAttribute =
+                markup?.hideBrowser ?? this.viewctrl?.docSettings.hideBrowser;
+            if (
+                hideBrowserAttribute ||
+                (this.isGlobal() && hideBrowserAttribute == undefined)
+            ) {
+                this.hidden = true;
+            }
         }
         const isPeerReview = getViewName() == "review";
         this.isPeerReview = isPeerReview;
@@ -307,7 +317,6 @@ export class AnswerBrowserComponent
                 ...this.viewctrl.docSettings.answerBrowser,
             };
         }
-        const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
             this.markupSettings = {
                 ...this.markupSettings,
