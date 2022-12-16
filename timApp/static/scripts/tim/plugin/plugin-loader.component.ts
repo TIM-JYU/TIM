@@ -175,6 +175,9 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         if (this.viewctrl && !this.preview) {
             this.viewctrl.registerPluginLoader(this);
         }
+        if (!this.taskId) {
+            this.viewctrl?.registerPluginLoaderWithoutTaskId(this);
+        }
         const r = TaskId.tryParse(this.taskId);
         if (r.ok) {
             this.parsedTaskId = r.result;
@@ -615,6 +618,10 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
             }
         }
         return false;
+    }
+
+    warnAboutMissingTaskId() {
+        this.error = "Plugin is missing task id";
     }
 
     getPrerequisiteLockedText() {

@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import type {AfterContentInit, OnInit} from "@angular/core";
 import {Directive, ElementRef, Input} from "@angular/core";
 import type {
     IGenericPluginMarkup,
@@ -22,6 +22,7 @@ import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {ViewCtrl} from "tim/document/viewctrl";
+import angular from "angular";
 
 /**
  * Plugin with initialization data passed from the server via JSON.
@@ -43,7 +44,7 @@ export abstract class AngularPluginBase<
         T extends Type<A, unknown>
     >
     extends PluginBaseCommon
-    implements OnInit, PluginJson
+    implements AfterContentInit, OnInit, PluginJson
 {
     attrsall: Readonly<A>;
     @Input() readonly json!: string;
@@ -145,6 +146,22 @@ export abstract class AngularPluginBase<
             );
         }
         this.vctrl = vctrlInstance!;
+    }
+
+    ngAfterContentInit() {
+        if (this.requiresTaskId && !this.taskid) {
+            // TODO: generic error elemnent in all plugin templates
+            const parId = angular
+                .element(this.getRootElement())
+                .parents(".par")
+                .attr("id");
+            if (parId) {
+                const ldr = this.vctrl.getPluginLoaderWithoutTaskid(parId);
+                if (ldr) {
+                    ldr.warnAboutMissingTaskId();
+                }
+            }
+        }
     }
 
     async tryResetChanges(e?: Event) {
