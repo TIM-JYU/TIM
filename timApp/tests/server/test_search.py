@@ -14,7 +14,7 @@ class SearchTest(TimRouteTest):
         text_in_document = "House cats like to hunt too."
         d = self.create_doc(initial_par=text_in_document)
         self.get(f"search/createContentFile")
-        url = f"search?ignoreRelevance=true&caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false"
+        url = f"search?ignoreRelevance=true&caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
         self.get(
             url,
             expect_status=200,
@@ -49,6 +49,8 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 1,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
                         "num_title_results": 0,
                         "par_results": [
                             {
@@ -58,6 +60,8 @@ class SearchTest(TimRouteTest):
                                 "results": [],
                             }
                         ],
+                        "path_results": [],
+                        "tag_results": [],
                         "title_results": [],
                     }
                 ],
@@ -66,6 +70,10 @@ class SearchTest(TimRouteTest):
                 "title_results": [],
                 "title_result_count": 0,
                 "word_result_count": 1,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -76,7 +84,7 @@ class SearchTest(TimRouteTest):
         self.create_doc(initial_par="There's a match inside, but it can't be searched.")
         text_to_search = "a"
         self.get(f"search/createContentFile")
-        url = f"search?folder=&query={text_to_search}"
+        url = f"search?folder=&query={text_to_search}&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
         self.get(
             url,
             expect_status=400,
@@ -94,7 +102,7 @@ class SearchTest(TimRouteTest):
         )
         self.get(f"search/createContentFile")
         text_to_search = "Cannot be found anywhere"
-        url = f"search?folder=&query={text_to_search}"
+        url = f"search?folder=&query={text_to_search}&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
         self.get(
             url,
             expect_status=200,
@@ -103,8 +111,12 @@ class SearchTest(TimRouteTest):
                 "incomplete_search_reason": "",
                 "errors": [],
                 "title_results": [],
+                "tags_results": [],
+                "paths_results": [],
                 "title_result_count": 0,
                 "word_result_count": 0,
+                "tags_result_count": 0,
+                "paths_result_count": 0,
             },
         )
 
@@ -117,7 +129,7 @@ class SearchTest(TimRouteTest):
         self.create_doc(initial_par=text_to_search)
         self.get(f"search/createContentFile")
         text_to_search_upper = "TEXT TO SEARCH"
-        url = f"search?caseSensitive={case_sensitive}&folder=&query={text_to_search_upper}"
+        url = f"search?caseSensitive={case_sensitive}&folder=&query={text_to_search_upper}&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
         self.get(
             url,
             expect_status=200,
@@ -126,14 +138,18 @@ class SearchTest(TimRouteTest):
                 "incomplete_search_reason": "",
                 "errors": [],
                 "title_results": [],
+                "tags_results": [],
+                "paths_results": [],
                 "title_result_count": 0,
                 "word_result_count": 0,
+                "tags_result_count": 0,
+                "paths_result_count": 0,
             },
         )
 
     def test_search_without_view_rights(self):
         text_to_search = "secret"
-        url = f"search?folder=&query={text_to_search}"
+        url = f"search?folder=&query={text_to_search}&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
 
         self.make_admin(self.test_user_1)
         self.login_test1()
@@ -152,6 +168,10 @@ class SearchTest(TimRouteTest):
                 "title_results": [],
                 "title_result_count": 0,
                 "word_result_count": 0,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -161,7 +181,7 @@ class SearchTest(TimRouteTest):
         :return:
         """
         text_to_search = "hidden"
-        url = f"search?folder=&query={text_to_search}"
+        url = f"search?folder=&query={text_to_search}&searchContent=true"
         u1 = self.test_user_1
         u1_name = u1.name
         self.login_test1()
@@ -206,6 +226,8 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 1,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
                         "num_title_results": 0,
                         "par_results": [
                             {
@@ -217,6 +239,8 @@ class SearchTest(TimRouteTest):
                                 "results": [],
                             }
                         ],
+                        "path_results": [],
+                        "tag_results": [],
                         "title_results": [],
                     }
                 ],
@@ -225,6 +249,10 @@ class SearchTest(TimRouteTest):
                 "title_results": [],
                 "title_result_count": 0,
                 "word_result_count": 1,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
         self.login_test2()
@@ -239,6 +267,10 @@ class SearchTest(TimRouteTest):
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 0,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -255,7 +287,7 @@ class SearchTest(TimRouteTest):
         self.test_user_1.grant_access(d, AccessType.edit)
         db.session.commit()
         self.get(
-            f"search?ignoreRelevance=true&folder=&query={text_to_search}",
+            f"search?ignoreRelevance=true&folder=&query={text_to_search}&searchContent=true",
             expect_status=200,
             expect_content={
                 "content_results": [
@@ -291,6 +323,8 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 1,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
                         "num_title_results": 0,
                         "par_results": [
                             {
@@ -302,6 +336,8 @@ class SearchTest(TimRouteTest):
                                 "results": [],
                             }
                         ],
+                        "path_results": [],
+                        "tag_results": [],
                         "title_results": [],
                     }
                 ],
@@ -310,11 +346,15 @@ class SearchTest(TimRouteTest):
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 1,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
         self.get(
-            f"search?folder=&query={text_to_search}&ignorePlugins=True",
+            f"search?folder=&query={text_to_search}&ignorePlugins=True&searchContent=true",
             expect_status=200,
             expect_content={
                 "content_results": [],
@@ -323,6 +363,10 @@ class SearchTest(TimRouteTest):
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 0,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -330,7 +374,7 @@ class SearchTest(TimRouteTest):
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
         self.get(
-            f"search?folder=&query={text_to_search}",
+            f"search?folder=&query={text_to_search}&searchContent=true",
             expect_status=200,
             expect_content={
                 "content_results": [],
@@ -339,6 +383,10 @@ class SearchTest(TimRouteTest):
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 0,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
             },
         )
 
@@ -359,13 +407,17 @@ class SearchTest(TimRouteTest):
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
                 "title_result_count": 1,
                 "title_results": [
                     {
                         "doc": {
                             "id": d.id,
                             "isFolder": False,
-                            "location": "users/test-user-1",
+                            "location": d.location,
                             "modified": "just now",
                             "name": d.short_name,
                             "owners": [
@@ -393,8 +445,12 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 0,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
                         "num_title_results": 1,
                         "par_results": [],
+                        "path_results": [],
+                        "tag_results": [],
                         "title_results": [{"num_results": 1, "results": []}],
                     }
                 ],
@@ -403,9 +459,10 @@ class SearchTest(TimRouteTest):
         )
 
     def test_tag_search(self):
+        self.make_admin(self.test_user_1)
         u = self.test_user_1
         self.login_test1()
-        d = self.create_doc()
+        d = self.create_doc(initial_par="Tag test")
         tags = ["dog", "dog2", "cat"]
         self.json_post(
             f"/tags/add/{d.path}",
@@ -417,18 +474,20 @@ class SearchTest(TimRouteTest):
                 ]
             },
         )
-
+        self.get(f"search/createContentFile")
         tag_to_search = "dog"
-        url = (
-            f"search/tags?caseSensitive=true&folder=&query={tag_to_search}&regex=false"
-        )
+        url = f"search?caseSensitive=true&folder=&query={tag_to_search}&regex=false&searchContent=false&searchTitles=false&searchTags=true&searchPaths=false"
         self.get(
             url,
             expect_status=200,
             expect_content={
+                "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
-                "results": [
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 2,
+                "tags_results": [
                     {
                         "doc": {
                             "id": d.id,
@@ -453,56 +512,35 @@ class SearchTest(TimRouteTest):
                                 "see_answers": True,
                                 "teacher": True,
                             },
-                            "tags": [
-                                {
-                                    "block_id": d.id,
-                                    "expires": None,
-                                    "name": tags[0],
-                                    "type": TagType.Regular.value,
-                                },
-                                {
-                                    "block_id": d.id,
-                                    "expires": None,
-                                    "name": tags[1],
-                                    "type": TagType.Regular.value,
-                                },
-                                {
-                                    "block_id": d.id,
-                                    "expires": None,
-                                    "name": tags[2],
-                                    "type": TagType.Regular.value,
-                                },
-                            ],
                             "title": d.title,
                             "unpublished": True,
                         },
-                        "matching_tags": [
-                            {
-                                "block_id": d.id,
-                                "expires": None,
-                                "name": tags[0],
-                                "type": TagType.Regular.value,
-                            },
-                            {
-                                "block_id": d.id,
-                                "expires": None,
-                                "name": tags[1],
-                                "type": TagType.Regular.value,
-                            },
-                        ],
-                        "num_results": 2,
+                        "incomplete": False,
+                        "num_par_results": 0,
+                        "num_path_results": 0,
+                        "num_tag_results": 2,
+                        "num_title_results": 0,
+                        "par_results": [],
+                        "path_results": [],
+                        "tag_results": [{"num_results": 2, "results": []}],
+                        "title_results": [],
                     }
                 ],
-                "tag_result_count": 2,
+                "title_result_count": 0,
+                "title_results": [],
+                "word_result_count": 0,
             },
         )
 
     def test_path_search(self):
+        self.make_admin(self.test_user_1)
         u = self.test_user_1
         self.login_test1()
         search_word = "dog"
-        d = self.create_doc(path="a/b/dogs-like-bones/c/d")
-        url = f"search/paths?folder=&query={search_word}"
+        uf = f"{self.current_user.get_personal_folder().path}"
+        d = self.create_doc(initial_par="Test", path=f"{uf}/a/b/dogs-like-bones/c/d")
+        self.get(f"search/createContentFile")
+        url = f"search?folder=&query={search_word}&regex=false&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
         self.get(
             url,
             expect_status=200,
@@ -510,15 +548,15 @@ class SearchTest(TimRouteTest):
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
-                "title_result_count": 1,
-                "title_results": [
+                "paths_result_count": 1,
+                "paths_results": [
                     {
                         "doc": {
                             "id": d.id,
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
-                            "name": "d",
+                            "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u.name}
                             ],
@@ -541,15 +579,23 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 0,
-                        "num_title_results": 1,
+                        "num_path_results": 1,
+                        "num_tag_results": 0,
+                        "num_title_results": 0,
                         "par_results": [],
-                        "title_results": [{"num_results": 1, "results": []}],
+                        "path_results": [{"num_results": 1, "results": []}],
+                        "tag_results": [],
+                        "title_results": [],
                     }
                 ],
+                "tags_result_count": 0,
+                "tags_results": [],
+                "title_result_count": 0,
+                "title_results": [],
                 "word_result_count": 0,
             },
         )
-        url = f"search/paths?folder=&query={search_word}&searchWholeWords=True"
+        url = f"search?folder=&query={search_word}&searchWholeWords=True&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
         self.get(
             url,
             expect_status=200,
@@ -557,13 +603,17 @@ class SearchTest(TimRouteTest):
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
                 "title_result_count": 0,
                 "title_results": [],
                 "word_result_count": 0,
             },
         )
         search_word_2 = "dogs"
-        url = f"search/paths?folder=&query={search_word_2}&searchWholeWords=True"
+        url = f"search?folder=&query={search_word_2}&searchWholeWords=True&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
         self.get(
             url,
             expect_status=200,
@@ -571,15 +621,15 @@ class SearchTest(TimRouteTest):
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
-                "title_result_count": 1,
-                "title_results": [
+                "paths_result_count": 1,
+                "paths_results": [
                     {
                         "doc": {
                             "id": d.id,
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
-                            "name": "d",
+                            "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u.name}
                             ],
@@ -602,11 +652,19 @@ class SearchTest(TimRouteTest):
                         },
                         "incomplete": False,
                         "num_par_results": 0,
-                        "num_title_results": 1,
+                        "num_path_results": 1,
+                        "num_tag_results": 0,
+                        "num_title_results": 0,
                         "par_results": [],
-                        "title_results": [{"num_results": 1, "results": []}],
+                        "path_results": [{"num_results": 1, "results": []}],
+                        "tag_results": [],
+                        "title_results": [],
                     }
                 ],
+                "tags_result_count": 0,
+                "tags_results": [],
+                "title_result_count": 0,
+                "title_results": [],
                 "word_result_count": 0,
             },
         )

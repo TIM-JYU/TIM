@@ -11,16 +11,13 @@ import type {ITag} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
 import type {
     IDocSearchResult,
-    ITagSearchResult,
     SearchBoxComponent,
 } from "tim/search/search-box.component";
 import {CommonModule} from "@angular/common";
 
 export interface ISearchResultDisplay {
-    result: IDocSearchResult;
     closed: boolean; // Whether this is shown collapsed or not.
-    tags: ITag[];
-    num_tag_results: number; // Same tag may contain the search word more than once.
+    result: IDocSearchResult;
 }
 
 enum SortOption {
@@ -68,33 +65,35 @@ enum SortOption {
                     <ul class="list-unstyled">
                         <li *ngFor="let r of displayResults">
                             <a class="cursor-pointer" (click)="r.closed = !r.closed"
-                               *ngIf="collapsibles && !limitedDisplay && (r.result.num_par_results + r.num_tag_results) > 0">
+                               *ngIf="collapsibles && !limitedDisplay && (r.result.num_par_results + r.result.num_tag_results) > 0">
                                 <i class="glyphicon" [ngClass]="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
                                    title="Toggle preview" style="width:1.3em;" i18n-title></i></a>
                             <span title="Note: hidden elements can affect the result count" i18n-title>
-                <a href="/view/{{r.result.doc.path}}"
-                   title="Open {{r.result.doc.title}}" i18n-title> {{r.result.doc.title}}</a> {{r.result.doc.path}}
-                                <i> ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <span
-                                        *ngIf="r.result.incomplete" i18n>or more matches</span>
-                <ng-container *ngIf="!r.result.incomplete"
-                              [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.num_tag_results">
-                            <ng-template ngPluralCase="=1" i18n>match</ng-template>
-                            <ng-template ngPluralCase="other" i18n>matches</ng-template>
-                </ng-container>)
+                                <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}" i18n-title> {{r.result.doc.title}}</a>
+                                {{r.result.doc.path}}
+                                <i> ({{r.result.num_par_results + r.result.num_title_results + r.result.num_tag_results + r.result.num_path_results}}
+                                    <span *ngIf="r.result.incomplete" i18n>or more matches</span>
+                                    <ng-container *ngIf="!r.result.incomplete"
+                                                  [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.result.num_tag_results + r.result.num_path_results">
+                                    <ng-template ngPluralCase="=1" i18n>match</ng-template>
+                                    <ng-template ngPluralCase="other" i18n>matches</ng-template>
+                                    </ng-container>
+                                    )
                                 </i>
-                </span>
+                            </span>
                             <ul *ngIf="!r.closed">
                                 <ng-container *ngFor="let p of r.result.par_results">
                                     <li *ngIf="p.preview">
                                         <a href="/view/{{r.result.doc.path}}#{{p.par_id}}"
                                            title="Open paragraph" i18n-title>{{p.preview}}</a>
-                                        <ng-container *ngFor="let tag of r.tags">
+                                        <!-- We are not interested in the tags, but the search results -->
+                                        <!--<ng-container *ngFor="let tag of r.tags">
                                             <span *ngIf="!r.closed"
                                                   class="btn-xs"
                                                   [ngClass]="tagClass(tag)">
                                                 {{tag.name}}
                                             </span>
-                                        </ng-container>
+                                        </ng-container>-->
                                     </li>
                                 </ng-container>
                             </ul>
@@ -124,10 +123,10 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
     void
 > {
     protected dialogName = "SearchResults";
-    private results: IDocSearchResult[] = [];
     searchWord: string = "";
     displayResults: ISearchResultDisplay[] = [];
-    private tagResults: ITagSearchResult[] = [];
+    private contentResults: IDocSearchResult[] = [];
+    private tagResults: IDocSearchResult[] = [];
     private titleResults: IDocSearchResult[] = [];
     private pathResults: IDocSearchResult[] = [];
     folder: string = "";
@@ -169,7 +168,7 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
         this.collapsibles = false;
         this.limitedDisplay = false;
         this.searchComponent = ctrl;
-        this.results = ctrl.results;
+        this.contentResults = ctrl.contentResults;
         this.tagResults = ctrl.tagResults;
         this.titleResults = ctrl.titleResults;
         this.pathResults = ctrl.pathResults;
@@ -212,8 +211,8 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                 // If path and title result are from same doc, combine.
                 if (t.doc.id === p.doc.id) {
                     const temp = t;
-                    temp.num_title_results =
-                        t.num_title_results + p.num_title_results;
+                    temp.num_title_results = t.num_title_results;
+                    temp.num_path_results = p.num_path_results;
                     titleAndPathResults.push(temp);
                     pathResultsFound = true;
                     break;
@@ -241,18 +240,15 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
         }
 
         // Combine title and tag results with existing content results.
-        for (const r of this.results) {
+        for (const r of this.contentResults) {
             const newDisplayResult: ISearchResultDisplay = {
-                closed: true,
-                num_tag_results: 0,
                 result: r,
-                tags: [],
+                closed: true,
             };
             // Add tags to existing word search result objects.
             for (const t of this.tagResults) {
                 if (t.doc.id === r.doc.id) {
-                    newDisplayResult.tags = t.matching_tags;
-                    newDisplayResult.num_tag_results = t.num_results;
+                    newDisplayResult.result.num_tag_results = t.num_tag_results;
                 }
             }
             // Add titlematches to existing word search result objects.
@@ -279,18 +275,18 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             if (!found) {
                 const newDocResult = {
                     closed: true,
-                    num_path_results: 0,
-                    num_tag_results: 0,
-                    path_results: [],
                     result: {
                         doc: t.doc,
                         incomplete: false,
                         num_par_results: 0,
                         num_title_results: t.num_title_results,
-                        par_results: [],
+                        num_path_results: t.num_path_results,
+                        num_tag_results: t.num_tag_results,
                         title_results: t.title_results,
+                        par_results: [],
+                        path_results: [],
+                        tag_results: [],
                     },
-                    tags: [],
                 };
                 this.displayResults.push(newDocResult);
             }
@@ -300,8 +296,7 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             for (const r of this.displayResults) {
                 if (t.doc.path === r.result.doc.path) {
                     // Add tag results to existing content-title-path results.
-                    r.tags = t.matching_tags;
-                    r.num_tag_results = t.num_results;
+                    r.result.num_tag_results = t.num_tag_results;
                     found = true;
                 }
             }
@@ -309,18 +304,18 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
             if (!found) {
                 const newDocResult = {
                     closed: true,
-                    num_path_results: 0,
-                    num_tag_results: t.num_results,
-                    path_results: [],
                     result: {
                         doc: t.doc,
                         incomplete: false,
                         num_par_results: 0,
                         num_title_results: 0,
+                        num_tag_results: t.num_tag_results,
+                        num_path_results: 0,
                         par_results: [],
                         title_results: [],
+                        path_results: [],
+                        tag_results: t.tag_results,
                     },
-                    tags: t.matching_tags,
                 };
                 this.displayResults.push(newDocResult);
             }
@@ -370,8 +365,9 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                     // Negative values to get ascending order.
                     let matches = -(
                         r.result.num_par_results +
-                        r.num_tag_results +
-                        r.result.num_title_results
+                        r.result.num_tag_results +
+                        r.result.num_title_results +
+                        r.result.num_path_results
                     );
                     // Show "x or more matches" before "x matches".
                     if (r.result.incomplete) {
@@ -384,8 +380,9 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
                 const getRelevance = (r: ISearchResultDisplay) => {
                     let matches = -(
                         r.result.num_par_results +
-                        r.num_tag_results +
-                        r.result.num_title_results
+                        r.result.num_tag_results +
+                        r.result.num_title_results +
+                        r.result.num_path_results
                     );
                     // Show "x or more matches" before "x matches".
                     if (r.result.incomplete) {
