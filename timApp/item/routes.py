@@ -1227,6 +1227,29 @@ def create_item_route(
     )
 
 
+@view_page.get("/itemInfo/<item_path>")
+def get_doc_basic_info(item_path: str) -> Response:
+    item: Item | None = DocEntry.find_by_path(
+        item_path, fallback_to_id=True
+    ) or Folder.find_by_path(item_path, fallback_to_id=True)
+    if item is None:
+        raise NotExist("Document does not exist")
+    verify_view_access(item)
+
+    res = {
+        "id": item.id,
+        "type": "folder" if isinstance(item, Folder) else "document",
+        "title": item.title,
+        "location": item.location,
+        "short_name": item.short_name,
+    }
+    if isinstance(item, DocEntry):
+        res |= {
+            "lang_id": item.lang_id,
+        }
+    return json_response(res)
+
+
 def create_item_direct(
     item_path: str,
     item_type: str,
