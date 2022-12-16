@@ -1,12 +1,12 @@
 import type {AlertSeverity} from "tim/ui/formErrorMessage";
-import {getURLParameter} from "tim/util/utils";
+import {getURLParameter, toPromise} from "tim/util/utils";
 import type {OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
-import {$http} from "tim/util/ngimport";
+import {Component, Input, ViewChild} from "@angular/core";
 import {slugify} from "tim/util/slugify";
-import {to} from "tim/util/utils";
 import type {ITaggedItem} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
+import {HttpClient} from "@angular/common/http";
+import {NgModel} from "@angular/forms";
 
 @Component({
     selector: "create-item",
@@ -31,7 +31,9 @@ import {TagType} from "tim/item/IItem";
                 <label>
                     Short name:
                     <input [disabled]="force" class="form-control" timShortName required
-                           [(ngModel)]="itemName" type="text" name="itemName"
+                           [(ngModel)]="itemName"
+                           (ngModelChange)="checkCopyValidity()"
+                           type="text" name="itemName"
                            placeholder="Type title first"
                            (keyup)="nameChanged()">
                 </label>
@@ -47,14 +49,15 @@ import {TagType} from "tim/item/IItem";
             <div class="form-group" timErrorState>
                 <label>
                     Location: <input size="50" [disabled]="force" class="form-control" type="text"
-                                     timLocation [(ngModel)]="itemLocation" name="itemLocation">
+                                     timLocation [(ngModel)]="itemLocation" name="itemLocation"
+                                     (ngModelChange)="checkCopyValidity()">
                 </label>
                 <tim-error-message></tim-error-message>
             </div>
             <tim-alert *ngFor="let alert of alerts" [severity]="alert.type">
                 {{ alert.msg }}
             </tim-alert>
-            <button class="timButton" [disabled]="f.invalid || creating" (click)="createItem()" type="button">
+            <button class="timButton" [disabled]="f.invalid || creating || !canCopy" (click)="createItem()" type="button">
                 Create {{ itemType }}
             </button>
             <span *ngIf="creating">Creating...</span>
@@ -73,7 +76,14 @@ export class CreateItemComponent implements OnInit {
     @Input() force = false;
     creating = false;
     @Input() private template?: string;
+    @ViewChild("f", {static: true}) form!: NgModel;
     tagsWithExpirations = false;
+
+    canCopy: boolean = true;
+    private originalLocation?: string;
+    private originalName?: string;
+
+    constructor(private http: HttpClient) {}
 
     ngOnInit() {
         this.automaticShortName = !this.force;
@@ -91,7 +101,32 @@ export class CreateItemComponent implements OnInit {
             this.params.template = this.template;
         }
 
+        void this.prefillCopyData();
         void this.checkExpiredTags();
+    }
+
+    private async prefillCopyData() {
+        const copyDocId = this.params?.copy;
+        if (!copyDocId) {
+            return;
+        }
+        const r = await toPromise(
+            this.http.get<{
+                title: string;
+                location: string;
+                short_name: string;
+            }>(`/itemInfo/${copyDocId}`)
+        );
+        if (!r.ok) {
+            return;
+        }
+
+        this.itemLocation = r.result.location;
+        this.itemTitle = r.result.title;
+        this.itemName = r.result.short_name;
+        this.originalName = r.result.short_name;
+        this.originalLocation = r.result.location;
+        this.canCopy = false;
     }
 
     /**
@@ -99,11 +134,11 @@ export class CreateItemComponent implements OnInit {
      */
     private async checkExpiredTags() {
         if (this.params?.copy) {
-            const r = await to(
-                $http.get<ITaggedItem>(`/tags/getDoc/${this.params.copy}`)
+            const r = await toPromise(
+                this.http.get<ITaggedItem>(`/tags/getDoc/${this.params.copy}`)
             );
             if (r.ok) {
-                const tags = r.result.data.tags;
+                const tags = r.result.tags;
                 for (const tag of tags) {
                     if (tag.expires && tag.type === TagType.Regular) {
                         this.tagsWithExpirations = true;
@@ -117,8 +152,8 @@ export class CreateItemComponent implements OnInit {
 
     async createItem() {
         this.creating = true;
-        const r = await to(
-            $http.post<{path: string}>("/createItem", {
+        const r = await toPromise(
+            this.http.post<{path: string}>("/createItem", {
                 item_path: this.itemLocation + "/" + this.itemName,
                 item_type: this.itemType,
                 item_title: this.itemTitle,
@@ -128,12 +163,12 @@ export class CreateItemComponent implements OnInit {
 
         if (!r.ok) {
             this.alerts = [];
-            this.alerts.push({msg: r.result.data.error, type: "danger"});
+            this.alerts.push({msg: r.result.error.error, type: "danger"});
             this.creating = false;
             return;
         }
 
-        window.location.href = "/view/" + r.result.data.path;
+        window.location.href = "/view/" + r.result.path;
     }
 
     titleChanged() {
@@ -142,10 +177,27 @@ export class CreateItemComponent implements OnInit {
         }
         if (this.itemTitle != null) {
             this.itemName = slugify(this.itemTitle);
+            this.checkCopyValidity();
         }
     }
 
     nameChanged() {
         this.automaticShortName = (this.itemName ?? []).length === 0;
+    }
+
+    checkCopyValidity() {
+        if (
+            this.itemName == this.originalName &&
+            this.itemLocation == this.originalLocation
+        ) {
+            this.canCopy = false;
+            this.alerts.push({
+                type: "danger",
+                msg: "You cannot copy an item to the same location with the same name. Change either the short name or the location.",
+            });
+        } else {
+            this.alerts = [];
+            this.canCopy = true;
+        }
     }
 }
