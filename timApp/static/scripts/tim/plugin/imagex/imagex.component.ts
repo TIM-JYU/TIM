@@ -22,13 +22,8 @@ import {
     valueOr,
 } from "tim/util/utils";
 import {editorChangeValue} from "tim/editor/editorScope";
-import type {
-    ITimComponent,
-    IVelpableComponent,
-    ViewCtrl,
-} from "tim/document/viewctrl";
+import type {ITimComponent, IVelpableComponent} from "tim/document/viewctrl";
 import {ChangeType} from "tim/document/viewctrl";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import type {
     IDrawOptions,
