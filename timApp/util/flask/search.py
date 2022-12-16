@@ -407,7 +407,6 @@ def add_doc_info_content_line(
         else:
             par_md_buf.write(doc_par.md)
 
-        # par_md = par_md_buf.getvalue().replace("\r", " ").replace("\n", " ")
         par_md = normalize_newlines(par_md_buf.getvalue())
         # Cherry pick attributes, because others are unnecessary for the search.
         par_attrs = par_dict["attrs"]
