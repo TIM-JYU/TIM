@@ -98,6 +98,7 @@ const NumericfieldAll = t.intersection([
                (blur)="autoSave()"
                (keydown.enter)="saveAndRefocus()"
                (keydown.control.s)="saveAndPreventDefault($event)"
+               (keydown.meta.s)="saveAndPreventDefault($event)"
                (ngModelChange)="updateInput()"
                [readonly]="readonly"
                [tooltip]="errormessage"
