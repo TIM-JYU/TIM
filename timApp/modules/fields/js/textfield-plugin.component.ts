@@ -275,7 +275,7 @@ export class TextfieldPluginComponent
     }
 
     saveAndRefocus() {
-        this.autoSave();
+        this.saveText();
         this.changeFocus();
     }
 

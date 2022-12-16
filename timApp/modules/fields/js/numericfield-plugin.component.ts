@@ -194,7 +194,7 @@ export class NumericfieldPluginComponent
     }
 
     saveAndRefocus() {
-        this.autoSave();
+        this.saveText();
         this.changeFocus();
     }
 
