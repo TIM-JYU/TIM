@@ -219,6 +219,9 @@ RUN python3.10 -m pip install pyod && bash -c "${APT_CLEANUP}"
 # pyqula
 RUN python3.10 -m pip install pyqula && bash -c "${APT_CLEANUP}"
 
+# sktime
+RUN python3.10 -m pip install sktime && bash -c "${APT_CLEANUP}"
+
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
 
@@ -233,7 +236,7 @@ RUN wget -q https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA
 RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot pstoedit liboctave-dev fonts-freefont-otf && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} make && ${APT_CLEANUP}"
 RUN printf "pkg install -forge io" | octave && \
- printf "pkg install -forge statistics" | octave && \
+ echo -n 'pkg install "https://downloads.sourceforge.net/project/octave/Octave%20Forge%20Packages/Individual%20Package%20Releases/statistics-1.4.3.tar.gz"' | octave && \
  printf "pkg install -forge struct" | octave && \
  printf "pkg install -forge optim" | octave
 
@@ -282,9 +285,12 @@ RUN swift --version
 
 RUN echo 'options(repos=structure(c(CRAN="https://cloud.r-project.org/")))' > ~/.Rprofile
 
+# TODO: Newer versions don't compile yet (seems to be missing some deps)
 RUN bash -c "${APT_INSTALL} cmake" && \
     git clone https://github.com/stevengj/nlopt.git && \
-    cd nlopt && cmake -DCMAKE_CXX_FLAGS=-std=c++11 . && make && make install && cd .. && rm -r nlopt && apt-get remove -y cmake && ${APT_CLEANUP}
+    cd nlopt && \
+    git checkout b195a672e006f6d9c48bb322f6e8e1d212e4df99 && \
+    cmake -DCMAKE_CXX_FLAGS=-std=c++11 . && make && make install && cd .. && rm -r nlopt && apt-get remove -y cmake && ${APT_CLEANUP}
 
 RUN ldconfig
 

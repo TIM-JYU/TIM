@@ -2,7 +2,6 @@ import moment from "moment";
 import type {
     AfterViewInit,
     DoBootstrap,
-    Injector,
     NgModuleRef,
     OnDestroy,
     OnInit,
@@ -49,24 +48,6 @@ const LAZY_COMMENT_MARKER = `<!--${LAZY_MARKER}`;
 
 function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;
-}
-
-const loadedModules: Map<string, NgModuleRef<unknown>> = new Map();
-
-function getModule(moduleType: Type<unknown>, injector: Injector) {
-    if (loadedModules.get(moduleType.name)) {
-        return loadedModules.get(moduleType.name);
-    }
-    // Note: there are multiple ways to bootstrap a module with the components
-    // 1. createNgModule - creates a new module with no platform -> mainly for child modules, prevents multiple platform instances
-    //   * Seems to be fast and easy to bootstrap, but doesn't allow referencing e.g. BrowserModule => this seems to be intended for child modules
-    // 2. PlatformRef.bootstrapModule - bootstraps a module as if it's an application module
-    //   * Angular allows multiple bootstraps for the same platform
-    //   * Seems to break change detection for plugins
-    // For now we'll use createNgModule since eventually we'll likely move to use Angular Elements that seem to do the same thing
-    const modRef = createNgModule(moduleType, injector);
-    loadedModules.set(moduleType.name, modRef);
-    return modRef;
 }
 
 @Component({
@@ -167,6 +148,9 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     running = false;
     endTime?: ReadonlyMoment;
     taskHidden = false;
+
+    private currentModRef?: NgModuleRef<unknown>;
+    private currentModuleType?: Type<unknown>;
 
     constructor(
         private elementRef: ElementRef<HTMLElement>,
@@ -277,6 +261,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
 
     ngOnDestroy() {
         this.removeActivationHandlers();
+        this.currentModRef?.destroy();
     }
 
     private removeActivationHandlers() {
@@ -408,14 +393,33 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         this.nonPluginHtml = element.outerHTML;
     }
 
+    private createModule(moduleType: Type<unknown>) {
+        if (this.currentModuleType === moduleType && this.currentModRef) {
+            return this.currentModRef;
+        }
+
+        if (this.currentModRef) {
+            this.currentModRef.destroy();
+            this.currentModRef = undefined;
+        }
+
+        // Note: there are multiple ways to bootstrap a module with the components
+        // 1. createNgModule - creates a new module with no platform -> mainly for child modules, prevents multiple platform instances
+        //   * Seems to be fast and easy to bootstrap, but doesn't allow referencing e.g. BrowserModule => this seems to be intended for child modules
+        // 2. PlatformRef.bootstrapModule - bootstraps a module as if it's an application module
+        //   * Angular allows multiple bootstraps for the same platform
+        //   * Seems to break change detection for plugins
+        // For now we'll use createNgModule since eventually we'll likely move to use Angular Elements that seem to do the same thing
+        this.currentModRef = createNgModule(moduleType, this.appRef.injector);
+        this.currentModuleType = moduleType;
+        return this.currentModRef;
+    }
+
     async setComponent(registeredPlugin: IRegisteredPlugin, json: string) {
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
 
-        const modRef = await getModule(
-            registeredPlugin.module,
-            this.appRef.injector
-        );
+        const modRef = this.createModule(registeredPlugin.module);
         const componentRef = await viewContainerRef.createComponent<PluginJson>(
             registeredPlugin.component,
             {ngModuleRef: modRef}

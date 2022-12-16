@@ -13,7 +13,6 @@ from webargs.flaskparser import use_args
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
-from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.item.block import Block
@@ -58,6 +57,7 @@ from tim_common.pluginserver_flask import (
     PluginReqs,
     EditorTab,
 )
+from tim_common.timjsonencoder import TimJsonEncoder
 from tim_common.utils import Missing
 
 
@@ -266,6 +266,7 @@ class TableFormHtmlModel(
                     value_or_default(self.markup.removeDocIds, True),
                     value_or_default(self.markup.showInView, False),
                     group_filter_type=self.markup.includeUsers,
+                    anonymize_names=value_or_default(self.markup.anonNames, False),
                 )
             r = {**r, **f}
         return r
@@ -306,6 +307,7 @@ class GenerateCSVModel:
     reportFilter: str | Missing = missing
     filterFields: list[str] = field(default_factory=list)
     filterValues: list[str] = field(default_factory=list)
+    anonNames: bool = False
 
 
 GenerateCSVSchema = class_schema(GenerateCSVModel)
@@ -359,7 +361,7 @@ filterRow: true   # show filters
 singleLine: true  # show every line as a single line
 emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email 
 separator: ";"    # Define your value separator here, ";" as default
-anonNames: false  # To show or hide user (and full) names in report, true or false
+anonNames: false  # Whether to show anonymised names, true or false
 reportButton: "Raportti"
 userListButtonText: "Käyttäjälista"
 showToolbar: true # toolbar for editing the table
@@ -450,9 +452,11 @@ def gen_csv(args: GenerateCSVModel) -> Response | str:
         args.filterFields,
         args.filterValues,
     )
+
     if len(separator) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
+
     doc = get_doc_or_abort(docid)
     if not isinstance(remove_doc_ids, bool):
         remove_doc_ids = True
@@ -466,6 +470,7 @@ def gen_csv(args: GenerateCSVModel) -> Response | str:
         remove_doc_ids,
         allow_non_teacher=True,
         user_filter=user_filter,
+        anonymize_names=args.anonNames,
         # TODO: group_filter_type=self.markup.includeUsers,
     )
     data: list[list[str | float | None]] = [[]]
@@ -580,6 +585,7 @@ def fetch_rows(m: FetchTableDataModel) -> Response:
         value_or_default(markup.removeDocIds, True),
         value_or_default(markup.showInView, False),
         group_filter_type=include_users,
+        anonymize_names=value_or_default(markup.anonNames, False),
     )
     return json_response(r)
 
@@ -594,6 +600,7 @@ class FetchTableDataModelPreview(FetchTableDataModel):
     fields: list[str]
     groups: list[str]
     removeDocIds: bool = True
+    anonNames: bool = False
 
 
 @tableForm_plugin.get("/fetchTableDataPreview")
@@ -616,7 +623,8 @@ def fetch_rows_preview(m: FetchTableDataModelPreview) -> Response:
         curr_user,
         view_ctx,
         m.removeDocIds,
-        allow_non_teacher=True
+        allow_non_teacher=True,
+        anonymize_names=m.anonNames,
         #  TODO: group_filter_type = plug.values.get("includeUsers"),
     )
     return json_response(r)
@@ -702,7 +710,29 @@ def tableform_get_fields(
     allow_non_teacher: bool,
     group_filter_type: MembershipFilter = MembershipFilter.Current,
     user_filter: list[str] | None = None,
+    anonymize_names: bool = False,
 ) -> TableFormObj:
+    user_filter_q = None
+    if user_filter is not None:
+        user_ids: list[int] = []
+        if anonymize_names:
+            # Preprocess users to retrieve their ids
+            # TODO: In future the ID is likely going to not be part of the name!
+            for user in user_filter:
+                if not user.startswith("user"):
+                    user_ids = []
+                    break
+                try:
+                    user_id = int(user[4:])
+                    user_ids.append(user_id)
+                except ValueError:
+                    user_ids = []
+                    break
+        if user_ids:
+            user_filter_q = User.id.in_(user_ids)
+        elif user_filter:
+            user_filter_q = User.name.in_(user_filter)
+
     fielddata, aliases, field_names, groups = get_fields_and_users(
         flds,
         RequestedGroups.from_name_list(groupnames),
@@ -713,7 +743,7 @@ def tableform_get_fields(
         add_missing_fields=True,
         access_option=GetFieldsAccess.from_bool(allow_non_teacher),
         member_filter_type=group_filter_type,
-        user_filter=User.name.in_(user_filter) if user_filter else None,
+        user_filter=user_filter_q,
     )
     rows = {}
     users: dict[str, TableFormUserInfo] = {}
@@ -723,13 +753,15 @@ def tableform_get_fields(
     membership_end_map: dict[str, str | None] = {}
     for f in fielddata:
         u: User = f["user"]
-        username = u.name
+        u.hide_name = anonymize_names
+        user_info = u.to_json()
+        username = user_info["name"]
+        rn = user_info["real_name"]
+        email = user_info["email"]
         rows[username] = dict(f["fields"])
         for key, content in rows[username].items():
             if type(content) is dict:
                 rows[username][key] = json.dumps(content)
-        rn = f["user"].real_name
-        email = f["user"].email
         users[username] = TableFormUserInfo(
             id=u.id,
             real_name=rn if rn is not None else "",

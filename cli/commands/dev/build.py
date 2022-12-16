@@ -26,13 +26,14 @@ If no tag is specified, the task is built with all tags.
 # 2. Specify the task and valid tags in the BUILD_TASKS dictionary.
 
 
-def build_tim(_: Optional[str]) -> Optional[str]:
+def build_tim(_: Optional[str], no_cache: bool) -> Optional[str]:
     image_name = f"timimages/tim:{tim_image_tag()}"
     cwd = Path.cwd()
     dockerfile = cwd / "timApp" / "Dockerfile"
     run_docker(
         [
             "build",
+            *(["--no-cache"] if no_cache else []),
             "--tag",
             image_name,
             "--file",
@@ -43,13 +44,14 @@ def build_tim(_: Optional[str]) -> Optional[str]:
     return image_name
 
 
-def build_csplugin(tag: Optional[str]) -> Optional[str]:
+def build_csplugin(tag: Optional[str], no_cache: bool) -> Optional[str]:
     assert tag is not None
     image_name = f"timimages/cs3:{tag}-{csplugin_image_tag()}"
     context = Path.cwd() / "timApp" / "modules" / "cs"
     run_docker(
         [
             "build",
+            *(["--no-cache"] if no_cache else []),
             "--tag",
             image_name,
             "--target",
@@ -63,20 +65,21 @@ def build_csplugin(tag: Optional[str]) -> Optional[str]:
 ######################################################
 
 
+class Arguments:
+    push: bool
+    no_cache: bool
+    tasks: List[str]
+
+
 class BuildTask(NamedTuple):
     tags: Optional[List[str]]
-    build: Callable[[Optional[str]], Optional[str]]
+    build: Callable[[Optional[str], bool], Optional[str]]
 
 
 BUILD_TASKS: Dict[str, BuildTask] = {
     "tim": BuildTask(None, build_tim),
     "csplugin": BuildTask(["base", "complete", "sudo"], build_csplugin),
 }
-
-
-class Arguments:
-    push: bool
-    tasks: List[str]
 
 
 def run(args: Arguments) -> None:
@@ -93,12 +96,12 @@ def run(args: Arguments) -> None:
         if build_tags:
             for tag in build_tags:
                 log_info(f"Building {task}:{tag}")
-                image = build_task.build(tag)
+                image = build_task.build(tag, args.no_cache)
                 if image:
                     built_images.append(image)
         else:
             log_info(f"Building {task}")
-            image = build_task.build(None)
+            image = build_task.build(None, args.no_cache)
             if image:
                 built_images.append(image)
 
@@ -119,6 +122,12 @@ def init(parser: ArgumentParser) -> None:
         "--push",
         help="Push TIM Docker images to Docker Hub.",
         action="store_true",
+    )
+    parser.add_argument(
+        "--no-cache",
+        help="Do not use cache when building the image.",
+        action="store_true",
+        dest="no_cache",
     )
     parser.add_argument(
         "tasks",
