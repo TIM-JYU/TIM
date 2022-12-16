@@ -195,7 +195,7 @@ export class MultisaveComponent
 
     ngOnInit() {
         super.ngOnInit();
-
+        this.requiresTaskId = false;
         if (this.markup.listener && this.vctrl) {
             this.vctrl.addChangeListener(this);
         }

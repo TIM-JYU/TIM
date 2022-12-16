@@ -185,7 +185,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
-
+        this.requiresTaskId = false;
         if (this.vctrl == null || this.vctrl.isSlideOrShowSlideView()) {
             return;
         }

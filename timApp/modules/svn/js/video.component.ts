@@ -350,7 +350,7 @@ export class VideoComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
-
+        this.requiresTaskId = false;
         this.start = toSeconds(this.markup.start);
         this.end = toSeconds(this.markup.end);
         this.bookmarks[0] = this.start ?? 0;

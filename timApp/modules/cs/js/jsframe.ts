@@ -338,6 +338,7 @@ export class JsframeComponent
 
     ngOnInit() {
         super.ngOnInit();
+        this.requiresTaskId = this.isDrawio() && this.isTask();
         this.viewctrl = vctrlInstance!;
         this.button = this.buttonText();
         const aa = this.attrsall;
@@ -400,9 +401,6 @@ export class JsframeComponent
                 await this.viewctrl.documentUpdate;
                 this.viewctrl.addParMenuEntry(this, this.getPar()!);
             })();
-            if (this.isTask() && !this.getTaskId()) {
-                this.error = "Task-mode on but TaskId is missing!";
-            }
             this.initFrameData = unwrapAllC(this.markup.data);
         }
     }
