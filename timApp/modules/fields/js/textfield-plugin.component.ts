@@ -94,6 +94,8 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [(ngModel)]="userword"
                (blur)="autoSave()"
                (keydown.enter)="saveAndRefocus()"
+               (keydown.control.s)="saveAndPreventDefault($event)"
+               (keydown.meta.s)="saveAndPreventDefault($event)"
                (ngModelChange)="updateInput()"
                [ngModelOptions]="{standalone: true}"
                [pattern]="getPattern()"
@@ -114,6 +116,8 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [(ngModel)]="userword"
                [ngModelOptions]="{standalone: true}"
                (blur)="autoSave()"
+               (keydown.control.s)="saveAndPreventDefault($event)"
+               (keydown.meta.s)="saveAndPreventDefault($event)"
                (keydown)="tryAutoGrow()"
                (keyup)="tryAutoGrow()"
                (ngModelChange)="updateInput()"
@@ -275,8 +279,13 @@ export class TextfieldPluginComponent
     }
 
     saveAndRefocus() {
-        this.autoSave();
+        this.saveText();
         this.changeFocus();
+    }
+
+    saveAndPreventDefault(e: Event) {
+        e.preventDefault();
+        this.saveText();
     }
 
     /**
