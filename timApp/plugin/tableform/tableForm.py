@@ -13,6 +13,7 @@ from webargs.flaskparser import use_args
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
+from timApp.document.hide_names import is_hide_names
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.item.block import Block
@@ -266,7 +267,8 @@ class TableFormHtmlModel(
                     value_or_default(self.markup.removeDocIds, True),
                     value_or_default(self.markup.showInView, False),
                     group_filter_type=self.markup.includeUsers,
-                    anonymize_names=value_or_default(self.markup.anonNames, False),
+                    anonymize_names=value_or_default(self.markup.anonNames, False)
+                    or value_or_default(self.hide_names, False),
                 )
             r = {**r, **f}
         return r
@@ -712,6 +714,9 @@ def tableform_get_fields(
     user_filter: list[str] | None = None,
     anonymize_names: bool = False,
 ) -> TableFormObj:
+    if is_hide_names():
+        anonymize_names = True
+
     user_filter_q = None
     if user_filter is not None:
         user_ids: list[int] = []
