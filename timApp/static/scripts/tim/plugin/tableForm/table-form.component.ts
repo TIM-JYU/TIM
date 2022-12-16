@@ -722,6 +722,7 @@ export class TableFormComponent
                         fields: this.markup.fields,
                         groups: this.markup.groups,
                         removeDocIds: this.markup.removeDocIds,
+                        anonNames: this.markup.anonNames ?? false,
                     })
             );
         } else {

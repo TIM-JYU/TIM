@@ -7,6 +7,7 @@ from typing import Union, Any, ValuesView, Generator
 
 import attr
 import filelock
+import sass
 from flask import current_app
 from flask import flash
 from flask import redirect
@@ -17,7 +18,6 @@ from markupsafe import Markup
 from marshmallow import EXCLUDE
 from sqlalchemy.orm import joinedload, defaultload
 
-import sass
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import (
     verify_view_access,
@@ -504,7 +504,10 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     access = verify_route_access(doc_info, route, require=False)
     if not access:
         if route != ViewRoute.View:
-            verify_view_access(doc_info)
+            try:
+                verify_view_access(doc_info, check_duration=True)
+            except ItemLockedException:
+                pass  # Prevent opening the unlock page; instead force redirect to /view first
             return redirect(f"/view/{item_path}")
         if not logged_in():
             return render_login(doc_info.document)
