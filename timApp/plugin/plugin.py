@@ -17,6 +17,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.editing.globalparid import GlobalParId
+from timApp.document.hide_names import is_hide_names
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
@@ -413,6 +414,10 @@ class Plugin:
             )
         ):
             access = {"access": self.task_id.access_specifier.value}
+
+        hide_names_info = {}
+        if is_hide_names():
+            hide_names_info = {"hide_names": True}
         return {
             "markup": self.values,
             **access,
@@ -430,6 +435,7 @@ class Plugin:
             "preview": options.preview,
             "viewmode": options.viewmode,
             "anonymous": not user.logged_in,
+            **hide_names_info,
             "info": info,
             "user_id": user.name if user.logged_in else "Anonymous",
             "targetFormat": options.target_format.value,
