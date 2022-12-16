@@ -714,7 +714,7 @@ def tableform_get_fields(
 ) -> TableFormObj:
     user_filter_q = None
     if user_filter is not None:
-        user_ids = []
+        user_ids: list[int] = []
         if anonymize_names:
             # Preprocess users to retrieve their ids
             # TODO: In future the ID is likely going to not be part of the name!
