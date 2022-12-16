@@ -173,6 +173,7 @@ export interface Iframesettings {
     selector: "jsframe-runner",
     template: `
         <div [ngClass]="{'warnFrame': isUnSaved(), 'csRunDiv': borders}" class="math que jsframe no-popup-menu">
+            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
