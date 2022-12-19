@@ -16,7 +16,7 @@ import type {PareditorController} from "tim/editor/pareditor";
 import type {IModalInstance} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
 import {$compile, $http} from "tim/util/ngimport";
-import {isMobileDevice, TimStorage, to} from "tim/util/utils";
+import {getViewName, isMobileDevice, TimStorage, to} from "tim/util/utils";
 import type {
     EditPosition,
     IExtraData,
@@ -184,6 +184,7 @@ export class NotesHandler {
                     $http.post<IParResponse>(`/deleteNote`, {
                         id: options.noteData?.id,
                         ctx: par.getJsonForServer(),
+                        view: getViewName(),
                     })
                 );
                 if (!r.ok) {
@@ -216,6 +217,7 @@ export class NotesHandler {
                         access: eData.access,
                         tags: eData.tags,
                         ctx: par.getJsonForServer(),
+                        view: getViewName(),
                     })
                 );
                 if (!r.ok) {
