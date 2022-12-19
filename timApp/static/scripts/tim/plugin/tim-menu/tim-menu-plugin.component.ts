@@ -169,6 +169,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
     private previouslyScrollingDown: boolean = true;
     private userPrefersHoverDisabled: boolean = false;
     private touchMode: boolean = false; // If a touch event has been detected in HTML body.
+    requiresTaskId = false;
 
     getDefaultMarkup() {
         return {};
@@ -185,7 +186,6 @@ export class TimMenuPluginComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
-        this.requiresTaskId = false;
         if (this.vctrl == null || this.vctrl.isSlideOrShowSlideView()) {
             return;
         }

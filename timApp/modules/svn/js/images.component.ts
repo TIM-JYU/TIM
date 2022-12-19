@@ -162,10 +162,10 @@ export class ImagesComponent extends AngularPluginBase<
     intervalId: number = 0;
     noFlicker: boolean = false;
     nearFiles: number = 1;
+    requiresTaskId = false;
 
     ngOnInit() {
         super.ngOnInit();
-        this.requiresTaskId = false;
         this.width = this.markup.width;
         this.height = this.markup.height;
         this.noFlicker = this.markup.noFlicker || this.markup.autoplay != 0;

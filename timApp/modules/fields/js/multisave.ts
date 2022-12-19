@@ -131,6 +131,7 @@ export class MultisaveComponent
     private unsavedTimComps: Set<string> = new Set<string>();
     private hasUnsavedTargets: boolean = false;
     unsavedTasksWithAliases: {component: ITimComponent; alias?: string}[] = [];
+    requiresTaskId = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -195,7 +196,6 @@ export class MultisaveComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.requiresTaskId = false;
         if (this.markup.listener && this.vctrl) {
             this.vctrl.addChangeListener(this);
         }

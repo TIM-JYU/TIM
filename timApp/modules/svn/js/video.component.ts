@@ -347,10 +347,10 @@ export class VideoComponent extends AngularPluginBase<
     videosettings?: {src: string; crossOrigin: string | null};
     playbackRateString = "";
     advVideo: boolean = false;
+    requiresTaskId = false;
 
     ngOnInit() {
         super.ngOnInit();
-        this.requiresTaskId = false;
         this.start = toSeconds(this.markup.start);
         this.end = toSeconds(this.markup.end);
         this.bookmarks[0] = this.start ?? 0;
