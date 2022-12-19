@@ -22,7 +22,6 @@ import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {ViewCtrl} from "tim/document/viewctrl";
-import angular from "angular";
 
 /**
  * Plugin with initialization data passed from the server via JSON.
@@ -150,11 +149,10 @@ export abstract class AngularPluginBase<
 
     ngAfterContentInit() {
         if (this.requiresTaskId && !this.taskid) {
-            // TODO: generic error elemnent in all plugin templates
-            const parId = angular
-                .element(this.getRootElement())
-                .parents(".par")
-                .attr("id");
+            // TODO: generic error element in all plugin templates
+            const parId = this.getRootElement()
+                .closest(".par")
+                ?.getAttribute("id");
             if (parId) {
                 const ldr = this.vctrl.getPluginLoaderWithoutTaskid(parId);
                 if (ldr) {
