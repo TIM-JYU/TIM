@@ -747,7 +747,7 @@ export class CalendarComponent
     ngOnInit() {
         this.icsURL = "";
         super.ngOnInit();
-
+        this.requiresTaskId = false;
         this.viewMode =
             CalendarView[capitalizeFirstLetter(this.viewOptions.mode)];
         if (this.viewOptions.date) {
