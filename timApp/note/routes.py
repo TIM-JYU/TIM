@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Any, Union
+from typing import Any
 
 from flask import Response
 from sqlalchemy import true
@@ -13,8 +13,8 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     verify_teacher_access,
     has_manage_access,
+    verify_route_access,
 )
-from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
@@ -23,6 +23,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.editing.routes import par_response
+from timApp.document.viewcontext import ViewRoute
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.markdown.markdownconverter import md_to_html
@@ -224,6 +225,7 @@ def post_note(
     access: str,
     ctx: ParContext,
     tags: dict[str, bool] | None = None,
+    view: ViewRoute = field(default=ViewRoute.View, metadata={"by_value": True}),
 ) -> Response:
     is_public = access == "everyone"
     got_tags = []
@@ -231,6 +233,7 @@ def post_note(
         if tags and tags.get(tag):
             got_tags.append(tag)
     orig_docinfo, p = check_permissions_and_get_orig(ctx, is_public)
+    verify_route_access(orig_docinfo, view)
 
     curr_user = get_current_user_object()
     n = UserNote(
@@ -248,7 +251,7 @@ def post_note(
     if is_public:
         notify_doc_watchers(orig_docinfo, text, NotificationType.CommentAdded, p)
     clear_doc_cache_after_comment(orig_docinfo, curr_user, is_public)
-    return comment_response(ctx, orig_docinfo, p)
+    return comment_response(ctx, orig_docinfo, p, view)
 
 
 def check_permissions_and_get_orig(
@@ -283,12 +286,13 @@ def edit_note(
     text: str,
     access: str,
     tags: dict[str, bool] | None = None,
+    view: ViewRoute = field(default=ViewRoute.View, metadata={"by_value": True}),
 ) -> Response:
     verify_logged_in()
     note_id = id
     n = get_comment_and_check_exists(note_id)
     d = get_doc_or_abort(n.doc_id)
-    verify_view_access(d)
+    verify_route_access(d, view)
     is_public = access == "everyone"
     orig_docinfo, p = check_permissions_and_get_orig(ctx, is_public)
     check_note_ctx_match(n, p)
@@ -309,17 +313,19 @@ def edit_note(
     if n.is_public:
         notify_doc_watchers(d, text, NotificationType.CommentModified, par)
     clear_doc_cache_after_comment(d, get_current_user_object(), is_public or was_public)
-    return comment_response(ctx, orig_docinfo, p)
+    return comment_response(ctx, orig_docinfo, p, view)
 
 
 @notes.post("/deleteNote")
 def delete_note(
     id: int,
     ctx: ParContext,
+    view: ViewRoute = field(default=ViewRoute.View, metadata={"by_value": True}),
 ) -> Response:
     note_id = id
     note = get_comment_and_check_exists(note_id)
     orig_docinfo, p = check_permissions_and_get_orig(ctx, is_public=False)
+    verify_route_access(orig_docinfo, view)
     if not has_note_edit_access(note):
         raise AccessDenied("Sorry, you don't have permission to remove this note.")
     check_note_ctx_match(note, p)
@@ -336,11 +342,11 @@ def delete_note(
             orig_docinfo, note.content, NotificationType.CommentDeleted, orig_p
         )
     clear_doc_cache_after_comment(orig_docinfo, get_current_user_object(), is_public)
-    return comment_response(ctx, orig_docinfo, p)
+    return comment_response(ctx, orig_docinfo, p, view)
 
 
 def comment_response(
-    ctx: ParContext, orig_docinfo: DocInfo, p: DocParagraph
+    ctx: ParContext, orig_docinfo: DocInfo, p: DocParagraph, view: ViewRoute
 ) -> Response:
     return par_response(
         [orig_docinfo.document.get_paragraph(ctx.orig.par_id)],
@@ -348,6 +354,7 @@ def comment_response(
         filter_return=ctx.curr
         if not p.is_translation()
         else GlobalParId(doc_id=ctx.orig.doc_id, par_id=ctx.curr.par_id),
+        for_view=view,
     )
 
 
