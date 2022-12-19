@@ -52,6 +52,8 @@ tim-dialog-frame {
     z-index: 1200 !important;
     position: static;
     background-color: var(--bg-color);
+    // need calc here because vanilla Sass does not support min(), max() etc. with differing units
+    width: calc(max(800px, 20em));
 
     &.draggable-attached {
         width: initial !important;
