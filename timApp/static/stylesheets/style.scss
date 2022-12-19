@@ -54,7 +54,6 @@ tim-dialog-frame {
     background-color: var(--bg-color);
 
     &.draggable-detached {
-        // need calc here because vanilla Sass does not support min(), max() etc. with differing units
         width: $paragraph-preferred-width;
     }
 
