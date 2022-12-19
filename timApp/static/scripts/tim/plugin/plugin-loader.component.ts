@@ -172,7 +172,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
 
     async ngOnInit() {
         this.viewctrl = vctrlInstance;
-        if (this.viewctrl && !this.preview) {
+        if (this.viewctrl && !this.preview && this.taskId) {
             this.viewctrl.registerPluginLoader(this);
         }
         if (!this.taskId) {
