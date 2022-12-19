@@ -53,6 +53,10 @@ tim-dialog-frame {
     position: static;
     background-color: var(--bg-color);
 
+    &.draggable-detached {
+        width: var(--paragraph-preferred-width);
+    }
+
     &.draggable-attached {
         width: initial !important;
         height: auto !important;
