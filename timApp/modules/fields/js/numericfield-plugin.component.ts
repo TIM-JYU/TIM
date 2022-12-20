@@ -97,6 +97,8 @@ const NumericfieldAll = t.intersection([
                [(ngModel)]="numericvalue"
                (blur)="autoSave()"
                (keydown.enter)="saveAndRefocus()"
+               (keydown.control.s)="saveAndPreventDefault($event)"
+               (keydown.meta.s)="saveAndPreventDefault($event)"
                (ngModelChange)="updateInput()"
                [readonly]="readonly"
                [tooltip]="errormessage"
@@ -194,8 +196,13 @@ export class NumericfieldPluginComponent
     }
 
     saveAndRefocus() {
-        this.autoSave();
+        this.saveText();
         this.changeFocus();
+    }
+
+    saveAndPreventDefault(e: Event) {
+        e.preventDefault();
+        this.saveText();
     }
 
     getDefaultMarkup() {

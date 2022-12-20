@@ -6,7 +6,7 @@ import type {OnDestroy, OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {showSearchResultDialog} from "tim/search/showSearchResultDialog";
 import * as t from "io-ts";
-import type {DocumentOrFolder, IItem, ITag, ITaggedItem} from "tim/item/IItem";
+import type {DocumentOrFolder, IItem, ITaggedItem} from "tim/item/IItem";
 import {relevanceSuggestions} from "tim/item/relevance-edit.component";
 import {someglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
@@ -19,9 +19,13 @@ import type {SearchResultsDialogComponent} from "tim/search/search-results-dialo
 export interface ISearchResultsInfo {
     content_results: IDocSearchResult[];
     title_results: IDocSearchResult[];
+    tags_results: IDocSearchResult[];
+    paths_results: IDocSearchResult[];
     incomplete_search_reason: string; // Tells the reason why when the search is incomplete.
     word_result_count: number;
     title_result_count: number;
+    tags_result_count: number;
+    paths_result_count: number;
     errors: ISearchError[];
 }
 
@@ -52,8 +56,12 @@ export interface IDocSearchResult {
     doc: IItem;
     par_results: IParSearchResult[];
     title_results: ITitleSearchResult[];
+    path_results: IPathSearchResult[];
+    tag_results: ITagSearchResult[];
     num_par_results: number;
     num_title_results: number;
+    num_path_results: number;
+    num_tag_results: number;
     incomplete: boolean;
 }
 
@@ -89,10 +97,11 @@ export interface IWordSearchResult {
  */
 export interface ITagSearchResult {
     doc: ITaggedItem;
-    // Number of matches in the document's tags (not matching_tags length, because same tag may contain match
-    // more than once.)
     num_results: number;
-    matching_tags: ITag[]; // List of tags that matched the query.
+}
+
+export interface IPathSearchResult {
+    num_results: number;
 }
 
 @Component({
@@ -199,15 +208,15 @@ export interface ITagSearchResult {
 })
 export class SearchBoxComponent implements OnInit, OnDestroy {
     // Results and variables search results dialog needs to know:
-    public results: IDocSearchResult[] = [];
-    public resultErrorMessage: string | undefined; // Message displayed only in results dialog.
+    public contentResults: IDocSearchResult[] = [];
+    public tagResults: IDocSearchResult[] = [];
+    public titleResults: IDocSearchResult[] = [];
+    public pathResults: IDocSearchResult[] = [];
     public tagMatchCount = 0;
     public wordMatchCount = 0;
     public titleMatchCount = 0;
     public pathMatchCount = 0;
-    public tagResults: ITagSearchResult[] = [];
-    public titleResults: IDocSearchResult[] = [];
-    public pathResults: IDocSearchResult[] = [];
+    public resultErrorMessage: string | undefined; // Message displayed only in results dialog.
     public incompleteSearchReason: string | undefined;
     public query: string = "";
     @Input() folder?: string;
@@ -223,7 +232,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     searchContent = true; // Content search.
     searchWholeWords = true; // Whole word search.
     searchOwned = false; // Limit search to docs owned by the user.
-    searchPaths = false; // Search document paths.
+    searchPaths = true; // Search document paths.
     private ignoreRelevance = false; // Don't limit results by relevance.
     relevanceThreshold = 10; // Exclude documents with < X relevance.
     suggestions = relevanceSuggestions;
@@ -286,19 +295,10 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
 
         const start = new Date().getTime();
 
-        // Each search type has separate route.
-        if (this.searchTags) {
-            await this.tagSearch();
-        }
-        if (this.searchPaths) {
-            await this.pathSearch();
-        }
-        if (this.searchContent || this.searchTitles) {
-            await this.wordSearch();
-        }
+        await this.combinedSearch();
         this.loading = false;
         if (
-            this.results.length === 0 &&
+            this.contentResults.length === 0 &&
             this.tagResults.length === 0 &&
             this.titleResults.length === 0 &&
             this.pathResults.length === 0 &&
@@ -327,10 +327,10 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
 
         // Show results in result dialog.
         if (this.createNewWindow) {
-            showSearchResultDialog(this);
+            await showSearchResultDialog(this);
         } else {
             if (!this.resultsDialog) {
-                showSearchResultDialog(this);
+                await showSearchResultDialog(this);
             } else {
                 this.resultsDialog.updateAttributes(this);
             }
@@ -456,59 +456,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         };
     }
 
-    /**
-     * Document path search.
-     */
-    private async pathSearch() {
-        const r = await to(
-            $http<ISearchResultsInfo>({
-                method: "GET",
-                params: {...this.getCommonSearchOptions()},
-                url: "/search/paths",
-            })
-        );
-        if (!r.ok) {
-            this.errorMessage = r.result.data.error;
-            this.pathResults = [];
-            return;
-        }
-        // Path results use title interface.
-        this.pathResults.push(...r.result.data.title_results);
-        if (r.result.data.incomplete_search_reason) {
-            this.incompleteSearchReason =
-                r.result.data.incomplete_search_reason;
-        }
-        this.pathMatchCount = r.result.data.title_result_count;
-    }
-
-    /**
-     * Document title search (unused).
-     */
-    private async titleSearch() {
-        const r = await to(
-            $http<ISearchResultsInfo>({
-                method: "GET",
-                params: {...this.getCommonSearchOptions()},
-                url: "/search/titles",
-            })
-        );
-        if (!r.ok) {
-            this.errorMessage = r.result.data.error;
-            this.titleResults = [];
-            return;
-        }
-        this.titleResults = r.result.data.title_results;
-        if (r.result.data.incomplete_search_reason) {
-            this.incompleteSearchReason =
-                r.result.data.incomplete_search_reason;
-        }
-        this.titleMatchCount = r.result.data.title_result_count;
-    }
-
-    /**
-     * Document paragraph word and title search.
-     */
-    private async wordSearch() {
+    private async combinedSearch() {
         const r = await to(
             $http<ISearchResultsInfo>({
                 method: "GET",
@@ -517,6 +465,8 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
                     maxDocResults: this.maxDocResults,
                     searchContent: this.searchContent,
                     searchTitles: this.searchTitles,
+                    searchTags: this.searchTags,
+                    searchPaths: this.searchPaths,
                     searchAttrs: true,
                     ...this.getCommonSearchOptions(),
                 },
@@ -525,45 +475,26 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         );
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
-            this.results = [];
+            this.contentResults = [];
             this.titleResults = [];
+            this.tagResults = [];
+            this.pathResults = [];
             return;
         }
         const response = r.result;
-        this.results = response.data.content_results;
+        this.contentResults = response.data.content_results;
         this.titleResults = response.data.title_results;
+        this.tagResults = response.data.tags_results;
+        this.pathResults = response.data.paths_results;
+
         if (response.data.incomplete_search_reason) {
             this.incompleteSearchReason =
                 response.data.incomplete_search_reason;
         }
         this.wordMatchCount = response.data.word_result_count;
         this.titleMatchCount = response.data.title_result_count;
-    }
-
-    /**
-     * Search document tags.
-     */
-    private async tagSearch() {
-        const r = await to(
-            $http<ITagSearchResultsInfo>({
-                method: "GET",
-                params: {...this.getCommonSearchOptions()},
-                url: "/search/tags",
-            })
-        );
-        if (r.ok) {
-            const response = r.result;
-            this.tagResults = response.data.results;
-            this.tagMatchCount = response.data.tag_result_count;
-            if (response.data.incomplete_search_reason) {
-                this.incompleteSearchReason =
-                    response.data.incomplete_search_reason;
-            }
-        } else {
-            this.errorMessage = r.result.data.error;
-            this.tagResults = [];
-            return;
-        }
+        this.tagMatchCount = response.data.tags_result_count;
+        this.pathMatchCount = response.data.paths_result_count;
     }
 
     /**
@@ -597,7 +528,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         this.tagResults = [];
         this.titleResults = [];
         this.pathResults = [];
-        this.results = [];
+        this.contentResults = [];
         this.errorMessage = undefined;
         this.resultErrorMessage = undefined;
     }

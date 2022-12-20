@@ -24,6 +24,10 @@ from lxml.html import HtmlElement
 
 from tim_common.html_sanitize import sanitize_html
 
+NORM_NEWLINES = ["\r\n", "\r", "\n", "\u0085", "\u2028", "\u2029"]
+NORM_NEWLINES_PATTERN = "|".join(NORM_NEWLINES)
+NORM_NEWLINES_COMPILED = re.compile(NORM_NEWLINES_PATTERN)
+
 
 def get_exception_code(
     ex: BaseException | None, tb: TracebackType | None = None
@@ -527,3 +531,13 @@ def partition(
     # Create two buffered iterators: values of i1 are cached for i2 to use
     i1, i2 = tee((pred(item), item) for item in iterable)
     return [item for t, item in i1 if t], [item for t, item in i2 if not t]
+
+
+def normalize_newlines(text: str) -> str:
+    """
+    Find and replace non-canonical separator characters with whitespace ' ' in the specified text.
+
+    :param text: Original text.
+    :return: Modified source text.
+    """
+    return re.sub(NORM_NEWLINES_COMPILED, " ", text)
