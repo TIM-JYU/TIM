@@ -338,7 +338,6 @@ export class JsframeComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.requiresTaskId = this.isDrawio() && this.isTask();
         this.viewctrl = vctrlInstance!;
         this.button = this.buttonText();
         const aa = this.attrsall;
@@ -397,6 +396,9 @@ export class JsframeComponent
             })();
         }
         if (this.isDrawio()) {
+            if (!this.isTask()) {
+                this.requiresTaskId = false;
+            }
             (async () => {
                 await this.viewctrl.documentUpdate;
                 this.viewctrl.addParMenuEntry(this, this.getPar()!);
