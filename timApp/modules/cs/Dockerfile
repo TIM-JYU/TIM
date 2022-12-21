@@ -220,7 +220,10 @@ RUN python3.10 -m pip install pyod && bash -c "${APT_CLEANUP}"
 RUN python3.10 -m pip install pyqula && bash -c "${APT_CLEANUP}"
 
 # sktime
-RUN python3.10 -m pip install sktime && bash -c "${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} python3.10-dev build-essential && \
+    python3.10 -m pip install sktime[all_extras] && \
+    apt-get purge --auto-remove -y python3.10-dev build-essential && \
+    ${APT_CLEANUP}"
 
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
