@@ -7870,6 +7870,14 @@
           <context context-type="linenumber">28</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5145731315765024579" datatype="html">
+        <source>Plugin is missing task id</source>
+        <target state="translated">Tehtävästä puuttuu tehtävätunniste</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/plugin-loader.component.ts</context>
+          <context context-type="linenumber">624</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -621,7 +621,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     warnAboutMissingTaskId() {
-        this.error = "Plugin is missing task id";
+        this.error = $localize`Plugin is missing task id`;
     }
 
     getPrerequisiteLockedText() {

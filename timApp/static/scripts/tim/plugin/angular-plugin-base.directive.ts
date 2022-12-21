@@ -7,7 +7,7 @@ import type {
 import type {Type} from "io-ts";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {AngularError, Failure} from "tim/util/utils";
-import {defaultTaskIdMissingMessage, toPromise} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import type {PluginMarkupErrors} from "tim/plugin/util";
 import {getDefaults, PluginBaseCommon, PluginMeta} from "tim/plugin/util";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -218,7 +218,7 @@ export abstract class AngularPluginBase<
                 ok: false,
                 result: {
                     error: {
-                        error: defaultTaskIdMissingMessage,
+                        error: $localize`Task id missing and required to answer this task.`,
                     },
                 },
             } as Failure<AngularError>;
