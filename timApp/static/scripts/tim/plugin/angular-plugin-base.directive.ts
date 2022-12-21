@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import type {AfterContentInit, OnInit} from "@angular/core";
 import {Directive, ElementRef, Input} from "@angular/core";
 import type {
     IGenericPluginMarkup,
@@ -6,6 +6,7 @@ import type {
 } from "tim/plugin/attributes";
 import type {Type} from "io-ts";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
+import type {AngularError, Failure} from "tim/util/utils";
 import {toPromise} from "tim/util/utils";
 import type {PluginMarkupErrors} from "tim/plugin/util";
 import {getDefaults, PluginBaseCommon, PluginMeta} from "tim/plugin/util";
@@ -19,6 +20,8 @@ import {
 import type {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import type {ViewCtrl} from "tim/document/viewctrl";
 
 /**
  * Plugin with initialization data passed from the server via JSON.
@@ -40,12 +43,14 @@ export abstract class AngularPluginBase<
         T extends Type<A, unknown>
     >
     extends PluginBaseCommon
-    implements OnInit, PluginJson
+    implements AfterContentInit, OnInit, PluginJson
 {
     attrsall: Readonly<A>;
     @Input() readonly json!: string;
     @Input() readonly plugintype?: string;
     @Input() readonly taskid?: string;
+    protected vctrl!: ViewCtrl;
+    protected requiresTaskId = true;
 
     markupError?: PluginMarkupErrors;
     protected pluginMeta: PluginMeta;
@@ -139,6 +144,22 @@ export abstract class AngularPluginBase<
                 this.taskid
             );
         }
+        this.vctrl = vctrlInstance!;
+    }
+
+    ngAfterContentInit() {
+        if (this.requiresTaskId && !this.taskid) {
+            // TODO: generic error element in all plugin templates
+            const parId = this.getRootElement()
+                .closest(".par")
+                ?.getAttribute("id");
+            if (parId) {
+                const ldr = this.vctrl.getPluginLoaderWithoutTaskid(parId);
+                if (ldr) {
+                    ldr.warnAboutMissingTaskId();
+                }
+            }
+        }
     }
 
     async tryResetChanges(e?: Event) {
@@ -193,7 +214,14 @@ export abstract class AngularPluginBase<
     ) {
         const tid = this.pluginMeta.getTaskId();
         if (!tid) {
-            throw Error("Task id missing.");
+            return {
+                ok: false,
+                result: {
+                    error: {
+                        error: $localize`Task id missing and required to answer this task.`,
+                    },
+                },
+            } as Failure<AngularError>;
         }
         const dt = tid.docTaskIdFull();
         const {url, data} = prepareAnswerRequest(

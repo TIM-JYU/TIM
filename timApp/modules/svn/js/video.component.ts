@@ -1,7 +1,6 @@
 ﻿import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
-import type {ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -18,7 +17,6 @@ import {
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {getKeyCode, KEY_LEFT, KEY_RIGHT} from "tim/util/keycodes";
@@ -343,16 +341,16 @@ export class VideoComponent extends AngularPluginBase<
     startt!: string | null;
     width?: number;
     height?: number;
-    private vctrl?: ViewCtrl;
+
     iframesettings?: Iframesettings;
     isPdf = false;
     videosettings?: {src: string; crossOrigin: string | null};
     playbackRateString = "";
     advVideo: boolean = false;
+    requiresTaskId = false;
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance;
         this.start = toSeconds(this.markup.start);
         this.end = toSeconds(this.markup.end);
         this.bookmarks[0] = this.start ?? 0;

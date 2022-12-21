@@ -4,11 +4,7 @@
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap, OnDestroy} from "@angular/core";
 import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
-import type {
-    ISetAnswerResult,
-    ITimComponent,
-    ViewCtrl,
-} from "tim/document/viewctrl";
+import type {ISetAnswerResult, ITimComponent} from "tim/document/viewctrl";
 import {ChangeType, FormModeOption, RegexOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -25,7 +21,6 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {FieldBasicData} from "./textfield-plugin.component";
@@ -112,7 +107,7 @@ export class RbfieldPluginComponent
     private result?: string;
     isRunning = false;
     userword: string = "0";
-    private vctrl!: ViewCtrl;
+
     private initialValue: string = "0";
     errormessage?: string;
     private hideSavedText = true;
@@ -162,7 +157,7 @@ export class RbfieldPluginComponent
     ngOnInit() {
         super.ngOnInit();
         this.rbName = this.rbname;
-        this.vctrl = vctrlInstance!;
+
         const uw = valueOr(
             this.attrsall.state?.c,
             this.markup.initword ?? "0"

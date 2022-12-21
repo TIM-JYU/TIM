@@ -9,7 +9,6 @@ import {
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {DomSanitizer} from "@angular/platform-browser";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import * as t from "io-ts";
 import $ from "jquery";
 import type {
@@ -2108,7 +2107,6 @@ ${fhtml}
             }
         }
 
-        this.vctrl = vctrlInstance!;
         this.hide = this.attrsall.markup.hide ?? {};
         //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
         this.createTemplateButtons();

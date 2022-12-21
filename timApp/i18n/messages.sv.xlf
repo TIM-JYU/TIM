@@ -7752,12 +7752,20 @@
           <context context-type="linenumber">40,41</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="875456296903848298" datatype="html">
-        <source>Velp menu: use minimal (simplified) UI</source>
-        <target state="translated">Velp meny: använd minimalt (förenklat) användargränssnitt</target>
+      <trans-unit id="8053311864205132091" datatype="html">
+        <source>Task id missing and required to answer this task.</source>
+        <target state="translated">Uppgifts-id saknas och krävs för att svara på denna uppgift.</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">361</context>
+          <context context-type="sourcefile">static/scripts/tim/util/utils.ts</context>
+          <context context-type="linenumber">28</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5145731315765024579" datatype="html">
+        <source>Plugin is missing task id</source>
+        <target state="translated">Plugin saknar uppgifts-id</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/plugin-loader.component.ts</context>
+          <context context-type="linenumber">624</context>
         </context-group>
       </trans-unit>
     </body>

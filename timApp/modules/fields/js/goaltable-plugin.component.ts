@@ -4,7 +4,7 @@
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
-import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import type {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -16,7 +16,6 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
@@ -135,7 +134,6 @@ export class GoalTablePluginComponent
     >
     implements ITimComponent
 {
-    private vctrl!: ViewCtrl;
     isRunning = false;
     private error: {message?: string; stacktrace?: string} = {};
     result: string = "";
@@ -178,7 +176,7 @@ export class GoalTablePluginComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         const aa = this.attrsall;
         const lang = this.markup.lang || "fi";
         this.lang = lang;

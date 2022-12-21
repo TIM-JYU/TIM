@@ -26,12 +26,7 @@ import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {PurifyModule} from "tim/util/purify.module";
 import {defaultErrorMessage, defaultTimeout} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import type {
-    ITimComponent,
-    IVelpableComponent,
-    ViewCtrl,
-} from "tim/document/viewctrl";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
+import type {ITimComponent, IVelpableComponent} from "tim/document/viewctrl";
 import type {IUser} from "tim/user/IUser";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
@@ -128,7 +123,7 @@ const PluginFields = t.intersection([
         <a *ngIf="uploadedFiles.length > 0 && !isUnSaved() && downloadPDFUrl" [href]="downloadPDFUrl" target="_blank">{{downloadPDFText()}}</a>
         <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
         <div *ngIf="!inReviewView()">
-            <ng-container body>
+            <ng-container *ngIf="enabled" body>
                 <div class="form-inline small">
                     <div style="position: relative;" *ngFor="let item of uploadedFiles; let i = index">
                         <div class="uploadContainer" #wraps>
@@ -165,7 +160,7 @@ const PluginFields = t.intersection([
                 <span *ngIf="connectionErrorMessage" class="error" [innerHTML]="connectionErrorMessage"></span>
                 <span *ngIf="userErrorMessage" class="error" [innerHTML]="userErrorMessage"></span>
             </div>
-            <button class="timButton" (click)="save()" i18n>Save answer</button>
+            <button *ngIf="enabled" class="timButton" (click)="save()" i18n>Save answer</button>
         </div>
         <p footer *ngIf="footer" [textContent]="footer"></p>
     `,
@@ -195,7 +190,8 @@ export class ReviewCanvasComponent
     private modelChangeSub!: Subscription;
     changes = false;
     private loadedImages = 0;
-    private vctrl!: ViewCtrl;
+
+    enabled = true;
 
     fileSelect?: FileSelectManagerComponent;
     uploadUrl?: string;
@@ -229,13 +225,16 @@ export class ReviewCanvasComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this, this.markup.tag);
         }
         const taskId = this.pluginMeta.getTaskId();
         if (taskId?.docId) {
             this.uploadUrl = `/pluginUpload/${taskId.docId}/${taskId.name}/`;
+        } else {
+            this.enabled = false;
+            return;
         }
 
         this.modelChangeSub = this.modelChanged

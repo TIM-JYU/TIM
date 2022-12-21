@@ -1558,6 +1558,7 @@ export class ViewCtrl implements IController {
     }
 
     private ldrs = new Map<string, PluginLoaderComponent>();
+    private loadersWithoutTaskIds = new Map<string, PluginLoaderComponent>(); // key: parid
 
     registerPluginLoader(loader: PluginLoaderComponent) {
         // // TODO: see todos at registerAnswerBrowser
@@ -1571,9 +1572,20 @@ export class ViewCtrl implements IController {
         this.ldrs.set(loader.taskId, loader);
     }
 
+    registerPluginLoaderWithoutTaskId(loader: PluginLoaderComponent) {
+        const parId = loader.id.split(".")[2];
+        if (parId) {
+            this.loadersWithoutTaskIds.set(parId, loader);
+        }
+    }
+
     getPluginLoader(taskId: string) {
         taskId = this.normalizeTaskId(taskId);
         return this.ldrs.get(taskId);
+    }
+
+    getPluginLoaderWithoutTaskid(parId: string) {
+        return this.loadersWithoutTaskIds.get(parId);
     }
 
     private anns = new EntityRegistry<string, AnnotationComponent>();

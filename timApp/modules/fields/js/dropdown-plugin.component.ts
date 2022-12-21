@@ -4,11 +4,7 @@
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
-import type {
-    ISetAnswerResult,
-    ITimComponent,
-    ViewCtrl,
-} from "tim/document/viewctrl";
+import type {ISetAnswerResult, ITimComponent} from "tim/document/viewctrl";
 import {ChangeType, FormModeOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -25,7 +21,6 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 
@@ -124,7 +119,7 @@ export class DropdownPluginComponent
     wordList?: string[];
     selectedWord?: string;
     private initialWord?: string;
-    private vctrl!: ViewCtrl;
+
     private forceSave = false;
     radio?: boolean;
     private shuffle?: boolean;
@@ -164,7 +159,7 @@ export class DropdownPluginComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         this.selectedWord = this.attrsall.state?.c ?? undefined;
         this.shuffle = this.markup.shuffle;
         if (this.shuffle && this.markup.words) {

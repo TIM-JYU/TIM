@@ -23,7 +23,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {DomSanitizer} from "@angular/platform-browser";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {slugify} from "tim/util/slugify";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
@@ -132,6 +131,7 @@ export class MultisaveComponent
     private unsavedTimComps: Set<string> = new Set<string>();
     private hasUnsavedTargets: boolean = false;
     unsavedTasksWithAliases: {component: ITimComponent; alias?: string}[] = [];
+    requiresTaskId = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -196,7 +196,6 @@ export class MultisaveComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
         if (this.markup.listener && this.vctrl) {
             this.vctrl.addChangeListener(this);
         }
