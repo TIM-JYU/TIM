@@ -104,8 +104,7 @@ class SettingsTest(TimRouteTest):
                     '"style_doc_ids": [], "last_answer_fetch": {}, '
                     '"auto_mark_all_read": false, "bookmarks": [{"Last edited": '
                     '[{"document 2": "/view/users/test-user-1/doc1"}]}], '
-                    '"max_uncollapsed_toc_items": null, '
-                    '"use_minimal_velp_menu_ui": false}',
+                    '"max_uncollapsed_toc_items": null}',
                     "real_name": "Test user 1",
                 },
                 "velps": [],
@@ -215,7 +214,6 @@ type: python
                 "remember_last_sidebar_menu_tab": False,
                 "style_doc_ids": [],
                 "use_document_word_list": False,
-                "use_minimal_velp_menu_ui": False,
                 "word_list": "",
             },
         )
@@ -249,7 +247,6 @@ type: python
                 "disable_menu_hover": True,
                 "remember_last_sidebar_menu_state": True,
                 "remember_last_sidebar_menu_tab": True,
-                "use_minimal_velp_menu_ui": False,
                 "auto_mark_all_read": True,
                 "bookmarks": None,
             },
@@ -284,7 +281,6 @@ type: python
                 "remember_last_sidebar_menu_tab": True,
                 "auto_mark_all_read": False,
                 "max_uncollapsed_toc_items": None,
-                "use_minimal_velp_menu_ui": False,
                 "bookmarks": None,
             },
         )

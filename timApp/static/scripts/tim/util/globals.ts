@@ -184,7 +184,6 @@ export interface ISettings {
     auto_mark_all_read: boolean;
     max_uncollapsed_toc_items: number | null;
     style_doc_ids: number[];
-    use_minimal_velp_menu_ui: boolean;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {

@@ -22,7 +22,6 @@ import type {
     IVelpGroupUI,
     VelpGroupSelectionType,
 } from "tim/velp/velptypes";
-import {settingsglobals} from "tim/util/globals";
 
 markAsUsed(velpSummary);
 
@@ -61,7 +60,6 @@ export class VelpSelectionController implements IController {
     private order!: string; // $onInit
     private selectedLabels: number[] = [];
     private advancedOn: boolean = false;
-    private minimalUI: boolean = false;
     private displayedVelpGroupsScope: number = 0;
     private defaultVelpGroup: IVelpGroupUI;
     private labelAdded: boolean = false;
@@ -190,7 +188,6 @@ export class VelpSelectionController implements IController {
             this.storage.velpGroupsDisplayed.get() ?? 0;
         this.selectedLabels = this.storage.velpLabels.get() ?? [];
         this.advancedOn = this.storage.advancedOn.get() ?? false;
-        this.minimalUI = settingsglobals().userPrefs.use_minimal_velp_menu_ui;
 
         this.onInit({$API: this});
 
@@ -1175,14 +1172,6 @@ export class VelpSelectionController implements IController {
             }
         }
         return false;
-    }
-
-    /** *
-     * Checks if the velp list ("Available velps") has been detached from the velp menu.
-     */
-    isDetached() {
-        const detached = window.localStorage.getItem("velpsDetached");
-        return detached == "true";
     }
 }
 

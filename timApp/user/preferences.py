@@ -32,7 +32,6 @@ class Preferences:
     auto_mark_all_read: bool = False
     bookmarks: BookmarkCollection | None = None
     max_uncollapsed_toc_items: int | None = None
-    use_minimal_velp_menu_ui: bool = False
 
     @staticmethod
     def from_json(j: dict) -> "Preferences":
