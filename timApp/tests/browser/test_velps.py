@@ -36,7 +36,7 @@ class VelpTest(BrowserTest):
             by=By.CSS_SELECTOR, value="#velpSelection"
         )
 
-        create_velp_btn = find_button_by_text(velp_selection_element, "Create new velp")
+        create_velp_btn = find_button_by_text(velp_selection_element, "Add velp")
         self.wait.until(expected_conditions.element_to_be_clickable(create_velp_btn))
 
         self.assert_same_screenshot(
@@ -44,6 +44,7 @@ class VelpTest(BrowserTest):
         )
 
         create_velp_btn.click()
+        # new_velp_selector = "#velp-editing"
         new_velp_selector = ".velp-data.new.edit"
         new_velp_element: WebElement = velp_selection_element.find_element(
             by=By.CSS_SELECTOR, value=new_velp_selector
