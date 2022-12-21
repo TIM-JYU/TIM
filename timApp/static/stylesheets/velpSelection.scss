@@ -1,8 +1,10 @@
 /** Layout styles **/
 .fulldiv {
     display: block;
-    min-width: 100%;
-    width: 100%;
+    min-width: 20em !important;
+    max-width: 20em !important;
+    border: none !important;
+    //width: 100%;
     float: left;
     overflow-y: auto;
     overflow-x: hidden;
@@ -16,6 +18,7 @@
     @media screen and (max-height: 800px) {
         min-height: 8em;
     }
+
 }
 
 annotation .fulldiv {
@@ -40,6 +43,8 @@ annotation .fulldiv {
 .velpMenu .tab-content {
     bottom: 0;
     top:0;
+    min-height: 12em;
+    border: none;
 }
 
 
@@ -50,8 +55,8 @@ annotation .fulldiv {
 
 .velpFixed {
     position: fixed;
-    min-width: fit-content;
-    max-width: 23em;
+    min-width: 20em;
+    max-width: 20em;
     min-height: 24em;
     height: fit-content;
     height: -webkit-fit-content;
@@ -68,8 +73,8 @@ annotation .fulldiv {
 /** Velp area styles **/
 .velpMenu {
     /* position: fixed; */
-    min-width: fit-content;
-    max-width: 23em;
+    //min-width: fit-content;
+    //max-width: 23em;
     word-wrap: break-word;
     background: white;
     z-index: 1001;
@@ -102,8 +107,8 @@ annotation .fulldiv {
 }
 
 .velpMenu .draggable-detached {
-    min-width: 19.5em;
-    max-width: 19.5em;
+    //min-width: 19.5em;
+    //max-width: 19.5em;
 
     .velp-stack {
         border-bottom: 1px solid gainsboro;
@@ -125,10 +130,17 @@ annotation .fulldiv {
     margin-bottom: 1em;
     background-color: white;
     border-top: solid 1px gainsboro;
-    float:left;
+    //float:left;
     position: relative;
     top: 0;
     bottom: 0;
+}
+
+.velpArea-available-velps {
+    min-height: 16em;
+}
+.velpList {
+    // this is intentionally empty
 }
 
 .autoscroll {
@@ -142,7 +154,7 @@ annotation .fulldiv {
     min-height: 16em;
     max-height: 60vh;
     height: fit-content;
-    min-width: 19.5em;
+    //min-width: 19.5em;
     width: 100%;
     max-width: 19.5em;
     position: relative;
@@ -156,6 +168,10 @@ annotation .fulldiv {
 .adjustForm {
     margin-top: 0.4em;
     margin-bottom: 0.4em;
+
+    .form-group {
+        display: inline;
+    }
 }
 
 .adjustAnnForm {
@@ -517,6 +533,33 @@ $inactive: whitesmoke;
     margin-top: 1em;
 }
 
+.velp-menu-selected-area {
+    min-height: 4em;
+    border-top: 1px solid $basic-border-color;
+    label {
+        font-size: small;
+    }
+
+    #selection {
+        font-size: x-small;
+    }
+}
+
+.velp-minimal-controls {
+    display: flex;
+
+    .velp-advanced-control {
+        margin-left: 0.4em;
+        padding-top: 0.25em;
+        font-size: small;
+    }
+}
+
+.velp-menu-advanced-controls {
+    font-size: small;
+    min-height: 16em;
+}
+
 #selection {
     min-height: 3em;
     margin: 0;
@@ -593,9 +636,14 @@ $inactive: whitesmoke;
 }
 
 .btn-create-new-velp {
-    margin-top: 0.3rem;
+    //margin-top: 0.3rem;
     padding-top: 0.3rem;
-    border-top: 1px solid gainsboro;
+    //border-top: 1px solid gainsboro;
+}
+
+.add-velp {
+    font-size: smaller;
+    padding: 2px 4px;
 }
 
 .btn-set-vg-visible {
