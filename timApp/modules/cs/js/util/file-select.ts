@@ -81,35 +81,39 @@ let nextId = 0;
 @Component({
     selector: "file-select",
     template: `
+        <ng-container *ngIf="uploadUrl">
         <div *ngIf="!dragAndDrop && stem">{{stem}}:</div>
-        <input #input [disabled]="!!progress" type="file" 
-               [hidden]="dragAndDrop" 
-               [id]="inputId" 
-               (change)="onFileChange($event)" 
-               (attr.multiple)="multiple" 
-               [accept]="accept"/>
-        <notification *ngIf="!dragAndDrop" class="error" #error></notification>
-        <ng-container *ngIf="dragAndDrop">
-            <label i18n-title title="Drag-and-drop or Click to browse" [for]="inputId" *ngIf="dragAndDrop"
-                    class="drag-and-drop"
-                    (drop)="onDrop($event)"
-                    (dragover)="onDragOver($event)"
-                    (click)="clearStatus();">
-                <div>
+            <input #input [disabled]="!!progress" type="file"
+                   [hidden]="dragAndDrop"
+                   [id]="inputId"
+                   (change)="onFileChange($event)"
+                   (attr.multiple)="multiple"
+                   [accept]="accept"/>
+            <notification *ngIf="!dragAndDrop" class="error" #error></notification>
+            <ng-container *ngIf="dragAndDrop">
+                <label i18n-title title="Drag-and-drop or Click to browse" [for]="inputId" *ngIf="dragAndDrop"
+                       class="drag-and-drop"
+                       (drop)="onDrop($event)"
+                       (dragover)="onDragOver($event)"
+                       (click)="clearStatus();">
                     <div>
-                        <p *ngIf="!progress && loadInfo.length == 0 && error.length == 0">{{stem}}</p>
-                        <ng-container *ngIf="progress">
-                            <tim-loading></tim-loading>
-                            <p *ngIf="numFiles > 1">File {{numUploaded+1}} / {{numFiles}}</p>
-                            <p>{{progress}}</p>
-                        </ng-container>
-                        <notification #loadInfo></notification>
-                        <notification class="error" #error></notification>
-                        <notification class="warning" #warning></notification>
+                        <div>
+                            <p *ngIf="!progress && loadInfo.length == 0 && error.length == 0">{{stem}}</p>
+                            <ng-container *ngIf="progress">
+                                <tim-loading></tim-loading>
+                                <p *ngIf="numFiles > 1">File {{numUploaded + 1}} / {{numFiles}}</p>
+                                <p>{{progress}}</p>
+                            </ng-container>
+                            <notification #loadInfo></notification>
+                            <notification class="error" #error></notification>
+                            <notification class="warning" #warning></notification>
+                        </div>
                     </div>
-                </div>
-            </label>
-        </ng-container>`,
+                </label>
+            </ng-container>
+        </ng-container>
+        <p *ngIf="!uploadUrl" i18n class="error">No file upload or observers present. This is a programming/configuration error.</p>
+`,
 })
 export class FileSelectComponent {
     // TODO: translations

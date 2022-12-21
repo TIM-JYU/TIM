@@ -18,12 +18,11 @@ import {
     AnswerSheetModule,
     makePreview,
 } from "tim/document/question/answer-sheet.component";
-import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import type {ITimComponent} from "tim/document/viewctrl";
 import {ChangeType} from "tim/document/viewctrl";
 import type {AnswerTable, IQuestionMarkup} from "tim/lecture/lecturetypes";
 import {AskedJsonJsonCodec} from "tim/lecture/lecturetypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
 import {showQuestionAskDialog} from "tim/lecture/showLectureDialogs";
 import type {ParContext} from "tim/document/structure/parContext";
@@ -110,7 +109,7 @@ export class QstComponent
     log?: string;
     isRunning: boolean = false;
     result?: string;
-    private vctrl!: ViewCtrl;
+
     preview!: IPreviewParams; // ngOnInit
     button: string = "";
     private savedAnswer?: AnswerTable;
@@ -170,7 +169,7 @@ export class QstComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         if (!this.pluginMeta.isPreview()) {
             this.vctrl.addTimComponent(this);
         }

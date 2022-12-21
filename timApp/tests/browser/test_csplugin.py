@@ -283,6 +283,39 @@ postprogram: |!!
         self.assertEqual("Laske: 10 + -3", self.find_element(".stem").text)
         self.assertEqual("4/3", self.find_element(".answer-index-count").text)
 
+    def test_missing_taskid_warning(self):
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+#- {plugin=csPlugin}
+type: text
+"""
+        )
+        self.goto_document(d)
+        self.wait_until_present_and_vis("tim-plugin-loader .alert")
+        loader_warning = "Plugin is missing task id"
+        # Default warning is visible by default
+        self.assertEqual(
+            loader_warning,
+            self.find_element("tim-plugin-loader .alert").text,
+        )
+        self.find_element("cs-runner .csRunMenu button").click()
+        self.wait_until_present_and_vis("cs-runner .error")
+        # Fallback warning shows if user answers a task without taskid
+        self.assertEqual(
+            "Task id missing and required to answer this task.",
+            self.find_element("cs-runner .error").text,
+        )
+        self.find_element(".edit-menu-button").click()
+        self.drv.find_elements(By.CSS_SELECTOR, ".flex-grow-5")[3].click()
+        self.wait_until_present_and_vis(".previewcontent tim-plugin-loader .alert")
+        # Warnings should appear in preview too
+        self.assertEqual(
+            loader_warning,
+            self.find_element(".previewcontent tim-plugin-loader .alert").text,
+        )
+
 
 class StackRandomTest(BrowserTest):
     def test_csplugin_answernr_stack1(self):

@@ -10,7 +10,6 @@ import {
 } from "tim/plugin/attributes";
 import {windowAsAny} from "tim/util/utils";
 import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -210,7 +209,6 @@ export class StackPluginComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
         this.button = this.buttonText();
         const aa = this.attrsall;
         this.userCode = aa.usercode ?? this.markup.by ?? "";
@@ -234,7 +232,7 @@ export class StackPluginComponent
         if (this.markup.open) {
             this.runGetTask();
         }
-        this.vctrl = vctrlInstance!;
+
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this);
         }

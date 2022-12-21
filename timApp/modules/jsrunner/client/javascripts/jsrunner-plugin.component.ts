@@ -4,7 +4,7 @@
 import type * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, Input, NgModule} from "@angular/core";
-import type {IJsRunner, ViewCtrl} from "tim/document/viewctrl";
+import type {IJsRunner} from "tim/document/viewctrl";
 import {RegexOption} from "tim/document/viewctrl";
 import {copyToClipboard} from "tim/util/utils";
 import {HttpClientModule} from "@angular/common/http";
@@ -13,7 +13,6 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import type {
@@ -84,7 +83,7 @@ export class JsRunnerPluginComponent
     md: string = "";
     html: string = "";
     fieldlist: string = "";
-    private vctrl!: ViewCtrl;
+
     scriptErrors?: ErrorList;
     isopen: boolean = true;
     private visible: number = -1;
@@ -136,7 +135,7 @@ export class JsRunnerPluginComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         this.userOpt = this.markup.includeUsers;
         if (this.markup.fieldhelper && this.isVisible()) {
             this.isopen = this.markup.open ?? false;

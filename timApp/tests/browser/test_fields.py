@@ -103,13 +103,15 @@ copy: target
         )
         self.goto_document(d)
 
-        def send_input(task: str, input: str | None):
+        def send_input(task: str, input: str | None, autosave=True):
             self.wait_until_present_and_vis(f"#{task} input")
             field = self.find_element_and_move_to(f"#{task} input")
-            self.wait_until_hidden(f"#{task} button")
             if input:
                 field.send_keys(input)
-                ActionChains(self.drv).send_keys(Keys.ENTER).perform()
+                if autosave:
+                    self.get_uninteractable_element().click()
+                else:
+                    ActionChains(self.drv).send_keys(Keys.ENTER).perform()
             else:
                 field.click()
             # Tooltip triggers on save
@@ -137,6 +139,8 @@ copy: target
 
         send_input("textfield", "Hello")
         send_input("numericfield", "400")
+        send_input("textfield", "Hello again", False)
+        send_input("numericfield", "400004", False)
         send_input("cbfield", None)
         send_input("cbcountfield", None)
         send_input("rbfield", None)

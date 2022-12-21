@@ -4,11 +4,7 @@
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
-import type {
-    ISetAnswerResult,
-    ITimComponent,
-    ViewCtrl,
-} from "tim/document/viewctrl";
+import type {ISetAnswerResult, ITimComponent} from "tim/document/viewctrl";
 import {ChangeType, FormModeOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -25,7 +21,6 @@ import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {FieldBasicData} from "./textfield-plugin.component";
@@ -113,7 +108,7 @@ export class CbcountfieldPluginComponent
     private result?: string;
     isRunning = false;
     userword: boolean = false;
-    private vctrl!: ViewCtrl;
+
     private initialValue: boolean = false;
     errormessage?: string;
     hideSavedText = true;
@@ -169,7 +164,7 @@ export class CbcountfieldPluginComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         const uw = valueOr(
             this.attrsall.state?.c,
             this.markup.initword ?? ""

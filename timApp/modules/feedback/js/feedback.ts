@@ -10,7 +10,7 @@ import type {
     OnInit,
 } from "@angular/core";
 import {Component, NgModule} from "@angular/core";
-import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import type {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -24,7 +24,6 @@ import {HttpClientModule} from "@angular/common/http";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 
@@ -158,7 +157,7 @@ export class FeedbackPluginComponent
     implements ITimComponent, OnInit, OnDestroy
 {
     error?: string;
-    private vctrl!: ViewCtrl;
+
     private userAnswer: string[] = [];
     feedback = "";
     private questionItemIndex!: number;
@@ -186,7 +185,7 @@ export class FeedbackPluginComponent
 
     ngOnInit() {
         super.ngOnInit();
-        this.vctrl = vctrlInstance!;
+
         this.addToCtrl();
         this.vctrl.listen("editModeChange", this.editModeChanged);
         this.setPluginWords();

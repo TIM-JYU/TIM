@@ -22,7 +22,6 @@ import {
 import {parseStyles, shuffleStrings} from "tim/plugin/util";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
 import type {DocIdDotName} from "tim/plugin/taskid";
 import {defaultErrorMessage, isIOS} from "tim/util/utils";
@@ -149,7 +148,7 @@ export class DragComponent
     effectAllowed: EffectAllowed = "copyMove";
     private forceSave = false;
     private shuffle?: boolean;
-    private vctrl = vctrlInstance;
+
     styles: Record<string, string> = {};
     saveFailed = false;
 

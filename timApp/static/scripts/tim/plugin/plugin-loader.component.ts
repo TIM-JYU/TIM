@@ -172,8 +172,11 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
 
     async ngOnInit() {
         this.viewctrl = vctrlInstance;
-        if (this.viewctrl && !this.preview) {
+        if (this.viewctrl && !this.preview && this.taskId) {
             this.viewctrl.registerPluginLoader(this);
+        }
+        if (!this.taskId) {
+            this.viewctrl?.registerPluginLoaderWithoutTaskId(this);
         }
         const r = TaskId.tryParse(this.taskId);
         if (r.ok) {
@@ -615,6 +618,10 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
             }
         }
         return false;
+    }
+
+    warnAboutMissingTaskId() {
+        this.error = $localize`Plugin is missing task id`;
     }
 
     getPrerequisiteLockedText() {
