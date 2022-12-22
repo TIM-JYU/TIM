@@ -7878,6 +7878,14 @@
           <context context-type="linenumber">624</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="230005773131071527" datatype="html">
+        <source>No file upload or observers present, the upload may not work. This is a programming/configuration error.</source>
+        <target state="translated">Ei tiedoston latausta tai tarkkailijoita, lataus ei välttämättä toimi. Tämä on ohjelmointi- tai konfiguraatiovirhe.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">113,116</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
