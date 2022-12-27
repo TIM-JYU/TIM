@@ -86,6 +86,7 @@ class VelpTest(BrowserTest):
         save_button: WebElement = new_velp_element.find_element(
             by=By.CSS_SELECTOR, value='input[type="submit"]'
         )
+        ActionChains(self.drv).move_to_element(save_button).perform()
         save_button.click()
         self.wait_until_hidden(new_velp_selector)
 
