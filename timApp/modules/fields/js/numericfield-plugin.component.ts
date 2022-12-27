@@ -336,8 +336,10 @@ export class NumericfieldPluginComponent
                     message = 'Value at "c" was not a valid number';
                 }
 
-                if (!this.markup.ignorestyles && content.styles) {
-                    this.styles = parseStyles(content.styles);
+                if (!this.markup.ignorestyles) {
+                    this.styles = content.styles
+                        ? parseStyles(content.styles)
+                        : {};
                 }
             }
             this.initialValue = this.numericvalue;
