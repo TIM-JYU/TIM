@@ -904,6 +904,7 @@ table:
         self.goto_document(d)
         td = self.find_element_avoid_staleness("#tabletask td")
         td.click()
+        self.wait_until_present_and_vis("tim-table-editor-toolbar-dialog")
         td.click()
         ActionChains(self.drv).send_keys("Hello").perform()
         td = self.find_element_avoid_staleness("#tableForm tbody td:nth-of-type(6)")
