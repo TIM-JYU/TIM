@@ -108,7 +108,7 @@ const NumericfieldAll = t.intersection([
                     {{buttonText()}}
                </button>
       </span>
-      <span *ngIf="isPlainText()" class="plaintext" [style.width.em]="cols">{{numericvalue}}</span>
+      <span *ngIf="isPlainText()" class="plaintext" [style.width.em]="cols" [ngStyle]="styles">{{numericvalue}} </span>
      </span></label>
     </div>
     <button class="timButton"

@@ -132,7 +132,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                     {{buttonText()}}
                </button>
          </span>
-         <span *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%"></span>
+         <span *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"></span>
          <a *ngIf="isDownloadButton" class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
          </span></label>
     </form>
