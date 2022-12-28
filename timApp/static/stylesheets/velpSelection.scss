@@ -658,20 +658,22 @@ $inactive: whitesmoke;
 }
 
 .edit-velp-advanced {
+    summary {
+        font-size: 1.2em;
+    }
+    .edit-velp-advanced-options {
+        margin-bottom: 0.8em;
+    }
+}
 
+.collapsible-menu {
     details {
         margin-bottom: 0.8em;
     }
-
     summary {
-        font-size: 1.2em;
         display: list-item !important;
         font-weight: bold;
         margin-bottom: 0.5em;
-    }
-
-    .edit-velp-advanced-options {
-        margin-bottom: 0.8em;
     }
 }
 

@@ -175,27 +175,31 @@
                                     </tr>
                                 </table>
                             </form>
-                            <form ng-submit="$ctrl.addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
-                                <p><label>Create new velp group:</label><input type="text" ng-model="$ctrl.newVelpGroup.name"
-                                                                               placeholder="Velp group name" required></p>
-                                <fieldset>
-                                    <label for="velpGroupSaveToSelect">Save to: </label>
-                                    <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
-                                            ng-model="$ctrl.newVelpGroup.target_type"
-                                            class="formInput" style="float: none; margin-bottom: 1rem"
-                                    >
-                                        <option ng-value="0" selected>Personal collection</option>
-                                        <option ng-value="1" ng-disabled="!$ctrl.vctrl.item.rights.editable">Document</option>
-                                        <option ng-value="2" ng-disabled="!$ctrl.vctrl.item.rights.editable">Folder</option>
-                                    </select>
-                                </fieldset>
-
-                                <p><input type="submit" class="timButton" value="Create velp group"></p>
-                                <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || ($ctrl.submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
-                                   class="error">
-                                    Velp group name is required!
-                                </p>
-                            </form>
+                        </div>
+                        <div class="collapsible-menu">
+                            <details>
+                                <summary>New velp group</summary>
+                                <div class="collapible-menu-open-content">
+                                    <form ng-submit="$ctrl.addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
+                                        <label for="new-velp-group-name">Group name: </label><input id="new-velp-group-name" type="text" ng-model="$ctrl.newVelpGroup.name" placeholder="Velp group name" required>
+                                        <fieldset>
+                                            <label for="velpGroupSaveToSelect">Save to: </label>
+                                            <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
+                                                    ng-model="$ctrl.newVelpGroup.target_type"
+                                                    class="formInput" style="float: none; margin-bottom: 1rem">
+                                                <option ng-value="0" selected>Personal collection</option>
+                                                <option ng-value="1" ng-disabled="!$ctrl.vctrl.item.rights.editable">Document</option>
+                                                <option ng-value="2" ng-disabled="!$ctrl.vctrl.item.rights.editable">Folder</option>
+                                            </select>
+                                        </fieldset>
+                                        <p><input type="submit" class="timButton" value="Create velp group"></p>
+                                        <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || ($ctrl.submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
+                                           class="error">
+                                            Velp group name is required!
+                                        </p>
+                                    </form>
+                                </div>
+                            </details>
                         </div>
                     </div>
                 </uib-tab>
