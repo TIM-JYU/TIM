@@ -341,11 +341,15 @@ position: absolute;
     padding-right: 0px;
 }
 
-.velp:hover .emphasise{
+.velp:hover .emphasise {
     margin-top: -1em;
     -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
     -moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
     box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
+
+    &.edit {
+        margin-top: 0;
+    }
 }
 
 .velp .emphasise{
@@ -358,9 +362,9 @@ position: absolute;
     z-index: 0;
     background: gainsboro;
 
--webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
--moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
+    -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
+    -moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
+    box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 }
 
 .bottom-part{
@@ -369,8 +373,11 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 }
 
 .velp .edit{
-    margin-top: 1em;
     z-index: 101;
+
+    &.new {
+        top: 1em;
+    }
 }
 
 .velp .content{
@@ -697,6 +704,6 @@ velp-window.velp-edit-available {
   position: fixed;
 
   & > .velp {
-    top: 1em !important;
+    top: 0.2em !important;
   }
 }
