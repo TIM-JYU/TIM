@@ -572,7 +572,13 @@ $inactive: whitesmoke;
     .velp-advanced-control {
         margin-left: 0.4em;
         padding-top: 0.25em;
-        font-size: small;
+        vertical-align: middle;
+
+        label {
+            vertical-align: middle;
+            font-size: small;
+            font-weight: normal;
+        }
     }
 }
 
@@ -671,22 +677,21 @@ $inactive: whitesmoke;
     padding: 2px 4px;
 }
 
-.edit-velp-advanced {
-    summary {
-        font-size: 1.2em;
-    }
-    .edit-velp-advanced-options {
-        margin-bottom: 0.8em;
-    }
-}
-
 .collapsible-menu {
+    margin-top: 0.5em;
+
     details {
         margin-bottom: 0.8em;
     }
+    details[open] {
+        summary {
+            font-weight: bold;
+        }
+    }
     summary {
+        font-size: 1em;
         display: list-item !important;
-        font-weight: bold;
+        font-weight: normal;
         margin-bottom: 0.5em;
     }
 }
