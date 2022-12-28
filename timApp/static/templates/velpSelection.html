@@ -159,7 +159,7 @@
                                             </p>
                                         </th>
                                         <th><span class="small">Velp group</span></th>
-                                        <th><span class="small glyphicon glyphicon-trash"></span></th>
+                                        <th><span class="small glyphicon glyphicon-trash" title="Delete velp group"></span></th>
                                     </tr>
                                     <tr ng-repeat="group in $ctrl.velpGroups" ng-hide="group.id<0">
                                         <td>
@@ -174,7 +174,7 @@
                                         <td>
                                             <span ng-click="$ctrl.deleteVelpGroup(group);"
                                                   ng-if="group.edit_access && !$ctrl.isDefaultLockedGroup(group)"
-                                                  class="glyphicon glyphicon-trash clickable-icon"></span>
+                                                  class="glyphicon glyphicon-trash clickable-icon" title="Delete velp group '{{ group.name }}'"></span>
                                             <span ng-if="!group.edit_access && !$ctrl.isDefaultLockedGroup(group)"
                                                   class="glyphicon glyphicon-trash lightgray"
                                                   uib-tooltip-html="$ctrl.toolTipMessages.deleteVelpGroupInsufficientRights" tooltip-placement="auto left"></span>
