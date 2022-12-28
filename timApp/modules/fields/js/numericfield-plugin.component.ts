@@ -108,7 +108,7 @@ const NumericfieldAll = t.intersection([
                     {{buttonText()}}
                </button>
       </span>
-      <span *ngIf="isPlainText()" class="plaintext" [style.width.em]="cols">{{numericvalue}}</span>
+      <span *ngIf="isPlainText()" class="plaintext" [style.width.em]="cols" [ngStyle]="styles">{{numericvalue}} </span>
      </span></label>
     </div>
     <button class="timButton"
@@ -336,8 +336,10 @@ export class NumericfieldPluginComponent
                     message = 'Value at "c" was not a valid number';
                 }
 
-                if (!this.markup.ignorestyles && content.styles) {
-                    this.styles = parseStyles(content.styles);
+                if (!this.markup.ignorestyles) {
+                    this.styles = content.styles
+                        ? parseStyles(content.styles)
+                        : {};
                 }
             }
             this.initialValue = this.numericvalue;
