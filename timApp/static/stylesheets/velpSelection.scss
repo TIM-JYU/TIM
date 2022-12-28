@@ -650,6 +650,24 @@ $inactive: whitesmoke;
     padding: 2px 4px;
 }
 
+.edit-velp-advanced {
+
+    details {
+        margin-bottom: 0.8em;
+    }
+
+    summary {
+        font-size: 1.2em;
+        display: list-item !important;
+        font-weight: bold;
+        margin-bottom: 0.5em;
+    }
+
+    .edit-velp-advanced-options {
+        margin-bottom: 0.8em;
+    }
+}
+
 .btn-set-vg-visible {
     font-size: 1.2rem;
 }
