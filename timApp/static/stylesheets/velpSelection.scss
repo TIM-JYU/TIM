@@ -29,15 +29,20 @@ annotation .fulldiv {
     resize: vertical;
     overflow-y: auto;
     max-height: 24vh;
+    border-bottom: 1px solid gainsboro;
+    border-left: 1px solid gainsboro;
 }
 
 .velp-groups-table {
     table {
         display: table;
-        min-width: 19.5em !important;
-        max-width: 19.5em !important;
+        min-width: 19.4em !important;
+        max-width: 19.4em !important;
 
-        td {
+        tr > td:first-child, th:first-child {
+            border-left: none;
+        }
+        td, th {
             max-width: 13em;
         }
     }
