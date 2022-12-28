@@ -134,19 +134,29 @@
                                         </option>
                                     </select>
                                 </fieldset>
-                                <table class="fulldiv velp-groups-resize" style="margin-bottom: 8px">
+                            </form>
+                            <div class="velp-groups-table velp-groups-resize">
+                                <table class="fulldiv" style="margin-bottom: 8px">
                                     <tr>
                                         <th>
-                                            <label class="comment-info small" for="velp-group-table-cb-show">Show</label>
-                                            <input id="velp-group-table-cb-show" type="checkbox" ng-model="$ctrl.settings.selectedAllShows" ng-change="$ctrl.changeAllVelpGroupSelections('show')">
+                                            <label class="comment-info small" for="velp-group-table-cb-show" title="Show">
+                                                <span class="glyphicon glyphicon-eye-open"></span>
+                                            </label>
+                                            <p>
+                                                <input id="velp-group-table-cb-show" type="checkbox" ng-model="$ctrl.settings.selectedAllShows" ng-change="$ctrl.changeAllVelpGroupSelections('show')">
+                                            </p>
                                         </th>
                                         <th>
-                                            <label for="velp-group-table-cb-default" ng-class="['comment-info', 'small', {disabled: !$ctrl.vctrl.item.rights.manage}]">Default</label>
-                                            <input id="velp-group-table-cb-default"
-                                                type="checkbox"
-                                                ng-model="$ctrl.settings.selectedAllDefault"
-                                                ng-disabled="!$ctrl.vctrl.item.rights.manage"
-                                                ng-change="$ctrl.changeAllVelpGroupSelections('default')">
+                                            <label for="velp-group-table-cb-default" title="Default" ng-class="['comment-info', 'small', {disabled: !$ctrl.vctrl.item.rights.manage}]">
+                                                <span class="glyphicon glyphicon-check"></span>
+                                            </label>
+                                            <p>
+                                                <input id="velp-group-table-cb-default"
+                                                    type="checkbox"
+                                                    ng-model="$ctrl.settings.selectedAllDefault"
+                                                    ng-disabled="!$ctrl.vctrl.item.rights.manage"
+                                                    ng-change="$ctrl.changeAllVelpGroupSelections('default')">
+                                            </p>
                                         </th>
                                         <th><span class="small">Velp group</span></th>
                                         <th><span class="small glyphicon glyphicon-trash"></span></th>
@@ -174,7 +184,7 @@
                                         </td>
                                     </tr>
                                 </table>
-                            </form>
+                            </div>
                         </div>
                         <div class="collapsible-menu">
                             <details>

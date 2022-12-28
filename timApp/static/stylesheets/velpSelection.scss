@@ -27,6 +27,20 @@ annotation .fulldiv {
 
 .velp-groups-resize {
     resize: vertical;
+    overflow-y: auto;
+    max-height: 24vh;
+}
+
+.velp-groups-table {
+    table {
+        display: table;
+        min-width: 19.5em !important;
+        max-width: 19.5em !important;
+
+        td {
+            max-width: 13em;
+        }
+    }
 }
 
 .div-90 {
