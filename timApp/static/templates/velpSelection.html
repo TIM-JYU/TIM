@@ -61,8 +61,9 @@
         </div>
         <div ng-show="$ctrl.advancedOn" class="velp-menu-advanced-controls">
             <uib-tabset active="$ctrl.active" class="velpFill">
-                <uib-tab index="0" heading="Select">
 
+                <!-- Velp filtering options -->
+                <uib-tab index="0" heading="Filter velps">
                     <!-- LABELS -->
                     <div id="labels">
                         <form class="form-inline adjustForm">
@@ -119,8 +120,8 @@
                     </div>
                 </uib-tab>
 
-                <!-- MANAGE VELPS -->
-                <uib-tab index="1" heading="Manage">
+                <!-- Velp groups -->
+                <uib-tab index="1" heading="Velp groups">
                     <div class="">
                         <div class="velpSummary autoscroll">
                             <form style="border-bottom: 1px solid gainsboro">
@@ -173,17 +174,6 @@
                                         </td>
                                     </tr>
                                 </table>
-                                <div style="margin-bottom: 0.5rem">
-                                    <label class="btn-set-vg-visible">Set default groups visible:</label>
-                                    <p>
-                                        <input type="button" class="timButton btn-set-vg-visible"
-                                               title="Shows only the default velp groups in current area (document or paragraph)"
-                                               value="Area" ng-click="$ctrl.resetCurrentShowsToDefaults()"/>
-                                        <input type="button" class="timButton btn-set-vg-visible"
-                                               title="Shows only the default velp groups in all areas"
-                                               value="All" ng-click="$ctrl.resetAllShowsToDefaults()"/>
-                                    </p>
-                                </div>
                             </form>
                             <form ng-submit="$ctrl.addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
                                 <p><label>Create new velp group:</label><input type="text" ng-model="$ctrl.newVelpGroup.name"
