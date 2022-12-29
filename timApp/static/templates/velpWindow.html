@@ -1,4 +1,4 @@
-<div class="velp" ng-style="{top: 1+$ctrl.index*2 + 'em'}"  ng-click="$ctrl.notAnnotationRights($ctrl.velp.points) || $ctrl.useVelp()" style="top: 1.2em">
+<div class="velp" ng-style="{top: 1+$ctrl.index*2 + 'em'}"  ng-click="$ctrl.notAnnotationRights($ctrl.velp.points) || $ctrl.useVelp()" >
     <div ng-class="['velp-data', 'emphasise', 'default',
                     {neutral: $ctrl.velp.points == 0,
                     positive: $ctrl.velp.points > 0,
@@ -43,141 +43,147 @@
                             class="clickable-icon"></tim-close-button>
 
         <form name="saveVelpForm" ng-submit="$ctrl.saveVelp(saveVelpForm)">
-            <p class="header"><input name="velpName" type="text" ng-model="$ctrl.velp.content"
-                       required placeholder="Velp content" title="Annotation visible text">
-            </p>
-            <p ng-show="(saveVelpForm.velpName.$invalid && !saveVelpForm.velpName.$pristine)"
-               class="error velpInfoText">
-                {{ $ctrl.settings.velpContentError }}
-            </p>
+            <!-- Basic velp info -->
+            <div class="add-velp-info">
+                <p class="header"><input name="velpName" type="text" ng-model="$ctrl.velp.content"
+                           required placeholder="Velp content" title="Annotation visible text">
+                </p>
+                <p ng-show="(saveVelpForm.velpName.$invalid && !saveVelpForm.velpName.$pristine)"
+                   class="error velpInfoText">
+                    {{ $ctrl.settings.velpContentError }}
+                </p>
 
 
-            <p ng-show="$ctrl.allowChangePoints()" class="header"><input id="addVelpPoints" type="number" style="width: 50%;"
-                                                    title="Default points from this velp"
-                                                    ng-model="$ctrl.velp.points"
-                                                    step="0.01"
-                                                    placeholder="Points" value="0">
-                <input type="color" ng-model="$ctrl.velp.color" title="change Velp default color" class="velp-color-selector">
-                <input ng-if="$ctrl.isVelpCustomColor()" class="btn-restore-velp-color" type="button" ng-click="$ctrl.clearVelpColor()" title="Reset color to original value" value="R">
-            </p>
-            <p ng-hide="$ctrl.allowChangePoints()" class="velpInfoText">{{ $ctrl.settings.teacherRightsError }}</p>
+                <p ng-show="$ctrl.allowChangePoints()" class="header"><input id="addVelpPoints" type="number" style="width: 50%;"
+                                                        title="Default points from this velp"
+                                                        ng-model="$ctrl.velp.points"
+                                                        step="0.01"
+                                                        placeholder="Points" value="0">
+                    <input type="color" ng-model="$ctrl.velp.color" title="change Velp default color" class="velp-color-selector">
+                    <input ng-if="$ctrl.isVelpCustomColor()" class="btn-restore-velp-color" type="button" ng-click="$ctrl.clearVelpColor()" title="Reset color to original value" value="R">
+                </p>
+                <p ng-hide="$ctrl.allowChangePoints()" class="velpInfoText">{{ $ctrl.settings.teacherRightsError }}</p>
 
-            <p><textarea placeholder="Add default comment" ng-model="$ctrl.velp.default_comment" title="Default comment for annotation" ></textarea></p>
-
-            <fieldset ng-show="$ctrl.advancedOn">
-                <legend>Labels
-                    <span class="pull-right"
-                          ng-class="['glyphicon', 'glyphicon-tag']"
-                          ng-repeat="l in $ctrl.velp.labels"
-                          ng-style="{ color: $ctrl.getColor(l) }">
-                    </span>
-                </legend>
-                <div class="editVelp-scrollarea">
-                <span ng-repeat="l in $ctrl.labels">
-
-                    <!-- Show this when label IS NOT being edited -->
-                    <span ng-if="!l.edit">
-                        <label>
-                            <input type="checkbox"
-                                      ng-click="$ctrl.updateVelpLabels(l)"
-                                      ng-checked="$ctrl.isLabelInVelp(l)">
-                            {{ l.content }}
-                        </label>
-
-                        <span class="pull-right" ng-click="$ctrl.toggleLabelToEdit(l)"
-                              ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']">
-                        </span>
-                        <br>
-                    </span>
-
-                    <!-- Show this when label IS being edited -->
-                    <span ng-if="l.edit">
-                        <input type="text"
-                               placeholder="Add label"
-                               ng-change="$ctrl.setLabelValid($ctrl.labelToEdit)"
-                               ng-model="$ctrl.labelToEdit.content">
-                        <span class="label-edit-glyphicons"
-                              ng-click="$ctrl.editLabel($ctrl.labelToEdit)"
-                              ng-class="['glyphicon', 'glyphicon-ok', 'clickable-icon']"
-                              ng-disabled="!$ctrl.isVelpValid($ctrl.velpToEdit)"
-                              ng-style="{color: 'green'}" title="Save">
-                        </span>
-                        <span class="label-edit-glyphicons"
-                              ng-click="$ctrl.toggleLabelToEdit(l)"
-                              ng-class="['glyphicon', 'glyphicon-ban-circle', 'clickable-icon']"
-                              ng-style="{color: 'red'}" title="Cancel">
-                        </span>
-
-                        <span ng-hide="$ctrl.labelToEdit.valid">
-                            <span class="error velpInfoText">{{ settings.labelContentError }}</span>
-                            <br>
-                        </span>
-                    </span>
-                </span>
-                </div>
-                <!-- Add new label -->
-                <div class="velpEdit-addLabel-controls">
-                    <input class="addLabelField" placeholder="Add label"
-                           ng-change="$ctrl.setLabelValid($ctrl.newLabel)"
-                           ng-model="$ctrl.newLabel.content">
-                    <input class="addLabelBtn" type="button" value="Add"
-                           ng-click="$ctrl.addLabel()">
-                    <span ng-hide="$ctrl.newLabel.valid"
-                          class="error velpInfoText">{{ $ctrl.settings.labelContentError }}</span>
-                </div>
-            </fieldset>
-
-            <!-- Velp groups -->
-            <fieldset ng-show="$ctrl.advancedOn">
-                <legend>Velp groups</legend>
-                <div class="editVelp-scrollarea">
-                <span ng-repeat="g in $ctrl.velpGroups">
-
-                    <label title="{{ !g.show ? 'This group is not shown in the selected area. Change setting in manage tab.' : ''}}"
-                           ng-class="{disabled: !g.edit_access, gray: !g.show}"><input type="checkbox"
-                                                                                       ng-click="$ctrl.updateVelpGroups(g)"
-                                                                                       ng-checked="$ctrl.isGroupInVelp(g)"
-                                                                                       ng-disabled="!g.edit_access">
-                        {{ g.name }}
+                <p><textarea placeholder="Add default comment" ng-model="$ctrl.velp.default_comment" title="Default comment for annotation" ></textarea></p>
+            </div>
+            <!-- Velp visibility options -->
+            <div class="add-velp-visibility-options">
+                <p class="velpEdit-remove-margin" style="margin-top: 4px;">
+                    <label for="edit-velp-visibility-options">
+                        <span title="Visible to" class="glyphicon glyphicon-eye-open visible-icon"></span>
                     </label>
-                    <br>
-                </span>
-                </div>
-            </fieldset>
-            <p class="error velpInfoText" ng-show="!$ctrl.isSomeVelpGroupSelected()">
-                {{ $ctrl.settings.velpGroupError }}
-            </p>
-            <p class="warning velpInfoText" ng-show="!$ctrl.isSomeVelpGroupShown()">
-                {{ $ctrl.settings.velpGroupWarning }}
-            </p>
-
-            <p class="velpEdit-remove-margin" style="margin-top: 4px;">
-                <label>
-                    <span title="Visible to"
-                          class="glyphicon glyphicon-eye-open visible-icon">
-
-                    </span>
-                    <select ng-model="$ctrl.velp.visible_to" title="Visible to"
+                    <select id="edit-velp-visibility-options"
+                            ng-model="$ctrl.velp.visible_to" title="Visible to"
                             ng-options="v as $ctrl.visibleOptions.names[v-1] for v in $ctrl.visibleOptions.values">
                     </select>
                     <span ng-class="['glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
                           uib-popover="Who can see the velp as a default?
-                                      'Just me' means that the annotation is visible only to yourself.
-                                      'Document owner' refers to the person or group who has been named as the document owner.
-                                      'Teachers' refers to the users that have teacher access to this document.
-                                      'Everyone' means that the annotation is visible to everyone who can view the assessed content."
+                                         'Just me' means that the annotation is visible only to yourself.
+                                         'Document owner' refers to the person or group who has been named as the document owner.
+                                         'Teachers' refers to the users that have teacher access to this document.
+                                         'Everyone' means that the annotation is visible to everyone who can view the assessed content."
                           popover-placement="top">
                     </span>
-                </label>
-            </p>
-            <p class="velpEdit-remove-margin">
-                <label>
-                    <span>Style</span>
-                    <select ng-model="$ctrl.velp.style" title="Style"
+                </p>
+                <p class="velpEdit-remove-margin">
+                    <label for="edit-velp-style-options">
+                        <span>Style</span>
+                    </label>
+                    <select id="edit-velp-style-options"
+                            ng-model="$ctrl.velp.style" title="Style"
                             ng-options="v as $ctrl.styleOptions.names[v-1] for v in $ctrl.styleOptions.values">
                     </select>
-                </label>
-            </p>
+                </p>
+            </div>
+            <!-- Advanced velp options -->
+            <div class="collapsible-menu">
+                <details>
+                  <summary>Advanced options</summary>
+                  <div class="collapsible-menu-open-content">
+                    <fieldset>
+                        <legend>Labels
+                            <span class="pull-right"
+                                  ng-class="['glyphicon', 'glyphicon-tag']"
+                                  ng-repeat="l in $ctrl.velp.labels"
+                                  ng-style="{ color: $ctrl.getColor(l) }">
+                            </span>
+                        </legend>
+                        <div class="editVelp-scrollarea">
+                            <span ng-repeat="l in $ctrl.labels">
+                               <!-- Show this when label IS NOT being edited -->
+                                <span ng-if="!l.edit">
+                                    <label>
+                                        <input type="checkbox"
+                                                  ng-click="$ctrl.updateVelpLabels(l)"
+                                                  ng-checked="$ctrl.isLabelInVelp(l)">
+                                        {{ l.content }}
+                                    </label>
+                                   <span class="pull-right" ng-click="$ctrl.toggleLabelToEdit(l)"
+                                          ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']">
+                                    </span>
+                                    <br>
+                                </span>
+                               <!-- Show this when label IS being edited -->
+                                <span ng-if="l.edit">
+                                    <input type="text"
+                                           placeholder="Add label"
+                                           ng-change="$ctrl.setLabelValid($ctrl.labelToEdit)"
+                                           ng-model="$ctrl.labelToEdit.content">
+                                    <span class="label-edit-glyphicons"
+                                          ng-click="$ctrl.editLabel($ctrl.labelToEdit)"
+                                          ng-class="['glyphicon', 'glyphicon-ok', 'clickable-icon']"
+                                          ng-disabled="!$ctrl.isVelpValid($ctrl.velpToEdit)"
+                                          ng-style="{color: 'green'}" title="Save">
+                                    </span>
+                                    <span class="label-edit-glyphicons"
+                                          ng-click="$ctrl.toggleLabelToEdit(l)"
+                                          ng-class="['glyphicon', 'glyphicon-ban-circle', 'clickable-icon']"
+                                          ng-style="{color: 'red'}" title="Cancel">
+                                    </span>
+                                   <span ng-hide="$ctrl.labelToEdit.valid">
+                                        <span class="error velpInfoText">{{ settings.labelContentError }}</span>
+                                        <br>
+                                    </span>
+                                </span>
+                            </span>
+                        </div>
+                        <!-- Add new label -->
+                        <div class="velpEdit-addLabel-controls">
+                            <input class="addLabelField" placeholder="Add label"
+                                   ng-change="$ctrl.setLabelValid($ctrl.newLabel)"
+                                   ng-model="$ctrl.newLabel.content">
+                            <input class="addLabelBtn" type="button" value="Add"
+                                   ng-click="$ctrl.addLabel()">
+                            <span ng-hide="$ctrl.newLabel.valid"
+                                  class="error velpInfoText">{{ $ctrl.settings.labelContentError }}</span>
+                        </div>
+                    </fieldset>
+                    <!-- Velp groups -->
+                    <fieldset>
+                        <legend>Velp groups</legend>
+                        <div class="editVelp-scrollarea">
+                            <span ng-repeat="g in $ctrl.velpGroups">
+                                <label title="{{ !g.show ? 'This group is not shown in the selected area. Change setting in manage tab.' : ''}}"
+                                    ng-class="{disabled: !g.edit_access, gray: !g.show}"><input type="checkbox"
+                                                                                               ng-click="$ctrl.updateVelpGroups(g)"
+                                                                                               ng-checked="$ctrl.isGroupInVelp(g)"
+                                                                                               ng-disabled="!g.edit_access">
+                                    {{ g.name }}
+                                </label>
+                                <br>
+                            </span>
+                        </div>
+                    </fieldset>
+                    <p class="error velpInfoText" ng-show="!$ctrl.isSomeVelpGroupSelected()">
+                        {{ $ctrl.settings.velpGroupError }}
+                    </p>
+                    <p class="warning velpInfoText" ng-show="!$ctrl.isSomeVelpGroupShown()">
+                        {{ $ctrl.settings.velpGroupWarning }}
+                    </p>
+                  </div>
+                </details>
+            </div>
+
             <!-- submit executes 'saveVelp'-function -->
             <p>
             <input type="submit" class="timButton" ng-value="$ctrl.saveButtonText()" ng-disabled="!$ctrl.isVelpValid()"/>

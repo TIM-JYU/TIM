@@ -178,7 +178,6 @@ export class DraggableController implements IController {
         this.sizeStorage = new TimStorage(this.posKey + "Size", SizeType);
         this.minStorage = new TimStorage(this.posKey + "min", t.boolean);
         this.detachStorage = new TimStorage(this.posKey + "detach", t.boolean);
-
         // Move element towards an anchor point selected by the user.
         window.addEventListener("resize", () => {
             void this.restoreSizeAndPosition(VisibilityFix.Full);
