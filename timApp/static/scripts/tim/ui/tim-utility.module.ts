@@ -29,6 +29,7 @@ import {LoadingComponent} from "tim/ui/loading.component";
 import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {CommonModule} from "@angular/common";
+import {PrintButtonComponent} from "tim/ui/print-button.component";
 
 @NgModule({
     providers: [SessionVerify],
@@ -58,6 +59,7 @@ import {CommonModule} from "@angular/common";
         BookmarkNamePipe,
         MarkAllAsReadComponent,
         SwitchButtonComponent,
+        PrintButtonComponent,
     ],
     exports: [
         MarkupErrorComponent,

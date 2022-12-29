@@ -99,6 +99,7 @@ TIM_SAFE_TAGS = [
     "tim-self-expire",
     "tim-mark-all-as-read",
     "tim-add-member",
+    "tim-print-button",
     "tim-goto-link",
     "tim-graph-viz",
     "tim-variables",

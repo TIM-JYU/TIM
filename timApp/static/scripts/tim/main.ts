@@ -76,6 +76,7 @@ import {
 } from "tim/util/timTiming";
 import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {PrintButtonComponent} from "tim/ui/print-button.component";
 
 BackspaceDisabler.disable();
 
@@ -123,6 +124,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timSiteHeader", SiteHeaderComponent);
     doDowngrade(dg, "timAccessCountdown", AccessCountdownComponent);
     doDowngrade(dg, "timGotoLink", GotoLinkComponent);
+    doDowngrade(dg, "timPrintButton", PrintButtonComponent);
     doDowngrade(dg, "timTimeLeft", TimeLeftComponent);
     doDowngrade(dg, "timCountdown", CountdownComponent);
     doDowngrade(dg, "timSidebarMenu", SidebarMenuComponent);
