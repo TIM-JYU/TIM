@@ -44,7 +44,6 @@ class VelpTest(BrowserTest):
         )
 
         create_velp_btn.click()
-        # new_velp_selector = "#velp-editing"
         new_velp_selector = ".velp-data.new.edit"
         new_velp_element: WebElement = velp_selection_element.find_element(
             by=By.CSS_SELECTOR, value=new_velp_selector
@@ -288,3 +287,77 @@ saveButton: Tallenna
         # tu1 added velps 3 and 4, deleted 3, did not touch filter selector
         # current canvas/annotation container should have velps 2 and 4
         self.assert_same_screenshot(canvas, "velps/filtered_canvas")
+
+    def test_velp_menu_advanced_tabs(self):
+        """
+        Check that velp menu advanced mode menu tabs are visible and usable.
+        """
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(initial_par="This is a velp test.")
+        self.goto_document(d, view="velp")
+
+        velp_selection_element = self.drv.find_element(
+            by=By.CSS_SELECTOR, value="#velpSelection"
+        )
+
+        cb_advanced_mode = self.find_element("#velp-advanced-checkbox")
+
+        advanced_mode_selector = ".velp-menu-advanced-controls"
+        advanced_mode_element: WebElement = velp_selection_element.find_element(
+            by=By.CSS_SELECTOR, value=advanced_mode_selector
+        )
+
+        cb_advanced_mode.click()
+        self.wait_until_present_and_vis(advanced_mode_selector)
+
+        self.assert_same_screenshot(
+            advanced_mode_element, "velps/velp_menu_advanced_controls"
+        )
+
+        tab_filter_velps: WebElement = self.find_element_by_text(
+            "Filter velps", "a", advanced_mode_element
+        )
+        tab_velp_groups: WebElement = self.find_element_by_text(
+            "Velp groups", "a", advanced_mode_element
+        )
+        tab_velp_summary: WebElement = self.find_element_by_text(
+            "Summary", "a", advanced_mode_element
+        )
+
+        tab_filter_velps_content_element: WebElement = (
+            advanced_mode_element.find_element(
+                by=By.CSS_SELECTOR, value=".velp-filter-tab"
+            )
+        )
+        tab_velp_groups_content_element: WebElement = (
+            advanced_mode_element.find_element(
+                by=By.CSS_SELECTOR, value=".velp-groups-tab"
+            )
+        )
+        tab_velp_summary_content_element: WebElement = (
+            advanced_mode_element.find_element(
+                by=By.CSS_SELECTOR, value=".velp-summary-tab"
+            )
+        )
+
+        tab_velp_groups.click()
+        self.wait_until_present_and_vis(".velp-groups-tab")
+
+        self.assert_same_screenshot(
+            tab_velp_groups_content_element, "velps/velp_groups_tab"
+        )
+
+        tab_velp_summary.click()
+        self.wait_until_present_and_vis(".velp-summary-tab")
+
+        self.assert_same_screenshot(
+            tab_velp_summary_content_element, "velps/velp_summary_tab"
+        )
+
+        tab_filter_velps.click()
+        self.wait_until_present_and_vis(".velp-filter-tab")
+
+        self.assert_same_screenshot(
+            tab_filter_velps_content_element, "velps/velp_filter_tab"
+        )

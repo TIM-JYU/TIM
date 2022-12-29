@@ -64,6 +64,7 @@
 
                 <!-- Velp filtering options -->
                 <uib-tab index="0" heading="Filter velps">
+                  <div class="velp-filter-tab">
                     <!-- LABELS -->
                     <div id="labels">
                         <form class="form-inline adjustForm">
@@ -118,11 +119,12 @@
                             </div>
                         </form>
                     </div>
+                  </div>
                 </uib-tab>
 
                 <!-- Velp groups -->
                 <uib-tab index="1" heading="Velp groups">
-                    <div class="">
+                    <div class="velp-groups-tab">
                         <div class="velpSummary autoscroll">
                             <form style="border-bottom: 1px solid gainsboro">
                                 <h5>Choose area for velp group:</h5>
@@ -216,12 +218,14 @@
 
         <!-- SUMMARY -->
         <uib-tab index="2" heading="Summary">
-            <velp-summary
-                    [annotations]="$ctrl.rctrl.annotations"
-                    (annotationselected)="$ctrl.rctrl.toggleAnnotation($event, true)"
-                    [selected-user]="$ctrl.vctrl.selectedUser"
-            >
-            </velp-summary>
+            <div class="velp-summary-tab">
+                <velp-summary
+                        [annotations]="$ctrl.rctrl.annotations"
+                        (annotationselected)="$ctrl.rctrl.toggleAnnotation($event, true)"
+                        [selected-user]="$ctrl.vctrl.selectedUser"
+                >
+                </velp-summary>
+            </div>
         </uib-tab>
     </uib-tabset>
         </div>
