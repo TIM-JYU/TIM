@@ -82,14 +82,10 @@ annotation .fulldiv {
     border: 1px solid gainsboro;
     background: white;
     z-index: 1000;
-    /* border-top-left-radius: 8px; */
 }
 
 /** Velp area styles **/
 .velpMenu {
-    /* position: fixed; */
-    //min-width: fit-content;
-    //max-width: 23em;
     word-wrap: break-word;
     background: white;
     z-index: 1001;
@@ -122,8 +118,6 @@ annotation .fulldiv {
 }
 
 .velpMenu .draggable-detached {
-    //min-width: 19.5em;
-    //max-width: 19.5em;
 
     .velp-stack {
         border-bottom: 1px solid gainsboro;
@@ -145,7 +139,6 @@ annotation .fulldiv {
     margin-bottom: 1em;
     background-color: white;
     border-top: solid 1px gainsboro;
-    //float:left;
     position: relative;
     top: 0;
     bottom: 0;
@@ -169,7 +162,6 @@ annotation .fulldiv {
     min-height: 16em;
     max-height: 60vh;
     height: fit-content;
-    //min-width: 19.5em;
     width: 100%;
     max-width: 19.5em;
     position: relative;
@@ -664,9 +656,7 @@ $inactive: whitesmoke;
 }
 
 .btn-create-new-velp {
-    //margin-top: 0.3rem;
     padding-top: 0.3rem;
-    //border-top: 1px solid gainsboro;
 }
 
 .icon-plus-add-velp {
