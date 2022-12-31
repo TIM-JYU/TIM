@@ -74,15 +74,15 @@ class TimServer(http.server.BaseHTTPRequestHandler):
             return self.do_all(post_params(self))
 
         print("do_POST MULTIHTML ==========================================")
-        querys = multi_post_params(self)
+        queries = multi_post_params(self)
         do_headers(self, "application/json")
         htmls = []
-        self.user_id = get_param(querys[0], "user_id", "--")
+        self.user_id = get_param(queries[0], "user_id", "--")
         print("UserId:", self.user_id)
         log(self)
-        # print(querys)
+        # print(queries)
 
-        for query in querys:
+        for query in queries:
             # print(query.jso)
             # print(str(query))
             s = self.get_html(query)
@@ -114,7 +114,7 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         self.wfile.write(s.encode("UTF-8"))
 
     def send_text_file(self, name: str, ftype: str, content_type: str):
-        """Sends a file to server from directory ftype with contect_type.
+        """Sends a file to server from directory ftype with content_type.
 
         :param name: files name part, possible extra directories
         :param ftype: files type (js, html, css), specifies also the directory where to get the file

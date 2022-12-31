@@ -307,7 +307,7 @@ export class UserListController implements IController {
                 },
                 {
                     // TODO: better desc
-                    title: "De-sync selected users in taks",
+                    title: "De-sync selected users in tasks",
                     action: ($event: IAngularEvent) => {
                         this.viewctrl.syncAnswerBrowsers = false;
                     },

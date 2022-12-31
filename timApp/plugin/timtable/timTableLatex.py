@@ -148,7 +148,7 @@ class Cell:
     cell_width: str = default_width
     """Width of the cell."""
     cell_height: str = default_height
-    """Heigth of the cell."""
+    """Height of the cell."""
     line_space: int = 0
     """Unused attribute."""
     pbox: str = "10cm"
@@ -970,7 +970,7 @@ def get_size(
     Parse width or height into LaTeX-supported format.
 
     :param item: Cell data.
-    :param key: Width or heigth.
+    :param key: Width or height.
     :param default: Value to be used if key wasn't found.
     :return: Cell width or height.
     """

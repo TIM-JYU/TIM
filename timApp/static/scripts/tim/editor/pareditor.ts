@@ -979,7 +979,7 @@ ${backTicks}
                         name: "Math SVG",
                     },
                     {
-                        title: "Insert new editor tempates",
+                        title: "Insert new editor templates",
                         func: () =>
                             this.editor!.insertTemplate(
                                 `editor_templates:
@@ -1646,7 +1646,7 @@ ${backTicks}
     /**
      * Checks whether the language combination is supported by the selected translator.
      * @param orig The source document's language code
-     * @param tr The curent document's language code
+     * @param tr The current document's language code
      * @returns Whether or not the language combination is supported
      */
     isTranslationPairSupported(orig: string, tr: string) {

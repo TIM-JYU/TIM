@@ -39,7 +39,7 @@ def add_all_new() -> None:
 
 def add_all_tr_services_to_session(log: bool = False) -> None:
     """
-    Add all supported translation services to be commited to database.
+    Add all supported translation services to be committed to database.
     Note: session.commit must be called afterwards to save the changes!
 
     Supported translation services must be implemented and are also listed in

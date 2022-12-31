@@ -492,7 +492,7 @@ export class VelpSelectionController implements IController {
     /**
      * Initially resets this.velpToEdit variable to the original (empty) state.
      * NOTE! this function is replaced in 'setVelpToEdit'. When replaced
-     * this mehtod resets the velp that is being edited to its original state.
+     * this method resets the velp that is being edited to its original state.
      */
     resetEditVelp() {
         this.velpToEdit = {

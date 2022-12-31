@@ -265,7 +265,7 @@ export interface TimTable {
     saveCallBack?: (cellsTosave: CellToSave[]) => void;
     saveStyleCallBack?: (cellsTosave: CellAttrToSave[]) => void;
     cbCallBack?: (cbs: boolean[], n: number, index: number) => void;
-    maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.colums
+    maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.columns
     minWidth?: string;
     singleLine?: boolean;
     filterRow?: boolean;
@@ -358,8 +358,8 @@ export interface ICellIndex {
 }
 
 export interface ISelectedCells {
-    cells: ICellIndex[]; // List of original cell indecies inside selected area
-    srows: boolean[]; // table for screen indecies selected
+    cells: ICellIndex[]; // List of original cell indices inside selected area
+    srows: boolean[]; // table for screen indices selected
     scol1: number; // screen index for first selected column
     scol2: number; // screen index for last selected column
     srow1: number; // screen index for first selected row
@@ -688,7 +688,7 @@ export enum ClearSort {
                           style="position: absolute; width: max-content"
                           [hidden]="hide.editorButtons">
                     <span [hidden]="hide.editorPosition" [innerHtml]="editorPosition"
-                          (click)="handleClickEditorPostion()" style="background: yellow;"></span>
+                          (click)="handleClickEditorPosition()" style="background: yellow;"></span>
                     <button
                             #buttonOpenBigEditor class="timButton buttonOpenBigEditor"
                             (click)="handleClickOpenBigEditor()"><span class="glyphicon glyphicon-pencil"></span>
@@ -736,7 +736,7 @@ export class TimTableComponent
 {
     error: string = "";
     public viewctrl?: ViewCtrl;
-    public cellDataMatrix: ICell[][] = []; // this has all table data as original indecies (sort does not affect)
+    public cellDataMatrix: ICell[][] = []; // this has all table data as original indices (sort does not affect)
     private prevCellDataMatrix: ICell[][] = [];
     public columns: IColumn[] = [];
     @Input() public data!: TimTable;
@@ -1289,7 +1289,7 @@ export class TimTableComponent
     /**
      * Make smaller matrix by cutting only needed columns
      * @param rows list of rows to use
-     * @param cols col indecies to take
+     * @param cols col indices to take
      */
     public static makeSmallerMatrix(rows: string[][], cols: number[]) {
         const result = [];
@@ -2312,7 +2312,7 @@ export class TimTableComponent
         // hideToolbar(this);
     }
 
-    handleClickEditorPostion() {
+    handleClickEditorPosition() {
         copyToClipboard(this.editorPosition);
     }
 
@@ -2391,7 +2391,7 @@ export class TimTableComponent
         ev: KeyboardEvent
     ): Promise<ChangeDetectionHint> {
         if (isKeyCode(ev, KEY_F2)) {
-            // TODO: change all other keys like this to avoid depreceted warings
+            // TODO: change all other keys like this to avoid deprecated warnings
             if (this.hide.edit) {
                 return ChangeDetectionHint.DoNotTrigger;
             }
@@ -3420,7 +3420,7 @@ export class TimTableComponent
      * @param styles The dictionary that will contain the final object styles
      * @param object The object that contains the user-given style attributes
      * @param validAttrs A set that contains the accepted style attributes
-     * @return posible class
+     * @return possible class
      */
     private applyStyle(
         styles: Record<string, string | number>,
@@ -4067,7 +4067,7 @@ export class TimTableComponent
                                         !newCls.includes(s1) &&
                                         areaClearOrSet != 2
                                     ) {
-                                        // is not allredy in classes
+                                        // is not already in classes
                                         newCls = newCls + " " + s1;
                                         clearOrSet = 1;
                                     } else if (!toggle && areaClearOrSet != 2) {

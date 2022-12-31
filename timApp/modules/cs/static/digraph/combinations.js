@@ -6,11 +6,11 @@ class Combinations {
     /*!
      * Initilaize combinations
      * \fn constructor(chars, n, full)
-     * \params string or array chars of elements to combinate
+     * \params string or array chars of elements to combine
      * \params int n number of max items
      * \params boolean full if true make all lengths from 1 to
-     *                      if false make jus all combinations
-     *                      of n lenght array of chars
+     *                      if false make just all combinations
+     *                      of n length array of chars
      */
     constructor(chars, n, full) {
         this.chars = chars;

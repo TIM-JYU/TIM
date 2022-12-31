@@ -99,7 +99,7 @@ export abstract class BaseParEditor {
             return;
         }
         $timeout(() => {
-            // time to let new char happend
+            // time to let new char happen
             this.forceWrap(false);
         });
     }

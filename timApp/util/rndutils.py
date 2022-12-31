@@ -142,7 +142,7 @@ def get_int_list(myrandom: Random, jso: str) -> list[int]:
 
 def get_uniform_list(myrandom: Random, jso: str) -> list[float]:
     """
-    Returns list of uniformely distributed random floats from given interval.
+    Returns list of uniformly distributed random floats from given interval.
 
     :param myrandom: random number generator
     :param jso: string to find the values

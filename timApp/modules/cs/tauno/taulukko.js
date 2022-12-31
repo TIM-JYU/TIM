@@ -380,12 +380,12 @@ Virtuaalikone.prototype.luoTaulukko = function (parametrit) {
     return new Taulukko(this); // XXX tää on niiiiin väärin...
 };
 
-Virtuaalikone.prototype.luoIndeksi = function (nimi,inro) {
-    var muuttuja = this.lisääMuuttuja(nimi, inro);
-    if (!inro) inro = muuttuja.diviArvo.arvo;
+Virtuaalikone.prototype.luoIndeksi = function (nimi,iNro) {
+    var muuttuja = this.lisääMuuttuja(nimi, iNro);
+    if (!iNro) iNro = muuttuja.diviArvo.arvo;
 
 
-    var solu = this.solu(inro);
+    var solu = this.solu(iNro);
     if (!solu) return;
 
     var io = new Indeksi(this, solu);
@@ -408,8 +408,8 @@ Virtuaalikone.prototype.luoMuuttujat = function (parametrit) {
             if ( isNaN(val) ) val = null;
             this.lisääMuuttuja(pn.substring(1), val ,null, true);
         } else if (pn[0]=='i') {
-            var inro = parseInt(parametrit[pn]);
-            this.luoIndeksi(pn.substring(1), inro);
+            var iNro = parseInt(parametrit[pn]);
+            this.luoIndeksi(pn.substring(1), iNro);
         }
     }
 
@@ -2062,13 +2062,13 @@ function alustaTauno(event) {
     if (prt.lang && prt.lang == "en" || prt.help ) {
        wordMuuttujat = "variables:";
        wordUusiMuuttuja = "new variable";
-       wordMuuttujatTitle = "list of variables, add varibale from button above";
+       wordMuuttujatTitle = "list of variables, add variable from button above";
        wordOhjelma = "program";
        wordApua = 'Parameters:\n' +
               '  help=help in english\n'+
               '  apua=apua suomeksi\n'+
               '  lang=en - user interface as english\n'+
-              '  s    - simple, no indeces\n'+
+              '  s    - simple, no indices\n'+
               '  mx=v - variable x by value v.\n'+
               '  ix=v - index variable x by value v.\n'+
               '  ts=n - set array size as n.\n'+

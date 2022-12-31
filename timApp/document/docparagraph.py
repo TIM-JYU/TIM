@@ -1366,7 +1366,7 @@ def add_heading_numbers(
 ):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{ctx.doc.doc_id}"
-    # TODO: Cache sould be picked up only once and used as a paramter
+    # TODO: Cache should be picked up only once and used as a parameter
     ps = commonmark.Parser()
     parsed = ps.parse(s)
     with shelve.open(macro_cache_file) as cache:

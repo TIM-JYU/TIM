@@ -922,7 +922,7 @@ def tim_convert_text(
     :param str outputfile: output will be written to outfilename or the converted content
             returned if None (Default value = None)
     :param list filters: pandoc filters e.g. filters=['pandoc-citeproc']
-    :param removethis: lines that contains this text are removed from genereted LaTeX file
+    :param removethis: lines that contains this text are removed from generated LaTeX file
     :param texfiles: what files need to copy
     :returns: converted string (unicode) or an empty string if an outputfile was given
     :param eol_type: EOL type to use. Allowed values are same as Pandoc (crlf, lf, native)
@@ -1077,7 +1077,7 @@ def _decode_result(s):
     try:
         s = s.decode("utf-8")
     except UnicodeDecodeError:
-        # this shouldn't happen: pandoc more or less garantees that the output is utf-8!
+        # this shouldn't happen: pandoc more or less guarantees that the output is utf-8!
         # raise RuntimeError('Pandoc output was not utf-8.')
         # noinspection PyBroadException
         try:

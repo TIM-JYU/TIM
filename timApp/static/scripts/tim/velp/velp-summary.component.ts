@@ -22,30 +22,30 @@ import type {Annotation} from "tim/velp/velptypes";
                 <table>
                     <tr>
                         <th class="summSecColumn">Annotation</th>
-                        <th class="summThiColumn">Points</th>
+                        <th class="summThirdColumn">Points</th>
                     </tr>
                     <tr *ngFor="let a of taskAnns">
                         <td class="summSecColumn"><a
                                 (click)="annotationselected.emit(a)">{{ a.content }}</a>
                         </td>
-                        <td class="summThiColumn"><span>{{ a.points }}</span></td>
+                        <td class="summThirdColumn"><span>{{ a.points }}</span></td>
                     </tr>
                     <tr>
                         <th class="summSecColumn">Points total in all answers</th>
-                        <th class="summThiColumn"><span>{{ getTotalPoints(taskAnns) }}</span></th>
+                        <th class="summThirdColumn"><span>{{ getTotalPoints(taskAnns) }}</span></th>
                     </tr>
                 </table>
                 <h5>Other document annotations</h5>
                 <table>
                     <tr>
                         <th class="summSecColumn">Annotation</th>
-                        <th class="summThiColumn">Points</th>
+                        <th class="summThirdColumn">Points</th>
                     </tr>
                     <tr *ngFor="let b of docAnns">
                         <td class="summSecColumn"><a
                                 (click)="annotationselected.emit(b)">{{ b.content }}</a>
                         </td>
-                        <td class="summThiColumn"><span>{{ b.points }}</span></td>
+                        <td class="summThirdColumn"><span>{{ b.points }}</span></td>
                     </tr>
                 </table>
             </div>

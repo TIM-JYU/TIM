@@ -367,7 +367,7 @@ anonNames: false  # Whether to show anonymised names, true or false
 reportButton: "Raportti"
 userListButtonText: "Käyttäjälista"
 showToolbar: true # toolbar for editing the table
-# hiddenColumns: [0,1] # which colums are hidden
+# hiddenColumns: [0,1] # which columns are hidden
 
 # forceUpdateButtonText: "Virkistä" # button for refreshing the table
 #dataView:        # uncomment this if table is big or want to use special properties

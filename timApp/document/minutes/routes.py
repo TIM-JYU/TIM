@@ -79,7 +79,7 @@ def create_minute_extracts(doc: str) -> Response:
 
     # we detect an extract by searching the document's non-expanded markdown for the extract macro
     # all paragraphs between two such macros belong to the same extract
-    # the rest of the document after the last occurence of the macro belong to the last extract
+    # the rest of the document after the last occurrence of the macro belong to the last extract
 
     markdown_to_find = "%%lista("
     end_markdown = ")%%"

@@ -2,7 +2,7 @@
 
 // For Lexer see: https://github.com/aaditmshah/lexer
 class Lexer {
-// Create lexer, add rexexp rules where to match
+// Create lexer, add regexp rules where to match
 // call lexer.setInput(input) to give input
 // call lexer.lex() to get on token at time until undefined
 // longest match is used if not /g in rule.
@@ -147,7 +147,7 @@ class Lexer {
 
             if (rule.global) index = j; // do not sort prior this
 
-            // move to place agording by its length, longest firts
+            // move to place according to its length, longest first
             while (--j > index) {
                 let k = j - 1;
 
@@ -265,7 +265,7 @@ class CalculatorOp {
     }
 
     type() {   }           // if parser should order, return on of above
-    reg() { return / /;  }  // regexp to match those opertation
+    reg() { return / /;  }  // regexp to match those operation
 
     pop() {                // pop value from calc stack
         if (this.calculator.stack.length === 0)
@@ -278,12 +278,12 @@ class CalculatorOp {
     lexname() { return this.name(); } // name to be used in allowed or illegals list
     output(extraBefore) { return ` ${this.name()} `;  } // text to output
     extraSpaceAfter() { return ""; } // need space before some operation?
-    doCalc() {  }              // helpper method for doing calc
-    calc() { this.doCalc(); }  // what to do when runned
+    doCalc() {  }              // helper method for doing calc
+    calc() { this.doCalc(); }  // what to do when run
     r(v) { return roundToNearest(v, this.calculator.params.decimals);  }
     lexfunc(lexme, lexer) { return this;  }  // what to be returned for lexer if match
     allowSignRight() { return true; } // does allow sign operation on right side
-    checkSign(lastToken) { return this; } // deny 2-3 as a sign and change to bin opertator -
+    checkSign(lastToken) { return this; } // deny 2-3 as a sign and change to bin operator -
 
     getnum(s) { // convert s as numeric using p, mem or parse
         if (s === undefined) return this.calculator.lastResult;
@@ -354,8 +354,8 @@ class SignOperation extends FuncRROperation{
     newCalcOperation() { return new BinOperation(this.calculator); }
 }
 
-// Thse two are outside of operations list, because
-// they are refered inside the list (SignMinus and SignPlus)
+// These two are outside of operations list, because
+// they are referred inside the list (SignMinus and SignPlus)
 class Plus extends BinOperation {
     reg() { return / *\+ /; }
     name() { return "+"; }

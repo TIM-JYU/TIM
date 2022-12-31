@@ -1,6 +1,6 @@
 /**
  * Created by hajoviin on 24.2.2015.
- * Contoller that handles lectures.
+ * Controller that handles lectures.
  * @author Matias Berg
  * @author Bek Eljurkaev
  * @author Minna Lehtomäki

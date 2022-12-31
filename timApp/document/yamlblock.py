@@ -112,8 +112,8 @@ def get_code_block_str(md: str) -> str:
 
 def compare_same(s1: str, s2: str, n: int) -> bool:
     """
-    :param s1: string than can contain max n spaces at the begining
-    :param s2: string to oompare, no spaces in the begining
+    :param s1: string than can contain max n spaces at the beginning
+    :param s2: string to oompare, no spaces in the beginning
     :param n: how many spaces allowed to caintain still to be same
     :return: True is same False other
     """
@@ -138,8 +138,8 @@ def correct_obj(text: str) -> str:
     """
     """
      Problem analyze:
-        il = atribute line indent len,   fi = first line indent
-        indent = string that must be inserted to every line, len = it's lenght
+        il = attribute line indent len,   fi = first line indent
+        indent = string that must be inserted to every line, len = it's length
 
         |a1: @!            il = 0, fi = 0     il-fi+1  = 1 
         |a            => indent=" "   len 1 

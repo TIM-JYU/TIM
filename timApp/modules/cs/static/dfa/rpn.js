@@ -1,5 +1,5 @@
 /*!
-* Class for Reverce Polish Notation
+* Class for Reverse Polish Notation
 */
 
 
@@ -419,7 +419,7 @@ class RPN {
                     cmds = cls.isMy(line);
                     if (cmds) break;
                 }
-                if (!cmds) {  // this should not happend if there is UnknownCommand last
+                if (!cmds) {  // this should not happen if there is UnknownCommand last
                     this.addError(`${this.linenumber}: ${line} - ` + this.params.unknownCommandError);
                     continue; // did not match any know types
                 }
@@ -488,7 +488,7 @@ class RPN {
 
 
     runUntil(n) {
-        // Runs the command list from begining until in step n
+        // Runs the command list from beginning until in step n
         // If n not defined, run all commands
         this.init();
         this.maxStack = Math.max(this.stack.length, this.maxStack);

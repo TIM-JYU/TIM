@@ -163,7 +163,7 @@ class AutoCounters:
         Set start of autonames
 
         :param base_name: base name for counters in this block
-        :return: emtpy string because used from filter
+        :return: empty string because used from filter
         """
         self.auto_name_base = base_name
         return ""
@@ -174,7 +174,7 @@ class AutoCounters:
 
         :param base_name: base name for counters in this block
         :param ctype: default type for counters in this block
-        :return: emtpy string because used from filter
+        :return: empty string because used from filter
         """
         if isinstance(base_name, int):
             base_name = None
@@ -256,7 +256,7 @@ class AutoCounters:
     def set_auto_number_headings(self, n: int) -> None:
         """
         Set from what level the headings are numbered.
-        Make also the dafault counter number template for that level
+        Make also the default counter number template for that level
         like "{h2}.{v}" if counting start from level 2.
 
         :param n: from what level to start heading counting
@@ -478,7 +478,7 @@ class AutoCounters:
             counter: TCounter | None = use_counters_type.counters.get(sname)
             use_counters_type.count += 1
             value: int = use_counters_type.count
-            if counter:  # shold not be
+            if counter:  # should not be
                 counter["s"] = self.error("Duplicate " + sname)
             else:
                 pure = self.get_type_text(ctype, sname, value, "pure", str(value))
@@ -499,9 +499,9 @@ class AutoCounters:
                     prefix = ""
                 counter = {
                     "v": value,  # just value, mostly numeric
-                    "p": pure,  # formated value
+                    "p": pure,  # formatted value
                     "s": show,  # show in place of counter
-                    "r": ref,  # normal refence format
+                    "r": ref,  # normal reference format
                     "t": text,  # with text
                     "l": long,  # long format, mostly for section header
                     "h": prefix + hname.replace(" ", "_"),  # Jump address
@@ -641,7 +641,7 @@ class AutoCounters:
     def get_label_placeholder(self) -> str:
         """
         returns next labels placeholder if there is labels
-        that can not be anchored to begining of the LaTeX environment
+        that can not be anchored to beginning of the LaTeX environment
         :return: placeholder for label that is replaced by
                  real labes after whole block is ready
         """
@@ -758,7 +758,7 @@ class AutoCounters:
         Return counter values as string to be appended to settings
 
         :param _dummy:  if used as filter
-        :return: counter values as settigs macro
+        :return: counter values as settings macro
         """
         result = """
 macros:        
@@ -824,9 +824,9 @@ macros:
         :param ctype: counter's type name
         :param name: name of counter
         :param value: value of counter to show
-        :param showtype: for what purpose value is formated
+        :param showtype: for what purpose value is formatted
         :param pure: pure value of counter
-        :return: formated show value
+        :return: formatted show value
         """
         vals = self.heading_vals
         if vals is None:
@@ -888,7 +888,7 @@ macros:
     def set_heading_vals(self, vals: dict) -> None:
         """
         This should be called every time when handling heading line.
-        Check whta counters should be reseted when heading numebrs changes
+        Check what counters should be reset when heading numbers changes
 
         :param vals: new values for current heading numbers
         :return: None

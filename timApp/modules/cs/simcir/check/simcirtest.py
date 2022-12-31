@@ -164,7 +164,7 @@ class Logik:
             self.ulostulot = []
             self.ledit = []
             self.connectors = []  # data['connectors']
-            portti = "LED"  ## Mofify to support others some day, make a list of possible output types
+            portti = "LED"  ## Modify to support others some day, make a list of possible output types
 
             for c in data["connectors"]:
                 con = Connector(c)

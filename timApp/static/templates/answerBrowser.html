@@ -196,7 +196,7 @@
                 <div *ngIf="imageReview">
                     <draw-canvas
                             [options]="{enabled: false, color: 'red', drawType: 2, opacity: 1.0, fill: false, w: 2}"
-                            [toolBar]="viewctrl.velpMode" [bgSources]="imageReviewDatas"
+                            [toolBar]="viewctrl.velpMode" [bgSources]="imageReviewData"
                             [imgLoadCallback]="setImageReview"></draw-canvas>
                 </div>
                 <div *ngIf="!imageReview" class="review" [innerHtml]="reviewHtml">

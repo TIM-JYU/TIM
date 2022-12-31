@@ -220,7 +220,7 @@ def distribute_session_verification(
     Distribute a session verification operation to the specified targets.
 
     .. note:: The function requires right distribution to be enabled.
-              Session verfication is distributed and verified with :ref:`timApp.defaultconfig.DIST_RIGHTS_SEND_SECRET`
+              Session verification is distributed and verified with :ref:`timApp.defaultconfig.DIST_RIGHTS_SEND_SECRET`
               and :ref:`timApp.defaultconfig.DIST_RIGHTS_RECEIVE_SECRET` configuration options.
 
     :param action: Action to perform. Usually either "verify" or "invalidate".

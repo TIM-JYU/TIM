@@ -1250,7 +1250,7 @@ class PY3(Language):
             )
         err = err.strip()
 
-        # TODO: Maybe export as genral copy_wav function
+        # TODO: Maybe export as general copy_wav function
         if self.wavsource and self.wavdest:
             rm_safe(self.wavdest)
             wav_ok, e = copy_file(

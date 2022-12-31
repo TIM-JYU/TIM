@@ -382,7 +382,7 @@ def add_email(
     # TODO: The email_owner_pre_confirmation flag was made available for caller with the idea that when inviting to
     #  message list would be implemented, this would control whether the new user was invited or directly added.
     #  However, inviting will most likely be implemented with other means than Mailman's invite system, so the flag
-    #  might be unnecessary. When the invite to a messge list is implemented, check if this is still needed or if the
+    #  might be unnecessary. When the invite to a message list is implemented, check if this is still needed or if the
     #  flag is given the same constant value of True as the other two flags for pre_something.
 
     # We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise they have

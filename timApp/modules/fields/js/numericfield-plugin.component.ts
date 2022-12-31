@@ -403,7 +403,7 @@ export class NumericfieldPluginComponent
 
     /**
      * Autosaver used by ng-blur in textfieldApp component.
-     * Needed to seperate from other save methods because of the if-structure.
+     * Needed to separate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {

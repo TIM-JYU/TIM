@@ -116,7 +116,7 @@ export class RbfieldPluginComponent
         saved: false,
         message: undefined,
     };
-    private preventedAutosave = false; // looks depracated???
+    private preventedAutosave = false; // looks deprecated???
     private rbName: string = "";
     saveFailed = false;
 
@@ -350,7 +350,7 @@ export class RbfieldPluginComponent
 
     /**
      * Autosaver used by ng-blur in rbfieldApp component.
-     * Needed to seperate from other save methods because of the if-structure.
+     * Needed to separate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {

@@ -117,7 +117,7 @@ export class TaggedDocumentListComponent {
 
     /*
      * Calls tag search function. Has option to searching for exactly matching
-     * tags or all that containg parts of the tag.
+     * tags or all that contain parts of the tag.
      */
     async searchClicked(tagName: string) {
         if (!this.enableSearch) {

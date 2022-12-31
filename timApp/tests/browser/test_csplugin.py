@@ -218,7 +218,7 @@ postprogram: |!!
         self.assertEqual("1/1", count.text)
         self.assertEqual("-6 + -3 = -9; -9 on OK", self.find_element(".console").text)
 
-        # make a new anwser, that is not saved (see later)
+        # make a new answer, that is not saved (see later)
         input_and_send("3")
         self.assertEqual("1/1", count.text)
         self.assertEqual(
@@ -418,7 +418,7 @@ stackversion: 0
         self.assertEqual("1/1", count.text)
         self.assertEqual("OK!", feedback_text())
 
-        # make a new anwser, that is not saved (see later)
+        # make a new answer, that is not saved (see later)
         input_and_send("16")
         self.assertEqual("1/1", count.text)
         self.assertEqual("4553:15+2", stem_text())

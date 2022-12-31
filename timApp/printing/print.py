@@ -268,7 +268,7 @@ def get_printed_document(
 
     print_type = PrintFormat(file_type)
     template_doc = None
-    orginal_print_type = print_type
+    original_print_type = print_type
     eol_type = "native"
     if print_type == PrintFormat.ICS:
         print_type = PrintFormat.PLAIN
@@ -370,7 +370,7 @@ def get_printed_document(
             + line
             + "#L"
             + line
-            + '" target="_blank">Erronous LaTeX file</a></p>'
+            + '" target="_blank">Erroneous LaTeX file</a></p>'
             + '<p><a href="'
             + latex_access_url
             + '" target="_blank">Created LaTeX file</a></p>'
@@ -388,10 +388,10 @@ def get_printed_document(
         add_csp_header(response)
         return response
 
-    mime = get_mimetype_for_format(orginal_print_type)
+    mime = get_mimetype_for_format(original_print_type)
 
     if not line:
-        if orginal_print_type == PrintFormat.HTML:
+        if original_print_type == PrintFormat.HTML:
             with open(cached, "r", encoding="utf-8") as f:
                 result = f.read()
             # TODO: This sanitizes the HTML, including PDF iframes.
@@ -452,7 +452,7 @@ def get_printed_document(
 def get_setting_and_counters_par(
     doc_info: DocInfo,
 ) -> tuple[DocParagraph | None, DocParagraph | None]:
-    # TODO: Make this more efective!
+    # TODO: Make this more effective!
     settings_par: DocParagraph | None = None
     counters_par: DocParagraph | None = None
     for par in doc_info.document:  # type: DocParagraph

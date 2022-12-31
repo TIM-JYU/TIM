@@ -909,7 +909,7 @@ def get_points_by_rule(
         if rule.total:
             s = groupsums[
                 0
-            ]  # TODO: find indesies from total, total is a list of names to count
+            ]  # TODO: find indices from total, total is a list of names to count
             task_groups["task_sum"] = round_if_not_none(s[0])
             task_groups["velp_sum"] = round_if_not_none(s[1])
             task_groups["total_sum"] = round_if_not_none(s[2])

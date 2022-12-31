@@ -58,7 +58,7 @@ objects:
       borderWidth: 2
       borderColor: "brown"
       textColor: "blue"
-      backgroud: yellow
+      background: yellow
       font: "30px times"
       size:
 targets: 

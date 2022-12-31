@@ -10,7 +10,7 @@ Run `npm install` to install TIM dependencies.
 
 The version of NPM that is used is determined by the OS.
 On Windows, the NPM that is installed on the system is used.
-On Linux, NPM packaged withing TIM image is used.
+On Linux, NPM packaged within TIM image is used.
 """,
 }
 

@@ -1,0 +1,12 @@
+name: Check spelling
+
+on: push
+
+jobs:
+  check_spelling:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check spelling of repository files
+        uses: crate-ci/typos@v1.13.6

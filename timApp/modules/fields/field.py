@@ -1,5 +1,5 @@
 """
-TIM plugin: a field to start other fileds
+TIM plugin: a field to start other fields
 """
 from flask import Response
 

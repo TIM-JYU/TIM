@@ -20,8 +20,8 @@ const allowedVariables = "abcdefghijklmpqrsuvwxy";
 
 export function truthTable(sentence: string) {
     let input = sentence.toLowerCase();
-    for (const [froms, tos] of replacements) {
-        input = input.split(froms).join(tos);
+    for (const [fromRepls, toRepls] of replacements) {
+        input = input.split(fromRepls).join(toRepls);
     }
 
     let header = "";

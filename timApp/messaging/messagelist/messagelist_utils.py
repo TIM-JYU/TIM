@@ -569,7 +569,7 @@ def parse_mailman_message_address(
     original: dict, header: str
 ) -> list[EmailAndDisplayName] | None:
     """Parse (potentially existing) fields 'from' 'to', 'cc', or 'bcc' from a dict representing Mailman's email message.
-    The fields are in lists, with individual list indicies being lists themselves of the form
+    The fields are in lists, with individual list indices being lists themselves of the form
         ['Display Name', 'email@domain.fi']
 
     :param original: Original message.
@@ -654,7 +654,7 @@ def set_message_list_notify_owner_on_change(
 ) -> None:
     """Set the notify list owner on list change flag for a list, and update necessary channels with this information.
 
-    If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
+    If the message list has an email list as a message channel, this will set the equivalent flag on the email list.
 
     :param message_list: The message list where the flag is being set.
     :param notify_owners_on_list_change_flag: An optional boolean flag. If True, then changes on the message list sends
@@ -682,7 +682,7 @@ def set_message_list_member_can_unsubscribe(
     """Set the list member's free unsubscription flag, and propagate that setting to channels that have own handling
     of unsubscription.
 
-    If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
+    If the message list has an email list as a message channel, this will set the equivalent flag on the email list.
 
     :param message_list: Message list where the flag is being set.
     :param can_unsubscribe_flag: An optional boolean flag. For True, the member can unsubscribe on their own. For False,
@@ -761,7 +761,7 @@ def set_message_list_tim_users_can_join(
 
     :param message_list: Message list where the flag is being set.
     :param can_join_flag: An optional boolean flag. If True, then TIM users can directly join this list, no moderation
-    needed. If False, then TIM users can't direclty join the message list. If None, the current value is kept.
+    needed. If False, then TIM users can't directly join the message list. If None, the current value is kept.
     """
     if can_join_flag is None or message_list.tim_user_can_join == can_join_flag:
         return

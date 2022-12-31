@@ -393,7 +393,7 @@ def create_tim_message(
     :param tim_message: InternalMessage object
     :param options: Options related to the message
     :param message_body: Message subject, contents and list of recipients
-    :param message_viewers: Groups that are allowed to view the message. If None, all recepients can.
+    :param message_viewers: Groups that are allowed to view the message. If None, all recipients can.
     :return: The created Document object
     """
     recipients = (

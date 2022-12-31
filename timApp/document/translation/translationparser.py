@@ -255,12 +255,12 @@ class TranslationParser:
     def quoted_collect(self, content: dict) -> list[TranslateApproval]:
         """
         Collect and separate translatable and untranslatable areas within
-        quatation marks.
-        Quatation element is delimited by quatation marks.
+        quotation marks.
+        Quotation element is delimited by quotation marks.
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
 
-        :param content: The types of quatation marks used and the text (list
+        :param content: The types of quotation marks used and the text (list
          of inlines) from Inline element: [ QuoteType, [Inline] ].
         :return: List containing the parsed collection of Quoted content.
         """

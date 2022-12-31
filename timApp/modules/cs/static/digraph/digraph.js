@@ -86,8 +86,8 @@ class DiGraph {
             if (value === -1) return;
             const node = digraph.nodes[from];
             if (node.arcs[value]) {
-                node.error += "Node " + node.name + ": dublicate transition " + value + "\n";
-                node.dublicate = true;
+                node.error += "Node " + node.name + ": duplicate transition " + value + "\n";
+                node.duplicate = true;
             }
             node.arcs[value] = arc;
         }
@@ -201,7 +201,7 @@ class DiGraph {
     /*!
      * Check if input s is accepted by this digraph
      * \param s input to check
-     * \return boolean true if accpeted
+     * \return boolean true if accepted
      */
     accepts(s) {
         this.cnt = 0;

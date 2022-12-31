@@ -43,7 +43,7 @@ class Bookmarks:
           }
         ]
 
-        This class mainly allows to handle bookmars in a more convenient way.
+        This class mainly allows to handle bookmarks in a more convenient way.
     """
 
     def __init__(self, user: User):

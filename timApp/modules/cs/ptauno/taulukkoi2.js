@@ -417,12 +417,12 @@ Virtuaalikone.prototype.luoTaulukko = function (parametrit) {
     return new Taulukko(this); // XXX tää on niiiiin väärin...
 };
 
-Virtuaalikone.prototype.luoIndeksi = function (nimi,inro) {
-    var muuttuja = this.lisääMuuttuja(nimi, inro);
-    if (!inro) inro = muuttuja.diviArvo.arvo;
+Virtuaalikone.prototype.luoIndeksi = function (nimi,iNro) {
+    var muuttuja = this.lisääMuuttuja(nimi, iNro);
+    if (!iNro) iNro = muuttuja.diviArvo.arvo;
 
 
-    var solu = this.solu(inro);
+    var solu = this.solu(iNro);
     if (!solu) return;
 
     var io = new Indeksi(this, solu);
@@ -443,8 +443,8 @@ Virtuaalikone.prototype.luoMuuttujat = function (parametrit) {
         if (pn[0]=='m') {
             this.lisääMuuttuja(pn.substring(1), parseInt(parametrit[pn])||null,null, true);
         } else if (pn[0]=='i') {
-            var inro = parseInt(parametrit[pn]) || null;
-            this.luoIndeksi(pn.substring(1), inro);
+            var iNro = parseInt(parametrit[pn]) || null;
+            this.luoIndeksi(pn.substring(1), iNro);
         }
     }
 

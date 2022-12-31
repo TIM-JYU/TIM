@@ -78,7 +78,7 @@ class ModelEntry(ScheduleEntry):
             self.kwargs = loads(model.kwargs or "{}")
         except ValueError as exc:
             logger.exception(
-                "Removing schedule %s for argument deseralization error: %r",
+                "Removing schedule %s for argument deserialization error: %r",
                 self.name,
                 exc,
             )
@@ -165,7 +165,7 @@ class ModelEntry(ScheduleEntry):
     def _default_now(self):
         now = self.app.now()
         # The PyTZ datetime must be localised for the Django-Celery-Beat
-        # scheduler to work. Keep in mind that timezone arithmatic
+        # scheduler to work. Keep in mind that timezone arithmetic
         # with a localized timezone may be inaccurate.
         # return now.tzinfo.localize(now.replace(tzinfo=None))
         return now.replace(tzinfo=self.app.timezone)
@@ -480,5 +480,5 @@ class DatabaseScheduler(Scheduler):
     @property
     def info(self):
         """override"""
-        # return infomation about Schedule
+        # return information about Schedule
         return f"    . db -> {self.dburi}"
