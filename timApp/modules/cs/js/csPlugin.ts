@@ -168,7 +168,7 @@ interface LanguageType {
     ace: string; // ACE-editor type
     comment: string; // one line comment for language, if needs
     // beg and end symbols, separate by space
-    // for exaple "/* */"
+    // for example "/* */"
 }
 
 class LanguageTypes {
@@ -972,7 +972,7 @@ export class CsController extends CsBase implements ITimComponent {
     lastUserargs?: string;
     lastUserinput?: string;
     localcode?: string;
-    keepErros: boolean = false;
+    keepErrors: boolean = false;
     muokattu: boolean;
     noeditor!: boolean;
     oneruntime?: string;
@@ -982,7 +982,7 @@ export class CsController extends CsBase implements ITimComponent {
     preview!: JQuery<HTMLElement>;
     result?: string;
     runError?: string | boolean;
-    runned: boolean = false;
+    hasBeenRun: boolean = false;
     runSuccess: boolean;
     runTestGreen: boolean = false;
     runTestRed: boolean = false;
@@ -1439,7 +1439,7 @@ export class CsController extends CsBase implements ITimComponent {
      * Checks whether usercode/args/input differ from previously saved values
      */
     textChanged(): void {
-        if (!this.keepErros) {
+        if (!this.keepErrors) {
             this.runError = undefined;
         }
         const nowUnsaved = this.hasUnSavedInput();
@@ -1513,7 +1513,7 @@ export class CsController extends CsBase implements ITimComponent {
 
     get program() {
         const prg = this.attrsall.program ?? this.markup.program;
-        // IF just replace by code, then no need fo show full code
+        // IF just replace by code, then no need to show full code
         if (prg?.trim() === "REPLACEBYCODE") {
             return "";
         }
@@ -2319,7 +2319,7 @@ ${fhtml}
     anyChanged() {
         this.textChanged();
         this.fullCode = this.getCode();
-        if (this.runned && this.markup.autoupdate) {
+        if (this.hasBeenRun && this.markup.autoupdate) {
             if (this.autoupdateHandle) {
                 window.clearTimeout(this.autoupdateHandle);
             }
@@ -2443,7 +2443,7 @@ ${fhtml}
     }
 
     async runCodeCommon(nosave: boolean, _extraMarkUp?: IExtraMarkup) {
-        this.runned = true;
+        this.hasBeenRun = true;
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty === "md") {
             this.showMD();
@@ -3218,7 +3218,7 @@ ${fhtml}
 
         const usercode = this.usercode;
 
-        // TODO: begin and end texts as a parameter and then indext picked there
+        // TODO: begin and end texts as a parameter and then indent picked there
         let ind = "";
         if (extra) {
             ind = this.getSameIndent(this.usercode, 0);
@@ -3235,7 +3235,7 @@ ${fhtml}
     }
 
     checkByCodeRemove() {
-        // TODO: begin and end texts as a parameter and then indext picked there
+        // TODO: begin and end texts as a parameter and then indent picked there
         if (this.nocode || !(this.file || this.program)) {
             return;
         }
@@ -3894,8 +3894,8 @@ ${fhtml}
             <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
             <div class="csRunErrorClass csRunError" *ngIf="runError">
                 <p class="pull-right" *ngIf="!markup['noclose']">
-                    <label class="normalLabel" title="Keep erros until next run">Keep <input type="checkbox"
-                                                                                             [(ngModel)]="keepErros"/></label>
+                    <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"
+                                                                                             [(ngModel)]="keepErrors"/></label>
                     <tim-close-button (click)="closeError()"></tim-close-button>
                 </p>
                 <pre class="csRunError">{{error}}</pre>

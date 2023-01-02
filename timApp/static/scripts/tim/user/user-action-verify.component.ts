@@ -121,7 +121,7 @@ const INFO_MAP: Record<VerificationType, Type<unknown> | undefined> = {
     [VerificationType.SET_PRIMARY_CONTACT]: SetPrimaryContactInfoComponent,
 };
 
-const VERIFY_RETRUN_URLS: Record<VerificationType, string | undefined> = {
+const VERIFY_RETURN_URLS: Record<VerificationType, string | undefined> = {
     [VerificationType.LIST_JOIN]: undefined,
     [VerificationType.CONTACT_OWNERSHIP]: $localize`Return to TIM settings.`,
     [VerificationType.SET_PRIMARY_CONTACT]: $localize`Return to TIM settings.`,
@@ -165,7 +165,7 @@ export class UserActionVerifyComponent implements AfterViewInit {
     infoContainer!: ViewContainerRef;
     processing: boolean = false;
     verifyComplete: boolean = false;
-    verifyReturnUrls = VERIFY_RETRUN_URLS;
+    verifyReturnUrls = VERIFY_RETURN_URLS;
     verificationResult?: {
         severity: AlertSeverity;
         message: string;

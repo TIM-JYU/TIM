@@ -1,0 +1,85 @@
+[files]
+extend-exclude = [
+    "typos.toml",
+    "*.c",
+    "*.cc",
+    "*.h",
+    "*.cpp",
+    "*.xlf",
+    "*.patch",
+    "*.min.js",
+    "*-min.js",
+    "timApp/static/scripts/vendor/",
+    "timApp/static/ohj1/",
+    "timApp/modules/cs/static/ohj2/",
+    "timApp/modules/cs/static/WeScheme/",
+    "test_signup.py",
+    "full.render.js",
+    "lite.render.js",
+    "embedded_sagecell.js",
+    "processing.js",
+    "codeHighlight.scss",
+]
+
+[default.extend-identifiers]
+# False positives/otherwise not worth fixing:
+ba = "ba"
+datas = "datas"
+global_datas = "global_datas"
+SMTPHeloError = "SMTPHeloError"
+ba_group = "ba_group"
+ue = "ue"
+nd = "nd"
+nd_path = "nd_path"
+209fc28604ba = "209fc28604ba"
+70a159e42ba6 = "70a159e42ba6"
+82c3b050ba5d = "82c3b050ba5d"
+209fc28604ba_ = "209fc28604ba_"
+70a159e42ba6_ = "70a159e42ba6_"
+82c3b050ba5d_add_index_to_readparagraphs = "82c3b050ba5d_add_index_to_readparagraphs"
+Anonymoys = "Anonymoys"
+ba_change = "ba_change"
+ba_confirm = "ba_confirm"
+GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU = "GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU"
+Otho = "Otho"
+makro = "makro"
+euclidianView = "euclidianView"
+alue = "alue"
+uudenMuuttujanAlue = "uudenMuuttujanAlue"
+muuttujaButtonAlue = "muuttujaButtonAlue"
+alle = "alle"
+funktion = "funktion"
+t_lnBA = "t_lnBA"
+rekursion = "rekursion"
+als = "als"
+ist = "ist"
+sade = "sade"
+addToDatas = "addToDatas"
+sectionning = "sectionning"
+eJwVy0EOhCAMQNG7dG0yahGFy5BaS2ZigEnFlfHu4vL95F8Q_qKJsuQKvuopHVDmb1HwAB0wJQlRS2r8vD40hlp2yS2YwTGamceerWXkaR0nIiTroiFaNtsPy = "eJwVy0EOhCAMQNG7dG0yahGFy5BaS2ZigEnFlfHu4vL95F8Q_qKJsuQKvuopHVDmb1HwAB0wJQlRS2r8vD40hlp2yS2YwTGamceerWXkaR0nIiTroiFaNtsPy"
+Versio = "Versio"
+MATA280 = "MATA280"
+
+[default.extend-words]
+# Custom corrections:
+'garåh' = "graph"
+agording = "according"
+allreadu = "already"
+charracter = "character"
+depreceted = "deprecated"
+dirrerences = "differences"
+helpper = "helper"
+indesies = "indices"
+lanbda = "lambda"
+opertation = "operation"
+opertator = "operator"
+pahse = "phase"
+parenthes = "parentheses"
+phese = "phase"
+refecence = "reference"
+refreneces = "references"
+releted = "related"
+requrie = "require"
+rexexp = "regexp"
+sthe = "the"
+whinch = "which"

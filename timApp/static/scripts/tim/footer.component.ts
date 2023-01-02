@@ -16,12 +16,12 @@ import {documentglobals, genericglobals} from "tim/util/globals";
                             <div class="col-xs-6">
                                 <p>
                                     <ng-container *ngIf="!docGlobals.requires_login || !hide.links" i18n>TIM last updated: </ng-container>
-                                    <ng-container *ngIf="hide.links && !docGlobals.requires_login">{{config.gitLastestCommitTimestamp}}
+                                    <ng-container *ngIf="hide.links && !docGlobals.requires_login">{{config.gitLatestCommitTimestamp}}
                                         <br>    
                                         <ng-container i18n>Problems and questions about TIM</ng-container>: {{config.helpEmail}}
                                     </ng-container>
                                     <ng-container *ngIf="!hide.links">
-                                        <a href="/view/tim/muutoshistoria">{{config.gitLastestCommitTimestamp}}</a>
+                                        <a href="/view/tim/muutoshistoria">{{config.gitLatestCommitTimestamp}}</a>
                                         <br>
                                         <ng-container i18n>Problems and questions about TIM</ng-container>
                                         :

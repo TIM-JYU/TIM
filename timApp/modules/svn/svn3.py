@@ -47,7 +47,7 @@ from tim_common.fileParams import (
     do_headers,
     post_params,
     multi_post_params,
-    get_chache_keys,
+    get_cache_keys,
     clear_cache,
     get_template,
     join_dict,
@@ -501,13 +501,13 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 
         print("do_POST MULTIHML ==========================================")
         t1 = time.perf_counter()
-        querys = multi_post_params(self)
-        # print(querys)
+        queries = multi_post_params(self)
+        # print(queries)
 
         do_headers(self, "application/json")
 
         htmls = []
-        for query in querys:
+        for query in queries:
             if multimd:
                 s = get_md(self, query)
             else:
@@ -517,7 +517,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         sresult = json.dumps(htmls)
         self.wout(sresult)
         t2 = time.perf_counter()
-        ts = "multihtml: %d - %7.4f" % (len(querys), (t2 - t1))
+        ts = "multihtml: %d - %7.4f" % (len(queries), (t2 - t1))
         print(ts)
 
     def do_PUT(self):
@@ -555,7 +555,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 
         if self.path.find("refresh") >= 0:
             print(f"Cleaning cache")
-            keys, mem_cache_len, disk_cache_len = get_chache_keys()
+            keys, mem_cache_len, disk_cache_len = get_cache_keys()
             clear_cache()
             print(keys)
             self.wout(

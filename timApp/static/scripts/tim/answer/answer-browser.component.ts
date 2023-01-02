@@ -174,7 +174,7 @@ export class AnswerBrowserComponent
     public review: boolean = false;
     imageReview: boolean = false;
     private imageReviewUrls: string[] = [];
-    imageReviewDatas: string[] = [];
+    imageReviewData: string[] = [];
     private imageReviewUrlIndex = 0;
     public oldreview: boolean = false;
     public shouldFocus: boolean = false;
@@ -635,11 +635,11 @@ export class AnswerBrowserComponent
                     const velpImages = await comp.getVelpImages();
                     if (velpImages) {
                         this.imageReview = true;
-                        this.imageReviewDatas = velpImages;
+                        this.imageReviewData = velpImages;
                     }
                 } else if (newReviewHtml.startsWith("data:image")) {
                     this.imageReview = true;
-                    this.imageReviewDatas = [newReviewHtml];
+                    this.imageReviewData = [newReviewHtml];
                 } else if (newReviewHtml.startsWith("imageurls:")) {
                     this.imageReview = true;
                     const fetchedImages: string[] = [];
@@ -661,7 +661,7 @@ export class AnswerBrowserComponent
                         );
                         fetchedImages.push(base64Data as string);
                     }
-                    this.imageReviewDatas = fetchedImages;
+                    this.imageReviewData = fetchedImages;
                 }
 
                 if (this.selectedAnswer) {

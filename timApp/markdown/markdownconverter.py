@@ -143,7 +143,7 @@ def srange(s, i1, i2, step=1, *argv):
 # noinspection PyPep8Naming
 def Pz(i):
     """
-    Returns number as a string so that from 0 comes "", postive number comes like " + 1"
+    Returns number as a string so that from 0 comes "", positive number comes like " + 1"
     and negative comes like " - 1"
 
     :param i: number to convert
@@ -183,7 +183,7 @@ def week_to_date(week_nr, daynr=1, year=None, frmt=None):
     :param daynr: day of week to get date
     :param year: year to get date
     :param frmt: extended format string
-    :return: date object or formated string
+    :return: date object or formatted string
     """
     if week_nr <= 0:
         week_nr = date.today().isocalendar()[1]
@@ -205,7 +205,7 @@ def month_to_week(month, daynr=1, year=None):
     get week number for month
     see: timApp/tests/unit/test_datefilters.py
 
-    :param month: month numer starting from 1
+    :param month: month number starting from 1
     :param daynr: day number of month
     :param year: from what year
     :return: week number
@@ -229,7 +229,7 @@ def now(frmt=0):
     Or this week %% "%w" | now %%
 
     :param frmt: format for current date or delta for current date
-    :return: current date + (fmt as int) if fmt is int, otherwise current timestamp formated
+    :return: current date + (fmt as int) if fmt is int, otherwise current timestamp formatted
     """
     if isinstance(frmt, int):
         return datetime.now() + timedelta(days=frmt)
@@ -549,7 +549,7 @@ def par_list_to_html_list(
 
     texplain = settings.is_texplain()
     textplain = settings.is_textplain()
-    if texplain or textplain:  # add pre-markers to tex paragrpahs
+    if texplain or textplain:  # add pre-markers to tex paragraphs
         for i in range(0, len(texts)):
             text = texts[i]
             if text.find("```") != 0 and text.find("#") != 0:
@@ -631,10 +631,10 @@ def make_slide_fragments(html_text: str) -> str:
 
 # Checks if html element's content is surrounded with given string and edits it accordingly
 def check_and_edit_html_if_surrounded_with(
-    html_content: str, string_delimeter: str, editing_function
+    html_content: str, string_delimiter: str, editing_function
 ) -> str:
     # List of strings after splitting html from
-    html_list = html_content.split(string_delimeter)
+    html_list = html_content.split(string_delimiter)
     if len(html_list) < 2:
         return html_content
     else:

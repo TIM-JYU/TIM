@@ -598,7 +598,7 @@ export class FeedbackPluginComponent
      * Saves the selected plugins content to the database.
      *
      * @param plugin The plugin to be saved.
-     * @returns{boolean} Whether the save was succesful.
+     * @returns{boolean} Whether the save was successful.
      */
     async savePlugin(plugin: ITimComponent) {
         this.saving = true;

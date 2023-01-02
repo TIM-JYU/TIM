@@ -267,7 +267,7 @@ def clear_cache():
         os.remove(CACHE_DIR + f)
 
 
-def get_chache_keys():
+def get_cache_keys():
     global cache
     s = ""
     memory_cache_size = len(cache)
@@ -287,7 +287,7 @@ def get_chache_keys():
 # noinspection PyBroadException
 def get_url_lines(url: str):
     global cache
-    # print("========= CACHE KEYS ==========\n", get_chache_keys())
+    # print("========= CACHE KEYS ==========\n", get_cache_keys())
     if url in cache:
         # print("from cache: ", url)
         return cache[url]
@@ -358,9 +358,9 @@ def get_url_lines_as_string(url: str, headers: dict[str, str] | None = None):
     global cache
     cachename = "lines_" + url + secure_hash_dict(headers)
     diskcache = CACHE_DIR + cachename.replace("/", "_").replace(":", "_")
-    # print("========= CACHE KEYS ==========\n", get_chache_keys())
+    # print("========= CACHE KEYS ==========\n", get_cache_keys())
     # print(cachename + "\n")
-    # print(cache) # chache does not work in forkingMix
+    # print(cache) # cache does not work in forkingMix
     if cachename in cache:
         # print("from cache: ", cachename)
         return cache[cachename]
@@ -978,8 +978,8 @@ def get_templates(dirname: str) -> object:
 
 def get_all_templates(dirname: str) -> dict:
     """Find list of all templates from dirname.  Dir should include file tabs.txt where there is one line for every tab
-    needed for TIM editor. Then there should be directories 0, 1, ... for each corresponding tab-line.  So if tehre is
-    two lines in tabs.txt tehre is directories 0 and 1 for first and second tab.
+    needed for TIM editor. Then there should be directories 0, 1, ... for each corresponding tab-line.  So if there is
+    two lines in tabs.txt there is directories 0 and 1 for first and second tab.
 
     :param dirname: the directory name where to find template list file and sub directories for templates
     :return: dict with list of lif to template items (templates) and texts (text)
@@ -1096,7 +1096,7 @@ def make_lazy(
 def replace_template_params(
     query: QueryClass, template: str, cond_itemname: str, itemnames=None
 ) -> str:
-    """Replaces all occurances of itemnames and cond_item_name in template by their value in query if  cond_itemname
+    """Replaces all occurrences of itemnames and cond_item_name in template by their value in query if  cond_itemname
     exists in query.
 
     :param query: query params where items can be read
@@ -1128,7 +1128,7 @@ def replace_template_params(
 def replace_template_param(
     query: QueryClass, template: str, cond_itemname: str, default=""
 ) -> str:
-    """Replaces all occurances of itemnames and cond_item_name in template by their value in query if  cond_itemname
+    """Replaces all occurrences of itemnames and cond_item_name in template by their value in query if  cond_itemname
     exists in query.
 
     :param query: query params where items can be read

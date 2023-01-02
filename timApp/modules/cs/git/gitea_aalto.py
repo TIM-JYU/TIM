@@ -90,7 +90,7 @@ class GiteaAaltoLib(GiteaLib):
             if user["secret_id"] != "ok":
                 print("check_credentials returned non-ok on secret_id when registering")
                 raise Exception(
-                    "Interal Error: 1. Please refresh page. If this message persists, please contact course staff."
+                    "Internal Error: 1. Please refresh page. If this message persists, please contact course staff."
                 )
 
         if "password" in user and user["password"] != "ok":

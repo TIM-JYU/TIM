@@ -437,7 +437,7 @@ export class StackPluginComponent
         }
         this.isRunning = true;
         if (!this.stackPeek) {
-            // remove extra fields from sceen
+            // remove extra fields from screen
             let divinput = this.element.find(".stackinputfeedback");
             divinput.remove();
             divinput = this.element.find(".stackprtfeedback");

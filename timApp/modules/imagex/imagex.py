@@ -245,7 +245,7 @@ class ImagexServer(TimServer):
                                     gottenpointsobj = {}
 
         answer = {}
-        # Check if getting finalanswer from excercise is allowed and if client asked for it.
+        # Check if getting finalanswer from exercise is allowed and if client asked for it.
         finalanswer = get_param(query, "finalanswer", False)
         finalanswerquery = get_json_param(query.jso, "input", "finalanswerquery", False)
 

@@ -257,7 +257,7 @@ def print_feedback_report(doc_path: str):
     elif name == "both":
         fullname = True
 
-    # Dialect names for the csv-writer delimitors.
+    # Dialect names for the csv-writer delimiters.
     if format == "tab":
         dialect = "excel-tab"
     elif format == "comma":

@@ -181,7 +181,7 @@ export abstract class PluginBaseCommon {
      * Sets plugin's answer content via external call
      * @param content answer to be parsed
      * @returns ISetAnswerResult: {ok: boolean, message: (string | undefined)}
-     * ok: true if content was succesfully parsed
+     * ok: true if content was successfully parsed
      * message: for replying with possible errors
      */
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {

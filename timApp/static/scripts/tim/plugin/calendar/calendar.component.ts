@@ -281,7 +281,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 </div>
             </div>
         </ng-template>
-        <div class="cal-ui-swicth">
+        <div class="cal-ui-switch">
             <label><input type="checkbox" [(ngModel)]="advancedUI" /><ng-container i18n>Advanced</ng-container></label>
             <tim-calendar-minimal-header 
                     [locale]="locale" 

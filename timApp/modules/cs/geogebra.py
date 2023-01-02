@@ -160,7 +160,7 @@ Eval:
 </p>
 
 <ul>
-  <li>Get constraction:
+  <li>Get construction:
     <a href="javascript:;" onclick="setArea(ggbApplet.getBase64()); setHelp('ggbApplet.getBase64()')">GGB</a>
     <a href="javascript:;" onclick="setArea(ggbApplet.getXML()); setHelp('ggbApplet.getXML()')">XML</a>
     <a href="javascript:;" onclick="setArea(ggbApplet.getAllObjectNames()); setHelp('ggbApplet.getAllObjectNames()')">Names</a>
@@ -184,7 +184,7 @@ Eval:
 <textarea name="resultArea" id="resultArea" cols=90 rows=10></textarea>
 <ul>
    <li><a href="javascript:timgeo.copyArea(resultArea())">Copy area</a></li>
-   <li>Set constraction:
+   <li>Set construction:
       <a href="javascript:;" onclick="ggbApplet.setBase64(resultArea().value); setHelp('ggbApplet.setBase64(ggb)')">GGB</a>
       <a href="javascript:;" onclick="ggbApplet.setXML(resultArea().value); setHelp('ggbApplet.setXML(xml)')">XML</a>
       <a href="javascript:;" onclick="ggbApplet.reset(); setHelp('ggbApplet.reset()')">Reset</a>

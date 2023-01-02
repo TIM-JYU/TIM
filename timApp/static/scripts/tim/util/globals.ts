@@ -54,7 +54,7 @@ interface IHostConfig {
 interface IConfig {
     minPasswordLength: number;
     simpleLoginUseStudyInfoMessage: boolean;
-    gitLastestCommitTimestamp: string;
+    gitLatestCommitTimestamp: string;
     helpEmail: string;
     gitBranch: string;
     hakaEnabled: boolean;

@@ -127,7 +127,7 @@ def test_name(name_candidate: str) -> None:
     """Check new message list's name candidate's name.
 
      The name has to meet naming rules, it has to be not already be in use and it cannot be a reserved name. If the
-     function retuns control to its caller, then name is viable to use for a message list. If at some point the name
+     function returns control to its caller, then name is viable to use for a message list. If at some point the name
      is not viable, then an exception is raised.
 
     :param name_candidate: The name candidate to check.
@@ -312,7 +312,7 @@ def parse_external_member(external_member_candidate: str) -> list[str] | None:
     or
         User Userington <user.userington@domain.fi>
 
-    :param external_member_candidate: A string represeting the external member.
+    :param external_member_candidate: A string representing the external member.
     :return: Return a list of the form [email, name_part_1, name_part_2, ...] if parsing was successful. Otherwise
     return None.
     """

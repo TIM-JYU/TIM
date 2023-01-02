@@ -334,7 +334,7 @@ function scrollElementVisibleInParent(
     extraY: number
 ) {
     // Scroll par window so that el comes visible if it is not visible
-    // it is ensured that at least extraY times el hight is over or under el
+    // it is ensured that at least extraY times el height is over or under el
     const rect = el.getBoundingClientRect();
     const prect = par.getBoundingClientRect();
 
@@ -581,7 +581,7 @@ export class TapePluginContent implements PluginJson {
 
     /**
      * Inserts a command into the program.
-     * Returns true if succesful, otherwise false.
+     * Returns true if successful, otherwise false.
      * @param commandToAdd The command.
      * @param parameterString The parameter of the command given as a string.
      * @param index (Optional) The place where the command is inserted in the program, if not to the end.

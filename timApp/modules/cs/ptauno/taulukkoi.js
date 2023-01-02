@@ -310,10 +310,10 @@ Virtuaalikone.prototype.luo_muuttujat = function (parametrit) {
         if (pn[0]=='m') {
             /* muuttuja = */ this.lisää_muuttuja(pn.substring(1), parseInt(parametrit[pn]));
         } else if (pn[0]=='i') {
-            var inro = parseInt(parametrit[pn]);
-            var muuttuja = this.lisää_muuttuja(pn.substring(1), inro);
+            var iNro = parseInt(parametrit[pn]);
+            var muuttuja = this.lisää_muuttuja(pn.substring(1), iNro);
             
-            var solu = this.solu(inro);
+            var solu = this.solu(iNro);
             var io = new Indeksi(this, solu);
             io.indeksoi(muuttuja);
             io.div.innerHTML = muuttuja.nimi();

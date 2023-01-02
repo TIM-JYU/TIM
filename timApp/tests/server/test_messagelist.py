@@ -209,7 +209,7 @@ class MessageListTest(TimMessageListTest):
         admin_doc = get_doc_or_abort(manage_doc["id"])
         # Verify returned admin doc is the same message list's admin doc in db.
         self.assertEqual(message_list.manage_doc_id, admin_doc.id)
-        # Verify name and archive type are as intented in the db.
+        # Verify name and archive type are as intended in the db.
         self.assertEqual(message_list.name, list_name)
         self.assertEqual(message_list.archive, archive)
         self.assertIsNotNone(Folder.find_by_path(f"archives/{message_list.name}"))

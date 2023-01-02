@@ -349,7 +349,7 @@ TASK_NAME_PROG = re.compile(
 
 def widen_fields(fields: list[str] | str) -> list[str]:
     """
-    if there is syntax d(1,3) in fileds, it is made d1,d2
+    if there is syntax d(1,3) in fields, it is made d1,d2
     from d(1,3)=t  would come d1=t1, d2=t2
 
     :param fields: list of fields

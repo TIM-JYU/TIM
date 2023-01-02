@@ -388,7 +388,7 @@ export class GamificationMapComponent {
                 this.tileFrameSet.tilewidth * scale,
                 this.tileFrameSet.tileheight * scale
             );
-            // If clicked on a bulding with one floor, draw two frame tiles and a roof frame
+            // If clicked on a building with one floor, draw two frame tiles and a roof frame
         } else if (
             tile.tileset.properties != null &&
             tile.tileset.properties.buildingProperty === 1 && // && this.json.layers[tile.layerNo + 1] &&
@@ -474,7 +474,7 @@ export class GamificationMapComponent {
                 this.tileFrameSet.tilewidth * scale,
                 this.tileFrameSet.tileheight * scale
             );
-            // If clicked on a bulding with two floors, draw one frame tile and a roof frame
+            // If clicked on a building with two floors, draw one frame tile and a roof frame
         } else if (
             tile.tileset.properties != null &&
             tile.tileset.properties.buildingProperty === 1 && // this.json.layers[tile.layerNo + 1] &&

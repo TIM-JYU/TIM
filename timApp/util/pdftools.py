@@ -367,7 +367,7 @@ def parse_error(message: str) -> str:
         return "Error: Unable to merge a password protected file; please remove the password requirement (including empty password)"
     elif (
         "Error: Unable to find file" in message
-        or "java.io.FileNotFoundEception" in message
+        or "java.io.FileNotFoundException" in message
     ):
         return "Error: file not found; merging tool couldn't find the attachment, try reuploading it"
     elif "java.lang.ClassCastException" in message:

@@ -226,7 +226,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         """
         If component is not show in view mode return False.
         This method is for to be overridden in child classes if they should not be shown on View-mode
-        :return: is component shown in view as deafault
+        :return: is component shown in view as default
         """
         return True
 

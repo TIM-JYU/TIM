@@ -938,7 +938,7 @@ def is_datablock(yaml: dict[str, Any]) -> bool:
     Checks if tableDataBlock exists
 
     :param yaml:
-    :return: Boolean indicating the existance of tabledatablock
+    :return: Boolean indicating the existence of tabledatablock
     """
     try:
         if yaml[TABLE][DATABLOCK]:

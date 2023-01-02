@@ -6,7 +6,7 @@ function removePairs(s, start, end) {
     s = s.replace(/\\0/g, "␀").replace(/\0/g, "␀");
     let i = start.indexOf(s[0]);
     if (end === undefined) end = start;
-    if (i >= 0) { // eat parenthes away
+    if (i >= 0) { // eat parentheses away
         // s[0] = ' ';
         let first = 1;
         let paren = end[i];
@@ -112,7 +112,7 @@ function normalizeJson(str){
 
 
 function varsStringToJson(s) {
-    // tries fix missing quotes and parenthes
+    // tries fix missing quotes and parentheses
     // does not work if object inside object
     // {x 4, y 2} => {"x": 4, "y": 2}
     // x: 4, y: 2 => {"x": 4, "y": 2}
@@ -204,7 +204,7 @@ class PrgObject {
  *
  * cmd has isMy static method that checks if string to parse belongs
  * to this cmd.
- * Check is mosty done by regexp and there should be
+ * Check is mostly done by regexp and there should be
  * a regex101 link for every cmd to see examples.
  *
  * If string is for this cmd, new command is created and
@@ -213,7 +213,7 @@ class PrgObject {
  * representing that string.  Mostly the list has only one command,
  * but there might be syntaxes like
  *    Ref list -> List $1 R 4
- * when isMy returns three commnds representing strings
+ * when isMy returns three commands representing strings
  *    Ref list
  *    List $1 R 4
  *    list -> $1
@@ -278,7 +278,7 @@ class Command extends PrgObject {
      * Mostly variables is needed to find other variables
      * and for checking options like step or static mode.
      * variables might change during running commands, so
-     * the value in comands creation moment can not be used.
+     * the value in commands creation moment can not be used.
      * Returns error message
      */
     run(variables) {
@@ -303,7 +303,7 @@ class TextObject extends PrgObject {
 class CreateVariable extends Command {
     /*!
      * Initialize variable creation
-     * \param create is function to create the variable, mostly lanbda
+     * \param create is function to create the variable, mostly lambda
      */
     constructor(create, name) {
         super();
@@ -341,7 +341,7 @@ class CreateVariable extends Command {
 
 
 /*!
- * base Class for one varible
+ * base Class for one variable
  * Even in normal C# or Java variable can not be reference
  * and value same time, but to allow user errors here it
  * is possible.  But then it hase error if used for both
@@ -386,7 +386,7 @@ class Variable extends PrgObject {
 
     addRef(objTo, variables, force) {
         // adds ref to any variable, but it is error
-        // if more than one ref or if not ref varible.
+        // if more than one ref or if not ref variable.
         // In static mode it is not allowed to change the
         // ref but new ref is added.  In step mode ref is changed.
         // index2 is for syntax: $2 = $1[3]
@@ -528,7 +528,7 @@ class Variable extends PrgObject {
     }
 
     checkCount(variables) {
-        return ""; // error allready given when set
+        return ""; // error already given when set
     }
 
     isString() {
@@ -541,7 +541,7 @@ class Variable extends PrgObject {
 }
 
 class NullVariable extends Variable {
-    // Null varible for un assigned refs or null ref
+    // Null variable for un assigned refs or null ref
     constructor(vals) {
         super("null", undefined, undefined);
         this.label = "null";
@@ -627,7 +627,7 @@ class CreateValueVariable extends CreateVariable {
 }
 
 
-class RefecenceVariable extends ValueVariable {
+class ReferenceVariable extends ValueVariable {
     // Creates a reference variable
     constructor(name, value, ref, rank) {
         super(name, value, ref, rank);
@@ -638,7 +638,7 @@ class RefecenceVariable extends ValueVariable {
     }
 }
 
-class SimpleRefecenceVariable extends RefecenceVariable {
+class SimpleReferenceVariable extends ReferenceVariable {
     // Creates a reference variable
     constructor(name, value, ref, rank) {
         super(name, value, ref, rank);
@@ -650,7 +650,7 @@ class SimpleRefecenceVariable extends RefecenceVariable {
 }
 
 
-class CreateRefecenceVariable extends CreateVariable {
+class CreateReferenceVariable extends CreateVariable {
     // Creates a reference variable
     // see: https://regex101.com/r/RSTA4z/latest
     // syntax: Ref luvut
@@ -659,7 +659,7 @@ class CreateRefecenceVariable extends CreateVariable {
         let r = re.exec(s);
         if (!r) return undefined;
         return [new CreateVariable(
-            () => new RefecenceVariable(r[1], undefined, nullRef, 0))];
+            () => new ReferenceVariable(r[1], undefined, nullRef, 0))];
     }
 }
 
@@ -709,7 +709,7 @@ class ArrayVariable extends ObjectVariable {
     // Creates array or list for refs or values
     // value ei not used in this case
     // kind is [ for Array and L for List (ArrayList in Java)
-    // type is R for referneces and V for values.
+    // type is R for references and V for values.
     constructor(name, value, kind, type, dir, len, rank) {
         super(name, value, undefined, rank);
         this.kind = kind;
@@ -723,7 +723,7 @@ class ArrayVariable extends ObjectVariable {
         let cls;
         switch (type) {
             case "R":
-                cls = RefecenceVariable;
+                cls = ReferenceVariable;
                 break;
             case "C":
                 cls = CharVariable;
@@ -809,7 +809,7 @@ class StructVariable extends ObjectVariable {
     // Creates array or list for refs or values
     // value ei not used in this case
     // kind is [ for Array and L for List (ArrayList in Java)
-    // type is R for referneces and V for values.
+    // type is R for references and V for values.
     constructor(name, value, kind, sclass, type, dir, len, rank) {
         super(name, value, undefined, rank);
         this.kind = kind;
@@ -828,11 +828,11 @@ class StructVariable extends ObjectVariable {
             init = undefined;
             switch (type.toUpperCase()) {
                 case "R":
-                    cls = RefecenceVariable;
+                    cls = ReferenceVariable;
                     nref = nullRef;
                     break;
                 case "SR":
-                    cls = SimpleRefecenceVariable;
+                    cls = SimpleReferenceVariable;
                     nref = nullRef;
                     break;
                 case "C":
@@ -898,7 +898,7 @@ class StructVariable extends ObjectVariable {
 
 
 class InitializedStructVariable extends StructVariable {
-    // Creates initilized array or list
+    // Creates initialized array or list
 
     constructor(name, value, kind, sclass, type, dir, vals, rank) {
         // let s = vals.replace(/  */g, " ").replace(/ *[,;] */g, ",");
@@ -951,7 +951,7 @@ class InitializedStructVariable extends StructVariable {
 
 
 class CreateInitializedStructVariable extends CreateVariable {
-    // Creates initilized struct
+    // Creates initialized struct
     // see: https://regex101.com/r/hN8WJy/latest   named class
     // see: https://regex101.com/r/Tbvab7/latest   ad hoc struct
     // syntax:
@@ -1002,7 +1002,7 @@ class CreateInitializedStructVariable extends CreateVariable {
 
 
 class InitializedArrayVariable extends ArrayVariable {
-    // Creates initilized array or list
+    // Creates initialized array or list
 
     constructor(name, value, kind, type, dir, len, vals, rank) {
         // let s = vals.replace(/  */g, " ").replace(/ *[,;] */g, ",");
@@ -1058,7 +1058,7 @@ class InitializedArrayVariable extends ArrayVariable {
 
 
 class CreateInitializedArrayVariable extends CreateVariable {
-    // Creates initilized array or list
+    // Creates initialized array or list
     // see: https://regex101.com/r/Hre5iQ/latest
     //      https://regex101.com/r/ZepJ1V/latest
     // syntax:
@@ -1115,7 +1115,7 @@ function addVarsCommandLines(cmds, cls, line) {
 
 
 class CreateInitialized2DArrayVariable extends CreateVariable {
-    // Creates initilized array or list
+    // Creates initialized array or list
     // see: https://regex101.com/r/u2asVs/1
     // syntax:
     //    A $1 V2x3 {3,4,5}
@@ -1182,7 +1182,7 @@ class CreateInitialized2DArrayVariable extends CreateVariable {
 
 
 class ReferenceTo extends Command {
-    // Set ref variable to refecence object
+    // Set ref variable to reference object
     // see: https://regex101.com/r/KTT0RB/latest
     // syntax: lista -> $1
     static isMy(s) {
@@ -1257,8 +1257,8 @@ const combinedRefCommands = [
     CreateObjectVariable,
 ];
 
-class CreateReferenceAndObject extends CreateRefecenceVariable {
-    // Set Crete object and set ref variable to refecence object
+class CreateReferenceAndObject extends CreateReferenceVariable {
+    // Set Crete object and set ref variable to reference object
     // see: https://regex101.com/r/CmSGH9/latest
     // syntax: ref aku -> new $1 Aku
     // syntax: ref aku -> a $1 v 3
@@ -1276,7 +1276,7 @@ class CreateReferenceAndObject extends CreateRefecenceVariable {
         }
         if (!cmds) return undefined;
         let refCmd = new CreateVariable(
-            () => new RefecenceVariable(name, undefined, nullRef, 0));
+            () => new ReferenceVariable(name, undefined, nullRef, 0));
         refCmd.line = "Ref " + name;
 
         let cmd = cmds[0];
@@ -1366,11 +1366,11 @@ class SetStyle extends Command {
         let errors = "";
         // let varTo = this.findVarForAssign(variables,this.to, false)[1];
         let tos = this.to.split(",");
-        for (const nto of tos) {
-            // let varTo = variables.findVar(nto);
-            if (!nto) continue;
-            let [,varTo] = this.findVarForAssign(variables,nto, true)
-            if (!varTo) errors += `Muuttujaa ${nto} ei löydy! `
+        for (const name of tos) {
+            // let varTo = variables.findVar(name);
+            if (!name) continue;
+            let [,varTo] = this.findVarForAssign(variables,name, true)
+            if (!varTo) errors += `Muuttujaa ${name} ei löydy! `
             else varTo.style = this.style;
         }
         return errors;
@@ -1585,7 +1585,7 @@ class AddSVG extends Command {
 
 
 class SetGraphAttributes extends Command {
-    // Add Garåh command to control positions etc
+    // Add graph command to control positions etc
     // see: https://regex101.com/r/q6YJDq/latest
     // syntax:
     //  Graph {x: 10, y:20}
@@ -1756,7 +1756,7 @@ class CodeCommand extends Command {
 }
 
 class UnknownCommand extends Command {
-    // This commad takes all commands that are not known
+    // This command takes all commands that are not known
     static isMy(s) {
         return [new UnknownCommand(s)];
     }
@@ -1797,7 +1797,7 @@ const knownCommands = [
     ReferenceTo,
     CreateValueVariable,
     CreateNullVariable,
-    CreateRefecenceVariable,
+    CreateReferenceVariable,
     CreateInitializedStructVariable,
     SetCount,
     AssignTo,
@@ -1821,9 +1821,9 @@ const knownCommands = [
 
 
 /*!
- * A phase is a list of variables and releted texts.
+ * A phase is a list of variables and related texts.
  * It may have phaseNumber, but in most cases there
- * is only one phese without phaseNumber.
+ * is only one phase without phaseNumber.
  * The whole drawing (variableRelations) may include
  * one or more phases.  Many option and other things
  * are in variableRelations, so reference to that parent
@@ -2176,7 +2176,7 @@ class VariableRelations {
      *     - phase 1
      *         - var 1
      *         - var 2
-     *     - pahse 2
+     *     - phase 2
      *         - var 1
      *         - var 2
      *         - var 3
@@ -2308,7 +2308,7 @@ class VariableRelations {
                     cmds = cls.isMy(line, this.currentPhase);
                     if (cmds) break;
                 }
-                if (!cmds) {  // this should not happend if there is UnknownCommand last
+                if (!cmds) {  // this should not happen if there is UnknownCommand last
                     this.addError(`${this.linenumber}: ${line} - ei tunneta tai ei hyväksytä`);
                     continue; // did not match any know types
                 }
@@ -2331,7 +2331,7 @@ class VariableRelations {
     }
 
     runUntil(n) {
-        // Runs the command list from begining until in step n
+        // Runs the command list from beginning until in step n
         // If n not defined, run all commands
         this.init();
         let nr = 0;
@@ -2349,7 +2349,7 @@ class VariableRelations {
         for (let phase of this.phaseList) {
             phase.solveLazy(true);
         }
-        if (nr >= this.commands.length) { // all runned, check counts
+        if (nr >= this.commands.length) { // all ran, check counts
             for (let phase of this.phaseList) {
                 for (let v of phase.vars) {
                     let error = v.checkCount(phase);
@@ -2439,7 +2439,7 @@ class VariableRelations {
 
 
 /*!
- * Compare two results and return dirrerences
+ * Compare two results and return differences
  */
 function compareValsAndRefs(code1, code2, params) {
     let vars1 =  new VariableRelations(code1, params);
@@ -2666,7 +2666,7 @@ const svgTextMixin = {
  */
 const svgVariableMixin = {
     showCount(dy) {
-        // show varibales count-attribute.  By red if in error state
+        // show variables count-attribute.  By red if in error state
         if (this.count !== undefined) {
             let p = this.left();
             p.x -= 5;
@@ -3014,7 +3014,7 @@ const svgSimpleReferenceVariableMixin = {
 const svgArrayVariableMixin = {
     toSVG(x, y, w, h, dx, dy) {
         // draw array as variables side by side
-        // and indesies over it. If there is over/under indexing
+        // and indices over it. If there is over/under indexing
         // draw those before and after array
         let nw = undefined;
         let dir = undefined;
@@ -3139,7 +3139,7 @@ const svgArrayVariableMixin = {
 
     refToSVG() {
         // draw all array's references and also
-        // over and under indexed refreneces
+        // over and under indexed references
         let svg = "";
         for (let ref of this.vars)
             svg += ref.refToSVG();
@@ -3180,7 +3180,7 @@ const svgArrayVariableMixin = {
 
 const svgStructVariableMixin = {
     toSVG(x, y, w, h, dx, dy) {
-        // draw struct as emty boxes side by side
+        // draw struct as empty boxes side by side
         let nh = 1;
         let nw = undefined;
         let dir = 0;
@@ -3327,7 +3327,7 @@ const svgStructVariableMixin = {
 
     refToSVG() {
         // draw all array's references and also
-        // over and under indexed refreneces
+        // over and under indexed references
         let svg = "";
         for (let ref of this.vars)
             svg += ref.refToSVG();
@@ -3363,11 +3363,11 @@ const svgStructVariableMixin = {
     },
 }
 
-// Add visual methods to variable and array varaible
+// Add visual methods to variable and array variable
 Object.assign(TextObject.prototype, svgTextMixin);
 Object.assign(Variable.prototype, svgVariableMixin);
 Object.assign(NullVariable.prototype, svgNullVariableMixin);
-Object.assign(SimpleRefecenceVariable.prototype, svgSimpleReferenceVariableMixin);
+Object.assign(SimpleReferenceVariable.prototype, svgSimpleReferenceVariableMixin);
 Object.assign(ArrayVariable.prototype, svgArrayVariableMixin);
 Object.assign(StructVariable.prototype, svgStructVariableMixin);
 
@@ -3760,7 +3760,7 @@ class VisualSVGVariableRelations {
                     if (gopts.dx !== undefined) xadd = gopts.dx;
                     if (gopts.dy !== undefined) yadd = gopts.dy;
 
-                    if (v.noMove) {  // mosty for null variable
+                    if (v.noMove) {  // mostly for null variable
                         xadd = 0;
                         yadd = 0;
                     }
@@ -3910,7 +3910,7 @@ class VisualSVGVariableRelations {
 
     startAnimate(moveOneStepToDirection, until) {
         // start animation and call moveOneStepToDirection
-        // in every intervall.  Stop if condtion until
+        // in every interval.  Stop if condition until
         // reached.
         let visual = this;
         this.stopAnimate();
@@ -4087,7 +4087,7 @@ function setData(data) {
     let variableRelations = new VariableRelations(data.code,
         params, knownCommands);
     let newCall = true;
-    let visual = elements.svgdiv.visual; // is it allreadu created?
+    let visual = elements.svgdiv.visual; // is it already created?
     if (!visual) {
         visual = new VisualSVGVariableRelations(variableRelations,
             data.args,

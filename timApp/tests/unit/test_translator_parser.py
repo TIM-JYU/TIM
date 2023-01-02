@@ -980,7 +980,7 @@ P.getData = function(){
         md = """**fet**
 
 
-*kursiv stil*
+*cursive style*
 
 
 <u>Understrykning</u>
@@ -1008,7 +1008,7 @@ kodblock
         NT = NoTranslate
         self.assertEqual(
             [
-                TR("\n<b>fet</b>\n\n<i>kursiv stil</i>\n\n"),
+                TR("\n<b>fet</b>\n\n<i>cursive style</i>\n\n"),
                 NT("<u>"),
                 TR("Understrykning"),
                 NT("</u>"),

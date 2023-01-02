@@ -313,7 +313,7 @@ export class TableFormComponent
         lockedCells: [],
         lockedColumns: [],
         table: {countRow: 0, countCol: 0, columns: []},
-        // TODO: give rows (and maybe colums) in data.table
+        // TODO: give rows (and maybe columns) in data.table
         task: true,
         userdata: {type: "Relative", cells: {}},
         nonUserSpecific: true,
@@ -788,7 +788,7 @@ export class TableFormComponent
             for (const aliasfield of ownFields) {
                 const field = aliasfield.split("=")[0].trim();
                 const docField = this.viewctrl.docId + "." + field;
-                // TODO: Double .includes call - maybe it's better to search for fieldsToUpdate from somethign
+                // TODO: Double .includes call - maybe it's better to search for fieldsToUpdate from something
                 //  that already has the docID
                 if (fields.includes(field) || fields.includes(docField)) {
                     fieldsToUpdate.push(aliasfield);
@@ -1015,7 +1015,7 @@ export class TableFormComponent
 
     /**
      * String to determinate how usernames are filtered in report.
-     * Choises are username, username and full name and anonymous. Username as default.
+     * Choices are username, username and full name and anonymous. Username as default.
      */
     sortBy() {
         return this.markup.sortBy ?? "username";

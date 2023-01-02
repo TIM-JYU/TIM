@@ -55,7 +55,7 @@ from tim_common.fileParams import (
     get_all_templates,
     file_to_string,
     get_template,
-    get_chache_keys,
+    get_cache_keys,
     clear_cache,
     replace_scripts,
     string_to_string_replace_url,
@@ -81,7 +81,7 @@ from ttype import TType
 #   markup tiedoston nimeksi 'csmarkup.json'
 #
 # Uuden kielen lisäämiseksi
-# 1. Mene tiedostoon languges.py ja kopioi sieltä luokka
+# 1. Mene tiedostoon languages.py ja kopioi sieltä luokka
 #        class Lang(Language):
 #      ja vaihda sille nimi, toteuta metodit ja täytä 'ttype' muuttuja.
 # 2. Tee tarvittava lisäys myös js/dir.js tiedoston kieliluetteloon.
@@ -715,7 +715,7 @@ def wait_file(f1):
     """Wait until the file is ready or 10 tries has been done.
 
     :param f1: filename to wait
-    :return: sthe file status if it became ready, otherwise False
+    :return: the file status if it became ready, otherwise False
 
     """
     count = 0
@@ -1020,20 +1020,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print("do_POST MULTIHML ==========================================")
         t1 = time.perf_counter()
         t1t = time.time()
-        querys = multi_post_params(self)
+        queries = multi_post_params(self)
         do_headers(self, "application/json")
         is_tauno = self.path.find("/tauno") >= 0
         is_simcir = self.path.find("/simcir") >= 0
         is_parsons = self.path.find("/parsons") >= 0
         htmls = []
-        self.user_id = get_param(querys[0], "user_id", "--")
+        self.user_id = get_param(queries[0], "user_id", "--")
         if self.user_id != "--":
             print("UserId:", self.user_id)
         self.log()
-        # print(querys)
+        # print(queries)
 
         global_anonymous = False
-        for query in querys:
+        for query in queries:
             is_graphviz = get_graphviz_data(query) is not None
             try:
                 update_markup_from_file(query)
@@ -1330,7 +1330,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if self.path.find("refresh") >= 0:
             print(f"Cleaning cache")
-            keys, mem_cache_len, disk_cache_len = get_chache_keys()
+            keys, mem_cache_len, disk_cache_len = get_cache_keys()
             clear_cache()
             print(keys)
             self.wout(
@@ -1577,7 +1577,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                             query.jso,
                             "markup",
                             "warnmessage",
-                            "Not recomended to use: " + warncondition,
+                            "Not recommended to use: " + warncondition,
                         )
 
                     # print(os.path.dirname(language.sourcefilename))

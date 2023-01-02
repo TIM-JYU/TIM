@@ -21,13 +21,13 @@ class SAMLUserAttributes:
               https://wiki.eduuni.fi/display/CSCHAKA/funetEduPersonSchema2dot4
     """
 
-    response_attribues: dict[str, Any]
+    response_attributes: dict[str, Any]
     """
     Raw attribute data
     """
 
     def _get_attribute_safe(self, name: str) -> Optional[_T]:
-        return self.response_attribues.get(name, [None])[0]
+        return self.response_attributes.get(name, [None])[0]
 
     def _get_attribute(self, name: str) -> _T:
         value = self._get_attribute_safe(name)
@@ -106,7 +106,7 @@ class SAMLUserAttributes:
 
         :return: List of identity assurance profiles (IAPs)
         """
-        res = self.response_attribues.get("eduPersonAssurance")
+        res = self.response_attributes.get("eduPersonAssurance")
         if not isinstance(res, list):
             raise RouteException("eduPersonAssurance is not a list")
         return res
@@ -146,7 +146,7 @@ class SAMLUserAttributes:
 
         :return: A list of unique codes of the user
         """
-        return self.response_attribues.get("schacPersonalUniqueCode")
+        return self.response_attributes.get("schacPersonalUniqueCode")
 
     @property
     def derived_username(self) -> str:

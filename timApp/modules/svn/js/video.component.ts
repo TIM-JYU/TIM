@@ -624,15 +624,15 @@ export class VideoComponent extends AngularPluginBase<
                 allow: iframeopts.allow,
             };
         } else {
-            let tbe = "";
+            let range = "";
             if (this.start) {
-                tbe += this.start; // loadedmetadata event doesn't work on iPad
+                range += this.start; // loadedmetadata event doesn't work on iPad
                 if (this.end) {
-                    tbe += "," + this.end;
+                    range += "," + this.end;
                 }
             }
-            if (tbe) {
-                srcUrl.hash = "#t=" + tbe;
+            if (range) {
+                srcUrl.hash = "#t=" + range;
             }
             this.videosettings = {
                 src: srcUrl.toString(),

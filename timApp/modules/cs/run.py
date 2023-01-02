@@ -20,7 +20,7 @@ def wait_file(f1, tries=10):
 
     :param f1: filename to wait
     :param tries: number of tries
-    :return: sthe file status if it became ready, otherwise False
+    :return: the file status if it became ready, otherwise False
 
     """
     count = 0
@@ -53,7 +53,7 @@ def run(
     """Alkuperäinen ajaminen, jossa ajo suoritetaan tavallisen prosessina.
 
     :param args: run arguments for the command
-    :param cwd: dircetory to start
+    :param cwd: directory to start
     :param shell: run shell or not
     :param kill_tree: kill to source tree after run
     :param timeout: time to run in ms
@@ -98,7 +98,7 @@ def get_user_mappings(root_dir, mounts):
     Return list of needed docker volume mappings to map under user directory
     At the moment this is "static", so every new mapping need to be added
     to know_user_mappings by admin
-    :param root_dir: what is the root dircetory to map
+    :param root_dir: what is the root directory to map
     :param mounts: list of keys to mount
     :return: docker volume mount list
     """
@@ -158,15 +158,15 @@ def run2(
     save_run_cmd=None,
     save_test_run_cmd=None,
 ):
-    """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
+    """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fulfill the
     run inside docker.
 
     :param args: run arguments for the command
-    :param cwd: in whinch directory the command should start
+    :param cwd: in which directory the command should start
     :param shell: maybe not needed any more???
     :param kill_tree: maybe not needed anymore
     :param timeout: how long the run is allowed to run
-    :param env: environment varibales for run
+    :param env: environment variables for run
     :param stdin: what file to use for stdin
     :param uargs: user arguments for the run
     :param code: which coding schema to use ("utf-8" is default)
@@ -176,7 +176,7 @@ def run2(
     :param no_x11: do not use X11
     :param dockercontainer: what container to run, container needs user with name agent
     :param compile_commandline: command line to compile code
-    :param escape_pipe: If True, pipe charracter | is escaped into '|'
+    :param escape_pipe: If True, pipe character | is escaped into '|'
     :param mounts: User-defined mounts
     :param extra_mappings: Extra non-user csplugin folder mappings
     :param escape_pipe: TODO: what
@@ -487,4 +487,4 @@ def get_imgsource(query):
     result = get_param(query, "imgsource", "")
     if result:
         return result
-    result = get_param(query, "bmpname", "")  # backwards compability
+    result = get_param(query, "bmpname", "")  # backwards compatibility

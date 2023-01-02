@@ -228,12 +228,12 @@ return game_is_over;
 //
 
 function Animation() {
-this.imageNum = new Array();  // Array of indicies document.images to be changed
+this.imageNum = new Array();  // Array of indices document.images to be changed
 this.imageSrc = new Array();  // Array of new srcs for imageNum array
 this.frameIndex = 0;          // the frame to play next
 this.alreadyPlaying = false;  // semaphore to ensure we play smoothly
 
-this.getFrameCount = getframecount;   // the total numebr of frame so far
+this.getFrameCount = getframecount;   // the total number of frame so far
 this.moreFrames = moreframes;         // tells us if there are more frames to play
 this.addFrame = addframe;             // add a frame to the animation
 this.drawNextFrame = drawnextframe;   // draws the next frame
