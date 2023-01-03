@@ -107,7 +107,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
        <textarea
                [rows]="rows"
                *ngIf="isTextArea()"
-               class="textarea"
+               class="form-control textarea"
                [(ngModel)]="userword"
                [ngModelOptions]="{standalone: true}"
                (blur)="autoSave()"
