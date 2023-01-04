@@ -86,6 +86,7 @@ export class GroupJoinComponent extends AngularPluginBase<
     errorMessage?: string;
     result?: JoinGroupResult;
     docPath?: string;
+    requiresTaskId = false;
 
     get groups() {
         return this.markup.groups ?? [];
