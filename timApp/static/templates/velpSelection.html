@@ -187,24 +187,31 @@
                         <div class="collapsible-menu">
                             <details>
                                 <summary>New velp group</summary>
-                                <div class="collapsible-menu-open-content">
+                                <div class="collapsible-menu-open-content autoscroll">
                                     <form ng-submit="$ctrl.addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
-                                        <label for="new-velp-group-name">Group name: </label><input id="new-velp-group-name" type="text" ng-model="$ctrl.newVelpGroup.name" placeholder="Velp group name" required>
-                                        <fieldset>
+                                        <div class="velp-groups-new-group-control">
+                                            <label for="new-velp-group-name">Group name: </label>
+                                            <input id="new-velp-group-name" type="text" ng-model="$ctrl.newVelpGroup.name" placeholder="Velp group name" required>
+                                        </div>
+                                        <div class="velp-groups-new-group-control">
                                             <label for="velpGroupSaveToSelect">Save to: </label>
-                                            <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
-                                                    ng-model="$ctrl.newVelpGroup.target_type"
-                                                    class="formInput">
-                                                <option ng-value="0" selected>Personal collection</option>
-                                                <option ng-value="1" ng-disabled="!$ctrl.vctrl.item.rights.editable">Document</option>
-                                                <option ng-value="2" ng-disabled="!$ctrl.vctrl.item.rights.editable">Folder</option>
-                                            </select>
-                                        </fieldset>
-                                        <p><input type="submit" class="timButton" value="Create velp group"></p>
-                                        <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || ($ctrl.submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
-                                           class="error">
-                                            Velp group name is required!
-                                        </p>
+                                            <fieldset>
+                                                <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
+                                                        ng-model="$ctrl.newVelpGroup.target_type"
+                                                        class="formInput">
+                                                    <option ng-value="0" selected>Personal collection</option>
+                                                    <option ng-value="1" ng-disabled="!$ctrl.vctrl.item.rights.editable">Document</option>
+                                                    <option ng-value="2" ng-disabled="!$ctrl.vctrl.item.rights.editable">Folder</option>
+                                                </select>
+                                            </fieldset>
+                                        </div>
+                                        <div class="velp-groups-new-group-control">
+                                            <input type="submit" class="timButton" value="Create velp group">
+                                            <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || ($ctrl.submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
+                                               class="error">
+                                                Velp group name is required!
+                                            </p>
+                                        </div>
                                     </form>
                                 </div>
                             </details>

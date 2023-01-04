@@ -194,6 +194,47 @@ annotation .fulldiv {
     }
 }
 
+.add-velp {
+    font-size: smaller;
+    padding: 2px 4px;
+}
+
+.collapsible-menu {
+    margin-top: 0.5em;
+
+    details {
+        margin-bottom: 0.8em;
+    }
+    details[open] {
+        summary {
+            font-weight: bold;
+        }
+    }
+    summary {
+        font-size: 1em;
+        display: list-item !important;
+        font-weight: normal;
+        margin-bottom: 0.5em;
+    }
+}
+
+.collapsible-menu-open-content {
+
+    form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .velp-groups-new-group-control {
+        display: flex;
+        flex-direction: row;
+        margin: 0.2em 0;
+
+        input {
+            margin-left: 0.3em;
+        }
+    }
+}
 
 /** Velp area styles **/
 .velpMenu .tab-content {
@@ -735,30 +776,6 @@ $inactive: whitesmoke;
 
 .icon-plus-add-velp {
     padding-right: 0.3em;
-}
-
-.add-velp {
-    font-size: smaller;
-    padding: 2px 4px;
-}
-
-.collapsible-menu {
-    margin-top: 0.5em;
-
-    details {
-        margin-bottom: 0.8em;
-    }
-    details[open] {
-        summary {
-            font-weight: bold;
-        }
-    }
-    summary {
-        font-size: 1em;
-        display: list-item !important;
-        font-weight: normal;
-        margin-bottom: 0.5em;
-    }
 }
 
 .btn-set-vg-visible {
