@@ -1,13 +1,11 @@
 /** Layout styles **/
 .fulldiv {
-    // TODO better default/minimum sizes for mobile
     display: block;
     border: none !important;
     overflow-y: auto;
     overflow-x: hidden;
-    // TODO remove min-height, it currently affects tr/th/td elements
-    min-height: 18em;
     max-height: 60vh;
+    margin-bottom: 2px;
 
     @media screen and (max-height: 1080px) {
         min-height: 12em;
@@ -15,6 +13,7 @@
 
     @media screen and (max-height: 800px) {
         min-height: 8em;
+        font-size: x-small !important;
     }
 
 }
@@ -27,16 +26,18 @@ annotation .fulldiv {
     form {
         display: flex;
         flex-direction: row;
+        margin: 4px 1px;
+        font-size: smaller;
 
-        h5 {
+        label {
             display: inline-flex;
+            margin: inherit;
         }
 
         fieldset {
             display: inline-flex;
             padding-left: 1em;
-            margin-top: 6px;
-            margin-bottom: 6px;
+            margin: inherit;
         }
 
         select {
@@ -51,7 +52,7 @@ annotation .fulldiv {
                 margin-top: 4px;
                 margin-bottom: 4px;
 
-                h5 {
+                label {
                     font-size: smaller;
                 }
 
@@ -80,10 +81,11 @@ annotation .fulldiv {
 }
 
 .velp-groups-table {
-    table {
+    .fulldiv {
         display: table;
-        min-width: 19.4em !important;
-        max-width: 19.4em !important;
+        width: 95%;
+        margin-left: 0;
+        margin-bottom: 2px;
 
         tr > td:first-child, th:first-child {
             border-left: none;
@@ -493,12 +495,19 @@ position: absolute;
 }
 
 .velp:hover .emphasise {
-    margin-top: -1em;
+
+    margin-top: -0.5em;
     -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
     -moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
     box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
 
+    /* Disable hover effect for add/edit velp window. It is already on top of everything else, so effect is not needed. */
     &.edit {
+        margin-top: 0;
+    }
+
+    /* Don't use hover effect on small screens (mobile), since it makes selecting velps more difficult. */
+    @media screen and (max-height: 800px) {
         margin-top: 0;
     }
 }

@@ -127,7 +127,7 @@
                     <div class="velp-groups-tab">
                         <div class="velpSummary autoscroll">
                             <form style="border-bottom: 1px solid gainsboro">
-                                <h5>Velp group area:</h5>
+                                <label for="velpGroupArea">Velp group area:</label>
                                 <fieldset>
                                     <select class="formInput" id="velpGroupArea" ng-model="$ctrl.groupAttachment.target_type" ng-change="$ctrl.updateVelpList()">
                                         <option ng-value="0" name="selArea" id="selDoc">Whole document</option>
@@ -138,27 +138,23 @@
                                 </fieldset>
                             </form>
                             <div class="velp-groups-table velp-groups-resize">
-                                <table class="fulldiv" style="margin-bottom: 8px">
+                                <table class="fulldiv">
                                     <tr>
                                         <th>
-                                            <label class="comment-info small" for="velp-group-table-cb-show" title="Show">
-                                                <span class="glyphicon glyphicon-eye-open"></span>
+                                            <input id="velp-group-table-cb-show" type="checkbox" ng-model="$ctrl.settings.selectedAllShows" ng-change="$ctrl.changeAllVelpGroupSelections('show')">
+                                            <label class="comment-info small glyphicon glyphicon-eye-open" for="velp-group-table-cb-show" title="Show">
+<!--                                                <span class="glyphicon glyphicon-eye-open"></span>-->
                                             </label>
-                                            <p>
-                                                <input id="velp-group-table-cb-show" type="checkbox" ng-model="$ctrl.settings.selectedAllShows" ng-change="$ctrl.changeAllVelpGroupSelections('show')">
-                                            </p>
                                         </th>
                                         <th>
+                                            <input id="velp-group-table-cb-default"
+                                                type="checkbox"
+                                                ng-model="$ctrl.settings.selectedAllDefault"
+                                                ng-disabled="!$ctrl.vctrl.item.rights.manage"
+                                                ng-change="$ctrl.changeAllVelpGroupSelections('default')">
                                             <label for="velp-group-table-cb-default" title="Default" ng-class="['comment-info', 'small', {disabled: !$ctrl.vctrl.item.rights.manage}]">
                                                 <span class="glyphicon glyphicon-check"></span>
                                             </label>
-                                            <p>
-                                                <input id="velp-group-table-cb-default"
-                                                    type="checkbox"
-                                                    ng-model="$ctrl.settings.selectedAllDefault"
-                                                    ng-disabled="!$ctrl.vctrl.item.rights.manage"
-                                                    ng-change="$ctrl.changeAllVelpGroupSelections('default')">
-                                            </p>
                                         </th>
                                         <th><span class="small">Velp group</span></th>
                                         <th><span class="small glyphicon glyphicon-trash" title="Delete velp group"></span></th>
@@ -198,7 +194,7 @@
                                             <label for="velpGroupSaveToSelect">Save to: </label>
                                             <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
                                                     ng-model="$ctrl.newVelpGroup.target_type"
-                                                    class="formInput" style="float: none; margin-bottom: 1rem">
+                                                    class="formInput">
                                                 <option ng-value="0" selected>Personal collection</option>
                                                 <option ng-value="1" ng-disabled="!$ctrl.vctrl.item.rights.editable">Document</option>
                                                 <option ng-value="2" ng-disabled="!$ctrl.vctrl.item.rights.editable">Folder</option>
