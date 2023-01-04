@@ -127,9 +127,9 @@
                     <div class="velp-groups-tab">
                         <div class="velpSummary autoscroll">
                             <form style="border-bottom: 1px solid gainsboro">
-                                <h5>Choose area for velp group:</h5>
+                                <h5>Velp group area:</h5>
                                 <fieldset>
-                                    <select class="formInput" id="velpGroupArea" ng-model="$ctrl.groupAttachment.target_type" ng-change="$ctrl.updateVelpList()" style="float: none; margin-bottom: 1rem">
+                                    <select class="formInput" id="velpGroupArea" ng-model="$ctrl.groupAttachment.target_type" ng-change="$ctrl.updateVelpList()">
                                         <option ng-value="0" name="selArea" id="selDoc">Whole document</option>
                                         <option ng-value="1" name="selArea" id="selPar" ng-class="{disabled: $ctrl.rctrl.selectedElement == null}" ng-disabled="$ctrl.rctrl.selectedElement == null">
                                             Selected paragraph

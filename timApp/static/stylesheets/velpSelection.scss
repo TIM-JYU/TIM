@@ -1,9 +1,11 @@
 /** Layout styles **/
 .fulldiv {
+    // TODO better default/minimum sizes for mobile
     display: block;
     border: none !important;
     overflow-y: auto;
     overflow-x: hidden;
+    // TODO remove min-height, it currently affects tr/th/td elements
     min-height: 18em;
     max-height: 60vh;
 
@@ -19,6 +21,54 @@
 
 annotation .fulldiv {
     min-height: unset;
+}
+
+.velp-groups-tab {
+    form {
+        display: flex;
+        flex-direction: row;
+
+        h5 {
+            display: inline-flex;
+        }
+
+        fieldset {
+            display: inline-flex;
+            padding-left: 1em;
+            margin-top: 6px;
+            margin-bottom: 6px;
+        }
+
+        select {
+            margin-bottom: 0;
+            max-width: unset;
+        }
+    }
+
+    @media screen and (max-height: 800px) {
+        .velpSummary {
+            form {
+                margin-top: 4px;
+                margin-bottom: 4px;
+
+                h5 {
+                    font-size: smaller;
+                }
+
+                fieldset {
+                    padding-left: 1em;
+                    margin-top: 6px;
+                    margin-bottom: 6px;
+                }
+
+                select {
+                    margin-bottom: 0;
+                    max-width: unset;
+                }
+            }
+
+        }
+    }
 }
 
 .velp-groups-resize {
@@ -53,6 +103,95 @@ annotation .fulldiv {
     width: 10%;
     float: left;
 }
+
+.velp-menu-selected-area {
+    min-height: 3.3em;
+    border-top: 1px solid $basic-border-color;
+    label {
+        font-size: small;
+
+        @media screen and (max-height: 800px) {
+            font-size: x-small;
+            padding-bottom: 0;
+        }
+    }
+
+    #selection {
+        font-size: x-small;
+
+        @media screen and (max-height: 800px) {
+            font-size: xx-small;
+        }
+    }
+}
+
+.velp-minimal-controls {
+    display: flex;
+
+    .velp-advanced-control {
+        margin-left: 0.4em;
+        padding-top: 0.25em;
+        vertical-align: middle;
+
+        label {
+            vertical-align: middle;
+            font-size: small;
+            font-weight: normal;
+        }
+    }
+}
+
+.velp-menu-advanced-controls {
+    font-size: small;
+    min-height: 16em;
+}
+
+#selection {
+    min-height: 3em;
+    margin: 0;
+
+    @media screen and (max-height: 1080px) {
+        min-height: 1.6em;
+    }
+
+    @media screen and (max-height: 800px) {
+        min-height: 2rem;
+    }
+}
+
+.available-velps {
+    background: white;
+}
+
+.editVelp-scrollarea {
+    display: block;
+    max-height: 16em;
+    overflow-y: auto;
+
+    @media screen and (max-height: 1080px) {
+        max-height: 8em;
+    }
+
+    @media screen and (max-height: 800px) {
+        font-size: 1.2rem;
+        max-height: 4.8rem;
+        line-height: 1rem;
+    }
+}
+
+.labels-scrollarea {
+    display: block;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    max-height: 4em;
+    margin-bottom: 4px;
+
+    @media screen and (max-height: 800px) {
+        font-size: 1.2rem;
+        line-height: 1rem;
+    }
+}
+
 
 /** Velp area styles **/
 .velpMenu .tab-content {
@@ -142,10 +281,18 @@ annotation .fulldiv {
     position: relative;
     top: 0;
     bottom: 0;
+
+    @media screen and (max-height: 800px) {
+        margin-bottom: 0.3em;
+    }
 }
 
 .velpArea-available-velps {
     min-height: 16em;
+
+    @media screen and (max-height: 800px) {
+        min-height: 7em;
+    }
 }
 
 .autoscroll {
@@ -165,7 +312,7 @@ annotation .fulldiv {
     resize: vertical;
 
     @media screen and (max-height: 800px) {
-        min-height: 10em;
+        min-height: 7em;
     }
 }
 
@@ -542,85 +689,6 @@ $inactive: whitesmoke;
 
 #resetAllSelBtn {
     margin-top: 1em;
-}
-
-.velp-menu-selected-area {
-    min-height: 4em;
-    border-top: 1px solid $basic-border-color;
-    label {
-        font-size: small;
-    }
-
-    #selection {
-        font-size: x-small;
-    }
-}
-
-.velp-minimal-controls {
-    display: flex;
-
-    .velp-advanced-control {
-        margin-left: 0.4em;
-        padding-top: 0.25em;
-        vertical-align: middle;
-
-        label {
-            vertical-align: middle;
-            font-size: small;
-            font-weight: normal;
-        }
-    }
-}
-
-.velp-menu-advanced-controls {
-    font-size: small;
-    min-height: 16em;
-}
-
-#selection {
-    min-height: 3em;
-    margin: 0;
-
-    @media screen and (max-height: 1080px) {
-        min-height: 1.6em;
-    }
-
-    @media screen and (max-height: 800px) {
-        min-height: 2rem;
-    }
-}
-
-.available-velps {
-    background: white;
-}
-
-.editVelp-scrollarea {
-    display: block;
-    max-height: 16em;
-    overflow-y: auto;
-
-    @media screen and (max-height: 1080px) {
-        max-height: 8em;
-    }
-
-    @media screen and (max-height: 800px) {
-        font-size: 1.2rem;
-        max-height: 4.8rem;
-        line-height: 1rem;
-    }
-}
-
-.labels-scrollarea {
-    display: block;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    max-height: 4em;
-    margin-bottom: 4px;
-
-    @media screen and (max-height: 800px) {
-        font-size: 1.2rem;
-        line-height: 1rem;
-    }
 }
 
 .label-edit-glyphicons {
