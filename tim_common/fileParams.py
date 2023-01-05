@@ -426,6 +426,17 @@ def replace_random(query: QueryClass, s):
     return result
 
 
+def replace_program_tokens(query: QueryClass, s: str) -> str:
+    replace_tokens = get_param(query, "replaceProgramTokens", None)
+    if replace_tokens is None or not isinstance(replace_tokens, dict):
+        return s
+    for token, value in replace_tokens.items():
+        if value is None:
+            value = ""
+        s = s.replace(token, str(value))
+    return s
+
+
 def do_escape(s: str):
     line = html.escape(s)
     # line = line.replace("{","&#123;")

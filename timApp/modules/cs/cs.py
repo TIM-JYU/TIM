@@ -65,6 +65,7 @@ from tim_common.fileParams import (
     get_json_param,
     get_param,
     QueryClass,
+    replace_program_tokens,
 )
 from ttype import TType
 
@@ -824,6 +825,7 @@ def check_fullprogram(query, cut_errors=False):
     get_param_del(query, "fullprogram", "")
     get_param_del(query, "fullfile", "")
 
+    fullprogram = replace_program_tokens(query, fullprogram)
     program = fullprogram
 
     program = replace_random(query, program)
