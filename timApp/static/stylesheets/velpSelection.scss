@@ -10,7 +10,6 @@
     @media screen and (max-height: 800px) {
         font-size: x-small !important;
     }
-
 }
 
 annotation .fulldiv {
@@ -43,26 +42,9 @@ annotation .fulldiv {
 
     @media screen and (max-height: 800px) {
         .velpSummary {
-            form {
-                margin-top: 4px;
-                margin-bottom: 4px;
-
-                label {
-                    font-size: smaller;
-                }
-
-                fieldset {
-                    padding-left: 1em;
-                    margin-top: 6px;
-                    margin-bottom: 6px;
-                }
-
-                select {
-                    margin-bottom: 0;
-                    max-width: unset;
-                }
+            form label {
+                font-size: smaller;
             }
-
         }
     }
 }
@@ -87,6 +69,19 @@ annotation .fulldiv {
         }
         td, th {
             max-width: 13em;
+        }
+    }
+}
+
+.velp-summary-tab {
+
+    @media screen and (max-height: 1080px) {
+        .velpSummary {
+            font-size: 0.8em;
+
+            h5 {
+                font-size: 1.2em;
+            }
         }
     }
 }
