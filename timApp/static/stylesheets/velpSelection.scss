@@ -7,12 +7,7 @@
     max-height: 60vh;
     margin-bottom: 2px;
 
-    @media screen and (max-height: 1080px) {
-        min-height: 12em;
-    }
-
     @media screen and (max-height: 800px) {
-        min-height: 8em;
         font-size: x-small !important;
     }
 
