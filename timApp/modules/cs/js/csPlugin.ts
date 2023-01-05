@@ -735,6 +735,7 @@ const CsMarkupOptional = t.partial({
     deleteFiles: t.array(t.string),
     jsBrowserConsole: t.boolean,
     editorOrder: t.array(t.string),
+    resetUserInput: t.boolean,
 });
 
 const CsMarkupDefaults = t.type({
@@ -1042,6 +1043,7 @@ export class CsController extends CsBase implements ITimComponent {
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
     private isSimcirUnsaved?: boolean;
     private clearSaved: boolean = false;
+    private originalUserInput?: string;
 
     @ViewChild("externalEditor")
     set externalEditorViewSetter(newValue: EditorComponent | undefined) {
@@ -1286,6 +1288,7 @@ export class CsController extends CsBase implements ITimComponent {
         this.userinput_ = str;
         if (tmp != str) {
             this.anyChanged();
+            this.updateCanReset();
         }
     }
 
@@ -2125,9 +2128,10 @@ ${fhtml}
         }
 
         this.timeout = valueOr(this.attrsall.timeout, 0) * 1000;
+        this.originalUserInput = (this.markup.userinput ?? "").toString();
         this.userinput = valueOr(
             this.attrsall.userinput,
-            (this.markup.userinput ?? "").toString()
+            this.originalUserInput
         );
         this.userargs = valueOr(
             this.attrsall.userargs,
@@ -3031,7 +3035,9 @@ ${fhtml}
         this.canReset = !!(
             (this.editor?.modified ?? false) ||
             this.isSage ||
-            this.simcir
+            this.simcir ||
+            (this.markup.resetUserInput &&
+                this.userinput !== this.originalUserInput)
         );
         return this.canReset;
     }
@@ -3049,6 +3055,9 @@ ${fhtml}
         } else {
             this.usercode = this.byCode;
         }
+        if (this.markup.resetUserInput) {
+            this.userinput_ = this.originalUserInput ?? "";
+        }
         if (this.isSage) {
             await this.initSage(false);
         }
@@ -3057,6 +3066,7 @@ ${fhtml}
             await this.initSimcirCircuitListener();
         }
         this.initSaved(clear);
+        this.updateCanReset();
     }
 
     async initSage(firstTime: boolean) {
