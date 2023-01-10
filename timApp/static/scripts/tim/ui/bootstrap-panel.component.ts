@@ -23,7 +23,6 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
                     <a href="#{{ anchorID }}" title="Permanent link to paragraph" class="">
                         <span class="header-anchor">#</span>
                     </a>
-                    <span title="Copy reference" class="header-name">create</span>
                 </span>
             </div>
             <div class="panel-body">
