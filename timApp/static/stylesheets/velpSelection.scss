@@ -135,7 +135,6 @@ annotation .fulldiv {
 
 .velp-menu-advanced-controls {
     font-size: small;
-    min-height: 16em;
 }
 
 #selection {
@@ -230,7 +229,6 @@ annotation .fulldiv {
 .velpMenu .tab-content {
     bottom: 0;
     top:0;
-    min-height: 12em;
     border: none;
 }
 
@@ -320,10 +318,10 @@ annotation .fulldiv {
 }
 
 .velpArea-available-velps {
-    min-height: 16em;
+    min-height: 7em;
 
-    @media screen and (max-height: 800px) {
-        min-height: 7em;
+    @media screen and (min-height: 750px) {
+        min-height: 16em;
     }
 }
 
@@ -343,7 +341,7 @@ annotation .fulldiv {
     position: relative;
     resize: vertical;
 
-    @media screen and (max-height: 800px) {
+    @media screen and (max-height: 600px) {
         min-height: 7em;
     }
 }
