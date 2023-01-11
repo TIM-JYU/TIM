@@ -16,7 +16,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
                 Export calendar as iCal
             </ng-container>
             <ng-container body>
-                <h3>Export options</h3>
+                <h3 i18n>Export options</h3>
                 <form>
                     <fieldset [disabled]="exportingICal">
                         <section>

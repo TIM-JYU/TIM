@@ -7792,6 +7792,14 @@
           <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5645156754014603448" datatype="html">
+        <source>Export options</source>
+        <target state="translated">Exportalternativ</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/export-ical.component.ts</context>
+          <context context-type="linenumber">19,20</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
