@@ -81,10 +81,14 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         elem = self.drv.find_element(By.XPATH, "//tim-login-menu/button")
         elem.click()
         elem = self.find_element("tim-login-dialog")
+        email_login_btn = elem.find_element(
+            By.CSS_SELECTOR, ".login-flex-col button:first-child"
+        )
+        email_login_btn.click()
         elem.find_element(By.XPATH, "//input[@type='text']").send_keys(email)
         elem.find_element(By.XPATH, "//input[@type='password']").send_keys(password)
         login = elem.find_element(
-            By.CSS_SELECTOR, ".flex.cl.align-center > .timButton"
+            By.CSS_SELECTOR, ".flex > .timButton:first-child"
         )  # Log in button
         login.click()
         self.wait.until(
