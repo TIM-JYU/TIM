@@ -6448,14 +6448,6 @@
           <context context-type="linenumber">62</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8301861427771997270" datatype="html">
-        <source>Document group (<x id="INTERPOLATION" equiv-text="{{ activeGroup }}"/>)</source>
-        <target state="translated">Dokumenttiryhmä (<x id="INTERPOLATION" equiv-text="{{ activeGroup }}"/>)</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
-          <context context-type="linenumber">66</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1097032444998081907" datatype="html">
         <source>Refresh page</source>
         <target state="translated">Virkistä sivu</target>
@@ -7884,6 +7876,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">113,116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2470527158706928323" datatype="html">
+        <source>Document groups (<x id="INTERPOLATION" equiv-text="{{ activeGroups }}"/>)</source>
+        <target state="translated">Dokumentin ryhmät (<x id="INTERPOLATION" equiv-text="{{ activeGroups }}"/>)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">66,67</context>
         </context-group>
       </trans-unit>
     </body>

@@ -969,7 +969,7 @@ export class AnswerBrowserComponent
         const r = await to(
             $http.get<IUser[]>(
                 `/getTaskUsers/${this.taskId.docTask().toString()}`,
-                {params: {group: this.viewctrl.group}}
+                {params: {groups: this.viewctrl.groups}}
             )
         );
         this.loading--;

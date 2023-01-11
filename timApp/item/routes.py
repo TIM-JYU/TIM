@@ -18,7 +18,7 @@ from markupsafe import Markup
 from marshmallow import EXCLUDE
 from sqlalchemy.orm import joinedload, defaultload
 
-from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
+from timApp.answer.answers import add_missing_users_from_groups, get_points_by_rule
 from timApp.auth.accesshelper import (
     verify_view_access,
     verify_teacher_access,
@@ -701,7 +701,7 @@ def render_doc_view(
         total_tasks = len(task_ids)
     if points_sum_rule and points_sum_rule.scoreboard_error:
         flash(f"Error in point_sum_rule scoreboard: {points_sum_rule.scoreboard_error}")
-    usergroup = m.group
+    usergroups = [m.group] if m.group is not None else None
     peer_review_start = doc_settings.peer_review_start()
     peer_review_stop = doc_settings.peer_review_stop()
     show_valid_only = (
@@ -711,33 +711,34 @@ def render_doc_view(
     )
     if teacher_or_see_answers:
         user_list = None
-        ug = None
-        if usergroup is None:
+        ugs = None
+        if usergroups is None:
             try:
-                usergroup = doc_settings.group()
-            except ValueError:
-                flash("The setting 'group' must be a string.")
-        can_add_missing = True
-        if usergroup is not None:
-            ug = UserGroup.get_by_name(usergroup)
-            if not ug:
-                flash(f"User group {usergroup} not found")
+                usergroups = doc_settings.groups()
+            except ValueError as e:
+                flash(str(e))
+        ugs_without_access = []
+        if usergroups is not None:
+            ugs = UserGroup.query.filter(UserGroup.name.in_(usergroups)).all()
+            if len(ugs) != len(usergroups):
+                not_found_ugs = set(usergroups) - set(ug.name for ug in ugs)
+                flash(f"Following groups were not found: {not_found_ugs}")
             else:
-                if not verify_group_view_access(ug, require=False, user=current_user):
-                    if not ug.is_personal_group:
+                for ug in ugs:
+                    if not verify_group_view_access(
+                        ug, require=False, user=current_user
+                    ):
                         flash(f"You don't have access to group '{ug.name}'.")
-                        ug = None
-                    else:
-                        can_add_missing = False
-                if ug:
-                    user_list = [u.id for u in ug.users]
+                        ugs_without_access.append(ug)
+            if ugs:
+                user_list = [u.id for ug in ugs for u in ug.users]
         user_list = get_points_by_rule(
             points_sum_rule, task_ids, user_list, show_valid_only=show_valid_only
         )
-        if ug and can_add_missing:
-            user_list = add_missing_users_from_group(user_list, ug)
-        elif ug and not user_list and not can_add_missing:
-            flash(f"You don't have access to group '{ug.name}'.")
+        if ugs:
+            user_list = add_missing_users_from_groups(
+                user_list, list(set(ugs) - set(ugs_without_access))
+            )
     elif doc_settings.show_task_summary() and current_user.logged_in:
         info = get_points_by_rule(
             points_sum_rule,
@@ -1013,7 +1014,7 @@ def render_doc_view(
         jsMods=angular_module_names,
         doc_css=doc_css,
         start_index=view_range.start_index,
-        group=usergroup,
+        groups=usergroups,
         translations=[
             tr.to_json(curr_user=current_user) for tr in doc_info.translations
         ],

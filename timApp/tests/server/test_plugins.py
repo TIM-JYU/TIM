@@ -426,7 +426,7 @@ class PluginTest(TimRouteTest):
         )
         self.get(
             f"/getTaskUsers/{task_id}",
-            query_string={"group": "testuser1"},
+            query_string={"groups": "testuser1"},
             expect_content=[
                 {
                     "email": "test1@example.com",

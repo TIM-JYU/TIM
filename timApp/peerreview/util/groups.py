@@ -25,14 +25,14 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
         if task.task_id:
             task_ids.append(task.task_id)
 
-    user_group = settings.group()
+    user_groups = settings.groups()
     user_ids = None
-    if user_group:
+    if user_groups:
         user_ids = [
             uid
             for uid, in (
                 UserGroupMember.query.join(UserGroup, UserGroupMember.group)
-                .filter(membership_current & (UserGroup.name == user_group))
+                .filter(membership_current & (UserGroup.name.in_(user_groups)))
                 .with_entities(UserGroupMember.user_id)
                 .all()
             )

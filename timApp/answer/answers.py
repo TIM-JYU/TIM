@@ -1032,8 +1032,8 @@ def flatten_points_result(
     return result_list
 
 
-def add_missing_users_from_group(result: list, usergroup: UserGroup) -> list:
-    users = set(usergroup.users)
+def add_missing_users_from_groups(result: list, usergroups: list[UserGroup]) -> list:
+    users = set(u for ug in usergroups for u in ug.users)
     existing_users = set()
     for d in result:
         existing_users.add(d["user"])

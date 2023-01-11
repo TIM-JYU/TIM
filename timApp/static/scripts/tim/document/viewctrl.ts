@@ -224,7 +224,7 @@ export class ViewCtrl implements IController {
     public item: IDocument;
     public docId: number;
 
-    public group?: string;
+    public groups?: [string];
     public scope: IScope;
     public noBrowser: boolean;
     public docVersion: [number, number];
@@ -312,7 +312,7 @@ export class ViewCtrl implements IController {
         this.item = dg.curr_item;
         this.startIndex = dg.startIndex;
         this.users = dg.users;
-        this.group = dg.group;
+        this.groups = dg.groups;
         this.teacherMode = dg.teacherMode;
         this.velpMode = dg.velpMode;
         this.scope = sc;
