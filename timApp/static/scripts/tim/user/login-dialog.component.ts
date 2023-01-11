@@ -363,7 +363,6 @@ export class LoginDialogComponent extends AngularDialogComponent<
     protected extraVerticalSize = 0;
     loggingIn = false;
 
-    // @ViewChild("loginEmail") private loginField!: ElementRef<HTMLInputElement>;
     @ViewChild("pw") private passwordField!: ElementRef<HTMLInputElement>;
     simpleEmailLogin = this.config.simpleEmailLogin;
     simpleLoginEmailGiven = false;
@@ -391,9 +390,6 @@ export class LoginDialogComponent extends AngularDialogComponent<
 
     ngAfterViewInit() {
         super.ngAfterViewInit();
-        // if (this.hideVars.hakaLogin) {
-        //     this.loginField.nativeElement.focus();
-        // }
     }
 
     getHomeOrgDisplayName() {
