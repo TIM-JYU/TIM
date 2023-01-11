@@ -64,9 +64,6 @@ interface ISimpleRegistrationResponse {
                     <div class="col-sm-12">
                         <ng-container *ngIf="!showSignup && !showSimpleLogin">
                             <ng-container *ngIf="!hideVars.hakaLogin">
-                                <p class="text-center instructions" i18n>
-                                    Members from universities and other Haka organizations, please use Haka to log in.
-                                </p>
                                 <tim-haka-login [idps]="idps"
                                                 [homeOrg]="homeOrg"
                                                 [addingUser]="addingToSession"></tim-haka-login>
@@ -155,10 +152,10 @@ interface ISimpleRegistrationResponse {
 
                             <div class="flex"
                                  *ngIf="simpleLoginEmailGiven || !simpleEmailLogin">
-                                <button [disabled]="loggingIn" class="timButton" (click)="loginWithEmail()"
+                                <button [disabled]="loggingIn" class="btn btn-primary" (click)="loginWithEmail()"
                                         i18n>Log in
                                 </button>
-                                <button class="timButton margin-left-1" (click)="cancelSimpleLogin()" i18n>Cancel</button>
+                                <button class="btn btn-default margin-left-1" (click)="cancelSimpleLogin()" i18n>Cancel</button>
                                 <tim-loading *ngIf="loggingIn"></tim-loading>
                             </div>
                             <tim-alert severity="danger" *ngIf="loginError">
