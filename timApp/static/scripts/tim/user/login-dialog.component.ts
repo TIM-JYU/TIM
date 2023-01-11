@@ -55,251 +55,275 @@ interface ISimpleRegistrationResponse {
 @Component({
     selector: "tim-login-dialog",
     template: `
-<tim-dialog-frame>
-    <ng-container header>
-        {{ getTitle() }}
-    </ng-container>
-    <ng-container body>
-<div class="row">
-    <div class="col-sm-12">
-    <ng-container *ngIf="!showSignup">
-        <ng-container *ngIf="!hideVars.hakaLogin">
-            <p class="text-center" i18n>
-                Members from universities and other Haka organizations, please use Haka to log in.
-            </p>
-            <tim-haka-login [idps]="idps"
-                    [homeOrg]="homeOrg"
-                    [addingUser]="addingToSession"></tim-haka-login>
-            <hr>
-            <p class="text-center" i18n>
-                Others, please log in with your TIM account.
-            </p>
-        </ng-container>
-
-        <ng-container *ngIf="!hideVars.emailLogin">
-        <div class="form-group">
-            <label for="email" class="control-label" i18n>Email or username</label>
-            <input class="form-control"
-                   id="email"
-                   [disabled]="simpleLoginEmailGiven"
-                   #loginEmail
-                   [(ngModel)]="loginForm.email"
-                   (keydown.enter)="handleEmailGiven()"
-                   autocomplete="username"
-                   type="text">
-        </div>
-
-            <ng-container *ngIf="simpleLoginEmailGiven">
-                <p>
-                    <ng-container *ngIf="useStudyInfoMessage; else normalHelpMsg" i18n>
-                        If you have not logged in before,
-                        and your email corresponds to the one in Studyinfo.fi,
-                        TIM sent a password to your email now.
-                        Please read the email in a separate browser tab,
-                        and please wait for the email at least 5 minutes
-                        if you don't get the email right away.
-                        Check your spam folder too.
-                    </ng-container>
-                    <ng-template #normalHelpMsg i18n>
-                        If you have not logged in to TIM before, TIM sent a password to your email now.
-                    </ng-template>
-                </p>
-                <p i18n>If you have logged in before, use your current password.</p>
+        <tim-dialog-frame>
+            <ng-container header>
+                {{ getTitle() }}
             </ng-container>
+            <ng-container body>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <ng-container *ngIf="!showSignup && !showSimpleLogin">
+                            <ng-container *ngIf="!hideVars.hakaLogin">
+                                <p class="text-center instructions" i18n>
+                                    Members from universities and other Haka organizations, please use Haka to log in.
+                                </p>
+                                <tim-haka-login [idps]="idps"
+                                                [homeOrg]="homeOrg"
+                                                [addingUser]="addingToSession"></tim-haka-login>
+                                <hr>
+                            </ng-container>
 
-        <div class="form-group" [hidden]="simpleEmailLogin && !simpleLoginEmailGiven">
-            <label for="password" class="control-label" i18n>Password</label>
-            <input class="form-control"
-                   id="password"
-                   #pw
-                   [(ngModel)]="loginForm.password"
-                   (keydown.enter)="loginWithEmail()"
-                   focusMe
-                   [enable]="focusPassword"
-                   autocomplete="current-password"
-                   type="password">
-            <p *ngIf="!hideVars.passwordRecovery" class="text-smaller"><a href="#" (click)="forgotPassword()" i18n>I forgot my password</a></p>
-        </div>
+                            <div class="flex">
+                                <ng-container *ngIf="!hideVars.emailLogin">
+                                    
+                                    <button *ngIf="!showSimpleLogin" class="center-block timButton" type="button"
+                                            (click)="beginSimpleLogin()" i18n>
+                                        Email login
+                                    </button>
+                                    
+                                </ng-container>
 
-            <div class="flex cl align-center" *ngIf="simpleEmailLogin && !simpleLoginEmailGiven">
-                <button [disabled]="!loginForm.email || signUpRequestInProgress"
-                        class="timButton"
-                        (click)="handleEmailGiven()" i18n>Continue</button>
-                <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
-            </div>
+                                <ng-container *ngIf="!hideVars.signup">
+                                    <button *ngIf="!showSignup" class="center-block timButton" type="button"
+                                            (click)="beginSignup()" i18n>
+                                        Sign up
+                                    </button>
+                                </ng-container>
+                            </div>
+                            
+                        </ng-container>
+                        
+<!--                    Simple email login form-->
+                        <ng-container *ngIf="showSimpleLogin">
+                            <div class="form-group">
+                                <label for="email" class="control-label" i18n>Email or username</label>
+                                <input class="form-control"
+                                       id="email"
+                                       [disabled]="simpleLoginEmailGiven"
+                                       #loginEmail
+                                       [(ngModel)]="loginForm.email"
+                                       (keydown.enter)="handleEmailGiven()"
+                                       autocomplete="username"
+                                       type="text">
+                            </div>
 
-        <div class="flex cl align-center" *ngIf="simpleLoginEmailGiven || !simpleEmailLogin">
-            <button [disabled]="loggingIn" class="timButton" (click)="loginWithEmail()" i18n>Log in</button>
-            <tim-loading *ngIf="loggingIn"></tim-loading>
-        </div>
-        <tim-alert severity="danger" *ngIf="loginError">
-            <tim-error-description [error]="loginError"></tim-error-description>
-        </tim-alert>
-        </ng-container>
+                            <ng-container *ngIf="simpleLoginEmailGiven">
+                                <p>
+                                    <ng-container *ngIf="useStudyInfoMessage; else normalHelpMsg" i18n>
+                                        If you have not logged in before,
+                                        and your email corresponds to the one in Studyinfo.fi,
+                                        TIM sent a password to your email now.
+                                        Please read the email in a separate browser tab,
+                                        and please wait for the email at least 5 minutes
+                                        if you don't get the email right away.
+                                        Check your spam folder too.
+                                    </ng-container>
+                                    <ng-template #normalHelpMsg i18n>
+                                        If you have not logged in to TIM before, TIM sent a password to your
+                                        email
+                                        now.
+                                    </ng-template>
+                                </p>
+                                <p i18n>If you have logged in before, use your current password.</p>
+                            </ng-container>
 
-        <ng-container *ngIf="!hideVars.signup">
-            <hr>
-            <p class="text-center" *ngIf="!showSignup" i18n>
-                Not a {{getHomeOrgDisplayName()}} student or staff member and don't have a TIM account?
-            </p>
-            <button *ngIf="!showSignup" class="center-block timButton" type="button"
-                (click)="beginSignup()" i18n>
-                Sign up
-            </button>
-        </ng-container>
-    </ng-container>
+                            <div class="form-group" [hidden]="simpleEmailLogin && !simpleLoginEmailGiven">
+                                <label for="password" class="control-label" i18n>Password</label>
+                                <input class="form-control"
+                                       id="password"
+                                       #pw
+                                       [(ngModel)]="loginForm.password"
+                                       (keydown.enter)="loginWithEmail()"
+                                       focusMe
+                                       [enable]="focusPassword"
+                                       autocomplete="current-password"
+                                       type="password">
+                                <p *ngIf="!hideVars.passwordRecovery" class="text-smaller"><a href="#"
+                                                                                              (click)="forgotPassword()"
+                                                                                              i18n>I forgot
+                                    my password</a></p>
+                            </div>
 
-    <form class="form" *ngIf="showSignup">
-        <div class="text-center" *ngIf="!resetPassword">
-            <p i18n>If you don't have an existing TIM or {{getHomeOrgDisplayName()}} account, you can create a TIM account here.</p>
-            <p i18n>Please input your email address to receive a temporary password.</p>
-        </div>
-        <p class="text-center" *ngIf="resetPassword && !emailSent" i18n>
-            To reset password, enter your email or username first.
-        </p>
-        <div class="form-group">
-            <label for="email-signup" class="control-label" i18n>Email or username</label>
-            <input class="form-control"
-                   id="email-signup"
-                   focusMe
-                   [(ngModel)]="email"
-                   [disabled]="emailSent"
-                   (keydown.enter)="provideEmail()"
-                   name="email"
-                   required
-                   i18n-placeholder
-                   autocomplete="username"
-                   placeholder="Email or username"
-                   type="text"/>
-            <label [ngStyle]="urlStyle" for="url" class="control-label" i18n>Do not type anything here</label>
-            <input class="form-control"
-                   [ngStyle]="urlStyle"
-                   tabindex="-1"
-                   id="url"
-                   [(ngModel)]="url"
-                   [disabled]="emailSent"
-                   name="url"
-                   i18n-placeholder
-                   placeholder="Do not type anything here"
-                   type="text"/>
-        </div>
-        <button (click)="provideEmail()"
-                [disabled]="!email"
-                *ngIf="!emailSent"
-                class="timButton" i18n>
-            Continue
-        </button>
-        <button (click)="cancelSignup()"
-                *ngIf="!emailSent"
-                class="btn btn-default" i18n>
-            Cancel
-        </button>
-        <div *ngIf="emailSent">
-            <div class="form-group" *ngIf="!tempPasswordProvided">
-                <label for="one-time-code-signup" class="control-label" i18n>
-                    TIM sent you a temporary password. Please check your email and type the password below to continue.
-                </label>
-                <input class="form-control"
-                       id="one-time-code-signup"
-                       focusMe
-                       [(ngModel)]="tempPassword"
-                       (keydown.enter)="provideTempPassword()"
-                       name="oneTimeCode"
-                       required
-                       i18n-placeholder
-                       placeholder="Password you received"
-                       autocomplete="one-time-code"
-                       type="password"/>
-            </div>
-            <button (click)="provideTempPassword()"
-                    [disabled]="!tempPassword"
-                    *ngIf="!tempPasswordProvided"
-                    class="center-block timButton" i18n>Continue</button>
-            <div *ngIf="tempPasswordProvided">
-                <div class="form-group">
-                    <label for="name-signup" class="control-label" i18n>
-                        Enter your name (Lastname Firstname)
-                    </label>
-                    <input class="form-control"
-                           id="name-signup"
-                           focusMe
-                           [(ngModel)]="name"
-                           [disabled]="nameProvided || !canChangeName"
-                           (keydown.enter)="newpw.focus()"
-                           name="name"
-                           required
-                           i18n-placeholder
-                           autocomplete="name"
-                           placeholder="Your name"
-                           type="text"/>
-                </div>
-                <div class="form-group">
-                    <label for="newpassword-signup" class="control-label" i18n>
-                        Create a new password (at least {{ minPasswordLength }} characters)
-                    </label>
-                    <input class="form-control"
-                           id="newpassword-signup"
-                           #newpw
-                           [(ngModel)]="newPassword"
-                           [disabled]="nameProvided"
-                           (keydown.enter)="repw.focus()"
-                           name="newPassword"
-                           required
-                           i18n-placeholder
-                           placeholder="Password"
-                           autocomplete="new-password"
-                           type="password"/>
-                </div>
-                <div class="form-group">
-                    <label for="repassword-signup" class="control-label" i18n>
-                        Retype the above password
-                    </label>
-                    <input class="form-control"
-                           id="repassword-signup"
-                           #repw
-                           [(ngModel)]="rePassword"
-                           [disabled]="nameProvided"
-                           (keydown.enter)="provideName()"
-                           name="rePassword"
-                           required
-                           i18n-placeholder
-                           autocomplete="new-password"
-                           placeholder="Retype password"
-                           type="password"/>
-                </div>
-                <button (click)="provideName()"
-                        [disabled]="!name"
-                        *ngIf="!nameProvided"
-                        class="center-block timButton" i18n>Finish
-                </button>
-            </div>
-            <span *ngIf="finishStatus === 'registered'" i18n>
+                            <div class="flex cl align-center"
+                                 *ngIf="simpleEmailLogin && !simpleLoginEmailGiven">
+                                <button [disabled]="!loginForm.email || signUpRequestInProgress"
+                                        class="timButton"
+                                        (click)="handleEmailGiven()" i18n>Continue
+                                </button>
+                                <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
+                            </div>
+
+                            <div class="flex"
+                                 *ngIf="simpleLoginEmailGiven || !simpleEmailLogin">
+                                <button [disabled]="loggingIn" class="timButton" (click)="loginWithEmail()"
+                                        i18n>Log in
+                                </button>
+                                <button class="timButton margin-left-1" (click)="cancelSimpleLogin()" i18n>Cancel</button>
+                                <tim-loading *ngIf="loggingIn"></tim-loading>
+                            </div>
+                            <tim-alert severity="danger" *ngIf="loginError">
+                                <tim-error-description [error]="loginError"></tim-error-description>
+                            </tim-alert>
+
+                        </ng-container>
+                        
+<!--                    Sign up form-->
+                        <form class="form" *ngIf="showSignup">
+                            <div class="text-center" *ngIf="!resetPassword">
+                                <p i18n>If you don't have an existing TIM or {{getHomeOrgDisplayName()}} account, you
+                                    can create a TIM account here.</p>
+                                <p i18n>Please input your email address to receive a temporary password.</p>
+                            </div>
+                            <p class="text-center" *ngIf="resetPassword && !emailSent" i18n>
+                                To reset password, enter your email or username first.
+                            </p>
+                            <div class="form-group">
+                                <label for="email-signup" class="control-label" i18n>Email or username</label>
+                                <input class="form-control"
+                                       id="email-signup"
+                                       focusMe
+                                       [(ngModel)]="email"
+                                       [disabled]="emailSent"
+                                       (keydown.enter)="provideEmail()"
+                                       name="email"
+                                       required
+                                       i18n-placeholder
+                                       autocomplete="username"
+                                       placeholder="Email or username"
+                                       type="text"/>
+                                <label [ngStyle]="urlStyle" for="url" class="control-label" i18n>Do not type anything
+                                    here</label>
+                                <input class="form-control"
+                                       [ngStyle]="urlStyle"
+                                       tabindex="-1"
+                                       id="url"
+                                       [(ngModel)]="url"
+                                       [disabled]="emailSent"
+                                       name="url"
+                                       i18n-placeholder
+                                       placeholder="Do not type anything here"
+                                       type="text"/>
+                            </div>
+                            <button (click)="provideEmail()"
+                                    [disabled]="!email"
+                                    *ngIf="!emailSent"
+                                    class="timButton" i18n>
+                                Continue
+                            </button>
+                            <button (click)="cancelSignup()"
+                                    *ngIf="!emailSent"
+                                    class="btn btn-default margin-left-1" i18n>
+                                Cancel
+                            </button>
+                            <div *ngIf="emailSent">
+                                <div class="form-group" *ngIf="!tempPasswordProvided">
+                                    <label for="one-time-code-signup" class="control-label" i18n>
+                                        TIM sent you a temporary password. Please check your email and type the password
+                                        below to continue.
+                                    </label>
+                                    <input class="form-control"
+                                           id="one-time-code-signup"
+                                           focusMe
+                                           [(ngModel)]="tempPassword"
+                                           (keydown.enter)="provideTempPassword()"
+                                           name="oneTimeCode"
+                                           required
+                                           i18n-placeholder
+                                           placeholder="Password you received"
+                                           autocomplete="one-time-code"
+                                           type="password"/>
+                                </div>
+                                <button (click)="provideTempPassword()"
+                                        [disabled]="!tempPassword"
+                                        *ngIf="!tempPasswordProvided"
+                                        class="center-block timButton" i18n>Continue
+                                </button>
+                                <div *ngIf="tempPasswordProvided">
+                                    <div class="form-group">
+                                        <label for="name-signup" class="control-label" i18n>
+                                            Enter your name (Lastname Firstname)
+                                        </label>
+                                        <input class="form-control"
+                                               id="name-signup"
+                                               focusMe
+                                               [(ngModel)]="name"
+                                               [disabled]="nameProvided || !canChangeName"
+                                               (keydown.enter)="newpw.focus()"
+                                               name="name"
+                                               required
+                                               i18n-placeholder
+                                               autocomplete="name"
+                                               placeholder="Your name"
+                                               type="text"/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="newpassword-signup" class="control-label" i18n>
+                                            Create a new password (at least {{ minPasswordLength }} characters)
+                                        </label>
+                                        <input class="form-control"
+                                               id="newpassword-signup"
+                                               #newpw
+                                               [(ngModel)]="newPassword"
+                                               [disabled]="nameProvided"
+                                               (keydown.enter)="repw.focus()"
+                                               name="newPassword"
+                                               required
+                                               i18n-placeholder
+                                               placeholder="Password"
+                                               autocomplete="new-password"
+                                               type="password"/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="repassword-signup" class="control-label" i18n>
+                                            Retype the above password
+                                        </label>
+                                        <input class="form-control"
+                                               id="repassword-signup"
+                                               #repw
+                                               [(ngModel)]="rePassword"
+                                               [disabled]="nameProvided"
+                                               (keydown.enter)="provideName()"
+                                               name="rePassword"
+                                               required
+                                               i18n-placeholder
+                                               autocomplete="new-password"
+                                               placeholder="Retype password"
+                                               type="password"/>
+                                    </div>
+                                    <button (click)="provideName()"
+                                            [disabled]="!name"
+                                            *ngIf="!nameProvided"
+                                            class="center-block timButton" i18n>Finish
+                                    </button>
+                                </div>
+                                <span *ngIf="finishStatus === 'registered'" i18n>
                 Thank you!
             </span>
-            <span *ngIf="finishStatus === 'updated'" i18n>
+                                <span *ngIf="finishStatus === 'updated'" i18n>
                 Your information was updated successfully.
             </span>
-            <span *ngIf="finishStatus" i18n>
+                                <span *ngIf="finishStatus" i18n>
                 Now you can
                 <a href="" focusMe>refresh</a>
                 the page to log in.
             </span>
-        </div>
-        <div class="flex justify-center">
-            <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
-        </div>
-        <tim-alert severity="danger" *ngIf="signUpError">
-            <tim-error-description [error]="signUpError"></tim-error-description>
-        </tim-alert>
-    </form>
-    </div>
-</div>
-    </ng-container>
-    <ng-container footer>
-        <button class="timButton" (click)="dismiss()" i18n>Close</button>
-    </ng-container>
-</tim-dialog-frame>
+                            </div>
+                            <div class="flex justify-center">
+                                <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
+                            </div>
+                            <tim-alert severity="danger" *ngIf="signUpError">
+                                <tim-error-description [error]="signUpError"></tim-error-description>
+                            </tim-alert>
+                        </form>
+                    </div>
+                </div>
+            </ng-container>
+            <ng-container footer>
+                <button class="timButton" (click)="dismiss()" i18n>Close</button>
+            </ng-container>
+        </tim-dialog-frame>
     `,
+    styleUrls: ["./login-dialog.component.scss"],
 })
 export class LoginDialogComponent extends AngularDialogComponent<
     ILoginParams,
@@ -307,6 +331,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
 > {
     hideVars: IVisibilityVars = getVisibilityVars();
     showSignup?: boolean; // Show sign up form instead of log in.
+    showSimpleLogin?: boolean; // Show simple email log in
     loginForm = {email: "", password: ""};
     addingToSession = false;
 
@@ -546,6 +571,14 @@ export class LoginDialogComponent extends AngularDialogComponent<
         if (this.loginForm.email) {
             this.email = this.loginForm.email;
         }
+    }
+
+    public cancelSimpleLogin() {
+        this.showSimpleLogin = false;
+    }
+
+    public beginSimpleLogin() {
+        this.showSimpleLogin = true;
     }
 
     private async sendRequest<T>(url: string, data: JsonValue): ToReturn<T> {
