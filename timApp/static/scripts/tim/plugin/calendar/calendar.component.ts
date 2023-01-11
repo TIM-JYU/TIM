@@ -60,7 +60,6 @@ import {
 } from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import {itemglobals} from "tim/util/globals";
-import {showConfirm} from "tim/ui/showConfirmDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {CustomDateFormatter} from "tim/plugin/calendar/custom-date-formatter.service";
 import {CustomEventTitleFormatter} from "tim/plugin/calendar/custom-event-title-formatter.service";
@@ -77,6 +76,7 @@ import {CalendarHeaderMinimalComponent} from "tim/plugin/calendar/calendar-heade
 import {ShowWeekComponent} from "tim/plugin/calendar/show-week.component";
 import {showEditJsonEventDialog} from "tim/plugin/calendar/showEditJsonEventDialog";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {showExportICal} from "tim/plugin/calendar/showExportICal";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -1014,38 +1014,8 @@ export class CalendarComponent
      * Collects event information in ICS-format and copies a link
      * to the ICS-file to the users clipboard
      */
-    async export() {
-        if (
-            !(await showConfirm(
-                "ICS",
-                $localize`Export calendar information in ics-format?`
-            ))
-        ) {
-            return;
-        }
-        const result = await toPromise(
-            this.http.get("/calendar/export", {
-                responseType: "text",
-            })
-        );
-        if (result.ok) {
-            this.icsURL = result.result;
-            const copyResult = await to2(
-                navigator.clipboard.writeText(this.icsURL)
-            );
-            if (copyResult.ok) {
-                this.exportDone = $localize`ICS-url copied to clipboard.`;
-            } else {
-                this.exportDone = $localize`Could not copy ICS-url to clipboard, check page permissions. Copy URL manually: ${this.icsURL}`;
-            }
-            this.refresh();
-        } else {
-            if (result.result.error.error) {
-                await showMessageDialog(result.result.error.error);
-            } else {
-                await showMessageDialog(defaultWuffMessage);
-            }
-        }
+    export() {
+        void showExportICal();
     }
 
     /**

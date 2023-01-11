@@ -6144,22 +6144,6 @@
           <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1521925891097959460" datatype="html">
-        <source>Export calendar information in ics-format?</source>
-        <target state="translated">Viedäänkö kalenteritiedot ICS-muodossa?</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
-          <context context-type="linenumber">830</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2537259444028776879" datatype="html">
-        <source>ICS-url copied to clipboard.</source>
-        <target state="translated">ICS-osoite kalenteriin kopioitu leikepöydälle.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
-          <context context-type="linenumber">846</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7897580452702919280" datatype="html">
         <source>Could not reset lock: <x id="PH" equiv-text="r.result.error.error"/></source>
         <target state="translated">Lukitusta ei voitu tyhjentää: <x id="PH" equiv-text="r.result.error.error"/></target>
@@ -6796,14 +6780,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
           <context context-type="linenumber">110</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7992007533396390309" datatype="html">
-        <source>Could not copy ICS-url to clipboard, check page permissions. Copy URL manually: <x id="PH" equiv-text="this.icsURL"/></source>
-        <target state="translated">ICS-linkkiä ei voitu kopioida leikepöydälle, tarkista sivulle myönnetyt oikeudet. Kopioi linkki käsin: <x id="PH" equiv-text="this.icsURL"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
-          <context context-type="linenumber">958</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2975577548588791187" datatype="html">
@@ -7884,6 +7860,46 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
           <context context-type="linenumber">66,67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2625139315069708823" datatype="html">
+        <source> Export calendar as iCal </source>
+        <target state="translated"> Vie kalenteri iCal-muodossa </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/export-ical.component.ts</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7868666072294717063" datatype="html">
+        <source> Include events booked by at least </source>
+        <target state="translated"> View tapahtumat, joita on varannut ainakin </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/export-ical.component.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7955962207090657901" datatype="html">
+        <source>people.</source>
+        <target state="translated">henkilöä.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/export-ical.component.ts</context>
+          <context context-type="linenumber">29,30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2354469305267406692" datatype="html">
+        <source> Copy the following URL to import the calendar into your calendar application: </source>
+        <target state="translated"> Kopioi ja vie alla oleva linkki käyttämäsi kalenterisovellukseen: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/export-ical.component.ts</context>
+          <context context-type="linenumber">37</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5949532288592788568" datatype="html">
+        <source> Export calendar </source>
+        <target state="translated"> Vie kalenteri </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/export-ical.component.ts</context>
+          <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
     </body>
