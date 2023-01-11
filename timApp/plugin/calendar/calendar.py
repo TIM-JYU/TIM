@@ -24,7 +24,7 @@ from typing import Literal
 
 from flask import Response, render_template_string, url_for
 from marshmallow import missing
-from sqlalchemy import false, true
+from sqlalchemy import false, true, func
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -97,6 +97,9 @@ class FilterOptions:
 
     includeDocumentEvents: bool = True
     """Whether to include events that are linked to the current document. Requires that the document ID is specified."""
+
+    showBookedByMin: int | None = None
+    """Show owned events that are booked by at least the given number of people"""
 
     docId: int | None = None
     """The document ID to use for the includeDocumentEvents option. If None, no document filtering is done."""
@@ -390,14 +393,24 @@ def import_events(
     return ok_response()
 
 
-@calendar_plugin.get("/ical")
-def get_ical(key: str) -> Response:
+@dataclass
+class ICalFilterOptions:
+    """Options for filtering the ICS export"""
+
+    key: str
+    showImportant: bool = True
+    includeOwned: bool = False
+    showBookedByMin: int | None = None
+
+
+@calendar_plugin.get("/ical", model=ICalFilterOptions)
+def get_ical(opts: ICalFilterOptions) -> Response:
     """Fetches users events in a ICS format. User ID is sorted out from hash code from query parameter
 
     :return: ICS file that can be exported otherwise 404 if user data does not exist.
     """
     user_data: ExportedCalendar = ExportedCalendar.query.filter_by(
-        calendar_hash=key
+        calendar_hash=opts.key
     ).one_or_none()
     if user_data is None:
         raise NotExist()
@@ -409,7 +422,9 @@ def get_ical(key: str) -> Response:
         FilterOptions(
             tags=[],
             groups=[],
-            showImportant=True,
+            showImportant=opts.showImportant,
+            showBookedByMin=opts.showBookedByMin,
+            includeOwned=opts.includeOwned,
         ),
     )
 
@@ -513,6 +528,23 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         # noinspection PyUnresolvedReferences
         booked_query = Event.query.filter(Event.event_id.in_(enrolled_subquery))
         event_queries.append(booked_query)
+
+    if filter_opts.showBookedByMin is not None:
+        booked_min_subquery = (
+            Event.query.filter(Event.creator == u)
+            .outerjoin(Enrollment)
+            .group_by(Event.event_id)
+            .with_entities(
+                Event.event_id, func.count(Enrollment.event_id).label("count")
+            )
+        ).subquery()
+        booked_min_query = (
+            db.session.query(booked_min_subquery)
+            .join(Event, Event.event_id == booked_min_subquery.c.event_id)
+            .filter(booked_min_subquery.c.count >= filter_opts.showBookedByMin)
+            .with_entities(Event)
+        )
+        event_queries.append(booked_min_query)
 
     timing_filter = true()
     # Apply date filter to all events
