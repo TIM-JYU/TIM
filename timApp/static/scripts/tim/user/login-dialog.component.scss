@@ -5,3 +5,18 @@
 .margin-left-1 {
   margin-left: 1em;
 }
+
+.login-flex-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 25em;
+  margin: auto;
+  row-gap: 0.5em;
+
+  .center-block {
+    white-space: normal;
+    margin-right: unset;
+    margin-left: unset;
+  }
+}

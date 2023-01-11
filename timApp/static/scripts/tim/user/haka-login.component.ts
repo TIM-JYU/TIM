@@ -61,11 +61,11 @@ function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
 @Component({
     selector: "tim-haka-login",
     template: `
-        <div style="background:#F0F0F0;border-style: solid;border-color: #848484;border-width: 1px;padding: 10px;">
+        <div class="haka-login-box">
             <a href="https://wiki.eduuni.fi/display/CSCHAKA" target="_blank" class="pull-right">
                 <img src="https://haka.funet.fi/shibboleth/images/Haka_nega_tiivis_pieni.svg"
                      alt="Federation logo"
-                     i18n-alt>
+                     i18n-alt class="haka-logo">
             </a>
             <div class="form-group">
                 <label for="haka-select">
@@ -79,14 +79,17 @@ function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
                     <option *ngFor="let idp of idps" [ngValue]="idp">{{getName(idp)}}</option>
                 </select>
             </div>
-            <button [disabled]="!selectedIdp"
-                    type="button"
-                    (click)="login()"
-                    class="timButton" i18n>
-                Log in
-            </button>
+            <div class="wrap-normal">
+                <button [disabled]="!selectedIdp"
+                        type="button"
+                        (click)="login()"
+                        class="timButton" i18n>
+                    Log in
+                </button>
+            </div>
         </div>
     `,
+    styleUrls: ["./haka-login.component.scss"],
 })
 export class HakaLoginComponent implements OnChanges {
     selectedIdp?: IDiscoveryFeedEntry;

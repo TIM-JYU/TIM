@@ -73,7 +73,7 @@ interface ISimpleRegistrationResponse {
                                 <hr>
                             </ng-container>
 
-                            <div class="flex">
+                            <div class="login-flex-col">
                                 <ng-container *ngIf="!hideVars.emailLogin">
                                     
                                     <button *ngIf="!showSimpleLogin" class="center-block timButton" type="button"
