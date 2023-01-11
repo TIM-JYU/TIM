@@ -4,21 +4,49 @@
     border: none !important;
     overflow-y: auto;
     overflow-x: hidden;
-    min-height: 18em;
     max-height: 60vh;
-
-    @media screen and (max-height: 1080px) {
-        min-height: 12em;
-    }
+    margin-bottom: 2px;
 
     @media screen and (max-height: 800px) {
-        min-height: 8em;
+        font-size: x-small !important;
     }
-
 }
 
 annotation .fulldiv {
     min-height: unset;
+}
+
+.velp-groups-tab {
+    form {
+        display: flex;
+        flex-direction: row;
+        margin: 4px 1px;
+        font-size: smaller;
+
+        label {
+            display: inline-flex;
+            margin: inherit;
+        }
+
+        fieldset {
+            display: inline-flex;
+            padding-left: 1em;
+            margin: inherit;
+        }
+
+        select {
+            margin-bottom: 0;
+            max-width: unset;
+        }
+    }
+
+    @media screen and (max-height: 800px) {
+        .velpSummary {
+            form label {
+                font-size: smaller;
+            }
+        }
+    }
 }
 
 .velp-groups-resize {
@@ -30,16 +58,30 @@ annotation .fulldiv {
 }
 
 .velp-groups-table {
-    table {
+    .fulldiv {
         display: table;
-        min-width: 19.4em !important;
-        max-width: 19.4em !important;
+        width: 95%;
+        margin-left: 0;
+        margin-bottom: 2px;
 
         tr > td:first-child, th:first-child {
             border-left: none;
         }
         td, th {
             max-width: 13em;
+        }
+    }
+}
+
+.velp-summary-tab {
+
+    @media screen and (max-height: 1080px) {
+        .velpSummary {
+            font-size: 0.8em;
+
+            h5 {
+                font-size: 1.2em;
+            }
         }
     }
 }
@@ -54,11 +96,139 @@ annotation .fulldiv {
     float: left;
 }
 
+.velp-menu-selected-area {
+    min-height: 3.3em;
+    border-top: 1px solid $basic-border-color;
+    label {
+        font-size: small;
+
+        @media screen and (max-height: 800px) {
+            font-size: x-small;
+            padding-bottom: 0;
+        }
+    }
+
+    #selection {
+        font-size: x-small;
+
+        @media screen and (max-height: 800px) {
+            font-size: xx-small;
+        }
+    }
+}
+
+.velp-minimal-controls {
+    display: flex;
+
+    .velp-advanced-control {
+        margin-left: 0.4em;
+        padding-top: 0.25em;
+        vertical-align: middle;
+
+        label {
+            vertical-align: middle;
+            font-size: small;
+            font-weight: normal;
+        }
+    }
+}
+
+.velp-menu-advanced-controls {
+    font-size: small;
+}
+
+#selection {
+    min-height: 3em;
+    margin: 0;
+
+    @media screen and (max-height: 1080px) {
+        min-height: 1.6em;
+    }
+
+    @media screen and (max-height: 800px) {
+        min-height: 2rem;
+    }
+}
+
+.available-velps {
+    background: white;
+}
+
+.editVelp-scrollarea {
+    display: block;
+    max-height: 16em;
+    overflow-y: auto;
+
+    @media screen and (max-height: 1080px) {
+        max-height: 8em;
+    }
+
+    @media screen and (max-height: 800px) {
+        font-size: 1.2rem;
+        max-height: 4.8rem;
+        line-height: 1rem;
+    }
+}
+
+.labels-scrollarea {
+    display: block;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    max-height: 4em;
+    margin-bottom: 4px;
+
+    @media screen and (max-height: 800px) {
+        font-size: 1.2rem;
+        line-height: 1rem;
+    }
+}
+
+.add-velp {
+    font-size: smaller;
+    padding: 2px 4px;
+}
+
+.collapsible-menu {
+    margin-top: 0.5em;
+
+    details {
+        margin-bottom: 0.8em;
+    }
+    details[open] {
+        summary {
+            font-weight: bold;
+        }
+    }
+    summary {
+        font-size: 1em;
+        display: list-item !important;
+        font-weight: normal;
+        margin-bottom: 0.5em;
+    }
+}
+
+.collapsible-menu-open-content {
+
+    form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .velp-groups-new-group-control {
+        display: flex;
+        flex-direction: row;
+        margin: 0.2em 0;
+
+        input {
+            margin-left: 0.3em;
+        }
+    }
+}
+
 /** Velp area styles **/
 .velpMenu .tab-content {
     bottom: 0;
     top:0;
-    min-height: 12em;
     border: none;
 }
 
@@ -72,7 +242,6 @@ annotation .fulldiv {
     position: fixed;
     min-width: 20em;
     max-width: 20em;
-    min-height: 24em;
     height: fit-content;
     height: -webkit-fit-content;
     max-height: 80em;
@@ -142,10 +311,18 @@ annotation .fulldiv {
     position: relative;
     top: 0;
     bottom: 0;
+
+    @media screen and (max-height: 800px) {
+        margin-bottom: 0.3em;
+    }
 }
 
 .velpArea-available-velps {
-    min-height: 16em;
+    min-height: 7em;
+
+    @media screen and (min-height: 750px) {
+        min-height: 16em;
+    }
 }
 
 .autoscroll {
@@ -164,8 +341,8 @@ annotation .fulldiv {
     position: relative;
     resize: vertical;
 
-    @media screen and (max-height: 800px) {
-        min-height: 10em;
+    @media screen and (max-height: 600px) {
+        min-height: 7em;
     }
 }
 
@@ -346,12 +523,19 @@ position: absolute;
 }
 
 .velp:hover .emphasise {
-    margin-top: -1em;
+
+    margin-top: -0.5em;
     -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
     -moz-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
     box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
 
+    /* Disable hover effect for add/edit velp window. It is already on top of everything else, so effect is not needed. */
     &.edit {
+        margin-top: 0;
+    }
+
+    /* Don't use hover effect on small screens (mobile), since it makes selecting velps more difficult. */
+    @media screen and (max-height: 800px) {
         margin-top: 0;
     }
 }
@@ -544,85 +728,6 @@ $inactive: whitesmoke;
     margin-top: 1em;
 }
 
-.velp-menu-selected-area {
-    min-height: 4em;
-    border-top: 1px solid $basic-border-color;
-    label {
-        font-size: small;
-    }
-
-    #selection {
-        font-size: x-small;
-    }
-}
-
-.velp-minimal-controls {
-    display: flex;
-
-    .velp-advanced-control {
-        margin-left: 0.4em;
-        padding-top: 0.25em;
-        vertical-align: middle;
-
-        label {
-            vertical-align: middle;
-            font-size: small;
-            font-weight: normal;
-        }
-    }
-}
-
-.velp-menu-advanced-controls {
-    font-size: small;
-    min-height: 16em;
-}
-
-#selection {
-    min-height: 3em;
-    margin: 0;
-
-    @media screen and (max-height: 1080px) {
-        min-height: 1.6em;
-    }
-
-    @media screen and (max-height: 800px) {
-        min-height: 2rem;
-    }
-}
-
-.available-velps {
-    background: white;
-}
-
-.editVelp-scrollarea {
-    display: block;
-    max-height: 16em;
-    overflow-y: auto;
-
-    @media screen and (max-height: 1080px) {
-        max-height: 8em;
-    }
-
-    @media screen and (max-height: 800px) {
-        font-size: 1.2rem;
-        max-height: 4.8rem;
-        line-height: 1rem;
-    }
-}
-
-.labels-scrollarea {
-    display: block;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    max-height: 4em;
-    margin-bottom: 4px;
-
-    @media screen and (max-height: 800px) {
-        font-size: 1.2rem;
-        line-height: 1rem;
-    }
-}
-
 .label-edit-glyphicons {
     margin-left: 3px;
 }
@@ -658,30 +763,6 @@ $inactive: whitesmoke;
 
 .icon-plus-add-velp {
     padding-right: 0.3em;
-}
-
-.add-velp {
-    font-size: smaller;
-    padding: 2px 4px;
-}
-
-.collapsible-menu {
-    margin-top: 0.5em;
-
-    details {
-        margin-bottom: 0.8em;
-    }
-    details[open] {
-        summary {
-            font-weight: bold;
-        }
-    }
-    summary {
-        font-size: 1em;
-        display: list-item !important;
-        font-weight: normal;
-        margin-bottom: 0.5em;
-    }
 }
 
 .btn-set-vg-visible {
