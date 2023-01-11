@@ -503,6 +503,11 @@ div.error {
         color: $link-color;
         font-size: 0.8em;
     }
+
+    &.cnt-labels {
+        font-size: 0.8em;
+        margin-top: -1.5em;
+    }
 }
 
 *:hover > .headerlink {
@@ -516,8 +521,6 @@ div.error {
 
     &.cnt-labels {
         color: $link-color;
-        font-size: 0.8em;
-        margin-top: -1.5em;
         span.cnt-label {
             cursor: copy;
         }
