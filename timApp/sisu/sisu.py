@@ -728,14 +728,14 @@ def get_sisu_assessments(
     doc_settings = doc.document.get_settings()
     if groups is None:
         try:
-            groupsetting = doc_settings.group()
+            groups_setting = doc_settings.groups()
         except ValueError as e:
             raise IncorrectSettings(str(e)) from e
-        if not groupsetting:
+        if not groups_setting:
             raise IncorrectSettings(
                 'The document must have "group" setting that indicates the student group name.'
             )
-        usergroups = [groupsetting]
+        usergroups = groups_setting
     else:
         usergroups = groups
     ugs = UserGroup.query.filter(UserGroup.name.in_(usergroups)).all()

@@ -2082,7 +2082,7 @@ def get_task_users(task_id: str) -> Response:
             raise AccessDenied()
         users = list(r.reviewable for r in reviews if r.task_name == tid.task_name)
     else:
-        usergroup = request.args.get("group")
+        usergroups = request.args.getlist("groups")
         q = (
             User.query.options(lazyload(User.groups))
             .join(Answer, User.answers)
@@ -2090,8 +2090,8 @@ def get_task_users(task_id: str) -> Response:
             .order_by(User.real_name.asc())
             .distinct()
         )
-        if usergroup is not None:
-            q = q.join(UserGroup, User.groups).filter(UserGroup.name.in_([usergroup]))
+        if usergroups:
+            q = q.join(UserGroup, User.groups).filter(UserGroup.name.in_(usergroups))
         users = q.all()
     if hide_names_in_teacher(d):
         model_u = User.get_model_answer_user()

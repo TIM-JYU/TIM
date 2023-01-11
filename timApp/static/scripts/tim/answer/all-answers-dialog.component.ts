@@ -29,7 +29,7 @@ const AnswersDialogOptions = t.intersection([
         consent: t.string,
         format: t.keyof({text: null, json: null}),
         salt: maybeUndefined(t.string),
-        group: maybeUndefined(t.string),
+        groups: maybeUndefined(t.array(t.string)),
     }),
     CommonDialogOptions,
 ]);
@@ -52,18 +52,18 @@ export interface IAllAnswersParams {
             </ng-container>
             <ng-container body>
                 <form class="form-horizontal">
-                    <div class="form-group" *ngIf="activeGroup">
+                    <div class="form-group" *ngIf="activeGroups">
                         <div class="col-sm-3">
                             <label class="radio-inline" i18n>Answer group</label>
                         </div>
                         <div class="col-sm-9">
                             <label class="radio-inline">
-                                <input type="radio" [(ngModel)]="options.group" name="answer-group" [value]="undefined">
+                                <input type="radio" [(ngModel)]="options.groups" name="answer-group" [value]="undefined">
                                 <ng-container i18n>All answerers</ng-container>
                             </label>
                             <label class="radio-inline">
-                                <input type="radio" [(ngModel)]="options.group" name="answer-group" [value]="activeGroup">
-                                <ng-container i18n>Document group ({{ activeGroup }})</ng-container>
+                                <input type="radio" [(ngModel)]="options.groups" name="answer-group" [value]="activeGroups">
+                                <ng-container i18n>Document groups ({{ activeGroups }})</ng-container>
                             </label>
                         </div>
                     </div>
@@ -295,7 +295,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
     options!: IOptions;
     private storage = new TimStorage("allAnswersOptions", AnswersDialogOptions);
     lastFetch?: ReadonlyMoment;
-    activeGroup?: string;
+    activeGroups?: [string]; // TODO: if multiple groups, template ui needs selector for all groups vs specific groups
 
     constructor(private http: HttpClient) {
         super();
@@ -317,7 +317,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
     ngOnInit() {
         const options = this.data;
         this.showSort = options.allTasks;
-        this.activeGroup = documentglobals().group;
+        this.activeGroups = documentglobals().groups;
 
         const defs = {
             age: "max",
@@ -331,12 +331,12 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
             print: "all",
             format: "text",
             salt: undefined,
-            group: undefined,
+            groups: undefined,
         } as const;
 
         this.options = this.storage.get() ?? defs;
-        if (this.options.group && this.activeGroup) {
-            this.options.group = this.activeGroup;
+        if (this.options.groups && this.activeGroups) {
+            this.options.groups = this.activeGroups;
         }
 
         (async () => {

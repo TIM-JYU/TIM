@@ -1,3 +1,5 @@
+import re
+
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -389,7 +391,21 @@ class BookmarkTest2(BookmarkTestBase):
             expect_status=400,
             expect_content="Document does not have associated course group",
         )
-        d.document.add_setting("group", "testcourse")
+        d.document.add_setting("groups", ["testcourse"])
+        d.document.add_setting("group", "anothertestcourse")
+        r = self.json_post(
+            "/bookmarks/addCourse",
+            params,
+            expect_status=400,
+        )
+        err = r["error"]
+        self.assertIn("Multiple course groups found", err)
+        self.assertSetEqual(
+            {m for m in re.findall("'(.*?)'", err)}, {"testcourse", "anothertestcourse"}
+        )
+        d.document.set_settings(
+            {"course_allow_manual_enroll": True, "group": "testcourse"}
+        )
         self.json_post(
             "/bookmarks/addCourse",
             params,

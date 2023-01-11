@@ -99,7 +99,10 @@ export class ImportAnswersDialogComponent extends AngularDialogComponent<
     }
 
     ngOnInit() {
-        this.importGroup = documentglobals().group;
+        const userGroups = documentglobals().groups;
+        if (userGroups?.length == 1) {
+            this.importGroup = userGroups[0]; // TODO: Support multiple groups
+        }
     }
 
     async importAnswers() {

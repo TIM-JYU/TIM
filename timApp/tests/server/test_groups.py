@@ -318,7 +318,7 @@ class GroupTest(TimRouteTest):
     def test_invalid_group_setting(self):
         d = self.create_doc(settings={"group": ["a", "b"]})
         html = self.get(d.get_url_for_view("teacher"))
-        self.assertIn("The setting &#39;group&#39; must be a string.", html)
+        self.assertIn("The setting &#39;group&#39; must be a string", html)
 
     def test_doc_group_setting_access(self):
         self.login_test1()

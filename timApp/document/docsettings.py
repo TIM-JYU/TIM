@@ -150,6 +150,7 @@ class DocSettings:
     course_allow_manual_enroll_key = "course_allow_manual_enroll"
     show_velps_key = "show_velps"
     group_key = "group"
+    groups_key = "groups"
     allow_self_confirm_from_key = "allow_self_confirm_from"
     auto_confirm_key = "auto_confirm"
     expire_next_doc_message_key = "expire_next_doc_message"
@@ -287,11 +288,18 @@ class DocSettings:
         res = self.__dict.get(self.show_velps_key, True)
         return res
 
-    def group(self) -> str | None:
-        res = self.__dict.get(self.group_key, None)
-        if res is not None and not isinstance(res, str):
-            raise ValueError(f"group must be str, not {type(res)}")
-        return res
+    def groups(self) -> list[str] | None:
+        g = self.__dict.get(self.group_key, None)
+        if g is not None and not isinstance(g, str):
+            raise ValueError(f"The setting 'group' must be a string, not {type(g)}")
+        res = self.__dict.get(self.groups_key, None)
+        if res is None:
+            return [g] if g else None
+        if not (isinstance(res, list) and all(isinstance(e, str) for e in res)):
+            raise ValueError(f"The setting 'groups' must be a list of strings")
+        elif g:
+            return list(set([g] + res))
+        return list(set(res))
 
     def auto_number_start(self) -> dict[int, int]:
         result = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
