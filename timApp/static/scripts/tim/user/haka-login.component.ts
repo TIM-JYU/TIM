@@ -69,7 +69,7 @@ function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
             </a>
             <div class="form-group">
                 <label for="haka-select">
-                    <ng-container i18n>Haka login</ng-container>
+                    <ng-container i18n>Haka login (Haka organisations and universities)</ng-container>
                 </label>
                 <select class="form-control"
                         id="haka-select"
@@ -84,7 +84,7 @@ function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
                         type="button"
                         (click)="login()"
                         class="timButton" i18n>
-                    Log in
+                    Log in with Haka
                 </button>
             </div>
         </div>
