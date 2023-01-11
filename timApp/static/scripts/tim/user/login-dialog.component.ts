@@ -316,7 +316,7 @@ interface ISimpleRegistrationResponse {
                 </div>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" (click)="dismiss()" i18n>Close</button>
+                <button class="btn btn-default" (click)="dismiss()" i18n>Close</button>
             </ng-container>
         </tim-dialog-frame>
     `,
