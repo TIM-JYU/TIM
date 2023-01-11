@@ -2734,44 +2734,12 @@
           <context context-type="linenumber">66</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3386853674104368310" datatype="html">
-        <source>Haka login</source>
-        <target state="translated">Haka-kirjautuminen</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
-          <context context-type="linenumber">71</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5946121121970393200" datatype="html">
         <source>Select your home organization...</source>
         <target state="translated">Valitse kotiorganisaatiosi...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
           <context context-type="linenumber">77</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2715185765061607307" datatype="html">
-        <source>
-                Log in
-            </source>
-        <target state="translated">
-                Kirjaudu sisään
-            </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
-          <context context-type="linenumber">85</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4814606488888120626" datatype="html">
-        <source>
-                Members from universities and other Haka organizations, please use Haka to log in.
-            </source>
-        <target state="translated">
-                Yliopistojen ja muiden Haka-organisaatioiden jäsenet, kirjautukaa Hakalla.
-            </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">75</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7169763988476671054" datatype="html">
@@ -7840,6 +7808,22 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">240</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3657392489783075042" datatype="html">
+        <source>Haka login (Haka organizations and universities)</source>
+        <target state="translated">Haka login (Haka organisaatiot and yliopistot)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">72</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6576888153560947254" datatype="html">
+        <source> Log in with Haka </source>
+        <target state="translated"> Kirjaudu sisään Haka-tunnistautumisella </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">87</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2470527158706928323" datatype="html">
