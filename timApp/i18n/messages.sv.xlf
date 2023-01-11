@@ -4318,14 +4318,6 @@
           <context context-type="linenumber">74,76</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2341982959296346504" datatype="html">
-        <source> Others, please log in with your TIM account. </source>
-        <target state="translated"> Övriga, vänligen logga in med ditt TIM-konto. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">81,83</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7169763988476671054" datatype="html">
         <source>Email or username</source>
         <target state="translated">E-postadress eller användarnamn</target>
@@ -4386,18 +4378,6 @@
           <context context-type="linenumber">126</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6962699013778688473" datatype="html">
-        <source>Continue</source>
-        <target state="translated">Fortsätt</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">132</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">220</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2336550011721758066" datatype="html">
         <source>Log in</source>
         <target state="translated">Logga in</target>
@@ -4412,14 +4392,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-menu.component.ts</context>
           <context context-type="linenumber">18</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3023906871690155199" datatype="html">
-        <source> Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don't have a TIM account? </source>
-        <target state="translated"> Inte ett student eller anställd av <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> och utan TIM konto? </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">147,149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7203320122205058413" datatype="html">
@@ -7742,6 +7714,26 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">113,116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5894581303239667306" datatype="html">
+        <source> Email login </source>
+        <target state="translated"> Inloggning via e-post</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8743900787768000333" datatype="html">
+        <source>Continue </source>
+        <target state="translated">Fortsätt </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">152</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">240</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2470527158706928323" datatype="html">

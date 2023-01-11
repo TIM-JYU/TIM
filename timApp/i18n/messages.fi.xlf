@@ -2774,18 +2774,6 @@
           <context context-type="linenumber">75</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2341982959296346504" datatype="html">
-        <source>
-                Others, please log in with your TIM account.
-            </source>
-        <target state="translated">
-                Muut, kirjautukaa TIM-tilillä.
-            </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">82</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7169763988476671054" datatype="html">
         <source>Email or username</source>
         <target state="translated">Sähköpostiosoite tai käyttäjätunnus</target>
@@ -2852,14 +2840,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">137</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3023906871690155199" datatype="html">
-        <source> Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don't have a TIM account? </source>
-        <target state="translated"> Etkö ole <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-opiskelija tai henkilökuntaa eikä sinulla ole TIM-tiliä? </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">147,149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7203320122205058413" datatype="html">
@@ -2952,18 +2932,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">214</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6962699013778688473" datatype="html">
-        <source>Continue</source>
-        <target state="translated">Jatka</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">132</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">220</context>
         </context-group>
       </trans-unit>
       <trans-unit id="834072654360023442" datatype="html">
@@ -7852,6 +7820,26 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">113,116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5894581303239667306" datatype="html">
+        <source> Email login </source>
+        <target state="translated"> Kirjaudu sisään sähköpostilla </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8743900787768000333" datatype="html">
+        <source>Continue </source>
+        <target state="translated">Jatka</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">152</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">240</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2470527158706928323" datatype="html">
