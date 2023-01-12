@@ -88,7 +88,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         elem.find_element(By.XPATH, "//input[@type='text']").send_keys(email)
         elem.find_element(By.XPATH, "//input[@type='password']").send_keys(password)
         login = elem.find_element(
-            By.CSS_SELECTOR, ".flex > .timButton:first-child"
+            By.CSS_SELECTOR, ".flex > button:first-child"
         )  # Log in button
         login.click()
         self.wait.until(
