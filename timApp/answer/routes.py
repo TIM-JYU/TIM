@@ -459,6 +459,16 @@ def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
             get_useranswers_for_task(user, tids, answer_map)
         if gtids:
             get_globals_for_tasks(gtids, answer_map)
+        loaded_contents = [json.loads(c.get("content")) for c in answer_map.values()]
+        for ans in answer_map.values():
+            try:
+                loaded_content = json.loads(ans.get("content"))
+            except JSONDecodeError:
+                loaded_content = ""
+            loaded_contents.append(loaded_content)
+        loaded_contents = call_dumbo(loaded_contents, path="/mdkeys")
+        for idx, ans in enumerate(answer_map.values()):
+            ans["content"] = json.dumps(loaded_contents[idx])
         return json_response({"answers": answer_map, "userId": user_id})
     except Exception as e:
         raise RouteException(str(e))
