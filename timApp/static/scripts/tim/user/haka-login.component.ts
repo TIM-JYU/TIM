@@ -64,7 +64,7 @@ function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
         <div class="haka-login-box">
             <a href="https://wiki.eduuni.fi/display/CSCHAKA" target="_blank" class="pull-right">
                 <img src="https://haka.funet.fi/shibboleth/images/Haka_nega_tiivis_pieni.svg"
-                     alt="Federation logo"
+                     alt="Haka logo"
                      i18n-alt class="haka-logo">
             </a>
             <div class="form-group">
@@ -74,6 +74,7 @@ function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
                 <select class="form-control"
                         id="haka-select"
                         style="margin-top: 6px"
+                        [disabled]="!idps || !idps.length"
                         [(ngModel)]="selectedIdp">
                     <option [ngValue]="undefined" disabled i18n>Select your home organization...</option>
                     <option *ngFor="let idp of idps" [ngValue]="idp">{{getName(idp)}}</option>
@@ -83,8 +84,8 @@ function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
                 <button [disabled]="!selectedIdp"
                         type="button"
                         (click)="login()"
-                        class="timButton" i18n>
-                    Log in with Haka
+                        class="timButton">
+                    <ng-container i18n>Log in via</ng-container> {{ selectedIdp ? getName(selectedIdp) : "Haka" }}
                 </button>
             </div>
         </div>

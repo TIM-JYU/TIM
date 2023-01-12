@@ -4262,14 +4262,6 @@
           <context context-type="linenumber">41,43</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8747125763308501031" datatype="html">
-        <source>Federation logo</source>
-        <target state="translated">Federation logo</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
-          <context context-type="linenumber">66</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5946121121970393200" datatype="html">
         <source>Select your home organization...</source>
         <target state="translated">Välj din hemorgansation...</target>
@@ -7694,7 +7686,7 @@
       </trans-unit>
       <trans-unit id="5894581303239667306" datatype="html">
         <source> Email login </source>
-        <target state="translated"> Inloggning via e-post</target>
+        <target state="translated"> Inloggning via e-post </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">81</context>
@@ -7718,14 +7710,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
           <context context-type="linenumber">72</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6576888153560947254" datatype="html">
-        <source> Log in with Haka </source>
-        <target state="translated"> Logga in med Haka</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
-          <context context-type="linenumber">87</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2470527158706928323" datatype="html">
@@ -7782,6 +7766,22 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/export-ical.component.ts</context>
           <context context-type="linenumber">19,20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5003932537689068654" datatype="html">
+        <source>Haka logo</source>
+        <target state="translated">Hakas logo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">67,68</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="498717790849733177" datatype="html">
+        <source>Log in via</source>
+        <target state="translated">Logga in via</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">88</context>
         </context-group>
       </trans-unit>
     </body>
