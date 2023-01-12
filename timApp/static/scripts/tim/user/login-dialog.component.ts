@@ -152,10 +152,10 @@ interface ISimpleRegistrationResponse {
 
                             <div class="flex"
                                  *ngIf="simpleLoginEmailGiven || !simpleEmailLogin">
-                                <button [disabled]="loggingIn" class="btn btn-primary" (click)="loginWithEmail()"
+                                <button [disabled]="loggingIn || resetPassword" class="btn btn-primary" (click)="loginWithEmail()"
                                         i18n>Log in
                                 </button>
-                                <button class="btn btn-default margin-left-1" (click)="cancelSimpleLogin()" i18n>Cancel</button>
+                                <button class="btn btn-default margin-left-1" [disabled]="resetPassword" (click)="cancelSimpleLogin()" i18n>Cancel</button>
                                 <tim-loading *ngIf="loggingIn"></tim-loading>
                             </div>
                             <tim-alert severity="danger" *ngIf="loginError">
