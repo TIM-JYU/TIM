@@ -73,7 +73,7 @@ interface ISimpleRegistrationResponse {
                             <div class="login-flex-col">
                                 <ng-container *ngIf="!hideVars.emailLogin">
                                     
-                                    <button *ngIf="!showSimpleLogin" class="center-block timButton" type="button"
+                                    <button *ngIf="(!showSimpleLogin && (!hideVars.hakaLogin || !hideVars.signup))" class="center-block timButton" type="button"
                                             (click)="beginSimpleLogin()" i18n>
                                         Email login
                                     </button>
@@ -91,7 +91,7 @@ interface ISimpleRegistrationResponse {
                         </ng-container>
                         
 <!--                    Simple email login form-->
-                        <ng-container *ngIf="showSimpleLogin">
+                        <ng-container *ngIf="(showSimpleLogin || (hideVars.hakaLogin && hideVars.signup))">
                             <div class="form-group">
                                 <label for="email" class="control-label" i18n>Email or username</label>
                                 <input class="form-control"
@@ -155,7 +155,7 @@ interface ISimpleRegistrationResponse {
                                 <button [disabled]="loggingIn || resetPassword" class="btn btn-primary" (click)="loginWithEmail()"
                                         i18n>Log in
                                 </button>
-                                <button class="btn btn-default margin-left-1" [disabled]="resetPassword" (click)="cancelSimpleLogin()" i18n>Cancel</button>
+                                <button *ngIf="showSimpleLogin" class="btn btn-default margin-left-1" [disabled]="resetPassword" (click)="cancelSimpleLogin()" i18n>Cancel</button>
                                 <tim-loading *ngIf="loggingIn"></tim-loading>
                             </div>
                             <tim-alert severity="danger" *ngIf="loginError">
