@@ -165,7 +165,7 @@ interface ISimpleRegistrationResponse {
                         </ng-container>
                         
 <!--                    Sign up form-->
-                        <form class="form" *ngIf="showSignup">
+                        <form class="form margin-top-1" *ngIf="showSignup">
                             <div class="text-center" *ngIf="!resetPassword">
                                 <p i18n>If you don't have an existing TIM or {{getHomeOrgDisplayName()}} account, you
                                     can create a TIM account here.</p>
@@ -305,7 +305,7 @@ interface ISimpleRegistrationResponse {
                 the page to log in.
             </span>
                             </div>
-                            <div class="flex justify-center">
+                            <div class="flex justify-center margin-bottom-1">
                                 <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
                             </div>
                             <tim-alert severity="danger" *ngIf="signUpError">
