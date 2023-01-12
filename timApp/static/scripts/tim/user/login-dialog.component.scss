@@ -6,6 +6,7 @@
   margin-left: 1em;
 }
 
+
 .login-flex-col {
   display: flex;
   flex-direction: column;
@@ -18,5 +19,9 @@
     white-space: normal;
     margin-right: unset;
     margin-left: unset;
+  }
+
+  button {
+    white-space: normal;
   }
 }
