@@ -9,6 +9,8 @@ import {Users} from "tim/user/userService";
 import {genericglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
 import {to, to2} from "tim/util/utils";
+import type {IVisibilityVars} from "tim/timRoot";
+import {getVisibilityVars} from "tim/timRoot";
 
 @Component({
     selector: "tim-start",
@@ -42,7 +44,7 @@ import {to, to2} from "tim/util/utils";
                 <button *ngIf="!isLoggedIn()" (click)="openLoginDialog(false)" type="button"
                         class="timButton margin-4" i18n>Log in
                 </button>
-                <button *ngIf="!isLoggedIn()" (click)="openLoginDialog(true)" type="button"
+                <button *ngIf="!isLoggedIn() && !hideVars.signup" (click)="openLoginDialog(true)" type="button"
                         class="timButton margin-4"
                         title="Create a TIM account"
                         i18n-title
@@ -112,6 +114,7 @@ export class FrontPageComponent implements IController {
     private docListOpen: boolean;
     bookmarks?: IBookmarkGroup[]; // For My courses.
     settings = genericglobals().userPrefs;
+    hideVars: IVisibilityVars = getVisibilityVars();
 
     constructor() {
         this.creatingNew = false;
