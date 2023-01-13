@@ -4262,36 +4262,12 @@
           <context context-type="linenumber">41,43</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8747125763308501031" datatype="html">
-        <source>Federation logo</source>
-        <target state="translated">Federation logo</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
-          <context context-type="linenumber">66</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3386853674104368310" datatype="html">
-        <source>Haka login</source>
-        <target state="translated">Haka inloggning</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
-          <context context-type="linenumber">71</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5946121121970393200" datatype="html">
         <source>Select your home organization...</source>
         <target state="translated">Välj din hemorgansation...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
           <context context-type="linenumber">77</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2715185765061607307" datatype="html">
-        <source> Log in </source>
-        <target state="translated"> Logga in </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
-          <context context-type="linenumber">84,86</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2826581353496868063" datatype="html">
@@ -4308,22 +4284,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
           <context context-type="linenumber">15</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4814606488888120626" datatype="html">
-        <source> Members from universities and other Haka organizations, please use Haka to log in. </source>
-        <target state="translated"> Medlemmar från universitet och andra Haka-prganisationer, använd Haka för att logga in. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">74,76</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2341982959296346504" datatype="html">
-        <source> Others, please log in with your TIM account. </source>
-        <target state="translated"> Övriga, vänligen logga in med ditt TIM-konto. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">81,83</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7169763988476671054" datatype="html">
@@ -4386,18 +4346,6 @@
           <context context-type="linenumber">126</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6962699013778688473" datatype="html">
-        <source>Continue</source>
-        <target state="translated">Fortsätt</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">132</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">220</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2336550011721758066" datatype="html">
         <source>Log in</source>
         <target state="translated">Logga in</target>
@@ -4412,14 +4360,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-menu.component.ts</context>
           <context context-type="linenumber">18</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3023906871690155199" datatype="html">
-        <source> Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don't have a TIM account? </source>
-        <target state="translated"> Inte ett student eller anställd av <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> och utan TIM konto? </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">147,149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7203320122205058413" datatype="html">
@@ -7744,6 +7684,34 @@
           <context context-type="linenumber">113,116</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5894581303239667306" datatype="html">
+        <source> Email login </source>
+        <target state="translated"> Inloggning via e-post </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8743900787768000333" datatype="html">
+        <source>Continue </source>
+        <target state="translated">Fortsätt </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">152</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">240</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3657392489783075042" datatype="html">
+        <source>Haka login (Haka organizations and universities)</source>
+        <target state="translated">Haka login (organisationer och universitet)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">72</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="2470527158706928323" datatype="html">
         <source>Document groups (<x id="INTERPOLATION" equiv-text="{{ activeGroups }}"/>)</source>
         <target state="translated">Dokumentgrupper (<x id="INTERPOLATION" equiv-text="{{ activeGroups }}"/>)</target>
@@ -7798,6 +7766,22 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/export-ical.component.ts</context>
           <context context-type="linenumber">19,20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5003932537689068654" datatype="html">
+        <source>Haka logo</source>
+        <target state="translated">Hakas logo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">67,68</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="498717790849733177" datatype="html">
+        <source>Log in via</source>
+        <target state="translated">Logga in via</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">88</context>
         </context-group>
       </trans-unit>
     </body>

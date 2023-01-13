@@ -1,0 +1,30 @@
+.haka-login-box {
+  background: #FFF;
+  border-radius: 4px;
+  border-color: #848484;
+  border-width: 1px;
+  padding: 10px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.32), 0 1px 3px 0 rgba(0, 0, 0, 0.37);
+
+  .haka-logo {
+    height: 1.8em;
+  }
+}
+
+.idp-selector {
+  margin-top: 10px;
+  row-gap: 0.5em;
+}
+
+.wrap-normal {
+  white-space: normal;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 25em;
+  margin: auto;
+
+  button {
+    white-space: normal;
+  }
+}

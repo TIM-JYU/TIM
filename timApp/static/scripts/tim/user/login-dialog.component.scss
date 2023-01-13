@@ -1,0 +1,35 @@
+.instructions {
+  font-size: 1.1em;
+}
+
+.margin-left-1 {
+  margin-left: 1em;
+}
+.margin-right-1 {
+  margin-right: 1em;
+}
+.margin-top-1 {
+  margin-top: 1em;
+}
+.margin-bottom-1 {
+  margin-bottom: 1em;
+}
+
+.login-flex-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 25em;
+  margin: auto;
+  row-gap: 0.5em;
+
+  .center-block {
+    white-space: normal;
+    margin-right: unset;
+    margin-left: unset;
+  }
+
+  button {
+    white-space: normal;
+  }
+}

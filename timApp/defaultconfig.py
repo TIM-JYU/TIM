@@ -181,7 +181,10 @@ BOOKMARKS_ENABLED = True
 # If False, only admins can create folders and documents.
 ALLOW_CREATE_DOCUMENTS = True
 
+# When enabled, display sign up/account registration option in login dialog.
 EMAIL_REGISTRATION_ENABLED = True
+
+# When enabled, display Haka identity provider/federation service as a login option.
 HAKA_ENABLED = True
 
 # If False, resetting password is not allowed.
