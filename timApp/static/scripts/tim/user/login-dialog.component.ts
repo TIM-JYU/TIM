@@ -91,7 +91,7 @@ interface ISimpleRegistrationResponse {
                         </ng-container>
                         
 <!--                    Simple email login form-->
-                        <ng-container *ngIf="(showSimpleLogin || (hideVars.hakaLogin && hideVars.signup))">
+                        <ng-container *ngIf="showSimpleLogin">
                             <div class="form-group">
                                 <label for="email" class="control-label" i18n>Email or username</label>
                                 <input class="form-control"
@@ -150,13 +150,13 @@ interface ISimpleRegistrationResponse {
                                 <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
                             </div>
 
-                            <div class="flex"
+                            <div class="flex align-center"
                                  *ngIf="simpleLoginEmailGiven || !simpleEmailLogin">
                                 <button [disabled]="loggingIn || resetPassword" class="btn btn-primary" (click)="loginWithEmail()"
                                         i18n>Log in
                                 </button>
                                 <button *ngIf="showSimpleLogin" class="btn btn-default margin-left-1" [disabled]="resetPassword" (click)="cancelSimpleLogin()" i18n>Cancel</button>
-                                <tim-loading *ngIf="loggingIn"></tim-loading>
+                                <tim-loading class="margin-left-1" *ngIf="loggingIn"></tim-loading>
                             </div>
                             <tim-alert severity="danger" *ngIf="loginError">
                                 <tim-error-description [error]="loginError"></tim-error-description>
@@ -383,6 +383,8 @@ export class LoginDialogComponent extends AngularDialogComponent<
         (async () => {
             this.idps = await loadIdPs();
         })();
+
+        this.resetView();
     }
 
     ngAfterViewInit() {
@@ -544,6 +546,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
 
     public forgotPassword() {
         this.resetPassword = true;
+        this.showSimpleLogin = false;
         this.beginSignup();
     }
 
@@ -552,6 +555,10 @@ export class LoginDialogComponent extends AngularDialogComponent<
      */
     public cancelSignup() {
         this.showSignup = false;
+        // If we were in "I forgot my password" in minimal view, just reset back to login
+        if (this.resetPassword && this.showMinimalLoginView) {
+            this.resetView();
+        }
         this.resetPassword = false;
     }
 
@@ -566,8 +573,24 @@ export class LoginDialogComponent extends AngularDialogComponent<
         }
     }
 
+    private get showMinimalLoginView() {
+        // Minimal view is used when all methods except email are disabled.
+        return this.hideVars.hakaLogin && this.hideVars.signup;
+    }
+
+    private resetView() {
+        this.showSignup = false;
+        this.resetPassword = false;
+        this.loginForm.email = "";
+        this.loginForm.password = "";
+        this.simpleLoginEmailGiven = false;
+        this.loginError = undefined;
+        this.showSimpleLogin = this.showMinimalLoginView;
+    }
+
     public cancelSimpleLogin() {
         this.showSimpleLogin = false;
+        this.resetView();
     }
 
     public beginSimpleLogin() {
