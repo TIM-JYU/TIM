@@ -72,12 +72,13 @@ interface ISimpleRegistrationResponse {
 
                             <div class="login-flex-col">
                                 <ng-container *ngIf="!hideVars.emailLogin">
-                                    
-                                    <button *ngIf="(!showSimpleLogin && (!hideVars.hakaLogin || !hideVars.signup))" class="center-block timButton" type="button"
+
+                                    <button *ngIf="(!showSimpleLogin && (!hideVars.hakaLogin || !hideVars.signup))"
+                                            class="center-block timButton" type="button"
                                             (click)="beginSimpleLogin()" i18n>
                                         Email login
                                     </button>
-                                    
+
                                 </ng-container>
 
                                 <ng-container *ngIf="!hideVars.signup">
@@ -87,10 +88,10 @@ interface ISimpleRegistrationResponse {
                                     </button>
                                 </ng-container>
                             </div>
-                            
+
                         </ng-container>
-                        
-<!--                    Simple email login form-->
+
+                        <!--                    Simple email login form-->
                         <ng-container *ngIf="showSimpleLogin">
                             <div class="form-group">
                                 <label for="email" class="control-label" i18n>Email or username</label>
@@ -152,10 +153,13 @@ interface ISimpleRegistrationResponse {
 
                             <div class="flex align-center"
                                  *ngIf="simpleLoginEmailGiven || !simpleEmailLogin">
-                                <button [disabled]="loggingIn || resetPassword" class="btn btn-primary" (click)="loginWithEmail()"
+                                <button [disabled]="loggingIn || resetPassword" class="btn btn-primary"
+                                        (click)="loginWithEmail()"
                                         i18n>Log in
                                 </button>
-                                <button *ngIf="showSimpleLogin" class="btn btn-default margin-left-1" [disabled]="resetPassword" (click)="cancelSimpleLogin()" i18n>Cancel</button>
+                                <button *ngIf="showSimpleLogin" class="btn btn-default margin-left-1"
+                                        [disabled]="resetPassword" (click)="cancelSimpleLogin()" i18n>Cancel
+                                </button>
                                 <tim-loading class="margin-left-1" *ngIf="loggingIn"></tim-loading>
                             </div>
                             <tim-alert severity="danger" *ngIf="loginError">
@@ -163,8 +167,8 @@ interface ISimpleRegistrationResponse {
                             </tim-alert>
 
                         </ng-container>
-                        
-<!--                    Sign up form-->
+
+                        <!--                    Sign up form-->
                         <form class="form margin-top-1" *ngIf="showSignup">
                             <div class="text-center" *ngIf="!resetPassword">
                                 <p i18n>If you don't have an existing TIM or {{getHomeOrgDisplayName()}} account, you
@@ -299,11 +303,7 @@ interface ISimpleRegistrationResponse {
                                 <span *ngIf="finishStatus === 'updated'" i18n>
                 Your information was updated successfully.
             </span>
-                                <span *ngIf="finishStatus" i18n>
-                Now you can
-                <a href="" focusMe>refresh</a>
-                the page to log in.
-            </span>
+                                <span *ngIf="finishStatus" i18n><a href="" focusMe>Refresh</a> the page to continue.</span>
                             </div>
                             <div class="flex justify-center margin-bottom-1">
                                 <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>

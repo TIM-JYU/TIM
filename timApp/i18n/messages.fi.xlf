@@ -2976,14 +2976,6 @@
           <context context-type="linenumber">280</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1031561808357651002" datatype="html">
-        <source> Now you can <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;&quot; focusMe>"/>refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to log in. </source>
-        <target state="translated"> Nyt voit <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;&quot; focusMe>"/>virkistää<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> sivun kirjautuaksesi sisään. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">282,286</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1346640911183618259" datatype="html">
         <source>Add a user to this session</source>
         <target state="translated">Lisää käyttäjä istuntoon</target>
@@ -7880,6 +7872,22 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
           <context context-type="linenumber">88</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7453395888030210040" datatype="html">
+        <source>Cancel </source>
+        <target state="translated">Peruuta </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">162</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4518343884091856656" datatype="html">
+        <source><x id="START_LINK" ctype="x-a" equiv-text="ocusMe>"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to continue.</source>
+        <target state="translated"><x id="START_LINK" ctype="x-a" equiv-text="ocusMe>"/>Virkistä sivu<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> jatkaaksesi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">306,307</context>
         </context-group>
       </trans-unit>
     </body>
