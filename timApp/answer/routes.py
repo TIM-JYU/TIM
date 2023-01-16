@@ -463,7 +463,7 @@ def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
         for ans in answer_map.values():
             try:
                 loaded_content = json.loads(ans.get("content"))
-            except JSONDecodeError:
+            except json.decoder.JSONDecodeError:
                 loaded_content = ""
             loaded_contents.append(loaded_content)
         loaded_contents = call_dumbo(loaded_contents, path="/mdkeys")
