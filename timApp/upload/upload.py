@@ -10,7 +10,7 @@ from urllib.parse import unquote, urlparse
 
 from PIL import Image
 from PIL import UnidentifiedImageError
-from PIL.Image import registered_extensions
+from PIL.Image import DecompressionBombError, registered_extensions
 from flask import Blueprint, request, send_file, Response, url_for
 from img2pdf import convert
 from sqlalchemy import case
@@ -338,6 +338,10 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
             raise RouteException(
                 f"Unable to process image {f.filename}, image may be corrupt"
             )
+        except DecompressionBombError as e:
+            raise RouteException(
+                f"Image is too large to upload {e.args[0][10:e.args[0].find(' exceeds')]}, please reduce the image size"
+            )
         returninfo.append(
             {
                 "file": (Path("/uploads") / f.relative_filesystem_path).as_posix(),
@@ -373,6 +377,10 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
             except UnidentifiedImageError:
                 raise RouteException(
                     f"Unable to process pdf {f.filename}, some pages may be corrupt"
+                )
+            except DecompressionBombError as e:
+                raise RouteException(
+                    f"The pdf has a too large page to upload {e.args[0][10:e.args[0].find(' exceeds')]}, please reduce the size or split the pdf to smaller pages"
                 )
             uf = UploadedFile.save_new(
                 imagepath,
