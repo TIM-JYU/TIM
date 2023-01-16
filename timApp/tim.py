@@ -239,9 +239,7 @@ def get_js_file(path: str):
         f"static/scripts/build/{path}",
     ]:
         try:
-            res = send_file(f)
-            res.access_control_allow_origin = "*"
-            return res
+            return send_file(f)
         except FileNotFoundError:
             pass
     raise NotExist("File not found")
