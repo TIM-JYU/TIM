@@ -39,7 +39,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {Users} from "tim/user/userService";
-import {someglobals} from "tim/util/globals";
+import {isMinimalMode, someglobals} from "tim/util/globals";
 import {$http, $log, $rootScope, $timeout} from "tim/util/ngimport";
 import type {IAnswerQuestionResult} from "tim/lecture/answer-to-question-dialog.component";
 import type {
@@ -216,6 +216,9 @@ export class LectureController {
      * Makes http request to check if the current user is in lecture.
      */
     async checkIfInLecture() {
+        if (isMinimalMode()) {
+            return;
+        }
         const response = await to(
             $http<ILectureResponse | ILectureListResponse | IEmptyResponse>({
                 url: "/checkLecture",

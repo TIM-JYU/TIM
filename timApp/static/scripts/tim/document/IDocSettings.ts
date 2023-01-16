@@ -44,6 +44,8 @@ export interface IDocSettings {
     translator?: string;
     sync_answerbrowsers?: boolean;
     answerBrowser?: IAnswerBrowserSettings;
+
+    minimalRequests?: boolean;
 }
 
 export interface ISlideDocSettings extends IDocSettings {
