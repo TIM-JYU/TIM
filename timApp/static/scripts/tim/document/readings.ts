@@ -2,7 +2,7 @@ import type {IPromise} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {getActiveDocument} from "tim/document/activedocument";
-import {documentglobals, genericglobals, isMinimalMode} from "tim/util/globals";
+import {documentglobals, genericglobals} from "tim/util/globals";
 import {
     diffDialog,
     setDiffDialog,
@@ -276,11 +276,7 @@ export async function initReadings(item: IItem) {
         }
     );
 
-    if (
-        Users.isLoggedIn() &&
-        genericglobals().bookmarks != null &&
-        !isMinimalMode()
-    ) {
+    if (Users.isLoggedIn() && genericglobals().bookmarks != null) {
         await $timeout(10000);
         await to(
             $http.post("/bookmarks/markLastRead/" + item.id, {

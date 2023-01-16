@@ -294,10 +294,3 @@ export function isErrorGlobals(g: SomeGlobals): g is IErrorGlobals {
 function someGlobals<T extends IGenericGlobals>(): T {
     return window as unknown as T;
 }
-
-export function isMinimalMode() {
-    const globals = someglobals();
-    return !!(
-        isDocumentGlobals(globals) && globals.docSettings.minimalRequests
-    );
-}
