@@ -429,7 +429,6 @@ def get_globals_for_tasks(task_ids: list[TaskId], answer_map: dict[str, dict]) -
 def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
     """
     Route for getting latest valid answers for given user and list of tasks
-
     :return: {"answers": {taskID: Answer}, "userId": user_id}
     """
     user = User.get_by_id(user_id)
@@ -459,19 +458,52 @@ def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
             get_useranswers_for_task(user, tids, answer_map)
         if gtids:
             get_globals_for_tasks(gtids, answer_map)
-        loaded_contents = [json.loads(c.get("content")) for c in answer_map.values()]
-        for ans in answer_map.values():
-            try:
-                loaded_content = json.loads(ans.get("content"))
-            except json.decoder.JSONDecodeError:
-                loaded_content = ""
-            loaded_contents.append(loaded_content)
-        loaded_contents = call_dumbo(loaded_contents, path="/mdkeys")
-        for idx, ans in enumerate(answer_map.values()):
-            ans["content"] = json.dumps(loaded_contents[idx])
         return json_response({"answers": answer_map, "userId": user_id})
     except Exception as e:
         raise RouteException(str(e))
+
+
+@answers.get("/answerMD")
+def get_answer_md(task_id: str, user_id: int) -> Response:
+    user = User.get_by_id(user_id)
+    if user is None:
+        raise RouteException("Non-existent user")
+    verify_logged_in()
+    is_self_request = get_current_user_id() == user_id
+    user_ctx = user_context_with_logged_in(user)
+    view_ctx = ViewContext(ViewRoute.View, False, origin=get_origin_from_request())
+    tid = TaskId.parse(task_id)
+    if tid.doc_id is None:
+        raise RouteException(f"Task ID {task_id} is missing document ID.")
+    dib = get_doc_or_abort(tid.doc_id, f"Document {tid.doc_id} not found")
+    if not is_peerreview_enabled(dib) and not is_self_request:
+        verify_seeanswers_access(dib)
+    doc = dib.document
+    doc.insert_preamble_pars()
+    try:
+        doc, plug = get_plugin_from_request(
+            doc, task_id=tid, u=user_ctx, view_ctx=view_ctx
+        )
+    except PluginException as e:
+        raise RouteException(str(e))
+    dumbo_opts = plug.par.get_dumbo_options(
+        base_opts=plug.par.doc.get_settings().get_dumbo_options()
+    )
+    answer_map: dict[str, dict] = {}
+    if tid.is_global:
+        get_globals_for_tasks([tid], answer_map)
+    else:
+        get_useranswers_for_task(user, [tid], answer_map)
+    ans = list(answer_map.values())
+    if not ans:
+        return json_response({"answers": {}, "userId": user_id})
+    answer = ans[0]
+    try:
+        loaded_content = json.loads(answer.get("content"))
+    except json.decoder.JSONDecodeError:
+        loaded_content = ""
+    loaded_content = call_dumbo(loaded_content, path="/mdkeys", options=dumbo_opts)
+    return json_response({"answer": loaded_content, "user_id": user_id})
 
 
 @dataclass

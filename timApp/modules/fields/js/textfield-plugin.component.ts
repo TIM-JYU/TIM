@@ -84,7 +84,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     <form #f class="form-inline">
      <label><span>
       <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
-        <span *ngIf="!isPlainText() && !isDownloadButton" >
+        <span *ngIf="!isPlainText() && !isDownloadButton">
         <input type="text"
                *ngIf="!isTextArea()"
                class="form-control"
@@ -134,7 +134,8 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                     {{buttonText()}}
                </button>
          </span>
-         <span #plainTextSpan *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"></span>
+         <span #plainTextSpan *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify"
+               class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"></span>
          <a *ngIf="isDownloadButton" class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
          </span></label>
     </form>
@@ -354,12 +355,42 @@ export class TextfieldPluginComponent
             this.updateListeners(ChangeType.Saved);
             return {ok: ok, message: message};
         });
-        if (this.isPlainText() && this.plainTextSpan) {
+        if (
+            this.markup.form != false &&
+            this.userword &&
+            this.isPlainText() &&
+            this.plainTextSpan
+        ) {
+            this.updateMdToHtml();
+        }
+        return ret;
+    }
+
+    async updateMdToHtml() {
+        const tid = this.getTaskId()?.docTask().toString();
+        if (!tid) {
+            return;
+        }
+        const ab = this.vctrl.getAnswerBrowser(tid);
+        if (!ab?.user) {
+            return;
+        }
+        const uid = ab.user.id;
+        const r = await this.httpGet<{
+            answer: Record<string, string>;
+            user_id: number;
+        }>(`/answerMD`, {
+            task_id: tid,
+            user_id: uid.toString(),
+        });
+        if (r.ok && r.result.user_id == uid) {
+            this.userword = r.result.answer.c ?? "";
+        }
+        if (this.plainTextSpan) {
             ParCompiler.processAllMathDelayed(
                 $(this.plainTextSpan.nativeElement)
             );
         }
-        return ret;
     }
 
     /**
