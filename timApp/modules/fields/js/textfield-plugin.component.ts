@@ -3,6 +3,7 @@
  */
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {ViewChild} from "@angular/core";
 import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
 import type {ISetAnswerResult, ITimComponent} from "tim/document/viewctrl";
 import {ChangeType, FormModeOption} from "tim/document/viewctrl";
@@ -23,6 +24,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {ParCompiler} from "tim/editor/parCompiler";
 
 const TextfieldMarkup = t.intersection([
     t.partial({
@@ -132,7 +134,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                     {{buttonText()}}
                </button>
          </span>
-         <span *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"></span>
+         <span #plainTextSpan *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"></span>
          <a *ngIf="isDownloadButton" class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
          </span></label>
     </form>
@@ -159,6 +161,7 @@ export class TextfieldPluginComponent
     >
     implements ITimComponent
 {
+    @ViewChild("plainTextSpan") plainTextSpan?: ElementRef<HTMLSpanElement>;
     private changes = false;
     private result?: string;
     isRunning = false;
@@ -324,7 +327,7 @@ export class TextfieldPluginComponent
     // TODO: get rid of any (styles can arrive as object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: Record<string, any>): ISetAnswerResult {
-        return this.zone.run(() => {
+        const ret = this.zone.run(() => {
             this.errormessage = undefined;
             let message;
             let ok = true;
@@ -351,6 +354,12 @@ export class TextfieldPluginComponent
             this.updateListeners(ChangeType.Saved);
             return {ok: ok, message: message};
         });
+        if (this.isPlainText() && this.plainTextSpan) {
+            ParCompiler.processAllMathDelayed(
+                $(this.plainTextSpan.nativeElement)
+            );
+        }
+        return ret;
     }
 
     /**
