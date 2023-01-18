@@ -1,7 +1,14 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    NgModule,
+    Output,
+    ViewChild,
+} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, NgForm} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TimepickerModule} from "ngx-bootstrap/timepicker";
@@ -10,19 +17,27 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {isAdmin, Users} from "tim/user/userService";
-import {toPromise} from "tim/util/utils";
+import {TimStorage, toPromise} from "tim/util/utils";
 import {CommonModule} from "@angular/common";
 import {BrowserModule} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import * as t from "io-ts";
 
-interface TimMessageOptions {
-    archive: boolean;
-    important: boolean;
-    messageChannel: boolean;
-    pageList: string;
-    isPrivate: boolean;
-    reply: boolean;
-    readReceipt: boolean;
+const TimSavedMessageOptions = t.type({
+    email: t.boolean,
+    defaultEmail: t.boolean,
+    replyAll: t.union([t.boolean, t.undefined]),
+    timMessage: t.boolean,
+    archive: t.boolean,
+    important: t.boolean,
+    messageChannel: t.boolean,
+    pageList: t.string,
+    isPrivate: t.boolean,
+    reply: t.boolean,
+    readReceipt: t.boolean,
+});
+
+interface TimMessageOptions extends t.TypeOf<typeof TimSavedMessageOptions> {
     expires: Date | undefined;
     sender: string | null;
     senderEmail: string | null;
@@ -33,7 +48,7 @@ interface TimMessageOptions {
     template: `
         <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="recipientList || sendGlobal">
             <tim-close-button *ngIf="!sendGlobal" (click)="closeComponent()"></tim-close-button>
-            <form>
+            <form #form="ngForm">
                 <fieldset [disabled]="sending || !canUseComponent">
                     <div class="message-info">
                         <ng-container *ngIf="!sendGlobal">
@@ -64,33 +79,33 @@ interface TimMessageOptions {
 
                         <div class="cb-collection">
                             <div *ngIf="!sendGlobal">
-                                <input type="checkbox" (change)="notDefault()" [(ngModel)]="email" id="send-email"
+                                <input type="checkbox" (change)="notDefault()" [(ngModel)]="timMessageOptions.email" id="send-email"
                                        name="send-email" i18n>
                                 <label for="send-email" i18n>email</label>
                             </div>
-                            <div class="cb-collection" *ngIf="email && !sendGlobal">
+                            <div class="cb-collection" *ngIf="timMessageOptions.email && !sendGlobal">
                                 <div>
-                                    <input type="radio" [(ngModel)]="defaultEmail" name="send-tim-message" id="send-tim"
+                                    <input type="radio" [(ngModel)]="timMessageOptions.defaultEmail" name="send-tim-message" id="send-tim"
                                            [value]="false">
                                     <label for="send-tim" i18n>Use TIM to send</label>
                                 </div>
                                 <div>
-                                    <input type="radio" [(ngModel)]="defaultEmail" name="email-use-local-app"
+                                    <input type="radio" [(ngModel)]="timMessageOptions.defaultEmail" name="email-use-local-app"
                                            id="email-use-local-app" [value]="true">
                                     <label for="email-use-local-app" i18n>Use your default email client</label>
                                     <a tooltip="Recipients will see each others' addresses" i18n-tooltip><i
                                             class="glyphicon glyphicon-info-sign"></i></a>
                                 </div>
-                                <ng-container *ngIf="email && !defaultEmail">
+                                <ng-container *ngIf="timMessageOptions.email && !timMessageOptions.defaultEmail">
                                     <div class="top-space">
-                                        <input type="radio" [(ngModel)]="replyAll" name="email-reply-sender"
+                                        <input type="radio" [(ngModel)]="timMessageOptions.replyAll" name="email-reply-sender"
                                                id="email-reply-sender" [value]="false" checked>
                                         <label for="email-reply-sender" i18n>Recipient only replies to sender</label>
                                         <a tooltip="Recipients can only reply to you" i18n-tooltip><i
                                                 class="glyphicon glyphicon-info-sign"></i></a>
                                     </div>
                                     <div>
-                                        <input type="radio" [(ngModel)]="replyAll" name="email-reply-all"
+                                        <input type="radio" [(ngModel)]="timMessageOptions.replyAll" name="email-reply-all"
                                                id="email-reply-all" [value]="true">
                                         <label for="email-reply-all" i18n>Recipient replies all by default</label>
                                         <a tooltip="Recipients can reply to all other recipients" i18n-tooltip><i
@@ -98,8 +113,8 @@ interface TimMessageOptions {
                                     </div>
                                 </ng-container>
                             </div>
-                            <div *ngIf="!defaultEmail && !sendGlobal">
-                                <input type="checkbox" (change)="emptyPageList()" [(ngModel)]="timMessage"
+                            <div *ngIf="!timMessageOptions.defaultEmail && !sendGlobal">
+                                <input type="checkbox" (change)="emptyPageList()" [(ngModel)]="timMessageOptions.timMessage"
                                        name="send-tim-message" id="send-tim-message">
                                 <label for="send-tim-message" i18n>TIM message</label>
                                 <a href="/view/tim/ohjeita/kayttoohjeet-tim-viesteille"
@@ -109,7 +124,7 @@ interface TimMessageOptions {
                                     <i class="helpButton glyphicon glyphicon-question-sign"></i>
                                 </a>
                             </div>
-                            <div class="cb-collection" *ngIf="timMessage && !defaultEmail">
+                            <div class="cb-collection" *ngIf="timMessageOptions.timMessage && !timMessageOptions.defaultEmail">
                                 <div class="page-list" *ngIf="!sendGlobal">
                                     <span class="pages-label">
                                         <label for="tim-message-pages" i18n>Pages to send TIM message to</label>
@@ -189,30 +204,34 @@ export class TimMessageSendComponent {
      *  variable, as its length grows beoynd 0 the the flag is set on?
      */
 
+    @ViewChild("form") form?: NgForm;
+
     @Input() recipientList: string = "";
     @Output() recipientListChange = new EventEmitter<string>();
     @Input()
     sendGlobal: boolean = false;
     @Input()
     docId?: number;
+    @Input()
+    storageKey?: string;
     messageSubject: string = "";
     messageBody: string = "";
     showOptions: boolean = false;
     emailbcc: boolean = false;
     emailbccme: boolean = true;
-    email: boolean = true;
-    defaultEmail: boolean = false;
-    replyAll: boolean | undefined = false;
     messageSendError?: string;
     messageSentOk: boolean = false;
     timMessageDoc?: string;
-    timMessage: boolean = false;
     urlError?: string;
     formChanged: boolean = true;
     sending = false;
     canUseComponent: boolean = true;
     timMessageOptions: TimMessageOptions = {
+        email: true,
+        defaultEmail: false,
         messageChannel: false,
+        replyAll: false,
+        timMessage: false,
         archive: false,
         important: false,
         isPrivate: false,
@@ -223,16 +242,37 @@ export class TimMessageSendComponent {
         sender: Users.getCurrent().real_name,
         senderEmail: Users.getCurrent().email,
     };
+    private resetOnChange: boolean = false;
+    private prevForm?: NgForm;
+    private messageStorage?: TimStorage<
+        t.TypeOf<typeof TimSavedMessageOptions>
+    >;
 
     ngOnInit() {
+        if (this.storageKey) {
+            this.messageStorage = new TimStorage(
+                `TimMessageSendComponent.Options.${this.storageKey}`,
+                TimSavedMessageOptions
+            );
+
+            const storedOptions = this.messageStorage.get();
+            if (storedOptions) {
+                this.timMessageOptions = {
+                    ...this.timMessageOptions,
+                    ...storedOptions,
+                };
+                this.showOptions = true;
+            }
+        }
+
         if (this.sendGlobal) {
             if (!isAdmin()) {
                 this.messageSendError = $localize`You are not authorized to send global messages`;
                 this.canUseComponent = false;
                 return;
             }
-            this.timMessage = true;
-            this.email = false;
+            this.timMessageOptions.timMessage = true;
+            this.timMessageOptions.email = false;
         }
     }
 
@@ -255,7 +295,7 @@ export class TimMessageSendComponent {
     }
 
     notDefault() {
-        this.defaultEmail = false;
+        this.timMessageOptions.defaultEmail = false;
     }
 
     emptyPageList() {
@@ -279,9 +319,10 @@ export class TimMessageSendComponent {
             !this.formChanged ||
             this.urlError ||
             (!this.timMessageOptions.messageChannel &&
-                !this.email &&
-                !this.timMessage) ||
-            (this.timMessage && !this.timMessageOptions.pageList)
+                !this.timMessageOptions.email &&
+                !this.timMessageOptions.timMessage) ||
+            (this.timMessageOptions.timMessage &&
+                !this.timMessageOptions.pageList)
         );
     }
 
@@ -309,11 +350,28 @@ export class TimMessageSendComponent {
         this.timMessageDoc = undefined;
     };
 
+    private saveAndResetFormOnChange() {
+        if (this.storageKey) {
+            this.messageStorage?.set(this.timMessageOptions);
+        }
+
+        this.resetOnChange = true;
+        if (this.form && this.form !== this.prevForm) {
+            this.form.valueChanges?.subscribe(() => {
+                if (this.resetOnChange) {
+                    this.resetOnChange = false;
+                    this.resetForm();
+                }
+            });
+            this.prevForm = this.form;
+        }
+    }
+
     public async sendMessage() {
         this.sending = true;
         this.resetForm();
         // send as TIM message
-        if (this.timMessage) {
+        if (this.timMessageOptions.timMessage) {
             const result = await this.postTimMessage(this.timMessageOptions);
             if (!result.ok) {
                 this.messageSendError = $localize`Failed to send as TIM message: ${result.result.error.error}`;
@@ -325,14 +383,20 @@ export class TimMessageSendComponent {
             }
         }
         // send as email in TIM
-        if (this.email && !this.defaultEmail) {
+        if (
+            this.timMessageOptions.email &&
+            !this.timMessageOptions.defaultEmail
+        ) {
             await this.sendEmailTim();
             this.sending = false;
-            window.setTimeout(this.resetForm, 5000);
+            this.saveAndResetFormOnChange();
             return;
         }
         // TODO: iPad do not like ;
-        if (this.email && this.defaultEmail) {
+        if (
+            this.timMessageOptions.email &&
+            this.timMessageOptions.defaultEmail
+        ) {
             let addrs = this.recipients.replace(/\n/g, ",");
             let bcc = "";
             if (this.emailbcc) {
@@ -359,7 +423,7 @@ export class TimMessageSendComponent {
                 bcc;
         }
         this.sending = false;
-        window.setTimeout(this.resetForm, 5000);
+        this.saveAndResetFormOnChange();
     }
 
     async sendEmailTim() {
@@ -375,23 +439,29 @@ export class TimMessageSendComponent {
                 subject: this.messageSubject,
                 msg: this.messageBody,
                 bccme: this.emailbccme,
-                replyall: this.replyAll,
+                replyall: this.timMessageOptions.replyAll,
             })
         );
         if (!response.ok) {
             this.messageSendError = response.result.error.error;
         } else {
             this.messageSentOk = true;
-            window.setTimeout(this.resetForm, 5000);
+            this.saveAndResetFormOnChange();
         }
     }
 
-    private postTimMessage(options: TimMessageOptions) {
+    private postTimMessage(opts: TimMessageOptions) {
         const message: Record<string, unknown> = {
             messageBody: this.messageBody,
             messageSubject: this.messageSubject,
             recipients: undefined,
         };
+        const options: Record<string, unknown> = {...opts};
+        delete options.defaultEmail;
+        delete options.replyAll;
+        delete options.email;
+        delete options.timMessage;
+
         if (!this.sendGlobal) {
             message.recipients = this.recipients.split(/\n/g);
         }

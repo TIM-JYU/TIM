@@ -276,7 +276,9 @@ const sortLang = "fi";
                 </button>
             </div>
             <tim-message-send [(recipientList)]="recipientList"
-                              [docId]="currentDocumentID()"></tim-message-send>
+                              [docId]="currentDocumentID()"
+                              [storageKey]="this.taskIdFull"
+            ></tim-message-send>
             <pre *ngIf="result">{{result}}</pre>
             <pre *ngIf="error" [innerHtml]="error"></pre>
             <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
@@ -353,6 +355,7 @@ export class TableFormComponent
     recipientList = "";
     loading = false;
     saveFailed = false;
+    taskIdFull?: string;
 
     get refreshScripts(): string[] {
         return (
@@ -528,6 +531,8 @@ export class TableFormComponent
 
     ngOnInit() {
         super.ngOnInit();
+
+        this.taskIdFull = this.getTaskId()?.docTask().toString();
 
         if (this.markup.runScripts) {
             this.runScripts = this.parseRunScripts(
