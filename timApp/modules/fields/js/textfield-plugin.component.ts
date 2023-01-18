@@ -328,7 +328,7 @@ export class TextfieldPluginComponent
     // TODO: get rid of any (styles can arrive as object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: Record<string, any>): ISetAnswerResult {
-        const ret = this.zone.run(() => {
+        return this.zone.run(() => {
             this.errormessage = undefined;
             let message;
             let ok = true;
@@ -353,17 +353,16 @@ export class TextfieldPluginComponent
             this.changes = false;
             this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
+            if (
+                this.markup.form != false &&
+                this.userword &&
+                this.isPlainText() &&
+                this.plainTextSpan
+            ) {
+                this.updateMdToHtml();
+            }
             return {ok: ok, message: message};
         });
-        if (
-            this.markup.form != false &&
-            this.userword &&
-            this.isPlainText() &&
-            this.plainTextSpan
-        ) {
-            this.updateMdToHtml();
-        }
-        return ret;
     }
 
     async updateMdToHtml() {
