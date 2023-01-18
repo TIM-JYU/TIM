@@ -1,7 +1,14 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    NgModule,
+    Output,
+    ViewChild,
+} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, NgForm} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TimepickerModule} from "ngx-bootstrap/timepicker";
@@ -33,7 +40,7 @@ interface TimMessageOptions {
     template: `
         <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="recipientList || sendGlobal">
             <tim-close-button *ngIf="!sendGlobal" (click)="closeComponent()"></tim-close-button>
-            <form>
+            <form #form="ngForm">
                 <fieldset [disabled]="sending || !canUseComponent">
                     <div class="message-info">
                         <ng-container *ngIf="!sendGlobal">
@@ -189,6 +196,8 @@ export class TimMessageSendComponent {
      *  variable, as its length grows beoynd 0 the the flag is set on?
      */
 
+    @ViewChild("form") form?: NgForm;
+
     @Input() recipientList: string = "";
     @Output() recipientListChange = new EventEmitter<string>();
     @Input()
@@ -223,6 +232,8 @@ export class TimMessageSendComponent {
         sender: Users.getCurrent().real_name,
         senderEmail: Users.getCurrent().email,
     };
+    private resetOnChange: boolean = false;
+    private prevForm?: NgForm;
 
     ngOnInit() {
         if (this.sendGlobal) {
@@ -309,6 +320,19 @@ export class TimMessageSendComponent {
         this.timMessageDoc = undefined;
     };
 
+    private resetFormOnChange() {
+        this.resetOnChange = true;
+        if (this.form && this.form !== this.prevForm) {
+            this.form.valueChanges?.subscribe(() => {
+                if (this.resetOnChange) {
+                    this.resetOnChange = false;
+                    this.resetForm();
+                }
+            });
+            this.prevForm = this.form;
+        }
+    }
+
     public async sendMessage() {
         this.sending = true;
         this.resetForm();
@@ -328,7 +352,7 @@ export class TimMessageSendComponent {
         if (this.email && !this.defaultEmail) {
             await this.sendEmailTim();
             this.sending = false;
-            window.setTimeout(this.resetForm, 5000);
+            this.resetFormOnChange();
             return;
         }
         // TODO: iPad do not like ;
@@ -359,7 +383,7 @@ export class TimMessageSendComponent {
                 bcc;
         }
         this.sending = false;
-        window.setTimeout(this.resetForm, 5000);
+        this.resetFormOnChange();
     }
 
     async sendEmailTim() {
@@ -382,7 +406,7 @@ export class TimMessageSendComponent {
             this.messageSendError = response.result.error.error;
         } else {
             this.messageSentOk = true;
-            window.setTimeout(this.resetForm, 5000);
+            this.resetFormOnChange();
         }
     }
 
