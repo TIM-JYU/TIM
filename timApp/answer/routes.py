@@ -429,6 +429,7 @@ def get_globals_for_tasks(task_ids: list[TaskId], answer_map: dict[str, dict]) -
 def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
     """
     Route for getting latest valid answers for given user and list of tasks
+
     :return: {"answers": {taskID: Answer}, "userId": user_id}
     """
     user = User.get_by_id(user_id)
@@ -465,6 +466,12 @@ def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
 
 @answers.get("/answerMD")
 def get_answer_md(task_id: str, user_id: int) -> Response:
+    """
+    Route for getting the latest valid answer for given task for given user.
+    Any answer content beginning with "md:" will be markdown-converted
+
+    :return: {"answer": {answer contents}, "userId": user_id}
+    """
     user = User.get_by_id(user_id)
     if user is None:
         raise RouteException("Non-existent user")
