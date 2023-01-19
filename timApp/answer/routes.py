@@ -467,10 +467,10 @@ def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
 @answers.get("/answerMD")
 def get_answer_md(task_id: str, user_id: int) -> Response:
     """
-    Route for getting the latest valid answer for given task for given user.
+    Route for getting the contents of the latest valid answer for given task for given user.
     Any answer content beginning with "md:" will be markdown-converted
 
-    :return: {"answer": {answer contents}, "userId": user_id}
+    :return: {"content": {answer content}, "userId": user_id}
     """
     user = User.get_by_id(user_id)
     if user is None:
@@ -503,14 +503,14 @@ def get_answer_md(task_id: str, user_id: int) -> Response:
         get_useranswers_for_task(user, [tid], answer_map)
     ans = list(answer_map.values())
     if not ans:
-        return json_response({"answers": {}, "userId": user_id})
+        return json_response({"content": {}, "userId": user_id})
     answer = ans[0]
     try:
         loaded_content = json.loads(answer.get("content"))
     except json.decoder.JSONDecodeError:
         loaded_content = ""
     loaded_content = call_dumbo(loaded_content, path="/mdkeys", options=dumbo_opts)
-    return json_response({"answer": loaded_content, "user_id": user_id})
+    return json_response({"content": loaded_content, "user_id": user_id})
 
 
 @dataclass

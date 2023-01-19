@@ -376,14 +376,14 @@ export class TextfieldPluginComponent
         }
         const uid = ab.user.id;
         const r = await this.httpGet<{
-            answer: Record<string, string>;
+            content: Record<string, string>;
             user_id: number;
         }>(`/answerMD`, {
             task_id: tid,
             user_id: uid.toString(),
         });
         if (r.ok && r.result.user_id == uid) {
-            this.userword = r.result.answer.c ?? "";
+            this.userword = r.result.content.c ?? "";
         }
         if (this.plainTextSpan) {
             ParCompiler.processAllMathDelayed(
