@@ -467,7 +467,7 @@ def append_to_bytearray(b: bytearray, v: Any) -> None:
         b.extend(v.to_bytes(4, "little", signed=True))
     elif isinstance(v, float):
         b.extend(struct.pack("f", v))
-    elif isinstance(v, tuple):
+    elif isinstance(v, tuple) or isinstance(v, list):
         for m in v:
             append_to_bytearray(b, m)
     elif isinstance(v, Enum):
