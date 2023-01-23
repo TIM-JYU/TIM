@@ -574,8 +574,11 @@ export class LoginDialogComponent extends AngularDialogComponent<
     }
 
     private get showMinimalLoginView() {
-        // Minimal view is used when all methods except email are disabled.
-        return this.hideVars.hakaLogin && this.hideVars.signup;
+        // Minimal view is used when
+        return (
+            (this.hideVars.hakaLogin && this.hideVars.signup) || // all methods except email are disabled.
+            (this.simpleEmailLogin && this.config.emailRegistrationEnabled) // only email sign-in is enabled with registration
+        );
     }
 
     private resetView() {
