@@ -1462,7 +1462,7 @@ var simcir = {};
       dragCompleteHandler = function(event) {
         checkTouch(event);
         var $target = $(event.target);
-        var body = $(".simcir-body");
+        var body = $target.closest(".simcir-body");
         var sx = 0;
         if ( body ) sx = body.offset().left + 100;
         enableEvents($dev, true);
@@ -1471,7 +1471,7 @@ var simcir = {};
           if ( event.pageX > sx ) {
             adjustDevice($dev);
             updateConnectors();
-          } else {
+          } else if (data.showToolbox) { // Toolbox acts as removal area, so don't remove if there isn't one
             removeDevice($dev);
           }
         });
