@@ -135,7 +135,8 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                </button>
          </span>
          <span #plainTextSpan *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify"
-               class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"></span>
+               class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"
+               [tooltip]="errormessage" [isOpen]="errormessage !== undefined && !hasButton()"></span>
          <a *ngIf="isDownloadButton" class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
          </span></label>
     </form>
@@ -384,6 +385,11 @@ export class TextfieldPluginComponent
         });
         if (r.ok && r.result.user_id == uid) {
             this.userword = r.result.content.c ?? "";
+        }
+        if (!r.ok) {
+            this.errormessage = $localize`Error rendering text, please try again`;
+        } else if (this.userword.includes("<pre>Latex timeouted\n</pre>")) {
+            this.errormessage = $localize`Text rendering timed out, please try again`;
         }
         if (this.plainTextSpan) {
             ParCompiler.processAllMathDelayed(
