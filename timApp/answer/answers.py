@@ -256,8 +256,9 @@ class AllAnswersOptions(AnswerPeriodOptions):
     )
 
     def __post_init__(self):
-        if self.group:
-            self.groups += self.group
+        self.groups = [
+            word for arg in self.groups + self.group for word in arg.split(",")
+        ]
 
 
 def get_all_answers(
