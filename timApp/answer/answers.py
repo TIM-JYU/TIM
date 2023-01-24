@@ -255,7 +255,7 @@ class AllAnswersOptions(AnswerPeriodOptions):
         default=False, metadata={"data_key": "includeInactiveMemberships"}
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.groups = [
             word for arg in self.groups + self.group for word in arg.split(",")
         ]
@@ -466,7 +466,7 @@ def get_all_answer_initial_query(
     period_to: datetime,
     task_ids: list[TaskId],
     valid: ValidityOptions,
-    groups: str | None = None,
+    groups: list[str] | None = None,
     include_expired_members: bool = False,
 ) -> Query:
     q = Answer.query.filter(
