@@ -1489,7 +1489,10 @@ export class CsController extends CsBase implements ITimComponent {
         this.userinput = this.savedvals?.input ?? "";
         this.edited = false;
         if (this.isSimcir) {
-            this.setCircuitData();
+            (async () => {
+                await this.setCircuitData();
+                await this.initSimcirCircuitListener();
+            })();
         }
         this.updateListeners(ChangeType.Saved);
         this.cdr.detectChanges();
