@@ -3,6 +3,7 @@
  */
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {ViewChild} from "@angular/core";
 import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
 import type {ISetAnswerResult, ITimComponent} from "tim/document/viewctrl";
 import {ChangeType, FormModeOption} from "tim/document/viewctrl";
@@ -23,6 +24,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {ParCompiler} from "tim/editor/parCompiler";
 
 const TextfieldMarkup = t.intersection([
     t.partial({
@@ -82,7 +84,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     <form #f class="form-inline">
      <label><span>
       <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
-        <span *ngIf="!isPlainText() && !isDownloadButton" >
+        <span *ngIf="!isPlainText() && !isDownloadButton">
         <input type="text"
                *ngIf="!isTextArea()"
                class="form-control"
@@ -132,7 +134,9 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                     {{buttonText()}}
                </button>
          </span>
-         <span *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"></span>
+         <span #plainTextSpan *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify"
+               class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"
+               [tooltip]="errormessage" [isOpen]="errormessage !== undefined && !hasButton()"></span>
          <a *ngIf="isDownloadButton" class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
          </span></label>
     </form>
@@ -159,6 +163,7 @@ export class TextfieldPluginComponent
     >
     implements ITimComponent
 {
+    @ViewChild("plainTextSpan") plainTextSpan?: ElementRef<HTMLSpanElement>;
     private changes = false;
     private result?: string;
     isRunning = false;
@@ -349,8 +354,48 @@ export class TextfieldPluginComponent
             this.changes = false;
             this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
+            if (
+                this.markup.form != false &&
+                this.userword &&
+                this.isPlainText() &&
+                this.plainTextSpan
+            ) {
+                this.updateMdToHtml();
+            }
             return {ok: ok, message: message};
         });
+    }
+
+    async updateMdToHtml() {
+        const tid = this.getTaskId()?.docTask().toString();
+        if (!tid) {
+            return;
+        }
+        const ab = this.vctrl.getAnswerBrowser(tid);
+        if (!ab?.user) {
+            return;
+        }
+        const uid = ab.user.id;
+        const r = await this.httpGet<{
+            content: Record<string, string>;
+            user_id: number;
+        }>(`/answerMD`, {
+            task_id: tid,
+            user_id: uid.toString(),
+        });
+        if (r.ok && r.result.user_id == uid) {
+            this.userword = r.result.content.c ?? "";
+        }
+        if (!r.ok) {
+            this.errormessage = $localize`Error rendering text, please try again`;
+        } else if (this.userword.includes("<pre>Latex timeouted\n</pre>")) {
+            this.errormessage = $localize`Text rendering timed out, please try again`;
+        }
+        if (this.plainTextSpan) {
+            ParCompiler.processAllMathDelayed(
+                $(this.plainTextSpan.nativeElement)
+            );
+        }
     }
 
     /**

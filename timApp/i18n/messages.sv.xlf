@@ -7792,6 +7792,22 @@
           <context context-type="linenumber">306,307</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6393364220046549775" datatype="html">
+        <source>Error rendering text, please try again</source>
+        <target state="translated">Tolkning misslyckades, var god försök igen </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/fields/js/textfield-plugin.component.ts</context>
+          <context context-type="linenumber">390</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1752954653766571047" datatype="html">
+        <source>Text rendering timed out, please try again</source>
+        <target state="translated">Timeout för tolkningen togs, var god försök igen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/fields/js/textfield-plugin.component.ts</context>
+          <context context-type="linenumber">392</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

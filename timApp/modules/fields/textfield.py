@@ -69,7 +69,7 @@ class TextfieldHtmlModel(
             return ""
         if isinstance(self.state.c, str) and not self.state.c.strip():
             return ""
-        return f"**{self.state.c}**"
+        return f"{self.state.c}"
 
 
 @dataclass
