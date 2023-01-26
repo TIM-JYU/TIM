@@ -55,7 +55,6 @@ const multisaveMarkup = t.intersection([
         autoUpdateDuplicates: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
         nosave: withDefault(t.boolean, false),
-        listener: withDefault(t.boolean, false),
         livefeed: withDefault(t.boolean, false),
     }),
 ]);
@@ -132,6 +131,7 @@ export class MultisaveComponent
     private hasUnsavedTargets: boolean = false;
     unsavedTasksWithAliases: {component: ITimComponent; alias?: string}[] = [];
     requiresTaskId = false;
+    listener = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -165,10 +165,6 @@ export class MultisaveComponent
         return this.markup.savedText ?? "Saved";
     }
 
-    get listener() {
-        return this.markup.listener;
-    }
-
     get livefeed() {
         return this.markup.livefeed;
     }
@@ -196,7 +192,11 @@ export class MultisaveComponent
 
     ngOnInit() {
         super.ngOnInit();
-        if (this.markup.listener && this.vctrl) {
+        if (
+            (this.markup.disableUnchanged || this.markup.livefeed) &&
+            this.vctrl
+        ) {
+            this.listener = true;
             this.vctrl.addChangeListener(this);
         }
     }
@@ -381,9 +381,6 @@ export class MultisaveComponent
     }
 
     public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {
-        if (!this.markup.listener) {
-            return;
-        }
         this.zone.run(() => {
             this.doInform(taskId, state, tag);
         });
@@ -425,7 +422,7 @@ export class MultisaveComponent
     }
 
     allSaved(): boolean {
-        return !this.markup.listener || !this.hasUnsavedTargets;
+        return !this.hasUnsavedTargets;
     }
 
     getAttributeType() {
