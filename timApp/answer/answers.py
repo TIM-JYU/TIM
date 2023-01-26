@@ -232,8 +232,8 @@ class AnswerPrintOptions(Enum):
 
 @dataclass
 class AllAnswersOptions(AnswerPeriodOptions):
-    group: list[str] = field(default_factory=list)
-    groups: list[str] = field(default_factory=list)
+    group: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
+    groups: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
     age: AgeOptions = field(default=AgeOptions.MAX, metadata={"by_value": True})
     valid: ValidityOptions = field(
         default=ValidityOptions.VALID, metadata={"by_value": True}
@@ -256,9 +256,8 @@ class AllAnswersOptions(AnswerPeriodOptions):
     )
 
     def __post_init__(self) -> None:
-        self.groups = [
-            word for arg in self.groups + self.group for word in arg.split(",")
-        ]
+        if self.group:
+            self.groups = self.groups + self.group if self.groups else self.group
 
 
 def get_all_answers(
