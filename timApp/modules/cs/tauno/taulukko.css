@@ -163,7 +163,9 @@ body {
 .taulukko {
     /* width: 70%; */
     margin: 0 auto;
-    display: block;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(3em, 1fr);
 }
 
 
@@ -183,7 +185,6 @@ body {
 }
 
 .solu {
-    width: 3em;
     /* background-color: #fdf6e3; */
     /* text-align: center; */
     font-size: 150%;
