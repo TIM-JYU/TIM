@@ -174,7 +174,7 @@ export class CbcountfieldPluginComponent
 
         if (!this.attrsall.preview) {
             if (this.markup.tag) {
-                this.vctrl.addTimComponent(this, this.markup.tag);
+                this.vctrl.addTimComponent(this);
             } else {
                 this.vctrl.addTimComponent(this);
             }

@@ -1482,7 +1482,7 @@ export class ImageXComponent
         super.ngOnInit();
 
         if (!this.attrsall.preview) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
+            this.vctrl.addTimComponent(this);
         }
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
         await timeout();

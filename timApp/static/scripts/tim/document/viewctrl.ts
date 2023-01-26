@@ -860,15 +860,15 @@ export class ViewCtrl implements IController {
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
      * @param {ITimComponent} component The component to be registered.
-     * @param {string | undefined} tag for accessing  group of ITimComponents
      */
-    public addTimComponent(component: ITimComponent, tag?: string | null) {
+    public addTimComponent(component: ITimComponent) {
         // Registering with any other name than docId.taskId breaks
         // form functionality
         const taskId = component.getTaskId();
         if (taskId) {
             const name = taskId.docTaskField();
             this.timComponents.set(name, component);
+            const tag = component.attrsall?.markup.tag;
             if (tag) {
                 const prev = this.timComponentTags.get(tag);
                 if (prev != undefined) {

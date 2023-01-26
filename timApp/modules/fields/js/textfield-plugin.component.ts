@@ -258,7 +258,7 @@ export class TextfieldPluginComponent
             this.markup.initword ?? ""
         ).toString();
         if (!this.attrsall.preview) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
+            this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
         if (this.markup.showname) {

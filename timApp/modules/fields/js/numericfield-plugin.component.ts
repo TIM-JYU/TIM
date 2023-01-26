@@ -270,7 +270,7 @@ export class NumericfieldPluginComponent
             });
         }
         if (!this.attrsall.preview) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
+            this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.numericvalue;
         if (this.attrsall.state?.styles && !this.markup.ignorestyles) {

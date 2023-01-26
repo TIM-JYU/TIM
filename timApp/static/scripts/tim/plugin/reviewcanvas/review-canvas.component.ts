@@ -227,7 +227,7 @@ export class ReviewCanvasComponent
         super.ngOnInit();
 
         if (!this.attrsall.preview) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
+            this.vctrl.addTimComponent(this);
         }
         const taskId = this.pluginMeta.getTaskId();
         if (taskId?.docId) {

@@ -183,7 +183,7 @@ export class DropdownPluginComponent
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
      */
     addToCtrl() {
-        this.vctrl.addTimComponent(this, this.markup.tag);
+        this.vctrl.addTimComponent(this);
     }
 
     ngOnDestroy() {
