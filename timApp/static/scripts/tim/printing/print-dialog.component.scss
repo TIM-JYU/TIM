@@ -15,3 +15,8 @@
   hyphens: auto;
 
 }
+
+:host ::ng-deep tim-alert pre {
+  max-height: 50vh;
+  overflow: auto;
+}
