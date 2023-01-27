@@ -1,7 +1,13 @@
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
 
 from timApp.tests.browser.browsertest import BrowserTest
+from timApp.tests.db.timdbtest import (
+    TEST_USER_1_NAME,
+    TEST_USER_2_NAME,
+    TEST_USER_3_NAME,
+)
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
@@ -132,3 +138,35 @@ initword: empty
 
         do_test(True)
         do_test(False)
+
+    def test_groups_serialize(self):
+        # Check that groups docsetting serializes to accepted format in allAnswersPlain
+        self.login_browser_quick_test1()
+        self.login_test1()
+        ug = UserGroup.create("tu2")
+        ug.users.append(self.test_user_2)
+        ug.admin_doc = self.create_doc().block
+        d = self.create_doc(
+            initial_par="""
+#- {plugin=textfield #t}
+                """,
+            settings={
+                "groups": ["testuser1", "tu2"],
+                "css": "#velpSelection {  visibility: hidden !important; }",
+            },
+        )
+        self.add_answer(d, "t", "tu1")
+        self.add_answer(d, "t", "tu2", user=self.test_user_2)
+        self.add_answer(d, "t", "tu3", user=self.test_user_3)
+        db.session.commit()
+        self.goto_document(d, "teacher")
+        self.find_element(".ui-grid-menu-button").click()
+        self.find_element_by_text("Answers as plain text").click()
+        self.find_element_by_text("Document groups").click()
+        self.find_element("tim-dialog-frame .timButton").click()
+        self.wait.until(ec.number_of_windows_to_be(2))
+        self.drv.switch_to.window(self.drv.window_handles[1])
+        texts = self.find_element("pre").text
+        self.assertIn(TEST_USER_1_NAME, texts)
+        self.assertIn(TEST_USER_2_NAME, texts)
+        self.assertNotIn(TEST_USER_3_NAME, texts)

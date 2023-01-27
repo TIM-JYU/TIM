@@ -232,7 +232,8 @@ class AnswerPrintOptions(Enum):
 
 @dataclass
 class AllAnswersOptions(AnswerPeriodOptions):
-    group: str | None = None
+    group: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
+    groups: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
     age: AgeOptions = field(default=AgeOptions.MAX, metadata={"by_value": True})
     valid: ValidityOptions = field(
         default=ValidityOptions.VALID, metadata={"by_value": True}
@@ -253,6 +254,10 @@ class AllAnswersOptions(AnswerPeriodOptions):
     include_inactive_memberships: bool = field(
         default=False, metadata={"data_key": "includeInactiveMemberships"}
     )
+
+    def __post_init__(self) -> None:
+        if self.group:
+            self.groups = self.groups + self.group if self.groups else self.group
 
 
 def get_all_answers(
@@ -280,7 +285,7 @@ def get_all_answers(
         options.period_to,
         task_ids,
         options.valid,
-        options.group,
+        options.groups,
         options.include_inactive_memberships,
     )
 
@@ -460,7 +465,7 @@ def get_all_answer_initial_query(
     period_to: datetime,
     task_ids: list[TaskId],
     valid: ValidityOptions,
-    group: str | None = None,
+    groups: list[str] | None = None,
     include_expired_members: bool = False,
 ) -> Query:
     q = Answer.query.filter(
@@ -474,10 +479,10 @@ def get_all_answer_initial_query(
         case ValidityOptions.VALID:
             q = q.filter_by(valid=True)
     q = q.join(User, Answer.users)
-    if group:
+    if groups:
         q = q.join(
             UserGroup, User.groups_dyn if include_expired_members else User.groups
-        ).filter(UserGroup.name == group)
+        ).filter(UserGroup.name.in_(groups))
     return q
 
 

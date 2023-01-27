@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from marshmallow import ValidationError
 
@@ -12,7 +12,8 @@ class DocViewParams:
     b: int | str | None = None
     e: int | str | None = None
     edit: str | None = None
-    group: str | None = None
+    group: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
+    groups: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
     hide_names: bool | None = None
     lazy: bool | None = None
     noanswers: bool = False

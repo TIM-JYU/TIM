@@ -362,6 +362,9 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
             periodFrom: this.options.periodFrom,
             periodTo: this.options.periodTo,
         };
+        if (this.options.groups) {
+            toSerialize.groups = [this.options.groups.join()];
+        }
         this.storage.set(this.options);
         // Don't include the salt in the serialized data if it's not used
         if (toSerialize.name !== "pseudonym") {

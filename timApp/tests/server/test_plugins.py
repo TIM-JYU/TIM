@@ -789,6 +789,17 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
 \[false, false\]
         """.strip(),
         )
+        group_result = self.get(
+            f"/allDocumentAnswersPlain/{doc.path}",
+            query_string={"group": "testuser1,"},
+        )
+        self.assertEqual(2, group_result.count("testuser1"))
+        self.assertEqual(0, group_result.count("testuser2"))
+        group_result = self.get(
+            f"/allAnswersPlain/{task_id}", query_string={"groups": ",testuser2"}
+        )
+        self.assertEqual(0, group_result.count("testuser1"))
+        self.assertEqual(1, group_result.count("testuser2"))
 
     def test_save_points(self):
         cannot_give_custom = {

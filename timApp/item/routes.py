@@ -701,7 +701,11 @@ def render_doc_view(
         total_tasks = len(task_ids)
     if points_sum_rule and points_sum_rule.scoreboard_error:
         flash(f"Error in point_sum_rule scoreboard: {points_sum_rule.scoreboard_error}")
-    usergroups = [m.group] if m.group is not None else None
+    usergroups = m.group if m.group is not None else None
+    if m.groups is not None:
+        usergroups = usergroups + m.groups if usergroups is not None else m.groups
+    if usergroups == [""]:
+        usergroups = []
     peer_review_start = doc_settings.peer_review_start()
     peer_review_stop = doc_settings.peer_review_stop()
     show_valid_only = (
