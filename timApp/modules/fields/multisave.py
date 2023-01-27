@@ -81,8 +81,9 @@ def reqs() -> PluginReqs:
 ```""",
         """
 ``` {plugin="multisave"}
-areas:
-- 
+livefeed: true
+allSavedText: 'You have no unsaved answers'
+unsavedText: 'You have {count} unsaved answers:'
 ```""",
         """
 ``` {plugin="multisave"}
@@ -114,13 +115,13 @@ showInView: false
                             },
                             {
                                 "data": templates[1].strip(),
-                                "text": "Multisave for areas",
-                                "expl": "Multisave for areas",
+                                "text": "Save button with warnings about unsaved tasks",
+                                "expl": "Save button with warnings about unsaved tasks",
                             },
                             {
                                 "data": templates[2].strip(),
-                                "text": "Multisave for specific IDs",
-                                "expl": "Multisave for specific IDs",
+                                "text": "Multisave for specific fields",
+                                "expl": "Multisave for specific fields",
                             },
                             {
                                 "data": templates[3].strip(),
