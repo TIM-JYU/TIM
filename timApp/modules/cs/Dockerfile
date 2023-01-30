@@ -10,7 +10,7 @@
 # (add --push arg to also push the images automatically to Docker Hub)
 
 
-FROM ubuntu:20.04 as base
+FROM ubuntu:22.04 as base
 LABEL maintainer="vesal@jyu.fi"
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
@@ -25,6 +25,9 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
     LC_CTYPE=en_US.UTF-8
 RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata && bash -c "${APT_CLEANUP}"
+
+# Install gpg and gpg-agent for verifying signatures before installing python
+RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
 
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
 RUN bash -c "${APT_INSTALL} python3.10 wget dirmngr gpg-agent curl python3.10-distutils && ${APT_CLEANUP}"
@@ -109,10 +112,11 @@ RUN python3.10 -m pip install requests urllib3 --upgrade && bash -c "${APT_CLEAN
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 # JDK
-RUN wget -q https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz && \
- tar -xf openjdk-17.0.2_linux-x64_bin.tar.gz && \
- rm openjdk-17.0.2_linux-x64_bin.tar.gz
-ENV PATH=$PWD/jdk-17.0.2/bin:$PATH
+ENV JDK_VERSION=19.0.1
+RUN wget -q https://download.java.net/java/GA/jdk${JDK_VERSION}/afdd2e245b014143b62ccb916125e3ce/10/GPL/openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
+ tar -xf openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
+ rm openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz
+ENV PATH=$PWD/jdk-${JDK_VERSION}/bin:$PATH
 RUN java -version
 # RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
 # RUN uuidgen > /etc/machine-id
@@ -141,8 +145,8 @@ RUN bash -c "${APT_INSTALL} \
     libc6 \
     libgcc1 \
     libgssapi-krb5-2 \
-    libicu66 \
-    libssl1.1 \
+    libicu70 \
+    libssl3 \
     libstdc++6 \
     zlib1g \
 && ${APT_CLEANUP}"
@@ -153,6 +157,12 @@ RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $
 
 # Set active Python version to 3.10
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 20
+
+# Edit OpenSSL config to enable "legacy" providers
+# OpenSSLv3 seems to disable RIPEMD160: https://github.com/openssl/openssl/issues/16994
+# TODO: Edit csplugin to get rid of RIPEMD160
+RUN sed -i 's/\[provider_sect\]/\0\nlegacy = legacy_sect/' /usr/lib/ssl/openssl.cnf && \
+    sed -i 's/\[default_sect\]/\0\nactivate = 1\n[legacy_sect]\nactivate = 1/' /usr/lib/ssl/openssl.cnf
 
 RUN useradd -m agent
 ENV HOME /home/agent
@@ -229,14 +239,14 @@ RUN bash -c "${APT_INSTALL} python3.10-dev build-essential && \
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
 
 # Scala
-RUN bash -c "${APT_INSTALL} openjdk-16-jre-headless && ${APT_CLEANUP}"
-ENV SCALA_VERSION 2.13.6
+RUN bash -c "${APT_INSTALL} openjdk-17-jre-headless && ${APT_CLEANUP}"
+ENV SCALA_VERSION 2.13.10
 RUN wget -q https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
  dpkg -i scala-${SCALA_VERSION}.deb && \
  rm scala-${SCALA_VERSION}.deb
 
 # Octave
-RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot pstoedit liboctave-dev fonts-freefont-otf && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal gnuplot pstoedit liboctave-dev fonts-freefont-otf && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} make && ${APT_CLEANUP}"
 RUN printf "pkg install -forge io" | octave && \
  echo -n 'pkg install "https://downloads.sourceforge.net/project/octave/Octave%20Forge%20Packages/Individual%20Package%20Releases/statistics-1.4.3.tar.gz"' | octave && \
@@ -254,9 +264,9 @@ RUN bash -c "${APT_INSTALL} libcurl4 libpython3.8 libxml2 && ${APT_CLEANUP}"
 
 # modified from https://github.com/apple/swift-docker/blob/main/5.5/ubuntu/20.04/slim/Dockerfile
 ARG SWIFT_SIGNING_KEY=A62AE125BBBFBB96A6E042EC925CC1CCED3D1561
-ARG SWIFT_PLATFORM=ubuntu20.04
-ARG SWIFT_BRANCH=swift-5.5-release
-ARG SWIFT_VERSION=swift-5.5-RELEASE
+ARG SWIFT_PLATFORM=ubuntu22.04
+ARG SWIFT_BRANCH=swift-5.7.1-release
+ARG SWIFT_VERSION=swift-5.7.1-RELEASE
 ARG SWIFT_WEBROOT=https://download.swift.org
 
 ENV SWIFT_SIGNING_KEY=$SWIFT_SIGNING_KEY \
@@ -303,7 +313,7 @@ RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArm
 RUN bash -c "${APT_INSTALL} bsdmainutils iputils-ping && ${APT_CLEANUP}"
 
 # Kotlin
-ENV         KOTLIN_VERSION=1.5.31 \
+ENV         KOTLIN_VERSION=1.7.21 \
             KOTLIN_HOME=/usr/local/kotlin
 
 RUN         cd  /tmp && \
@@ -328,7 +338,7 @@ RUN ln -s "/cargo/bin/"* "/usr/bin/"
 RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
 
 # Go
-ENV GOLANG_VERSION=1.17.6
+ENV GOLANG_VERSION=1.19.3
 RUN wget -q https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && rm go${GOLANG_VERSION}.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
@@ -338,17 +348,17 @@ RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
 # Install NUnit runner for .NET
-ENV NUNIT_RUNNER_VERSION=3.14.0
+ENV NUNIT_RUNNER_VERSION=3.15.2
 RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version ${NUNIT_RUNNER_VERSION} && \
     # We need to call NUnit directly with dotnet exec in order to properly declare custom references
-    ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/netcoreapp3.1/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
+    ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/net6.0/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
 
 # Install ffmpeg for transcoding videos
 RUN bash -c "${APT_INSTALL} ffmpeg && ${APT_CLEANUP}"
 
 # Install mongosh (adapted from https://github.com/rtsp/docker-mongosh/blob/main/Dockerfile)
-ENV MONGODB_VERSION=5.0
-ENV MONGOSH_VERSION=1.1.9
+ENV MONGODB_VERSION=6.0
+ENV MONGOSH_VERSION=1.6.0
 
 RUN curl -fsSL "https://www.mongodb.org/static/pgp/server-${MONGODB_VERSION}.asc" | gpg --dearmor -o /etc/apt/trusted.gpg.d/mongodb-org-${MONGODB_VERSION}.gpg && \
     echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/${MONGODB_VERSION} multiverse" > /etc/apt/sources.list.d/mongodb-org-${MONGODB_VERSION}.list && \
@@ -362,12 +372,7 @@ RUN python3.10 -m pip install cqlsh six --upgrade && bash -c "${APT_CLEANUP}"
 RUN cqlsh --version
 
 # Install Elixir
-RUN bash -c "${APT_INSTALL} gnupg" && \
-    wget https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb && \
-    dpkg -i erlang-solutions_2.0_all.deb && \
-    rm erlang-solutions_2.0_all.deb && \
-    apt-get update && \
-    bash -c "${APT_INSTALL} esl-erlang elixir && apt-get purge --auto-remove -y gnupg && ${APT_CLEANUP}" && \
+RUN bash -c "${APT_INSTALL} erlang elixir && apt-get purge --auto-remove -y gnupg && ${APT_CLEANUP}" && \
     elixir --version
 
 RUN python3.10 -m pip install coverage && bash -c "${APT_CLEANUP}"
