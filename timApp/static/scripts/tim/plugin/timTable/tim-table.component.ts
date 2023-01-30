@@ -65,6 +65,7 @@ import type {
     VirtualScrollingOptions,
 } from "tim/plugin/dataview/data-view.component";
 import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
+import type {IGenericPluginMarkup} from "tim/plugin/attributes";
 import {nullable, withDefault} from "tim/plugin/attributes";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {
@@ -235,7 +236,7 @@ export interface IToolbarTemplate {
     toColName?: string;
 }
 
-export interface TimTable {
+export interface TimTable extends IGenericPluginMarkup {
     table: ITable;
     id?: string;
     headers?: string[];
@@ -863,6 +864,10 @@ export class TimTableComponent
 
     get element(): JQuery<HTMLElement> {
         return $(this.el.nativeElement);
+    }
+
+    get markup() {
+        return this.data;
     }
 
     get disableUnchanged() {

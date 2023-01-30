@@ -297,8 +297,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         if (!c) {
             return undefined;
         }
-        const a = c.attrsall;
-        return a?.markup;
+        return c.markup;
     }
 
     public isUseCurrentUser() {
