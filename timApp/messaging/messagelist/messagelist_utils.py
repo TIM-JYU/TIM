@@ -1,3 +1,4 @@
+import base64
 import itertools
 import re
 from dataclasses import dataclass, field
@@ -9,6 +10,7 @@ from typing import Iterator
 from urllib.error import HTTPError
 from urllib.parse import SplitResult, parse_qs, urlsplit
 
+from flask import render_template_string
 from isodate import datetime_isoformat
 from mailmanclient import MailingList
 from sqlalchemy.orm import load_only
@@ -55,6 +57,8 @@ from timApp.messaging.messagelist.messagelist_models import (
     MessageListMember,
 )
 from timApp.timdb.sqa import db
+from timApp.upload.upload import upload_image_or_file_impl
+from timApp.upload.uploadedfile import UploadedFile
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -182,6 +186,45 @@ class EmailAndDisplayName:
 
 
 @dataclass
+class BaseMessageAttachment:
+    filename: str
+
+    def save_attachment(self, d: DocInfo) -> UploadedFile:
+        raise NotImplementedError
+
+    def read(self) -> bytes:
+        raise NotImplementedError
+
+
+@dataclass
+class Base64Attachment(BaseMessageAttachment):
+    """Attachment that is encoded in base64."""
+
+    attachment: str
+
+    def read(self) -> bytes:
+        return base64.b64decode(self.attachment)
+
+    def save_attachment(self, d: DocInfo) -> UploadedFile:
+        f, _ = upload_image_or_file_impl(d, self)
+        return f
+
+
+@dataclass
+class PlainTextAttachment(BaseMessageAttachment):
+    """Attachment that is plain text."""
+
+    attachment: str
+
+    def read(self) -> bytes:
+        return self.attachment.encode()
+
+    def save_attachment(self, d: DocInfo) -> UploadedFile:
+        f, _ = upload_image_or_file_impl(d, self)
+        return f
+
+
+@dataclass
 class BaseMessage:
     """A unified datastructure for messages TIM handles."""
 
@@ -210,6 +253,8 @@ class BaseMessage:
 
     # Mailman may append a message hash which can be used for file names
     message_id: str | None = None
+
+    attachments: list[BaseMessageAttachment] = field(default_factory=list)
 
 
 # Path prefixes for documents and folders.
@@ -470,6 +515,16 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
     archive_doc = create_archive_doc_with_permission(
         message.subject, archive_doc_path, message_list, message
     )
+
+    # Add attachments to the archive
+
+    uploaded_attachments = []
+    for attachment in message.attachments:
+        uploaded_attachments.append(attachment.save_attachment(archive_doc))
+
+    # Flush all attachments to the database
+    db.session.flush()
+
     archive_doc.document.add_setting(
         "macros",
         {
@@ -492,6 +547,23 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
     archive_doc.document.add_paragraph(
         message_body_to_md(message.message_body), attrs={"taskId": "message-body"}
     )
+
+    if uploaded_attachments:
+        attachment_list = render_template_string(
+            """
+***
+
+[**Attachments**]{.attachments-title}
+
+{% for attachment in attachments %}
+- [{{ attachment.filename }}](/files/{{ attachment.id }}/{{ attachment.filename }})
+{% endfor %}
+""",
+            attachments=uploaded_attachments,
+        )
+        archive_doc.document.add_paragraph(
+            attachment_list, attrs={"classes": ["attachments-list"]}
+        )
 
     archive_doc.document.add_paragraph(
         "<tim-archive-footer message='%%message|tojson%%'></tim-archive-footer>",
@@ -530,6 +602,28 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
     message_body = original.get("body", "")
     message_id = original.get("message-id-hash")
 
+    attachments: list[BaseMessageAttachment] = []
+    if "attachments" in original:
+        for attachment in original["attachments"]:
+            encoding = attachment.get("content_transfer_encoding")
+            # TODO: Check if we need other decoding methods.
+            if encoding is None:
+                continue
+            if encoding == "base64":
+                attachments.append(
+                    Base64Attachment(
+                        filename=attachment["filename"],
+                        attachment=attachment["payload"],
+                    )
+                )
+            else:
+                attachments.append(
+                    PlainTextAttachment(
+                        filename=attachment["filename"],
+                        attachment=attachment["payload"],
+                    )
+                )
+
     message = BaseMessage(
         message_list_name=msg_list.name,
         domain=msg_list.email_list_domain,
@@ -541,6 +635,7 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
         # Message body
         message_body=message_body,
         message_id=message_id,
+        attachments=attachments,
     )
 
     # Try parsing the rest of email specific fields.

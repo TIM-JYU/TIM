@@ -578,12 +578,17 @@ def upload_and_stamp_attachment(
 
 
 def upload_image_or_file(d: DocInfo, file):
+    f, type_str = upload_image_or_file_impl(d, file)
+    db.session.commit()
+    return json_response({type_str: f"{f.id}/{f.filename}"})
+
+
+def upload_image_or_file_impl(d: DocInfo, file):
     content = file.read()
     imgtype = imghdr.what(None, h=content)
     type_str = "image" if imgtype else "file"
     f = save_file_and_grant_access(d, content, file, BlockType.from_str(type_str))
-    db.session.commit()
-    return json_response({type_str: f"{f.id}/{f.filename}"})
+    return f, type_str
 
 
 def save_file_and_grant_access(
