@@ -188,7 +188,7 @@ export class DropdownPluginComponent
 
     ngOnDestroy() {
         if (!this.attrsall.preview) {
-            this.vctrl.removeTimComponent(this, this.markup.tag);
+            this.vctrl.removeTimComponent(this);
         }
     }
 

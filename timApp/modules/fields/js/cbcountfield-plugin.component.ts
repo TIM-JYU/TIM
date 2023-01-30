@@ -173,11 +173,7 @@ export class CbcountfieldPluginComponent
         this.count = this.attrsall.count ?? 0;
 
         if (!this.attrsall.preview) {
-            if (this.markup.tag) {
-                this.vctrl.addTimComponent(this);
-            } else {
-                this.vctrl.addTimComponent(this);
-            }
+            this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
         if (this.markup.showname) {
@@ -188,11 +184,7 @@ export class CbcountfieldPluginComponent
 
     ngOnDestroy() {
         if (!this.attrsall.preview) {
-            if (this.markup.tag) {
-                this.vctrl.removeTimComponent(this, this.markup.tag);
-            } else {
-                this.vctrl.removeTimComponent(this);
-            }
+            this.vctrl.removeTimComponent(this);
         }
     }
 

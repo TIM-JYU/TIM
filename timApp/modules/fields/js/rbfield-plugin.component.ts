@@ -165,11 +165,7 @@ export class RbfieldPluginComponent
         this.userword = uw; // this.makeBoolean(uw);
 
         if (!this.attrsall.preview) {
-            if (this.markup.tag) {
-                this.vctrl.addTimComponent(this);
-            } else {
-                this.vctrl.addTimComponent(this);
-            }
+            this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
         if (this.markup.showname) {
@@ -447,11 +443,7 @@ export class RbfieldPluginComponent
 
     ngOnDestroy(): void {
         if (!this.attrsall.preview) {
-            if (this.markup.tag) {
-                this.vctrl.removeTimComponent(this, this.markup.tag);
-            } else {
-                this.vctrl.removeTimComponent(this);
-            }
+            this.vctrl.removeTimComponent(this);
         }
     }
 }

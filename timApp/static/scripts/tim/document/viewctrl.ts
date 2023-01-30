@@ -898,9 +898,8 @@ export class ViewCtrl implements IController {
     /**
      * Unregisters an ITimComponent from the view controller by its name attribute if it has one.
      * @param {ITimComponent} component The component to be unregistered.
-     * @param {string | undefined} tag for accessing  group of ITimComponents
      */
-    public removeTimComponent(component: ITimComponent, tag?: string | null) {
+    public removeTimComponent(component: ITimComponent) {
         const taskId = component.getTaskId();
         if (taskId) {
             const name = taskId.docTaskField();
@@ -908,6 +907,7 @@ export class ViewCtrl implements IController {
             if (res == component) {
                 this.timComponents.delete(name);
             }
+            const tag = component.markup.tag;
             if (tag) {
                 const prev = this.timComponentTags.get(tag);
                 if (prev != undefined) {
