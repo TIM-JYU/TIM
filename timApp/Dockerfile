@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
     APT_CLEANUP="rm -rf /var/lib/apt/lists /dvisvgm-2.4 /usr/share/doc ~/.cache"
@@ -75,8 +75,11 @@ texlive-xetex \
 wget \
 && ${APT_CLEANUP}"
 
+# Install gpg and gpg-agent for verifying signatures
+RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
+
 # Update dvisvgm so that it supports converting PDFs to SVGs
-ENV DVISVGM_VERSION="2.12"
+ENV DVISVGM_VERSION="2.14"
 RUN bash -c "${APT_INSTALL} gcc g++ libgs-dev libkpathsea-dev pkg-config libfreetype6-dev make && ${APT_CLEANUP}"
 RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/${DVISVGM_VERSION}/dvisvgm-${DVISVGM_VERSION}.tar.gz" -qO $FILE && \
  tar -xf $FILE && \
@@ -133,7 +136,7 @@ ${APT_CLEANUP} && \
 rm pyproject.toml poetry.lock"
 
 # Install Pandoc
-RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.14.2/pandoc-2.14.2-1-amd64.deb" -qO $FILE && \
+RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-amd64.deb" -qO $FILE && \
  dpkg -i $FILE && rm $FILE && bash -c "${APT_CLEANUP}"
 
 # Set name and email for git.
@@ -146,7 +149,7 @@ RUN mkdir /service
 RUN useradd -M agent
 RUN chown -R agent /service
 
-RUN bash -c "${APT_INSTALL} curl qpdf gpg-agent poppler-utils && ${APT_CLEANUP} && \
+RUN bash -c "${APT_INSTALL} curl qpdf poppler-utils && ${APT_CLEANUP} && \
     curl --version && qpdf --version"
 
 # On current TIM production server, using latest versions of Node and NPM will cause
