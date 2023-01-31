@@ -288,7 +288,7 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
     if should_anonymize_annotations(d, current_user):
         curruser_id = current_user.id
         anonymize_annotations(results, curruser_id)
-    elif is_peerreview_enabled(d) and not has_seeanswers_access(d):
+    elif d.document.get_settings().peer_review() and not has_seeanswers_access(d):
         # TODO: these checks should be changed to something else
         #  - peerreview might be disabled later, but the annotation should remain anonymous to target
         #  - in future peerreview pairing may be changeable, but anonymization info should persist
