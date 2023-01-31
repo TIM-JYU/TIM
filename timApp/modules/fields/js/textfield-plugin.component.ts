@@ -671,22 +671,6 @@ export class TextfieldPluginComponent
             this.updateListeners(ChangeType.Modified);
         }
     }
-
-    // TODO: Generic, move
-    updateListeners(state: ChangeType) {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(
-            taskId,
-            state,
-            this.markup.tag ? this.markup.tag : undefined
-        );
-    }
 }
 
 @NgModule({

@@ -403,21 +403,6 @@ export class CbfieldPluginComponent
     getAttributeType() {
         return CbfieldAll;
     }
-
-    updateListeners(state: ChangeType) {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(
-            taskId,
-            state,
-            this.markup.tag ? this.markup.tag : undefined
-        );
-    }
 }
 
 @NgModule({

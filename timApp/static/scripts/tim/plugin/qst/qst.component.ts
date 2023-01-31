@@ -211,21 +211,6 @@ export class QstComponent
         this.cdr.detectChanges();
     }
 
-    updateListeners(state: ChangeType) {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(
-            taskId,
-            state,
-            this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined
-        );
-    }
-
     async updateAnswer(at: AnswerTable) {
         // updateAnswer is called always at least once from dynamicAnswerSheet (see the ngOnChanges in that file).
         // Upon first call, we record the currently saved answer.

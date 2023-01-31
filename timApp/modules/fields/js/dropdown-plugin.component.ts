@@ -262,17 +262,6 @@ export class DropdownPluginComponent
         }
     }
 
-    updateListeners(state: ChangeType) {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(taskId, state, this.markup.tag);
-    }
-
     /**
      * Force the plugin to save its information.
      *

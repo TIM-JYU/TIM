@@ -426,21 +426,6 @@ export class RbfieldPluginComponent
         return RbfieldAll;
     }
 
-    updateListeners(state: ChangeType) {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(
-            taskId,
-            state,
-            this.markup.tag ? this.markup.tag : undefined
-        );
-    }
-
     ngOnDestroy(): void {
         if (!this.attrsall.preview) {
             this.vctrl.removeTimComponent(this);

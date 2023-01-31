@@ -1468,21 +1468,6 @@ export class CsController extends CsBase implements ITimComponent {
         this.isUnitTest = this.getIsUnitTest();
     }
 
-    updateListeners(state: ChangeType) {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(
-            taskId,
-            state,
-            this.markup.tag ? this.markup.tag : undefined
-        );
-    }
-
     resetChanges(): void {
         this.usercode = this.savedvals?.usercode ?? "";
         this.userargs = this.savedvals?.args ?? "";
