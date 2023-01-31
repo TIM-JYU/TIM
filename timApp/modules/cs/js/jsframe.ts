@@ -376,6 +376,9 @@ export class JsframeComponent
 
         this.updateIframeSettings();
 
+        if (!this.isTask()) {
+            this.requiresTaskId = false;
+        }
         if (this.isPreview()) {
             return;
         }
@@ -396,9 +399,6 @@ export class JsframeComponent
             })();
         }
         if (this.isDrawio()) {
-            if (!this.isTask()) {
-                this.requiresTaskId = false;
-            }
             (async () => {
                 await this.viewctrl.documentUpdate;
                 this.viewctrl.addParMenuEntry(this, this.getPar()!);
