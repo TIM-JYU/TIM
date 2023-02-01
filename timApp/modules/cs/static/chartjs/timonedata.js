@@ -334,7 +334,7 @@ TIMJS.setData = function(P, data) {
         }
     }
     if ( data.labels ) P.chart.data.labels = data.labels;
-    if ( data.data )
+    if ( data.data ) {
         fieldindex++;
         datasets[0].data = dopros ? pros(data.data) : data.data;
 
