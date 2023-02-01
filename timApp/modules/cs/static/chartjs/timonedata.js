@@ -334,9 +334,16 @@ TIMJS.setData = function(P, data) {
         }
     }
     if ( data.labels ) P.chart.data.labels = data.labels;
-    if ( data.data ) {
-       fieldindex++;
-       datasets[0].data = dopros ? pros(data.data) : data.data;
+    if ( data.data )
+        fieldindex++;
+        datasets[0].data = dopros ? pros(data.data) : data.data;
+
+        if (data.backgroundColor) {
+            datasets[0].backgroundColor = data.backgroundColor;
+        }
+        if (data.borderColor) {
+            datasets[0].borderColor = data.borderColor;
+        }
     }
     if ( data.data2 || data.label2 || data.dataopt2 ) {
         ensureDataSets(datasets, 2);
