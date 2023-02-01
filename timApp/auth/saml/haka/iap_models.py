@@ -1,7 +1,7 @@
 import functools
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, TypeVar
+from typing import Any, Optional
 
 REFEDS_PREFIX = "https://refeds.org/assurance"
 REFEDS_LOCAL_ENTRPRISE_ASSURANCE = f"{REFEDS_PREFIX}/IAP/local-enterprise"
@@ -50,6 +50,3 @@ class IdentityAssuranceProofing:
 
     highest_refeds_level: RefedsIapLevel
     local_enterprise: bool
-
-
-_T = TypeVar("_T")

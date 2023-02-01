@@ -13,9 +13,10 @@ from timApp.tim_app import get_home_organization_group, app
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
-from timApp.user.user import User, UserOrigin, UserInfo
+from timApp.user.user import User, UserInfo
 from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
+from timApp.user.userorigin import UserOrigin
 from timApp.user.userutils import create_password_hash
 
 test_pw = "somepwd123"

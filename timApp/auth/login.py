@@ -31,8 +31,9 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
 from timApp.user.personaluniquecode import PersonalUniqueCode
-from timApp.user.user import User, UserOrigin, UserInfo
+from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
+from timApp.user.userorigin import UserOrigin
 from timApp.user.users import create_anonymous_user
 from timApp.user.userutils import create_password_hash, check_password_hash
 from timApp.util.flask.requesthelper import RouteException, NotExist

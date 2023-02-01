@@ -1,5 +1,6 @@
+from abc import ABC, abstractmethod
 from dataclasses import field, dataclass
-from typing import Callable
+from typing import Callable, Any, Optional, TypeVar
 from xml.etree.ElementTree import ParseError
 
 import requests
@@ -15,8 +16,7 @@ from werkzeug.sansio.response import Response
 
 from timApp.auth.accesshelper import AccessDenied
 from timApp.auth.login import create_or_update_user, set_user_to_session
-from timApp.auth.saml.attributes import SAMLUserAttributes
-from timApp.auth.saml.client import (
+from timApp.auth.saml.utils import (
     get_saml_config,
     get_saml_client,
 )
@@ -24,9 +24,9 @@ from timApp.auth.sessioninfo import logged_in
 from timApp.tim_app import app, csrf
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
-from timApp.user.user import UserInfo, UserOrigin
-from timApp.user.usercontact import ContactOrigin
+from timApp.user.user import UserInfo
 from timApp.user.usergroup import UserGroup
+from timApp.user.userorigin import UserOrigin
 from timApp.util.error_handlers import report_error
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import RouteException, is_testing
@@ -41,12 +41,116 @@ class IdpDescription:
     scopes: list[str] = field(default_factory=list)
 
 
+_T = TypeVar("_T")
+
+
+class BaseSamlUserAttributes(ABC):
+    def __init__(self, attributes: dict[str, Any]) -> None:
+        self.attributes = attributes
+
+    def get_attribute_safe(self, name: str, t: type[_T]) -> Optional[_T]:
+        res = self.attributes.get(name, [None])[0]
+        if res is not None and not isinstance(res, t):
+            raise RouteException(f"Attribute {name} is not of type {t}")
+        return res
+
+    def get_attribute(self, name: str, t: type[_T]) -> _T:
+        value = self.get_attribute_safe(name, t)
+        if value is None:
+            raise RouteException(f"Missing required attribute {name}")
+        return value
+
+    @property
+    @abstractmethod
+    def derived_username(self) -> str:
+        """
+        TIM username derived from the attributes.
+
+        :return: The TIM username of the user
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def surname(self) -> str:
+        """
+        Surname of the user.
+
+        :return: Surname of the user
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def given_name(self) -> str:
+        """
+        Given name of the user.
+        Generally, the preferred given name the person has indicated to be used.
+
+        :return: Given name of the user
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def email(self) -> str:
+        """
+        Email address of the user.
+        Generally, the preferred address for the "to:" field of email to be sent to this person.
+
+        .. note:: If email is not provided via metadata, derive a temporary unique email via :meth:`derive_noreply_email`.
+
+        :return: Email address of the user
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def unique_codes(self) -> list[SchacPersonalUniqueCode] | None:
+        """
+        A list of "unique codes" of the user. The values are meant to be unique and allow to identify the user in
+        the given organization.
+
+        The codes follow the SCHAC Personal Unique Code specification (https://wiki.refeds.org/display/SCHAC/Personal+Unique+Code).
+
+        :return: A list of unique codes of the user
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def organisation_group(self) -> str | None:
+        """
+        User's organization. Users under the same organization are put in the same user group.
+
+        :return: User's organization in host (hostname.domain) format
+        """
+        ...
+
+    def to_json(self) -> dict[str, Any]:
+        """
+        Convert the attributes to a JSON-serializable dictionary.
+        :return: JSON-serializable dictionary of attributes
+        """
+        ucs = self.unique_codes
+        return {
+            "givenName": self.given_name,
+            "sn": self.surname,
+            "mail": self.email,
+            "schacPersonalUniqueCode": [uc.to_urn() for uc in ucs] if ucs else [],
+            "organisation_group": self.organisation_group,
+        }
+
+
 @dataclass
 class SamlService:
     name: str
     metadata_url: str
+    user_origin: UserOrigin
+    service_group_name: str
 
     get_idp_description: Callable[[str, dict], IdpDescription | None]
+    saml_user_attributes_type: type[BaseSamlUserAttributes]
 
     metadata_timeout: int = 60 * 60 * 24
 
@@ -157,29 +261,26 @@ def _handle_acs(service: SamlService) -> Response:
             f"Please contact {app.config['HELP_EMAIL']} if the problem persists."
         )
 
-    ava = resp.get_identity()
+    identity_dict = resp.get_identity()
 
     session.pop("requestID", None)
     session.pop("cameFrom", None)
 
-    saml_attributes = SAMLUserAttributes(ava)
-    org_group = UserGroup.get_organization_group(saml_attributes.org)
-    parsed_codes = []
+    saml_attributes = service.saml_user_attributes_type(identity_dict)
+    org_group = (
+        UserGroup.get_organization_group(saml_attributes.organisation_group)
+        if saml_attributes.organisation_group
+        else None
+    )
     ucs = saml_attributes.unique_codes
-    if ucs:
-        for c in ucs:
-            parsed = SchacPersonalUniqueCode.parse(c)
-            if not parsed:
-                log_warning(f"Failed to parse unique code: {c}")
-            else:
-                parsed_codes.append(parsed)
-    elif ucs is None:
+    if ucs is None:
         log_warning(f"{saml_attributes.derived_username} did not receive unique codes")
-    else:
+        ucs = []
+    elif len(ucs) == 0:
         log_warning(
             f"{saml_attributes.derived_username} received empty unique code list"
         )
-        # Don't update email here to prevent setting is as primary automatically
+    # Don't update email here to prevent setting is as primary automatically
     user = create_or_update_user(
         UserInfo(
             username=saml_attributes.derived_username,
@@ -187,22 +288,24 @@ def _handle_acs(service: SamlService) -> Response:
             email=saml_attributes.email,
             given_name=saml_attributes.given_name,
             last_name=saml_attributes.surname,
-            origin=UserOrigin.Haka,
-            unique_codes=parsed_codes,
+            origin=service.user_origin,
+            unique_codes=ucs,
         ),
         group_to_add=org_group,
-        update_email=False,  # Don't update the email here since we don't want to force the Haka mail as primary
+        update_email=False,  # Don't update the email here since we don't want to force the service mail as primary
     )
     user.set_emails(
-        [saml_attributes.email], ContactOrigin.Haka, can_update_primary=True
+        [saml_attributes.email],
+        service.user_origin.to_contact_origin(),
+        can_update_primary=True,
     )
-    haka = UserGroup.get_haka_group()
-    if haka not in user.groups:
-        user.groups.append(haka)
+    service_group = UserGroup.get_or_create_group(service.service_group_name)
+    if service_group not in user.groups:
+        user.groups.append(service_group)
     db.session.commit()
     set_user_to_session(user)
     if session.get("debugSSO"):
-        return json_response(ava)
+        return json_response(identity_dict)
     rs = request.form.get("RelayState")
     if rs:
         return redirect(rs)

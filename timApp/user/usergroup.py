@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.auth.auth_models import BlockAccess
+from timApp.auth.saml.haka.routes import HAKA_USERS_GROUPNAME
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
 from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageDisplay,
@@ -249,8 +250,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_haka_group() -> UserGroup:
-        haka_group_name = "Haka users"
-        return UserGroup.get_or_create_group(haka_group_name)
+        return UserGroup.get_or_create_group(HAKA_USERS_GROUPNAME)
 
     @staticmethod
     def get_organizations() -> list[UserGroup]:

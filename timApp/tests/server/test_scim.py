@@ -18,9 +18,10 @@ from timApp.sisu.sisu import call_sisu_assessments
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.user.user import User, UserOrigin, UserInfo
+from timApp.user.user import User, UserInfo
 from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX, get_admin_group_id
+from timApp.user.userorigin import UserOrigin
 from timApp.util.utils import seq_to_str, get_current_time
 
 a = ("t", "pass")

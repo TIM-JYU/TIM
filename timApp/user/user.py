@@ -64,6 +64,7 @@ from timApp.user.usergroupmember import (
     membership_current,
     membership_deleted,
 )
+from timApp.user.userorigin import UserOrigin
 from timApp.user.userutils import (
     grant_access,
     get_access_type_id,

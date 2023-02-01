@@ -2,7 +2,7 @@ import re
 import traceback
 from dataclasses import field, dataclass
 from functools import cached_property
-from typing import Optional, Any, Generator
+from typing import Any, Generator
 
 from flask import Blueprint, request, current_app, Response
 from sqlalchemy.exc import IntegrityError
@@ -26,7 +26,6 @@ from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
 from timApp.user.user import (
     User,
-    UserOrigin,
     last_name_to_first,
     SCIM_USER_NAME,
     UserInfo,
@@ -39,6 +38,7 @@ from timApp.user.usergroup import (
     DELETED_GROUP_PREFIX,
 )
 from timApp.user.usergroupmember import UserGroupMember, membership_current
+from timApp.user.userorigin import UserOrigin
 from timApp.util.flask.requesthelper import load_data_from_req, JSONException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning, log_info

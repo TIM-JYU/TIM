@@ -1,8 +1,9 @@
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.sqa import db
-from timApp.user.user import User, UserInfo, UserOrigin
+from timApp.user.user import User, UserInfo
 from timApp.user.usercontact import ContactOrigin
+from timApp.user.userorigin import UserOrigin
 
 
 class ContactsTest(TimDbTest):
