@@ -194,7 +194,9 @@ export class MultisaveComponent
     ngOnInit() {
         super.ngOnInit();
         if (
-            (this.markup.disableUnchanged || this.markup.livefeed) &&
+            (this.markup.disableUnchanged ||
+                this.markup.livefeed ||
+                this.markup.undo) &&
             this.vctrl
         ) {
             this.listener = true;
