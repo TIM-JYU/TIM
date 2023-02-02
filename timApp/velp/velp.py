@@ -9,6 +9,8 @@ the document.
 :version: 1.0.0
 
 """
+import json
+
 from timApp.item.deleting import (
     soft_delete_document,
 )
@@ -47,6 +49,7 @@ from timApp.user.users import get_rights_holders, remove_access
 from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import (
+    to_dict,
     json_response,
     no_cache_json_response,
     ok_response,
@@ -108,6 +111,41 @@ DEFAULT_PERSONAL_VELP_GROUP_NAME = "Personal-default"
 # TODO: Done create velp, get velp groups from folders (get_velp_groups),
 # TODO: make default velp group and necessary folder (velpabc)
 # TODO: Add route for deleting velp (at least a velp without any annotations). Remove by setting valid_until attribute.
+
+# Main route for initializing Velp feature
+# Combines individual routes for velp data
+@velps.get("/<int:doc_id>/get_velp_initialization_data")
+def get_velp_initialization_data(doc_id: int) -> Response:
+    """Get all initialization data for velps for the specified document.
+
+    :param doc_id: Document id number
+    :return: Dictionary containing the document's velp data for the current user.
+    """
+
+    velp_groups: list[dict] = json.loads(get_velp_groups(doc_id).data)
+    default_velp_group: dict = to_dict(get_default_velp_group(doc_id).data)
+    doc_velps: list[Velp] = json.loads(get_velps(doc_id).data)
+    velp_labels: list[dict] = json.loads(get_velp_labels(doc_id).data)
+    personal_vg_selections: dict = to_dict(
+        get_velp_group_personal_selections(doc_id).data
+    )
+    default_vg_selections: dict = to_dict(
+        get_velp_group_default_selections(doc_id).data
+    )
+    personal_velp_group: CreatedVelpGroup = json.loads(
+        get_default_personal_velp_group(doc_id).data
+    )
+
+    data = {
+        "velp_groups": velp_groups,
+        "default_velp_group": default_velp_group,
+        "velps": doc_velps,
+        "velp_labels": velp_labels,
+        "personal_vg_selections": personal_vg_selections,
+        "default_vg_selections": default_vg_selections,
+        "personal_velp_group": personal_velp_group,
+    }
+    return no_cache_json_response(data)
 
 
 @velps.get("/<int:doc_id>/get_default_velp_group")
