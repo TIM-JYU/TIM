@@ -91,7 +91,7 @@ const RbfieldAll = t.intersection([
             (click)="autoSave()">
         {{buttonText()}}
         </button>
-    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </div>
 `,
     styleUrls: ["./rbfield-plugin.component.scss"],
@@ -165,11 +165,7 @@ export class RbfieldPluginComponent
         this.userword = uw; // this.makeBoolean(uw);
 
         if (!this.attrsall.preview) {
-            if (this.markup.tag) {
-                this.vctrl.addTimComponent(this, this.markup.tag);
-            } else {
-                this.vctrl.addTimComponent(this);
-            }
+            this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
         if (this.markup.showname) {
@@ -430,28 +426,9 @@ export class RbfieldPluginComponent
         return RbfieldAll;
     }
 
-    updateListeners(state: ChangeType) {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(
-            taskId,
-            state,
-            this.markup.tag ? this.markup.tag : undefined
-        );
-    }
-
     ngOnDestroy(): void {
         if (!this.attrsall.preview) {
-            if (this.markup.tag) {
-                this.vctrl.removeTimComponent(this, this.markup.tag);
-            } else {
-                this.vctrl.removeTimComponent(this);
-            }
+            this.vctrl.removeTimComponent(this);
         }
     }
 }

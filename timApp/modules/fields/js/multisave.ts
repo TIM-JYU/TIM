@@ -27,6 +27,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 import {slugify} from "tim/util/slugify";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {PurifyModule} from "tim/util/purify.module";
 import {
     GroupType,
     SisuAssessmentExportModule,
@@ -55,7 +56,6 @@ const multisaveMarkup = t.intersection([
         autoUpdateDuplicates: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
         nosave: withDefault(t.boolean, false),
-        listener: withDefault(t.boolean, false),
         livefeed: withDefault(t.boolean, false),
     }),
 ]);
@@ -98,21 +98,21 @@ const multisaveAll = t.intersection([
     </div> <!-- unsaved fields -->
     <div *ngIf="!livefeed || !allSaved()">
     <button class="timButton"
-            [disabled]="(disableUnchanged && listener && allSaved())"
+            [disabled]="(disableUnchanged && allSaved())"
             *ngIf="buttonText() && !markup.destCourse"
             (click)="save()">
         {{buttonText()}}
     </button>
     &nbsp;
     <button class="btn btn-default"
-            *ngIf="(undoButton && (!listener || !allSaved()))"
+            *ngIf="(undoButton && !allSaved())"
             [title]="undoTitle"
             (click)="tryResetChanges($event)">
         {{undoButton}}
     </button>
     <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
     </div>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </span>
     `,
     styleUrls: ["./multisave.component.scss"],
@@ -132,6 +132,7 @@ export class MultisaveComponent
     private hasUnsavedTargets: boolean = false;
     unsavedTasksWithAliases: {component: ITimComponent; alias?: string}[] = [];
     requiresTaskId = false;
+    listener = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -147,7 +148,7 @@ export class MultisaveComponent
     }
 
     buttonText() {
-        return super.buttonText() ?? "Save";
+        return super.buttonText() ?? $localize`Save`;
     }
 
     get allSavedText() {
@@ -162,11 +163,7 @@ export class MultisaveComponent
     }
 
     get savedText() {
-        return this.markup.savedText ?? "Saved";
-    }
-
-    get listener() {
-        return this.markup.listener;
+        return this.markup.savedText ?? $localize`Saved`;
     }
 
     get livefeed() {
@@ -196,7 +193,13 @@ export class MultisaveComponent
 
     ngOnInit() {
         super.ngOnInit();
-        if (this.markup.listener && this.vctrl) {
+        if (
+            (this.markup.disableUnchanged ||
+                this.markup.livefeed ||
+                this.markup.undo) &&
+            this.vctrl
+        ) {
+            this.listener = true;
             this.vctrl.addChangeListener(this);
         }
     }
@@ -274,10 +277,7 @@ export class MultisaveComponent
             !this.markup.tags &&
             !ownArea
         ) {
-            targets = this.vctrl.getTimComponentsByRegex(
-                ".*",
-                RegexOption.DontPrependCurrentDocId
-            );
+            targets = this.vctrl.getAllTimComponents();
         }
         return targets;
     }
@@ -381,9 +381,6 @@ export class MultisaveComponent
     }
 
     public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {
-        if (!this.markup.listener) {
-            return;
-        }
         this.zone.run(() => {
             this.doInform(taskId, state, tag);
         });
@@ -425,7 +422,7 @@ export class MultisaveComponent
     }
 
     allSaved(): boolean {
-        return !this.markup.listener || !this.hasUnsavedTargets;
+        return !this.hasUnsavedTargets;
     }
 
     getAttributeType() {
@@ -464,6 +461,7 @@ export class MultisaveComponent
         FormsModule,
         TimUtilityModule,
         SisuAssessmentExportModule,
+        PurifyModule,
     ],
 })
 export class MultisaveModule implements DoBootstrap {

@@ -227,7 +227,7 @@ export class ReviewCanvasComponent
         super.ngOnInit();
 
         if (!this.attrsall.preview) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
+            this.vctrl.addTimComponent(this);
         }
         const taskId = this.pluginMeta.getTaskId();
         if (taskId?.docId) {
@@ -298,7 +298,7 @@ export class ReviewCanvasComponent
 
     ngOnDestroy() {
         if (!this.attrsall.preview) {
-            this.vctrl.removeTimComponent(this, this.markup.tag);
+            this.vctrl.removeTimComponent(this);
         }
         this.modelChangeSub.unsubscribe();
     }

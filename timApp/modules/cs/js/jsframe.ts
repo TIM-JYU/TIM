@@ -376,6 +376,9 @@ export class JsframeComponent
 
         this.updateIframeSettings();
 
+        if (!this.isTask()) {
+            this.requiresTaskId = false;
+        }
         if (this.isPreview()) {
             return;
         }
@@ -396,9 +399,6 @@ export class JsframeComponent
             })();
         }
         if (this.isDrawio()) {
-            if (!this.isTask()) {
-                this.requiresTaskId = false;
-            }
             (async () => {
                 await this.viewctrl.documentUpdate;
                 this.viewctrl.addParMenuEntry(this, this.getPar()!);
@@ -590,7 +590,9 @@ export class JsframeComponent
             }
         }
         this.edited = false;
-        this.updateListeners();
+        this.updateListeners(
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
+        );
         this.prevdata = unwrapAllC(data);
         if (this.isTask() && r.result.data.web.console) {
             this.console = r.result.data.web.console;
@@ -624,7 +626,9 @@ export class JsframeComponent
         this.currentData = this.initFrameData;
         this.send({msg: "close"});
         this.console = "";
-        this.updateListeners();
+        this.updateListeners(
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
+        );
         this.c();
     }
 
@@ -637,23 +641,10 @@ export class JsframeComponent
         this.send({msg: "close"});
         this.edited = false;
         this.console = "";
-        this.updateListeners();
-        this.c();
-    }
-
-    updateListeners() {
-        if (!this.viewctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.viewctrl.informChangeListeners(
-            taskId,
-            this.edited ? ChangeType.Modified : ChangeType.Saved,
-            this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined
+        this.updateListeners(
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
         );
+        this.c();
     }
 
     getDataReady<T extends JSFrameData>(data: T, dosave = false) {
@@ -726,7 +717,9 @@ export class JsframeComponent
                 this.console = "";
                 this.edited = true;
                 this.currentData = unwrapAllC(this.getDataReady(d.data));
-                this.updateListeners();
+                this.updateListeners(
+                    this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
+                );
                 this.c();
             }
             if (d.msg === "datasave") {

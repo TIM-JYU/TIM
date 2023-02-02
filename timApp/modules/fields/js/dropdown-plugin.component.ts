@@ -103,7 +103,7 @@ const DropdownAll = t.intersection([
             (click)="save()">
         {{buttonText()}}
     </button>
-    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </div>`,
     styleUrls: ["./dropdown-plugin.component.scss"],
 })
@@ -183,12 +183,12 @@ export class DropdownPluginComponent
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
      */
     addToCtrl() {
-        this.vctrl.addTimComponent(this, this.markup.tag);
+        this.vctrl.addTimComponent(this);
     }
 
     ngOnDestroy() {
         if (!this.attrsall.preview) {
-            this.vctrl.removeTimComponent(this, this.markup.tag);
+            this.vctrl.removeTimComponent(this);
         }
     }
 
@@ -260,17 +260,6 @@ export class DropdownPluginComponent
         if (this.markup.autosave || this.markup.autosave === undefined) {
             this.save();
         }
-    }
-
-    updateListeners(state: ChangeType) {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(taskId, state, this.markup.tag);
     }
 
     /**

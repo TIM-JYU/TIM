@@ -1482,7 +1482,7 @@ export class ImageXComponent
         super.ngOnInit();
 
         if (!this.attrsall.preview) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
+            this.vctrl.addTimComponent(this);
         }
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
         await timeout();
@@ -1646,7 +1646,7 @@ export class ImageXComponent
 
     ngOnDestroy() {
         if (!this.attrsall.preview) {
-            this.vctrl.removeTimComponent(this, this.markup.tag);
+            this.vctrl.removeTimComponent(this);
         }
     }
 
@@ -1691,21 +1691,8 @@ export class ImageXComponent
     checkChanges() {
         this.result = "";
         this.cdr.detectChanges();
-        this.updateListeners();
-    }
-
-    updateListeners() {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(
-            taskId,
-            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved,
-            this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined
+        this.updateListeners(
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
         );
     }
 
@@ -1879,7 +1866,9 @@ export class ImageXComponent
             }));
             this.previousDrawing = [...this.drawing.getDrawing()];
             this.prevAnswer = this.getContent();
-            this.updateListeners();
+            this.updateListeners(
+                this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
+            );
             this.cdr.detectChanges();
             return {saved: true, message: undefined};
         } else {

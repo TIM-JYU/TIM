@@ -94,7 +94,7 @@ export interface IUnsavedComponent {
 }
 
 export interface ITimComponent extends IUnsavedComponent {
-    attrsall?: IGenericPluginTopLevelFields<IGenericPluginMarkup>; // TimTable does not have attrsall - that's why it's optional.
+    attrsall?: IGenericPluginTopLevelFields<IGenericPluginMarkup>; // TODO: TimTable: implement attrsall.info or extend AngularPluginBase
     getName: () => string | undefined;
     getContent: () => string | undefined;
     getContentArray?: () => string[] | undefined;
@@ -102,6 +102,7 @@ export interface ITimComponent extends IUnsavedComponent {
     getTaskId: () => TaskId | undefined;
     belongsToArea: (area: string) => boolean;
     formBehavior: () => FormModeOption;
+    markup: IGenericPluginMarkup;
     save: () => Promise<{saved: boolean; message: string | undefined}>;
     getPar: () => ParContext | undefined;
     setPluginWords?: (words: string[]) => void;
@@ -860,15 +861,15 @@ export class ViewCtrl implements IController {
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
      * @param {ITimComponent} component The component to be registered.
-     * @param {string | undefined} tag for accessing  group of ITimComponents
      */
-    public addTimComponent(component: ITimComponent, tag?: string | null) {
+    public addTimComponent(component: ITimComponent) {
         // Registering with any other name than docId.taskId breaks
         // form functionality
         const taskId = component.getTaskId();
         if (taskId) {
             const name = taskId.docTaskField();
             this.timComponents.set(name, component);
+            const tag = component.markup.tag;
             if (tag) {
                 const prev = this.timComponentTags.get(tag);
                 if (prev != undefined) {
@@ -885,7 +886,7 @@ export class ViewCtrl implements IController {
             } else {
                 this.timComponentArrays.set(name, [component]);
             }
-            if (component.attrsall?.markup.hideBrowser) {
+            if (component.markup.hideBrowser) {
                 const ldr = this.getPluginLoader(name);
                 if (ldr) {
                     ldr.hideBrowser = true;
@@ -897,9 +898,8 @@ export class ViewCtrl implements IController {
     /**
      * Unregisters an ITimComponent from the view controller by its name attribute if it has one.
      * @param {ITimComponent} component The component to be unregistered.
-     * @param {string | undefined} tag for accessing  group of ITimComponents
      */
-    public removeTimComponent(component: ITimComponent, tag?: string | null) {
+    public removeTimComponent(component: ITimComponent) {
         const taskId = component.getTaskId();
         if (taskId) {
             const name = taskId.docTaskField();
@@ -907,6 +907,7 @@ export class ViewCtrl implements IController {
             if (res == component) {
                 this.timComponents.delete(name);
             }
+            const tag = component.markup.tag;
             if (tag) {
                 const prev = this.timComponentTags.get(tag);
                 if (prev != undefined) {

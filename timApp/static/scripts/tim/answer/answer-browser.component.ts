@@ -30,7 +30,7 @@ import type {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {FormsModule} from "@angular/forms";
 import {PurifyModule} from "tim/util/purify.module";
-import type {ViewCtrl} from "tim/document/viewctrl";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {isVelpable} from "tim/document/viewctrl";
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {
@@ -1241,32 +1241,29 @@ export class AnswerBrowserComponent
         if (!c) {
             return user;
         }
-        const a = c.attrsall;
-        if (a?.markup?.useCurrentUser) {
+        const m = c.markup;
+        if (m.useCurrentUser) {
             this.user = Users.getCurrent(); // TODO: looks bad when function has a side effect?
             return Users.getCurrent();
         }
         return user;
     }
 
-    public pluginAttrs():
-        | IGenericPluginTopLevelFields<IGenericPluginMarkup>
-        | undefined {
+    public getPluginComponent(): ITimComponent | undefined {
         if (!this.viewctrl || !this.taskId) {
             return undefined;
         }
-        const c = this.viewctrl.getTimComponentByName(
-            this.taskId.docTaskField()
-        );
-        if (!c) {
-            return undefined;
-        }
-        return c.attrsall;
+        return this.viewctrl.getTimComponentByName(this.taskId.docTaskField());
+    }
+
+    public pluginAttrs():
+        | IGenericPluginTopLevelFields<IGenericPluginMarkup>
+        | undefined {
+        return this.getPluginComponent()?.attrsall;
     }
 
     public pluginMarkup(): IGenericPluginMarkup | undefined {
-        const a = this.pluginAttrs();
-        return a?.markup;
+        return this.getPluginComponent()?.markup;
     }
 
     public pluginInfo() {

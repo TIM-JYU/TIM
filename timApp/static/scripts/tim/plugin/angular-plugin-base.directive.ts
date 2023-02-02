@@ -22,6 +22,7 @@ import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {ViewCtrl} from "tim/document/viewctrl";
+import type {ChangeType} from "tim/document/viewctrl";
 
 /**
  * Plugin with initialization data passed from the server via JSON.
@@ -176,8 +177,22 @@ export abstract class AngularPluginBase<
                 return;
             }
         }
-
         this.resetChanges();
+    }
+
+    updateListeners(state: ChangeType) {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(
+            taskId,
+            state,
+            this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined
+        );
     }
 
     protected httpGet<U>(

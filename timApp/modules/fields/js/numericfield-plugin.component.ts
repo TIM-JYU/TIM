@@ -119,7 +119,7 @@ const NumericfieldAll = t.intersection([
     </button>
     <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event);">{{undoButton}}</a>
     <p class="savedtext" *ngIf="!hideSavedText && hasButton()">Saved!</p>
-    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
+    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </div> `,
     styleUrls: ["./numericfield-plugin.component.scss"],
 })
@@ -270,7 +270,7 @@ export class NumericfieldPluginComponent
             });
         }
         if (!this.attrsall.preview) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
+            this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.numericvalue;
         if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
@@ -280,7 +280,7 @@ export class NumericfieldPluginComponent
 
     ngOnDestroy() {
         if (!this.attrsall.preview) {
-            this.vctrl.removeTimComponent(this, this.markup.tag);
+            this.vctrl.removeTimComponent(this);
         }
     }
 
@@ -595,21 +595,6 @@ export class NumericfieldPluginComponent
             this.hideSavedText = true;
             this.updateListeners(ChangeType.Modified);
         }
-    }
-
-    updateListeners(state: ChangeType) {
-        if (!this.vctrl) {
-            return;
-        }
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            return;
-        }
-        this.vctrl.informChangeListeners(
-            taskId,
-            state,
-            this.markup.tag ? this.markup.tag : undefined
-        );
     }
 }
 

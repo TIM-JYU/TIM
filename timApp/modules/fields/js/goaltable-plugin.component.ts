@@ -119,7 +119,7 @@ const scaleValueWords: Word[] = [
                     <span class="notSavedSpan" *ngIf="isUnSaved()"></span>&nbsp;
                     <span *ngIf="result">{{result}}</span>
                 </div>
-                <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+                <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
                 <p></p>
             </div>
         </div>
