@@ -148,7 +148,7 @@ export class MultisaveComponent
     }
 
     buttonText() {
-        return super.buttonText() ?? "Save";
+        return super.buttonText() ?? $localize`Save`;
     }
 
     get allSavedText() {
@@ -163,7 +163,7 @@ export class MultisaveComponent
     }
 
     get savedText() {
-        return this.markup.savedText ?? "Saved";
+        return this.markup.savedText ?? $localize`Saved`;
     }
 
     get livefeed() {

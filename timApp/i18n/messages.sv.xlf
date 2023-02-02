@@ -7808,6 +7808,14 @@
           <context context-type="linenumber">392</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6333335057236774263" datatype="html">
+        <source>Saved</source>
+        <target state="translated">Sparad</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/fields/js/multisave.ts</context>
+          <context context-type="linenumber">166</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
