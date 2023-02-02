@@ -98,14 +98,14 @@ const multisaveAll = t.intersection([
     </div> <!-- unsaved fields -->
     <div *ngIf="!livefeed || !allSaved()">
     <button class="timButton"
-            [disabled]="(disableUnchanged && listener && allSaved())"
+            [disabled]="(disableUnchanged && allSaved())"
             *ngIf="buttonText() && !markup.destCourse"
             (click)="save()">
         {{buttonText()}}
     </button>
     &nbsp;
     <button class="btn btn-default"
-            *ngIf="(undoButton && (!listener || !allSaved()))"
+            *ngIf="(undoButton && !allSaved())"
             [title]="undoTitle"
             (click)="tryResetChanges($event)">
         {{undoButton}}
