@@ -200,3 +200,13 @@ export type IVelpGroupCollection = Record<
     string,
     Array<{id: number; selected?: boolean}>
 >;
+
+export type IVelpData = {
+    velp_groups: IVelpGroup[];
+    default_velp_group: IVelpGroup;
+    velps: IVelp[];
+    velp_labels: ILabel[];
+    personal_vg_selections: IVelpGroupCollection;
+    default_vg_selections: IVelpGroupCollection;
+    personal_velp_group: IVelpGroup & {created_new_group: boolean};
+};
