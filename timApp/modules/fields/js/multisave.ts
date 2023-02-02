@@ -277,10 +277,7 @@ export class MultisaveComponent
             !this.markup.tags &&
             !ownArea
         ) {
-            targets = this.vctrl.getTimComponentsByRegex(
-                ".*",
-                RegexOption.DontPrependCurrentDocId
-            );
+            targets = this.vctrl.getAllTimComponents();
         }
         return targets;
     }
