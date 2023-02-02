@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import {Component} from "@angular/core";
 import type {OnInit} from "@angular/core";
 import type {Require} from "tim/util/utils";
-import {clone, TimStorage, to2} from "tim/util/utils";
+import {clone, TimStorage, to2, toPromise} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velp-summary.component";
 import type {VelpWindowComponent} from "tim/velp/velp-window.component";
 import {colorPalette} from "tim/velp/velp-window.component";
@@ -13,6 +13,7 @@ import type {ViewCtrl} from "tim/document/viewctrl";
 import {$http} from "tim/util/ngimport";
 import {HttpClient} from "@angular/common/http";
 import type {
+    IVelpData,
     ILabel,
     ILabelUI,
     INewLabel,
@@ -461,29 +462,20 @@ export class VelpMenuComponent implements OnInit {
         this.selectedLabels = this.storage.velpLabels.get() ?? [];
         this.advancedOn = this.storage.advancedOn.get() ?? false;
 
-        // TODO check if these routes can all be called simultaneously
-        // TODO fetch all data using just one route
-        const p1 = this.http.get<IVelpGroup[]>(`/${docId}/get_velp_groups`);
-        // Get velpgroup data
-        const response = await p1;
-        const p2 = $http.get<IVelpGroup>(`/${docId}/get_default_velp_group`);
-        const p4 = $http.get<IVelp[]>(`/${docId}/get_velps`);
-        const p5 = $http.get<ILabel[]>(`/${docId}/get_velp_labels`);
-        const p6 = $http.get<IVelpGroupCollection>(
-            `/${docId}/get_velp_group_personal_selections`
+        const r = await toPromise(
+            this.http.get<IVelpData>(`/${docId}/get_velp_initialization_data`)
         );
-        const p7 = $http.get<IVelpGroupCollection>(
-            `/${docId}/get_velp_group_default_selections`
-        );
-        // Get default velp group data
-        const response2 = await p2;
-        const p3 = $http.get<IVelpGroup & {created_new_group: boolean}>(
-            "/get_default_personal_velp_group"
-        );
+        if (!r.ok) {
+            return; // TODO proper error handling
+        }
 
-        this.velpGroups = response.data;
-
-        this.defaultVelpGroup = response2.data;
+        this.velpGroups = r.result.velp_groups;
+        this.defaultVelpGroup = r.result.default_velp_group;
+        this.defaultPersonalVelpGroup = r.result.personal_velp_group;
+        this.rctrl.velps = r.result.velps;
+        this.labels = r.result.velp_labels;
+        this.groupSelections = r.result.personal_vg_selections;
+        this.groupDefaults = r.result.default_vg_selections;
 
         // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
         for (const g of this.velpGroups) {
@@ -508,18 +500,9 @@ export class VelpMenuComponent implements OnInit {
             this.newVelp.velp_groups.push(this.defaultVelpGroup.id);
         }
 
-        // Get personal velp group data
-        const response3 = await p3;
-        const data = response3.data;
-        this.defaultPersonalVelpGroup = {
-            id: data.id,
-            name: data.name,
-            target_type: null,
-            default: true,
-        };
-
-        if (data.created_new_group) {
-            this.velpGroups.push(data);
+        // Add new default personal velp group if it didn't exist before
+        if (r.result.personal_velp_group.created_new_group) {
+            this.velpGroups.push(this.defaultPersonalVelpGroup);
         }
 
         if (!this.defaultVelpGroup.edit_access) {
@@ -541,8 +524,6 @@ export class VelpMenuComponent implements OnInit {
         }
 
         // Get velp and annotation data
-        const response4 = await p4;
-        this.rctrl.velps = response4.data;
         this.rctrl.velps.forEach((v) => {
             v.edit = false;
             if (v.labels == null) {
@@ -550,9 +531,7 @@ export class VelpMenuComponent implements OnInit {
             }
         });
 
-        // Get label data
-        const response5 = await p5;
-        this.labels = response5.data;
+        // Set label data
         this.labels.forEach((l) => {
             l.edit = false;
             l.selected = false;
@@ -563,8 +542,6 @@ export class VelpMenuComponent implements OnInit {
             }
         });
 
-        const response6 = await p6;
-        this.groupSelections = response6.data;
         if (!this.groupSelections.hasOwnProperty("0")) {
             this.groupSelections["0"] = [];
         }
@@ -580,9 +557,6 @@ export class VelpMenuComponent implements OnInit {
                 }
             }
         });
-
-        const response7 = await p7;
-        this.groupDefaults = response7.data;
 
         const docDefaults = this.groupDefaults["0"];
 
