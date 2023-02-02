@@ -1,6 +1,7 @@
 import type {IScope} from "angular";
 import angular from "angular";
 import $ from "jquery";
+// import {Component} from "@angular/core";
 import {Users} from "tim/user/userService";
 import type {IAnnotationBindings} from "tim/velp/annotation.component";
 import {
@@ -39,7 +40,7 @@ import {
     to,
     truncate,
 } from "tim/util/utils";
-import type {VelpSelectionController} from "tim/velp/velpSelection";
+import type {VelpMenuComponent} from "tim/velp/velp-menu-dialog.component";
 import type {
     IAnnotationCoordinate,
     IAnnotationInterval,
@@ -108,11 +109,12 @@ export class ReviewController {
     private selectedCanvas?: DrawCanvasComponent; // drawn annotation area
     private drawMinDimensions = 10; // minimum width/height for drawn velp. If less then add extra padding
     private annotations: Annotation[];
-    private scope: IScope;
     private velpBadge?: HTMLInputElement;
     private velpBadgePar?: ParContext;
-    private velpSelection?: VelpSelectionController; // initialized through onInit
+    private velpMenu?: VelpMenuComponent; // initialized through onInit
     private lastOpenedAnnotation = 0;
+
+    public scope: IScope;
 
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
@@ -123,8 +125,8 @@ export class ReviewController {
         this.zIndex = 3;
     }
 
-    initVelpSelection(velpSelection: VelpSelectionController) {
-        this.velpSelection = velpSelection;
+    initVelpSelection(velpMenuComp: VelpMenuComponent) {
+        this.velpMenu = velpMenuComp;
 
         document.addEventListener("selectionchange", () => {
             const range = getSelection()?.getRangeAt(0);
@@ -604,7 +606,7 @@ export class ReviewController {
         btn.onclick = (e) => {
             this.clearVelpBadge(e);
         };
-        // btn.setAttribute("ng-click", "clearVelpBadge($event)");
+        // btn.setAttribute("(click)", "clearVelpBadge($event)");
         // $compile(btn)(this);
         this.velpBadge = btn;
         return btn;
@@ -643,10 +645,10 @@ export class ReviewController {
             $(btn).remove();
         }
 
-        if (e != null && this.velpSelection) {
+        if (e != null && this.velpMenu) {
             this.selectedElement = undefined;
             this.selectedArea = undefined;
-            this.velpSelection.updateVelpList();
+            this.velpMenu.updateVelpList();
             e.stopPropagation();
         }
     }
@@ -726,7 +728,7 @@ export class ReviewController {
      * @todo When annotations can break tags, check annotations from all elements in the selection.
      */
     selectText(par: ParContext): void {
-        if (!this.velpSelection) {
+        if (!this.velpMenu) {
             return;
         }
         const oldElement = this.selectedElement;
@@ -752,7 +754,7 @@ export class ReviewController {
         const newElement = this.selectedElement;
         this.updateVelpBadge(oldElement, newElement);
         if (newElement != null) {
-            this.velpSelection.updateVelpList();
+            this.velpMenu.updateVelpList();
         }
     }
 

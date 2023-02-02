@@ -1,11 +1,12 @@
-import type {IController, IFormController, IScope} from "angular";
-import {timApp} from "tim/app";
+import {IScope} from "angular";
+import type {IFormController} from "angular";
+import {Component} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {$http, $timeout} from "tim/util/ngimport";
 import type {Binding, Require} from "tim/util/utils";
 import {clone, to} from "tim/util/utils";
-import type {VelpSelectionController} from "tim/velp/velpSelection";
+import type {VelpMenuComponent} from "tim/velp/velp-menu-dialog.component";
 import type {
     ILabel,
     ILabelUI,
@@ -48,16 +49,233 @@ interface IVelpOptionSetting {
 /**
  * Controller for velp Window
  */
-export class VelpWindowController implements IController {
-    static $inject = ["$scope", "$element"];
+@Component({
+    selector: "tim-velp-window",
+    template: `
+        <div class="velp" [ngStyle]="{top: 0.5+index*2 + 'em'}" (click)="notAnnotationRights(velp.points) || useVelp()">
+            <div [ngClass]="['velp-data', 'emphasise', 'default',
+                    {neutral: velp.points == 0,
+                    positive: velp.points > 0,
+                    negative: velp.points < 0,
+                    new: new,
+                    inactive: notAnnotationRights(velp.points),
+                    edit: velp.edit}]"
+                 [ngStyle]="{ backgroundColor: getCustomColor()}"
+            >
+                
+                <!-- Show this when velp is NOT being edited -->
+                <div *ngIf="!velp.edit" class="content velpContent">
+                    <div>
+                        <span class="header math">{{ velp.content }}</span>
+
+                        <span (click)="toggleVelpToEdit(); $event.stopPropagation();"
+                              *ngIf="hasEditAccess"
+                              class="pull-right glyphicon glyphicon-pencil clickable-icon">
+                        </span>
+                        
+                        <span *ngIf="notAnnotationRights(velp.points)"
+                              class="annmark glyphicon glyphicon-exclamation-sign clickable-icon pull-right"
+                              ng-attr-title="{{ settings.teacherRightsError }}">
+                        </span>
+                        
+                        <span class="margin-5-right header pull-right">{{ velp.points }}</span>
+                        
+                        <p class="velpInfoText truncate math">{{ velp.default_comment }}</p>
+                        
+                        <div class="tags">
+                            <span *ngIf="velpSelection.advancedOn">
+                                <span class="pull-right"
+                                      [ngClass]="['glyphicon', 'glyphicon-tag']"
+                                      *ngFor="let label of velp.labels" title="label.content"
+                                      [ngStyle]="{ color: getColor(label) }">
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="bottom-part"></div>
+                </div>
+                
+                <!-- Show this when velp IS being edited -->
+                <div *ngIf="velp.edit" class="content">
+                    <tim-close-button (click)="toggleVelpToEdit(); $event.stopPropagation();"
+                                      class="clickable-icon"></tim-close-button>
+
+                    <form #saveVelpForm (ngSubmit)="saveVelp(saveVelpForm)">
+                        
+                        <!-- Basic velp info -->
+                        <div class="add-velp-info">
+                            <p class="header"><input name="velpName" type="text" [(ngModel)]="velp.content"
+                                                     required placeholder="Velp content"
+                                                     title="Annotation visible text">
+                            </p>
+                            <p *ngIf="(saveVelpForm.velpName.$invalid && !saveVelpForm.velpName.$pristine)"
+                               class="error velpInfoText">
+                                {{ settings.velpContentError }}
+                            </p>
+                            
+                            <p *ngIf="allowChangePoints()" class="header">
+                                <input id="addVelpPoints" type="number"
+                                     style="width: 50%;"
+                                     title="Default points from this velp"
+                                     [(ngModel)]="velp.points"
+                                     step="0.01"
+                                     placeholder="Points" value="0">
+                                <input type="color" [(ngModel)]="velp.color" title="change Velp default color"
+                                       class="velp-color-selector">
+                                <input *ngIf="isVelpCustomColor()" class="btn-restore-velp-color" type="button"
+                                       (click)="clearVelpColor()" title="Reset color to original value" value="R">
+                            </p>
+                            <p ng-hide="allowChangePoints()" class="velpInfoText">{{ settings.teacherRightsError }}</p>
+
+                            <p><textarea placeholder="Add default comment" [(ngModel)]="velp.default_comment"
+                                         title="Default comment for annotation"></textarea></p>
+                        </div>
+                        
+                        <!-- Velp visibility options -->
+                        <div class="add-velp-visibility-options">
+                            <p class="velpEdit-remove-margin" style="margin-top: 4px;">
+                                <label for="edit-velp-visibility-options">
+                                    <span title="Visible to" class="glyphicon glyphicon-eye-open visible-icon"></span>
+                                </label>
+                                <select id="edit-velp-visibility-options"
+                                        [(ngModel)]="velp.visible_to" title="Visible to"
+                                        ng-options="v as visibleOptions.names[v-1] for v in visibleOptions.values">
+                                </select>
+                                <span [ngClass]="['glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+                                      uib-popover="Who can see the velp as a default?
+                                         'Just me' means that the annotation is visible only to yourself.
+                                         'Document owner' refers to the person or group who has been named as the document owner.
+                                         'Teachers' refers to the users that have teacher access to this document.
+                                         'Everyone' means that the annotation is visible to everyone who can view the assessed content."
+                                      popover-placement="top">
+                                </span>
+                            </p>
+                            <p class="velpEdit-remove-margin">
+                                <label for="edit-velp-style-options">
+                                    <span>Style</span>
+                                </label>
+                                <select id="edit-velp-style-options"
+                                        [(ngModel)]="velp.style" title="Style"
+                                        ng-options="v as styleOptions.names[v-1] for v in styleOptions.values">
+                                </select>
+                            </p>
+                        </div>
+                        
+                        <!-- Advanced velp options -->
+                        <div class="collapsible-menu">
+                            <details>
+                                <summary>Advanced options</summary>
+                                <div class="collapsible-menu-open-content">
+                                    <fieldset>
+                                        <legend>Labels
+                                            <span class="pull-right"
+                                                  [ngClass]="['glyphicon', 'glyphicon-tag']"
+                                                  *ngFor="let l of velp.labels"
+                                                  [ngStyle]="{ color: getColor(l) }">
+                                            </span>
+                                        </legend>
+                                        <div class="editVelp-scrollarea">
+                                            <span *ngFor="let l of labels">
+                                                
+                                               <!-- Show this when label IS NOT being edited -->
+                                                <span *ngIf="!l.edit">
+                                                    <label>
+                                                        <input type="checkbox"
+                                                               (click)="updateVelpLabels(l)"
+                                                               [checked]="isLabelInVelp(l)">
+                                                        {{ l.content }}
+                                                    </label>
+                                                   <span class="pull-right" (click)="toggleLabelToEdit(l)"
+                                                         [ngClass]="['glyphicon', 'glyphicon-pencil', 'clickable-icon']">
+                                                    </span>
+                                                    <br>
+                                                </span>
+                                                
+                                                <!-- Show this when label IS being edited -->
+                                                <span *ngIf="l.edit">
+                                                    <input type="text"
+                                                           placeholder="Add label"
+                                                           (ngModelChange)="setLabelValid(labelToEdit)"
+                                                           [(ngModel)]="labelToEdit">
+                                                    <span class="label-edit-glyphicons"
+                                                          (click)="editLabel()"
+                                                          [ngClass]="['glyphicon', 'glyphicon-ok', 'clickable-icon']"
+                                                          [disabled]="!isVelpValid()"
+                                                          [ngStyle]="{color: 'green'}" title="Save">
+                                                    </span>
+                                                    <span class="label-edit-glyphicons"
+                                                          (click)="toggleLabelToEdit(l)"
+                                                          [ngClass]="['glyphicon', 'glyphicon-ban-circle', 'clickable-icon']"
+                                                          [ngStyle]="{color: 'red'}" title="Cancel">
+                                                    </span>
+                                                   <span *ngIf="!labelToEdit.valid">
+                                                        <span class="error velpInfoText">{{ settings.labelContentError }}</span>
+                                                        <br>
+                                                    </span>
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <!-- Add new label -->
+                                        <div class="velpEdit-addLabel-controls">
+                                            <input class="addLabelField" placeholder="Add label"
+                                                   (ngModelChange)="setLabelValid(newLabel)"
+                                                   [(ngModel)]="newLabel">
+                                            <input class="addLabelBtn" type="button" value="Add"
+                                                   (click)="addLabel()">
+                                            <span *ngIf="!newLabel.valid"
+                                                  class="error velpInfoText">{{ settings.labelContentError }}</span>
+                                        </div>
+                                    </fieldset>
+                                    <!-- Velp groups -->
+                                    <fieldset>
+                                        <legend>Velp groups</legend>
+                                        <div class="editVelp-scrollarea">
+                                            <span *ngFor="let g of velpGroups">
+                                                <label title="{{ !g.show ? 'This group is not shown in the selected area. Change setting in manage tab.' : ''}}"
+                                                       [ngClass]="{disabled: !g.edit_access, gray: !g.show}">
+                                                    <input type="checkbox"
+                                                           (click)="updateVelpGroups(g)"
+                                                           [checked]="isGroupInVelp(g)"
+                                                           [disabled]="!g.edit_access">
+                                                    {{ g.name }}
+                                                </label>
+                                                <br>
+                                            </span>
+                                        </div>
+                                    </fieldset>
+                                    <p class="error velpInfoText" *ngIf="!isSomeVelpGroupSelected()">
+                                        {{ settings.velpGroupError }}
+                                    </p>
+                                    <p class="warning velpInfoText" *ngIf="!isSomeVelpGroupShown()">
+                                        {{ settings.velpGroupWarning }}
+                                    </p>
+                                </div>
+                            </details>
+                        </div>
+
+                        <!-- submit executes 'saveVelp'-function -->
+                        <p>
+                            <input type="submit" class="timButton" [value]="saveButtonText()"
+                                   [disabled]="!isVelpValid()"/>
+                            <input type="button" class="timButton" value="Cancel"
+                                   (click)="toggleVelpToEdit(); $event.stopPropagation();">
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    `,
+})
+export class VelpWindowComponent {
     private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
-    private velpLocal!: IVelp;
-    private velp!: Binding<IVelpUI, "<">;
-    private newLabel: INewLabel;
-    private labelToEdit: INewLabel;
-    private visibleOptions: IVelpOptionSetting;
-    private styleOptions: IVelpOptionSetting;
-    private settings: {
+    velpLocal!: IVelp;
+    velp!: Binding<IVelpUI, "<">;
+    newLabel: INewLabel;
+    labelToEdit: INewLabel;
+    visibleOptions: IVelpOptionSetting;
+    styleOptions: IVelpOptionSetting;
+    settings: {
         teacherRightsError: string;
         labelContentError: string;
         velpGroupError: string;
@@ -65,16 +283,16 @@ export class VelpWindowController implements IController {
         velpContentError: string;
     };
     private submitted: boolean;
-    private hasEditAccess: boolean;
-    private new!: Binding<boolean, "<">;
-    private velpGroups!: Binding<IVelpGroupUI[], "<">;
-    private velpSelection!: Require<VelpSelectionController>;
-    private labels!: Binding<ILabelUI[], "<">;
+    hasEditAccess: boolean;
+    new!: Binding<boolean, "<">;
+    velpGroups!: Binding<IVelpGroupUI[], "<">;
+    velpSelection!: Require<VelpMenuComponent>;
+    labels!: Binding<ILabelUI[], "<">;
     private docId!: Binding<number, "<">;
     private teacherRight!: Binding<boolean, "<">;
     private vctrl!: ViewCtrl;
 
-    $onInit() {
+    ngOnInit() {
         this.velpLocal = clone(this.velp);
 
         if (this.velp.visible_to == null) {
@@ -588,22 +806,3 @@ export class VelpWindowController implements IController {
 /**
  * Angular directive for velp selection
  */
-timApp.component("velpWindow", {
-    bindings: {
-        advancedOn: "=",
-        docId: "<",
-        index: "<",
-        labels: "=",
-        new: "<",
-        onVelpSelect: "&",
-        teacherRight: "<",
-        velp: "=",
-        velpGroups: "=", // all velpgroups, not just selected ones
-    },
-    require: {
-        velpSelection: "^velpSelection",
-        vctrl: "^timView",
-    },
-    controller: VelpWindowController,
-    templateUrl: "/static/templates/velpWindow.html",
-});

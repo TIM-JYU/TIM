@@ -1,15 +1,17 @@
-import type {IController, IFormController} from "angular";
+import type {IFormController} from "angular";
 import * as t from "io-ts";
-import {timApp} from "tim/app";
-import type {Binding, Require} from "tim/util/utils";
-import {clone, markAsUsed, TimStorage, to} from "tim/util/utils";
+import {Component} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import type {Require} from "tim/util/utils";
+import {clone, TimStorage, to2} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velp-summary.component";
-import type {VelpWindowController} from "tim/velp/velpWindow";
-import {colorPalette} from "tim/velp/velpWindow";
+import type {VelpWindowComponent} from "tim/velp/velp-window.component";
+import {colorPalette} from "tim/velp/velp-window.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {$http} from "tim/util/ngimport";
+import {HttpClient} from "@angular/common/http";
 import type {
     ILabel,
     ILabelUI,
@@ -22,8 +24,6 @@ import type {
     IVelpGroupUI,
     VelpGroupSelectionType,
 } from "tim/velp/velptypes";
-
-markAsUsed(velpSummary);
 
 /**
  * The directive retrieves all the data from the server including velps, labels, velp groups and annotations.
@@ -43,33 +43,305 @@ const sortLang: string = "fi";
 /**
  * Controller for velp selection
  */
-export class VelpSelectionController implements IController {
-    private initialized = false;
-    private labels: ILabelUI[];
-    private velpGroups: IVelpGroupUI[];
-    private newVelp: INewVelp;
+@Component({
+    selector: "tim-velp-menu-dialog",
+    template: `
+        <div tim-draggable-fixed="" class="velpFixed hidden-print" save="%%PAGEID%%velpMenu" click="true"
+             caption="Velp menu" id="velpSelection">
+            <div class="velpMenu draggable-content">
+                <div class="velp-minimal-controls">
+                    <div class="btn-create-new-velp">
+                        <button class="timButton add-velp" style=""
+                                [disabled]="!initialized" (click)="openCreateNewVelpWindow()" value=""><span
+                                class="glyphicon glyphicon-plus icon-plus-add-velp" style="font-size: x-small"></span>Add
+                            velp
+                        </button>
+                    </div>
+                    <div class="velp-advanced-control">
+                        <input type="checkbox" [(ngModel)]="advancedOn"
+                               (ngModelChange)="setAdvancedOnlocalStorage(advancedOn)" id="velp-advanced-checkbox">
+                        <label for="velp-advanced-checkbox"> Advanced view</label>
+                    </div>
+                </div>
+                <div class="velpArea velpArea-available-velps">
+                    <div save="%%PAGEID%%selectVelpsDiv" class="velpList">
+
+                        <!-- Edit window for velps -->
+                        <tim-velp-window class="velp" [ngStyle]="{top: '0.2em'}"
+                                     *ngIf="newVelp.edit"
+                                     velp="newVelp"
+                                     index="-1"
+                                     velp-groups="velpGroups"
+                                     teacher-right="vctrl.item.rights.teacher"
+                                     labels="labels"
+                                     new="true"
+                                     vctrl="vctrl"
+                                     advanced-on="advancedOn"></tim-velp-window>
+
+                        <!-- Actual velps -->
+                        <div class="velp-stack draggable-content available-velps autoscroll">
+                            <tim-velp-window
+                                    *ngFor="let velp of filteredVelps = (rctrl.velps | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn) track by $index"
+                                    advanced-on="advancedOn"
+                                    doc-id="docId"
+                                    index="$index"
+                                    labels="labels"
+                                    new="false"
+                                    on-velp-select="rctrl.useVelp($VELP)"
+                                    teacher-right="vctrl.item.rights.teacher"
+                                    velp-groups="velpGroups"
+                                    velp="velp"></tim-velp-window>
+                        </div>
+                    </div>
+                </div>
+                <div class="velp-menu-selected-area">
+                    <label for="selection">Selected area:</label>
+                    <p id="selection">
+                        <span *ngIf="!rctrl.selectedElement">Nothing selected</span>
+                        <span *ngIf="rctrl.selectedElement">
+                    <span *ngIf="rctrl.selectedArea">
+                        '{{ rctrl.getSelectedAreaBeginning() }}' of
+                    </span>
+                    <span *ngIf="rctrl.selectionIsDrawing">
+                        new drawing in review image of
+                    </span>
+                </span>
+                        <span *ngIf="rctrl.selectedElement">
+                    <span *ngIf="!rctrl.getSelectedAnswerTaskName()">paragraph '{{rctrl.getSelectedParagraphBeginning()}}
+                        '</span>
+                    <span *ngIf="rctrl.getSelectedAnswerTaskName()">answer in task '{{rctrl.getSelectedAnswerTaskName()}}
+                        '</span>
+                </span>
+                    </p>
+                </div>
+                <div *ngIf="advancedOn" class="velp-menu-advanced-controls">
+                    <uib-tabset active="active" class="velpFill">
+
+                        <!-- Velp filtering options -->
+                        <uib-tab index="0" heading="Filter velps">
+                            <div class="velp-filter-tab">
+                                <!-- LABELS -->
+                                <div id="labels">
+                                    <form class="form-inline adjustForm">
+                                        <div class="form-group velp-filters">
+                                            <label class="formLabel" for="searchLabels">Search labels:</label>
+                                            <input class="formInput" id="searchLabels" [(ngModel)]="filterLabel"
+                                                   placeholder="Filter labels">
+                                        </div>
+                                    </form>
+                                    <div>
+                                        <div class="labels-scrollarea">
+                                            <p *ngFor="let label of filteredLabels = ( labels | filter:{content:filterLabel} )"
+                                               class="label tag-false"
+                                               [ngStyle]="{ backgroundColor: getColor(label.id) };"
+                                               (click)="toggleLabel(label)" [(ngModel)]="test" value="{{ label.id }}">
+                                                {{ label.content }} <span class="glyphicon glyphicon-ok"
+                                                                          *ngIf="label.selected"></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <form class="form-inline adjustForm">
+                                        <div class="form-group velp-filters">
+                                            <label class="formLabel" for="searchVelps">Search velps:</label>
+                                            <input class="formInput" id="searchVelps" [(ngModel)]="filterVelp"
+                                                   placeholder="Filter velps">
+                                        </div>
+                                    </form>
+                                </div>
+                                <div>
+                                    <form class="form-inline adjustForm">
+                                        <div class="form-group velp-filters">
+                                            <label class="formLabel" for="orderVelps">Order velps: </label>
+                                            <select id="orderVelps" class="formInput" [(ngModel)]="order"
+                                                    (ngModelChange)="changeOrdering(order)">
+                                                <option value="content">Alphabetical</option>
+                                                <option value="-used">Most used</option>
+                                                <option value="label">Labels</option>
+                                                <option value="-points">Highest point</option>
+                                                <option value="points">Lowest point</option>
+                                            </select>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div>
+                                    <form class="form-inline adjustForm">
+                                        <div class="form-group velp-filters">
+                                            <label class="formLabel" for="displayVelps">Displayed velps: </label>
+                                            <select class="formInput" id="displayVelps"
+                                                    [(ngModel)]="displayedVelpGroupsScope"
+                                                    (ngModelChange)="changeDisplayedVelpGroupsScope(displayedVelpGroupsScope)">
+                                                <option [value]="0">Whole document</option>
+                                                <option [value]="1">Selected paragraph</option>
+                                            </select>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </uib-tab>
+
+                        <!-- Velp groups -->
+                        <uib-tab index="1" heading="Velp groups">
+                            <div class="velp-groups-tab">
+                                <div class="velpSummary autoscroll">
+                                    <form style="border-bottom: 1px solid gainsboro">
+                                        <label for="velpGroupArea">Velp group area:</label>
+                                        <fieldset>
+                                            <select class="formInput" id="velpGroupArea"
+                                                    [(ngModel)]="groupAttachment.target_type"
+                                                    (ngModelChange)="updateVelpList()">
+                                                <option [value]="0" name="selArea" id="selDoc">Whole document</option>
+                                                <option [value]="1" name="selArea" id="selPar"
+                                                        [ngClass]="{disabled: rctrl.selectedElement == null}"
+                                                        [disabled]="rctrl.selectedElement == null">
+                                                    Selected paragraph
+                                                </option>
+                                            </select>
+                                        </fieldset>
+                                    </form>
+                                    <div class="velp-groups-table velp-groups-resize">
+                                        <table class="fulldiv">
+                                            <tr>
+                                                <th>
+                                                    <input id="velp-group-table-cb-show" type="checkbox"
+                                                           [(ngModel)]="settings.selectedAllShows"
+                                                           (ngModelChange)="changeAllVelpGroupSelections('show')">
+                                                    <label class="comment-info small glyphicon glyphicon-eye-open"
+                                                           for="velp-group-table-cb-show" title="Show">
+                                                        <!--                                                <span class="glyphicon glyphicon-eye-open"></span>-->
+                                                    </label>
+                                                </th>
+                                                <th>
+                                                    <input id="velp-group-table-cb-default"
+                                                           type="checkbox"
+                                                           [(ngModel)]="settings.selectedAllDefault"
+                                                           [disabled]="!vctrl.item.rights.manage"
+                                                           (ngModelChange)="changeAllVelpGroupSelections('default')">
+                                                    <label for="velp-group-table-cb-default" title="Default"
+                                                           [ngClass]="['comment-info', 'small', {disabled: !vctrl.item.rights.manage}]">
+                                                        <span class="glyphicon glyphicon-check"></span>
+                                                    </label>
+                                                </th>
+                                                <th><span class="small">Velp group</span></th>
+                                                <th><span class="small glyphicon glyphicon-trash"
+                                                          title="Delete velp group"></span></th>
+                                            </tr>
+                                            <tr *ngFor="let group of velpGroups" ng-hide="group.id<0">
+                                                <td>
+                                                    <input type="checkbox" [(ngModel)]="group.show"
+                                                           (ngModelChange)="changeVelpGroupSelection(group, 'show')">
+                                                </td>
+                                                <td>
+                                                    <input type="checkbox" [(ngModel)]="group.default"
+                                                           [disabled]="!vctrl.item.rights.manage"
+                                                           (ngModelChange)="changeVelpGroupSelection(group, 'default')">
+                                                </td>
+                                                <td>
+                                                    <a href="/manage/{{ group.location }}">{{ group.name }}</a>
+                                                </td>
+                                                <td>
+                                            <span (click)="deleteVelpGroup(group);"
+                                                  *ngIf="group.edit_access && !isDefaultLockedGroup(group)"
+                                                  class="glyphicon glyphicon-trash clickable-icon"
+                                                  title="Delete velp group '{{ group.name }}'"></span>
+                                                    <span *ngIf="!group.edit_access && !isDefaultLockedGroup(group)"
+                                                          class="glyphicon glyphicon-trash lightgray"
+                                                          uib-tooltip-html="toolTipMessages.deleteVelpGroupInsufficientRights"
+                                                          tooltip-placement="auto left"></span>
+                                                    <span *ngIf="isDefaultLockedGroup(group)"
+                                                          class="glyphicon glyphicon-lock"
+                                                          uib-tooltip-html="toolTipMessages.deleteVelpGroupLockedGroup"
+                                                          tooltip-placement="auto left"></span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="collapsible-menu">
+                                    <details>
+                                        <summary>New velp group</summary>
+                                        <div class="collapsible-menu-open-content">
+                                            <form (ngSubmit)="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
+                                                <div class="velp-groups-new-group-control">
+                                                    <label for="new-velp-group-name">Group name: </label>
+                                                    <input id="new-velp-group-name" type="text"
+                                                           [(ngModel)]="newVelpGroup.name" placeholder="Velp group name"
+                                                           required>
+                                                </div>
+                                                <div class="velp-groups-new-group-control">
+                                                    <label for="velpGroupSaveToSelect">Save to: </label>
+                                                    <fieldset>
+                                                        <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
+                                                                [(ngModel)]="newVelpGroup.target_type"
+                                                                class="formInput">
+                                                            <option [value]="0" selected>Personal collection</option>
+                                                            <option [value]="1"
+                                                                    [disabled]="!vctrl.item.rights.editable">Document
+                                                            </option>
+                                                            <option [value]="2"
+                                                                    [disabled]="!vctrl.item.rights.editable">Folder
+                                                            </option>
+                                                        </select>
+                                                    </fieldset>
+                                                </div>
+                                                <div class="velp-groups-new-group-control">
+                                                    <input type="submit" class="timButton" value="Create velp group">
+                                                    <p *ngIf="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || (submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
+                                                       class="error">
+                                                        Velp group name is required!
+                                                    </p>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                        </uib-tab>
+
+                        <!-- SUMMARY -->
+                        <uib-tab index="2" heading="Summary">
+                            <div class="velp-summary-tab">
+                                <velp-summary
+                                        [annotations]="rctrl.annotations"
+                                        (annotationselected)="rctrl.toggleAnnotation($event, true)"
+                                        [selected-user]="vctrl.selectedUser"
+                                >
+                                </velp-summary>
+                            </div>
+                        </uib-tab>
+                    </uib-tabset>
+                </div>
+
+
+            </div>
+        </div>
+    `,
+})
+export class VelpMenuComponent implements OnInit {
+    initialized = false;
+    labels: ILabelUI[];
+    velpGroups: IVelpGroupUI[];
+    newVelp: INewVelp;
     private velpToEdit: INewVelp;
     private newLabel: INewLabel;
     private labelToEdit: INewLabel;
-    private newVelpGroup: INewVelpGroup;
-    private settings: {selectedAllShows: boolean; selectedAllDefault: boolean};
-    private submitted: {velp: boolean; velpGroup: boolean};
-    private groupAttachment: {target_type: number; id: number | null};
+    newVelpGroup: INewVelpGroup;
+    settings: {selectedAllShows: boolean; selectedAllDefault: boolean};
+    submitted: {velp: boolean; velpGroup: boolean};
+    groupAttachment: {target_type: number; id: number | null};
     private groupSelections: IVelpGroupCollection;
     private groupDefaults: IVelpGroupCollection;
-    private order!: string; // $onInit
+    order!: string; // ngOnInit
     private selectedLabels: number[] = [];
-    private advancedOn: boolean = false;
-    private displayedVelpGroupsScope: number = 0;
+    advancedOn: boolean = false;
+    displayedVelpGroupsScope: number = 0;
     private defaultVelpGroup: IVelpGroupUI;
     private labelAdded: boolean = false;
     public vctrl!: Require<ViewCtrl>;
     private defaultPersonalVelpGroup: IVelpGroup;
-    private onInit!: Binding<
-        (params: {$API: VelpSelectionController}) => void,
-        "&"
-    >;
-    private newVelpCtrl?: VelpWindowController;
+
+    newVelpCtrl?: VelpWindowComponent;
 
     private storage!: {
         velpOrdering: TimStorage<string>;
@@ -83,7 +355,7 @@ export class VelpSelectionController implements IController {
         deleteVelpGroupLockedGroup: string;
     };
 
-    constructor() {
+    constructor(private http: HttpClient) {
         this.labels = [];
         this.velpGroups = [];
 
@@ -164,7 +436,7 @@ export class VelpSelectionController implements IController {
         return this.vctrl.reviewCtrl;
     }
 
-    async $onInit() {
+    async ngOnInit() {
         this.rctrl.initVelpSelection(this);
         this.rctrl.velps = [];
         // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
@@ -189,11 +461,9 @@ export class VelpSelectionController implements IController {
         this.selectedLabels = this.storage.velpLabels.get() ?? [];
         this.advancedOn = this.storage.advancedOn.get() ?? false;
 
-        this.onInit({$API: this});
-
         // TODO check if these routes can all be called simultaneously
         // TODO fetch all data using just one route
-        const p1 = $http.get<IVelpGroup[]>(`/${docId}/get_velp_groups`);
+        const p1 = this.http.get<IVelpGroup[]>(`/${docId}/get_velp_groups`);
         // Get velpgroup data
         const response = await p1;
         const p2 = $http.get<IVelpGroup>(`/${docId}/get_default_velp_group`);
@@ -396,7 +666,7 @@ export class VelpSelectionController implements IController {
             content: this.newLabel.content,
             language_id: "FI", // TODO: Change to user language
         };
-        const response = await to(
+        const response = await to2(
             $http.post<{id: number}>("/add_velp_label", data)
         );
         if (!response.ok) {
@@ -424,7 +694,7 @@ export class VelpSelectionController implements IController {
         }
     }
 
-    registerNewVelp(v: VelpWindowController) {
+    registerNewVelp(v: VelpWindowComponent) {
         this.newVelpCtrl = v;
     }
 
@@ -448,7 +718,7 @@ export class VelpSelectionController implements IController {
      */
     async generateDefaultVelpGroup(): Promise<IVelpGroup | null> {
         if (this.defaultVelpGroup.edit_access) {
-            const json = await to(
+            const json = await to2(
                 $http.post<IVelpGroup>(
                     "/{0}/create_default_velp_group".replace(
                         "{0}",
@@ -758,7 +1028,7 @@ export class VelpSelectionController implements IController {
 
         form.$setPristine();
 
-        const json = await to(
+        const json = await to2(
             $http.post<IVelpGroup>(
                 "/{0}/create_velp_group".replace("{0}", this.docId.toString()),
                 this.newVelpGroup
@@ -806,7 +1076,7 @@ export class VelpSelectionController implements IController {
             !(await showConfirm($localize`Delete velp group?`, confirmMessage))
         ) {
         } else {
-            const deleteResponse = await to(
+            const deleteResponse = await to2(
                 $http.delete("/velp/group/" + group.id)
             );
 
@@ -1035,7 +1305,7 @@ export class VelpSelectionController implements IController {
         }
 
         this.groupSelections[targetID] = clone(this.groupDefaults[targetID]);
-        await to(
+        await to2(
             $http.post(
                 "/{0}/reset_target_area_selections_to_defaults".replace(
                     "{0}",
@@ -1053,7 +1323,7 @@ export class VelpSelectionController implements IController {
     async resetAllShowsToDefaults() {
         this.groupSelections = clone(this.groupDefaults);
 
-        await to(
+        await to2(
             $http.post(
                 "/{0}/reset_all_selections_to_defaults".replace(
                     "{0}",
@@ -1311,18 +1581,4 @@ timApp.filter("orderByWhenNotEditing", () => {
 
         return list;
     };
-});
-
-/**
- * Angular directive for velp selection
- */
-timApp.component("velpSelection", {
-    bindings: {
-        onInit: "&",
-    },
-    require: {
-        vctrl: "^timView",
-    },
-    controller: VelpSelectionController,
-    templateUrl: "/static/templates/velpSelection.html",
 });

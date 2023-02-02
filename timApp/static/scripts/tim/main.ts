@@ -24,7 +24,7 @@ import {LoginMenuComponent} from "tim/user/login-menu.component";
 import * as timRoot from "tim/timRoot";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import {AnnotationComponent} from "tim/velp/annotation.component";
-import * as velpSelection from "tim/velp/velpSelection";
+import * as velpSelection from "tim/velp/velp-menu-dialog.component";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {AppModule} from "tim/app.module";
 import {HeaderComponent} from "tim/header/header.component";

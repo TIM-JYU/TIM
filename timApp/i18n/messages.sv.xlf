@@ -6358,7 +6358,7 @@
         <source>Delete velp group?</source>
         <target state="translated">Ta bort velpgruppen?</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/velp/velp-menu-dialog.component.ts</context>
           <context context-type="linenumber">785</context>
         </context-group>
       </trans-unit>
@@ -6366,7 +6366,7 @@
         <source>Insufficient permissions to delete group</source>
         <target state="translated">Otillräckliga behörigheter för att radera gruppen</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/velp/velp-menu-dialog.component.ts</context>
           <context context-type="linenumber">163</context>
         </context-group>
       </trans-unit>
@@ -6374,7 +6374,7 @@
         <source>Permanent default group cannot be deleted</source>
         <target state="translated">Permanent förvald gruppen kan inte raderas</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/velp/velp-menu-dialog.component.ts</context>
           <context context-type="linenumber">164</context>
         </context-group>
       </trans-unit>
@@ -6382,7 +6382,7 @@
         <source>Insufficient permissions to delete velp group: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;.</source>
         <target state="translated">Otillräckliga rättigheter för att ta bort velpgruppen: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;.</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/velp/velp-menu-dialog.component.ts</context>
           <context context-type="linenumber">839</context>
         </context-group>
       </trans-unit>
@@ -6398,7 +6398,7 @@
                                              &lt;/br&gt;
                                              Om de listade velps inte tillhör några andra velpgrupper, kommer de inte att visas i listan med velpmallar efter att denna operation har slutförts.&lt;/br&gt;</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/velp/velp-menu-dialog.component.ts</context>
           <context context-type="linenumber">798,802</context>
         </context-group>
       </trans-unit>
@@ -6412,7 +6412,7 @@
                       <x id="PH_1" equiv-text="warningGroupHasVelps"/>
                       Velps som har läggats till dokumenter kommer inte att raderas.</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/velp/velp-menu-dialog.component.ts</context>
           <context context-type="linenumber">805,808</context>
         </context-group>
       </trans-unit>
