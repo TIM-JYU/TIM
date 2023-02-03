@@ -370,12 +370,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (!this.location) {
             this.location = "";
         }
-        if (!this.maxSize) {
-            this.maxSize = this.getEventCapacity();
-        } else if (
-            this.eventHasBookings() &&
-            this.maxSize < this.getEventCapacity()
-        ) {
+        if (this.eventHasBookings() && this.maxSize < this.getEventCapacity()) {
             this.maxSize = this.getEventCapacity();
         }
 
