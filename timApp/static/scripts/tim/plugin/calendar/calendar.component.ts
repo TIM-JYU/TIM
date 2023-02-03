@@ -725,6 +725,11 @@ export class CalendarComponent
                 event.color = colors.gray;
                 return;
             }
+            // Event without max capacity are always in blue (since they are not bookable)
+            if (event.meta!.maxSize === 0) {
+                event.color = colors.blue;
+                return;
+            }
             if (event.meta!.booker_groups) {
                 const isCurrentUserBooker = event.meta!.booker_groups.some(
                     (group) =>

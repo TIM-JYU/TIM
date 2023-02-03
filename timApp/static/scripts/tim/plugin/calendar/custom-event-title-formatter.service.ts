@@ -28,6 +28,9 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         if (!event.meta) {
             return "";
         }
+        if (event.meta.maxSize === 0) {
+            return event.title;
+        }
         let res = `(${event.meta.enrollments}/${event.meta.maxSize}`;
         if (
             event.meta.extraEnrollments !== undefined &&
@@ -45,6 +48,9 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
     ) {
         if (!event.meta) {
             return "";
+        }
+        if (event.meta.maxSize === 0) {
+            return event.title;
         }
         let res = `${title} (${event.meta.enrollments}/${event.meta.maxSize}`;
         if (
