@@ -213,6 +213,36 @@ export type TIMEventMeta = {
 
 export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
 
+export function postProcessCalendarEvent(
+    event: TIMCalendarEvent,
+    editable: boolean
+) {
+    event.start = new Date(event.start);
+    if (event.end) {
+        event.end = new Date(event.end);
+    }
+    event.meta = {
+        description: event.meta!.description,
+        tmpEvent: false,
+        enrollments: event.meta!.enrollments,
+        extraEnrollments: event.meta!.extraEnrollments,
+        maxSize: event.meta!.maxSize,
+        location: event.meta!.location,
+        booker_groups: event.meta!.booker_groups,
+        isExtra: event.meta!.isExtra,
+        editEnabled: editable,
+        send_notifications: event.meta!.send_notifications,
+        important: event.meta!.important,
+        owner: event.meta!.owner,
+        signup_before: new Date(event.meta!.signup_before),
+    };
+    event.resizable = {
+        beforeStart: editable,
+        afterEnd: editable,
+    };
+    return event;
+}
+
 @Component({
     selector: "tim-calendar",
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -828,31 +858,9 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
-            result.result.forEach((event) => {
-                event.start = new Date(event.start);
-                if (event.end) {
-                    event.end = new Date(event.end);
-                }
-                event.meta = {
-                    description: event.meta!.description,
-                    tmpEvent: false,
-                    enrollments: event.meta!.enrollments,
-                    extraEnrollments: event.meta!.extraEnrollments,
-                    maxSize: event.meta!.maxSize,
-                    location: event.meta!.location,
-                    booker_groups: event.meta!.booker_groups,
-                    isExtra: event.meta!.isExtra,
-                    editEnabled: this.editEnabled,
-                    send_notifications: event.meta!.send_notifications,
-                    important: event.meta!.important,
-                    owner: event.meta!.owner,
-                    signup_before: new Date(event.meta!.signup_before),
-                };
-                event.resizable = {
-                    beforeStart: this.editEnabled,
-                    afterEnd: this.editEnabled,
-                };
-            });
+            result.result.forEach((event) =>
+                postProcessCalendarEvent(event, this.editEnabled)
+            );
             this.events = result.result;
             this.refresh();
         } else {
@@ -1032,9 +1040,15 @@ export class CalendarComponent
         this.dialogOpen = false;
         if (result.ok) {
             const modifiedEvent = result.result;
-            if (modifiedEvent.meta) {
+            const originalEvent = this.events.find(
+                (e) => e.id === modifiedEvent.id
+            );
+            if (modifiedEvent.meta && originalEvent) {
                 if (modifiedEvent.meta.deleted) {
-                    this.events.splice(this.events.indexOf(modifiedEvent), 1);
+                    this.events.splice(this.events.indexOf(originalEvent), 1);
+                } else {
+                    Object.assign(originalEvent, modifiedEvent);
+                    originalEvent.meta = modifiedEvent.meta;
                 }
             }
             this.refresh();

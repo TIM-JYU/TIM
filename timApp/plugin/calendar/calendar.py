@@ -579,6 +579,28 @@ def get_events(opts: FilterOptions) -> Response:
     )
 
 
+@calendar_plugin.get("/events/<int:event_id>")
+def get_event(event_id: int) -> Response:
+    """Fetches the event with the given id from the database in JSON format
+
+    :param event_id: event id
+    :return: Event in JSON format
+    """
+    verify_logged_in()
+    event = Event.get_by_id(event_id)
+    if event is None:
+        raise NotExist(f"Event not found by the id of {event_id}")
+
+    cur_user = get_current_user_object()
+    right = event.get_enrollment_right(cur_user)
+    if not right.is_valid:
+        raise AccessDenied("No permission to see event")
+
+    return json_response(
+        event.to_json(with_users=right.can_manage_event, for_user=cur_user)
+    )
+
+
 @calendar_plugin.get("/events/<int:event_id>/bookers")
 def get_event_bookers(event_id: int) -> str | Response:
     """Fetches all enrollments from the database for the given event and returns the full name and email of every
@@ -884,6 +906,21 @@ def delete_event(event_id: int) -> Response:
             "{event_title} {event_time} has been cancelled.",
             f"TIM-Calendar event {{event_title}} {{event_time}} has been cancelled by {user_obj.real_name} ({user_obj.name}).",
         )
+        enrolled_users_contacts = []
+        for enrolled_user in enrolled_users:
+            if enrolled_user.is_personal_group:
+                enrolled_users_contacts.append(
+                    f"{enrolled_user.personal_user.real_name} ({enrolled_user.personal_user.name}), {enrolled_user.personal_user.email}"
+                )
+            else:
+                enrolled_users_contacts.append(f"Group {enrolled_user.name}")
+        enrolled_users_list = "\n ".join(enrolled_users_contacts)
+        send_email_to_creator(
+            event_id,
+            CalendarEmailEvent.Deleted,
+            user_obj,
+            f"The following users and groups were enrolled to the event:\n\n{enrolled_users_list}",
+        )
 
     db.session.delete(event)
     db.session.commit()
@@ -1037,10 +1074,14 @@ def delete_booking(event_id: int) -> Response:
 class CalendarEmailEvent(Enum):
     Booked = "booked"
     Cancelled = "cancelled"
+    Deleted = "deleted"
 
 
 def send_email_to_creator(
-    event_id: int, event_type: CalendarEmailEvent, user_obj: User
+    event_id: int,
+    event_type: CalendarEmailEvent,
+    user_obj: User,
+    extra_msg: str | None = None,
 ) -> None:
     """
     Sends an email of cancelled/booked time to creator of the event
@@ -1063,6 +1104,8 @@ def send_email_to_creator(
     msg = f"TIM-Calendar reservation {event.title} {event_time} has been {event_type.value} by {name}."
     # TODO: Subject should be shorter
     subject = msg
+    if extra_msg:
+        msg += f"\n\n{extra_msg}"
     send_email(rcpt, subject, msg)
 
 

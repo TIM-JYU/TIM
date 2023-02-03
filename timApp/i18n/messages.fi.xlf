@@ -5616,14 +5616,6 @@
           <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8620159010953252294" datatype="html">
-        <source>Are you sure you want to delete the event "<x id="PH" equiv-text="this.data.title"/>"?</source>
-        <target state="translated">Haluatko varmasti poistaa tapahtuman "<x id="PH" equiv-text="this.data.title"/>"?</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
-          <context context-type="linenumber">361</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="8070111471967683012" datatype="html">
         <source> Book event </source>
         <target state="translated"> Varaa tapahtuma </target>
@@ -7912,6 +7904,30 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/fields/js/multisave.ts</context>
           <context context-type="linenumber">166</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9049493306777946885" datatype="html">
+        <source>This will also delete <x id="PH" equiv-text="eventToDelete.meta.enrollments"/> enrollments!</source>
+        <target state="translated">Tämä myös poistaa <x id="PH" equiv-text="eventToDelete.meta.enrollments"/> ilmoittautumista!</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">418,417</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4226948524710103460" datatype="html">
+        <source>Are you sure you want to delete the event "<x id="PH" equiv-text="this.data.title"/>"?<x id="PH_1" equiv-text="enrollmentMessage"/></source>
+        <target state="translated">Oletko varma, että haluat poistaa tapahtuman "<x id="PH" equiv-text="this.data.title"/>"?<x id="PH_1" equiv-text="enrollmentMessage"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">424,422</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4552627774522949686" datatype="html">
+        <source>Could not load latest event data, is there internet connection? Please close the dialog and try again.</source>
+        <target state="translated">Tapahtuman tiedot ei voitu ladata, onko internet-yhteyttä? Ole hyvä, ja sulje dialogi ja kokeile uudelleen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">250</context>
         </context-group>
       </trans-unit>
     </body>
