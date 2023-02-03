@@ -7930,6 +7930,14 @@
           <context context-type="linenumber">250</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4048890404505834885" datatype="html">
+        <source>Ask question</source>
+        <target state="translated">Kysy kysymys</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/qst/qst.component.ts</context>
+          <context context-type="linenumber">82,83</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

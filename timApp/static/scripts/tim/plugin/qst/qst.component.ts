@@ -79,7 +79,7 @@ const PluginFields = t.intersection([
                     </a>
                     &nbsp;&nbsp;
                     <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
-                        <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
+                        <span class="glyphicon glyphicon-question-sign" i18n-title title="Ask question"></span>
                     </a>
                     &ngsp;
                     <span class="qstResult" *ngIf="result">{{result}}</span>
@@ -179,7 +179,7 @@ export class QstComponent
             showExplanations: this.attrsall.show_result,
             enabled: !this.attrsall.markup.invalid,
         });
-        this.button = this.buttonText() ?? "Save";
+        this.button = this.buttonText() ?? $localize`Save`;
     }
 
     ngOnDestroy() {
@@ -325,8 +325,12 @@ export class QstComponent
         }
         const data = r.result;
         let result = data.web.result;
-        if (result == "Saved" && this.attrsall.markup.savedText != undefined) {
-            result = this.attrsall.markup.savedText;
+        if (result == "Saved") {
+            if (this.attrsall.markup.savedText != undefined) {
+                result = this.attrsall.markup.savedText;
+            } else {
+                result = $localize`Saved`;
+            }
         }
         this.result = result;
         this.log = data.web.error;
