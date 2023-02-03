@@ -537,6 +537,7 @@ export class AnswerBrowserComponent
      * also sets up points, fetches review data if needed and dims the plugin if teacher-mode and no answers
      * @param changeReviewOnly only fetch and set the plugin review html, without touching anything else
      * @param askNew true if new task is asked to generate
+     * @param forceUpdate if true, then re-fetch plugin state regardless of currently loaded state
      * // TODO: Separate function for just fetching the review html
      */
     async changeAnswer(
@@ -1177,6 +1178,10 @@ export class AnswerBrowserComponent
         return false;
     }
 
+    /**
+     * Fetch answers to task and update state if necessary See {@link changeAnswer} for state update conditions
+     * @param forceUpdate if true, always update state
+     */
     async getAnswersAndUpdate(forceUpdate?: boolean) {
         // if ( this.isUseCurrentUser(this.taskId) ) { return null; }
 
@@ -1196,6 +1201,12 @@ export class AnswerBrowserComponent
         return data;
     }
 
+    /**
+     * Set fetched answers, set selected answer and update plugin state if necessary
+     * @param data fetched answers
+     * @param newSelectedId answer to select
+     * @param forceUpdate if true, always update plugin state
+     */
     private async handleAnswerFetch(
         data: IAnswer[],
         newSelectedId?: number,
