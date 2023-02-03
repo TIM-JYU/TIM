@@ -259,6 +259,7 @@ export abstract class AngularPluginBase<
                 feedback: result.result.feedback,
                 topfeedback: result.result.topfeedback,
                 valid: result.result.valid,
+                refresh: result.result.refresh,
             });
         } else {
             handleAnswerResponse(dt, {

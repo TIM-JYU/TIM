@@ -126,6 +126,7 @@ timApp.config([
                             topfeedback: resp.data.topfeedback,
                             savedNew: resp.data.savedNew,
                             valid: resp.data.valid,
+                            refresh: resp.data.refresh,
                         });
                         return response;
                     },

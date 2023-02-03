@@ -122,6 +122,7 @@ export interface IAnswerSaveEvent {
     topfeedback?: string;
     feedback?: string;
     valid?: boolean;
+    refresh?: boolean;
 }
 
 type AnswerLoadCallback = (a: IAnswer) => void;
@@ -226,7 +227,7 @@ export class AnswerBrowserComponent
             if (this.answers.length == 0 && this.viewctrl.teacherMode) {
                 this.getAvailableUsers();
             }
-            this.getAnswersAndUpdate();
+            this.getAnswersAndUpdate(args.refresh);
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
         }
@@ -536,9 +537,14 @@ export class AnswerBrowserComponent
      * also sets up points, fetches review data if needed and dims the plugin if teacher-mode and no answers
      * @param changeReviewOnly only fetch and set the plugin review html, without touching anything else
      * @param askNew true if new task is asked to generate
+     * @param forceUpdate if true, then re-fetch plugin state regardless of currently loaded state
      * // TODO: Separate function for just fetching the review html
      */
-    async changeAnswer(changeReviewOnly = false, askNew: boolean = false) {
+    async changeAnswer(
+        changeReviewOnly = false,
+        askNew: boolean = false,
+        forceUpdate?: boolean
+    ) {
         if (!changeReviewOnly) {
             this.updatePoints();
         }
@@ -586,7 +592,8 @@ export class AnswerBrowserComponent
                 this.loadedAnswer &&
                 this.selectedAnswer.id == this.loadedAnswer.id &&
                 this.oldreview == this.review
-            )
+            ) ||
+            forceUpdate
         ) {
             this.loading++;
             const r = await to(
@@ -1171,7 +1178,11 @@ export class AnswerBrowserComponent
         return false;
     }
 
-    async getAnswersAndUpdate() {
+    /**
+     * Fetch answers to task and update state if necessary See {@link changeAnswer} for state update conditions
+     * @param forceUpdate if true, always update state
+     */
+    async getAnswersAndUpdate(forceUpdate?: boolean) {
         // if ( this.isUseCurrentUser(this.taskId) ) { return null; }
 
         if (
@@ -1185,12 +1196,22 @@ export class AnswerBrowserComponent
         if (!data) {
             return;
         }
-        await this.handleAnswerFetch(data);
+        await this.handleAnswerFetch(data, undefined, forceUpdate);
         this.isAndSetShowNewTask();
         return data;
     }
 
-    private async handleAnswerFetch(data: IAnswer[], newSelectedId?: number) {
+    /**
+     * Set fetched answers, set selected answer and update plugin state if necessary
+     * @param data fetched answers
+     * @param newSelectedId answer to select
+     * @param forceUpdate if true, always update plugin state
+     */
+    private async handleAnswerFetch(
+        data: IAnswer[],
+        newSelectedId?: number,
+        forceUpdate?: boolean
+    ) {
         this.updating = true;
         if (
             (data.length > 0 &&
@@ -1215,7 +1236,7 @@ export class AnswerBrowserComponent
                     this.updatePoints();
                 }
             }
-            await this.changeAnswer();
+            await this.changeAnswer(undefined, undefined, forceUpdate);
         } else {
             this.answers = data;
             if (this.answers.length === 0 && this.viewctrl.teacherMode) {
