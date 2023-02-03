@@ -122,6 +122,7 @@ export interface IAnswerSaveEvent {
     topfeedback?: string;
     feedback?: string;
     valid?: boolean;
+    refresh?: boolean;
 }
 
 type AnswerLoadCallback = (a: IAnswer) => void;
@@ -226,7 +227,7 @@ export class AnswerBrowserComponent
             if (this.answers.length == 0 && this.viewctrl.teacherMode) {
                 this.getAvailableUsers();
             }
-            this.getAnswersAndUpdate();
+            this.getAnswersAndUpdate(args.refresh);
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
         }
@@ -538,7 +539,11 @@ export class AnswerBrowserComponent
      * @param askNew true if new task is asked to generate
      * // TODO: Separate function for just fetching the review html
      */
-    async changeAnswer(changeReviewOnly = false, askNew: boolean = false) {
+    async changeAnswer(
+        changeReviewOnly = false,
+        askNew: boolean = false,
+        forceUpdate?: boolean
+    ) {
         if (!changeReviewOnly) {
             this.updatePoints();
         }
@@ -586,7 +591,8 @@ export class AnswerBrowserComponent
                 this.loadedAnswer &&
                 this.selectedAnswer.id == this.loadedAnswer.id &&
                 this.oldreview == this.review
-            )
+            ) ||
+            forceUpdate
         ) {
             this.loading++;
             const r = await to(
@@ -1171,7 +1177,7 @@ export class AnswerBrowserComponent
         return false;
     }
 
-    async getAnswersAndUpdate() {
+    async getAnswersAndUpdate(forceUpdate?: boolean) {
         // if ( this.isUseCurrentUser(this.taskId) ) { return null; }
 
         if (
@@ -1185,12 +1191,16 @@ export class AnswerBrowserComponent
         if (!data) {
             return;
         }
-        await this.handleAnswerFetch(data);
+        await this.handleAnswerFetch(data, undefined, forceUpdate);
         this.isAndSetShowNewTask();
         return data;
     }
 
-    private async handleAnswerFetch(data: IAnswer[], newSelectedId?: number) {
+    private async handleAnswerFetch(
+        data: IAnswer[],
+        newSelectedId?: number,
+        forceUpdate?: boolean
+    ) {
         this.updating = true;
         if (
             (data.length > 0 &&
@@ -1215,7 +1225,7 @@ export class AnswerBrowserComponent
                     this.updatePoints();
                 }
             }
-            await this.changeAnswer();
+            await this.changeAnswer(undefined, undefined, forceUpdate);
         } else {
             this.answers = data;
             if (this.answers.length === 0 && this.viewctrl.teacherMode) {
