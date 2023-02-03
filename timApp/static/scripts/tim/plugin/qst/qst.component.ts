@@ -325,7 +325,7 @@ export class QstComponent
         }
         const data = r.result;
         let result = data.web.result;
-        if (result == "Saved" && this.attrsall.markup.savedText) {
+        if (result == "Saved" && this.attrsall.markup.savedText != undefined) {
             result = this.attrsall.markup.savedText;
         }
         this.result = result;
