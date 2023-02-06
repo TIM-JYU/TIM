@@ -99,7 +99,7 @@ class PluginTest(TimRouteTest):
             expect_content="Task not found in the document: mmcqexamplez",
         )
 
-        doc.document.set_settings({"global_plugin_attrs": {"all": {"answerLimit": 3}}})
+        doc.document.set_settings({"global_plugin_attrs": {"all": {"answerLimit": 2}}})
         resp = self.post_answer(plugin_type, task_id, [True, True, False])
         self.check_ok_answer(resp)
 
