@@ -489,7 +489,7 @@ def get_all_answer_initial_query(
 def get_existing_answers_info(
     users: list[User], task_id: TaskId
 ) -> ExistingAnswersInfo:
-    q = get_latest_answers_query(task_id, users)
+    q = get_latest_valid_answers_query(task_id, users)
     latest = q.first()
     count = q.count()
     return ExistingAnswersInfo(latest_answer=latest, count=count)
