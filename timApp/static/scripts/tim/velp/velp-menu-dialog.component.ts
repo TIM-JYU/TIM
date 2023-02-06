@@ -4,7 +4,6 @@ import {Component} from "@angular/core";
 import type {OnInit} from "@angular/core";
 import type {Require} from "tim/util/utils";
 import {clone, TimStorage, to2, toPromise} from "tim/util/utils";
-import * as velpSummary from "tim/velp/velp-summary.component";
 import type {VelpWindowComponent} from "tim/velp/velp-window.component";
 import {colorPalette} from "tim/velp/velp-window.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -82,7 +81,7 @@ const sortLang: string = "fi";
                         <!-- Actual velps -->
                         <div class="velp-stack draggable-content available-velps autoscroll">
                             <tim-velp-window
-                                    *ngFor="let velp of filteredVelps = (rctrl.velps | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn) track by $index"
+                                    *ngFor="let velp of filteredVelps | filterByContent:this.filterVelp | orderByWhenNotEditing:this.order:filteredVelps | filterByVelpGroups:this.velpGroups | filterByLabels:this.labels:this.advancedOn; trackBy: trackByVelpIDFn"
                                     advanced-on="advancedOn"
                                     doc-id="docId"
                                     index="$index"
@@ -303,12 +302,12 @@ const sortLang: string = "fi";
                         <!-- SUMMARY -->
                         <uib-tab index="2" heading="Summary">
                             <div class="velp-summary-tab">
-                                <velp-summary
+                                <tim-velp-summary
                                         [annotations]="rctrl.annotations"
                                         (annotationselected)="rctrl.toggleAnnotation($event, true)"
                                         [selected-user]="vctrl.selectedUser"
                                 >
-                                </velp-summary>
+                                </tim-velp-summary>
                             </div>
                         </uib-tab>
                     </uib-tabset>
@@ -355,6 +354,11 @@ export class VelpMenuComponent implements OnInit {
         deleteVelpGroupInsufficientRights: string;
         deleteVelpGroupLockedGroup: string;
     };
+
+    private filteredVelps?: IVelp[];
+    private filteredLabels?: ILabel[];
+    private filterVelp?: string;
+    private filterLabel?: string;
 
     constructor(private http: HttpClient) {
         this.labels = [];
@@ -431,9 +435,11 @@ export class VelpMenuComponent implements OnInit {
             deleteVelpGroupInsufficientRights: $localize`Insufficient permissions to delete group`,
             deleteVelpGroupLockedGroup: $localize`Permanent default group cannot be deleted`,
         };
+
+        // this.filteredVelps = [];
     }
 
-    get rctrl() {
+    public get rctrl() {
         return this.vctrl.reviewCtrl;
     }
 
@@ -569,6 +575,7 @@ export class VelpMenuComponent implements OnInit {
             }
         });
 
+        this.filteredVelps = this.rctrl.velps;
         this.updateVelpList();
         this.initialized = true;
     }
@@ -593,7 +600,6 @@ export class VelpMenuComponent implements OnInit {
      * Return true if user has teacher rights.
      * @returns {boolean}
      */
-
     allowChangePoints() {
         return this.vctrl.item.rights.teacher;
     }
@@ -641,14 +647,14 @@ export class VelpMenuComponent implements OnInit {
             language_id: "FI", // TODO: Change to user language
         };
         const response = await to2(
-            $http.post<{id: number}>("/add_velp_label", data)
+            this.http.post<ILabel>("/add_velp_label", data)
         );
         if (!response.ok) {
             return;
         }
         const labelToAdd = {
             ...data,
-            id: response.result.data.id,
+            id: response.result.id,
             selected: false,
         };
         this.resetNewLabel();
@@ -828,6 +834,15 @@ export class VelpMenuComponent implements OnInit {
     /* Whether the group is a non-removable default group for the document or the user */
     isDefaultLockedGroup(group: IVelpGroup) {
         return this.isVelpGroupDefaultFallBack(group.id);
+    }
+
+    /**
+     * Filter and order displayed velp templates according to selected options.
+     */
+    filterVelps() {
+        this.filteredVelps = this.rctrl.velps?.filter();
+        // this.rctrl.velps? | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn);
+        //                   ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn)
     }
 
     /**
@@ -1417,11 +1432,21 @@ export class VelpMenuComponent implements OnInit {
         }
         return false;
     }
+
+    /**
+     * Tracking function for velp templates
+     * @param index
+     * @param velp
+     */
+    trackByVelpIDFn(index: number, velp: IVelp): number {
+        return velp.id;
+    }
 }
 
 /**
  * Filter for ordering velps
  */
+/*
 timApp.filter("filterByLabels", () => {
     return (velps?: IVelp[], labels?: ILabelUI[], advancedOn?: boolean) => {
         const selectedVelps: Record<number, [IVelp, number]> = {};
@@ -1556,3 +1581,4 @@ timApp.filter("orderByWhenNotEditing", () => {
         return list;
     };
 });
+*/

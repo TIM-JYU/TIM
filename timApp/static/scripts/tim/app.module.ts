@@ -43,6 +43,10 @@ import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {RoleInfoComponent} from "tim/header/role-info.component";
+import {VelpContentFilter} from "tim/velp/velp-content-filter.pipe";
+import {VelpLabelFilter} from "tim/velp/velp-label-filter.pipe";
+import {VelpGroupFilter} from "tim/velp/velp-group-filter.pipe";
+import {VelpOrder} from "tim/velp/velp-order.pipe";
 
 @NgModule({
     declarations: [
@@ -74,6 +78,10 @@ import {RoleInfoComponent} from "tim/header/role-info.component";
         GamificationMapComponent,
         SelfExpireComponent,
         RoleInfoComponent,
+        VelpContentFilter,
+        VelpLabelFilter,
+        VelpGroupFilter,
+        VelpOrder,
     ],
     imports: [
         BrowserModule,
