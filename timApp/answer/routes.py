@@ -1085,7 +1085,8 @@ def post_answer_impl(
             if vr.is_invalid:
                 is_valid = False
                 explanation = (
-                    vr.invalidate_reason + "Your answer was saved but marked as invalid"
+                    vr.invalidate_reason
+                    + " Your answer was saved but marked as invalid."
                 )
             elif vr.is_expired:
                 fixed_time = (

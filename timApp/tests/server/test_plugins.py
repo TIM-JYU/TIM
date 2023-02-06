@@ -2377,7 +2377,7 @@ accessField:
 accessField:
  field: %d.access_ext
  limit: 1
- error: "You already locked your access to this task"
+ error: "You already locked your access to this task."
 """
                 % d_ext.id
             )
@@ -2386,7 +2386,7 @@ accessField:
         self.test_user_2.grant_access(d_ext, AccessType.view)
         db.session.commit()
         self.login_test2()
-        access_error_default = "You have expired your access to this task."
+        access_error_default = "You have expired your access to this task. Your answer was saved but marked as invalid."
         resp = self.post_answer(
             "textfield", f"{d.id}.question", user_input={"c": "testuser2@d part 1"}
         )
@@ -2416,7 +2416,10 @@ accessField:
             f"{d.id}.question_ext_accessfield",
             user_input={"c": "testuser2@d_ext"},
         )
-        self.assertEqual("You already locked your access to this task", resp["error"])
+        self.assertEqual(
+            "You already locked your access to this task. Your answer was saved but marked as invalid.",
+            resp["error"],
+        )
         self.assertFalse(resp["valid"])
         self.assertEqual(
             1, len(self.get_task_answers(f"{d.id}.question_ext_accessfield"))
@@ -2437,7 +2440,7 @@ accessField:
 """
             )
         )
-        access_error_default = "You have expired your access to this task."
+        access_error_default = "You have expired your access to this task. Your answer was saved but marked as invalid."
         self.post_answer("textfield", f"{d.id}.access", user_input={"c": "1"})
         resp = self.post_answer("textfield", f"{d.id}.question", user_input={"c": "ok"})
         # only invalid answers on access source, answer is successful
