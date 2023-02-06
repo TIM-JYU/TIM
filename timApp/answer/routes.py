@@ -1084,7 +1084,9 @@ def post_answer_impl(
             is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
             if vr.is_invalid:
                 is_valid = False
-                explanation = vr.invalidate_reason
+                explanation = (
+                    vr.invalidate_reason + "Your answer was saved but marked as invalid"
+                )
             elif vr.is_expired:
                 fixed_time = (
                     receive_time
