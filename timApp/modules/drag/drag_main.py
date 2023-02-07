@@ -2,7 +2,6 @@
 Module for serving drag item-plugin.
 """
 from dataclasses import dataclass, asdict
-from typing import Union
 
 from flask import render_template_string
 from marshmallow.utils import missing
@@ -76,7 +75,7 @@ class DragAnswerModel(
 def render_static_drag(m: DragHtmlModel) -> str:
     return render_template_string(
         """
-<div class="csRunDiv no-popup-menu">
+<div class="csRunDiv no-popup-menu {% if header %}cs-has-header{% endif %}">
     <h4>{{ header }}</h4>
     <p class="stem">{{ stem }}</p>
     <div><label>{{ inputstem or '' }} <span>

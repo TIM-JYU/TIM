@@ -84,7 +84,7 @@ class ReviewCanvasAnswerModel(
 def render_static_reviewcanvas(m: ReviewCanvasHtmlModel) -> str:
     return render_template_string(
         """
-<div class="csRunDiv no-popup-menu">
+<div class="csRunDiv no-popup-menu {% if header %}cs-has-header{% endif %}">
 {% if header %}<h4>{{ header }}</h4>{% endif %}
 {% if stem %}<p class="stem">{{ stem }}</p>{% endif %}
 <div><label>{{ inputstem or '' }}

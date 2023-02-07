@@ -2,11 +2,10 @@
 Module for serving dropdown item-plugin.
 """
 from dataclasses import dataclass, asdict
-from typing import Union
 
 from flask import render_template_string
 from marshmallow import validates
-from marshmallow.utils import missing, _Missing
+from marshmallow.utils import missing
 
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
@@ -72,7 +71,7 @@ class DropdownAnswerModel(
 def render_static_dropdown(m: DropdownHtmlModel) -> str:
     return render_template_string(
         """
-<div class="csRunDiv no-popup-menu">
+<div class="csRunDiv no-popup-menu {% if header %}cs-has-header{% endif %}>"
     <h4>{{ header }}</h4>
     <p class="stem">{{ stem }}</p>
     <div><label>{{ inputstem or '' }} <span>

@@ -638,7 +638,9 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
             lazy_visible = (
                 '<div class="lazyVisible '
                 + cs_class
-                + 'no-popup-menu" >'
+                + "no-popup-menu"
+                + (" cs-has-header" if get_param(query, "header", None) else "")
+                + '">'
                 + get_surrounding_headers(
                     query,
                     ('<div class="' + lazyclasses + '"' ' " ng-non-bindable>' + prebeg)

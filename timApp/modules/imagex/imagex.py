@@ -7,9 +7,6 @@ import json
 
 from geometry import is_inside
 
-# ImagexServer is inherited from this. Contains methods like do_GET, do_PUT, etc generic server stuff.
-from tim_common.tim_server import TimServer, start_server
-
 # Library for checking if a point is inside a shape.
 from tim_common.fileParams import (
     encode_json_data,
@@ -26,6 +23,9 @@ from tim_common.fileParams import (
     get_query_from_json,
 )
 
+# ImagexServer is inherited from this. Contains methods like do_GET, do_PUT, etc generic server stuff.
+from tim_common.tim_server import TimServer, start_server
+
 PORT = 5000
 PROGDIR = "."
 
@@ -37,7 +37,11 @@ def get_lazy_imagex_html(query: QueryClass) -> str:
     :return: lazy version of imagex-plugins html
 
     """
-    s = '<div class="csRunDiv no-popup-menu">'
+    s = (
+        '<div class="csRunDiv no-popup-menu'
+        + (" cs-has-header" if get_param(query, "header", None) else "")
+        + '">'
+    )
     s += replace_template_params(query, "<h4>{{header}}</h4>", "header")
     s += replace_template_params(query, '<p class="stem">{{stem}}</p>', "stem")
     s += "</div>"

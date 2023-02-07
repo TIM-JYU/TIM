@@ -2,7 +2,7 @@
 TIM feedback-plugin.
 """
 from dataclasses import dataclass, asdict
-from typing import Union, Any
+from typing import Any
 
 from flask import render_template_string
 from marshmallow import validates, ValidationError
@@ -83,7 +83,7 @@ class FeedbackAnswerModel(
 def render_static_feedback(m: FeedbackHtmlModel) -> str:
     return render_template_string(
         """
-<div class="csRunDiv no-popup-menu">
+<div class="csRunDiv no-popup-menu {% if header %}cs-has-header{% endif %}">
     <h4>{{ header }}</h4>
     <p class="stem">{{ stem }}</p>
     <div><label>{{ inputstem or '' }}</label>
