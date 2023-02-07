@@ -117,7 +117,7 @@ export class VelpWindowController implements IController {
                 "Just me",
                 "Document owner",
                 "Teachers",
-                "Users with access to content",
+                "Users with access",
             ],
         };
         this.styleOptions = {
