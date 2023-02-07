@@ -4,13 +4,13 @@
     </tim-alert>
     <label *ngIf="hidden && anyInvalid && !formMode" class="checkbox-inline onlyValid">
         <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
-    <div *ngIf="!hidden">
-        <div *ngIf="viewctrl.teacherMode && users && users.length > 0" class="flex">
+    <div *ngIf="!hidden" class="answerbrowser-container">
+        <div *ngIf="viewctrl.teacherMode && users && users.length > 0" class="flex user-select">
             <div>
                 <div class="input-group input-group-xs">
             <span class="input-group-btn">
-               <button i18n-title class="btn btn-primary" (click)="randomStudent()" title="Choose random student">R</button>
-               <button i18n-title title="Previous user" class="btn btn-primary" (click)="changeStudent(-1)">&uarr;</button>
+               <button i18n-title class="btn btn-primary random-student" (click)="randomStudent()" title="Choose random student">R</button>
+               <button i18n-title title="Previous user" class="btn btn-primary scroll-users" (click)="changeStudent(-1)">&uarr;</button>
              </span>
                     <select class="form-control"
                             focus-me="!selectedAnswer && shouldFocus #blurWhenFalse"
@@ -20,7 +20,7 @@
 
                     </select>
                     <span class="input-group-btn">
-             <button i18n-title title="Next user" class="btn btn-primary" (click)="changeStudent(+1)">&darr;</button>
+             <button i18n-title title="Next user" class="btn btn-primary scroll-users" (click)="changeStudent(+1)">&darr;</button>
             </span>
                 </div>
             </div>
@@ -28,23 +28,23 @@
             <span class="user-index-count">
                 {{ findSelectedUserIndex() + 1 }}/{{ users.length }}
             </span>
-                <a href="mailto:{{user?.email}}">email</a>
+                <a class="email" href="mailto:{{user?.email}}">email</a>
             </div>
         </div>
         <div i18n *ngIf="isGlobal()" class="flex">
             Showing answers from all users
         </div>
-        <div *ngIf="!hasUserChanged() || loading">
+        <div class="answer-edit-tools" *ngIf="!hasUserChanged() || loading">
                         <span class="flex align-center">
             <div *ngIf="answers.length > 0">
                 <div *ngIf="showBrowseAnswers" class="flex align-center ab-option-row">
                     <div *ngIf="filteredAnswers.length > 0">
-                        <div class="input-group input-group-xs">
+                        <div class="input-group input-group-xs answer-picker">
                 <span class="input-group-btn">
                     <button i18n-title title="Previous answer" class="btn btn-primary prevAnswer"
                             (click)="changeAnswerTo(-1)">&larr;</button>
                 </span>
-                            <select i18n-title class="form-control"
+                            <select i18n-title class="form-control answer-select"
                                     title="List of answers"
                                     [(ngModel)]="selectedAnswer"
                                     (ngModelChange)="changeAnswer()">
@@ -66,15 +66,16 @@
                         </span>
                         <label class="checkbox-inline onlyValid" *ngIf="anyInvalid">
                             <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
-                        <span *ngIf="showTeacher()"> | <a i18n (click)="getAllAnswers()">All answers</a>
+                        <span class="all-answers" *ngIf="showTeacher()"> <span class="delimiter">|</span> <a i18n (click)="getAllAnswers()">All answers</a>
                     </span>
                         <button i18n-title class="timButton" *ngIf="showNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button>
-                        <span *ngIf="selectedAnswer">| <a i18n i18n-title title="Link to currently selected answer"
+                        <span class="answer-link" *ngIf="selectedAnswer"><span class="delimiter">|</span> <a i18n i18n-title title="Link to currently selected answer"
                                                           (click)="$event.preventDefault()"
                                                           href="{{ getAnswerLink() }}">Link</a>
-                        (<a i18n-title title="Link to currently selected answer without other document content"
-                            target="_blank"
-                            href="{{ getAnswerLink(true) }}">only</a>)&nbsp;
+                            <span class="answer-only-link"> (<a i18n-title title="Link to currently selected answer without other document content"
+                                target="_blank"
+                                href="{{ getAnswerLink(true) }}">only</a>)&nbsp;
+                        </span>
                         </span>
                     </div>
                 </div>
@@ -127,26 +128,28 @@
                             <input type="checkbox"
                                    [(ngModel)]="giveCustomPoints"><ng-container i18n>Set custom points</ng-container></label>
                     </span>
-                            <span *ngIf="showTeacher()">
-                        <label class="checkbox-inline">
-                            <input type="checkbox" [(ngModel)]="isValidAnswer"><ng-container i18n="@@abIsValidCheckbox">Valid</ng-container>
-                        </label>
+                        <span class="answer-validity">
+                            <ng-container *ngIf="showTeacher()">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" [(ngModel)]="isValidAnswer"><ng-container i18n="@@abIsValidCheckbox">Valid</ng-container>
+                            </label>
+                                </ng-container>
+                            <span>
+                                <button i18n-title title="Save validity"
+                                        (click)="saveValidity()"
+                                        class="timButton btn-xs"
+                                        *ngIf="isValidAnswer != selectedAnswer.valid">
+                                    <i class="glyphicon glyphicon-ok"></i>
+                                </button>
                             </span>
-                    <span>
-                        <button i18n-title title="Save validity"
-                                (click)="saveValidity()"
-                                class="timButton btn-xs"
-                                *ngIf="isValidAnswer != selectedAnswer.valid">
-                            <i class="glyphicon glyphicon-ok"></i>
-                        </button>
-                    </span>
+                        </span>
                                 <span *ngIf="viewctrl.teacherMode && allowCustomPoints()">
                                     <label class="checkbox-inline">
                                         <input type="checkbox" [(ngModel)]="giveCustomPoints"><ng-container i18n>cp</ng-container>
                                     </label>
                                 </span>
                             </div>
-                            <span *ngIf="showTeacher()">
+                            <span *ngIf="showTeacher()" class="save-teacher">
                                 <label class="checkbox-inline">
                                     <input type="checkbox" (change)="toggleInput()" [(ngModel)]="saveTeacher"><ng-container i18n>Save teacher's fix</ng-container>
                                 </label>
@@ -229,7 +232,7 @@
            title="Show model answer"
            (click)="showModelAnswer()">{{getModelAnswerLinkText()}}</a>
         <div *ngIf="!showModelAnswerLink() && modelAnswer.linkTextBeforeCount">{{modelAnswer.linkTextBeforeCount}}</div>
-        <span *ngIf="showClearModelAnswerLockLink()"> | <a i18n i18n-title (click)="clearModelAnswerLock()" title="Manage model answer locks">Manage model answer locks</a>
+        <span *ngIf="showClearModelAnswerLockLink()"><span class="delimiter">|</span><a i18n i18n-title (click)="clearModelAnswerLock()" title="Manage model answer locks">Manage model answer locks</a>
         </span>
         <div class="modelAnswerContent" *ngIf="modelAnswerVisible" [innerHtml]="modelAnswerHtml | purify">
 
