@@ -81,7 +81,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     selector: "tim-cs-jsav-runner",
     template: `
 <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-<div class="csRunDiv no-popup-menu">
+<div class="csRunDiv no-popup-menu" [class.cs-has-header]="header">
     <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
     <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
     <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen | purify"></p>

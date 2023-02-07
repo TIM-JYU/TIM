@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["hide_"] }] */
-import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
+import {ChangeDetectorRef, Component, ElementRef} from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {defaultTimeout, toPromise} from "tim/util/utils";
@@ -9,7 +9,7 @@ import {CsController} from "./csPlugin";
 @Component({
     selector: "cs-git-reg-runner",
     template: `
-        <div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
+        <div [ngClass]="{'csRunDiv': markup.borders}" [class.cs-has-header]="header" class="type-{{rtype}}">
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 *ngIf="header" [innerHTML]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>

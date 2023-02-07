@@ -1241,7 +1241,7 @@ interface IAnswerResponse {
     selector: "imagex-runner",
     // changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="csRunDiv no-popup-menu">
+        <div class="csRunDiv no-popup-menu" [class.cs-has-header]="header">
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
             <h4 *ngIf="header" [innerHtml]="header"></h4>

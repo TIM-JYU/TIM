@@ -81,7 +81,7 @@ interface IStackData {
 @Component({
     selector: "tim-stack-runner",
     template: `
-        <div class="csRunDiv math que stack no-popup-menu">
+        <div class="csRunDiv math que stack no-popup-menu" [class.cs-has-header]="header">
             <h4 *ngIf="header" [innerHtml]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="markup.beforeOpen | purify"></p>

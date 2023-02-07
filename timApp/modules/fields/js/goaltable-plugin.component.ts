@@ -85,7 +85,7 @@ const scaleValueWords: Word[] = [
     selector: "tim-goaltable-runner",
     template: `
         <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-        <div [class.csRunDiv]="borders" class="goalTableDiv no-popup-menu">
+        <div [class.csRunDiv]="borders" [class.cs-has-header]="header" class="goalTableDiv no-popup-menu">
             <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
             <div class="goalTableInner">
                 <p>
