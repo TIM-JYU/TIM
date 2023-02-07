@@ -113,7 +113,12 @@ export class VelpWindowController implements IController {
             type: "select",
             title: "Visible to",
             values: [1, 2, 3, 4],
-            names: ["Just me", "Document owner", "Teachers", "Everyone"],
+            names: [
+                "Just me",
+                "Document owner",
+                "Teachers",
+                "Users with access to content",
+            ],
         };
         this.styleOptions = {
             type: "select",
