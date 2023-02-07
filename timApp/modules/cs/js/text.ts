@@ -1,4 +1,4 @@
-import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
+import {ChangeDetectorRef, Component, ElementRef} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {CsController} from "./csPlugin";
@@ -6,7 +6,7 @@ import {CsController} from "./csPlugin";
 @Component({
     selector: "cs-text-runner",
     template: `
-        <div [ngClass]="{csRunDiv: markup.borders}" class="csTinyDiv" style="text-align: left;">
+        <div [ngClass]="{csRunDiv: markup.borders}" [class.cs-has-header]="header" class="csTinyDiv" style="text-align: left;">
             <h4 *ngIf="header" [innerHTML]="header | purify"></h4>
             <span *ngIf="stem"
                 class="stem"

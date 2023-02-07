@@ -59,7 +59,7 @@ const PluginFields = t.intersection([
     selector: "tim-qst",
     template: `
         <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-        <div class="csRunDiv qst no-popup-menu" *ngIf="isTask()">
+        <div class="csRunDiv qst no-popup-menu" [class.cs-has-header]="getHeader()" *ngIf="isTask()">
             <h4 *ngIf="getHeader()" [innerHtml]="getHeader() | purify"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
             <tim-answer-sheet

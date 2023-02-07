@@ -59,7 +59,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
 @Component({
     selector: "tim-geogebra",
     template: `
-        <div [class.csRunDiv]="markup.borders" class="math que geogebra no-popup-menu">
+        <div [class.csRunDiv]="markup.borders" [class.cs-has-header]="header" class="math que geogebra no-popup-menu">
             <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="markup.beforeOpen | purify"></p>

@@ -50,7 +50,7 @@ interface IRunResult {
     selector: "cs-extcheck-runner",
     styleUrls: ["./extcheck.scss"],
     template: `
-        <div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
+        <div [ngClass]="{'csRunDiv': markup.borders}" [class.cs-has-header]="header" class="type-{{rtype}}">
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 *ngIf="header" [innerHTML]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
