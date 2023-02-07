@@ -236,7 +236,7 @@ export class AnnotationComponent
             {id: 1, name: "Just me"},
             {id: 2, name: "Document owner"},
             {id: 3, name: "Teachers"},
-            {id: 4, name: "Everyone"},
+            {id: 4, name: "Users with access"},
         ],
     };
     styleOptions = {
@@ -693,7 +693,7 @@ export class AnnotationComponent
         'Just me' means that the annotation is visible only to yourself.
         'Document owner' refers to the person or group who has been named as the document owner.
         'Teachers' refers to the users that have teacher access to this document.
-        'Everyone' means that the annotation is visible to everyone who can view the assessed content.`);
+        'Users with access' means that the annotation is visible to everyone who can view the assessed content.`);
     }
 
     onColorUpdate(newColor: string) {
