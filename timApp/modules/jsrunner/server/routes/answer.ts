@@ -20,6 +20,7 @@ import type {
     VelpDataT,
 } from "../servertypes";
 import {JsrunnerAnswer} from "../servertypes";
+import {ivmRequest} from "../util/request";
 import type {IToolsResult, NewUserData, ToolsBase} from "./tools";
 import {GTools, numberLines, Tools} from "./tools";
 
@@ -301,6 +302,10 @@ router.put("/", async (req, res, next) => {
         peerreviews: value.input.peerreviews,
     };
     await ctx.global.set("g", JSON.stringify(runnerData));
+    await ctx.global.set(
+        "_ivm_request",
+        new ivm.Callback(ivmRequest, {sync: true})
+    );
     let r: AnswerReturn;
     try {
         const result: ReturnType<typeof runner> = JSON.parse(

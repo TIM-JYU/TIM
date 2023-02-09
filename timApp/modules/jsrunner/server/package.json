@@ -18,9 +18,11 @@
     "fp-ts": "^2.12.3",
     "http-errors": "^2.0.0",
     "io-ts": "^2.2.18",
-    "isolated-vm": "^4.4.1",
+    "isolated-vm": "^4.4.2",
     "jade": "~1.11.0",
-    "morgan": "~1.10.0"
+    "morgan": "~1.10.0",
+    "node-fetch": "^2.6.9",
+    "form-data": "^4.0.0"
   },
   "devDependencies": {
     "@types/acorn": "^6.0.0",
@@ -28,6 +30,8 @@
     "@types/debug": "^4.1.7",
     "@types/http-errors": "^1.8.2",
     "@types/morgan": "^1.9.3",
+    "@types/node": "^18.13.0",
+    "@types/node-fetch": "^2.6.2",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
     "eslint": "^8.24.0",

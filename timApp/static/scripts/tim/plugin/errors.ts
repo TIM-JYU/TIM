@@ -26,7 +26,11 @@ function indexOfFirstName(context: Context) {
     return context.findIndex((c) => c.key.match(/^[a-z]/) != null);
 }
 
-export function getErrors(v: Left<t.Errors>): MarkupError {
+export function getErrors(
+    v: Left<t.Errors>,
+    filterKey: string = "markup",
+    showKeyLessErrors: boolean = true
+): MarkupError {
     const ps: Array<[string[], string]> = v.left
         .filter((e) => {
             const ind = indexOfFirstName(e.context);
@@ -34,7 +38,7 @@ export function getErrors(v: Left<t.Errors>): MarkupError {
                 return (
                     e.context.length >= 3 &&
                     e.context[0].key === "" &&
-                    e.context[ind].key === "markup"
+                    (e.context[ind].key === filterKey || filterKey === "*")
                 );
             }
         })
@@ -49,6 +53,10 @@ export function getErrors(v: Left<t.Errors>): MarkupError {
         const key = keys.join(".");
         // don't report parent fields because it's not useful
         if (isPrefixOfSome(key, knownKeys)) {
+            continue;
+        }
+        // Avoid showing the errors that don't have a key
+        if (!key && !showKeyLessErrors) {
             continue;
         }
         // avoid too verbose messages
