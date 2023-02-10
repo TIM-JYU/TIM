@@ -8,6 +8,7 @@ import io
 import json
 import logging
 import os
+import random
 import re
 import shlex
 import shutil
@@ -538,6 +539,12 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
 
     usercode = get_json_eparam(query.jso, "state", "usercode", None)
 
+    if usercode is None and markup.get("parsonsShuffleHost", False):
+        bycodeLines = bycode.split("\n")
+        random.shuffle(bycodeLines)
+        bycode = "\n".join(bycodeLines)
+        js["by"] = bycode
+
     if before_open or is_rv:
         susercode = language.modify_usercode(usercode or "")
         before_open = before_open.replace("{USERCODE}", susercode)
@@ -747,11 +754,15 @@ def replace_code(rules, s):
         cut_replace, cut_by = get_2_items(rule, "replace", "by", None, "")
         if cut_replace:
             try:
+                p = re.compile(cut_replace, flags=re.S)
+                result = p.sub(cut_by, result)
+                """
                 while True:
                     m = re.search(cut_replace, result, flags=re.S)
                     if not m:
                         break
                     result = result.replace(m.group(1), cut_by)
+                """
             except Exception as e:
                 msg = str(e)
                 if isinstance(e, IndexError):
@@ -1492,17 +1503,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Check query parameters
             p0 = FileParams(query, "", "")
-            # print("p0=")
-            # print(p0.replace)
+
+            usercode_edit_rules = query.jso.get("markup", {}).get("usercodeEdit", None)
+            if p0.by and usercode_edit_rules:
+                p0.by = replace_code(usercode_edit_rules, p0.by)
+
             if p0.url == "" and p0.replace == "":
                 p0.replace = "XXXX"
 
-            # print("type=" + ttype)
-
-            # s = ""
-            # if p0.url != "":
-            #
-            s = get_file_to_output(query, False and print_file)
+            s = get_file_to_output(query, False and print_file, p0)
             slines = ""
 
             # Open the file and write it
