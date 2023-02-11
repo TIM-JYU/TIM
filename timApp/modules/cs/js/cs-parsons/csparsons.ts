@@ -9,6 +9,7 @@ interface CsParsonsOptions {
     notordermatters: boolean;
     words: boolean;
     maxcheck: number | undefined;
+    maxhostcheck: number | undefined;
     separator?: string;
     minWidth: string;
     styleWords: string;
@@ -45,6 +46,14 @@ export class CsParsonsWidget {
 
     show() {
         let classes = "sortable-code sortable-output";
+        let maxn;
+        if (this.options.maxcheck) {
+            maxn = this.options.maxcheck;
+        }
+        if (this.options.maxhostcheck) {
+            maxn = this.options.maxhostcheck;
+        }
+
         const parsonsEditDiv = this.options.sortable;
         let type = "div";
         if (this.options.words) {
@@ -80,7 +89,7 @@ export class CsParsonsWidget {
             // var div2 = document.createElement(typ);
             // div2.appendChild(div);
             parsonsEditDiv.appendChild(div);
-            if (this.options.maxcheck && this.options.maxcheck == i + 1) {
+            if (maxn && maxn == i + 1) {
                 div = document.createElement(type);
                 div.className = "parsonsstatic";
                 parsonsEditDiv.appendChild(div);
@@ -92,7 +101,7 @@ export class CsParsonsWidget {
             "float: left; width: 100%" + ";" + this.options.styleWords
         );
         const a = $(parsonsEditDiv);
-        if (this.options.maxcheck) {
+        if (maxn) {
             a.sortable({
                 items: ":not(.parsonsstatic)",
                 start: function () {
@@ -160,7 +169,7 @@ export class CsParsonsWidget {
         return result;
     }
 
-    check(userText: string) {
+    check(userText: string, correct?: number[]) {
         const result = "";
         const div = this.options.sortable;
         const lines = this.text.split("\n");
@@ -171,14 +180,15 @@ export class CsParsonsWidget {
         let maxn = div.childElementCount;
         if (
             this.options.maxcheck &&
-            this.options.maxcheck < div.childElementCount
+            this.options.maxcheck < div.childElementCount &&
+            !correct
         ) {
             maxn = this.options.maxcheck;
         }
         for (let i = 0; i < maxn; i++) {
             const node = div.children[i];
             let nodeok = true;
-            if (this.options.notordermatters) {
+            if (this.options.notordermatters && !correct) {
                 nodeok = false;
                 for (let j = 0; j < maxn; j++) {
                     if (lines[j] === ulines[i]) {
@@ -187,6 +197,14 @@ export class CsParsonsWidget {
                         break;
                     }
                 }
+            } else if (correct) {
+                if (i >= correct.length) {
+                    // handle max as many as in correct
+                    break;
+                }
+                if (correct[i] < 0) {
+                    nodeok = false;
+                }
             } else {
                 if (lines[i] !== ulines[i]) {
                     nodeok = false;
@@ -194,7 +212,7 @@ export class CsParsonsWidget {
             }
             if (!nodeok) {
                 node.setAttribute("style", "background-color: RED;");
-            } else if (this.options.maxcheck) {
+            } else if (this.options.maxcheck || correct) {
                 node.setAttribute("style", "background-color: LIGHTGREEN;");
             }
         }

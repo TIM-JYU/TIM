@@ -30,6 +30,7 @@ from languages import dummy_language, sanitize_cmdline
 from manager import all_js_files, all_css_files
 from points import return_points, get_points_rule, check_number_rule, give_points
 from run import generate_filename, run2_subdir
+from timApp.modules.cs.cs_utils import replace_code, check_parsons
 from tim_common.cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from tim_common.fileParams import (
     encode_json_data,
@@ -745,40 +746,6 @@ def debug_str(s):
     print(t.isoformat(" ") + ": " + s)
 
 
-def replace_code(rules, s):
-    result = s
-    if not rules:
-        return result
-
-    for rule in rules:
-        cut_replace, cut_by = get_2_items(rule, "replace", "by", None, "")
-        if cut_replace:
-            try:
-                p = re.compile(cut_replace, flags=re.S)
-                result = p.sub(cut_by, result)
-                """
-                while True:
-                    m = re.search(cut_replace, result, flags=re.S)
-                    if not m:
-                        break
-                    result = result.replace(m.group(1), cut_by)
-                """
-            except Exception as e:
-                msg = str(e)
-                if isinstance(e, IndexError):
-                    msg = "group () missing"
-                result = (
-                    "replace pattern error: "
-                    + msg
-                    + "\n"
-                    + "Pattern: "
-                    + cut_replace
-                    + "\n\n"
-                    + result
-                )
-    return result
-
-
 def check_code(out, err, compiler_output, ttype):
     err = err + compiler_output
     if ttype == "fs":
@@ -896,30 +863,6 @@ def check_fullprogram(query, cut_errors=False):
     # query.jso.markup["byCode"] = by_code
     # query.jso.markup["program"] = program
     return True
-
-
-def check_parsons(expect_code, usercode, maxn, notordermatters):
-    p = 0
-    exlines = expect_code.splitlines()
-    exlines = exlines[:maxn]
-    usrlines = usercode.splitlines()
-    usrlines = usrlines[:maxn]
-
-    if notordermatters:
-        for usrline in usrlines:
-            for i, exline in enumerate(exlines):
-                if usrline == exline:
-                    exlines[i] = "XXXXXXXXXXXX"
-                    p += 1
-                    break
-    else:
-        for i, exline in enumerate(exlines):
-            if i >= len(usrlines):
-                break
-            if exline == usrlines[i]:
-                p += 1
-
-    return p
 
 
 def doc_address(query, check=False):
@@ -1662,15 +1605,22 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if expect_code:
                         if expect_code == "byCode":
                             expect_code = get_param(query, "byCode", "")
+                            if expect_code == "":
+                                expect_code = query.query.get("by", [""])[0]
                         maxn = get_param(query, "parsonsmaxcheck", 0)
+                        if maxn <= 0:
+                            maxn = get_param(query, "parsonsmaxhostcheck", 0)
                         if maxn > 0:
-                            p = check_parsons(
+                            p, parsons_correct = check_parsons(
                                 expect_code,
                                 usercode,
                                 maxn,
                                 get_param(query, "parsonsnotordermatters", False),
+                                usercode_edit_rules,
                             )
-                            give_points(points_rule, "code", p)
+                            if p > 0:
+                                give_points(points_rule, "code", 1)
+                            web["parsons_correct"] = parsons_correct
                         else:
                             excode = expect_code.rstrip("\n")
                             match = False

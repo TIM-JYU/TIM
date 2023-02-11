@@ -13,11 +13,12 @@ export class ParsonsEditorComponent implements IEditor {
     private parson?: {
         join: (str: string) => string;
         clear: () => void;
-        check: (str: string) => string;
+        check: (str: string, correct?: number[]) => string;
     };
     private content_?: string;
     @Input() shuffle: boolean = false;
     @Input() maxcheck?: number;
+    @Input() maxhostcheck?: number;
     @Input() notordermatters: boolean = false;
     @Input() base: string = "";
     @Input() styleWords: string = "";
@@ -62,6 +63,7 @@ export class ParsonsEditorComponent implements IEditor {
             shuffle: this.shuffle,
             styleWords: this.styleWords,
             maxcheck: this.maxcheck,
+            maxhostcheck: this.maxhostcheck,
             notordermatters: this.notordermatters,
             onChange: (p) => {
                 this.contentChanged(p.join("\n"));
@@ -81,5 +83,9 @@ export class ParsonsEditorComponent implements IEditor {
 
     check(): string {
         return this.parson?.check(this.content) ?? "";
+    }
+
+    checkHost(correct: number[]): string {
+        return this.parson?.check(this.content, correct) ?? "";
     }
 }
