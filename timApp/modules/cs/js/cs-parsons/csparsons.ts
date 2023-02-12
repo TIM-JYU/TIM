@@ -9,7 +9,7 @@ interface CsParsonsOptions {
     notordermatters: boolean;
     words: boolean;
     maxcheck: number | undefined;
-    maxhostcheck: number | undefined;
+    shuffleHost: boolean | undefined;
     separator?: string;
     minWidth: string;
     styleWords: string;
@@ -50,9 +50,6 @@ export class CsParsonsWidget {
         if (this.options.maxcheck) {
             maxn = this.options.maxcheck;
         }
-        if (this.options.maxhostcheck) {
-            maxn = this.options.maxhostcheck;
-        }
 
         const parsonsEditDiv = this.options.sortable;
         let type = "div";
@@ -83,6 +80,7 @@ export class CsParsonsWidget {
                 }
             }
             div.setAttribute("class", "sortitem");
+            div.setAttribute("parsons-style", "sortitem");
 
             const t = document.createTextNode(w);
             div.appendChild(t);
@@ -169,7 +167,7 @@ export class CsParsonsWidget {
         return result;
     }
 
-    check(userText: string, correct?: number[]) {
+    check(userText: string, correct?: number[], styles?: string[]) {
         const result = "";
         const div = this.options.sortable;
         const lines = this.text.split("\n");
@@ -185,15 +183,22 @@ export class CsParsonsWidget {
         ) {
             maxn = this.options.maxcheck;
         }
-        for (let i = 0; i < maxn; i++) {
-            const node = div.children[i];
-            let nodeok = true;
+        let i = -1;
+        for (const node of div.children) {
+            if (node.getAttribute("parsons-style") !== "sortitem") {
+                continue;
+            }
+            i++;
+            if (i >= maxn) {
+                break;
+            }
+            let nodeok = 1;
             if (this.options.notordermatters && !correct) {
-                nodeok = false;
+                nodeok = -1;
                 for (let j = 0; j < maxn; j++) {
                     if (lines[j] === ulines[i]) {
                         lines[j] = "XXXXXXXXXXXXXX";
-                        nodeok = true;
+                        nodeok = 1;
                         break;
                     }
                 }
@@ -202,18 +207,50 @@ export class CsParsonsWidget {
                     // handle max as many as in correct
                     break;
                 }
-                if (correct[i] < 0) {
-                    nodeok = false;
-                }
+                nodeok = correct[i];
             } else {
                 if (lines[i] !== ulines[i]) {
-                    nodeok = false;
+                    nodeok = -1;
                 }
             }
-            if (!nodeok) {
+            if (nodeok == -1) {
                 node.setAttribute("style", "background-color: RED;");
-            } else if (this.options.maxcheck || correct) {
+            } else if ((this.options.maxcheck && !correct) || nodeok == 1) {
                 node.setAttribute("style", "background-color: LIGHTGREEN;");
+            }
+        }
+        if (styles) {
+            // use style list to style items
+            i = -1;
+            const regex = /(class:.*?;)/;
+            for (const node of div.children) {
+                if (node.getAttribute("parsons-style") !== "sortitem") {
+                    continue;
+                }
+                i++;
+                if (i >= styles.length) {
+                    break;
+                }
+                if (!styles?.[i]) {
+                    continue;
+                }
+                let style = styles[i].trim();
+                // is there non-standard class: inside style?
+                const found = style.match(regex);
+                if (found) {
+                    const cls = found[0]
+                        .replace("class:", "")
+                        .replace(";", "")
+                        .replace(/['"]/g, "")
+                        .trim();
+                    for (const cl of cls.split(" ")) {
+                        node.classList.add(cl);
+                    }
+                    style = style.replace(found[0], "").trim();
+                }
+                if (style) {
+                    node.setAttribute("style", style);
+                }
             }
         }
 
@@ -228,6 +265,10 @@ export class CsParsonsWidget {
         for (let i = 0; i < div.childElementCount; i++) {
             const node = div.children[i];
             node.removeAttribute("style");
+            if (node.getAttribute("parsons-style") !== "sortitem") {
+                continue;
+            }
+            node.setAttribute("class", "sortitem");
         }
     }
 }

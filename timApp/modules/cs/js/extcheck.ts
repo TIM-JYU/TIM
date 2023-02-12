@@ -81,7 +81,7 @@ interface IRunResult {
                             [editorIndex]="markup.editorMode"
                             [parsonsShuffle]="initUserCode"
                             [parsonsMaxcheck]="markup.parsonsmaxcheck"
-                            [parsonsMaxHostcheck]="markup.parsonsmaxhostcheck"
+                            [parsonsShuffleHost]="markup.parsonsShuffleHost"
                             [parsonsNotordermatters]="markup.parsonsnotordermatters"
                             [parsonsStyleWords]="markup['style-words']"
                             [parsonsWords]="markup.words"

@@ -1608,8 +1608,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                             if expect_code == "":
                                 expect_code = query.query.get("by", [""])[0]
                         maxn = get_param(query, "parsonsmaxcheck", 0)
-                        if maxn <= 0:
-                            maxn = get_param(query, "parsonsmaxhostcheck", 0)
                         if maxn > 0:
                             p, parsons_correct = check_parsons(
                                 expect_code,

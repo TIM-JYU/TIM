@@ -158,7 +158,7 @@ export class JSParsonsEditorComponent implements IEditor {
             <cs-parsons-editor *ngIf="mode == Mode.Parsons"
                     [shuffle]="parsonsShuffle"
                     [maxcheck]="parsonsMaxcheck"
-                    [maxhostcheck]="parsonsMaxHostcheck"
+                    [shuffleHost]="parsonsShuffleHost"
                     [base]="base"
                     [words]="parsonsWords"
                     [styleWords]="parsonsStyleWords"
@@ -218,7 +218,7 @@ export class EditorComponent implements IMultiEditor {
 
     @Input() parsonsShuffle: boolean = false;
     @Input() parsonsMaxcheck?: number;
-    @Input() parsonsMaxHostcheck?: number;
+    @Input() parsonsShuffleHost?: boolean;
     @Input() parsonsNotordermatters: boolean = false;
     @Input() parsonsStyleWords: string = "";
     @Input() parsonsWords: boolean = false;

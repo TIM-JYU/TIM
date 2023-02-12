@@ -698,7 +698,7 @@ const CsMarkupOptional = t.partial({
     noeditor: t.boolean,
     normal: nullable(t.string),
     parsonsmaxcheck: t.number,
-    parsonsmaxhostcheck: t.number,
+    parsonsShuffleHost: t.boolean,
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -907,6 +907,7 @@ interface IRunResponseWeb {
     "-replyHTML"?: string;
     "-replyMD"?: string;
     parsons_correct?: number[];
+    parsons_styles?: string[];
 }
 
 export interface IRunResponse {
@@ -1709,8 +1710,8 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.parsonsmaxcheck;
     }
 
-    get parsonsmaxhostcheck() {
-        return this.markup.parsonsmaxhostcheck;
+    get parsonsShuffleHost() {
+        return this.markup.parsonsShuffleHost;
     }
 
     get parsonsnotordermatters() {
@@ -2720,10 +2721,11 @@ ${fhtml}
             if (!noErrorClear) {
                 this.error = data.web.error;
             }
-            if (data.web.parsons_correct) {
+            if (data.web.parsons_correct || data.web.parsons_styles) {
                 if (this.editor?.parsonsEditor) {
                     this.editor.parsonsEditor.checkHost(
-                        data.web.parsons_correct
+                        data.web.parsons_correct,
+                        data.web.parsons_styles
                     );
                 }
             }
@@ -3781,7 +3783,7 @@ ${fhtml}
                                [editorIndex]="editorMode"
                                [parsonsShuffle]="initUserCode"
                                [parsonsMaxcheck]="parsonsmaxcheck"
-                               [parsonsMaxHostcheck]="parsonsmaxhostcheck"
+                               [parsonsShuffleHost]="parsonsShuffleHost"
                                [parsonsNotordermatters]="parsonsnotordermatters"
                                [parsonsStyleWords]="markup['style-words']"
                                [parsonsWords]="words"
