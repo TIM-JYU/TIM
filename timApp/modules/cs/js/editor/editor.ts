@@ -17,6 +17,11 @@ import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
 
+export interface IParsonsHtmlLine {
+    t: string;
+    h: string;
+}
+
 type ModeID = number;
 
 export class Mode {
@@ -162,7 +167,8 @@ export class JSParsonsEditorComponent implements IEditor {
                     [base]="base"
                     [words]="parsonsWords"
                     [styleWords]="parsonsStyleWords"
-                    [notordermatters]="parsonsNotordermatters"
+                    [notordermatters]="parsonsNotordermatters" 
+                    [parsonsHTML]="parsonsHTML"
                     (change)="onEditorContentChanged($event)">
             </cs-parsons-editor>
             <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
@@ -222,6 +228,7 @@ export class EditorComponent implements IMultiEditor {
     @Input() parsonsNotordermatters: boolean = false;
     @Input() parsonsStyleWords: string = "";
     @Input() parsonsWords: boolean = false;
+    @Input() parsonsHTML?: IParsonsHtmlLine[];
 
     private modeIndex_: number = -1;
     private modes_: Mode[] = [];

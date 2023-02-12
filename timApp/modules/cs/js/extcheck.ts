@@ -85,6 +85,7 @@ interface IRunResult {
                             [parsonsNotordermatters]="markup.parsonsnotordermatters"
                             [parsonsStyleWords]="markup['style-words']"
                             [parsonsWords]="markup.words"
+                            [parsonsHTML]="markup.parsonsHTML"
                             (close)="onFileClose($event)"
                             (content)="onContentChange($event)">
                     </cs-editor>

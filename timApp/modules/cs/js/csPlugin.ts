@@ -468,6 +468,11 @@ const TemplateButton = t.intersection([
     }),
 ]);
 
+const ParsonsHtmlLine = t.type({
+    t: t.string,
+    h: t.string,
+});
+
 interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
@@ -699,6 +704,7 @@ const CsMarkupOptional = t.partial({
     normal: nullable(t.string),
     parsonsmaxcheck: t.number,
     parsonsShuffleHost: t.boolean,
+    parsonsHTML: t.array(ParsonsHtmlLine),
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -1720,6 +1726,10 @@ export class CsController extends CsBase implements ITimComponent {
 
     get words() {
         return this.markup.words;
+    }
+
+    get parsonsHTML() {
+        return this.markup.parsonsHTML;
     }
 
     get count() {
@@ -3787,6 +3797,7 @@ ${fhtml}
                                [parsonsNotordermatters]="parsonsnotordermatters"
                                [parsonsStyleWords]="markup['style-words']"
                                [parsonsWords]="words"
+                               [parsonsHTML]="parsonsHTML"
                                (close)="onFileClose($event)"
                                (content)="onContentChange($event)"
                                [spellcheck]="spellcheck">

@@ -3,6 +3,11 @@ import {shuffleStrings} from "tim/plugin/util";
 import "./jquery-ui-sortable.min.js";
 import "./jquery.ui.touch-punch.min.js";
 
+interface IParsonsHtmlLine {
+    t: string;
+    h: string;
+}
+
 interface CsParsonsOptions {
     shuffle: boolean;
     sortable: Element;
@@ -13,14 +18,31 @@ interface CsParsonsOptions {
     separator?: string;
     minWidth: string;
     styleWords: string;
+    parsonsHTML: IParsonsHtmlLine[] | undefined;
 
     onChange?(widget: CsParsonsWidget): void;
+}
+
+export function shuffleParsonHTML(
+    strings: IParsonsHtmlLine[]
+): IParsonsHtmlLine[] {
+    const result = strings.slice();
+    const n = strings.length;
+    for (let i = n - 1; i >= 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = result[i];
+        result[i] = result[j];
+        result[j] = tmp;
+    }
+    return result;
 }
 
 export class CsParsonsWidget {
     options: CsParsonsOptions;
     text: string = "";
     lines: string[] = [];
+
+    parsonsHTML: IParsonsHtmlLine[] | undefined;
 
     constructor(options: CsParsonsOptions) {
         const defaults = {
@@ -36,9 +58,14 @@ export class CsParsonsWidget {
 
     init(text: string, userText: string) {
         this.text = text;
+        this.parsonsHTML = this.options.parsonsHTML;
         if (this.options.shuffle) {
-            this.lines = text.split("\n");
-            this.lines = shuffleStrings(this.lines);
+            if (this.parsonsHTML) {
+                this.parsonsHTML = shuffleParsonHTML(this.parsonsHTML);
+            } else {
+                this.lines = text.split("\n");
+                this.lines = shuffleStrings(this.lines);
+            }
         } else {
             this.lines = userText.split("\n");
         }
@@ -58,11 +85,21 @@ export class CsParsonsWidget {
             this.options.separator = " ";
             type = "span";
         }
-        const words = this.lines;
+        let n = this.lines.length;
+        if (this.parsonsHTML) {
+            n = this.parsonsHTML.length;
+        }
         parsonsEditDiv.innerHTML = "";
-        for (let i = 0; i < words.length; i++) {
+        for (let i = 0; i < n; i++) {
             let div;
-            let w = words[i];
+            let w = "";
+            let h = "";
+            if (this.parsonsHTML) {
+                w = this.parsonsHTML[i].t;
+                h = this.parsonsHTML[i].h;
+            } else {
+                w = this.lines[i];
+            }
             if (this.options.words && w === "") {
                 div = document.createElement("div");
                 w = "\\n";
@@ -81,9 +118,14 @@ export class CsParsonsWidget {
             }
             div.setAttribute("class", "sortitem");
             div.setAttribute("parsons-style", "sortitem");
+            div.setAttribute("parsons-text", w);
 
-            const t = document.createTextNode(w);
-            div.appendChild(t);
+            if (h) {
+                div.innerHTML = h;
+            } else {
+                const t = document.createTextNode(w);
+                div.appendChild(t);
+            }
             // var div2 = document.createElement(typ);
             // div2.appendChild(div);
             parsonsEditDiv.appendChild(div);
@@ -145,9 +187,12 @@ export class CsParsonsWidget {
         if (!div) {
             return "";
         }
-        for (let i = 0; i < div.childElementCount; i++) {
-            const node = div.childNodes[i];
-            let line = node.textContent;
+        for (const node of div.children) {
+            if (node.getAttribute("parsons-style") !== "sortitem") {
+                continue;
+            }
+            // let line = node.textContent;
+            let line = node.getAttribute("parsons-text");
             if (line === "") {
                 continue;
             } // separatorline

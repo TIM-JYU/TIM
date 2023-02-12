@@ -3,7 +3,7 @@ import {EventEmitter} from "@angular/core";
 import {Output} from "@angular/core";
 import type {SimpleChanges} from "@angular/core";
 import {ElementRef, ViewChild, Component, Input} from "@angular/core";
-import type {IEditor} from "./editor";
+import type {IEditor, IParsonsHtmlLine} from "./editor";
 
 @Component({
     selector: "cs-parsons-editor",
@@ -22,6 +22,7 @@ export class ParsonsEditorComponent implements IEditor {
     @Input() notordermatters: boolean = false;
     @Input() base: string = "";
     @Input() styleWords: string = "";
+    @Input() parsonsHTML?: IParsonsHtmlLine[];
     @Input() words: boolean = false;
     @ViewChild("area") area!: ElementRef;
     @Output("change") private contentChange: EventEmitter<{
@@ -62,6 +63,7 @@ export class ParsonsEditorComponent implements IEditor {
             minWidth: "40px",
             shuffle: this.shuffle,
             styleWords: this.styleWords,
+            parsonsHTML: this.parsonsHTML,
             maxcheck: this.maxcheck,
             shuffleHost: this.shuffleHost,
             notordermatters: this.notordermatters,

@@ -32,6 +32,7 @@ from points import return_points, get_points_rule, check_number_rule, give_point
 from run import generate_filename, run2_subdir
 from timApp.modules.cs.cs_utils import replace_code, check_parsons
 from tim_common.cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
+from timApp.markdown.dumboclient import call_dumbo, DumboOptions, MathType, InputFormat
 from tim_common.fileParams import (
     encode_json_data,
     replace_random,
@@ -555,6 +556,28 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
     if doc_addr:
         js["markup"]["docurl"] = doc_addr["dochtml"]
 
+    if get_param(query, "parsonsMD", False):
+        bymd = []
+        code = bycode
+        if usercode:
+            code = usercode
+        for s in code.split("\n"):
+            bymd.append(s)
+        mtype = MathType.MathJax
+        # TODO: vaihda nimeksi parsonsMathType ja merkkijonoksi
+        if get_param(query, "parsonsMathSVG", False):
+            mtype = MathType.SVG
+        dopts = DumboOptions(
+            math_type=mtype,
+            input_format=InputFormat.Markdown,
+            math_preamble="",
+            smart_punct=False,
+        )
+        htmls = call_dumbo(bymd, options=dopts)
+        parsonsHTML = []
+        for i in range(0, len(bymd)):
+            parsonsHTML.append({"t": bymd[i], "h": htmls[i]})
+        js["markup"]["parsonsHTML"] = parsonsHTML
     jso = json.dumps(js)
 
     if is_rv:
