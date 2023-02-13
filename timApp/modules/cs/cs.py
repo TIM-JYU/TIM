@@ -564,12 +564,10 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
 
     parsonsMD = get_param(query, "parsonsMD", None)
     if parsonsMD and parsonsMD.get("md", True):
-        bymd = []
         code = bycode
         if usercode:
             code = usercode
-        for s in code.split("\n"):
-            bymd.append(s)
+        bymd = code.split("\n")
         dopts = get_dumbo_options_from_obj(parsonsMD)
         htmls = call_dumbo(bymd, options=dopts)
         parsonsHTML = []
