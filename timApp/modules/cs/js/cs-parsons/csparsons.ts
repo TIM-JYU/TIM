@@ -2,6 +2,7 @@ import $ from "jquery";
 import {shuffleStrings} from "tim/plugin/util";
 import "./jquery-ui-sortable.min.js";
 import "./jquery.ui.touch-punch.min.js";
+import DOMPurify from "dompurify";
 
 interface IParsonsHtmlLine {
     t: string;
@@ -121,7 +122,7 @@ export class CsParsonsWidget {
             div.setAttribute("parsons-text", w);
 
             if (h) {
-                div.innerHTML = h;
+                div.innerHTML = DOMPurify.sanitize(h);
             } else {
                 const t = document.createTextNode(w);
                 div.appendChild(t);
