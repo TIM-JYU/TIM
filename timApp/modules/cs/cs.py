@@ -32,7 +32,13 @@ from manager import all_js_files, all_css_files
 from points import return_points, get_points_rule, check_number_rule, give_points
 from run import generate_filename, run2_subdir
 from tim_common.cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
-from tim_common.dumboclient import call_dumbo, DumboOptions, MathType, InputFormat
+from tim_common.dumboclient import (
+    call_dumbo,
+    DumboOptions,
+    MathType,
+    InputFormat,
+    get_dumbo_options_from_obj,
+)
 from tim_common.fileParams import (
     encode_json_data,
     replace_random,
@@ -545,6 +551,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
         random.shuffle(bycodeLines)
         bycode = "\n".join(bycodeLines)
         js["by"] = bycode
+        js["markup"].pop("byCode", None)
 
     if before_open or is_rv:
         susercode = language.modify_usercode(usercode or "")
@@ -555,23 +562,15 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
     if doc_addr:
         js["markup"]["docurl"] = doc_addr["dochtml"]
 
-    if get_param(query, "parsonsMD", False):
+    parsonsMD = get_param(query, "parsonsMD", None)
+    if parsonsMD and parsonsMD.get("md", True):
         bymd = []
         code = bycode
         if usercode:
             code = usercode
         for s in code.split("\n"):
             bymd.append(s)
-        mtype = MathType.MathJax
-        # TODO: vaihda nimeksi parsonsMathType ja merkkijonoksi
-        if get_param(query, "parsonsMathSVG", False):
-            mtype = MathType.SVG
-        dopts = DumboOptions(
-            math_type=mtype,
-            input_format=InputFormat.Markdown,
-            math_preamble="",
-            smart_punct=False,
-        )
+        dopts = get_dumbo_options_from_obj(parsonsMD)
         htmls = call_dumbo(bymd, options=dopts)
         parsonsHTML = []
         for i in range(0, len(bymd)):

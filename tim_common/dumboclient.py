@@ -72,6 +72,21 @@ DUMBO_URL = "http://dumbo:5000"
 KEYS_PATHS = {"/mdkeys", "/latexkeys"}
 
 
+def get_dumbo_options_from_obj(
+    obj, base_opts: DumboOptions = DumboOptions.default()
+) -> DumboOptions:
+    if obj is None:
+        return base_opts
+    return DumboOptions(
+        math_type=MathType.from_string(obj.get("math_type", base_opts.math_type)),
+        math_preamble=obj.get("math_preamble", base_opts.math_preamble),
+        input_format=InputFormat.from_string(
+            obj.get("input_format", base_opts.input_format)
+        ),
+        smart_punct=obj.get("smart_punct", base_opts.smart_punct),
+    )
+
+
 @overload
 def call_dumbo(
     data: list[str],
