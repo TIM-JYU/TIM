@@ -9,7 +9,6 @@ import sqlalchemy.exc
 from sqlalchemy.orm import close_all_sessions
 from sqlalchemy_utils import drop_database
 
-import timApp.markdown.dumboclient
 import timApp.timdb.init
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -173,7 +172,6 @@ TEST_USER_3_NAME = "Test user 3"
 TEST_USER_1_USERNAME = "testuser1"
 TEST_USER_2_USERNAME = "testuser2"
 TEST_USER_3_USERNAME = "testuser3"
-
 
 CI_SKIP_TESTS = {
     # STACK image is not yet pulled in CI

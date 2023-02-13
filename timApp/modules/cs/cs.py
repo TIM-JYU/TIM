@@ -24,15 +24,15 @@ from traceback import print_exc
 from urllib.request import urlopen
 
 from cs_logging import get_logger
+from cs_utils import replace_code, check_parsons
 from file_handler import FileHandler
 from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
 from manager import all_js_files, all_css_files
 from points import return_points, get_points_rule, check_number_rule, give_points
 from run import generate_filename, run2_subdir
-from timApp.modules.cs.cs_utils import replace_code, check_parsons
 from tim_common.cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
-from timApp.markdown.dumboclient import call_dumbo, DumboOptions, MathType, InputFormat
+from tim_common.dumboclient import call_dumbo, DumboOptions, MathType, InputFormat
 from tim_common.fileParams import (
     encode_json_data,
     replace_random,
@@ -48,7 +48,6 @@ from tim_common.fileParams import (
     LAZYEND,
     get_param_del,
     query_params_to_map_check_parts,
-    get_2_items,
     get_param_table,
     get_clean_param,
     get_params,
@@ -2070,7 +2069,6 @@ else:
         """Handle requests in a separate thread."""
 
     print("Normal mode/ForkingMixIn")
-
 
 if __name__ == "__main__":
     init_directories()

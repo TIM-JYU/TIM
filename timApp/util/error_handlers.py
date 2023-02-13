@@ -32,7 +32,6 @@ from timApp.auth.sessioninfo import get_current_user_object, clear_session
 from timApp.document.docentry import DocEntry
 from timApp.document.docsettings import get_minimal_visibility_settings
 from timApp.folder.folder import Folder
-from timApp.markdown.dumboclient import DumboHTMLException
 from timApp.notification.send_email import send_email
 from timApp.plugin.pluginexception import PluginException
 from timApp.sisu.sisu import IncorrectSettings, SisuError
@@ -51,6 +50,7 @@ from timApp.util.flask.requesthelper import (
 from timApp.util.flask.responsehelper import error_generic, html_error
 from timApp.util.logger import log_error
 from timApp.util.utils import get_current_time, get_exception_code
+from tim_common.dumboclient import DumboHTMLException
 
 ERROR_CODES_FOLDER = "error-codes"
 
