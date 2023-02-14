@@ -3,13 +3,12 @@ import * as t from "io-ts";
 import {Component, Input} from "@angular/core";
 import type {OnInit} from "@angular/core";
 import type {Require} from "tim/util/utils";
-import {clone, TimStorage, to, to2, toPromise} from "tim/util/utils";
+import {clone, TimStorage, toPromise} from "tim/util/utils";
 import type {VelpTemplateComponent} from "tim/velp/velp-template.component";
 import {colorPalette} from "tim/velp/velp-template.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {ViewCtrl} from "tim/document/viewctrl";
-import {$http} from "tim/util/ngimport";
 import {HttpClient} from "@angular/common/http";
 import type {
     IVelpData,
@@ -92,7 +91,6 @@ import type {
                                     index="$index"
                                     labels="labels"
                                     new="false"
-                                    on-velp-select="rctrl.useVelp($VELP)"
                                     teacher-right="vctrl.item.rights.teacher"
                                     velp-groups="velpGroups"
                                     velp="velp"></tim-velp-template>
@@ -708,8 +706,8 @@ export class VelpMenuComponent implements OnInit {
      */
     async generateDefaultVelpGroup(): Promise<IVelpGroup | null> {
         if (this.defaultVelpGroup.edit_access) {
-            const json = await to(
-                $http.post<IVelpGroup>(
+            const response = await toPromise(
+                this.http.post<IVelpGroup>(
                     "/{0}/create_default_velp_group".replace(
                         "{0}",
                         this.docId.toString()
@@ -717,11 +715,11 @@ export class VelpMenuComponent implements OnInit {
                     "{}"
                 )
             );
-            if (!json.ok) {
-                await showMessageDialog(json.result.data.error);
+            if (!response.ok) {
+                await showMessageDialog(response.result.error.error);
                 return null;
             }
-            const newDefaultVelpGroup = json.result.data;
+            const newDefaultVelpGroup = response.result;
             newDefaultVelpGroup.default = true;
 
             const index = this.velpGroups.indexOf(this.defaultVelpGroup);
@@ -783,6 +781,7 @@ export class VelpMenuComponent implements OnInit {
      * Edits the label according to the this.labelToedit variable.
      * All required data exists in the this.labelToedit variable,
      * including the ID of the label.
+     * TODO: error handling in case of update failure
      */
     editLabel() {
         if (this.labelToEdit.content.length < 1) {
@@ -801,7 +800,7 @@ export class VelpMenuComponent implements OnInit {
             }
         }
 
-        $http.post("/update_velp_label", updatedLabel);
+        this.http.post("/update_velp_label", updatedLabel);
     }
 
     /**
@@ -1028,20 +1027,20 @@ export class VelpMenuComponent implements OnInit {
 
         form.$setPristine();
 
-        const json = await to(
-            $http.post<IVelpGroup>(
+        const response = await toPromise(
+            this.http.post<IVelpGroup>(
                 "/{0}/create_velp_group".replace("{0}", this.docId.toString()),
                 this.newVelpGroup
             )
         );
-        if (!json.ok) {
-            await showMessageDialog(json.result.data.error);
+        if (!response.ok) {
+            await showMessageDialog(response.result.error.error);
             return;
         }
-        const group: IVelpGroupUI = json.result.data;
+        const group: IVelpGroupUI = response.result;
         group.selected = false;
         group.show = true;
-        this.velpGroups.push(json.result.data);
+        this.velpGroups.push(response.result);
 
         // TODO: show in selected area
     }
@@ -1049,6 +1048,7 @@ export class VelpMenuComponent implements OnInit {
     /**
      * Removes the velp group.
      * @param group the velp group to be deleted
+     * TODO: Move localized messages outside the function
      */
     async deleteVelpGroup(group: IVelpGroupUI) {
         /* Make a list of velps that belong to this velp group */
@@ -1076,8 +1076,8 @@ export class VelpMenuComponent implements OnInit {
             !(await showConfirm($localize`Delete velp group?`, confirmMessage))
         ) {
         } else {
-            const deleteResponse = await to(
-                $http.delete("/velp/group/" + group.id)
+            const deleteResponse = await toPromise(
+                this.http.delete("/velp/group/" + group.id)
             );
 
             if (deleteResponse.ok) {
@@ -1135,7 +1135,7 @@ export class VelpMenuComponent implements OnInit {
         );
 
         if (type === "show") {
-            $http.post(
+            this.http.post(
                 "/{0}/change_selection".replace("{0}", this.docId.toString()),
                 data
             );
@@ -1166,7 +1166,7 @@ export class VelpMenuComponent implements OnInit {
              }
              */
         } else if (type === "default") {
-            $http.post(
+            this.http.post(
                 "/{0}/change_selection".replace("{0}", this.docId.toString()),
                 data
             );
@@ -1238,7 +1238,7 @@ export class VelpMenuComponent implements OnInit {
                 });
             }
 
-            $http.post(
+            this.http.post(
                 "/{0}/change_all_selections".replace(
                     "{0}",
                     this.docId.toString()
@@ -1269,7 +1269,7 @@ export class VelpMenuComponent implements OnInit {
                 });
             }
 
-            $http.post(
+            this.http.post(
                 "/{0}/change_all_selections".replace(
                     "{0}",
                     this.docId.toString()
@@ -1305,8 +1305,8 @@ export class VelpMenuComponent implements OnInit {
         }
 
         this.groupSelections[targetID] = clone(this.groupDefaults[targetID]);
-        await to(
-            $http.post(
+        await toPromise(
+            this.http.post(
                 "/{0}/reset_target_area_selections_to_defaults".replace(
                     "{0}",
                     this.docId.toString()
@@ -1323,8 +1323,8 @@ export class VelpMenuComponent implements OnInit {
     async resetAllShowsToDefaults() {
         this.groupSelections = clone(this.groupDefaults);
 
-        await to(
-            $http.post(
+        await toPromise(
+            this.http.post(
                 "/{0}/reset_all_selections_to_defaults".replace(
                     "{0}",
                     this.docId.toString()

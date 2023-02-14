@@ -3,10 +3,8 @@ import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
 import {Component} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {ViewCtrl} from "tim/document/viewctrl";
-import {$http} from "tim/util/ngimport";
 import {HttpClient} from "@angular/common/http";
-import type {Binding, Require} from "tim/util/utils";
-import {clone, to} from "tim/util/utils";
+import {clone, toPromise} from "tim/util/utils";
 import type {VelpMenuComponent} from "tim/velp/velp-menu.component";
 import type {
     ILabel,
@@ -285,7 +283,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
     };
     private submitted: boolean;
     hasEditAccess: boolean;
-    new!: Binding<boolean, "<">;
+    new!: boolean;
     velpGroups!: IVelpGroupUI[];
     velpMenu!: VelpMenuComponent;
     labels!: ILabelUI[];
@@ -321,7 +319,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
         // );
     }
 
-    constructor() {
+    constructor(private http: HttpClient) {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
         this.labelToEdit = {
             content: "",
@@ -576,16 +574,16 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
             language_id: "FI", // TODO: Change to user language
         };
 
-        const json = await to(
-            $http.post<{id: number}>("/add_velp_label", data)
+        const r = await toPromise(
+            this.http.post<ILabel>("/add_velp_label", data)
         );
-        if (!json.ok) {
+        if (!r.ok) {
             return;
         }
         const labelToAdd = {
             ...data,
             selected: false,
-            id: json.result.data.id,
+            id: r.result.id,
         };
         this.resetNewLabel();
         this.labels.push(labelToAdd);
@@ -646,6 +644,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
      * All required data exists in the this.labelToedit variable,
      * including the ID of the label.
      * TODO: This can be simplified
+     * TODO: add error handling and messages in case of a failed update
      */
     editLabel() {
         if (this.labelToEdit.content.length < 1) {
@@ -663,7 +662,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
             }
         }
 
-        $http.post("/update_velp_label", updatedLabel);
+        this.http.post("/update_velp_label", updatedLabel);
     }
 
     /**
@@ -696,8 +695,8 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
     }
 
     async updateVelpInDatabase() {
-        await to(
-            $http.post(
+        await toPromise(
+            this.http.post(
                 "/{0}/update_velp".replace("{0}", this.docId.toString()),
                 this.velp
             )
@@ -741,15 +740,17 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
             velp_groups: clone(this.velp.velp_groups),
             style: this.velp.style,
         };
-        const json = await to($http.post<number>("/add_velp", data));
-        if (!json.ok) {
+        const response = await toPromise(
+            this.http.post<number>("/add_velp", data)
+        );
+        if (!response.ok) {
             return;
         }
         const velpToAdd: IVelp = {
-            id: json.result.data,
+            id: response.result,
             ...data,
         };
-        velpToAdd.id = json.result.data;
+        velpToAdd.id = response.result;
         if (this.velpMenu.rctrl.velps != null) {
             this.velpMenu.rctrl.velps.push(velpToAdd);
         }
