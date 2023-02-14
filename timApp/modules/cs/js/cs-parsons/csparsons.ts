@@ -144,7 +144,7 @@ export class CsParsonsWidget {
         const a = $(parsonsEditDiv);
         if (maxn) {
             a.sortable({
-                items: ":not(.parsonsstatic)",
+                items: ".sortitem",
                 start: function () {
                     $(".parsonsstatic", this).each(function () {
                         const thisJq = $(this);
