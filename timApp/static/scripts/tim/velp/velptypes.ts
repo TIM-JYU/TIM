@@ -201,6 +201,9 @@ export type IVelpGroupCollection = Record<
     Array<{id: number; selected?: boolean}>
 >;
 
+/**
+ * Combined data type for fetching velp data from the server.
+ */
 export type IVelpData = {
     velp_groups: IVelpGroup[];
     default_velp_group: IVelpGroup;
