@@ -40,7 +40,7 @@ import {
     to,
     truncate,
 } from "tim/util/utils";
-import type {VelpMenuComponent} from "tim/velp/velp-menu-dialog.component";
+import type {VelpMenuComponent} from "tim/velp/velp-menu.component";
 import type {
     IAnnotationCoordinate,
     IAnnotationInterval,
@@ -1661,5 +1661,18 @@ export class ReviewController {
         }
         this.annotations.push(ann);
         return ann;
+    }
+
+    isSomeAreaSelected(): boolean {
+        return this.selectedArea != undefined;
+    }
+
+    isSelectionDrawing(): boolean {
+        return this.selectionIsDrawing;
+    }
+
+    getAllAnnotations(): Annotation[] {
+        // TODO should probably do access checks here as well
+        return this.annotations;
     }
 }
