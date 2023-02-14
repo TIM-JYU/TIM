@@ -1,12 +1,13 @@
-import {IScope} from "angular";
 import type {IFormController} from "angular";
+import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
 import {Component} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {ViewCtrl} from "tim/document/viewctrl";
-import {$http, $timeout} from "tim/util/ngimport";
+import {$http} from "tim/util/ngimport";
+import {HttpClient} from "@angular/common/http";
 import type {Binding, Require} from "tim/util/utils";
 import {clone, to} from "tim/util/utils";
-import type {VelpMenuComponent} from "tim/velp/velp-menu-dialog.component";
+import type {VelpMenuComponent} from "tim/velp/velp-menu.component";
 import type {
     ILabel,
     ILabelUI,
@@ -47,12 +48,12 @@ interface IVelpOptionSetting {
 }
 
 /**
- * Controller for velp Window
+ * Component representing Velp templates. Velp templates are used to add Annotations to a document.
  */
 @Component({
-    selector: "tim-velp-window",
+    selector: "tim-velp-template",
     template: `
-        <div class="velp" [ngStyle]="{top: 0.5+index*2 + 'em'}" (click)="notAnnotationRights(velp.points) || useVelp()">
+        <div class="velp" [ngStyle]="{top: 0.5 + 'em'}" (click)="notAnnotationRights(velp.points) || useVelp()">
             <div [ngClass]="['velp-data', 'emphasise', 'default',
                     {neutral: velp.points == 0,
                     positive: velp.points > 0,
@@ -62,7 +63,7 @@ interface IVelpOptionSetting {
                     edit: velp.edit}]"
                  [ngStyle]="{ backgroundColor: getCustomColor()}"
             >
-                
+
                 <!-- Show this when velp is NOT being edited -->
                 <div *ngIf="!velp.edit" class="content velpContent">
                     <div>
@@ -72,16 +73,16 @@ interface IVelpOptionSetting {
                               *ngIf="hasEditAccess"
                               class="pull-right glyphicon glyphicon-pencil clickable-icon">
                         </span>
-                        
+
                         <span *ngIf="notAnnotationRights(velp.points)"
                               class="annmark glyphicon glyphicon-exclamation-sign clickable-icon pull-right"
                               ng-attr-title="{{ settings.teacherRightsError }}">
                         </span>
-                        
+
                         <span class="margin-5-right header pull-right">{{ velp.points }}</span>
-                        
+
                         <p class="velpInfoText truncate math">{{ velp.default_comment }}</p>
-                        
+
                         <div class="tags">
                             <span *ngIf="velpSelection.advancedOn">
                                 <span class="pull-right"
@@ -94,14 +95,14 @@ interface IVelpOptionSetting {
                     </div>
                     <div class="bottom-part"></div>
                 </div>
-                
+
                 <!-- Show this when velp IS being edited -->
-                <div *ngIf="velp.edit" class="content">
+                <div *ngIf="velp.edit" class="content" [ngClass]="velpEditingStyle">
                     <tim-close-button (click)="toggleVelpToEdit(); $event.stopPropagation();"
                                       class="clickable-icon"></tim-close-button>
 
                     <form #saveVelpForm (ngSubmit)="saveVelp(saveVelpForm)">
-                        
+
                         <!-- Basic velp info -->
                         <div class="add-velp-info">
                             <p class="header"><input name="velpName" type="text" [(ngModel)]="velp.content"
@@ -112,14 +113,14 @@ interface IVelpOptionSetting {
                                class="error velpInfoText">
                                 {{ settings.velpContentError }}
                             </p>
-                            
+
                             <p *ngIf="allowChangePoints()" class="header">
                                 <input id="addVelpPoints" type="number"
-                                     style="width: 50%;"
-                                     title="Default points from this velp"
-                                     [(ngModel)]="velp.points"
-                                     step="0.01"
-                                     placeholder="Points" value="0">
+                                       style="width: 50%;"
+                                       title="Default points from this velp"
+                                       [(ngModel)]="velp.points"
+                                       step="0.01"
+                                       placeholder="Points" value="0">
                                 <input type="color" [(ngModel)]="velp.color" title="change Velp default color"
                                        class="velp-color-selector">
                                 <input *ngIf="isVelpCustomColor()" class="btn-restore-velp-color" type="button"
@@ -130,7 +131,7 @@ interface IVelpOptionSetting {
                             <p><textarea placeholder="Add default comment" [(ngModel)]="velp.default_comment"
                                          title="Default comment for annotation"></textarea></p>
                         </div>
-                        
+
                         <!-- Velp visibility options -->
                         <div class="add-velp-visibility-options">
                             <p class="velpEdit-remove-margin" style="margin-top: 4px;">
@@ -160,7 +161,7 @@ interface IVelpOptionSetting {
                                 </select>
                             </p>
                         </div>
-                        
+
                         <!-- Advanced velp options -->
                         <div class="collapsible-menu">
                             <details>
@@ -190,7 +191,7 @@ interface IVelpOptionSetting {
                                                     </span>
                                                     <br>
                                                 </span>
-                                                
+
                                                 <!-- Show this when label IS being edited -->
                                                 <span *ngIf="l.edit">
                                                     <input type="text"
@@ -266,8 +267,9 @@ interface IVelpOptionSetting {
 
         </div>
     `,
+    styleUrls: ["velp-menu.component.scss"],
 })
-export class VelpWindowComponent {
+export class VelpTemplateComponent implements OnInit, OnChanges {
     private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
     velpLocal!: IVelp;
     velp!: Binding<IVelpUI, "<">;
@@ -292,6 +294,8 @@ export class VelpWindowComponent {
     private teacherRight!: Binding<boolean, "<">;
     private vctrl!: ViewCtrl;
 
+    private velpEditingStyle: string;
+
     ngOnInit() {
         this.velpLocal = clone(this.velp);
 
@@ -311,14 +315,14 @@ export class VelpWindowComponent {
                 (g) => (g.edit_access && this.isGroupInVelp(g)) || false
             );
         }
-        $timeout(() => {
-            this.scope.$evalAsync(() => {
-                ParCompiler.processAllMath(this.element.find(".velpContent"));
-            });
-        });
+
+        // TODO make this work with Angular
+        // ParCompiler.processAllMath(
+        //     this.element.find(".velpContent")
+        // );
     }
 
-    constructor(private scope: IScope, private element: JQLite) {
+    constructor() {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
         this.labelToEdit = {
             content: "",
@@ -350,18 +354,26 @@ export class VelpWindowComponent {
         };
         this.submitted = false;
         this.hasEditAccess = false;
-        scope.$watch(
-            () => this.velp.edit,
-            (newValue, oldValue) => {
-                if (!newValue && oldValue) {
-                    scope.$evalAsync(() => {
-                        ParCompiler.processAllMath(
-                            this.element.find(".velpContent")
-                        );
-                    });
-                }
-            }
-        );
+
+        // TODO make this work with Angular
+        // this.scope.$watch(
+        //     () => this.velp.edit,
+        //     (newValue, oldValue) => {
+        //         if (!newValue && oldValue) {
+        //             this.scope.$evalAsync(() => {
+        //                 ParCompiler.processAllMath(
+        //                     this.element.find(".velpContent")
+        //                 );
+        //             });
+        //         }
+        //     }
+        // );
+
+        this.velpEditingStyle = "";
+    }
+
+    ngOnChanges(changes: SimpleChanges): void {
+        throw new Error("Method not implemented.");
     }
 
     saveButtonText() {
@@ -379,7 +391,6 @@ export class VelpWindowComponent {
         const lastEdited = this.velpSelection.getVelpUnderEdit();
 
         if (lastEdited.edit && lastEdited.id !== this.velp.id) {
-            // if (this.new === "true") this.$parent.resetNewVelp();
             this.velpSelection.resetEditVelp();
         }
 
@@ -388,7 +399,7 @@ export class VelpWindowComponent {
             this.cancelEdit();
         } else {
             if (!this.new) {
-                this.element.addClass("velp-edit-available");
+                this.velpEditingStyle = "velp-edit-available";
             }
 
             if (this.new) {

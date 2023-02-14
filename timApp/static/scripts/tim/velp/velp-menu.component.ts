@@ -1,11 +1,11 @@
 import type {IFormController} from "angular";
 import * as t from "io-ts";
-import {Component} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import type {OnInit} from "@angular/core";
 import type {Require} from "tim/util/utils";
-import {clone, TimStorage, to2, toPromise} from "tim/util/utils";
-import type {VelpWindowComponent} from "tim/velp/velp-window.component";
-import {colorPalette} from "tim/velp/velp-window.component";
+import {clone, TimStorage, to, to2, toPromise} from "tim/util/utils";
+import type {VelpTemplateComponent} from "tim/velp/velp-template.component";
+import {colorPalette} from "tim/velp/velp-template.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {ViewCtrl} from "tim/document/viewctrl";
@@ -38,13 +38,13 @@ import type {
 
 // TODO: show velps with same name side by side. Make changes to the template.
 
-const sortLang: string = "fi";
+// const sortLang: string = "fi";
 
 /**
- * Controller for velp selection
+ * Component for managing and using Velp templates."
  */
 @Component({
-    selector: "tim-velp-menu-dialog",
+    selector: "tim-velp-menu",
     template: `
         <div tim-draggable-fixed="" class="velpFixed hidden-print" save="%%PAGEID%%velpMenu" click="true"
              caption="Velp menu" id="velpSelection">
@@ -67,7 +67,7 @@ const sortLang: string = "fi";
                     <div save="%%PAGEID%%selectVelpsDiv" class="velpList">
 
                         <!-- Edit window for velps -->
-                        <tim-velp-window class="velp" [ngStyle]="{top: '0.2em'}"
+                        <tim-velp-template class="velp" [ngStyle]="{top: '0.2em'}"
                                      *ngIf="newVelp.edit"
                                      velp="newVelp"
                                      index="-1"
@@ -76,12 +76,17 @@ const sortLang: string = "fi";
                                      labels="labels"
                                      new="true"
                                      vctrl="vctrl"
-                                     advanced-on="advancedOn"></tim-velp-window>
+                                     advanced-on="advancedOn"></tim-velp-template>
 
                         <!-- Actual velps -->
                         <div class="velp-stack draggable-content available-velps autoscroll">
-                            <tim-velp-window
-                                    *ngFor="let velp of filteredVelps | filterByContent:this.filterVelp | orderByWhenNotEditing:this.order:filteredVelps | filterByVelpGroups:this.velpGroups | filterByLabels:this.labels:this.advancedOn; trackBy: trackByVelpIDFn"
+                            <tim-velp-template
+                                    *ngFor="let velp of filteredVelps 
+                                                        | filterByContent:this.filterVelp 
+                                                        | orderByWhenNotEditing:this.order:filteredVelps 
+                                                        | filterByVelpGroups:this.velpGroups 
+                                                        | filterByLabels:this.labels:this.advancedOn; 
+                                                        trackBy: trackByVelpIDFn"
                                     advanced-on="advancedOn"
                                     doc-id="docId"
                                     index="$index"
@@ -90,7 +95,7 @@ const sortLang: string = "fi";
                                     on-velp-select="rctrl.useVelp($VELP)"
                                     teacher-right="vctrl.item.rights.teacher"
                                     velp-groups="velpGroups"
-                                    velp="velp"></tim-velp-window>
+                                    velp="velp"></tim-velp-template>
                         </div>
                     </div>
                 </div>
@@ -133,7 +138,7 @@ const sortLang: string = "fi";
                                         <div class="labels-scrollarea">
                                             <p *ngFor="let label of filteredLabels = ( labels | filter:{content:filterLabel} )"
                                                class="label tag-false"
-                                               [ngStyle]="{ backgroundColor: getColor(label.id) };"
+                                               [ngStyle]="{backgroundColor: getColor(label.id)}"
                                                (click)="toggleLabel(label)" [(ngModel)]="test" value="{{ label.id }}">
                                                 {{ label.content }} <span class="glyphicon glyphicon-ok"
                                                                           *ngIf="label.selected"></span>
@@ -317,6 +322,7 @@ const sortLang: string = "fi";
             </div>
         </div>
     `,
+    styleUrls: ["velp-menu.component.scss"],
 })
 export class VelpMenuComponent implements OnInit {
     initialized = false;
@@ -341,7 +347,7 @@ export class VelpMenuComponent implements OnInit {
     public vctrl!: Require<ViewCtrl>;
     private defaultPersonalVelpGroup: IVelpGroup;
 
-    newVelpCtrl?: VelpWindowComponent;
+    newVelpCtrl?: VelpTemplateComponent;
 
     private storage!: {
         velpOrdering: TimStorage<string>;
@@ -355,10 +361,11 @@ export class VelpMenuComponent implements OnInit {
         deleteVelpGroupLockedGroup: string;
     };
 
-    private filteredVelps?: IVelp[];
-    private filteredLabels?: ILabel[];
-    private filterVelp?: string;
-    private filterLabel?: string;
+    filteredVelps?: IVelp[];
+    filteredLabels?: ILabel[];
+
+    @Input() filterVelp?: string;
+    @Input() filterLabel?: string;
 
     constructor(private http: HttpClient) {
         this.labels = [];
@@ -373,6 +380,7 @@ export class VelpMenuComponent implements OnInit {
             id: -2,
             velp_groups: [],
             visible_to: 4,
+            // TODO use User language setting from TIM settings
             language_id: "FI",
             color: null,
             valid_until: null,
@@ -387,6 +395,7 @@ export class VelpMenuComponent implements OnInit {
             id: -1,
             velp_groups: [],
             visible_to: 4,
+            // TODO use User language setting from TIM settings
             language_id: "FI",
             color: null,
             valid_until: null,
@@ -646,12 +655,13 @@ export class VelpMenuComponent implements OnInit {
             content: this.newLabel.content,
             language_id: "FI", // TODO: Change to user language
         };
-        const response = await to2(
+        const response = await toPromise(
             this.http.post<ILabel>("/add_velp_label", data)
         );
         if (!response.ok) {
             return;
         }
+
         const labelToAdd = {
             ...data,
             id: response.result.id,
@@ -674,7 +684,7 @@ export class VelpMenuComponent implements OnInit {
         }
     }
 
-    registerNewVelp(v: VelpWindowComponent) {
+    registerNewVelp(v: VelpTemplateComponent) {
         this.newVelpCtrl = v;
     }
 
@@ -698,7 +708,7 @@ export class VelpMenuComponent implements OnInit {
      */
     async generateDefaultVelpGroup(): Promise<IVelpGroup | null> {
         if (this.defaultVelpGroup.edit_access) {
-            const json = await to2(
+            const json = await to(
                 $http.post<IVelpGroup>(
                     "/{0}/create_default_velp_group".replace(
                         "{0}",
@@ -836,14 +846,15 @@ export class VelpMenuComponent implements OnInit {
         return this.isVelpGroupDefaultFallBack(group.id);
     }
 
-    /**
-     * Filter and order displayed velp templates according to selected options.
-     */
-    filterVelps() {
-        this.filteredVelps = this.rctrl.velps?.filter();
-        // this.rctrl.velps? | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn);
-        //                   ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn)
-    }
+    // TODO Remove this after pipes are working
+    // /**
+    //  * Filter and order displayed velp templates according to selected options.
+    //  */
+    // filterVelps() {
+    //     this.filteredVelps = this.rctrl.velps?.filter();
+    //     // this.rctrl.velps? | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn);
+    //     //                   ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn)
+    // }
 
     /**
      * Updates the velp list according to how the velp groups are selected in the area.
@@ -1017,7 +1028,7 @@ export class VelpMenuComponent implements OnInit {
 
         form.$setPristine();
 
-        const json = await to2(
+        const json = await to(
             $http.post<IVelpGroup>(
                 "/{0}/create_velp_group".replace("{0}", this.docId.toString()),
                 this.newVelpGroup
@@ -1065,7 +1076,7 @@ export class VelpMenuComponent implements OnInit {
             !(await showConfirm($localize`Delete velp group?`, confirmMessage))
         ) {
         } else {
-            const deleteResponse = await to2(
+            const deleteResponse = await to(
                 $http.delete("/velp/group/" + group.id)
             );
 
@@ -1294,7 +1305,7 @@ export class VelpMenuComponent implements OnInit {
         }
 
         this.groupSelections[targetID] = clone(this.groupDefaults[targetID]);
-        await to2(
+        await to(
             $http.post(
                 "/{0}/reset_target_area_selections_to_defaults".replace(
                     "{0}",
@@ -1312,7 +1323,7 @@ export class VelpMenuComponent implements OnInit {
     async resetAllShowsToDefaults() {
         this.groupSelections = clone(this.groupDefaults);
 
-        await to2(
+        await to(
             $http.post(
                 "/{0}/reset_all_selections_to_defaults".replace(
                     "{0}",
