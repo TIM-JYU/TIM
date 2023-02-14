@@ -14,7 +14,7 @@ import {IUser} from "tim/user/IUser";
 import type {Annotation} from "tim/velp/velptypes";
 
 @Component({
-    selector: "velp-summary",
+    selector: "tim-velp-summary",
     template: `
         <div class="velpArea">
             <div class="velpSummary velp-summary-autoscroll">
