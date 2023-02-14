@@ -10,6 +10,8 @@ import {ShortNameDirective} from "tim/ui/short-name.directive";
 import {LocationDirective} from "tim/ui/location.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
+import {VelpMenuComponent} from "tim/velp/velp-menu.component";
+import {VelpTemplateComponent} from "tim/velp/velp-template.component";
 import {AnnotationComponent} from "tim/velp/annotation.component";
 import {SignatureComponent} from "tim/ui/signature.component";
 import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
@@ -56,6 +58,8 @@ import {VelpOrder} from "tim/velp/velp-order.pipe";
         HeaderComponent,
         LocationDirective,
         ShortNameDirective,
+        VelpMenuComponent,
+        VelpTemplateComponent,
         AnnotationComponent,
         SignatureComponent,
         VelpSummaryComponent,
