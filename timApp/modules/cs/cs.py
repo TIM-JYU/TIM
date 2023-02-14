@@ -546,11 +546,12 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
 
     usercode = get_json_eparam(query.jso, "state", "usercode", None)
 
-    if usercode is None and markup.get("parsonsShuffleHost", False):
-        bycodeLines = bycode.split("\n")
-        random.shuffle(bycodeLines)
-        bycode = "\n".join(bycodeLines)
-        js["by"] = bycode
+    if markup.get("parsonsShuffleHost", False):
+        if usercode is None:
+            bycodeLines = bycode.split("\n")
+            random.shuffle(bycodeLines)
+            bycode = "\n".join(bycodeLines)
+            js["by"] = bycode
         js["markup"].pop("byCode", None)
 
     if before_open or is_rv:
