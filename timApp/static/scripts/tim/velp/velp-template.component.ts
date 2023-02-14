@@ -84,7 +84,7 @@ interface IVelpOptionSetting {
                         <p class="velpInfoText truncate math">{{ velp.default_comment }}</p>
 
                         <div class="tags">
-                            <span *ngIf="velpSelection.advancedOn">
+                            <span *ngIf="velpMenu.advancedOn">
                                 <span class="pull-right"
                                       [ngClass]="['glyphicon', 'glyphicon-tag']"
                                       *ngFor="let label of velp.labels" title="label.content"
@@ -270,9 +270,8 @@ interface IVelpOptionSetting {
     styleUrls: ["velp-menu.component.scss"],
 })
 export class VelpTemplateComponent implements OnInit, OnChanges {
-    private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
     velpLocal!: IVelp;
-    velp!: Binding<IVelpUI, "<">;
+    velp!: IVelpUI;
     newLabel: INewLabel;
     labelToEdit: INewLabel;
     visibleOptions: IVelpOptionSetting;
@@ -287,11 +286,11 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
     private submitted: boolean;
     hasEditAccess: boolean;
     new!: Binding<boolean, "<">;
-    velpGroups!: Binding<IVelpGroupUI[], "<">;
-    velpSelection!: Require<VelpMenuComponent>;
-    labels!: Binding<ILabelUI[], "<">;
-    private docId!: Binding<number, "<">;
-    private teacherRight!: Binding<boolean, "<">;
+    velpGroups!: IVelpGroupUI[];
+    velpMenu!: VelpMenuComponent;
+    labels!: ILabelUI[];
+    private docId!: number;
+    private teacherRight!: boolean;
     private vctrl!: ViewCtrl;
 
     private velpEditingStyle: string;
@@ -309,7 +308,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
         // declare edit rights
         if (this.new) {
             this.hasEditAccess = true;
-            this.velpSelection.registerNewVelp(this);
+            this.velpMenu.registerNewVelp(this);
         } else {
             this.hasEditAccess = this.velpGroups.some(
                 (g) => (g.edit_access && this.isGroupInVelp(g)) || false
@@ -388,10 +387,10 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
      * this method closes it.
      */
     toggleVelpToEdit() {
-        const lastEdited = this.velpSelection.getVelpUnderEdit();
+        const lastEdited = this.velpMenu.getVelpUnderEdit();
 
         if (lastEdited.edit && lastEdited.id !== this.velp.id) {
-            this.velpSelection.resetEditVelp();
+            this.velpMenu.resetEditVelp();
         }
 
         this.velp.edit = !this.velp.edit;
@@ -406,9 +405,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
                 this.velpLocal = clone(this.velp);
                 // TODO: focus velp content textarea
             }
-            this.velpSelection.setVelpToEdit(this.velp, () =>
-                this.cancelEdit()
-            );
+            this.velpMenu.setVelpToEdit(this.velp, () => this.cancelEdit());
         }
     }
 
@@ -444,7 +441,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
 
     useVelp() {
         if (!this.velp.edit && !this.notAnnotationRights(this.velp.points)) {
-            this.onVelpSelect({$VELP: this.velp});
+            this.velpMenu.rctrl.useVelp(this.velp);
         }
     }
 
@@ -685,7 +682,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
     }
 
     async editVelp() {
-        const defaultVelpGroup = this.velpSelection.getDefaultVelpGroup();
+        const defaultVelpGroup = this.velpMenu.getDefaultVelpGroup();
 
         if (
             this.isGroupInVelp(defaultVelpGroup) &&
@@ -713,7 +710,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
      * Adds a new velp on form submit event.
      */
     async addVelp() {
-        const defaultVelpGroup = this.velpSelection.getDefaultVelpGroup();
+        const defaultVelpGroup = this.velpMenu.getDefaultVelpGroup();
         if (
             this.isGroupInVelp(defaultVelpGroup) &&
             defaultVelpGroup.id === -1
@@ -723,7 +720,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
         } else if (this.velp.velp_groups.length > 0) {
             await this.addNewVelpToDatabase();
         }
-        this.velpSelection.updateVelpList();
+        this.velpMenu.updateVelpList();
     }
 
     /**
@@ -753,15 +750,15 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
             ...data,
         };
         velpToAdd.id = json.result.data;
-        if (this.velpSelection.rctrl.velps != null) {
-            this.velpSelection.rctrl.velps.push(velpToAdd);
+        if (this.velpMenu.rctrl.velps != null) {
+            this.velpMenu.rctrl.velps.push(velpToAdd);
         }
 
         this.velpLocal.velp_groups = velpToAdd.velp_groups;
         this.velpLocal.labels = velpToAdd.labels;
 
         this.toggleVelpToEdit();
-        this.velpSelection.updateVelpList();
+        this.velpMenu.updateVelpList();
 
         // this.velp =  clone(this.velpLocal);
         // this.velpLocal = clone(this.velp);
@@ -781,10 +778,9 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
      *
      */
     async handleDefaultVelpGroupIssue() {
-        const oldDefaultGroup = this.velpSelection.getDefaultVelpGroup();
+        const oldDefaultGroup = this.velpMenu.getDefaultVelpGroup();
 
-        const newDefaultGroup =
-            await this.velpSelection.generateDefaultVelpGroup();
+        const newDefaultGroup = await this.velpMenu.generateDefaultVelpGroup();
         if (newDefaultGroup == null) {
             return;
         }
@@ -797,7 +793,7 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
         }
 
         this.velp.velp_groups.push(newDefaultGroup.id);
-        this.velpSelection.setDefaultVelpGroup(newDefaultGroup);
+        this.velpMenu.setDefaultVelpGroup(newDefaultGroup);
     }
 
     /**
