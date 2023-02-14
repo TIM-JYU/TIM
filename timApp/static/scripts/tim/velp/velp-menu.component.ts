@@ -104,10 +104,10 @@ import type {
                     <p id="selection">
                         <span *ngIf="!rctrl.selectedElement">Nothing selected</span>
                         <span *ngIf="rctrl.selectedElement">
-                    <span *ngIf="rctrl.selectedArea">
+                    <span *ngIf="rctrl.isSomeAreaSelected()">
                         '{{ rctrl.getSelectedAreaBeginning() }}' of
                     </span>
-                    <span *ngIf="rctrl.selectionIsDrawing">
+                    <span *ngIf="rctrl.isSelectionDrawing()">
                         new drawing in review image of
                     </span>
                 </span>
@@ -308,7 +308,7 @@ import type {
                         <uib-tab index="2" heading="Summary">
                             <div class="velp-summary-tab">
                                 <tim-velp-summary
-                                        [annotations]="rctrl.annotations"
+                                        [annotations]="rctrl.getAllAnnotations()"
                                         (annotationselected)="rctrl.toggleAnnotation($event, true)"
                                         [selected-user]="vctrl.selectedUser"
                                 >
