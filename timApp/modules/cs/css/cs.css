@@ -300,7 +300,7 @@ ul.output {
   display: inline-block;
 }
 
-.sortable-words span {
+.sortable-words .sortitem {
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
     border-radius: 5px;
@@ -312,8 +312,12 @@ ul.output {
     cursor: move;
     float: left;
     white-space: pre !important;
-    min-height: 40px;
-    /*min-width: 20px; */
+    /* min-height: 40px; */
+    /* min-width: 20px; */
+}
+
+.sortable-words  p {
+    margin: 0 0 0px;
 }
 
 .sortable-words div {

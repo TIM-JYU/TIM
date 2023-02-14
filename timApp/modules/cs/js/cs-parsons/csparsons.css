@@ -64,7 +64,7 @@ ul.output {
   display: inline-block;
 }
 
-.sortable-words span {
+.sortable-words .sortitem {
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
     border-radius: 5px;
