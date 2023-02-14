@@ -24,7 +24,9 @@ import {LoginMenuComponent} from "tim/user/login-menu.component";
 import * as timRoot from "tim/timRoot";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import {AnnotationComponent} from "tim/velp/annotation.component";
-import * as velpSelection from "tim/velp/velp-menu-dialog.component";
+import {VelpMenuComponent} from "tim/velp/velp-menu.component";
+import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
+import {VelpTemplateComponent} from "tim/velp/velp-template.component";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {AppModule} from "tim/app.module";
 import {HeaderComponent} from "tim/header/header.component";
@@ -35,7 +37,6 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {setAngularJSGlobal} from "@angular/upgrade/static";
 import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {LoadingComponent} from "tim/ui/loading.component";
-import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
 import {DialogComponent} from "tim/ui/dialog.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {DialogContainerComponent} from "tim/ui/angulardialog/dialog-container.component";
@@ -92,7 +93,6 @@ markAsUsed(
     selfExpire,
     timRoot,
     userlistController,
-    velpSelection,
     viewctrl,
     markAllAsRead
 );
@@ -112,6 +112,8 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timLoading", LoadingComponent);
     doDowngrade(dg, "annotation", AnnotationComponent);
     doDowngrade(dg, "velpSummary", VelpSummaryComponent);
+    doDowngrade(dg, "velpSelection", VelpMenuComponent);
+    doDowngrade(dg, "velpWindow", VelpTemplateComponent);
     doDowngrade(dg, "timDialog", DialogComponent);
     doDowngrade(dg, "timCloseButton", CloseButtonComponent);
     doDowngrade(dg, "timDialogContainer", DialogContainerComponent);
