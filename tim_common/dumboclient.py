@@ -1,7 +1,7 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
 import json
 from enum import Enum
-from typing import NamedTuple, overload
+from typing import NamedTuple, overload, Any
 
 import requests
 
@@ -73,7 +73,7 @@ KEYS_PATHS = {"/mdkeys", "/latexkeys"}
 
 
 def get_dumbo_options_from_obj(
-    obj, base_opts: DumboOptions = DumboOptions.default()
+    obj: dict[str, Any], base_opts: DumboOptions = DumboOptions.default()
 ) -> DumboOptions:
     if obj is None:
         return base_opts
