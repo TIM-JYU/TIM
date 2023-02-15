@@ -1,6 +1,8 @@
+import {isRight} from "fp-ts/lib/Either";
 import type {Left} from "fp-ts/lib/Either";
 import type * as t from "io-ts";
-import type {Context} from "io-ts";
+import type {Context, Validation} from "io-ts";
+import type {Reporter} from "io-ts/lib/Reporter";
 
 function getEssentialContext(c: t.Context) {
     for (let i = c.length - 1; i >= 0; i--) {
@@ -26,7 +28,33 @@ function indexOfFirstName(context: Context) {
     return context.findIndex((c) => c.key.match(/^[a-z]/) != null);
 }
 
-export function getErrors(v: Left<t.Errors>): MarkupError {
+class BasicReporterImpl implements Reporter<string[]> {
+    report(validation: Validation<unknown>): string[] {
+        if (isRight(validation)) {
+            return ["No errors"];
+        }
+        const errors = validation.left;
+
+        return errors.map((e) => {
+            const path = e.context
+                .filter((c) => c.key != "" && isNaN(Number.parseInt(c.key, 10)))
+                .map((c) => c.key)
+                .join(".");
+            const last = e.context[e.context.length - 1];
+            return `${path}: Invalid value '${JSON.stringify(
+                last.actual
+            )}'. Expected '${last.type.name}'`;
+        });
+    }
+}
+
+export const BasicReporter: Reporter<string[]> = new BasicReporterImpl();
+
+export function getErrors(
+    v: Left<t.Errors>,
+    filterKey: string = "markup",
+    showKeyLessErrors: boolean = true
+): MarkupError {
     const ps: Array<[string[], string]> = v.left
         .filter((e) => {
             const ind = indexOfFirstName(e.context);
@@ -34,7 +62,7 @@ export function getErrors(v: Left<t.Errors>): MarkupError {
                 return (
                     e.context.length >= 3 &&
                     e.context[0].key === "" &&
-                    e.context[ind].key === "markup"
+                    (e.context[ind].key === filterKey || filterKey === "*")
                 );
             }
         })
@@ -49,6 +77,10 @@ export function getErrors(v: Left<t.Errors>): MarkupError {
         const key = keys.join(".");
         // don't report parent fields because it's not useful
         if (isPrefixOfSome(key, knownKeys)) {
+            continue;
+        }
+        // Avoid showing the errors that don't have a key
+        if (!key && !showKeyLessErrors) {
             continue;
         }
         // avoid too verbose messages
