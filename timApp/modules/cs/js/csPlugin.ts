@@ -468,6 +468,13 @@ const TemplateButton = t.intersection([
     }),
 ]);
 
+const ParsonsHtmlLine = t.type({
+    t: t.string,
+    h: t.string,
+});
+
+export interface IParsonsHtmlLine extends t.TypeOf<typeof ParsonsHtmlLine> {}
+
 interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
@@ -698,6 +705,8 @@ const CsMarkupOptional = t.partial({
     noeditor: t.boolean,
     normal: nullable(t.string),
     parsonsmaxcheck: t.number,
+    parsonsShuffleHost: t.boolean,
+    parsonsHTML: t.array(ParsonsHtmlLine),
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -905,6 +914,8 @@ interface IRunResponseWeb {
     "-replyImage"?: string;
     "-replyHTML"?: string;
     "-replyMD"?: string;
+    parsons_correct?: number[];
+    parsons_styles?: string[];
 }
 
 export interface IRunResponse {
@@ -1707,12 +1718,20 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.parsonsmaxcheck;
     }
 
+    get parsonsShuffleHost() {
+        return this.markup.parsonsShuffleHost;
+    }
+
     get parsonsnotordermatters() {
         return this.markup.parsonsnotordermatters;
     }
 
     get words() {
         return this.markup.words;
+    }
+
+    get parsonsHTML() {
+        return this.markup.parsonsHTML;
     }
 
     get count() {
@@ -2713,6 +2732,14 @@ ${fhtml}
             }
             if (!noErrorClear) {
                 this.error = data.web.error;
+            }
+            if (data.web.parsons_correct || data.web.parsons_styles) {
+                if (this.editor?.parsonsEditor) {
+                    this.editor.parsonsEditor.checkHost(
+                        data.web.parsons_correct,
+                        data.web.parsons_styles
+                    );
+                }
             }
             this.runSuccess = true;
 
@@ -3768,9 +3795,11 @@ ${fhtml}
                                [editorIndex]="editorMode"
                                [parsonsShuffle]="initUserCode"
                                [parsonsMaxcheck]="parsonsmaxcheck"
+                               [parsonsShuffleHost]="parsonsShuffleHost"
                                [parsonsNotordermatters]="parsonsnotordermatters"
                                [parsonsStyleWords]="markup['style-words']"
                                [parsonsWords]="words"
+                               [parsonsHTML]="parsonsHTML"
                                (close)="onFileClose($event)"
                                (content)="onContentChange($event)"
                                [spellcheck]="spellcheck">

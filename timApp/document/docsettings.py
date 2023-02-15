@@ -15,8 +15,8 @@ from timApp.document.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
-from timApp.markdown.dumboclient import MathType, DumboOptions, InputFormat
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
+from tim_common.dumboclient import MathType, DumboOptions, InputFormat
 from tim_common.markupmodels import AnswerBrowserInfo
 from tim_common.marshmallow_dataclass import field_for_schema
 
@@ -99,7 +99,6 @@ class DocSettingTypes:
 doc_setting_field_map: dict[str, Field] = {
     f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)
 }
-
 
 T = TypeVar("T")
 

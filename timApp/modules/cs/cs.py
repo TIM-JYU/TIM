@@ -8,6 +8,7 @@ import io
 import json
 import logging
 import os
+import random
 import re
 import shlex
 import shutil
@@ -23,6 +24,7 @@ from traceback import print_exc
 from urllib.request import urlopen
 
 from cs_logging import get_logger
+from cs_utils import replace_code, check_parsons
 from file_handler import FileHandler
 from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
@@ -30,6 +32,10 @@ from manager import all_js_files, all_css_files
 from points import return_points, get_points_rule, check_number_rule, give_points
 from run import generate_filename, run2_subdir
 from tim_common.cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
+from tim_common.dumboclient import (
+    call_dumbo,
+    DumboOptions,
+)
 from tim_common.fileParams import (
     encode_json_data,
     replace_random,
@@ -45,7 +51,6 @@ from tim_common.fileParams import (
     LAZYEND,
     get_param_del,
     query_params_to_map_check_parts,
-    get_2_items,
     get_param_table,
     get_clean_param,
     get_params,
@@ -538,6 +543,14 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
 
     usercode = get_json_eparam(query.jso, "state", "usercode", None)
 
+    if markup.get("parsonsShuffleHost", False):
+        if usercode is None:
+            bycodeLines = bycode.split("\n")
+            random.shuffle(bycodeLines)
+            bycode = "\n".join(bycodeLines)
+            js["by"] = bycode
+        js["markup"].pop("byCode", None)
+
     if before_open or is_rv:
         susercode = language.modify_usercode(usercode or "")
         before_open = before_open.replace("{USERCODE}", susercode)
@@ -547,6 +560,18 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
     if doc_addr:
         js["markup"]["docurl"] = doc_addr["dochtml"]
 
+    parsonsMD = get_param(query, "parsonsMD", None)
+    if parsonsMD and parsonsMD.get("md", True):
+        code = bycode
+        if usercode:
+            code = usercode
+        bymd = code.split("\n")
+        dopts = DumboOptions.from_dict(parsonsMD)
+        htmls = call_dumbo(bymd, options=dopts)
+        parsonsHTML = []
+        for i in range(0, len(bymd)):
+            parsonsHTML.append({"t": bymd[i], "h": htmls[i]})
+        js["markup"]["parsonsHTML"] = parsonsHTML
     jso = json.dumps(js)
 
     if is_rv:
@@ -738,36 +763,6 @@ def debug_str(s):
     print(t.isoformat(" ") + ": " + s)
 
 
-def replace_code(rules, s):
-    result = s
-    if not rules:
-        return result
-
-    for rule in rules:
-        cut_replace, cut_by = get_2_items(rule, "replace", "by", None, "")
-        if cut_replace:
-            try:
-                while True:
-                    m = re.search(cut_replace, result, flags=re.S)
-                    if not m:
-                        break
-                    result = result.replace(m.group(1), cut_by)
-            except Exception as e:
-                msg = str(e)
-                if isinstance(e, IndexError):
-                    msg = "group () missing"
-                result = (
-                    "replace pattern error: "
-                    + msg
-                    + "\n"
-                    + "Pattern: "
-                    + cut_replace
-                    + "\n\n"
-                    + result
-                )
-    return result
-
-
 def check_code(out, err, compiler_output, ttype):
     err = err + compiler_output
     if ttype == "fs":
@@ -885,30 +880,6 @@ def check_fullprogram(query, cut_errors=False):
     # query.jso.markup["byCode"] = by_code
     # query.jso.markup["program"] = program
     return True
-
-
-def check_parsons(expect_code, usercode, maxn, notordermatters):
-    p = 0
-    exlines = expect_code.splitlines()
-    exlines = exlines[:maxn]
-    usrlines = usercode.splitlines()
-    usrlines = usrlines[:maxn]
-
-    if notordermatters:
-        for usrline in usrlines:
-            for i, exline in enumerate(exlines):
-                if usrline == exline:
-                    exlines[i] = "XXXXXXXXXXXX"
-                    p += 1
-                    break
-    else:
-        for i, exline in enumerate(exlines):
-            if i >= len(usrlines):
-                break
-            if exline == usrlines[i]:
-                p += 1
-
-    return p
 
 
 def doc_address(query, check=False):
@@ -1492,17 +1463,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Check query parameters
             p0 = FileParams(query, "", "")
-            # print("p0=")
-            # print(p0.replace)
+
+            usercode_edit_rules = query.jso.get("markup", {}).get("usercodeEdit", None)
+            if p0.by and usercode_edit_rules:
+                p0.by = replace_code(usercode_edit_rules, p0.by)
+
             if p0.url == "" and p0.replace == "":
                 p0.replace = "XXXX"
 
-            # print("type=" + ttype)
-
-            # s = ""
-            # if p0.url != "":
-            #
-            s = get_file_to_output(query, False and print_file)
+            s = get_file_to_output(query, False and print_file, p0)
             slines = ""
 
             # Open the file and write it
@@ -1653,15 +1622,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if expect_code:
                         if expect_code == "byCode":
                             expect_code = get_param(query, "byCode", "")
+                            if expect_code == "":
+                                expect_code = query.query.get("by", [""])[0]
                         maxn = get_param(query, "parsonsmaxcheck", 0)
                         if maxn > 0:
-                            p = check_parsons(
+                            p, parsons_correct = check_parsons(
                                 expect_code,
                                 usercode,
                                 maxn,
                                 get_param(query, "parsonsnotordermatters", False),
+                                usercode_edit_rules,
                             )
-                            give_points(points_rule, "code", p)
+                            if p > 0:
+                                give_points(points_rule, "code", 1)
+                            web["parsons_correct"] = parsons_correct
                         else:
                             excode = expect_code.rstrip("\n")
                             match = False
@@ -2090,7 +2064,6 @@ else:
         """Handle requests in a separate thread."""
 
     print("Normal mode/ForkingMixIn")
-
 
 if __name__ == "__main__":
     init_directories()

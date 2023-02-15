@@ -19,7 +19,7 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {parseStyles, shuffleStrings} from "tim/plugin/util";
+import {parseStyles} from "tim/plugin/util";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
@@ -27,6 +27,7 @@ import type {DocIdDotName} from "tim/plugin/taskid";
 import {defaultErrorMessage, isIOS} from "tim/util/utils";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {shuffle} from "tim/plugin/util";
 
 const DragMarkup = t.intersection([
     t.partial({
@@ -173,7 +174,7 @@ export class DragComponent
         this.shuffle = this.markup.shuffle ?? false;
         this.saveButton = this.markup.savebutton ?? false;
         const words = this.attrsall.state?.c ?? this.markup.words ?? [];
-        this.createWordobjs(this.shuffle ? shuffleStrings(words) : words);
+        this.createWordobjs(this.shuffle ? shuffle(words) : words);
 
         polyfill({
             // Use this to make use of the scroll behaviour.
@@ -274,7 +275,7 @@ export class DragComponent
      */
     setPluginWords(words: string[]) {
         if (this.shuffle) {
-            this.createWordobjs(shuffleStrings(words));
+            this.createWordobjs(shuffle(words));
         } else {
             this.createWordobjs(words);
         }

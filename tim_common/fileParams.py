@@ -593,9 +593,10 @@ def get_params(self):
     return result
 
 
-def get_file_to_output(query: QueryClass, show_html: bool):
+def get_file_to_output(query: QueryClass, show_html: bool, p0: FileParams = None):
     try:
-        p0 = FileParams(query, "", "")
+        if p0 is None:
+            p0 = FileParams(query, "", "")
         # if p0.url == "":
         s = p0.get_file(show_html)
         # if not s:

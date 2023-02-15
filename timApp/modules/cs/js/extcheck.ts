@@ -81,9 +81,11 @@ interface IRunResult {
                             [editorIndex]="markup.editorMode"
                             [parsonsShuffle]="initUserCode"
                             [parsonsMaxcheck]="markup.parsonsmaxcheck"
+                            [parsonsShuffleHost]="markup.parsonsShuffleHost"
                             [parsonsNotordermatters]="markup.parsonsnotordermatters"
                             [parsonsStyleWords]="markup['style-words']"
                             [parsonsWords]="markup.words"
+                            [parsonsHTML]="markup.parsonsHTML"
                             (close)="onFileClose($event)"
                             (content)="onContentChange($event)">
                     </cs-editor>

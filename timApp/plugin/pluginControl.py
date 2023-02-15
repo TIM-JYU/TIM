@@ -23,7 +23,6 @@ from timApp.document.randutils import hashfunc
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import YamlBlock
-from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import (
@@ -56,6 +55,7 @@ from timApp.util.utils import (
     get_error_html_block,
     get_error_html,
 )
+from tim_common.dumboclient import call_dumbo
 from tim_common.html_sanitize import sanitize_html
 
 

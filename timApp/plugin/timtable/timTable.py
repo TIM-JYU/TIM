@@ -12,7 +12,6 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.document import Document
 from timApp.document.viewcontext import default_view_ctx
-from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.save_plugin import save_plugin
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
@@ -26,6 +25,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response
+from tim_common.dumboclient import call_dumbo, DumboOptions
 
 timTable_plugin = Blueprint("timTable_plugin", __name__, url_prefix="/timTable/")
 

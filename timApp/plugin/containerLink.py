@@ -10,13 +10,13 @@ from flask import current_app
 from requests import Response
 
 from timApp.document.docsettings import DocSettings
-from tim_common.timjsonencoder import TimJsonEncoder
-from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.plugin.plugin import Plugin, AUTOMD
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.timtable import timTable
 from timApp.util.logger import log_warning
+from tim_common.dumboclient import call_dumbo, DumboOptions
+from tim_common.timjsonencoder import TimJsonEncoder
 
 CSPLUGIN_DOMAIN = "csplugin"
 DRAGPLUGIN_DOMAIN = "drag"

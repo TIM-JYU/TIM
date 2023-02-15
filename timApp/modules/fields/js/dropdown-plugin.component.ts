@@ -12,7 +12,7 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior, parseStyles, shuffleStrings} from "tim/plugin/util";
+import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage} from "tim/util/utils";
 import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -23,6 +23,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {shuffle} from "tim/plugin/util";
 
 const DropdownMarkup = t.intersection([
     t.partial({
@@ -163,7 +164,7 @@ export class DropdownPluginComponent
         this.selectedWord = this.attrsall.state?.c ?? undefined;
         this.shuffle = this.markup.shuffle;
         if (this.shuffle && this.markup.words) {
-            this.wordList = shuffleStrings(this.markup.words);
+            this.wordList = shuffle(this.markup.words);
         } else {
             this.wordList = this.markup.words ?? [];
         }
@@ -281,7 +282,7 @@ export class DropdownPluginComponent
     setPluginWords(words: string[]) {
         this.zone.run(() => {
             if (this.shuffle) {
-                this.wordList = shuffleStrings(words);
+                this.wordList = shuffle(words);
             } else {
                 this.wordList = words;
             }

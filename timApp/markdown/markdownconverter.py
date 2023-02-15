@@ -20,9 +20,9 @@ from timApp.markdown.autocounters import (
     add_h_values,
     check_autonumber_error,
 )
-from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.util.utils import get_error_html, title_to_id, slugify
 from timApp.util.utils import widen_fields
+from tim_common.dumboclient import call_dumbo, DumboOptions
 from tim_common.html_sanitize import sanitize_html, presanitize_html_body
 
 if TYPE_CHECKING:

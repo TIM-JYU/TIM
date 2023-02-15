@@ -4,7 +4,7 @@ Tehtävä jossa käyttäjä järjestelee tekstejä
 type: text
 -pointsRule:
     code: 1.0
-    expectCode: byCode
+    expectCodePlain: byCode
 wrap: -1
 lazy: false
 editorModes: 2

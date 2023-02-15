@@ -1,6 +1,6 @@
 """A test for markdownconverter module."""
 
-import timApp.markdown.dumboclient
+import tim_common.dumboclient
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.viewcontext import default_view_ctx
 from timApp.markdown.markdownconverter import md_to_html, par_list_to_html_list
@@ -172,7 +172,7 @@ input_format: rst
     def test_markup_md_conversion(self):
         self.assertEqual(
             {"test1": "value1", "test2": "<em>value2</em>"},
-            timApp.markdown.dumboclient.call_dumbo(
+            tim_common.dumboclient.call_dumbo(
                 {"test1": "value1", "test2": "md:*value2*"}, path="/mdkeys"
             ),
         )
@@ -181,7 +181,7 @@ input_format: rst
                 {"test1": "value1", "test2": "<em>value2</em>"},
                 {"test3": "value3", "test4": "<strong>value4</strong>"},
             ],
-            timApp.markdown.dumboclient.call_dumbo(
+            tim_common.dumboclient.call_dumbo(
                 [
                     {"test1": "value1", "test2": "md:*value2*"},
                     {"test3": "value3", "test4": "md:**value4**"},
