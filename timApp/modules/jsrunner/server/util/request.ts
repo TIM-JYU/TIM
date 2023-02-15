@@ -5,7 +5,7 @@ import type {BodyInit} from "node-fetch";
 import fetch from "node-fetch";
 import FormData from "form-data";
 import ivm from "isolated-vm";
-import {getErrors} from "tim/plugin/errors";
+import {BasicReporter} from "tim/plugin/errors";
 
 const RequestFormData = t.type({
     type: t.literal("form-data"),
@@ -71,9 +71,9 @@ export async function request(url: unknown, opt: unknown) {
     }
     const decodedOpt = RequestOptions.decode(opt);
     if (isLeft(decodedOpt)) {
-        const errString = getErrors(decodedOpt, "*", false)
-            .map(({name, type}) => `- ${name}: ${type}`)
-            .join(`\n`);
+        const errString = BasicReporter.report(decodedOpt)
+            .map((e) => ` - ${e}`)
+            .join("\n");
         throw new Error(
             `Invalid request options for the following values:\n${errString}`
         );

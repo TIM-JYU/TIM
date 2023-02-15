@@ -1,6 +1,8 @@
+import {isRight} from "fp-ts/lib/Either";
 import type {Left} from "fp-ts/lib/Either";
 import type * as t from "io-ts";
-import type {Context} from "io-ts";
+import type {Context, Validation} from "io-ts";
+import type {Reporter} from "io-ts/lib/Reporter";
 
 function getEssentialContext(c: t.Context) {
     for (let i = c.length - 1; i >= 0; i--) {
@@ -25,6 +27,28 @@ function isPrefixOfSome(s: string, others: string[]) {
 function indexOfFirstName(context: Context) {
     return context.findIndex((c) => c.key.match(/^[a-z]/) != null);
 }
+
+class BasicReporterImpl implements Reporter<string[]> {
+    report(validation: Validation<unknown>): string[] {
+        if (isRight(validation)) {
+            return ["No errors"];
+        }
+        const errors = validation.left;
+
+        return errors.map((e) => {
+            const path = e.context
+                .filter((c) => c.key != "" && isNaN(Number.parseInt(c.key, 10)))
+                .map((c) => c.key)
+                .join(".");
+            const last = e.context[e.context.length - 1];
+            return `${path}: Invalid value '${JSON.stringify(
+                last.actual
+            )}'. Expected '${last.type.name}'`;
+        });
+    }
+}
+
+export const BasicReporter: Reporter<string[]> = new BasicReporterImpl();
 
 export function getErrors(
     v: Left<t.Errors>,

@@ -13,6 +13,7 @@
     "paths": {
       "tim/plugin/*": ["../../../static/scripts/tim/plugin/*"],
       "io-ts": ["node_modules/io-ts"],
+      "io-ts/lib/Reporter": ["node_modules/io-ts/lib/Reporter"],
       "fp-ts/lib/Either": ["node_modules/fp-ts/lib/Either"],
       "tim/util/*": ["../../../static/scripts/tim/util/*"]
     },
