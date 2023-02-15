@@ -1,8 +1,8 @@
 import $ from "jquery";
-import {shuffleStrings} from "tim/plugin/util";
 import "./jquery-ui-sortable.min.js";
 import "./jquery.ui.touch-punch.min.js";
 import DOMPurify from "dompurify";
+import {shuffle} from "tim/plugin/util";
 
 interface IParsonsHtmlLine {
     t: string;
@@ -22,20 +22,6 @@ interface CsParsonsOptions {
     parsonsHTML: IParsonsHtmlLine[] | undefined;
 
     onChange?(widget: CsParsonsWidget): void;
-}
-
-export function shuffleParsonHTML(
-    strings: IParsonsHtmlLine[]
-): IParsonsHtmlLine[] {
-    const result = strings.slice();
-    const n = strings.length;
-    for (let i = n - 1; i >= 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const tmp = result[i];
-        result[i] = result[j];
-        result[j] = tmp;
-    }
-    return result;
 }
 
 export class CsParsonsWidget {
@@ -62,10 +48,10 @@ export class CsParsonsWidget {
         this.parsonsHTML = this.options.parsonsHTML;
         if (this.options.shuffle) {
             if (this.parsonsHTML) {
-                this.parsonsHTML = shuffleParsonHTML(this.parsonsHTML);
+                this.parsonsHTML = shuffle(this.parsonsHTML);
             } else {
                 this.lines = text.split("\n");
-                this.lines = shuffleStrings(this.lines);
+                this.lines = shuffle(this.lines);
             }
         } else {
             this.lines = userText.split("\n");
