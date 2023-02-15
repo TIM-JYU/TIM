@@ -3,11 +3,7 @@ import "./jquery-ui-sortable.min.js";
 import "./jquery.ui.touch-punch.min.js";
 import DOMPurify from "dompurify";
 import {shuffle} from "tim/plugin/util";
-
-interface IParsonsHtmlLine {
-    t: string;
-    h: string;
-}
+import type {IParsonsHtmlLine} from "../csPlugin";
 
 interface CsParsonsOptions {
     shuffle: boolean;
@@ -178,7 +174,7 @@ export class CsParsonsWidget {
             if (node.getAttribute("parsons-style") !== "sortitem") {
                 continue;
             }
-            // let line = node.textContent;
+            // The original text version is saved in the parsons-text attribute; textContent may be derived from HTML
             let line = node.getAttribute("parsons-text");
             if (line === "") {
                 continue;

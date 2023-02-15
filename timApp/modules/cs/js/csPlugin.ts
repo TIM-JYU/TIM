@@ -473,6 +473,8 @@ const ParsonsHtmlLine = t.type({
     h: t.string,
 });
 
+export interface IParsonsHtmlLine extends t.TypeOf<typeof ParsonsHtmlLine> {}
+
 interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
