@@ -47,8 +47,8 @@ def check_parsons(
     usercode: str,
     maxn: int,
     notordermatters: bool = False,
-    edit_code_rules: str = None,
-) -> (int, list):
+    edit_code_rules: str | None = None,
+) -> tuple[int, list]:
     """
     Checks if order of usercode matches expect_code order
     :param expect_code: where to compare
@@ -56,7 +56,7 @@ def check_parsons(
     :param maxn: how many lines max to compare
     :param notordermatters: if true, then order does not matter
     :param edit_code_rules: rules to edit code
-    :return: (1 if matches, 0 otherwise, list of corretcs)
+    :return: (1 if matches; 0 otherwise, list of corretcs)
     """
     p = 0
     if edit_code_rules:
