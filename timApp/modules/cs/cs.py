@@ -35,9 +35,6 @@ from tim_common.cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from tim_common.dumboclient import (
     call_dumbo,
     DumboOptions,
-    MathType,
-    InputFormat,
-    get_dumbo_options_from_obj,
 )
 from tim_common.fileParams import (
     encode_json_data,
@@ -569,7 +566,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
         if usercode:
             code = usercode
         bymd = code.split("\n")
-        dopts = get_dumbo_options_from_obj(parsonsMD)
+        dopts = DumboOptions.from_dict(parsonsMD)
         htmls = call_dumbo(bymd, options=dopts)
         parsonsHTML = []
         for i in range(0, len(bymd)):

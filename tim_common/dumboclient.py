@@ -1,7 +1,7 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
 import json
 from enum import Enum
-from typing import NamedTuple, overload, Any
+from typing import NamedTuple, overload, Any, Type
 
 import requests
 
@@ -58,6 +58,28 @@ class DumboOptions(NamedTuple):
             smart_punct=False,
         )
 
+    @staticmethod
+    def from_dict(obj: dict[str, Any]) -> "DumboOptions":
+        default = DumboOptions.default()
+        if obj is None:
+            return default
+
+        def safe_get(key: str, t: Type, def_val: Any) -> Any:
+            if (k := obj.get(key)) and isinstance(k, t):
+                return k
+            return def_val
+
+        return DumboOptions(
+            math_type=MathType.from_string(
+                safe_get("math_type", str, default.math_type)
+            ),
+            math_preamble=safe_get("math_preamble", str, default.math_preamble),
+            input_format=InputFormat.from_string(
+                safe_get("input_format", str, default.input_format)
+            ),
+            smart_punct=safe_get("smart_punct", bool, default.smart_punct),
+        )
+
     def dict(self) -> dict:
         return {
             "mathOption": self.math_type.value,
@@ -70,21 +92,6 @@ class DumboOptions(NamedTuple):
 DUMBO_URL = "http://dumbo:5000"
 
 KEYS_PATHS = {"/mdkeys", "/latexkeys"}
-
-
-def get_dumbo_options_from_obj(
-    obj: dict[str, Any], base_opts: DumboOptions = DumboOptions.default()
-) -> DumboOptions:
-    if obj is None:
-        return base_opts
-    return DumboOptions(
-        math_type=MathType.from_string(obj.get("math_type", base_opts.math_type)),
-        math_preamble=obj.get("math_preamble", base_opts.math_preamble),
-        input_format=InputFormat.from_string(
-            obj.get("input_format", base_opts.input_format)
-        ),
-        smart_punct=obj.get("smart_punct", base_opts.smart_punct),
-    )
 
 
 @overload
