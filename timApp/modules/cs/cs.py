@@ -1823,6 +1823,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             else:  # run cmd wins all other run types
                 language.set_stdin(userinput)
+                language.add_uploaded_files()
                 runcommand = get_param(query, "cmd", "")
                 if (
                     "run" not in ttype
