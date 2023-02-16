@@ -118,6 +118,17 @@ export class AceEditorComponent implements IEditor {
         this.updateDisabled();
         this.content = this.content_ ?? "";
         this.content_ = undefined;
+
+        this.aceEditor?.commands.addCommand({
+            name: "toggleCommentLines",
+            bindKey: {
+                win: "Ctrl-'",
+                mac: "Command-'",
+            },
+            exec: () => {
+                this.aceEditor?.toggleCommentLines();
+            },
+        });
     }
 
     get content(): string {

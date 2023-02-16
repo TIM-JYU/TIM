@@ -320,7 +320,7 @@ def get_iframehtml_answer_impl(
 
     users = [ctx_user]
 
-    answerinfo = get_existing_answers_info(users, tid)
+    answerinfo = get_existing_answers_info(users, tid, True)
 
     info = plugin.get_info(users, answerinfo.count)
 
@@ -691,7 +691,7 @@ def get_postanswer_plugin_etc(
     if newtask:  # found_plugin.par.get_attr("seed") == "answernr":
         force_answer = True  # variable tasks are always saved even with same answer
 
-    answerinfo = get_existing_answers_info(users, tid)
+    answerinfo = get_existing_answers_info(users, tid, True)
     answernr = -1
     answernr_to_user = None
 
@@ -1084,7 +1084,10 @@ def post_answer_impl(
             is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
             if vr.is_invalid:
                 is_valid = False
-                explanation = vr.invalidate_reason
+                explanation = (
+                    vr.invalidate_reason
+                    + " Your answer was saved but marked as invalid."
+                )
             elif vr.is_expired:
                 fixed_time = (
                     receive_time

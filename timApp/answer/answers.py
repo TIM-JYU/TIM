@@ -48,13 +48,13 @@ class ExistingAnswersInfo:
     count: int
 
 
-def get_latest_answers_query(task_id: TaskId, users: list[User]) -> Query:
-    if task_id.is_global:
-        q = Answer.query.filter_by(task_id=task_id.doc_task).order_by(Answer.id.desc())
-    else:
+def get_answers_query(task_id: TaskId, users: list[User], only_valid: bool) -> Query:
+    q = Answer.query.filter_by(task_id=task_id.doc_task)
+    if only_valid:
+        q = q.filter_by(valid=True)
+    if not task_id.is_global:
         q = (
-            Answer.query.filter_by(task_id=task_id.doc_task)
-            .join(User, Answer.users)
+            q.join(User, Answer.users)
             .filter(User.id.in_([u.id for u in users]))
             .group_by(Answer.id)
             .with_entities(Answer.id)
@@ -62,9 +62,9 @@ def get_latest_answers_query(task_id: TaskId, users: list[User]) -> Query:
                 (func.array_agg(aggregate_order_by(User.id, User.id)))
                 == sorted(u.id for u in users)
             )
-            .subquery()
-        )
-        q = Answer.query.filter(Answer.id.in_(q)).order_by(Answer.id.desc())
+        ).subquery()
+        q = Answer.query.filter(Answer.id.in_(q))
+    q = q.order_by(Answer.id.desc())
     return q
 
 
@@ -155,7 +155,7 @@ def save_answer(
         )
     if tags is None:
         tags = []
-    answerinfo = get_existing_answers_info(users, task_id)
+    answerinfo = get_existing_answers_info(users, task_id, False)
     if (
         is_redundant_answer(content_str, answerinfo, plugintype, valid)
         and not force_save
@@ -487,9 +487,9 @@ def get_all_answer_initial_query(
 
 
 def get_existing_answers_info(
-    users: list[User], task_id: TaskId
+    users: list[User], task_id: TaskId, only_valid: bool
 ) -> ExistingAnswersInfo:
-    q = get_latest_answers_query(task_id, users)
+    q = get_answers_query(task_id, users, only_valid)
     latest = q.first()
     count = q.count()
     return ExistingAnswersInfo(latest_answer=latest, count=count)
