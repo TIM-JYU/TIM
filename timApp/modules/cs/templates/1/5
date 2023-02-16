@@ -10,8 +10,16 @@ lazy: false
 editorModes: 2
 header: "Järjestä suuruusjärjestykseen"
 stem: Järjestä suuruusjärjestykseen pienen ensin
-style-words: "font-size: 1.5em;font-weight: bold;"
-#words: true
+parsons:
+  styleWords: "font-size: 1.5em;font-weight: bold;"
+  #shuffleHost: true
+  #words: true
+  #md: true
+  #math_type: svg
+  #menuText: "Parsons"
+  #notOrderMatters: true
+  #maxCheck: 3
+  #minWidth: "3em"
 byCode: |!!
 Pieni
 Keskikokoinen
