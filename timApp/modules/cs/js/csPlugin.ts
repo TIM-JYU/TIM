@@ -745,6 +745,8 @@ const CsMarkupOptional = t.partial({
     jsBrowserConsole: t.boolean,
     editorOrder: t.array(t.string),
     resetUserInput: t.boolean,
+    uploadAcceptPattern: t.string,
+    uploadAcceptMaxSize: t.number,
 });
 
 const CsMarkupDefaults = t.type({
@@ -774,6 +776,7 @@ const CsMarkupDefaults = t.type({
     lang: withDefault(t.string, "fi"),
     maxrows: withDefault(t.Integer, 100),
     maxSize: withDefault(t.number, 50),
+    uploadAcceptMaxSize: withDefault(t.number, -1), // Differs from maxSize because this is a global maxSize instead of default
     noConsoleClear: withDefault(t.boolean, false),
     nocode: withDefault(t.boolean, false),
     norun: withDefault(t.boolean, false),
@@ -1276,6 +1279,8 @@ export class CsController extends CsBase implements ITimComponent {
         }
 
         component.allowMultiple = this.markup.allowMultipleFiles;
+        component.accept = this.markup.uploadAcceptPattern;
+        component.maxSize = this.markup.uploadAcceptMaxSize;
         component.multipleElements = this.markup.multipleUploadElements;
         component.files = files;
     }
