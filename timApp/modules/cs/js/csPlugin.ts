@@ -698,7 +698,7 @@ const CsMarkupOptional = t.partial({
     mode: t.string,
     noeditor: t.boolean,
     normal: nullable(t.string),
-    parsons: t.union([CsParsonsOptions, t.undefined]),
+    parsons: withDefault(CsParsonsOptions, {}),
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -1200,6 +1200,9 @@ export class CsController extends CsBase implements ITimComponent {
             this.editor.allowedPaths = this.editor.files
                 .map((f) => f.path)
                 .concat(this.markup.allowedPaths ?? []);
+        }
+        if (this.markup.parsons) {
+            this.markup.parsons.shuffle = this.initUserCode;
         }
     }
 
