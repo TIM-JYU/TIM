@@ -147,3 +147,7 @@ li.correctPosition, .testcase.pass {
     display: block;
     color: red;
 }
+
+.parsonsstatic {
+    cursor: pointer !important;
+}

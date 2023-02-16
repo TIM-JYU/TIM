@@ -3,7 +3,8 @@ import {EventEmitter} from "@angular/core";
 import {Output} from "@angular/core";
 import type {SimpleChanges} from "@angular/core";
 import {ElementRef, ViewChild, Component, Input} from "@angular/core";
-import type {IEditor, IParsonsHtmlLine} from "./editor";
+import {ICsParsonsOptions} from "../cs-parsons/csparsons";
+import type {IEditor} from "./editor";
 
 @Component({
     selector: "cs-parsons-editor",
@@ -16,14 +17,9 @@ export class ParsonsEditorComponent implements IEditor {
         check: (str: string, correct?: number[], styles?: string[]) => string;
     };
     private content_?: string;
-    @Input() shuffle: boolean = false;
-    @Input() maxcheck?: number;
-    @Input() shuffleHost?: boolean;
-    @Input() notordermatters: boolean = false;
+    @Input() parsonsOptions?: ICsParsonsOptions;
     @Input() base: string = "";
-    @Input() styleWords: string = "";
-    @Input() parsonsHTML?: IParsonsHtmlLine[];
-    @Input() words: boolean = false;
+
     @ViewChild("area") area!: ElementRef;
     @Output("change") private contentChange: EventEmitter<{
         content: string;
@@ -57,20 +53,14 @@ export class ParsonsEditorComponent implements IEditor {
 
     async createParsons(content: string) {
         const csp = await import("../cs-parsons/csparsons");
-        const parson = new csp.CsParsonsWidget({
-            sortable: this.area.nativeElement as Element,
-            words: this.words,
-            minWidth: "40px",
-            shuffle: this.shuffle,
-            styleWords: this.styleWords,
-            parsonsHTML: this.parsonsHTML,
-            maxcheck: this.maxcheck,
-            shuffleHost: this.shuffleHost,
-            notordermatters: this.notordermatters,
-            onChange: (p) => {
-                this.contentChanged(p.join("\n"));
-            },
-        });
+        if (!this.parsonsOptions) {
+            this.parsonsOptions = {};
+        }
+        this.parsonsOptions.onChange = (p) => {
+            this.contentChanged(p.join("\n"));
+        };
+        this.parsonsOptions.sortable = this.area.nativeElement as Element;
+        const parson = new csp.CsParsonsWidget(this.parsonsOptions);
         parson.init(this.base, content);
         parson.show();
         this.parson = parson;
@@ -84,7 +74,7 @@ export class ParsonsEditorComponent implements IEditor {
     }
 
     check(): string {
-        if (this.shuffleHost) {
+        if (this.parsonsOptions?.shuffleHost) {
             return "";
         }
         return this.parson?.check(this.content) ?? "";

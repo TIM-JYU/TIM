@@ -49,6 +49,7 @@ import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
 } from "../simcir/simcir-all";
+import {CsParsonsOptions} from "./cs-parsons/csparsons";
 import type {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import type {EditorComponent} from "./editor/editor";
@@ -468,13 +469,6 @@ const TemplateButton = t.intersection([
     }),
 ]);
 
-const ParsonsHtmlLine = t.type({
-    t: t.string,
-    h: t.string,
-});
-
-export interface IParsonsHtmlLine extends t.TypeOf<typeof ParsonsHtmlLine> {}
-
 interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
@@ -704,9 +698,7 @@ const CsMarkupOptional = t.partial({
     mode: t.string,
     noeditor: t.boolean,
     normal: nullable(t.string),
-    parsonsmaxcheck: t.number,
-    parsonsShuffleHost: t.boolean,
-    parsonsHTML: t.array(ParsonsHtmlLine),
+    parsons: t.union([CsParsonsOptions, t.undefined]),
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -751,7 +743,6 @@ const CsMarkupOptional = t.partial({
 
 const CsMarkupDefaults = t.type({
     autorun: withDefault(t.boolean, false),
-    parsonsnotordermatters: withDefault(t.boolean, false),
     blind: withDefault(t.boolean, false),
     canvasHeight: withDefault(t.number, 300),
     canvasWidth: withDefault(t.number, 700),
@@ -782,7 +773,6 @@ const CsMarkupDefaults = t.type({
     norun: withDefault(t.boolean, false),
     nosave: withDefault(t.boolean, false),
     open: withDefault(t.boolean, false),
-    parsons: withDefault(t.string, "Parsons"),
     rows: withDefault(t.Integer, 1),
     showRuntime: withDefault(t.boolean, false),
     toggleEditor: withDefault(t.union([t.boolean, t.string]), false),
@@ -792,7 +782,6 @@ const CsMarkupDefaults = t.type({
     validityCheckMessage: withDefault(t.string, ""),
     validityCheckForceSave: withDefault(t.boolean, false),
     viewCode: withDefault(t.boolean, false),
-    words: withDefault(t.boolean, false),
     allowMultipleFiles: withDefault(t.boolean, true),
     multipleUploadElements: withDefault(t.boolean, true),
     mayAddFiles: withDefault(t.boolean, false),
@@ -1719,26 +1708,6 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.editorMode;
     }
 
-    get parsonsmaxcheck() {
-        return this.markup.parsonsmaxcheck;
-    }
-
-    get parsonsShuffleHost() {
-        return this.markup.parsonsShuffleHost;
-    }
-
-    get parsonsnotordermatters() {
-        return this.markup.parsonsnotordermatters;
-    }
-
-    get words() {
-        return this.markup.words;
-    }
-
-    get parsonsHTML() {
-        return this.markup.parsonsHTML;
-    }
-
     get count() {
         return this.markup.count;
     }
@@ -2172,7 +2141,7 @@ ${fhtml}
                 this.english ? "Normal" : "Tavallinen"
             ),
             valueDefu(this.markup.highlight, "Highlight"),
-            this.markup.parsons,
+            this.markup.parsons?.menuText ?? "Parsons",
             this.markup.jsparsons,
         ];
         for (const c of this.markup.editorModes.toString()) {
@@ -3798,13 +3767,7 @@ ${fhtml}
                                [wrap]="wrap"
                                [modes]="editorModes"
                                [editorIndex]="editorMode"
-                               [parsonsShuffle]="initUserCode"
-                               [parsonsMaxcheck]="parsonsmaxcheck"
-                               [parsonsShuffleHost]="parsonsShuffleHost"
-                               [parsonsNotordermatters]="parsonsnotordermatters"
-                               [parsonsStyleWords]="markup['style-words']"
-                               [parsonsWords]="words"
-                               [parsonsHTML]="parsonsHTML"
+                               [parsonsOptions]="markup.parsons"
                                (close)="onFileClose($event)"
                                (content)="onContentChange($event)"
                                [spellcheck]="spellcheck">
