@@ -104,12 +104,16 @@ export class CsParsonsWidget {
                 div = document.createElement(type);
                 if (
                     this.options.words &&
-                    this.options.minWidth &&
-                    w.length < 3
+                    this.options.minWidth // &&
+                    // w.length < 3
                 ) {
                     div.setAttribute(
                         "style",
-                        "width: " + this.options.minWidth
+                        "width: " + this.options.minWidth + ";"
+                    );
+                    div.setAttribute(
+                        "origstyle",
+                        "width: " + this.options.minWidth + ";"
                     );
                 }
             }
@@ -307,6 +311,10 @@ export class CsParsonsWidget {
         for (let i = 0; i < div.childElementCount; i++) {
             const node = div.children[i];
             node.removeAttribute("style");
+            const origstyle = node.getAttribute("origstyle");
+            if (origstyle) {
+                node.setAttribute("style", origstyle);
+            }
             if (node.getAttribute("parsons-style") !== "sortitem") {
                 continue;
             }
