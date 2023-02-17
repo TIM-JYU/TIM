@@ -259,10 +259,17 @@ export class CsParsonsWidget {
                     nodeok = -1;
                 }
             }
+            const origstyle = node.getAttribute("origstyle") ?? "";
             if (nodeok == -1) {
-                node.setAttribute("style", "background-color: RED;");
+                node.setAttribute(
+                    "style",
+                    "background-color: RED;" + origstyle
+                );
             } else if ((this.options.maxCheck && !correct) || nodeok == 1) {
-                node.setAttribute("style", "background-color: LIGHTGREEN;");
+                node.setAttribute(
+                    "style",
+                    "background-color: LIGHTGREEN;" + origstyle
+                );
             }
         }
         if (styles) {
@@ -294,6 +301,8 @@ export class CsParsonsWidget {
                     }
                     style = style.replace(found[0], "").trim();
                 }
+                const origstyle = node.getAttribute("origstyle") ?? "";
+                style = style ?? "" + origstyle;
                 if (style) {
                     node.setAttribute("style", style);
                 }
