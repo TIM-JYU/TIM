@@ -3,45 +3,56 @@ import "./jquery-ui-sortable.min.js";
 import "./jquery.ui.touch-punch.min.js";
 import DOMPurify from "dompurify";
 import {shuffle} from "tim/plugin/util";
-import type {IParsonsHtmlLine} from "../csPlugin";
+import * as t from "io-ts";
 
-interface CsParsonsOptions {
-    shuffle: boolean;
-    sortable: Element;
-    notordermatters: boolean;
-    words: boolean;
-    maxcheck: number | undefined;
-    shuffleHost: boolean | undefined;
-    separator?: string;
-    minWidth: string;
-    styleWords: string;
-    parsonsHTML: IParsonsHtmlLine[] | undefined;
+export const ParsonsHtmlLine = t.type({
+    t: t.string,
+    h: t.string,
+});
 
+export interface IParsonsHtmlLine extends t.TypeOf<typeof ParsonsHtmlLine> {}
+
+export const CsParsonsOptions = t.partial({
+    styleWords: t.string,
+    shuffle: t.boolean,
+    notOrderMatters: t.boolean,
+    words: t.boolean,
+    maxCheck: t.number,
+    shuffleHost: t.boolean,
+    separator: t.string,
+    minWidth: t.string,
+    html: t.array(ParsonsHtmlLine),
+    menuText: t.string,
+});
+
+export interface ICsParsonsOptions extends t.TypeOf<typeof CsParsonsOptions> {
+    sortable?: Element;
     onChange?(widget: CsParsonsWidget): void;
 }
 
 export class CsParsonsWidget {
-    options: CsParsonsOptions;
+    options: ICsParsonsOptions;
     text: string = "";
     lines: string[] = [];
 
     parsonsHTML: IParsonsHtmlLine[] | undefined;
 
-    constructor(options: CsParsonsOptions) {
+    constructor(options?: ICsParsonsOptions) {
         const defaults = {
             separator: "\n",
             styleWords: "",
+            shuffle: false,
         };
 
         this.options = {
             ...defaults,
-            ...options,
+            ...(options ?? {}),
         };
     }
 
     init(text: string, userText: string) {
         this.text = text;
-        this.parsonsHTML = this.options.parsonsHTML;
+        this.parsonsHTML = this.options.html;
         if (this.options.shuffle) {
             if (this.parsonsHTML) {
                 this.parsonsHTML = shuffle(this.parsonsHTML);
@@ -57,8 +68,8 @@ export class CsParsonsWidget {
     show() {
         let classes = "sortable-code sortable-output";
         let maxn;
-        if (this.options.maxcheck) {
-            maxn = this.options.maxcheck;
+        if (this.options.maxCheck) {
+            maxn = this.options.maxCheck;
         }
 
         const parsonsEditDiv = this.options.sortable;
@@ -71,6 +82,9 @@ export class CsParsonsWidget {
         let n = this.lines.length;
         if (this.parsonsHTML) {
             n = this.parsonsHTML.length;
+        }
+        if (!parsonsEditDiv) {
+            return;
         }
         parsonsEditDiv.innerHTML = "";
         for (let i = 0; i < n; i++) {
@@ -106,8 +120,8 @@ export class CsParsonsWidget {
             if (h) {
                 div.innerHTML = DOMPurify.sanitize(h);
             } else {
-                const t = document.createTextNode(w);
-                div.appendChild(t);
+                const text = document.createTextNode(w);
+                div.appendChild(text);
             }
             // var div2 = document.createElement(typ);
             // div2.appendChild(div);
@@ -205,11 +219,11 @@ export class CsParsonsWidget {
         }
         let maxn = div.childElementCount;
         if (
-            this.options.maxcheck &&
-            this.options.maxcheck < div.childElementCount &&
+            this.options.maxCheck &&
+            this.options.maxCheck < div.childElementCount &&
             !correct
         ) {
-            maxn = this.options.maxcheck;
+            maxn = this.options.maxCheck;
         }
         let i = -1;
         for (const node of div.children) {
@@ -221,7 +235,7 @@ export class CsParsonsWidget {
                 break;
             }
             let nodeok = 1;
-            if (this.options.notordermatters && !correct) {
+            if (this.options.notOrderMatters && !correct) {
                 nodeok = -1;
                 for (let j = 0; j < maxn; j++) {
                     if (lines[j] === ulines[i]) {
@@ -243,7 +257,7 @@ export class CsParsonsWidget {
             }
             if (nodeok == -1) {
                 node.setAttribute("style", "background-color: RED;");
-            } else if ((this.options.maxcheck && !correct) || nodeok == 1) {
+            } else if ((this.options.maxCheck && !correct) || nodeok == 1) {
                 node.setAttribute("style", "background-color: LIGHTGREEN;");
             }
         }

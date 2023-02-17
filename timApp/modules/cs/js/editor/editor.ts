@@ -13,14 +13,10 @@ import {TimStorage} from "tim/util/utils";
 import * as t from "io-ts";
 import type {IFile} from "../util/file-select";
 import {getInt} from "../util/util";
+import {ICsParsonsOptions} from "../cs-parsons/csparsons";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
-
-export interface IParsonsHtmlLine {
-    t: string;
-    h: string;
-}
 
 type ModeID = number;
 
@@ -161,14 +157,8 @@ export class JSParsonsEditorComponent implements IEditor {
                     [spellcheck]="spellcheck">
             </cs-normal-editor>
             <cs-parsons-editor *ngIf="mode == Mode.Parsons"
-                    [shuffle]="parsonsShuffle"
-                    [maxcheck]="parsonsMaxcheck"
-                    [shuffleHost]="parsonsShuffleHost"
-                    [base]="base"
-                    [words]="parsonsWords"
-                    [styleWords]="parsonsStyleWords"
-                    [notordermatters]="parsonsNotordermatters" 
-                    [parsonsHTML]="parsonsHTML"
+                    [base]="base" 
+                    [parsonsOptions]="parsonsOptions"            
                     (change)="onEditorContentChanged($event)">
             </cs-parsons-editor>
             <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
@@ -222,13 +212,7 @@ export class EditorComponent implements IMultiEditor {
     maxRows_: number = 100;
     private wrap_?: {n: number; auto: boolean};
 
-    @Input() parsonsShuffle: boolean = false;
-    @Input() parsonsMaxcheck?: number;
-    @Input() parsonsShuffleHost?: boolean;
-    @Input() parsonsNotordermatters: boolean = false;
-    @Input() parsonsStyleWords: string = "";
-    @Input() parsonsWords: boolean = false;
-    @Input() parsonsHTML?: IParsonsHtmlLine[];
+    @Input() parsonsOptions?: ICsParsonsOptions;
 
     private modeIndex_: number = -1;
     private modes_: Mode[] = [];
@@ -630,7 +614,9 @@ export class EditorComponent implements IMultiEditor {
     }
 
     reset() {
-        this.parsonsShuffle = true;
+        if (this.parsonsOptions) {
+            this.parsonsOptions.shuffle = true;
+        }
         this.content = this.base;
     }
 

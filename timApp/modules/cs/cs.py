@@ -543,7 +543,8 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
 
     usercode = get_json_eparam(query.jso, "state", "usercode", None)
 
-    if markup.get("parsonsShuffleHost", False):
+    parsons_options = markup.get("parsons", {})
+    if parsons_options.get("shuffleHost", False):
         if usercode is None:
             bycodeLines = bycode.split("\n")
             random.shuffle(bycodeLines)
@@ -560,18 +561,20 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
     if doc_addr:
         js["markup"]["docurl"] = doc_addr["dochtml"]
 
-    parsonsMD = get_param(query, "parsonsMD", None)
-    if parsonsMD and parsonsMD.get("md", True):
+    parsons_md = parsons_options.get(
+        "md", parsons_options.get("math_type", None) is not None
+    )
+    if parsons_md:
         code = bycode
         if usercode:
             code = usercode
         bymd = code.split("\n")
-        dopts = DumboOptions.from_dict(parsonsMD)
+        dopts = DumboOptions.from_dict(parsons_options)
         htmls = call_dumbo(bymd, options=dopts)
         parsonsHTML = []
         for i in range(0, len(bymd)):
             parsonsHTML.append({"t": bymd[i], "h": htmls[i]})
-        js["markup"]["parsonsHTML"] = parsonsHTML
+        js["markup"]["parsons"]["html"] = parsonsHTML
     jso = json.dumps(js)
 
     if is_rv:
@@ -1619,18 +1622,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         )
                         is_plain = True
 
+                    parsons_options = get_param(query, "parsons", {})
+
                     if expect_code:
                         if expect_code == "byCode":
                             expect_code = get_param(query, "byCode", "")
                             if expect_code == "":
                                 expect_code = query.query.get("by", [""])[0]
-                        maxn = get_param(query, "parsonsmaxcheck", 0)
+                        maxn = parsons_options.get("maxCheck", 0)
                         if maxn > 0:
                             p, parsons_correct = check_parsons(
                                 expect_code,
                                 usercode,
                                 maxn,
-                                get_param(query, "parsonsnotordermatters", False),
+                                parsons_options.get("notOrderMatters", False),
                                 usercode_edit_rules,
                             )
                             if p > 0:
