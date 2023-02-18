@@ -3207,6 +3207,26 @@ ${fhtml}
         copyToClipboard(this.result ?? "");
     }
 
+    elementSelectAll(event: KeyboardEvent) {
+        if (event.ctrlKey && event.key === "a") {
+            const element = event.target as HTMLElement;
+            if (!element) {
+                return;
+            }
+            const range = document.createRange();
+            range.selectNodeContents(element);
+
+            // Luo Selection-objekti ja aseta siihen aiemmin luotu Range-objekti
+            const selection = window.getSelection();
+            if (!selection) {
+                return;
+            }
+            selection.removeAllRanges();
+            selection.addRange(range);
+            event.preventDefault();
+        }
+    }
+
     copyCode() {
         let pre = "";
         let post = "";
@@ -3915,15 +3935,15 @@ ${fhtml}
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <div class="consoleDiv" *ngIf="result">
+            <div class="consoleDiv" *ngIf="result" >
                 <a class="copyConsoleLink" href="#" *ngIf="markup.copyConsoleLink"
                    (click)="copyConsole(); $event.preventDefault()"
                    title="Copy console text to clipboard"
                 >{{markup.copyConsoleLink}}</a>
-                <pre class="console">{{result}}</pre>
+                <pre id="resultConsole"  class="console" (keydown)="elementSelectAll($event)" tabindex="0">{{result}}</pre>
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
-            <div class="csrunPreview">
+            <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0">
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
                      caption="Preview"
