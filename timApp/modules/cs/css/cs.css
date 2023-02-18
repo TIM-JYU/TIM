@@ -393,3 +393,9 @@ csError .error {
     color: red;
     background-color: lightgoldenrodyellow;
 }
+
+a.copyConsoleLink {
+    float: right;
+    margin-top: -1em;
+    /*font-size: x-small;*/
+}

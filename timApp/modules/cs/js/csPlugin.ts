@@ -750,6 +750,7 @@ const CsMarkupDefaults = t.type({
     codeunder: withDefault(t.boolean, false),
     cols: withDefault(t.Integer, 10),
     copyLink: withDefault(t.string, "Copy"),
+    copyConsoleLink: withDefault(t.string, "🗊"),
     dragAndDrop: withDefault(t.boolean, true),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
@@ -3202,6 +3203,10 @@ ${fhtml}
         return i;
     }
 
+    copyConsole() {
+        copyToClipboard(this.result ?? "");
+    }
+
     copyCode() {
         let pre = "";
         let post = "";
@@ -3910,7 +3915,13 @@ ${fhtml}
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <pre class="console" *ngIf="result">{{result}}</pre>
+            <div class="consoleDiv" *ngIf="result">
+                <a class="copyConsoleLink" href="#" *ngIf="markup.copyConsoleLink"
+                   (click)="copyConsole(); $event.preventDefault()"
+                   title="Copy console text to clipboard"
+                >{{markup.copyConsoleLink}}</a>
+                <pre class="console">{{result}}</pre>
+            </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
             <div class="csrunPreview">
                 <div *ngIf="iframesettings && !isTauno"
