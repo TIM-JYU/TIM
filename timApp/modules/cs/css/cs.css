@@ -397,5 +397,21 @@ csError .error {
 a.copyConsoleLink {
     float: right;
     margin-top: -1em;
-    /*font-size: x-small;*/
+    font-size: small;
+}
+
+a.copyErrorLink {
+    float: right;
+    margin-top: 0.5em;
+    margin-right: 0.2em;
+    font-size: x-small;
+}
+
+.csRunErrorClass .glyphicon {
+    font-size: x-small;
+}
+
+.csRunErrorClass .normalLabel {
+    font-weight: normal;
+    font-size: small;
 }

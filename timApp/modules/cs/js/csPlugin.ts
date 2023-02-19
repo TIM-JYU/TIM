@@ -750,7 +750,8 @@ const CsMarkupDefaults = t.type({
     codeunder: withDefault(t.boolean, false),
     cols: withDefault(t.Integer, 10),
     copyLink: withDefault(t.string, "Copy"),
-    copyConsoleLink: withDefault(t.string, "🗊"),
+    copyConsoleLink: withDefault(t.string, "⧉"),
+    copyErrorLink: withDefault(t.string, "⧉"),
     dragAndDrop: withDefault(t.boolean, true),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
@@ -758,7 +759,6 @@ const CsMarkupDefaults = t.type({
     indent: withDefault(t.Integer, -1),
     initSimcir: withDefault(t.string, ""),
     "style-args": withDefault(t.string, ""), // TODO get rid of "-"
-    "style-words": withDefault(t.string, ""), // TODO get rid of "-"
     inputrows: withDefault(t.Integer, 1),
     inputstem: withDefault(t.string, ""),
     isHtml: withDefault(t.boolean, false),
@@ -3203,8 +3203,9 @@ ${fhtml}
         return i;
     }
 
-    copyConsole() {
-        copyToClipboard(this.result ?? "");
+    copyString(s: string | undefined, event: UIEvent) {
+        copyToClipboard(s ?? "");
+        event?.preventDefault();
     }
 
     elementSelectAll(event: KeyboardEvent) {
@@ -3742,7 +3743,7 @@ ${fhtml}
                     </select>
                 </div>
             </div>
-            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"></p>
+            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify" (keydown)="elementSelectAll($event)" tabindex="0"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
@@ -3885,7 +3886,7 @@ ${fhtml}
                           class="inputSmall"
                           style="float: right;"
                           title="Run time in sec {{runtime}}">{{oneruntime}}</span>
-                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;"
+                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2" class="inputSmall" style="float: right;"
                           title="Put 0 to no wrap">
                 <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()"
                         style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
@@ -3917,11 +3918,14 @@ ${fhtml}
             <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
             <div class="csRunErrorClass csRunError" *ngIf="runError">
                 <p class="pull-right" *ngIf="!markup['noclose']">
-                    <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"
-                                                                                             [(ngModel)]="keepErrors"/></label>
+                    <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"></label>
                     <tim-close-button (click)="closeError()"></tim-close-button>
                 </p>
-                <pre class="csRunError">{{error}}</pre>
+                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                   (click)="copyString(error, $event)"
+                   title="Copy text to clipboard"
+                >{{markup.copyErrorLink}}</a>
+                <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{error}}</pre>
                 <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
                     <tim-close-button (click)="closeError()"></tim-close-button>
                 </p>
@@ -3930,14 +3934,18 @@ ${fhtml}
                 <p class="pull-right" *ngIf="!markup['noclose']">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
-                <pre class="csRunError">{{fetchError}}</pre>
+                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                   (click)="copyString(fetchError, $event)"
+                   title="Copy text to clipboard"
+                >{{markup.copyErrorLink}}</a>
+                <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{fetchError}}</pre>
                 <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
             <div class="consoleDiv" *ngIf="result" >
-                <a class="copyConsoleLink" href="#" *ngIf="markup.copyConsoleLink"
-                   (click)="copyConsole(); $event.preventDefault()"
+                <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
+                   (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
                 >{{markup.copyConsoleLink}}</a>
                 <pre id="resultConsole"  class="console" (keydown)="elementSelectAll($event)" tabindex="0">{{result}}</pre>
