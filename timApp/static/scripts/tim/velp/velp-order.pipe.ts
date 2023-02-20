@@ -3,7 +3,7 @@
  */
 import type {PipeTransform} from "@angular/core";
 import {Injectable, Pipe} from "@angular/core";
-import type {INewVelp, IVelp} from "tim/velp/velptypes";
+import type {IVelp} from "tim/velp/velptypes";
 
 @Pipe({
     name: "orderByWhenNotEditing",
@@ -11,15 +11,19 @@ import type {INewVelp, IVelp} from "tim/velp/velptypes";
 @Injectable()
 export class VelpOrder implements PipeTransform {
     transform(
-        velps: INewVelp[],
+        velps: IVelp[],
         orderStr: string,
-        filteredVelps: IVelp[],
+        advancedOn?: boolean,
         sortLang?: string
-    ): INewVelp[] {
-        for (const v of velps) {
-            if (v.edit) {
-                return filteredVelps;
-            }
+    ): IVelp[] {
+        // TODO return immediately if editing a velp (maybe use velpToEdit from VelpMenuComponent)
+        // for (const v of velps) {
+        //     if (v.edit) {
+        //         return filteredVelps;
+        //     }
+        // }
+        if (!advancedOn) {
+            return velps;
         }
 
         let list;

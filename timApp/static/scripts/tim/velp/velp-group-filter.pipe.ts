@@ -3,7 +3,7 @@
  */
 import type {PipeTransform} from "@angular/core";
 import {Injectable, Pipe} from "@angular/core";
-import type {INewVelp, IVelpGroupUI} from "tim/velp/velptypes";
+import type {IVelp, IVelpGroupUI} from "tim/velp/velptypes";
 
 @Pipe({
     name: "filterByVelpGroups",
@@ -11,13 +11,16 @@ import type {INewVelp, IVelpGroupUI} from "tim/velp/velptypes";
 @Injectable()
 export class VelpGroupFilter implements PipeTransform {
     transform(
-        velps?: INewVelp[],
-        groups?: IVelpGroupUI[]
-    ): INewVelp[] | undefined {
-        const selected: INewVelp[] = [];
+        velps: IVelp[],
+        groups?: IVelpGroupUI[],
+        advancedOn?: boolean
+    ): IVelp[] {
+        const selected: IVelp[] = [];
         const checkedGroups = [];
 
-        if (groups == null || velps == null) {
+        // TODO advancedOn is probably redundant here:
+        //   search/filter options are not visible to user if advancedOn is false
+        if (groups == null || velps == null || !advancedOn) {
             return velps;
         }
 
@@ -29,10 +32,12 @@ export class VelpGroupFilter implements PipeTransform {
 
         for (const v of velps) {
             // always include velp that is being edited
-            if (v.edit) {
-                selected.push(v);
-                continue;
-            }
+
+            // TODO find a way to include velp that is being edited (maybe use velpToEdit from VelpMenuComponent)
+            // if (v.edit) {
+            //     selected.push(v);
+            //     continue;
+            // }
 
             for (const c of checkedGroups) {
                 if (v.velp_groups.includes(c) && !selected.includes(v)) {

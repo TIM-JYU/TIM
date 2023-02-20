@@ -11,13 +11,15 @@ import type {ILabelUI, IVelp} from "tim/velp/velptypes";
 @Injectable()
 export class VelpLabelFilter implements PipeTransform {
     transform(
-        velps?: IVelp[],
+        velps: IVelp[],
         labels?: ILabelUI[],
         advancedOn?: boolean
-    ): IVelp[] | undefined {
+    ): IVelp[] {
         const selectedVelps: Record<number, [IVelp, number]> = {};
         const selectedLabels = [];
 
+        // TODO advancedOn is probably redundant here:
+        //   search/filter options are not visible to user if advancedOn is false
         if (!advancedOn) {
             return velps;
         }
