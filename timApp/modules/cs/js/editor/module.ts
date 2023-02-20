@@ -8,6 +8,7 @@ import {EditorComponent, JSParsonsEditorComponent} from "./editor";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
+import {MathEditorComponent} from "./math-editor.component";
 
 @NgModule({
     declarations: [
@@ -17,6 +18,7 @@ import {ParsonsEditorComponent} from "./parsons";
         ParsonsEditorComponent,
         CountBoardComponent,
         JSParsonsEditorComponent,
+        MathEditorComponent,
     ],
     imports: [CommonModule, FormsModule, TimUtilityModule, CsUtilityModule],
     exports: [CountBoardComponent, EditorComponent, AceEditorComponent],

@@ -2147,6 +2147,7 @@ ${fhtml}
             valueDefu(this.markup.highlight, "Highlight"),
             this.markup.parsons?.menuText ?? "Parsons",
             this.markup.jsparsons,
+            "MathEditor",
         ];
         for (const c of this.markup.editorModes.toString()) {
             const mode = parseInt(c, 10);
