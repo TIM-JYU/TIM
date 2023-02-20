@@ -21,6 +21,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {LogoComponent} from "tim/ui/logo.component";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {setTheme} from "ngx-bootstrap/utils";
+import {PopoverModule} from "ngx-bootstrap/popover";
 import {LoginMenuComponent} from "tim/user/login-menu.component";
 import {FrontPageComponent} from "tim/frontpage/front-page.component";
 import {BookmarkFolderBoxComponent} from "tim/bookmark/bookmark-folder-box.component";
@@ -101,6 +102,7 @@ import {LabelContentFilter} from "tim/velp/label-content-filter.pipe";
         TypeaheadModule.forRoot(),
         TooltipModule.forRoot(),
         TabsModule.forRoot(),
+        PopoverModule.forRoot(),
     ],
     providers: [
         SessionVerify,
