@@ -16,6 +16,7 @@ import {getInt} from "../util/util";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
+import {MathEditorComponent} from "./math-editor.component";
 
 type ModeID = number;
 
@@ -26,12 +27,15 @@ export class Mode {
     static readonly Parsons: ModeID = 2;
     static readonly JSParsons: ModeID = 3;
 
+    static readonly Math: ModeID = 4;
+
     static readonly defaultTexts = {
         [Mode.Default]: "Default", // TODO: translations
         [Mode.Normal]: "Normal",
         [Mode.ACE]: "Highlight",
         [Mode.Parsons]: "Parsons",
         [Mode.JSParsons]: "JS Parsons",
+        [Mode.Math]: "Math",
     };
 
     static readonly modeClasses = {
@@ -40,6 +44,7 @@ export class Mode {
         [Mode.ACE]: "ace",
         [Mode.Parsons]: "parsons",
         [Mode.JSParsons]: "jsparsons",
+        [Mode.Math]: "math",
     };
 
     public id: ModeID;
@@ -148,6 +153,7 @@ export class JSParsonsEditorComponent implements IEditor {
                 </div>
             </div>
             <ng-container *ngIf="!addTabActive">
+                <cs-math-editor *ngIf="mode == Mode.Math"></cs-math-editor>
             <cs-normal-editor *ngIf="mode == Mode.Normal"
                     [minRows]="minRows_"
                     [maxRows]="maxRows_"
@@ -194,6 +200,8 @@ export class EditorComponent implements IMultiEditor {
     Mode = Mode;
 
     private normalEditor?: NormalEditorComponent;
+    private mathEditor?: MathEditorComponent;
+
     private aceEditor?: AceEditorComponent;
     parsonsEditor?: ParsonsEditorComponent;
     editorreadonly: boolean = false;
@@ -285,6 +293,18 @@ export class EditorComponent implements IMultiEditor {
             this.content = oldContent;
             this.content_ = undefined;
         }
+    }
+
+    // For after ngIf sets the value
+    @ViewChild(MathEditorComponent) private set mathEditorViewSetter(
+        component: MathEditorComponent | undefined
+    ) {
+        if (component == this.mathEditor) {
+            return;
+        }
+        const oldContent = this.mathEditor?.content ?? this.content;
+        this.mathEditor = component;
+        this.initEditor(oldContent);
     }
 
     // For after ngIf sets the value
@@ -467,6 +487,8 @@ export class EditorComponent implements IMultiEditor {
                 return this.aceEditor;
             case Mode.Parsons:
                 return this.parsonsEditor;
+            case Mode.Math:
+                return this.mathEditor;
             case Mode.JSParsons:
                 break;
         }
