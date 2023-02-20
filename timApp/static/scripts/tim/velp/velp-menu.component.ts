@@ -220,10 +220,10 @@ import type {
                                                     <input id="velp-group-table-cb-default"
                                                            type="checkbox"
                                                            [(ngModel)]="settings.selectedAllDefault"
-                                                           [disabled]="!vctrl.item.rights.manage"
+                                                           [disabled]="!hasManageRights()"
                                                            (ngModelChange)="changeAllVelpGroupSelections('default')">
                                                     <label for="velp-group-table-cb-default" title="Default"
-                                                           [ngClass]="['comment-info', 'small', {disabled: !vctrl.item.rights.manage}]">
+                                                           [ngClass]="['comment-info', 'small', {disabled: !hasManageRights()}]">
                                                         <span class="glyphicon glyphicon-check"></span>
                                                     </label>
                                                 </th>
@@ -238,7 +238,7 @@ import type {
                                                 </td>
                                                 <td>
                                                     <input type="checkbox" [(ngModel)]="group.default"
-                                                           [disabled]="!vctrl.item.rights.manage"
+                                                           [disabled]="!hasManageRights()"
                                                            (ngModelChange)="changeVelpGroupSelection(group, 'default')">
                                                 </td>
                                                 <td>
@@ -281,10 +281,10 @@ import type {
                                                                 class="formInput">
                                                             <option [value]="0" selected>Personal collection</option>
                                                             <option [value]="1"
-                                                                    [disabled]="!vctrl.item.rights.editable">Document
+                                                                    [disabled]="!hasEditRights()">Document
                                                             </option>
                                                             <option [value]="2"
-                                                                    [disabled]="!vctrl.item.rights.editable">Folder
+                                                                    [disabled]="!hasEditRights()">Folder
                                                             </option>
                                                         </select>
                                                     </fieldset>
@@ -1453,6 +1453,13 @@ export class VelpMenuComponent implements OnInit {
      */
     trackByVelpIDFn(index: number, velp: IVelp): number {
         return velp.id;
+    }
+
+    hasManageRights(): boolean {
+        return this.vctrl.item.rights.manage;
+    }
+    hasEditRights(): boolean {
+        return this.vctrl.item.rights.editable;
     }
 }
 
