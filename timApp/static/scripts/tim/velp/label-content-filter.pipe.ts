@@ -6,7 +6,7 @@ import {Injectable, Pipe} from "@angular/core";
 import type {ILabelUI} from "tim/velp/velptypes";
 
 @Pipe({
-    name: "filterByLabelContent",
+    name: "filterLabelByContent",
 })
 @Injectable()
 export class LabelContentFilter implements PipeTransform {
@@ -17,6 +17,7 @@ export class LabelContentFilter implements PipeTransform {
     ): ILabelUI[] {
         const returnLabels = [];
 
+        // TODO advancedOn is probably redundant here
         if (!advancedOn || !searchString) {
             return labels;
         }

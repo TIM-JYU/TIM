@@ -118,10 +118,10 @@ import type {
                     </p>
                 </div>
                 <div *ngIf="advancedOn" class="velp-menu-advanced-controls">
-                    <uib-tabset active="active" class="velpFill">
+                    <tabset active="active" class="velpFill">
 
                         <!-- Velp filtering options -->
-                        <uib-tab index="0" heading="Filter velps">
+                        <tab index="0" heading="Filter velps">
                             <div class="velp-filter-tab">
                                 <!-- LABELS -->
                                 <div id="labels">
@@ -134,10 +134,10 @@ import type {
                                     </form>
                                     <div>
                                         <div class="labels-scrollarea">
-                                            <p *ngFor="let label of filteredLabels | filterLabelByContent:this.filterLabel"
+                                            <p *ngFor="let label of filteredLabels | filterLabelByContent:this.filterLabel:this.advancedOn"
                                                class="label tag-false"
                                                [ngStyle]="{backgroundColor: getColor(label.id)}"
-                                               (click)="toggleLabel(label)" [(ngModel)]="test" value="{{ label.id }}">
+                                               (click)="toggleLabel(label)" value="{{ label.id }}">
                                                 {{ label.content }} <span class="glyphicon glyphicon-ok"
                                                                           *ngIf="label.selected"></span>
                                             </p>
@@ -183,10 +183,10 @@ import type {
                                     </form>
                                 </div>
                             </div>
-                        </uib-tab>
+                        </tab>
 
                         <!-- Velp groups -->
-                        <uib-tab index="1" heading="Velp groups">
+                        <tab index="1" heading="Velp groups">
                             <div class="velp-groups-tab">
                                 <div class="velpSummary autoscroll">
                                     <form style="border-bottom: 1px solid gainsboro">
@@ -301,10 +301,10 @@ import type {
                                     </details>
                                 </div>
                             </div>
-                        </uib-tab>
+                        </tab>
 
                         <!-- SUMMARY -->
-                        <uib-tab index="2" heading="Summary">
+                        <tab index="2" heading="Summary">
                             <div class="velp-summary-tab">
                                 <tim-velp-summary
                                         [annotations]="rctrl.getAllAnnotations()"
@@ -313,8 +313,8 @@ import type {
                                 >
                                 </tim-velp-summary>
                             </div>
-                        </uib-tab>
-                    </uib-tabset>
+                        </tab>
+                    </tabset>
                 </div>
 
 
@@ -361,7 +361,7 @@ export class VelpMenuComponent implements OnInit {
     };
 
     filteredVelps: IVelp[];
-    filteredLabels?: ILabel[];
+    filteredLabels: ILabel[];
 
     @Input() filterVelp?: string;
     @Input() filterLabel?: string;
@@ -445,6 +445,7 @@ export class VelpMenuComponent implements OnInit {
         };
 
         this.filteredVelps = [];
+        this.filteredLabels = [];
     }
 
     public get rctrl() {
