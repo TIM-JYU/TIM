@@ -217,6 +217,16 @@ export class AceParEditor extends BaseParEditor {
                 this.pageBreakClicked();
             },
         });
+        this.editor.commands.addCommand({
+            name: "toggleCommentLines",
+            bindKey: {
+                win: "Ctrl-'",
+                mac: "Command-'",
+            },
+            exec: () => {
+                this.editor.toggleCommentLines();
+            },
+        });
         this.editor.keyBinding.setKeyboardHandler({
             handleKeyboard: () => {
                 this.checkWrap();

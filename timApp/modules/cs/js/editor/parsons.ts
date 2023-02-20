@@ -3,6 +3,7 @@ import {EventEmitter} from "@angular/core";
 import {Output} from "@angular/core";
 import type {SimpleChanges} from "@angular/core";
 import {ElementRef, ViewChild, Component, Input} from "@angular/core";
+import {ICsParsonsOptions} from "../cs-parsons/csparsons";
 import type {IEditor} from "./editor";
 
 @Component({
@@ -13,15 +14,12 @@ export class ParsonsEditorComponent implements IEditor {
     private parson?: {
         join: (str: string) => string;
         clear: () => void;
-        check: (str: string) => string;
+        check: (str: string, correct?: number[], styles?: string[]) => string;
     };
     private content_?: string;
-    @Input() shuffle: boolean = false;
-    @Input() maxcheck?: number;
-    @Input() notordermatters: boolean = false;
+    @Input() parsonsOptions?: ICsParsonsOptions;
     @Input() base: string = "";
-    @Input() styleWords: string = "";
-    @Input() words: boolean = false;
+
     @ViewChild("area") area!: ElementRef;
     @Output("change") private contentChange: EventEmitter<{
         content: string;
@@ -55,18 +53,14 @@ export class ParsonsEditorComponent implements IEditor {
 
     async createParsons(content: string) {
         const csp = await import("../cs-parsons/csparsons");
-        const parson = new csp.CsParsonsWidget({
-            sortable: this.area.nativeElement as Element,
-            words: this.words,
-            minWidth: "40px",
-            shuffle: this.shuffle,
-            styleWords: this.styleWords,
-            maxcheck: this.maxcheck,
-            notordermatters: this.notordermatters,
-            onChange: (p) => {
-                this.contentChanged(p.join("\n"));
-            },
-        });
+        if (!this.parsonsOptions) {
+            this.parsonsOptions = {};
+        }
+        this.parsonsOptions.onChange = (p) => {
+            this.contentChanged(p.join("\n"));
+        };
+        this.parsonsOptions.sortable = this.area.nativeElement as Element;
+        const parson = new csp.CsParsonsWidget(this.parsonsOptions);
         parson.init(this.base, content);
         parson.show();
         this.parson = parson;
@@ -80,6 +74,13 @@ export class ParsonsEditorComponent implements IEditor {
     }
 
     check(): string {
+        if (this.parsonsOptions?.shuffleHost) {
+            return "";
+        }
         return this.parson?.check(this.content) ?? "";
+    }
+
+    checkHost(correct?: number[], styles?: string[]): string {
+        return this.parson?.check(this.content, correct, styles) ?? "";
     }
 }

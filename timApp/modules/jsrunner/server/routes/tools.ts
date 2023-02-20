@@ -25,6 +25,22 @@ import type {
     VelpDataT,
 } from "../servertypes";
 
+// Declare helper functions that are imported from outside the Isolate
+
+declare global {
+    // See util/request.ts, function ivmRequest
+    function _ivm_request(url: unknown, ops: unknown): IvmReference;
+}
+
+interface IvmReference {
+    getSync<T>(key: string): T;
+    release(): void;
+}
+
+interface IvmExternalCopy {
+    copy(options: {transferIn: boolean; release: boolean}): unknown;
+}
+
 export function numberLines(s: string, delta: number): string {
     if (!s) {
         return "";
@@ -970,6 +986,39 @@ export class ToolsBase {
         const col = this.columnLettersToIndex(letters[0]);
         const row = parseInt(numbers[0], 10) - 1;
         return [col, row];
+    }
+
+    /**
+     * Performs an HTTP request.
+     *
+     * @param url URL to request
+     * @param opts Options for the request. The available options are:
+     *              - method: HTTP method to use (default: "GET")
+     *              - query: URL query parameters to add to the URL as a record [string, string] (default: undefined)
+     *              - headers: HTTP headers to send (default: {})
+     *              - timeout: Request timeout in milliseconds (default: 10000)
+     *              - body: Data to send with the request. This can be a string or an object that has the following properties:
+     *                     - type: Type of data to send. Available values are "form-data" (send data as multipart/form-data), "form-urlencoded" (send data as URL-encoded string) and "json" (send data as JSON).
+     *                     - params: The data to send. This must be a record of type [string, string] for "form-data" and "url-params" and a record of type [string, unknown] for "json".
+     *              - responseType: What data to return. Available values are
+     *                     - "text": Return the response as a string (default)
+     *                     - "json": Return the response as a parsed JSON object
+     *                     - "status": Return the response status code
+     */
+    request(url: string, opts: unknown) {
+        if (!checkString(url)) {
+            throw genericTypeError("url", url);
+        }
+        const ref = _ivm_request(url, opts);
+        while (!ref.getSync<boolean>("done")) {
+            // Empty loop, just wait for the request to finish on the main thread.
+        }
+        const error = ref.getSync<string | undefined>("error");
+        if (error) {
+            throw Error(`Error handling request '${url}': ${error}`);
+        }
+        const result = ref.getSync<IvmExternalCopy>("result");
+        return result.copy({transferIn: true, release: true});
     }
 }
 

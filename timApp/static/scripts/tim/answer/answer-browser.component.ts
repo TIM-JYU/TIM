@@ -1437,7 +1437,11 @@ export class AnswerBrowserComponent
         if (this.taskInfo == null) {
             return null;
         }
-        return Math.max(this.taskInfo.answerLimit - this.answers.length, 0);
+        return Math.max(
+            this.taskInfo.answerLimit -
+                this.answers.filter((a) => a.valid).length,
+            0
+        );
     }
 
     public setInfo(info: ITaskInfo) {

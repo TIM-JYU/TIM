@@ -24,7 +24,6 @@ from timApp.lecture.question_utils import (
     create_points_table,
     qst_filter_markup_points,
 )
-from timApp.markdown.dumboclient import DumboOptions
 from timApp.plugin.containerLink import convert_md
 from timApp.plugin.containerLink import (
     prepare_for_dumbo_attr_list_recursive,
@@ -42,6 +41,7 @@ from timApp.util.flask.requesthelper import (
 )
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.utils import get_dataclass_field_names
+from tim_common.dumboclient import DumboOptions
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (

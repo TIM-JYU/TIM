@@ -177,11 +177,13 @@ class AnswerTest(TimRouteTest):
         a = self.add_answer(d, "t", "z", user=self.test_user_1)
         a.users_all.append(self.test_user_2)
         answers = get_existing_answers_info(
-            [self.test_user_1, self.test_user_2], TaskId(doc_id=d.id, task_name="t")
+            [self.test_user_1, self.test_user_2],
+            TaskId(doc_id=d.id, task_name="t"),
+            only_valid=False,
         )
         self.assertEqual(1, answers.count)
         answers = get_existing_answers_info(
-            [self.test_user_1], TaskId(doc_id=d.id, task_name="t")
+            [self.test_user_1], TaskId(doc_id=d.id, task_name="t"), only_valid=False
         )
         self.assertEqual(3, answers.count)
 

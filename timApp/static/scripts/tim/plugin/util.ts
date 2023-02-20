@@ -196,12 +196,12 @@ export abstract class PluginBaseCommon {
 }
 
 /**
- * Shuffles a string array.
- * @param strings Array of strings to be shuffled.
+ * Shuffles an array.
+ * @param items Array of items to be shuffled.
  */
-export function shuffleStrings(strings: string[]): string[] {
-    const result = strings.slice();
-    const n = strings.length;
+export function shuffle<T>(items: T[]): T[] {
+    const result = items.slice();
+    const n = items.length;
     for (let i = n - 1; i >= 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         const tmp = result[i];

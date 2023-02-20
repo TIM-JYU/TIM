@@ -1,7 +1,7 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
 import json
 from enum import Enum
-from typing import NamedTuple, overload
+from typing import NamedTuple, overload, Any, Type
 
 import requests
 
@@ -19,7 +19,7 @@ class MathType(Enum):
     PNG = "png"
 
     @staticmethod
-    def from_string(s: str):
+    def from_string(s: str) -> "MathType":
         try:
             return MathType(s)
         except ValueError:
@@ -36,7 +36,7 @@ class InputFormat(Enum):
     LaTeX = "latex"
 
     @staticmethod
-    def from_string(s: str):
+    def from_string(s: str) -> "InputFormat":
         try:
             return InputFormat(s)
         except ValueError:
@@ -50,7 +50,7 @@ class DumboOptions(NamedTuple):
     smart_punct: bool
 
     @staticmethod
-    def default():
+    def default() -> "DumboOptions":
         return DumboOptions(
             math_type=MathType.MathJax,
             math_preamble="",
@@ -58,7 +58,29 @@ class DumboOptions(NamedTuple):
             smart_punct=False,
         )
 
-    def dict(self):
+    @staticmethod
+    def from_dict(obj: dict[str, Any]) -> "DumboOptions":
+        default = DumboOptions.default()
+        if obj is None:
+            return default
+
+        def safe_get(key: str, t: Type, def_val: Any) -> Any:
+            if (k := obj.get(key)) and isinstance(k, t):
+                return k
+            return def_val
+
+        return DumboOptions(
+            math_type=MathType.from_string(
+                safe_get("math_type", str, default.math_type)
+            ),
+            math_preamble=safe_get("math_preamble", str, default.math_preamble),
+            input_format=InputFormat.from_string(
+                safe_get("input_format", str, default.input_format)
+            ),
+            smart_punct=safe_get("smart_punct", bool, default.smart_punct),
+        )
+
+    def dict(self) -> dict:
         return {
             "mathOption": self.math_type.value,
             "mathPreamble": self.math_preamble,
@@ -75,7 +97,7 @@ KEYS_PATHS = {"/mdkeys", "/latexkeys"}
 @overload
 def call_dumbo(
     data: list[str],
-    path="",
+    path: str = "",
     options: DumboOptions = DumboOptions.default(),
     data_opts: list[DumboOptions] | None = None,
 ) -> list[str]:
@@ -85,7 +107,7 @@ def call_dumbo(
 @overload
 def call_dumbo(
     data: dict,
-    path="",
+    path: str = "",
     options: DumboOptions = DumboOptions.default(),
     data_opts: list[DumboOptions] | None = None,
 ) -> dict:
@@ -95,7 +117,7 @@ def call_dumbo(
 @overload
 def call_dumbo(
     data: list[dict],
-    path="",
+    path: str = "",
     options: DumboOptions = DumboOptions.default(),
     data_opts: list[DumboOptions] | None = None,
 ) -> list[dict]:
@@ -104,7 +126,7 @@ def call_dumbo(
 
 def call_dumbo(
     data: list[str] | dict | list[dict],
-    path="",
+    path: str = "",
     options: DumboOptions = DumboOptions.default(),
     data_opts: list[DumboOptions] | None = None,
 ) -> list[str] | dict | list[dict]:
@@ -125,7 +147,7 @@ def call_dumbo(
     try:
         if path in KEYS_PATHS:
             if is_dict:
-                data_to_send = {"content": [{"content": data}], **opts}
+                data_to_send: dict = {"content": [{"content": data}], **opts}
             else:
                 if data_opts:
                     data_to_send = {
@@ -135,7 +157,10 @@ def call_dumbo(
                         **opts,
                     }
                 else:
-                    data_to_send = {"content": [{"content": d} for d in data], **opts}
+                    data_to_send = {
+                        "content": [{"content": d} for d in data],
+                        **opts,
+                    }
         else:
             data_to_send = {"content": data, **opts}
         r = requests.post(

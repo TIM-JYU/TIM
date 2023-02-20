@@ -80,7 +80,6 @@ from timApp.item.manage import (
     log_task_block,
 )
 from timApp.item.taskblock import insert_task_block, TaskBlock
-from timApp.markdown.dumboclient import call_dumbo
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
@@ -143,6 +142,7 @@ from timApp.util.utils import (
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str
 from timApp.velp.annotations import get_annotations_with_comments_in_document
+from tim_common.dumboclient import call_dumbo
 from tim_common.markupmodels import GenericMarkupModel, asdict_skip_missing
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import value_or_default
@@ -320,7 +320,7 @@ def get_iframehtml_answer_impl(
 
     users = [ctx_user]
 
-    answerinfo = get_existing_answers_info(users, tid)
+    answerinfo = get_existing_answers_info(users, tid, True)
 
     info = plugin.get_info(users, answerinfo.count)
 
@@ -691,7 +691,7 @@ def get_postanswer_plugin_etc(
     if newtask:  # found_plugin.par.get_attr("seed") == "answernr":
         force_answer = True  # variable tasks are always saved even with same answer
 
-    answerinfo = get_existing_answers_info(users, tid)
+    answerinfo = get_existing_answers_info(users, tid, True)
     answernr = -1
     answernr_to_user = None
 
@@ -1084,7 +1084,10 @@ def post_answer_impl(
             is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
             if vr.is_invalid:
                 is_valid = False
-                explanation = vr.invalidate_reason
+                explanation = (
+                    vr.invalidate_reason
+                    + " Your answer was saved but marked as invalid."
+                )
             elif vr.is_expired:
                 fixed_time = (
                     receive_time

@@ -15,6 +15,7 @@ class CsPluginTest(BrowserTest):
             initial_par="""
 #- {plugin=csPlugin #py}
 type: python
+copyConsoleLink: ""
 pointsRule:
   code: 1
   expectCode: .*Hei maailma.*
@@ -32,6 +33,7 @@ pointsRule:
         tr_par.set_markdown(
             """
 type: python
+copyConsoleLink: ""
 pointsRule:
   code: 1
   expectCode: .*Hello world.*
@@ -186,6 +188,7 @@ stem: ""
 ``` {id="suSn2NPH8MC3" #summa2 plugin="csPlugin" rnd="[[-10,10],[-10,-1]]" seed="answernr"}
 type: text
 buttonNewTask: Uusi 
+copyConsoleLink: ""
 stem: "Laske: %%rnd[0]%% +  %%rnd[1]%%"
 postoutput: web.console
 postprogram: |!!
@@ -332,6 +335,7 @@ class StackRandomTest(BrowserTest):
             initial_par="""
 ``` {id="suSn2NPH8MC3" #summa3 plugin="csPlugin" rnd="1,20000" seed="answernr"}
 type: stack
+copyConsoleLink: ""
 buttonNewTask: Uusi
 undo:
   button: Yay

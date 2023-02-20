@@ -22,7 +22,6 @@ from timApp.document.prepared_par import PreparedPar
 from timApp.document.randutils import random_id, hashfunc
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.markdown.autocounters import TimSandboxedEnvironment
-from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
 from timApp.markdown.markdownconverter import (
     par_list_to_html_list,
     expand_macros,
@@ -33,6 +32,7 @@ from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import count_chars_from_beginning, get_error_html, title_to_id
+from tim_common.dumboclient import DumboOptions, MathType, InputFormat
 from tim_common.html_sanitize import sanitize_html, strip_div
 from tim_common.utils import parse_bool
 

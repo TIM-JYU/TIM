@@ -422,7 +422,8 @@ export class FileSelectComponent {
             (upload)="uploadEmitter.emit($event)"
             (uploadDone)="uploadDoneEmitter.emit($event)"
             [mappingFunction]="fileMappings(this)"
-            [accept]="accept">
+            [accept]="accept"
+            [maxSize]="maxSize">
         </file-select>`,
 })
 export class FileSelectManagerComponent {

@@ -67,8 +67,8 @@
     margin-right:3px;
 }
 .web-console .console-input {
-    width:75%; 
-    margin-left:auto; 
+    width:75%;
+    margin-left:auto;
     margin-right:auto;
     display: inline;
     border: none;
@@ -204,7 +204,7 @@ height:85%;
 .success{display:block;}
 
 .web-console pre {
-  margin-left: 0.0em; 
+  margin-left: 0;
   border-left: none;
   color: cyan;
   background: black;
@@ -221,16 +221,15 @@ height:85%;
 .csEditorAreaDiv {
   display: -webkit-box;
   width: 100%;
-}  
+}
 
 .csRunMenu {
   margin-top: 0px;
 }
 
 .csrunEditorDiv {
-    width: 100%; 
+    width: 100%;
 }
-
 
 /** Stylesheet for the parsons */
 
@@ -243,7 +242,7 @@ height:85%;
 
 .sortable-output {
     background-color: #FFA;
-    padding-bottom: 5px; 
+    padding-bottom: 5px;
 }
 
 #sortableTrash { width: 38%; }
@@ -267,7 +266,7 @@ height:85%;
 ul.output {
     background-color: #FFA;
 }
-.sortable-code li {
+.sortable-code li  {
     -moz-border-radius:10px;
     -webkit-border-radius:10px;
     border-radius: 10px;
@@ -294,13 +293,11 @@ ul.output {
     white-space: pre !important;
 }
 
-
-
 .sortable-words li {
   display: inline-block;
 }
 
-.sortable-words span {
+.sortable-words .sortitem {
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
     border-radius: 5px;
@@ -312,8 +309,10 @@ ul.output {
     cursor: move;
     float: left;
     white-space: pre !important;
-    min-height: 40px;
-    /*min-width: 20px; */
+}
+
+.sortable-words  p {
+    margin: 0 0 0;
 }
 
 .sortable-words div {
@@ -366,7 +365,7 @@ li.correctPosition, .testcase.pass {
     border:1px solid green;
 }
 
-.
+
 /** For styling the toggleable elements */
 .jsparson-toggle {
     padding: 0 15px;
@@ -386,7 +385,33 @@ li.correctPosition, .testcase.pass {
     color: red;
 }
 
+.parsonsstatic {
+    cursor: default !important;
+}
+
 csError .error {
     color: red;
     background-color: lightgoldenrodyellow;
+}
+
+a.copyConsoleLink {
+    float: right;
+    margin-top: -1em;
+    font-size: small;
+}
+
+a.copyErrorLink {
+    float: right;
+    margin-top: 0.5em;
+    margin-right: 0.2em;
+    font-size: x-small;
+}
+
+.csRunErrorClass .glyphicon {
+    font-size: x-small;
+}
+
+.csRunErrorClass .normalLabel {
+    font-weight: normal;
+    font-size: small;
 }

@@ -49,6 +49,7 @@ import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
 } from "../simcir/simcir-all";
+import {CsParsonsOptions} from "./cs-parsons/csparsons";
 import type {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import type {EditorComponent} from "./editor/editor";
@@ -697,7 +698,7 @@ const CsMarkupOptional = t.partial({
     mode: t.string,
     noeditor: t.boolean,
     normal: nullable(t.string),
-    parsonsmaxcheck: t.number,
+    parsons: withDefault(CsParsonsOptions, {}),
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -736,11 +737,12 @@ const CsMarkupOptional = t.partial({
     jsBrowserConsole: t.boolean,
     editorOrder: t.array(t.string),
     resetUserInput: t.boolean,
+    uploadAcceptPattern: t.string,
+    uploadAcceptMaxSize: t.number,
 });
 
 const CsMarkupDefaults = t.type({
     autorun: withDefault(t.boolean, false),
-    parsonsnotordermatters: withDefault(t.boolean, false),
     blind: withDefault(t.boolean, false),
     canvasHeight: withDefault(t.number, 300),
     canvasWidth: withDefault(t.number, 700),
@@ -748,6 +750,8 @@ const CsMarkupDefaults = t.type({
     codeunder: withDefault(t.boolean, false),
     cols: withDefault(t.Integer, 10),
     copyLink: withDefault(t.string, "Copy"),
+    copyConsoleLink: withDefault(t.string, "⧉"),
+    copyErrorLink: withDefault(t.string, "⧉"),
     dragAndDrop: withDefault(t.boolean, true),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
@@ -755,7 +759,6 @@ const CsMarkupDefaults = t.type({
     indent: withDefault(t.Integer, -1),
     initSimcir: withDefault(t.string, ""),
     "style-args": withDefault(t.string, ""), // TODO get rid of "-"
-    "style-words": withDefault(t.string, ""), // TODO get rid of "-"
     inputrows: withDefault(t.Integer, 1),
     inputstem: withDefault(t.string, ""),
     isHtml: withDefault(t.boolean, false),
@@ -765,12 +768,12 @@ const CsMarkupDefaults = t.type({
     lang: withDefault(t.string, "fi"),
     maxrows: withDefault(t.Integer, 100),
     maxSize: withDefault(t.number, 50),
+    uploadAcceptMaxSize: withDefault(t.number, -1), // Differs from maxSize because this is a global maxSize instead of default
     noConsoleClear: withDefault(t.boolean, false),
     nocode: withDefault(t.boolean, false),
     norun: withDefault(t.boolean, false),
     nosave: withDefault(t.boolean, false),
     open: withDefault(t.boolean, false),
-    parsons: withDefault(t.string, "Parsons"),
     rows: withDefault(t.Integer, 1),
     showRuntime: withDefault(t.boolean, false),
     toggleEditor: withDefault(t.union([t.boolean, t.string]), false),
@@ -780,7 +783,6 @@ const CsMarkupDefaults = t.type({
     validityCheckMessage: withDefault(t.string, ""),
     validityCheckForceSave: withDefault(t.boolean, false),
     viewCode: withDefault(t.boolean, false),
-    words: withDefault(t.boolean, false),
     allowMultipleFiles: withDefault(t.boolean, true),
     multipleUploadElements: withDefault(t.boolean, true),
     mayAddFiles: withDefault(t.boolean, false),
@@ -905,6 +907,8 @@ interface IRunResponseWeb {
     "-replyImage"?: string;
     "-replyHTML"?: string;
     "-replyMD"?: string;
+    parsons_correct?: number[];
+    parsons_styles?: string[];
 }
 
 export interface IRunResponse {
@@ -1198,6 +1202,9 @@ export class CsController extends CsBase implements ITimComponent {
                 .map((f) => f.path)
                 .concat(this.markup.allowedPaths ?? []);
         }
+        if (this.markup.parsons) {
+            this.markup.parsons.shuffle = this.initUserCode;
+        }
     }
 
     @ViewChild(FileSelectManagerComponent)
@@ -1265,6 +1272,8 @@ export class CsController extends CsBase implements ITimComponent {
         }
 
         component.allowMultiple = this.markup.allowMultipleFiles;
+        component.accept = this.markup.uploadAcceptPattern;
+        component.maxSize = this.markup.uploadAcceptMaxSize;
         component.multipleElements = this.markup.multipleUploadElements;
         component.files = files;
     }
@@ -1703,18 +1712,6 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.editorMode;
     }
 
-    get parsonsmaxcheck() {
-        return this.markup.parsonsmaxcheck;
-    }
-
-    get parsonsnotordermatters() {
-        return this.markup.parsonsnotordermatters;
-    }
-
-    get words() {
-        return this.markup.words;
-    }
-
     get count() {
         return this.markup.count;
     }
@@ -2148,7 +2145,7 @@ ${fhtml}
                 this.english ? "Normal" : "Tavallinen"
             ),
             valueDefu(this.markup.highlight, "Highlight"),
-            this.markup.parsons,
+            this.markup.parsons?.menuText ?? "Parsons",
             this.markup.jsparsons,
             "MathEditor",
         ];
@@ -2715,6 +2712,14 @@ ${fhtml}
             if (!noErrorClear) {
                 this.error = data.web.error;
             }
+            if (data.web.parsons_correct || data.web.parsons_styles) {
+                if (this.editor?.parsonsEditor) {
+                    this.editor.parsonsEditor.checkHost(
+                        data.web.parsons_correct,
+                        data.web.parsons_styles
+                    );
+                }
+            }
             this.runSuccess = true;
 
             this.runError = this.error; // TODO: TÄMÄ AIHEUTTAA TEKSTIN PALAUTTAMISEN
@@ -3197,6 +3202,31 @@ ${fhtml}
             }
         }
         return i;
+    }
+
+    copyString(s: string | undefined, event: UIEvent) {
+        copyToClipboard(s ?? "");
+        event?.preventDefault();
+    }
+
+    elementSelectAll(event: KeyboardEvent) {
+        if (event.ctrlKey && event.key === "a") {
+            const element = event.target as HTMLElement;
+            if (!element) {
+                return;
+            }
+            const range = document.createRange();
+            range.selectNodeContents(element);
+
+            // Luo Selection-objekti ja aseta siihen aiemmin luotu Range-objekti
+            const selection = window.getSelection();
+            if (!selection) {
+                return;
+            }
+            selection.removeAllRanges();
+            selection.addRange(range);
+            event.preventDefault();
+        }
     }
 
     copyCode() {
@@ -3714,7 +3744,7 @@ ${fhtml}
                     </select>
                 </div>
             </div>
-            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"></p>
+            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify" (keydown)="elementSelectAll($event)" tabindex="0"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
@@ -3767,11 +3797,7 @@ ${fhtml}
                                [wrap]="wrap"
                                [modes]="editorModes"
                                [editorIndex]="editorMode"
-                               [parsonsShuffle]="initUserCode"
-                               [parsonsMaxcheck]="parsonsmaxcheck"
-                               [parsonsNotordermatters]="parsonsnotordermatters"
-                               [parsonsStyleWords]="markup['style-words']"
-                               [parsonsWords]="words"
+                               [parsonsOptions]="markup.parsons"
                                (close)="onFileClose($event)"
                                (content)="onContentChange($event)"
                                [spellcheck]="spellcheck">
@@ -3861,7 +3887,7 @@ ${fhtml}
                           class="inputSmall"
                           style="float: right;"
                           title="Run time in sec {{runtime}}">{{oneruntime}}</span>
-                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;"
+                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2" class="inputSmall" style="float: right;"
                           title="Put 0 to no wrap">
                 <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()"
                         style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
@@ -3893,11 +3919,14 @@ ${fhtml}
             <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
             <div class="csRunErrorClass csRunError" *ngIf="runError">
                 <p class="pull-right" *ngIf="!markup['noclose']">
-                    <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"
-                                                                                             [(ngModel)]="keepErrors"/></label>
+                    <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"></label>
                     <tim-close-button (click)="closeError()"></tim-close-button>
                 </p>
-                <pre class="csRunError">{{error}}</pre>
+                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                   (click)="copyString(error, $event)"
+                   title="Copy text to clipboard"
+                >{{markup.copyErrorLink}}</a>
+                <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{error}}</pre>
                 <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
                     <tim-close-button (click)="closeError()"></tim-close-button>
                 </p>
@@ -3906,14 +3935,24 @@ ${fhtml}
                 <p class="pull-right" *ngIf="!markup['noclose']">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
-                <pre class="csRunError">{{fetchError}}</pre>
+                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                   (click)="copyString(fetchError, $event)"
+                   title="Copy text to clipboard"
+                >{{markup.copyErrorLink}}</a>
+                <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{fetchError}}</pre>
                 <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <pre class="console" *ngIf="result">{{result}}</pre>
+            <div class="consoleDiv" *ngIf="result" >
+                <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
+                   (click)="copyString(result, $event)"
+                   title="Copy console text to clipboard"
+                >{{markup.copyConsoleLink}}</a>
+                <pre id="resultConsole"  class="console" (keydown)="elementSelectAll($event)" tabindex="0">{{result}}</pre>
+            </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
-            <div class="csrunPreview">
+            <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0">
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
                      caption="Preview"

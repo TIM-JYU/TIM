@@ -209,7 +209,7 @@ par 22
 
         # Make sure viewing source works for a reference paragraph that is inside an area.
         menu = self.open_menu(pars[21])
-        self.find_element_by_text("View source", parent=menu).click()
+        self.find_element_by_text("View source", element="button", parent=menu).click()
         self.wait_until_text_present(
             "tim-diff-dialog", f'#- {{rd="{ref.id}" rp="6JG9R9LAg4AT"}}'
         )
@@ -247,11 +247,11 @@ par 2
         self.use_left_menu()
         pars = self.find_par_elems()
         menu = self.open_menu(pars[2])
-        self.find_element_by_text("Edit", parent=menu).click()
+        self.find_element_by_text("Edit", element="button", parent=menu).click()
         self.wait_until_present_and_vis("pareditor")
         old_len = len(pars)
         self.wait_for_editor_load()
-        self.find_element_by_text("Delete").click()
+        self.find_element_by_text("Delete", element="button").click()
         self.drv.switch_to.alert.accept()
         self.wait_until_hidden("pareditor")
         pars = self.find_par_elems()
@@ -287,7 +287,9 @@ par4
 
         # Select across 2 areas.
         menu = self.select_pars(".par2", ".par3", toggle_edit=True)
-        self.find_element_by_text("Cut selection", parent=menu).click()
+        self.find_element_by_text(
+            "Cut selection", element="button", parent=menu
+        ).click()
         self.wait_until_hidden(".par2")
         pars = self.find_par_elems()
         self.check_par_texts(
@@ -430,7 +432,9 @@ par4
         self.wait_until_hidden("pareditor")
 
     def edit_selection_and_save(self, menu: WebElement):
-        self.find_element_by_text("Edit selection", parent=menu).click()
+        self.find_element_by_text(
+            "Edit selection", element="button", parent=menu
+        ).click()
         self.wait_for_editor_load()
         txtelem = self.find_element(".editorContainer textarea")
         txt = txtelem.get_attribute("value")
@@ -445,7 +449,9 @@ par4
                 menu = self.open_menu(self.find_element(start))
                 if toggle_edit:
                     self.find_element(".parEditButton").click()
-                self.find_element_by_text("Start selection", parent=menu).click()
+                self.find_element_by_text(
+                    "Start selection", element="button", parent=menu
+                ).click()
                 self.find_element(end).click()
                 menu = self.open_menu(self.find_element(start))
                 return menu

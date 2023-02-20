@@ -216,6 +216,7 @@ class Language:
         # self.exename = "./%s.exe" % self.filename
         self.pure_exename = "/home/agent/%s.exe" % self.filename
         self.inputfilename = f"/tmp/{self.basename}/{self.ifilename}"
+        self.upload_file_path = f"/tmp/{self.basename}"
         self.prgpath = "/tmp/%s" % self.basename
         self.filepath = self.prgpath
         # self.imgsource = ""
@@ -281,6 +282,25 @@ class Language:
                 stdin_default = "input.txt"
             write_safe(self.inputfilename, userinput)
         self.stdin = get_param(self.query, "stdin", stdin_default)
+
+    def add_uploaded_files(self):
+        uploaded_files = get_json_param(self.query.jso, "input", "uploadedFiles", None)
+        copy_uploaded_files = get_param(self.query, "uploadCopy", False)
+        uploaded_file_name_template: str = get_param(
+            self.query, "uploadCopyFileName", "uploaded_file.{n}.{ext}"
+        )
+
+        if uploaded_files and copy_uploaded_files:
+            for i, file in enumerate(uploaded_files):
+                path = file["path"]
+                name = os.path.basename(path)
+                name_no_ext, ext = os.path.splitext(name)
+                ext = ext.lstrip(".")
+                new_name = uploaded_file_name_template.format_map(
+                    {"n": i, "ext": ext, "name": name_no_ext}
+                )
+                new_path = os.path.join(self.upload_file_path, new_name)
+                copy_file(path, new_path)
 
     def before_save(self, s):
         return s
