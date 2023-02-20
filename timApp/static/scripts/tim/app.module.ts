@@ -49,6 +49,7 @@ import {VelpContentFilter} from "tim/velp/velp-content-filter.pipe";
 import {VelpLabelFilter} from "tim/velp/velp-label-filter.pipe";
 import {VelpGroupFilter} from "tim/velp/velp-group-filter.pipe";
 import {VelpOrder} from "tim/velp/velp-order.pipe";
+import {LabelContentFilter} from "tim/velp/label-content-filter.pipe";
 
 @NgModule({
     declarations: [
@@ -82,6 +83,7 @@ import {VelpOrder} from "tim/velp/velp-order.pipe";
         GamificationMapComponent,
         SelfExpireComponent,
         RoleInfoComponent,
+        LabelContentFilter,
         VelpContentFilter,
         VelpLabelFilter,
         VelpGroupFilter,
