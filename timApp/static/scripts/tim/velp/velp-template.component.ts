@@ -1,7 +1,7 @@
 import type {IFormController} from "angular";
 import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
-import {Component} from "@angular/core";
-import {ParCompiler} from "tim/editor/parCompiler";
+import {Component, Input} from "@angular/core";
+// import {ParCompiler} from "tim/editor/parCompiler";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {HttpClient} from "@angular/common/http";
 import {clone, toPromise} from "tim/util/utils";
@@ -45,6 +45,7 @@ interface IVelpOptionSetting {
     names: string[];
 }
 
+// TODO refactor forms to Angular Forms
 /**
  * Component representing Velp templates. Velp templates are used to add Annotations to a document.
  */
@@ -74,7 +75,7 @@ interface IVelpOptionSetting {
 
                         <span *ngIf="notAnnotationRights(velp.points)"
                               class="annmark glyphicon glyphicon-exclamation-sign clickable-icon pull-right"
-                              ng-attr-title="{{ settings.teacherRightsError }}">
+                              [attr.title]="settings.teacherRightsError">
                         </span>
 
                         <span class="margin-5-right header pull-right">{{ velp.points }}</span>
@@ -141,12 +142,9 @@ interface IVelpOptionSetting {
                                         ng-options="v as visibleOptions.names[v-1] for v in visibleOptions.values">
                                 </select>
                                 <span [ngClass]="['glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
-                                      uib-popover="Who can see the velp as a default?
-                                         'Just me' means that the annotation is visible only to yourself.
-                                         'Document owner' refers to the person or group who has been named as the document owner.
-                                         'Teachers' refers to the users that have teacher access to this document.
-                                         'Everyone' means that the annotation is visible to everyone who can view the assessed content."
-                                      popover-placement="top">
+                                      [popover]="this.AnnotationVisibilityInfoPopover"
+                                      [popoverTitle]="'Who can see the velp as a default?'"
+                                      [placement]="'top'">
                                 </span>
                             </p>
                             <p class="velpEdit-remove-margin">
@@ -288,10 +286,15 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
     velpMenu!: VelpMenuComponent;
     labels!: ILabelUI[];
     private docId!: number;
-    private teacherRight!: boolean;
+    @Input() teacherRight!: boolean;
     private vctrl!: ViewCtrl;
 
-    private velpEditingStyle: string;
+    @Input() velpEditingStyle: string;
+
+    readonly AnnotationVisibilityInfoPopover: string = `'Just me' means that the annotation is visible only to yourself.
+'Document owner' refers to the person or group who has been named as the document owner.
+'Teachers' refers to the users that have teacher access to this document.
+'Everyone' means that the annotation is visible to everyone who can view the assessed content.`;
 
     ngOnInit() {
         this.velpLocal = clone(this.velp);
@@ -434,7 +437,8 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
     cancelEdit() {
         this.velp = clone(this.velpLocal);
         this.velp.edit = false;
-        this.element.removeClass("velp-edit-available");
+        // this.element.removeClass("velp-edit-available");
+        this.velpEditingStyle = "";
     }
 
     useVelp() {
