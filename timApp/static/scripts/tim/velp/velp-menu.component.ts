@@ -81,9 +81,9 @@ import type {
                         <div class="velp-stack draggable-content available-velps autoscroll">
                             <tim-velp-template
                                     *ngFor="let velp of filteredVelps 
-                                                        | filterByContent:this.filterVelp 
-                                                        | orderByWhenNotEditing:this.order:filteredVelps 
-                                                        | filterByVelpGroups:this.velpGroups 
+                                                        | filterByContent:this.filterVelp:this.advancedOn 
+                                                        | orderByWhenNotEditing:this.order:this.advancedOn 
+                                                        | filterByVelpGroups:this.velpGroups:this.advancedOn 
                                                         | filterByLabels:this.labels:this.advancedOn; 
                                                         trackBy: trackByVelpIDFn"
                                     advanced-on="advancedOn"
@@ -134,7 +134,7 @@ import type {
                                     </form>
                                     <div>
                                         <div class="labels-scrollarea">
-                                            <p *ngFor="let label of filteredLabels = ( labels | filter:{content:filterLabel} )"
+                                            <p *ngFor="let label of filteredLabels | filterLabelByContent:this.filterLabel"
                                                class="label tag-false"
                                                [ngStyle]="{backgroundColor: getColor(label.id)}"
                                                (click)="toggleLabel(label)" [(ngModel)]="test" value="{{ label.id }}">
@@ -144,6 +144,7 @@ import type {
                                         </div>
                                     </div>
                                 </div>
+                                <!-- VELP CONTENT/GROUPS-->
                                 <div>
                                     <form class="form-inline adjustForm">
                                         <div class="form-group velp-filters">
@@ -359,7 +360,7 @@ export class VelpMenuComponent implements OnInit {
         deleteVelpGroupLockedGroup: string;
     };
 
-    filteredVelps?: IVelp[];
+    filteredVelps: IVelp[];
     filteredLabels?: ILabel[];
 
     @Input() filterVelp?: string;
@@ -443,7 +444,7 @@ export class VelpMenuComponent implements OnInit {
             deleteVelpGroupLockedGroup: $localize`Permanent default group cannot be deleted`,
         };
 
-        // this.filteredVelps = [];
+        this.filteredVelps = [];
     }
 
     public get rctrl() {
@@ -583,6 +584,7 @@ export class VelpMenuComponent implements OnInit {
         });
 
         this.filteredVelps = this.rctrl.velps;
+        this.filteredLabels = this.labels;
         this.updateVelpList();
         this.initialized = true;
     }
