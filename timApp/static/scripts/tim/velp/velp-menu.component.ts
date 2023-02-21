@@ -1,7 +1,7 @@
-import type {IFormController} from "angular";
 import * as t from "io-ts";
 import {Component, Input} from "@angular/core";
 import type {OnInit} from "@angular/core";
+import type {NgForm} from "@angular/forms";
 import type {Require} from "tim/util/utils";
 import {clone, TimStorage, toPromise} from "tim/util/utils";
 import type {VelpTemplateComponent} from "tim/velp/velp-template.component";
@@ -231,34 +231,36 @@ import type {
                                                 <th><span class="small glyphicon glyphicon-trash"
                                                           title="Delete velp group"></span></th>
                                             </tr>
-                                            <tr *ngFor="let group of velpGroups" ng-hide="group.id<0">
-                                                <td>
-                                                    <input type="checkbox" [(ngModel)]="group.show"
-                                                           (ngModelChange)="changeVelpGroupSelection(group, 'show')">
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" [(ngModel)]="group.default"
-                                                           [disabled]="!hasManageRights()"
-                                                           (ngModelChange)="changeVelpGroupSelection(group, 'default')">
-                                                </td>
-                                                <td>
-                                                    <a href="/manage/{{ group.location }}">{{ group.name }}</a>
-                                                </td>
-                                                <td>
-                                            <span (click)="deleteVelpGroup(group);"
-                                                  *ngIf="group.edit_access && !isDefaultLockedGroup(group)"
-                                                  class="glyphicon glyphicon-trash clickable-icon"
-                                                  title="Delete velp group '{{ group.name }}'"></span>
-                                                    <span *ngIf="!group.edit_access && !isDefaultLockedGroup(group)"
-                                                          class="glyphicon glyphicon-trash lightgray"
-                                                          uib-tooltip-html="toolTipMessages.deleteVelpGroupInsufficientRights"
-                                                          tooltip-placement="auto left"></span>
-                                                    <span *ngIf="isDefaultLockedGroup(group)"
-                                                          class="glyphicon glyphicon-lock"
-                                                          uib-tooltip-html="toolTipMessages.deleteVelpGroupLockedGroup"
-                                                          tooltip-placement="auto left"></span>
-                                                </td>
-                                            </tr>
+                                            <ng-container *ngFor="let group of velpGroups">
+                                                <tr *ngIf="group.id < 0">
+                                                    <td>
+                                                        <input type="checkbox" [(ngModel)]="group.show"
+                                                               (ngModelChange)="changeVelpGroupSelection(group, 'show')">
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" [(ngModel)]="group.default"
+                                                               [disabled]="!hasManageRights()"
+                                                               (ngModelChange)="changeVelpGroupSelection(group, 'default')">
+                                                    </td>
+                                                    <td>
+                                                        <a href="/manage/{{ group.location }}">{{ group.name }}</a>
+                                                    </td>
+                                                    <td>
+                                                        <span (click)="deleteVelpGroup(group);"
+                                                              *ngIf="group.edit_access && !isDefaultLockedGroup(group)"
+                                                              class="glyphicon glyphicon-trash clickable-icon"
+                                                              title="Delete velp group '{{ group.name }}'"></span>
+                                                                <span *ngIf="!group.edit_access && !isDefaultLockedGroup(group)"
+                                                                      class="glyphicon glyphicon-trash lightgray"
+                                                                      uib-tooltip-html="toolTipMessages.deleteVelpGroupInsufficientRights"
+                                                                      tooltip-placement="auto left"></span>
+                                                                <span *ngIf="isDefaultLockedGroup(group)"
+                                                                      class="glyphicon glyphicon-lock"
+                                                                      uib-tooltip-html="toolTipMessages.deleteVelpGroupLockedGroup"
+                                                                      tooltip-placement="auto left"></span>
+                                                    </td>
+                                                </tr>
+                                            </ng-container>
                                         </table>
                                     </div>
                                 </div>
@@ -266,7 +268,7 @@ import type {
                                     <details>
                                         <summary>New velp group</summary>
                                         <div class="collapsible-menu-open-content">
-                                            <form (ngSubmit)="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
+                                            <form #addVelpGroupForm="ngForm" (ngSubmit)="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
                                                 <div class="velp-groups-new-group-control">
                                                     <label for="new-velp-group-name">Group name: </label>
                                                     <input id="new-velp-group-name" type="text"
@@ -277,7 +279,7 @@ import type {
                                                     <label for="velpGroupSaveToSelect">Save to: </label>
                                                     <fieldset>
                                                         <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
-                                                                [(ngModel)]="newVelpGroup.target_type"
+                                                                [(ngModel)]="this.newVelpGroup.target_type"
                                                                 class="formInput">
                                                             <option [value]="0" selected>Personal collection</option>
                                                             <option [value]="1"
@@ -291,7 +293,7 @@ import type {
                                                 </div>
                                                 <div class="velp-groups-new-group-control">
                                                     <input type="submit" class="timButton" value="Create velp group">
-                                                    <p *ngIf="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || (submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
+                                                    <p *ngIf="(addVelpGroupForm.newVelpGroup.name.invalid && !addVelpGroupForm.newVelpGroup.name.pristine) || (submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.invalid)"
                                                        class="error">
                                                         Velp group name is required!
                                                     </p>
@@ -308,8 +310,8 @@ import type {
                             <div class="velp-summary-tab">
                                 <tim-velp-summary
                                         [annotations]="rctrl.getAllAnnotations()"
-                                        (annotationselected)="rctrl.toggleAnnotation($event, true)"
-                                        [selected-user]="vctrl.selectedUser"
+                                        (annotationSelected)="rctrl.toggleAnnotation($event, true)"
+                                        [selectedUser]="vctrl.selectedUser"
                                 >
                                 </tim-velp-summary>
                             </div>
@@ -1011,14 +1013,16 @@ export class VelpMenuComponent implements OnInit {
      * Adds a velp group on form submit event.
      * @param form - Velp group form
      */
-    async addVelpGroup(form: IFormController) {
-        const valid = form.$valid;
+    async addVelpGroup(form: NgForm) {
+        const valid = form.valid;
         this.submitted.velpGroup = true;
         if (!valid) {
             return;
         }
 
-        form.$setPristine();
+        // TODO should we also set 'dirty' to false and remove ng-dirty here,
+        //  as per https://docs.angularjs.org/api/ng/type/form.FormController#$setPristine
+        form.setValue({pristine: true});
 
         const response = await toPromise(
             this.http.post<IVelpGroup>(
