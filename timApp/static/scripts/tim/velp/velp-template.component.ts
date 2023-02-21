@@ -38,6 +38,8 @@ export const colorPalette = [
 // TODO: add min and max values for points
 // TODO: user should be able to delete velp without any annotations
 
+// TODO Fix (refactor) velp template forms
+
 interface IVelpOptionSetting {
     type: string;
     title: string;

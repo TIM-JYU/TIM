@@ -16,7 +16,7 @@ import type {
     ILabelUI,
     INewLabel,
     INewVelp,
-    INewVelpGroup,
+    // INewVelpGroup,
     IVelp,
     IVelpGroup,
     IVelpGroupCollection,
@@ -36,6 +36,8 @@ import type {
  */
 
 // TODO: show velps with same name side by side. Make changes to the template.
+// TODO Fix (refactor) velp group forms
+// TODO Fix tooltips (uib-tooltip) for velp group deletion
 
 // const sortLang: string = "fi";
 
@@ -271,7 +273,7 @@ import type {
                                             <form #addVelpGroupForm="ngForm" (ngSubmit)="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
                                                 <div class="velp-groups-new-group-control">
                                                     <label for="new-velp-group-name">Group name: </label>
-                                                    <input id="new-velp-group-name" type="text"
+                                                    <input #newVelpGroup.name id="new-velp-group-name" type="text"
                                                            [(ngModel)]="newVelpGroup.name" placeholder="Velp group name"
                                                            required>
                                                 </div>
@@ -279,8 +281,9 @@ import type {
                                                     <label for="velpGroupSaveToSelect">Save to: </label>
                                                     <fieldset>
                                                         <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
-                                                                [(ngModel)]="this.newVelpGroup.target_type"
-                                                                class="formInput">
+                                                                [(ngModel)]="newVelpGroup.target_type"
+                                                                class="formInput"
+                                                                #newVelpGroup.target_type>
                                                             <option [value]="0" selected>Personal collection</option>
                                                             <option [value]="1"
                                                                     [disabled]="!hasEditRights()">Document
@@ -333,7 +336,7 @@ export class VelpMenuComponent implements OnInit {
     private velpToEdit: INewVelp;
     private newLabel: INewLabel;
     private labelToEdit: INewLabel;
-    newVelpGroup: INewVelpGroup;
+    newVelpGroup: IVelpGroupUI;
     settings: {selectedAllShows: boolean; selectedAllDefault: boolean};
     submitted: {velp: boolean; velpGroup: boolean};
     groupAttachment: {target_type: number; id: number | null};
@@ -414,7 +417,7 @@ export class VelpMenuComponent implements OnInit {
             name: "",
             target_type: 0,
             selected: false,
-            id: null,
+            id: -9, // instead of null
             show: false,
             default: false,
         };
