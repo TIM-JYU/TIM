@@ -67,15 +67,15 @@ import type {
 
                         <!-- Edit window for velps -->
                         <tim-velp-template class="velp" [ngStyle]="{top: '0.2em'}"
-                                     *ngIf="newVelp.edit"
-                                     velp="newVelp"
-                                     index="-1"
-                                     velp-groups="velpGroups"
-                                     teacher-right="vctrl.item.rights.teacher"
-                                     labels="labels"
-                                     new="true"
-                                     vctrl="vctrl"
-                                     advanced-on="advancedOn"></tim-velp-template>
+                                           *ngIf="newVelp.edit"
+                                           velp="newVelp"
+                                           index="-1"
+                                           velp-groups="velpGroups"
+                                           [teacherRight]="hasTeacherRights()"
+                                           labels="labels"
+                                           new="true"
+                                           vctrl="vctrl"
+                                           advanced-on="advancedOn"></tim-velp-template>
 
                         <!-- Actual velps -->
                         <div class="velp-stack draggable-content available-velps autoscroll">
@@ -137,7 +137,7 @@ import type {
                                             <p *ngFor="let label of filteredLabels | filterLabelByContent:this.filterLabel:this.advancedOn"
                                                class="label tag-false"
                                                [ngStyle]="{backgroundColor: getColor(label.id)}"
-                                               (click)="toggleLabel(label)" value="{{ label.id }}">
+                                               (click)="toggleLabel(label)">
                                                 {{ label.content }} <span class="glyphicon glyphicon-ok"
                                                                           *ngIf="label.selected"></span>
                                             </p>
@@ -694,7 +694,7 @@ export class VelpMenuComponent implements OnInit {
      */
     openCreateNewVelpWindow() {
         if (!this.newVelpCtrl) {
-            showMessageDialog("New velp controller is not registered");
+            showMessageDialog("New velp component is not registered");
             return;
         }
         this.newVelpCtrl.toggleVelpToEdit();
@@ -847,16 +847,6 @@ export class VelpMenuComponent implements OnInit {
     isDefaultLockedGroup(group: IVelpGroup) {
         return this.isVelpGroupDefaultFallBack(group.id);
     }
-
-    // TODO Remove this after pipes are working
-    // /**
-    //  * Filter and order displayed velp templates according to selected options.
-    //  */
-    // filterVelps() {
-    //     this.filteredVelps = this.rctrl.velps?.filter();
-    //     // this.rctrl.velps? | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn);
-    //     //                   ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn)
-    // }
 
     /**
      * Updates the velp list according to how the velp groups are selected in the area.
@@ -1459,147 +1449,10 @@ export class VelpMenuComponent implements OnInit {
     hasManageRights(): boolean {
         return this.vctrl.item.rights.manage;
     }
+    hasTeacherRights(): boolean {
+        return this.vctrl.item.rights.teacher;
+    }
     hasEditRights(): boolean {
         return this.vctrl.item.rights.editable;
     }
 }
-
-/**
- * Filter for ordering velps
- */
-/*
-timApp.filter("filterByLabels", () => {
-    return (velps?: IVelp[], labels?: ILabelUI[], advancedOn?: boolean) => {
-        const selectedVelps: Record<number, [IVelp, number]> = {};
-        const selectedLabels = [];
-
-        if (!advancedOn) {
-            return velps;
-        }
-
-        if (labels != null) {
-            for (const l of labels) {
-                if (l.selected) {
-                    selectedLabels.push(l.id);
-                }
-            }
-        }
-
-        if (velps != null) {
-            for (let j = 0; j < velps.length; j++) {
-                for (const s of selectedLabels) {
-                    if (velps[j].labels?.includes(s)) {
-                        if (!(j in selectedVelps)) {
-                            selectedVelps[j] = [velps[j], 1];
-                        } else {
-                            selectedVelps[j][1] += 1;
-                        }
-                    }
-                }
-            }
-        }
-
-        // return all velps if no labels selected
-        if (selectedLabels.length === 0) {
-            return velps;
-        }
-
-        const selectedArray = [];
-        const returnVelps = [];
-
-        for (const sv in selectedVelps) {
-            if (selectedVelps.hasOwnProperty(sv)) {
-                selectedArray.push(selectedVelps[sv]);
-            }
-        }
-
-        selectedArray.sort((a, b) => b[1] - a[1]);
-
-        for (const s of selectedArray) {
-            returnVelps.push(s[0]);
-        }
-
-        return returnVelps;
-    };
-});
-
-timApp.filter("filterByVelpGroups", () => {
-    return (velps?: INewVelp[], groups?: IVelpGroupUI[]) => {
-        const selected: INewVelp[] = [];
-        const checkedGroups = [];
-
-        if (groups == null || velps == null) {
-            return velps;
-        }
-
-        for (const g of groups) {
-            if (g.show) {
-                checkedGroups.push(g.id);
-            }
-        }
-
-        for (const v of velps) {
-            // always include velp that is being edited
-            if (v.edit) {
-                selected.push(v);
-                continue;
-            }
-
-            for (const c of checkedGroups) {
-                if (v.velp_groups.includes(c) && !selected.includes(v)) {
-                    selected.push(v);
-                }
-            }
-        }
-
-        return selected;
-    };
-});
-
-timApp.filter("orderByWhenNotEditing", () => {
-    return (velps: INewVelp[], orderStr: string, filteredVelps: IVelp[]) => {
-        for (const v of velps) {
-            if (v.edit) {
-                return filteredVelps;
-            }
-        }
-
-        let list;
-        let reverse = false;
-        let order: keyof IVelp = orderStr as keyof IVelp;
-        if (orderStr.startsWith("-")) {
-            reverse = true;
-            order = order.substring(1) as keyof IVelp;
-        }
-
-        if (order === "labels") {
-            list = velps;
-        } else if (order === "content") {
-            list = velps.sort((v1, v2) =>
-                v1.content.localeCompare(v2.content, sortLang)
-            );
-        } else {
-            list = velps.sort((v1, v2) => {
-                const v1o = v1[order];
-                const v2o = v2[order];
-                if (v1o == null) {
-                    return v2o != null ? -1 : 0;
-                } else if (v2o == null) {
-                    return 1;
-                } else if (v1o < v2o) {
-                    return -1;
-                } else if (v1o > v2o) {
-                    return 1;
-                }
-                return 0;
-            });
-        }
-
-        if (reverse) {
-            list = list.reverse();
-        }
-
-        return list;
-    };
-});
-*/
