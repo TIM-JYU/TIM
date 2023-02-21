@@ -26,7 +26,7 @@ import type {Annotation} from "tim/velp/velptypes";
                     </tr>
                     <tr *ngFor="let a of taskAnns">
                         <td class="summSecColumn"><a
-                                (click)="annotationselected.emit(a)">{{ a.content }}</a>
+                                (click)="annotationSelected.emit(a)">{{ a.content }}</a>
                         </td>
                         <td class="summThirdColumn"><span>{{ a.points }}</span></td>
                     </tr>
@@ -43,7 +43,7 @@ import type {Annotation} from "tim/velp/velptypes";
                     </tr>
                     <tr *ngFor="let b of docAnns">
                         <td class="summSecColumn"><a
-                                (click)="annotationselected.emit(b)">{{ b.content }}</a>
+                                (click)="annotationSelected.emit(b)">{{ b.content }}</a>
                         </td>
                         <td class="summThirdColumn"><span>{{ b.points }}</span></td>
                     </tr>
@@ -54,9 +54,9 @@ import type {Annotation} from "tim/velp/velptypes";
     styleUrls: ["./velp-summary.component.scss"],
 })
 export class VelpSummaryComponent implements OnChanges {
-    @Input() private annotations!: Array<Annotation>;
+    @Input() annotations!: Array<Annotation>;
     @Input() selectedUser!: IUser;
-    @Output() annotationselected = new EventEmitter<Annotation>();
+    @Output() annotationSelected = new EventEmitter<Annotation>();
     taskAnns!: Annotation[];
     docAnns!: Annotation[];
 

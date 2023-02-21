@@ -1,9 +1,9 @@
-import type {IFormController} from "angular";
 import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
+import type {NgForm} from "@angular/forms";
 import {Component, Input} from "@angular/core";
+import {HttpClient} from "@angular/common/http";
 // import {ParCompiler} from "tim/editor/parCompiler";
 import type {ViewCtrl} from "tim/document/viewctrl";
-import {HttpClient} from "@angular/common/http";
 import {clone, toPromise} from "tim/util/utils";
 import type {VelpMenuComponent} from "tim/velp/velp-menu.component";
 import type {
@@ -100,15 +100,16 @@ interface IVelpOptionSetting {
                     <tim-close-button (click)="toggleVelpToEdit(); $event.stopPropagation();"
                                       class="clickable-icon"></tim-close-button>
 
-                    <form #saveVelpForm (ngSubmit)="saveVelp(saveVelpForm)">
+                    <form #saveVelpForm="ngForm" (ngSubmit)="saveVelp(saveVelpForm)">
 
                         <!-- Basic velp info -->
                         <div class="add-velp-info">
-                            <p class="header"><input name="velpName" type="text" [(ngModel)]="velp.content"
+                            <p class="header">
+                                <input #velpName="ngModel" name="velpName" type="text" [(ngModel)]="velp.content"
                                                      required placeholder="Velp content"
                                                      title="Annotation visible text">
                             </p>
-                            <p *ngIf="(saveVelpForm.velpName.$invalid && !saveVelpForm.velpName.$pristine)"
+                            <p *ngIf="(saveVelpForm.velpName.invalid && !saveVelpForm.velpName.pristine)"
                                class="error velpInfoText">
                                 {{ settings.velpContentError }}
                             </p>
@@ -414,13 +415,16 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
      * Saves velp to database
      * @param form
      */
-    saveVelp(form: IFormController) {
-        if (!form.$valid) {
+    saveVelp(form: NgForm) {
+        if (!form.valid) {
             return;
         }
-        form.$setPristine();
+        // TODO should we also set 'dirty' to false and remove ng-dirty here,
+        //  as per https://docs.angularjs.org/api/ng/type/form.FormController#$setPristine
+        form.setValue({pristine: true});
         // this.submitted = true;
 
+        // TODO Add missing error handling
         if (this.new) {
             // add new velp
             this.addVelp();
