@@ -1,0 +1,13 @@
+//adding mathquill.css to styleUrls didn't load the styles so load it this way
+:host ::ng-deep {
+    @import 'static/scripts/vendor/mathquill/mathquill';
+}
+
+.mq-editable-field {
+    width: 100%;
+}
+.math-editor-container {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1em;
+}

@@ -1,5 +1,5 @@
 import {NgModule} from "@angular/core";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
 import {CsUtilityModule} from "../util/module";
@@ -20,7 +20,13 @@ import {MathEditorComponent} from "./math-editor.component";
         JSParsonsEditorComponent,
         MathEditorComponent,
     ],
-    imports: [CommonModule, FormsModule, TimUtilityModule, CsUtilityModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+        TimUtilityModule,
+        CsUtilityModule,
+        ReactiveFormsModule,
+    ],
     exports: [CountBoardComponent, EditorComponent, AceEditorComponent],
 })
 export class EditorModule {}
