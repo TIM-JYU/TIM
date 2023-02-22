@@ -74,9 +74,9 @@ def add(lang_name: str) -> None:
 
 
 @language_cli.command()
-def add_all_languages() -> None:
+def update() -> None:
     """
-    Add languages defined in configuration into database from command line.
+    Update database table for supported languages.
 
     :return: None.
     """
