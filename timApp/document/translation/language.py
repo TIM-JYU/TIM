@@ -123,3 +123,8 @@ class Language(db.Model):
             "flagUri": self.flag_uri,
             "name": self.autonym,
         }
+
+    def __lt__(self, other):
+        """Comparison function that enables ordering between Language objects"""
+
+        return self.lang_code < other.lang_code
