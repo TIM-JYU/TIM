@@ -124,8 +124,7 @@ class Language(db.Model):
             "name": self.autonym,
         }
 
-    # ignore type checking this for now, see: https://peps.python.org/pep-0484/#the-problem-of-forward-declarations
-    def __lt__(self, other) -> bool:  # type: ignore
+    def __lt__(self, other: "Language") -> bool:
         """Comparison function that enables ordering between Language objects
 
         :param Language other: another Language object to compare against
