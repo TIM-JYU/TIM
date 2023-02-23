@@ -6,8 +6,8 @@ import type {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import type {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 import {isScreenSizeOrLower, TimStorage} from "tim/util/utils";
-import type {ISettings} from "tim/util/globals";
-import {genericglobals} from "tim/util/globals";
+import type {IDocumentGlobals, ISettings} from "tim/util/globals";
+import {genericglobals, isDocumentGlobals} from "tim/util/globals";
 import type {IVisibilityVars} from "tim/timRoot";
 import {getVisibilityVars} from "tim/timRoot";
 import * as t from "io-ts";
@@ -18,6 +18,13 @@ enum MenuState {
     Closed,
     Max,
 }
+
+// Map of menu state names to menu state
+const MENU_STATE_MAP: Record<string, MenuState> = Object.fromEntries(
+    Object.entries(MenuState)
+        .filter(([_, v]) => typeof v === "number")
+        .map(([k, v]) => [k.toLowerCase(), v as MenuState])
+);
 
 interface UpdateVisStateOptions {
     tabs?: boolean;
@@ -72,6 +79,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     );
     private currentTab?: string;
     private settings: ISettings = genericglobals().userPrefs;
+    private docGlobals?: IDocumentGlobals;
     private currentMenuState: MenuState = MenuState.Open;
     private isSm = isScreenSizeOrLower(sizeBreakpoint);
     private lastNonSmState = this.lastVisState;
@@ -82,7 +90,12 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     nextGlyphicon: string = MENU_BUTTON_ICONS[this.nextState];
     tabsVisible = false;
 
-    constructor(private tabEntryList: TabEntryListService) {}
+    constructor(private tabEntryList: TabEntryListService) {
+        const g = genericglobals();
+        if (isDocumentGlobals(g)) {
+            this.docGlobals = g;
+        }
+    }
 
     get showMenu() {
         return this.currentMenuState == MenuState.Open;
@@ -111,6 +124,15 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     get lastVisState(): MenuState {
+        if (this.docGlobals?.docSettings.sidemenu_initial_state) {
+            const state =
+                MENU_STATE_MAP[
+                    this.docGlobals.docSettings.sidemenu_initial_state
+                ];
+            if (state !== undefined) {
+                return state;
+            }
+        }
         if (!this.settings.remember_last_sidebar_menu_state) {
             return MenuState.Open;
         }
