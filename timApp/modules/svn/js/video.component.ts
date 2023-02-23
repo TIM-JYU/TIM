@@ -663,6 +663,10 @@ export class VideoComponent extends AngularPluginBase<
                 this.video.nativeElement
             );
         }
+        if (this.end && this.end < 0) {
+            this.end = v.duration + this.end;
+            this.watchEnd = this.end;
+        }
     }
 
     timeupdate() {
