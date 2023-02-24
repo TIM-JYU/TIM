@@ -114,14 +114,16 @@ export async function updateAnnotationServer(
                 
                 <span class="fulldiv">
                     <span class="div-90 annTopSection" (mouseenter)="setShowFull(true)">
-                        <p><span class="annHeader math"><strong>{{ annotation.getContent() }}</strong></span></p>
+                        <p>
+                            <span class="annHeader math"><strong>{{ annotation.getContent() }}</strong></span>
+                            <tim-close-button class="clickable-icon"
+                                              (click)="toggleAnnotationShow(); setShowFull(false)"></tim-close-button>
+                        </p>
                         <p *ngIf="showFull">
                             <tim-signature [user]="annotation.annotator"
                                            [time]="annotation.creation_time"></tim-signature>
                         </p>
                     </span>
-                    <tim-close-button class="clickable-icon"
-                                      (click)="toggleAnnotationShow(); setShowFull(false)"></tim-close-button>
                 </span>
                 
                 <div>
