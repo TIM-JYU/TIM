@@ -1,5 +1,5 @@
 import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
-import type {NgForm} from "@angular/forms";
+// import type {NgForm} from "@angular/forms";
 import {Component, Input} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 // import {ParCompiler} from "tim/editor/parCompiler";
@@ -56,9 +56,9 @@ interface IVelpOptionSetting {
     template: `
         <div class="velp" [ngStyle]="{top: 0.5 + 'em'}" (click)="notAnnotationRights(velp.points) || useVelp()">
             <div [ngClass]="['velp-data', 'emphasise', 'default',
-                    {neutral: velp.points == 0,
-                    positive: velp.points > 0,
-                    negative: velp.points < 0,
+                    {neutral: velp.points == 0 || null || undefined,
+                    positive: velp.points != null && velp.points > 0,
+                    negative: velp.points != null && velp.points < 0,
                     new: new,
                     inactive: notAnnotationRights(velp.points),
                     edit: velp.edit}]"
@@ -102,7 +102,8 @@ interface IVelpOptionSetting {
                     <tim-close-button (click)="toggleVelpToEdit(); $event.stopPropagation();"
                                       class="clickable-icon"></tim-close-button>
 
-                    <form #saveVelpForm="ngForm" (ngSubmit)="saveVelp(saveVelpForm)">
+                    <!-- TODO do forms properly with NgForm-->
+                    <form #saveVelpForm (ngSubmit)="saveVelp(saveVelpForm)">
 
                         <!-- Basic velp info -->
                         <div class="add-velp-info">
@@ -423,8 +424,9 @@ export class VelpTemplateComponent implements OnInit, OnChanges {
     /**
      * Saves velp to database
      * @param form
+     * TODO Should use NgForm and custom form components
      */
-    saveVelp(form: NgForm) {
+    saveVelp(form: HTMLFormElement) {
         if (!form.valid) {
             return;
         }

@@ -1,7 +1,7 @@
 import * as t from "io-ts";
 import {Component, Input} from "@angular/core";
 import type {OnInit} from "@angular/core";
-import type {NgForm} from "@angular/forms";
+// import type {NgForm} from "@angular/forms";
 import type {Require} from "tim/util/utils";
 import {clone, TimStorage, toPromise} from "tim/util/utils";
 import type {VelpTemplateComponent} from "tim/velp/velp-template.component";
@@ -271,7 +271,8 @@ import {Users} from "tim/user/userService";
                                     <details>
                                         <summary>New velp group</summary>
                                         <div class="collapsible-menu-open-content">
-                                            <form #addVelpGroupForm="ngForm" (ngSubmit)="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
+                                            <!-- TODO do forms properly with NgForm -->
+                                            <form #addVelpGroupForm (ngSubmit)="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
                                                 <div class="velp-groups-new-group-control">
                                                     <label for="new-velp-group-name">Group name: </label>
                                                     <input #newVelpGroup.name id="new-velp-group-name" type="text"
@@ -1020,8 +1021,9 @@ export class VelpMenuComponent implements OnInit {
     /**
      * Adds a velp group on form submit event.
      * @param form - Velp group form
+     * TODO Should use NgForm and custom form components
      */
-    async addVelpGroup(form: NgForm) {
+    async addVelpGroup(form: HTMLFormElement) {
         const valid = form.valid;
         this.submitted.velpGroup = true;
         if (!valid) {
