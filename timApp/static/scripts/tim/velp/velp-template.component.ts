@@ -197,11 +197,18 @@ interface IVelpOptionSetting {
                                                            placeholder="Add label"
                                                            (ngModelChange)="setLabelValid(labelToEdit)"
                                                            [(ngModel)]="labelToEdit">
-                                                    <span class="label-edit-glyphicons"
+                                                    
+                                                    <span *ngIf="isVelpValid()" class="label-edit-glyphicons"
                                                           (click)="editLabel()"
                                                           [ngClass]="['glyphicon', 'glyphicon-ok', 'clickable-icon']"
-                                                          [disabled]="!isVelpValid()"
                                                           [ngStyle]="{color: 'green'}" title="Save">
+                                                    </span>
+                                                    <!-- Show grayed out save/ok button for label if velp is not valid. 
+                                                         TODO Should check for label content as well? 
+                                                    -->
+                                                    <span *ngIf="!isVelpValid()" class="label-edit-glyphicons"
+                                                          [ngClass]="['glyphicon', 'glyphicon-ok', 'clickable-icon']"
+                                                          [ngStyle]="{color: 'gray'}" title="Label name is not valid">
                                                     </span>
                                                     <span class="label-edit-glyphicons"
                                                           (click)="toggleLabelToEdit(l)"
