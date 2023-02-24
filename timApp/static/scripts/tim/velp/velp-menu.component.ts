@@ -37,8 +37,12 @@ import {Users} from "tim/user/userService";
  */
 
 // TODO: show velps with same name side by side. Make changes to the template.
-// TODO Fix (refactor) velp group forms
+
+// TODO Fix not getting a reference to ReviewController (getting undefined)
+// TODO Fix (refactor) velp group forms to use NgForm and custom form components
 // TODO Fix tooltips (uib-tooltip) for velp group deletion
+// TODO Fix localization strings (extract into separate properties)
+// TODO Fix passing attribute/property values to child components (AngularJS -> Angular)
 
 // const sortLang: string = "fi";
 
