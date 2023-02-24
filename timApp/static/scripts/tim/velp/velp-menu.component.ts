@@ -23,6 +23,7 @@ import type {
     IVelpGroupUI,
     VelpGroupSelectionType,
 } from "tim/velp/velptypes";
+import {Users} from "tim/user/userService";
 
 /**
  * The directive retrieves all the data from the server including velps, labels, velp groups and annotations.
@@ -93,7 +94,7 @@ import type {
                                     index="$index"
                                     labels="labels"
                                     new="false"
-                                    teacher-right="vctrl.item.rights.teacher"
+                                    [teacherRight]="hasTeacherRights()"
                                     velp-groups="velpGroups"
                                     velp="velp"></tim-velp-template>
                         </div>
@@ -417,6 +418,7 @@ export class VelpMenuComponent implements OnInit {
             name: "",
             target_type: 0,
             selected: false,
+            location: "",
             id: -9, // instead of null
             show: false,
             default: false,
@@ -429,9 +431,11 @@ export class VelpMenuComponent implements OnInit {
 
         this.groupSelections = {};
         this.groupDefaults = {};
+        // TODO initialize document default velp group path properly
         this.defaultVelpGroup = {
             id: -1,
             name: "No access to default group",
+            location: "",
             edit_access: false,
             show: true,
             default: true,
@@ -441,6 +445,7 @@ export class VelpMenuComponent implements OnInit {
         this.defaultPersonalVelpGroup = {
             id: -2,
             name: "Personal-default",
+            location: this.getPersonalVelpGroupPath(),
             target_type: null,
             default: true,
         };
@@ -1461,5 +1466,17 @@ export class VelpMenuComponent implements OnInit {
     }
     hasEditRights(): boolean {
         return this.vctrl.item.rights.editable;
+    }
+
+    /**
+     * Return path to current user's Personal-default velp group
+     * TODO should return empty string or undefined if the Personal-default group
+     *      or velp-groups folder do not exist
+     * @private
+     */
+    private getPersonalVelpGroupPath(): string {
+        return (
+            "users/" + Users.getCurrent().name + "/velp-groups/Personal-default"
+        );
     }
 }
