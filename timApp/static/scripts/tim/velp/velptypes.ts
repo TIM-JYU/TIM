@@ -178,6 +178,7 @@ export type ILabel = {
 export type IVelpGroup = {
     name: string;
     target_type: number | null;
+    location: string;
     id: number;
     default: boolean;
     edit_access?: boolean;
