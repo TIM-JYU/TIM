@@ -6,7 +6,7 @@
  */
 
 import type {OnInit} from "@angular/core";
-import {Component, ElementRef, ViewChild} from "@angular/core";
+import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import type {IEditor} from "./editor";
 import {
     IMathQuill,
@@ -40,6 +40,14 @@ enum ActiveEditorType {
                           [formControl]="latexInputControl">
             </textarea>
             </div>
+            
+             <cs-ace-editor
+                    [languageMode]="languageMode"
+                    [minRows]="minRows"
+                    [maxRows]="maxRows"
+                    [placeholder]="placeholder"
+                    [disabled]="disabled">
+            </cs-ace-editor>
         </div>
     `,
     styleUrls: ["./math-editor.component.scss"],
@@ -56,6 +64,13 @@ export class MathEditorComponent implements OnInit, IEditor {
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
 
     content: string = "";
+
+    //ACE editor settings
+    @Input() placeholder: string = "";
+    @Input() languageMode: string = "";
+    @Input() disabled: boolean = false;
+    @Input() minRows: number = 0;
+    @Input() maxRows: number = 0;
 
     constructor() {}
 
