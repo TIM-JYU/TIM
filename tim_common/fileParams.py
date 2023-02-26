@@ -353,8 +353,17 @@ def check_url_scheme(url: str):
         raise Exception(f"URL scheme must be http or https, got '{scheme}'")
 
 
+def clean_url(url: str):
+    i = url.find("?")
+    if i < 0:
+        return url
+    return url[:i]
+
+
 # noinspection PyBroadException
-def get_url_lines_as_string(url: str, headers: dict[str, str] | None = None):
+def get_url_lines_as_string(
+    url: str, headers: dict[str, str] | None = None, not_found_error: str | None = None
+):
     global cache
     cachename = "lines_" + url + secure_hash_dict(headers)
     diskcache = CACHE_DIR + cachename.replace("/", "_").replace(":", "_")
@@ -385,7 +394,9 @@ def get_url_lines_as_string(url: str, headers: dict[str, str] | None = None):
         # ftype = req.headers['content-type']
         lines = res.readlines()
     except:
-        return "File not found: " + url
+        if not not_found_error:
+            return "File not found: " + clean_url(url)
+        return not_found_error
     # filecontent = nltk.clean_html(html)
 
     n = len(lines)
@@ -503,7 +514,7 @@ class FileParams:
             self.url = url
         # if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
 
-    def get_file(self, escape_html=False):
+    def get_file(self, escape_html=False, not_found_error=None):
         if self.prorgam:
             # print(self.prorgam)
             return self.scan_needed_lines(self.prorgam.split("\n"), escape_html)
@@ -515,7 +526,9 @@ class FileParams:
 
         lines = get_url_lines(self.url)
         if not lines:
-            return "File not found " + self.url
+            if not_found_error:
+                return not_found_error
+            return "File not found " + clean_url(self.url)
 
         return self.scan_needed_lines(lines, escape_html)
 
@@ -595,17 +608,18 @@ def get_params(self):
 
 def get_file_to_output(query: QueryClass, show_html: bool, p0: FileParams = None):
     try:
+        not_found_error = query.jso.get("markup", {}).get("notFoundError", None)
         if p0 is None:
             p0 = FileParams(query, "", "")
         # if p0.url == "":
-        s = p0.get_file(show_html)
+        s = p0.get_file(show_html, not_found_error=not_found_error)
         # if not s:
         # return "Must give file= -parameter"
         s += p0.get_include(show_html)
         u = p0.url
         for i in range(1, 10):
             p = FileParams(query, "." + str(i), u)
-            s += p.get_file(show_html)
+            s += p.get_file(show_html, not_found_error=not_found_error)
             s += p.get_include(show_html)
             if p.url:
                 u = p.url

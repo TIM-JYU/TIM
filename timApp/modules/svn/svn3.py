@@ -58,6 +58,7 @@ from tim_common.fileParams import (
     get_surrounding_headers,
     get_surrounding_md_headers2,
     QueryClass,
+    clean_url,
 )
 
 PORT = 5000
@@ -726,9 +727,9 @@ def get_html(
     if show_html:
         s += (
             '</pre><p class="smalllink"><a href="'
-            + ffn
+            + clean_url(ffn)
             + '" target="_blank">'
-            + fn
+            + clean_url(fn)
             + "</a>"
         )
     s = NOLAZY + get_surrounding_headers(
