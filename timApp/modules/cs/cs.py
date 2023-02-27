@@ -712,9 +712,10 @@ def handle_common_params(query: QueryClass, ttype: TType):
 
     q_bycode = get_param(query, "byCode", None)
     q_byfile = get_param(query, "byFile", None)
+    not_found_error = get_param(query, "notFoundError", None)
     if q_byfile is not None and q_bycode is None:
         # TODO: Better error message for missing file
-        js["by"] = get_url_lines_as_string(q_byfile)
+        js["by"] = get_url_lines_as_string(q_byfile, not_found_error=not_found_error)
     bycode = ""
     if q_bycode is not None:
         bycode = q_bycode

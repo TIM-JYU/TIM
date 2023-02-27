@@ -7,5 +7,5 @@ startscan: "-/\\*\\*"
 end: "/\\*"
 endn: -3
 linefmt: "{0:03d} "
-stem: "Laita hakemiston c:\norsu"
+stem: "Tiedosto Jasen.java"
 ```

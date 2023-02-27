@@ -35,6 +35,7 @@ export interface IDocSettings {
     save_teacher?: boolean;
     show_scoreboard?: boolean;
     exam_mode?: string;
+    sidemenu_initial_state?: string;
     cache?: boolean;
     peer_review?: boolean;
     peer_review_start?: string;

@@ -393,7 +393,7 @@ def get_all_languages() -> Response:
     :return: JSON response containing all the available languages.
     """
 
-    langs = Language.query.all()
+    langs = sorted(Language.query.all())
     return json_response(langs)
 
 
