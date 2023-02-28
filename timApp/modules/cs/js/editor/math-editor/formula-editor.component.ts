@@ -1,8 +1,8 @@
 /**
- * Math Editor for inputting LaTeX math
+ * Formula Editor for inputting LaTeX math
  * @author Juha Reinikainen
  * @licence MIT
- * @date 20.2.2023
+ * @date 28.2.2023
  */
 
 import type {OnInit} from "@angular/core";
@@ -27,24 +27,22 @@ enum ActiveEditorType {
 @Component({
     selector: "cs-formula-editor",
     template: `
-        <div class="math-editor-container">
-            <div class="formula-editor">
-                <div class="formula-container">
-                    <span #visualInput></span>
-        
-                    <textarea name="math-editor-output" #latexInput cols="30" rows="10"
-                              (click)="handleLatexFocus()"
-                              (keyup)="handleLatexInput()"
-                              [formControl]="latexInputControl">
-                    </textarea>                    
-                </div>
-
-                <div class="formula-button-container">
-                    <button (click)="handleFormulaOk()">Ok</button>
-                    <button>Cancel</button>                    
-                </div>                
-
+        <div class="formula-editor">
+            <div class="formula-container">
+                <span #visualInput></span>
+    
+                <textarea name="math-editor-output" #latexInput cols="30" rows="10"
+                          (click)="handleLatexFocus()"
+                          (keyup)="handleLatexInput()"
+                          [formControl]="latexInputControl">
+                </textarea>                    
             </div>
+
+            <div class="formula-button-container">
+                <button (click)="handleFormulaOk()">Ok</button>
+                <button>Cancel</button>                    
+            </div>                
+
         </div>
     `,
     styleUrls: ["./formula-editor.component.scss"],

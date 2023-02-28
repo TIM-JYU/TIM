@@ -8,7 +8,7 @@ import {EditorComponent, JSParsonsEditorComponent} from "./editor";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
-import {MathEditorComponent} from "./math-editor.component";
+import {MathEditorComponent} from "./math-editor/math-editor.component";
 import {FormulaEditorComponent} from "./math-editor/formula-editor.component";
 
 @NgModule({

@@ -6,15 +6,9 @@
  */
 
 import type {OnInit} from "@angular/core";
-import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {FormControl} from "@angular/forms";
-import type {
-    IMathQuill,
-    MathFieldMethods,
-    MathQuillConfig,
-} from "vendor/mathquill/mathquill";
-import type {IEditor} from "./editor";
-import {AceEditorComponent} from "./ace";
+import {Component, Input, ViewChild} from "@angular/core";
+import type {IEditor} from "../editor";
+import {AceEditorComponent} from "../ace";
 
 @Component({
     selector: "cs-math-editor",
@@ -57,6 +51,10 @@ export class MathEditorComponent implements OnInit, IEditor {
 
     setReadOnly(b: boolean): void {}
 
+    /**
+     * Add inputted formula to editor
+     * @param formulaLatex latex string that was inputted
+     */
     handleOk = (formulaLatex: string) => {
         const dollars = "$$";
         const mathContent = `${dollars}\n${formulaLatex}\n${dollars}`;

@@ -17,7 +17,7 @@ import {ICsParsonsOptions} from "../cs-parsons/csparsons";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
-import {MathEditorComponent} from "./math-editor.component";
+import {MathEditorComponent} from "./math-editor/math-editor.component";
 
 type ModeID = number;
 
