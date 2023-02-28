@@ -900,6 +900,7 @@ class Shell(Language):
         self.exename = self.sourcefilename
         self.pure_exename = "/home/agent/%s.sh" % self.filename
         self.fileext = "sh"
+        self.imgdest = f"/csgenerated/{self.rndname}.png"
 
     # noinspection PyBroadException
     def run(self, result, sourcelines, points_rule):
@@ -914,6 +915,7 @@ class Shell(Language):
         except OSError as e:
             print(e)
             code, out, err, pwddir = (-1, "", str(e), "")
+        out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
 
