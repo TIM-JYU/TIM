@@ -1,0 +1,30 @@
+// Font used by MathQuill
+@import 'static/scripts/vendor/mathquill/fonts/Symbola';
+:host ::ng-deep {
+    // MathQuill elements are added dynamically, so Angular CLI cannot find them at compile-time.
+    // We need to import them via ::ng-deep.
+    @import 'static/scripts/vendor/mathquill/mathquill';
+}
+
+.mq-editable-field {
+    width: 100%;
+}
+
+
+.formula-editor {
+    border: 1px solid black;
+    padding: 1em;
+}
+
+.formula-container {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1em;
+}
+
+.formula-button-container {
+    display: flex;
+    flex-direction: row;
+    column-gap: 0.5em;
+    padding: 0.5em 0em;
+}
