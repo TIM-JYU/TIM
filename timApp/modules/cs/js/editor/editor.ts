@@ -17,7 +17,7 @@ import {ICsParsonsOptions} from "../cs-parsons/csparsons";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
-import {MathEditorComponent} from "./math-editor.component";
+import {MathEditorComponent} from "./math-editor/math-editor.component";
 
 type ModeID = number;
 
@@ -154,7 +154,13 @@ export class JSParsonsEditorComponent implements IEditor {
                 </div>
             </div>
             <ng-container *ngIf="!addTabActive">
-                <cs-math-editor *ngIf="mode == Mode.Math"></cs-math-editor>
+            <cs-math-editor *ngIf="mode == Mode.Math"
+                [languageMode]="languageMode"
+                [minRows]="minRows_"
+                [maxRows]="maxRows_"
+                [placeholder]="file && file.placeholder ? file.placeholder : ''"
+                [disabled]="isDisabled">
+            </cs-math-editor>
             <cs-normal-editor *ngIf="mode == Mode.Normal"
                     [minRows]="minRows_"
                     [maxRows]="maxRows_"

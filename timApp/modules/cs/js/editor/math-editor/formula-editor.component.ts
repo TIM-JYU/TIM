@@ -1,19 +1,20 @@
 /**
- * Math Editor for inputting LaTeX math
+ * Formula Editor for inputting LaTeX math
  * @author Juha Reinikainen
  * @licence MIT
- * @date 20.2.2023
+ * @date 28.2.2023
  */
 
 import type {OnInit} from "@angular/core";
-import {Component, ElementRef, ViewChild} from "@angular/core";
-import type {IEditor} from "./editor";
-import {
+import {Component, ElementRef, Input, ViewChild} from "@angular/core";
+import {FormControl} from "@angular/forms";
+import type {
     IMathQuill,
     MathFieldMethods,
     MathQuillConfig,
-} from "../../../../static/scripts/vendor/mathquill/mathquill";
-import {FormControl} from "@angular/forms";
+} from "vendor/mathquill/mathquill";
+import type {IEditor} from "../editor";
+import {AceEditorComponent} from "../ace";
 
 /**
  * Field which has the focus
@@ -24,27 +25,29 @@ enum ActiveEditorType {
 }
 
 @Component({
-    selector: "cs-math-editor",
+    selector: "cs-formula-editor",
     template: `
-        <div class="math-editor-container">
-            <div class="math-editor-input">
-                <h2>Input</h2>
+        <div class="formula-editor">
+            <div class="formula-container">
                 <span #visualInput></span>
-            </div>
-
-            <div class="math-editor-output-container">
-                <h2>Latex</h2>
+    
                 <textarea name="math-editor-output" #latexInput cols="30" rows="10"
                           (click)="handleLatexFocus()"
                           (keyup)="handleLatexInput()"
                           [formControl]="latexInputControl">
-            </textarea>
+                </textarea>                    
             </div>
+
+            <div class="formula-button-container">
+                <button (click)="handleFormulaOk()">Ok</button>
+                <button>Cancel</button>                    
+            </div>                
+
         </div>
     `,
-    styleUrls: ["./math-editor.component.scss"],
+    styleUrls: ["./formula-editor.component.scss"],
 })
-export class MathEditorComponent implements OnInit, IEditor {
+export class FormulaEditorComponent implements OnInit, IEditor {
     latexInputControl = new FormControl("");
     @ViewChild("latexInput") latexInput!: ElementRef<HTMLTextAreaElement>;
 
@@ -57,6 +60,10 @@ export class MathEditorComponent implements OnInit, IEditor {
 
     content: string = "";
 
+    @ViewChild("aceEditor") aceEditor!: AceEditorComponent;
+
+    @Input() handleOk!: (formulaLatex: string) => void;
+
     constructor() {}
 
     ngOnInit(): void {}
@@ -65,7 +72,7 @@ export class MathEditorComponent implements OnInit, IEditor {
 
     editHandler(field: any) {
         // write changes in visual field to latex field if visual field
-        //was the one modified
+        // was the one modified
         if (this.activeEditor === ActiveEditorType.Visual) {
             const latex = field.latex();
             this.latexInputControl.setValue(latex);
@@ -104,9 +111,15 @@ export class MathEditorComponent implements OnInit, IEditor {
 
     handleLatexInput() {
         // write changes in latex field to visual field if latex field
-        //was the one modified
+        // was the one modified
         if (this.latexInputControl.value) {
             this.mathField.latex(this.latexInputControl.value);
+        }
+    }
+
+    handleFormulaOk() {
+        if (this.mathField.latex) {
+            this.handleOk(this.mathField.latex());
         }
     }
 
