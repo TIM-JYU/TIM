@@ -377,6 +377,10 @@ RUN bash -c "${APT_INSTALL} erlang elixir && apt-get purge --auto-remove -y gnup
 
 RUN python3.10 -m pip install coverage && bash -c "${APT_CLEANUP}"
 
+# Install OpenSCAD
+
+RUN bash -c "${APT_INSTALL} openscad && ${APT_CLEANUP}"
+
 USER agent
 
 FROM complete as sudo
