@@ -518,7 +518,7 @@ export class AnswerBrowserComponent
             return;
         }
         const r = await to(
-            $http.put(
+            $http.put<PeerReview>(
                 `/saveReview/${this.user.id}/${this.taskId
                     .docTask()
                     .toString()}`,
@@ -529,10 +529,21 @@ export class AnswerBrowserComponent
             )
         );
         if (!r.ok) {
-            console.log(r);
             this.showError(r.result);
             return;
         }
+        const savedPeerReview = r.result.data;
+        const previousPeerReview = this.viewctrl.reviewCtrl.peerReviews.find(
+            (p) => p.id == savedPeerReview.id
+        );
+        if (previousPeerReview) {
+            previousPeerReview.points = savedPeerReview.points;
+            previousPeerReview.comment = savedPeerReview.comment;
+            previousPeerReview.reviewed = savedPeerReview.reviewed;
+        } else {
+            this.viewctrl.reviewCtrl.peerReviews.push(savedPeerReview);
+        }
+        this.peerReviews = this.viewctrl.reviewCtrl.peerReviews;
         this.savedReviewPoints = this.reviewPoints;
         this.savedReviewComment = this.reviewComment;
     }

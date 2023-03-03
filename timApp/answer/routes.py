@@ -198,7 +198,7 @@ def save_review_points(
     peer_review.points = points
     peer_review.reviewed = True
     db.session.commit()
-    return ok_response()
+    return json_response(peer_review)
 
 
 @answers.put("/savePoints/<int:user_id>/<int:answer_id>")

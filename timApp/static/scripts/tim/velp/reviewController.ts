@@ -115,7 +115,7 @@ export class ReviewController {
     private velpSelection?: VelpSelectionController; // initialized through onInit
     private lastOpenedAnnotation = 0;
 
-    private peerReviews: PeerReview[];
+    public peerReviews: PeerReview[];
 
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
