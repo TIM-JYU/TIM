@@ -198,16 +198,16 @@
                  <div class="flex ab-option-row review-row">
                            <form (ngSubmit)="saveReview()" *ngIf="hasPeerReviewers || isPeerReview" class="point-form peer-review-area form-inline">
                                 <label class="inline">
-                                    <ng-container i18n>Review: </ng-container>
+                                    <ng-container i18n>Peer review: </ng-container>
                                 </label>
-                                <ng-container *ngIf="!isPeerReview && this.filteredPeerReviews.length == 1 && this.reviewPoints == undefined"> (no points given)</ng-container>
-                                <ng-container *ngIf="!isPeerReview && this.filteredPeerReviews.length > 1"> (average of {{peerReviews.length}} reviews)</ng-container>
-                                <ng-container *ngIf="!isPeerReview && filteredPeerReviews.length == 0"> (no reviews given)</ng-container>
+                                <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length == 1 && this.reviewPoints == undefined"> (no points given)</ng-container>
+                                <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length > 1"> (average of {{peerReviews.length}} reviews)</ng-container>
+                                <ng-container i18n *ngIf="!isPeerReview && filteredPeerReviews.length == 0"> (no reviews given)</ng-container>
                                <div class="peer-review-area">
                                     <textarea class="peer-review-area" [(ngModel)]="reviewComment" [disabled]="!isPeerReview" rows="2" name="reviewComment" [placeholder]="isPeerReview ? 'Add your review' : 'No review given'"></textarea>
                                </div>
                                <div class="ab-option-row">
-                                   <span>Points:
+                                   <span><ng-container i18n>Points:</ng-container>
                                    <input class="form-control input-xs"
                                                   [ngClass]="{ unsaved: reviewPoints != savedReviewPoints,
                                                   'no-step': !markupSettings.pointsStep }"
@@ -223,12 +223,10 @@
                                                   autocomplete="off"
                                                   size="2">
                                    </span>
-                                   <button i18n-title title="Save review"
+                                   <button i18n i18n-title title="Save your review"
                                            class="timButton btn-xs"
                                            *ngIf="isPeerReview"
-                                           [disabled]="reviewPoints == savedReviewPoints && reviewComment == savedReviewComment">
-                                       Save your review
-                                   </button>
+                                           [disabled]="reviewPoints == savedReviewPoints && reviewComment == savedReviewComment">Save your review</button>
                                </div>
                             </form>
                  </div>
