@@ -276,7 +276,7 @@ form:false
             query_string={"id": ann2.id, "content": "tu1@tu2's_velp"},
         )
         self.login_test2()
-        anns = self.get(f"{d.id}/get_annotations")
+        anns = self.get(f"{d.id}/get_annotations")["annotations"]
 
         def check_ann_for_testuser1(ann: dict):
             annotator = ann.get("annotator")
@@ -308,7 +308,7 @@ form:false
         d.document.set_settings({"anonymize_reviewers": "view"})
         self.test_user_2.grant_access(d, AccessType.see_answers)
         db.session.commit()
-        anns = self.get(f"{d.id}/get_annotations")
+        anns = self.get(f"{d.id}/get_annotations")["annotations"]
         self.assertEqual(anns[0].get("annotator").get("name"), self.test_user_1.name)
         info_anns = self.get("/settings/info")["annotations"]
         for iann in info_anns:
