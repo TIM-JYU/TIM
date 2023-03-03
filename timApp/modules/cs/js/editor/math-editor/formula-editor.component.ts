@@ -34,15 +34,22 @@ enum ActiveEditorType {
                 <textarea name="math-editor-output" #latexInput cols="30" rows="10"
                           (click)="handleLatexFocus()"
                           (keyup)="handleLatexInput()"
-                          [formControl]="latexInputControl">
+                          [formControl]="latexInputControl"
+                            placeholder="write LaTeX">
                 </textarea>                    
             </div>
 
             <div class="formula-button-container">
-                <button (click)="handleFormulaOk()">Ok</button>
-                <button>Cancel</button>                    
-            </div>                
+                <div class="formula-buttons">
+                    <button class="timButton" (click)="handleFormulaOk()">Ok</button>
+                    <button class="timButton">Cancel</button>                                        
+                </div>
 
+                <label class="font-weight-normal">
+                    <input type="checkbox" [formControl]="isMultilineFormulaControl">
+                    Multiline
+                </label>
+            </div>
         </div>
     `,
     styleUrls: ["./formula-editor.component.scss"],
@@ -62,7 +69,9 @@ export class FormulaEditorComponent implements OnInit, IEditor {
 
     @ViewChild("aceEditor") aceEditor!: AceEditorComponent;
 
-    @Input() handleOk!: (formulaLatex: string) => void;
+    @Input() handleOk!: (formulaLatex: string, isMultiline: boolean) => void;
+
+    isMultilineFormulaControl = new FormControl(true);
 
     constructor() {}
 
@@ -118,8 +127,12 @@ export class FormulaEditorComponent implements OnInit, IEditor {
     }
 
     handleFormulaOk() {
-        if (this.mathField.latex) {
-            this.handleOk(this.mathField.latex());
+        if (
+            this.mathField.latex &&
+            this.isMultilineFormulaControl.value !== null
+        ) {
+            const isMultiline = this.isMultilineFormulaControl.value;
+            this.handleOk(this.mathField.latex(), isMultiline);
         }
     }
 
