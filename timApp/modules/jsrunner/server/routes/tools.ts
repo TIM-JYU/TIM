@@ -1196,7 +1196,7 @@ export class Tools extends ToolsBase {
         markup: IJsRunnerMarkup,
         aliases: AliasDataT,
         protected velps: VelpDataT[],
-        protected peerreviews: PeerReviewDataT[]
+        protected peerreviewdata: PeerReviewDataT[] | null
     ) {
         super(currDoc, markup, aliases);
     }
@@ -1637,7 +1637,7 @@ export class Tools extends ToolsBase {
     }
 
     /**
-     * Print velp-points of current user in one task
+     * Get velp-points of current user in one task
      */
     getVelpPoints(task: string) {
         const peerreviewers = this.getPeerReviewsForUser().map((pr) => pr.id);
@@ -1662,14 +1662,23 @@ export class Tools extends ToolsBase {
     }
 
     /**
-     * Print every row in peer_review table where document_id matches jsrunner origin doc id
+     * Return every row in peer_review table where document_id matches jsrunner origin doc id
      */
     getAllPeerReviews(): PeerReviewDataT[] {
         return this.peerreviews;
     }
 
+    get peerreviews(): PeerReviewDataT[] {
+        if (this.peerreviewdata == null) {
+            throw new Error(
+                "Attribute peerReview: true is required in jsrunner markup"
+            );
+        }
+        return this.peerreviewdata;
+    }
+
     /**
-     * Print every row from peer_review table where document_id matches
+     * Return every row from peer_review table where document_id matches
      * jsrunner origin doc id and reviewer is current user
      */
     getPeerReviewsByUser(): PeerReviewDataT[] {
@@ -1679,7 +1688,7 @@ export class Tools extends ToolsBase {
     }
 
     /**
-     * Print every row from peer_review table where document_id matches
+     * Get every row from peer_review table where document_id matches
      * jsrunner origin doc id and target is current user
      */
     getPeerReviewsForUser(): PeerReviewDataT[] {
@@ -1690,6 +1699,7 @@ export class Tools extends ToolsBase {
 
     /**
      * Print reviewers and received points of current user
+     * // TODO: Check if correct
      */
     getPeerReviewersForUser(usersObject: Users): string[] {
         const reviewers = this.getPeerReviewsForUser().map(
@@ -1699,7 +1709,7 @@ export class Tools extends ToolsBase {
     }
 
     /*
-     * Print reviewers and received points of current user
+     * Get reviewers and velp points given by reviewers for the current user
      */
     getReviews(task: string, usersObject?: Users): PeerReviewerUser[] {
         const users = usersObject ? usersObject : this.users;
