@@ -421,6 +421,7 @@ export class AnswerBrowserComponent
     }
 
     changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
+        // currently used only in form-mode
         if (!this.isGlobal() && !this.isUseCurrentUser()) {
             this.user = user;
             this.fetchedUser = this.user;
