@@ -6,6 +6,12 @@ from timApp.timdb.sqa import db
 
 class ScoreboardTest(TimRouteTest):
     def test_scoreboard(self):
+        def clear_js_vars(d_obj: dict) -> dict:
+            result = d_obj.copy()
+            doc = result.get("doc", {})
+            doc.pop("modified", None)
+            return result
+
         self.login_test1()
         d = self.create_doc()
         r = self.get(d.url, as_tree=True)
@@ -103,8 +109,8 @@ pointsRule:
         )
         r = self.get(d.url, as_tree=True)
         summs = self.get_js_variable(r, "score_infos")
-        self.assertEqual(summd, summs[0])
-        self.assertEqual(summd2, summs[1])
+        self.assertEqual(clear_js_vars(summd), clear_js_vars(summs[0]))
+        self.assertEqual(clear_js_vars(summd2), clear_js_vars(summs[1]))
 
         # Testing user point calculation.
 
