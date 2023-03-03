@@ -1043,7 +1043,7 @@ export class AnswerBrowserComponent
 
     showError(response: {data: {error: string}}) {
         this.alerts.push({
-            msg: "Error: " + response.data.error,
+            msg: "Error: " + (response.data.error ?? response.data),
             type: "danger",
         });
     }
