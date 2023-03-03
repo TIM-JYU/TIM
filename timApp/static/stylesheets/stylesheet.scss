@@ -399,6 +399,19 @@ a .glyphicon {
     @import "csRun";
 }
 
+body.slide-pars {
+
+    .content-container > div {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .paragraphs {
+        margin-left: auto;
+        margin-right: 0;
+    }
+}
+
 .correct {
     background-color: limegreen;
     padding: 0.5em;

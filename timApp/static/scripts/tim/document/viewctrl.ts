@@ -1406,6 +1406,25 @@ export class ViewCtrl implements IController {
         }
     }
 
+    slideParsState = 0;
+
+    public removeSlideParsState() {
+        this.slideParsState--;
+        if (this.slideParsState <= 0) {
+            this.slideParsState = 0;
+            const bodyElement = document.querySelector("body");
+            bodyElement?.classList.remove("slide-pars");
+        }
+    }
+
+    public addSlideParsState() {
+        this.slideParsState++;
+        if (this.slideParsState > 0) {
+            const bodyElement = document.querySelector("body");
+            bodyElement?.classList.add("slide-pars");
+        }
+    }
+
     updatePending() {
         for (const [key, val] of this.pendingUpdates) {
             const par = getElementByParId(key);
