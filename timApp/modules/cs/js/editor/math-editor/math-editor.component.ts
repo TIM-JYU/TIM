@@ -55,9 +55,15 @@ export class MathEditorComponent implements OnInit, IEditor {
      * Add inputted formula to editor
      * @param formulaLatex latex string that was inputted
      */
-    handleOk = (formulaLatex: string) => {
-        const dollars = "$$";
-        const mathContent = `${dollars}\n${formulaLatex}\n${dollars}`;
-        this.aceEditor.insert(mathContent);
+    handleOk = (formulaLatex: string, isMultiline: boolean) => {
+        const wrapSymbol = isMultiline ? "$$" : "$";
+
+        if (isMultiline) {
+            const mathContent = `${wrapSymbol}\n${formulaLatex}\n${wrapSymbol}`;
+            this.aceEditor.insert(mathContent);
+        } else {
+            const mathContent = `${wrapSymbol}${formulaLatex}${wrapSymbol}`;
+            this.aceEditor.insert(mathContent);
+        }
     };
 }
