@@ -1719,9 +1719,22 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.formulaEditor;
     }
 
+    /**
+     * Write inputted formula to current editor
+     * @param result formula that was typed
+     */
     onFormulaEditorClose(result: FormulaResult) {
         const {latex, isMultiline} = result;
-        console.log(latex, isMultiline);
+        const wrapSymbol = isMultiline ? "$$" : "$";
+
+        if (isMultiline) {
+            const multilineLatex = latex.split("\n").join("\\\\\n");
+            const mathContent = `${wrapSymbol}\n${multilineLatex}\\\\\n${wrapSymbol}\n`;
+            this.editor?.insert(mathContent);
+        } else {
+            const mathContent = `${wrapSymbol}${latex}${wrapSymbol}`;
+            this.editor?.insert(mathContent);
+        }
     }
 
     get count() {

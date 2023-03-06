@@ -47,7 +47,7 @@ export type FormulaResult = {
                           (click)="handleLatexFocus()"
                           (keyup)="handleLatexInput()"
                           [formControl]="latexInputControl"
-                            placeholder="write LaTeX">
+                          placeholder="write LaTeX">
                 </textarea>                    
             </div>
 
@@ -78,8 +78,6 @@ export class FormulaEditorComponent implements OnInit, IEditor {
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
 
     content: string = "";
-
-    @ViewChild("aceEditor") aceEditor!: AceEditorComponent;
 
     @Output() okEvent = new EventEmitter<FormulaResult>();
 
@@ -133,22 +131,36 @@ export class FormulaEditorComponent implements OnInit, IEditor {
     handleLatexInput() {
         // write changes in latex field to visual field if latex field
         // was the one modified
-        if (this.latexInputControl.value) {
+        if (
+            this.activeEditor === ActiveEditorType.Latex &&
+            this.latexInputControl.value !== null
+        ) {
             this.mathField.latex(this.latexInputControl.value);
         }
     }
 
     handleFormulaOk() {
         if (
-            this.mathField.latex &&
+            this.latexInputControl.value &&
             this.isMultilineFormulaControl.value !== null
         ) {
             const isMultiline = this.isMultilineFormulaControl.value;
-            this.okEvent.emit({
-                latex: this.mathField.latex() ?? "",
-                isMultiline: isMultiline,
-            });
+            // latex textarea has linebreaks so return them if multiline
+            // mathfField doesn't so it can be used for non multiline return value
+            if (isMultiline) {
+                this.okEvent.emit({
+                    latex: this.latexInputControl.value ?? "",
+                    isMultiline: isMultiline,
+                });
+            } else {
+                this.okEvent.emit({
+                    latex: this.mathField.latex() ?? "",
+                    isMultiline: isMultiline,
+                });
+            }
         }
+        this.mathField.latex("");
+        this.latexInputControl.setValue("");
     }
 
     setReadOnly(b: boolean): void {}
