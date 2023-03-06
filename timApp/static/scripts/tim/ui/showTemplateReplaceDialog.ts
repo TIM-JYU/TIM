@@ -14,6 +14,7 @@ export const TemplateParam = t.intersection([
         error: t.string,
         what: t.string,
         flags: t.string,
+        select: t.array(t.string),
     }),
 ]);
 
@@ -24,6 +25,15 @@ export async function showTemplateReplaceDialog(
     param: ITemplateParam
 ): Promise<string> {
     const re = new RegExp(param.pattern ?? ".*");
+
+    let extraOptions = {};
+    if (param.select) {
+        extraOptions = {
+            inputType: "select",
+            options: param.select,
+        };
+    }
+
     const replace = await to2(
         showInputDialog({
             isInput: InputDialogKind.InputAndValidator,
@@ -41,6 +51,7 @@ export async function showTemplateReplaceDialog(
                     }
                     return res({ok: true, result: input});
                 }),
+            ...extraOptions,
         })
     );
     if (!replace.ok) {
