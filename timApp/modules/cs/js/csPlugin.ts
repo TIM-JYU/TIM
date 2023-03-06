@@ -699,6 +699,7 @@ const CsMarkupOptional = t.partial({
     noeditor: t.boolean,
     normal: nullable(t.string),
     parsons: withDefault(CsParsonsOptions, {}),
+    formulaEditor: t.boolean,
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -755,6 +756,7 @@ const CsMarkupDefaults = t.type({
     dragAndDrop: withDefault(t.boolean, true),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
+    formulaEditor: withDefault(t.boolean, false),
     iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
     indent: withDefault(t.Integer, -1),
     initSimcir: withDefault(t.string, ""),
@@ -1710,6 +1712,10 @@ export class CsController extends CsBase implements ITimComponent {
 
     get editorMode() {
         return this.markup.editorMode;
+    }
+
+    get formulaEditor() {
+        return this.markup.formulaEditor;
     }
 
     get count() {
@@ -3788,6 +3794,9 @@ ${fhtml}
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
             <div class="csRunCode">
+                <div>
+                    {{formulaEditor ? "formulaEditor" : "no formulaEditor"}}
+                </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
                 <div class="csEditorAreaDiv">
                     <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
