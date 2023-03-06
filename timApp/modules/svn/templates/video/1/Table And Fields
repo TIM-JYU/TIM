@@ -100,40 +100,55 @@ program: |!!
     let compensation = %%peer_review_points%%;
     let maxDiff = %%maxEro%%;
 
-    let reviewCount = tools.getVelpReviewCount("TASK");
+    let peerReviewsByUser = tools.peerreviews.filter(pr => pr.reviewer_id == tools.data.user.id && pr.task_name == "TASK")
+    let reviewedPeerReviewsByUser = peerReviewsByUser.filter(pr => pr.reviewed)
+    let peerReviewsForUser = tools.peerreviews.filter(pr => pr.reviewable_id == tools.data.user.id && pr.task_name == "TASK")
+    let reviewedPeerReviewsForUser = peerReviewsForUser.filter(pr => pr.reviewed)
+
+    // Points received by making peer reviews
+    let reviewCount = reviewedPeerReviewsByUser.length;
     let vp = reviewCount * compensation;
-    tools.setDouble("Vp", vp);
-
-    let velpPoints = tools.getVelpTaskPoints("TASK");
-    let teachersCorrection = tools.getDouble("Ope", -100);
-    if (teachersCorrection != -100) {
-        tools.setDouble("Pisteet", teachersCorrection);
-    }
-    else {
-        tools.setString("Pisteet", velpPoints);
-    }
-
     let VpOpe = tools.getDouble("VpOpe", -100);
     if (VpOpe != -100) {
         tools.setDouble("Vp", VpOpe);
     }
     else {
-        tools.setString("Vp", vp);
+        tools.setDouble("Vp", vp);
+    }
+    
+    // Total points given by peer reviewers
+    let receivedTaskPoints = reviewedPeerReviewsForUser.reduce((prevs,curr) => prevs + curr, 0)
+    let receivedPeerReviewsWithPoints = reviewedPeerReviewsForUser.filter(pr => pr.points != null)
+    let teachersCorrection = tools.getDouble("Ope", -100);
+    if (teachersCorrection != -100) {
+        tools.setDouble("Pisteet", teachersCorrection);
+    }
+    else if (receivedPeerReviewsWithPoints.length > 0){
+        let receivedTaskPoints = receivedPeerReviewsWithPoints.reduce((prevs,curr) => prevs + curr.points, 0)
+        let avg = receivedTaskPoints / receivedPeerReviewsWithPoints.length;
+        tools.setDouble("Pisteet", receivedTaskPoints / receivedPeerReviewsWithPoints.length)
+    }
+    else {
+        tools.setString("Pisteet", "")
     }
 
+    // Individual points peer reviewers
     let pointsArray = [];
-    let reviews = tools.getReviews("TASK", gtools.users);
-    for (let i = 1; i <= reviews.length; i++) {
-        tools.setString("TASK_Arvioija_${i}"+i, reviews[i-1].name);
-        points = reviews[i-1].points;
-        totalPoints = 0;
-        for (let j=0; j<points.length; j++) {
-            totalPoints += points[j];
+    for ([index, review] of peerReviewsForUser.entries()) {
+        i = index + 1
+        tools.setString("TASK_Arvioija_"+i, review.reviewer.name);
+        if (!review.reviewed){
+            tools.setString("TASK_P_"+i, "Ei arvioinut")
+            continue;
         }
-        avg = totalPoints / points.length;
-        tools.setString("TASK_P_"+i, avg);
+        if (review.points == null) {
+            tools.setString("TASK_P_"+i, "Arvioi ilman pisteitä")
+            continue;
+        }
+        points = review.points;
+        tools.setString("TASK_P_"+i, points);
 
-        pointsArray.push(avg);
+        pointsArray.push(points);
         max = Math.max(...pointsArray);
         min = Math.min(...pointsArray);
         delta = max - min;
