@@ -71,6 +71,9 @@
              {% if attrs.float_caption %}
              caption="{{ attrs.float_caption }}"
              {% endif %}
+             {% if attrs.float_slide_pars %}
+             slide-pars="true"
+             {% endif %}
          {% endif %}
          {% if t.target %}
              ref-id="{{ t.target.id }}"

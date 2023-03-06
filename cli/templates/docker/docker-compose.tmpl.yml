@@ -336,7 +336,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
    - /tmp
  caddy:
-  image: caddy:2.3.0
+  image: caddy:2.6
   command: caddy run --config /etc/caddy/Caddyfile
   read_only: true
   volumes:

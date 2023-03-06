@@ -15,6 +15,7 @@ import {
     isMobileDevice,
     TimStorage,
 } from "tim/util/utils";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 
 function getPixels(s: string) {
     const s2 = s.replace(/px$/, "");
@@ -62,6 +63,7 @@ timApp.directive("timDraggableFixed", [
                 draggable: "<?",
                 save: "@?",
                 initialSize: "<?",
+                slidePars: "<?",
             },
             controller: DraggableController,
             controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
@@ -139,6 +141,7 @@ export class DraggableController implements IController {
     private caption?: Binding<string, "<">;
     private click?: Binding<boolean, "<">;
     private detachable?: Binding<boolean, "<">;
+    private slidePars?: Binding<boolean, "<">;
     private resize?: Binding<boolean, "<">;
     private save?: Binding<string, "<">;
     private dragClick?: () => void;
@@ -224,12 +227,20 @@ export class DraggableController implements IController {
             }
             this.element.removeClass("draggable-detached");
             this.element.addClass("draggable-attached");
+            console.log("attach", this.slidePars);
+            if (this.slidePars) {
+                vctrlInstance?.removeSlideParsState();
+            }
         } else {
             this.element.css("position", this.anchor);
             this.element.css("visibility", "visible");
             void this.restoreSizeAndPosition(VisibilityFix.Full);
             this.element.removeClass("draggable-attached");
             this.element.addClass("draggable-detached");
+            console.log("detach", this.slidePars);
+            if (this.slidePars) {
+                vctrlInstance?.addSlideParsState();
+            }
         }
         this.element.css("z-index", this.getVisibleLayer());
 

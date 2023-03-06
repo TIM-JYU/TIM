@@ -109,6 +109,7 @@ const ShowFileMarkup = t.intersection([
         crossOrigin: nullable(t.string),
         start: t.union([t.number, t.string]),
         videoname: nullable(t.string),
+        thumbnailFile: nullable(t.string),
         width: t.number,
         defaultSubtitles: t.string,
     }),
@@ -221,8 +222,9 @@ const ShowFileAll = t.type({
             </ng-container>
             <ng-container *ngIf="isNormalSize">
                 <div *ngIf="!videoOn" class="no-popup-menu play">
-                    <a (click)="toggleVideo()">
-                        <i class="glyphicon glyphicon-play-circle"
+                    <a (click)="toggleVideo()" [class.video-thumbnail]="markup.thumbnailFile">
+                        <img *ngIf="markup.thumbnailFile" class="video-thumbnail-image" [src]="markup.thumbnailFile">
+                        <i *ngIf="markup.videoicon" class="glyphicon glyphicon-play-circle video-icon"
                            title="Click here to show the video"></i>
                     </a>
                 </div>
