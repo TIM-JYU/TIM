@@ -163,12 +163,6 @@ PointsType = Union[
     None,  # Clear points, only by teacher
 ]
 
-
-@answers.put("/saveReview/<int:user_id>/<task_id>/<comment>")
-def null_review_points(user_id: int, task_id: str, comment: str) -> Response:
-    return save_review_points(task_id, user_id, comment)
-
-
 # TODO: loggable route (points in url?)
 @answers.put("/saveReview/<int:user_id>/<task_id>")
 def save_review_points(
