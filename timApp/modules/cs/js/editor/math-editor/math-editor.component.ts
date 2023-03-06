@@ -9,12 +9,13 @@ import type {OnInit} from "@angular/core";
 import {Component, Input, ViewChild} from "@angular/core";
 import type {IEditor} from "../editor";
 import {AceEditorComponent} from "../ace";
+import type {FormulaResult} from "./formula-editor.component";
 
 @Component({
     selector: "cs-math-editor",
     template: `
         <div class="math-editor-container">
-            <cs-formula-editor [handleOk]="handleOk"></cs-formula-editor>
+            <cs-formula-editor (okEvent)="handleOk($event)"></cs-formula-editor>
             
              <cs-ace-editor #aceEditor
                     [languageMode]="languageMode"
@@ -55,15 +56,16 @@ export class MathEditorComponent implements OnInit, IEditor {
      * Add inputted formula to editor
      * @param formulaLatex latex string that was inputted
      */
-    handleOk = (formulaLatex: string, isMultiline: boolean) => {
+    handleOk(result: FormulaResult) {
+        const {latex, isMultiline} = result;
         const wrapSymbol = isMultiline ? "$$" : "$";
 
         if (isMultiline) {
-            const mathContent = `${wrapSymbol}\n${formulaLatex}\n${wrapSymbol}`;
+            const mathContent = `${wrapSymbol}\n${latex}\n${wrapSymbol}`;
             this.aceEditor.insert(mathContent);
         } else {
-            const mathContent = `${wrapSymbol}${formulaLatex}${wrapSymbol}`;
+            const mathContent = `${wrapSymbol}${latex}${wrapSymbol}`;
             this.aceEditor.insert(mathContent);
         }
-    };
+    }
 }

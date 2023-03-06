@@ -6,7 +6,14 @@
  */
 
 import type {OnInit} from "@angular/core";
-import {Component, ElementRef, Input, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    EventEmitter,
+    Input,
+    Output,
+    ViewChild,
+} from "@angular/core";
 import {FormControl} from "@angular/forms";
 import type {
     IMathQuill,
@@ -23,6 +30,11 @@ enum ActiveEditorType {
     Visual = "visual",
     Latex = "latex",
 }
+
+export type FormulaResult = {
+    latex: string;
+    isMultiline: boolean;
+};
 
 @Component({
     selector: "cs-formula-editor",
@@ -69,7 +81,7 @@ export class FormulaEditorComponent implements OnInit, IEditor {
 
     @ViewChild("aceEditor") aceEditor!: AceEditorComponent;
 
-    @Input() handleOk!: (formulaLatex: string, isMultiline: boolean) => void;
+    @Output() okEvent = new EventEmitter<FormulaResult>();
 
     isMultilineFormulaControl = new FormControl(true);
 
@@ -132,7 +144,10 @@ export class FormulaEditorComponent implements OnInit, IEditor {
             this.isMultilineFormulaControl.value !== null
         ) {
             const isMultiline = this.isMultilineFormulaControl.value;
-            this.handleOk(this.mathField.latex(), isMultiline);
+            this.okEvent.emit({
+                latex: this.mathField.latex() ?? "",
+                isMultiline: isMultiline,
+            });
         }
     }
 

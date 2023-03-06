@@ -29,6 +29,11 @@ import {FormulaEditorComponent} from "./math-editor/formula-editor.component";
         CsUtilityModule,
         ReactiveFormsModule,
     ],
-    exports: [CountBoardComponent, EditorComponent, AceEditorComponent],
+    exports: [
+        CountBoardComponent,
+        EditorComponent,
+        AceEditorComponent,
+        FormulaEditorComponent,
+    ],
 })
 export class EditorModule {}
