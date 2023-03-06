@@ -59,6 +59,7 @@ import {getInt} from "./util/util";
 import type {IFile, IFileSpecification} from "./util/file-select";
 import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
+import type {FormulaResult} from "./editor/math-editor/formula-editor.component";
 
 // TODO better name?
 interface Vid {
@@ -1716,6 +1717,11 @@ export class CsController extends CsBase implements ITimComponent {
 
     get formulaEditor() {
         return this.markup.formulaEditor;
+    }
+
+    onFormulaEditorClose(result: FormulaResult) {
+        const {latex, isMultiline} = result;
+        console.log(latex, isMultiline);
     }
 
     get count() {
@@ -3794,8 +3800,8 @@ ${fhtml}
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
             <div class="csRunCode">
-                <div>
-                    {{formulaEditor ? "formulaEditor" : "no formulaEditor"}}
+                <div *ngIf="formulaEditor">
+                    <cs-formula-editor (okEvent)="onFormulaEditorClose($event)"></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
                 <div class="csEditorAreaDiv">
