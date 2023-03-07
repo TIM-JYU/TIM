@@ -54,6 +54,22 @@ export interface IAnnotationComment {
 }
 
 @JsonObject()
+export class PeerReview {
+    @JsonProperty() public id!: number;
+    @JsonProperty() public answer_id!: number;
+    @JsonProperty() public task_name!: string;
+    @JsonProperty() public block_id!: number;
+    @JsonProperty() public reviewer_id!: number;
+    @JsonProperty() public reviewer!: IUser;
+    @JsonProperty() public reviewable_id!: number;
+    @JsonProperty() public points?: number;
+    @JsonProperty() public comment?: string;
+    @JsonProperty() public reviewed?: boolean;
+    // @JsonProperty() public start_time!: number;
+    // @JsonProperty() public end_time!: number;
+}
+
+@JsonObject()
 export class Annotation implements IAnnotation {
     @JsonProperty() public id!: number;
     @JsonProperty() public annotator!: IUser;

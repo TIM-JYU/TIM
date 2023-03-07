@@ -16,7 +16,7 @@ from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
 from timApp.peerreview.peerreview import PeerReview
 from timApp.peerreview.util.peerreview_utils import (
-    get_reviews_for_user_query,
+    get_reviews_where_user_is_reviewer_query,
     is_peerreview_enabled,
 )
 from timApp.user.user import User
@@ -61,7 +61,7 @@ def get_annotations_with_comments_in_document(
         answer_filter = (User.id == user.id) | (User.id == None)
         if is_peerreview_enabled(d):
             answer_filter |= User.id.in_(
-                get_reviews_for_user_query(d, user)
+                get_reviews_where_user_is_reviewer_query(d, user)
                 .with_entities(PeerReview.reviewable_id)
                 .subquery()
             )

@@ -18,12 +18,15 @@ from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import get_current_time
 
 
-def get_reviews_for_user(d: DocInfo, user: User) -> list[PeerReview]:
-    q = get_reviews_for_user_query(d, user).options(joinedload(PeerReview.reviewable))
+def get_reviews_where_user_is_reviewer(d: DocInfo, user: User) -> list[PeerReview]:
+    """Return all peer_review rows where block_is is d.id and the person making the review is the given user"""
+    q = get_reviews_where_user_is_reviewer_query(d, user).options(
+        joinedload(PeerReview.reviewable)
+    )
     return q.all()
 
 
-def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
+def get_reviews_where_user_is_reviewer_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
 
 
@@ -31,13 +34,23 @@ def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
     return PeerReview.query.filter_by(block_id=doc.id).all()
 
 
-def get_reviews_to_user(d: DocInfo, user: User) -> list[PeerReview]:
-    q = get_reviews_to_user_query(d, user).options(joinedload(PeerReview.reviewable))
+def get_reviews_targeting_user(d: DocInfo, user: User) -> list[PeerReview]:
+    """Return all peer_review rows where block_id is d.id and the user is the review target"""
+    q = get_reviews_targeting_user_query(d, user).options(
+        joinedload(PeerReview.reviewable)
+    )
     return q.all()
 
 
-def get_reviews_to_user_query(d: DocInfo, user: User) -> Query:
+def get_reviews_targeting_user_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewable_id=user.id)
+
+
+def get_reviews_related_to_user(d: DocInfo, user: User) -> list[PeerReview]:
+    q = PeerReview.query.filter_by(block_id=d.id).filter(
+        (PeerReview.reviewable_id == user.id) | (PeerReview.reviewer_id == user.id)
+    )
+    return q.all()
 
 
 def has_review_access(

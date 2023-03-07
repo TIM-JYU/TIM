@@ -84,9 +84,10 @@ from timApp.markdown.markdownconverter import md_to_html
 from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
 from timApp.notification.send_email import multi_send_email
+from timApp.peerreview.peerreview import PeerReview
 from timApp.peerreview.util.peerreview_utils import (
     has_review_access,
-    get_reviews_for_user,
+    get_reviews_where_user_is_reviewer,
     is_peerreview_enabled,
     get_reviews_for_document,
 )
@@ -161,6 +162,37 @@ PointsType = Union[
     str,  # Points as string, convert them to float
     None,  # Clear points, only by teacher
 ]
+
+# TODO: loggable route (points in url?)
+@answers.put("/saveReview/<int:user_id>/<task_id>")
+def save_review_points(
+    task_id: str, user_id: int, comment: str | None = None, points: PointsType = None
+) -> Response:
+    tid = TaskId.parse(task_id)
+    curr_user_id = get_current_user_id()
+    if tid.doc_id is None:
+        raise RouteException("Task ID must include document ID")
+    doc = get_doc_or_abort(tid.doc_id)
+    verify_view_access(doc)
+    if not is_peerreview_enabled(doc):
+        raise AccessDenied("Peer review is not enabled")
+    peer_review = PeerReview.query.filter_by(
+        block_id=tid.doc_id,
+        task_name=tid.task_name,
+        reviewer_id=curr_user_id,
+        reviewable_id=user_id,
+    ).first()
+    if not peer_review:
+        raise RouteException("Invalid review target")
+    try:
+        points = points_to_float(points)
+    except ValueError:
+        raise RouteException("Invalid points format.")
+    peer_review.comment = comment
+    peer_review.points = points
+    peer_review.reviewed = True
+    db.session.commit()
+    return json_response(peer_review)
 
 
 @answers.put("/savePoints/<int:user_id>/<int:answer_id>")
@@ -1375,7 +1407,7 @@ def preprocess_jsrunner_answer(
         answerdata["peerreviews"] = get_reviews_for_document(d)
         answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d)
     else:
-        answerdata["peerreviews"] = []
+        answerdata["peerreviews"] = None
         answerdata["velps"] = []
     answerdata.pop(
         "paramComps", None
@@ -2123,16 +2155,16 @@ def get_state(
 
 
 @answers.get("/getTaskUsers/<task_id>")
-def get_task_users(task_id: str) -> Response:
+def get_task_users(task_id: str, peer_review: bool = False) -> Response:
     tid = TaskId.parse(task_id)
     if tid.doc_id is None:
         raise RouteException("Task is missing document ID")
     d = get_doc_or_abort(tid.doc_id)
-    if not verify_seeanswers_access(d, require=False):
+    if not verify_seeanswers_access(d, require=False) or peer_review:
         curr_user = get_current_user_object()
         if not is_peerreview_enabled(d):
             raise AccessDenied()
-        reviews = get_reviews_for_user(d, curr_user)
+        reviews = get_reviews_where_user_is_reviewer(d, curr_user)
         if not reviews:
             raise AccessDenied()
         users = list(r.reviewable for r in reviews if r.task_name == tid.task_name)

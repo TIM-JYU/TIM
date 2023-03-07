@@ -92,7 +92,7 @@ from timApp.messaging.messagelist.messagelist_utils import (
 )
 from timApp.peerreview.util.groups import generate_review_groups, PeerReviewException
 from timApp.peerreview.util.peerreview_utils import (
-    get_reviews_for_user,
+    get_reviews_where_user_is_reviewer,
     check_review_grouping,
     is_peerreview_enabled,
 )
@@ -865,7 +865,7 @@ def render_doc_view(
                     set_default_velp_group_selected_and_visible(doc_info)
                 except PeerReviewException as e:
                     flash(str(e))
-            reviews = get_reviews_for_user(doc_info, current_user)
+            reviews = get_reviews_where_user_is_reviewer(doc_info, current_user)
             for review in reviews:
                 user_list.append(review.reviewable_id)
             user_list = get_points_by_rule(

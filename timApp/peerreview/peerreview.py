@@ -36,6 +36,12 @@ class PeerReview(db.Model):
     reviewed = db.Column(db.Boolean, default=False)
     """Review status"""
 
+    points = db.Column(db.Float)
+    """Points given by the reviewer"""
+
+    comment = db.Column(db.Text)
+    """Review comment"""
+
     __table_args__ = (
         db.UniqueConstraint("answer_id", "block_id", "reviewer_id", "reviewable_id"),
         db.UniqueConstraint("task_name", "block_id", "reviewer_id", "reviewable_id"),
@@ -51,8 +57,11 @@ class PeerReview(db.Model):
             "task_name": self.task_name,
             "block_id": self.block_id,
             "reviewer_id": self.reviewer_id,
+            "reviewer": self.reviewer,
             "reviewable_id": self.reviewable_id,
             "start_time": self.start_time,
             "end_time": self.end_time,
             "reviewed": self.reviewed,
+            "points": self.points,
+            "comment": self.comment,
         }

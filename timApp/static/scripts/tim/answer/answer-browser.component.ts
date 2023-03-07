@@ -66,6 +66,7 @@ import type {
 } from "tim/answer/IAnswer";
 import {CommonModule} from "@angular/common";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
+import type {PeerReview} from "tim/velp/velptypes";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
@@ -165,6 +166,7 @@ export class AnswerBrowserComponent
     saveTeacher: boolean = false;
     users: IUser[] | undefined;
     reviewerUsers: IUser[] = [];
+    hasPeerReviewers = false;
     answers: IAnswer[] = [];
     filteredAnswers: IAnswer[] = [];
     onlyValid: boolean = true;
@@ -183,6 +185,12 @@ export class AnswerBrowserComponent
     feedback?: string;
     taskInfo: ITaskInfo | undefined;
     points: number | undefined;
+    reviewPoints: number | undefined;
+    reviewComment: string | undefined;
+    peerReviews: PeerReview[] = [];
+    filteredPeerReviews: PeerReview[] = [];
+    savedReviewPoints: number | undefined;
+    savedReviewComment: string | undefined;
     private loadedAnswer: {
         id: number | undefined;
         valid: boolean | undefined;
@@ -347,7 +355,7 @@ export class AnswerBrowserComponent
                 this.dimPlugin();
             }
             if (!this.isGlobal()) {
-                await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
+                await this.checkUsers(true); // load users, answers have already been loaded for the currently selected user
             }
             const el = this.loader.loaderElement;
             // Lazily wait before loading users. Allow tapping on plugin or the loader
@@ -409,9 +417,11 @@ export class AnswerBrowserComponent
         } else {
             this.unDimPlugin();
         }
+        this.setReviewerUsers();
     }
 
     changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
+        // currently used only in form-mode
         if (!this.isGlobal() && !this.isUseCurrentUser()) {
             this.user = user;
             this.fetchedUser = this.user;
@@ -501,6 +511,41 @@ export class AnswerBrowserComponent
             return;
         }
         this.selectedAnswer.points = this.points;
+    }
+
+    async saveReview() {
+        if (!this.user) {
+            return;
+        }
+        const r = await to(
+            $http.put<PeerReview>(
+                `/saveReview/${this.user.id}/${this.taskId
+                    .docTask()
+                    .toString()}`,
+                {
+                    points: this.reviewPoints,
+                    comment: this.reviewComment,
+                }
+            )
+        );
+        if (!r.ok) {
+            this.showError(r.result);
+            return;
+        }
+        const savedPeerReview = r.result.data;
+        const previousPeerReview = this.viewctrl.reviewCtrl.peerReviews.find(
+            (p) => p.id == savedPeerReview.id
+        );
+        if (previousPeerReview) {
+            previousPeerReview.points = savedPeerReview.points;
+            previousPeerReview.comment = savedPeerReview.comment;
+            previousPeerReview.reviewed = savedPeerReview.reviewed;
+        } else {
+            this.viewctrl.reviewCtrl.peerReviews.push(savedPeerReview);
+        }
+        this.peerReviews = this.viewctrl.reviewCtrl.peerReviews;
+        this.savedReviewPoints = this.reviewPoints;
+        this.savedReviewComment = this.reviewComment;
     }
 
     updatePoints() {
@@ -632,7 +677,6 @@ export class AnswerBrowserComponent
                 }
             }
             if (this.review) {
-                this.reviewerUser = undefined;
                 let newReviewHtml = r.result.data.reviewHtml;
                 // Check if component itself provides review data and try to load it instead
                 const comp = this.viewctrl.getTimComponentByName(
@@ -683,7 +727,6 @@ export class AnswerBrowserComponent
                 } else {
                     this.reviewHtml = undefined;
                 }
-                this.setReviewerUsers();
                 await $timeout();
             }
         }
@@ -706,7 +749,16 @@ export class AnswerBrowserComponent
                 this.unDimPlugin();
             }
         }
+        this.setReviewerUsers();
         this.isAndSetShowNewTask();
+    }
+
+    showReviewUserSelector() {
+        return (
+            !this.isPeerReview &&
+            ((this.reviewerUsers.length > 1 && this.review) ||
+                this.hasPeerReviewers)
+        );
     }
 
     readAsDataUrl(input: Blob) {
@@ -976,7 +1028,12 @@ export class AnswerBrowserComponent
         const r = await to(
             $http.get<IUser[]>(
                 `/getTaskUsers/${this.taskId.docTask().toString()}`,
-                {params: {groups: this.viewctrl.groups}}
+                {
+                    params: {
+                        groups: this.viewctrl.groups,
+                        peer_review: this.isPeerReview,
+                    },
+                }
             )
         );
         this.loading--;
@@ -997,7 +1054,7 @@ export class AnswerBrowserComponent
 
     showError(response: {data: {error: string}}) {
         this.alerts.push({
-            msg: "Error: " + response.data.error,
+            msg: "Error: " + (response.data.error ?? response.data),
             type: "danger",
         });
     }
@@ -1191,7 +1248,6 @@ export class AnswerBrowserComponent
         ) {
             return;
         }
-
         const data = await this.getAnswers();
         if (!data) {
             return;
@@ -1393,14 +1449,41 @@ export class AnswerBrowserComponent
     }
 
     setReviewerUsers() {
-        if (!this.selectedAnswer) {
-            this.reviewerUser = undefined;
-            return;
-        }
-        this.reviewerUsers =
-            this.viewctrl.reviewCtrl.getAnnotationersByAnswerId(
-                this.selectedAnswer.id
+        const uniqueReviewers = new Map<number, IUser>();
+        // TODO: Check if annotations are loaded yet, if not, retrigger this via vctrl
+        if (this.user) {
+            const reviews = this.viewctrl.reviewCtrl.getReviews(
+                this.taskId,
+                this.user.id
             );
+            this.peerReviews = reviews;
+            reviews.forEach((u) => {
+                uniqueReviewers.set(u.reviewer.id, u.reviewer);
+            });
+            if (reviews.length > 0) {
+                this.hasPeerReviewers = true;
+            } else {
+                this.hasPeerReviewers = false;
+            }
+        }
+        if (this.selectedAnswer) {
+            this.viewctrl.reviewCtrl
+                .getAnnotationersByAnswerId(this.selectedAnswer.id)
+                .forEach((u) => {
+                    uniqueReviewers.set(u.id, u);
+                });
+        }
+        if (this.isPeerReview) {
+            this.reviewerUser = Users.getCurrent();
+            this.reviewerUsers = [this.reviewerUser];
+        } else {
+            this.reviewerUsers = Array.from(uniqueReviewers.values());
+            this.reviewerUser = this.reviewerUsers.find(
+                (reviewer) => reviewer.id == this.reviewerUser?.id
+            );
+        }
+
+        this.refreshPeerReview();
     }
 
     updateReviewers() {
@@ -1412,16 +1495,47 @@ export class AnswerBrowserComponent
     }
 
     changeReviewerUser() {
-        if (this.selectedAnswer && this.reviewHtml) {
+        if (this.selectedAnswer && this.reviewHtml && this.review) {
             const par = this.getPar();
-            if (!par) {
-                return;
+            if (par) {
+                this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
+                    this.selectedAnswer.id,
+                    par,
+                    this.reviewerUser
+                );
             }
-            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
-                this.selectedAnswer.id,
-                par,
-                this.reviewerUser
+        }
+        this.refreshPeerReview();
+    }
+
+    refreshPeerReview() {
+        if (this.hasPeerReviewers || this.isPeerReview) {
+            this.filteredPeerReviews = this.peerReviews.filter(
+                (p) => p.reviewed
             );
+            if (this.reviewerUser) {
+                this.filteredPeerReviews = this.filteredPeerReviews.filter(
+                    (p) => p.reviewer_id == this.reviewerUser!.id
+                );
+            }
+            if (this.filteredPeerReviews.length == 1) {
+                this.reviewPoints = this.filteredPeerReviews[0].points;
+                this.reviewComment = this.filteredPeerReviews[0].comment;
+            } else if (this.filteredPeerReviews.length > 1) {
+                this.reviewPoints =
+                    this.filteredPeerReviews.reduce(
+                        (sum, curr) => sum + (curr.points ?? 0),
+                        0
+                    ) / this.filteredPeerReviews.length;
+                this.reviewComment = this.filteredPeerReviews
+                    .map((r) => r.comment)
+                    .join("\n---\n");
+            } else {
+                this.reviewPoints = undefined;
+                this.reviewComment = undefined;
+            }
+            this.savedReviewPoints = this.reviewPoints;
+            this.savedReviewComment = this.reviewComment;
         }
     }
 
@@ -1480,10 +1594,14 @@ export class AnswerBrowserComponent
         }
     }
 
-    async checkUsers() {
+    async checkUsers(force?: boolean) {
         // TODO: Changing user from sidebar could change to user's answer on global field
         // for now just skip the fetches (firefox throws error in their current state)
-        if (this.loading > 0 || this.isGlobal() || this.isUseCurrentUser()) {
+        if (
+            this.isGlobal() ||
+            this.isUseCurrentUser() ||
+            (this.loading > 0 && !force)
+        ) {
             return;
         }
         await this.loadUserAnswersIfChanged();

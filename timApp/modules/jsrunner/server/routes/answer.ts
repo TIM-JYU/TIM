@@ -54,7 +54,7 @@ interface IRunnerData {
     program: string;
     compileProgram: (code: string) => string;
     velps: VelpDataT[];
-    peerreviews: PeerReviewDataT[];
+    peerreviews: PeerReviewDataT[] | null;
 }
 
 type RunnerResult =
