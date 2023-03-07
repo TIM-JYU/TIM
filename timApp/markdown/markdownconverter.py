@@ -433,9 +433,13 @@ def end_value(s: Any, defvalue: Any = "") -> str:
     return ret
 
 
-def slugify_str(s: Any) -> str:
+def slugify_str(s: Any, underscore: Any = None) -> str:
+    if underscore:
+        underscore = True
+    else:
+        underscore = False
     if isinstance(s, str):
-        return slugify(s)
+        return slugify(s, underscored=underscore)
     return s
 
 
