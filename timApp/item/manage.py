@@ -14,11 +14,6 @@ from isodate import Duration
 from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
 
-from timApp.answer.jsrunner_util import (
-    save_fields,
-    FieldSaveRequest,
-    FieldSaveUserEntry,
-)
 from timApp.auth.accesshelper import (
     verify_manage_access,
     verify_ownership,
@@ -52,6 +47,11 @@ from timApp.item.validation import (
     validate_item,
     validate_item_and_create_intermediate_folders,
     has_special_chars,
+)
+from timApp.plugin.jsrunner.util import (
+    save_fields,
+    FieldSaveRequest,
+    FieldSaveUserEntry,
 )
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock

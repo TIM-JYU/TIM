@@ -13,7 +13,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
-from timApp.answer.jsrunner_util import save_fields
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
@@ -659,6 +658,8 @@ def send_grades_to_sisu(
             a.completionDate = completion_date_iso
             a.sentGrade = a.gradeId
             a.sentCredit = a.completionCredits
+
+        from timApp.plugin.jsrunner.util import save_fields
 
         save_fields(
             {
