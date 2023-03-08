@@ -868,16 +868,22 @@ def question_convert_js_to_yaml(markup: dict, is_task: bool, task_id: str | None
         "utf-8"
     )  # see also .safe_dump
     mdyaml = mdyaml.replace("\n\n", "\n")
-    prefix = " "
-    if qst:
-        prefix = " d"  # like document question
+
+    # Don't add 'dquestion' plugin attribute as it is not needed or processed. Instead, use is_task value
+    # to determine whether question is a document question (ie. task), or a lecture question.
+    question_attr = " question=" + ('""' if is_task else '"true"')
+    # prefix = " "
+    # if qst:
+    # prefix = " d"  # like document question
     result = (
         "``` {#"
         + taskid
-        + prefix
-        + 'question="'
-        + "true"
-        + '" plugin="qst"}\n'
+        # + prefix
+        # + ' question="'
+        # + str(not qst).lower() # Does not work: question="false" also produces a lecture question
+        # + '" plugin="qst"}\n'
+        + question_attr
+        + ' plugin="qst"}\n'
         + mdyaml
         + "```\n"
     )
