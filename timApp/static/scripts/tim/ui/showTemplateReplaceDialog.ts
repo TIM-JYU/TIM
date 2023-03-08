@@ -13,6 +13,7 @@ export const TemplateParam = t.intersection([
         pattern: t.string,
         error: t.string,
         what: t.string,
+        with: t.string,
         flags: t.string,
         select: t.array(t.string),
     }),
@@ -34,26 +35,31 @@ export async function showTemplateReplaceDialog(
         };
     }
 
-    const replace = await to2(
-        showInputDialog({
-            isInput: InputDialogKind.InputAndValidator,
-            text: param.text,
-            title: "Parameter",
-            okText: "OK",
-            defaultValue: param.default,
-            validator: (input) =>
-                new Promise<Result<string, string>>((res) => {
-                    if (!input.match(re)) {
-                        return res({
-                            ok: false,
-                            result: param.error ?? "",
-                        });
-                    }
-                    return res({ok: true, result: input});
-                }),
-            ...extraOptions,
-        })
-    );
+    let replace;
+    if (param.with) {
+        replace = {ok: true, result: param.with};
+    } else {
+        replace = await to2(
+            showInputDialog({
+                isInput: InputDialogKind.InputAndValidator,
+                text: param.text,
+                title: "Parameter",
+                okText: "OK",
+                defaultValue: param.default,
+                validator: (input) =>
+                    new Promise<Result<string, string>>((res) => {
+                        if (!input.match(re)) {
+                            return res({
+                                ok: false,
+                                result: param.error ?? "",
+                            });
+                        }
+                        return res({ok: true, result: input});
+                    }),
+                ...extraOptions,
+            })
+        );
+    }
     if (!replace.ok) {
         return "";
     }
