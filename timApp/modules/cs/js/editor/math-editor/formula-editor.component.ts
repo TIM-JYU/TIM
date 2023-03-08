@@ -54,7 +54,7 @@ export type FormulaResult = {
             <div class="formula-button-container">
                 <div class="formula-buttons">
                     <button class="timButton" (click)="handleFormulaOk()">Ok</button>
-                    <button class="timButton">Cancel</button>                                        
+                    <button class="timButton" (click)="handleFormulaCancel()">Cancel</button>                                        
                 </div>
 
                 <label class="font-weight-normal">
@@ -80,6 +80,7 @@ export class FormulaEditorComponent implements OnInit, IEditor {
     content: string = "";
 
     @Output() okEvent = new EventEmitter<FormulaResult>();
+    @Output() cancelEvent = new EventEmitter<void>();
 
     isMultilineFormulaControl = new FormControl(true);
 
@@ -139,6 +140,11 @@ export class FormulaEditorComponent implements OnInit, IEditor {
         }
     }
 
+    clearFields() {
+        this.mathField.latex("");
+        this.latexInputControl.setValue("");
+    }
+
     handleFormulaOk() {
         if (
             this.latexInputControl.value &&
@@ -159,8 +165,12 @@ export class FormulaEditorComponent implements OnInit, IEditor {
                 });
             }
         }
-        this.mathField.latex("");
-        this.latexInputControl.setValue("");
+        this.clearFields();
+    }
+
+    handleFormulaCancel() {
+        this.cancelEvent.emit();
+        this.clearFields();
     }
 
     setReadOnly(b: boolean): void {}

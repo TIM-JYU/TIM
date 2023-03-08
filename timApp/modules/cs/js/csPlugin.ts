@@ -1723,7 +1723,7 @@ export class CsController extends CsBase implements ITimComponent {
      * Write inputted formula to current editor
      * @param result formula that was typed
      */
-    onFormulaEditorClose(result: FormulaResult) {
+    onFormulaEditorCloseOk(result: FormulaResult) {
         const {latex, isMultiline} = result;
         const wrapSymbol = isMultiline ? "$$" : "$";
 
@@ -1735,6 +1735,10 @@ export class CsController extends CsBase implements ITimComponent {
             const mathContent = `${wrapSymbol}${latex}${wrapSymbol}`;
             this.editor?.insert(mathContent);
         }
+    }
+
+    onFormulaEditorCloseCancel() {
+        console.log("cancel");
     }
 
     get count() {
@@ -3819,7 +3823,10 @@ ${fhtml}
             </div>
             <div class="csRunCode">
                 <div *ngIf="formulaEditor">
-                    <cs-formula-editor (okEvent)="onFormulaEditorClose($event)"></cs-formula-editor>
+                    <cs-formula-editor 
+                            (okEvent)="onFormulaEditorCloseOk($event)"
+                            (cancelEvent)="onFormulaEditorCloseCancel()"
+                    ></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
                 <div class="csEditorAreaDiv">
