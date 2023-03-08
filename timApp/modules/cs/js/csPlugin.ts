@@ -3812,6 +3812,11 @@ ${fhtml}
                 </div>
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
+            <div *ngIf="formulaEditor">
+                    <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet" target="_blank">                
+                        <span class="glyphicon glyphicon-question-sign" title="Ohjeet"></span>
+                    </a>
+            </div>
             <div class="csRunCode">
                 <div *ngIf="formulaEditor">
                     <cs-formula-editor (okEvent)="onFormulaEditorClose($event)"></cs-formula-editor>
