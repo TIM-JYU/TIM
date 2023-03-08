@@ -13,7 +13,7 @@ export const TemplateParam = t.intersection([
         pattern: t.string,
         error: t.string,
         what: t.string,
-        with: t.string,
+        useDefault: t.boolean,
         flags: t.string,
         select: t.array(t.string),
     }),
@@ -36,8 +36,8 @@ export async function showTemplateReplaceDialog(
     }
 
     let replace;
-    if (param.with) {
-        replace = {ok: true, result: param.with};
+    if (param.useDefault) {
+        replace = {ok: true, result: param.default};
     } else {
         replace = await to2(
             showInputDialog({
@@ -81,8 +81,8 @@ export async function replaceTemplateValues(data: string): Promise<string> {
             const jso = JSON.parse(s);
             if (TemplateParam.is(jso)) {
                 replaceList.push(jso);
-                rows.shift();
             }
+            rows.shift(); // Don't stay in the loop
         } catch (e) {
             return "" + e + "\n" + s;
         }
