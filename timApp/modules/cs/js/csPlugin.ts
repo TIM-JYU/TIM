@@ -983,6 +983,7 @@ export class CsController extends CsBase implements ITimComponent {
     keepErrors: boolean = false;
     muokattu: boolean;
     noeditor!: boolean;
+    formulaEditorOpen = false;
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
     postcode?: string;
@@ -1724,6 +1725,7 @@ export class CsController extends CsBase implements ITimComponent {
      * @param result formula that was typed
      */
     onFormulaEditorCloseOk(result: FormulaResult) {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
         const {latex, isMultiline} = result;
         const wrapSymbol = isMultiline ? "$$" : "$";
 
@@ -1738,7 +1740,12 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     onFormulaEditorCloseCancel() {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
         console.log("cancel");
+    }
+
+    onFormulaEditorAddFormula() {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
     get count() {
@@ -3817,12 +3824,13 @@ ${fhtml}
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
             <div *ngIf="formulaEditor">
+                    <button (click)="onFormulaEditorAddFormula()">Add formula</button>
                     <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet" target="_blank">                
                         <span class="glyphicon glyphicon-question-sign" title="Ohjeet"></span>
                     </a>
             </div>
             <div class="csRunCode">
-                <div *ngIf="formulaEditor">
+                <div *ngIf="formulaEditor && formulaEditorOpen">
                     <cs-formula-editor 
                             (okEvent)="onFormulaEditorCloseOk($event)"
                             (cancelEvent)="onFormulaEditorCloseCancel()"
