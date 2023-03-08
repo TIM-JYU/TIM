@@ -41,7 +41,7 @@ export type FormulaResult = {
     template: `
         <div class="formula-editor">
             <div class="formula-container">
-                <span #visualInput></span>
+                <span class="visual-input" #visualInput></span>
     
                 <textarea name="math-editor-output" #latexInput cols="30" rows="10"
                           (click)="handleLatexFocus()"
