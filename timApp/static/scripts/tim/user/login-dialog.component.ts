@@ -11,7 +11,7 @@ import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {JsonValue} from "tim/util/jsonvalue";
 import {saveCurrentScreenPar} from "tim/document/parhelpers";
-import {genericglobals} from "tim/util/globals";
+import {genericglobals, isDocumentGlobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
 import type {IOkResponse, Result, ToReturn} from "tim/util/utils";
 import {capitalizeFirstLetter, mapSuccess, to} from "tim/util/utils";
@@ -106,23 +106,28 @@ interface ISimpleRegistrationResponse {
                             </div>
 
                             <ng-container *ngIf="simpleLoginEmailGiven">
-                                <p>
-                                    <ng-container *ngIf="useStudyInfoMessage; else normalHelpMsg" i18n>
-                                        If you have not logged in before,
-                                        and your email corresponds to the one in Studyinfo.fi,
-                                        TIM sent a password to your email now.
-                                        Please read the email in a separate browser tab,
-                                        and please wait for the email at least 5 minutes
-                                        if you don't get the email right away.
-                                        Check your spam folder too.
-                                    </ng-container>
-                                    <ng-template #normalHelpMsg i18n>
-                                        If you have not logged in to TIM before, TIM sent a password to your
-                                        email
-                                        now.
-                                    </ng-template>
-                                </p>
-                                <p i18n>If you have logged in before, use your current password.</p>
+                                <ng-container *ngIf="loginMessage; else automaticLoginMessage">
+                                    <div [innerHTML]="loginMessage | purify"></div>
+                                </ng-container>
+                                <ng-template #automaticLoginMessage>
+                                    <p>
+                                        <ng-container *ngIf="useStudyInfoMessage; else normalHelpMsg" i18n>
+                                            If you have not logged in before,
+                                            and your email corresponds to the one in Studyinfo.fi,
+                                            TIM sent a password to your email now.
+                                            Please read the email in a separate browser tab,
+                                            and please wait for the email at least 5 minutes
+                                            if you don't get the email right away.
+                                            Check your spam folder too.
+                                        </ng-container>
+                                        <ng-template #normalHelpMsg i18n>
+                                            If you have not logged in to TIM before, TIM sent a password to your
+                                            email
+                                            now.
+                                        </ng-template>
+                                    </p>
+                                    <p i18n>If you have logged in before, use your current password.</p>
+                                </ng-template>
                             </ng-container>
 
                             <div class="form-group" [hidden]="simpleEmailLogin && !simpleLoginEmailGiven">
@@ -303,7 +308,8 @@ interface ISimpleRegistrationResponse {
                                 <span *ngIf="finishStatus === 'updated'" i18n>
                 Your information was updated successfully.
             </span>
-                                <span *ngIf="finishStatus" i18n><a href="" focusMe>Refresh</a> the page to continue.</span>
+                                <span *ngIf="finishStatus" i18n><a href=""
+                                                                   focusMe>Refresh</a> the page to continue.</span>
                             </div>
                             <div class="flex justify-center margin-bottom-1">
                                 <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
@@ -366,8 +372,14 @@ export class LoginDialogComponent extends AngularDialogComponent<
     focusPassword = false;
     useStudyInfoMessage = this.config.simpleLoginUseStudyInfoMessage;
     minPasswordLength = this.config.minPasswordLength;
+    loginMessage?: string;
 
     ngOnInit() {
+        const globals = genericglobals();
+        if (isDocumentGlobals(globals)) {
+            this.loginMessage = globals.docSettings.loginMessage;
+        }
+
         const params = this.data;
         if (params) {
             if (params.addingToSession !== undefined) {
