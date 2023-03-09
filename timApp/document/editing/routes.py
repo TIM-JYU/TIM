@@ -373,7 +373,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
 
 def mark_as_translated(p: DocParagraph):
     try:
-        deref = p.get_referenced_pars()
+        deref = p.get_referenced_pars(blind_settings=False)
     except TimDbException:
         deref = None
     if deref:

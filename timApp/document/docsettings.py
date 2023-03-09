@@ -682,7 +682,9 @@ def __resolve_final_settings_impl(
                 # so that we always get the original markdown.
                 tr_attr = curr.get_attr("r")
                 curr.set_attr("r", None)
-                refs = curr.get_referenced_pars()
+                refs = curr.get_referenced_pars(
+                    blind_settings=False
+                )  # Don't blind when resolving and parsing settings
                 curr.set_attr("r", tr_attr)
             except InvalidReferenceException:
                 break
