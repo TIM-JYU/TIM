@@ -7,11 +7,11 @@ import {showInputDialog} from "tim/ui/showInputDialog";
 export const TemplateParam = t.intersection([
     t.type({
         default: t.string,
-        text: t.string,
     }),
     t.partial({
         pattern: t.string,
         error: t.string,
+        text: t.string,
         what: t.string,
         useDefault: t.boolean,
         flags: t.string,
@@ -42,7 +42,7 @@ export async function showTemplateReplaceDialog(
         replace = await to2(
             showInputDialog({
                 isInput: InputDialogKind.InputAndValidator,
-                text: param.text,
+                text: param.text ?? `Replacement for ${param.default}`,
                 title: "Parameter",
                 okText: "OK",
                 defaultValue: param.default,
