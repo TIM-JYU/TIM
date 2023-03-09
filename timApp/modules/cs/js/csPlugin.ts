@@ -1741,7 +1741,6 @@ export class CsController extends CsBase implements ITimComponent {
 
     onFormulaEditorCloseCancel() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
-        console.log("cancel");
     }
 
     onFormulaEditorAddFormula() {
@@ -3830,14 +3829,15 @@ ${fhtml}
                     </a>
             </div>
             <div class="csRunCode">
-                <div *ngIf="formulaEditor && formulaEditorOpen">
+                <div *ngIf="formulaEditor">
                     <cs-formula-editor 
                             (okEvent)="onFormulaEditorCloseOk($event)"
                             (cancelEvent)="onFormulaEditorCloseCancel()"
+                            [visible]="formulaEditorOpen"
                     ></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
-                <div class="csEditorAreaDiv">
+                <div class="csEditorAreaDiv" [hidden]="formulaEditor && formulaEditorOpen">
                     <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
                                [base]="byCode"
                                [minRows]="rows"

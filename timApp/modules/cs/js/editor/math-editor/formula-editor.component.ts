@@ -1,3 +1,4 @@
+/* eslint no-underscore-dangle: ["error", { "allow": ["_visible"] }] */
 /**
  * Formula Editor for inputting LaTeX math
  * @author Juha Reinikainen
@@ -10,6 +11,7 @@ import {
     Component,
     ElementRef,
     EventEmitter,
+    Input,
     Output,
     ViewChild,
 } from "@angular/core";
@@ -37,30 +39,30 @@ export type FormulaResult = {
 @Component({
     selector: "cs-formula-editor",
     template: `
-        <div class="formula-editor">
+        <dialog #formulaDialog class="formula-editor-dialog">
             <div class="formula-container">
                 <span class="visual-input" #visualInput></span>
     
-                <textarea name="math-editor-output" #latexInput cols="30" rows="10"
+                <textarea name="math-editor-output" #latexInput cols="30" rows="5"
                           (click)="handleLatexFocus()"
                           (keyup)="handleLatexInput()"
                           [formControl]="latexInputControl"
                           placeholder="write LaTeX">
                 </textarea>                    
             </div>
-
+    
             <div class="formula-button-container">
                 <div class="formula-buttons">
                     <button class="timButton" (click)="handleFormulaOk()">Ok</button>
                     <button class="timButton" (click)="handleFormulaCancel()">Cancel</button>                                        
                 </div>
-
+    
                 <label class="font-weight-normal">
                     <input type="checkbox" [formControl]="isMultilineFormulaControl">
                     Multiline
                 </label>
             </div>
-        </div>
+        </dialog>
     `,
     styleUrls: ["./formula-editor.component.scss"],
 })
@@ -82,6 +84,22 @@ export class FormulaEditorComponent implements OnInit, IEditor {
 
     isMultilineFormulaControl = new FormControl(true);
 
+    @ViewChild("formulaDialog") formulaDialog!: ElementRef<HTMLDialogElement>;
+
+    @Input()
+    get visible(): boolean {
+        return this._visible;
+    }
+    set visible(isVis: boolean) {
+        this._visible = isVis;
+        if (this.formulaDialog && isVis) {
+            this.formulaDialog.nativeElement.show();
+        } else if (this.formulaDialog) {
+            this.formulaDialog.nativeElement.close();
+        }
+    }
+    private _visible: boolean = false;
+
     constructor() {}
 
     ngOnInit(): void {}
@@ -98,7 +116,7 @@ export class FormulaEditorComponent implements OnInit, IEditor {
     }
 
     enterHandler(field: MathFieldMethods) {
-        console.log("enter");
+        this.handleFormulaOk();
     }
 
     async loadMathQuill() {
