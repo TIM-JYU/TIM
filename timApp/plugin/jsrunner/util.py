@@ -2,7 +2,8 @@ import copy
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import TypedDict, Any, DefaultDict
+from datetime import datetime
+from typing import TypedDict, Any, DefaultDict, Literal
 
 from sqlalchemy import func
 
@@ -13,12 +14,15 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     AccessDenied,
     verify_task_access,
+    verify_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
+from timApp.item.block import Block
+from timApp.item.item import Item
 from timApp.messaging.messagelist.messagelist_utils import (
     UserGroupDiff,
     sync_usergroup_messagelist_members,
@@ -35,7 +39,8 @@ from timApp.user.groups import do_create_group, verify_group_edit_access
 from timApp.user.user import User, UserInfo, UserOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
-from timApp.util.flask.requesthelper import RouteException
+from timApp.user.userutils import grant_access, expire_access
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.utils import is_valid_email, approximate_real_name
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -126,6 +131,20 @@ NewUserInfoSchema = class_schema(NewUserInfo)
 
 
 @dataclass
+class ItemRightActionData:
+    item: str
+    group: str
+    action: Literal["add", "expire"]
+    accessType: AccessType | None = None
+    manageKey: str | None = None  # TODO: Implement
+    accessibleFrom: datetime | None = None
+    accessibleTo: datetime | None = None
+
+
+ItemRightActionSchema = class_schema(ItemRightActionData)
+
+
+@dataclass
 class FieldSaveResult:
     users_created: list[User] = field(default_factory=list)
     users_missing: list[UserInfo] = field(default_factory=list)
@@ -147,6 +166,7 @@ class FieldSaveRequest(TypedDict, total=False):
     missingUsers: Any | None
     groups: JsrunnerGroups | None
     newUsers: dict | None
+    itemRightActions: dict | None
 
 
 def save_fields(
@@ -174,6 +194,14 @@ def save_fields(
         if new_users:
             verify_user_create_right(curr_user)
             groups = _create_new_users(new_users, groups)
+
+    item_right_actions_json: dict | None = jsonresp.get("itemRightActions")
+    if item_right_actions_json:
+        item_right_actions: list[ItemRightActionData] = ItemRightActionSchema().load(
+            item_right_actions_json, many=True
+        )
+        if item_right_actions:
+            _handle_item_right_actions(item_right_actions, curr_user)
 
     handle_jsrunner_groups(groups, curr_user)
     missing_users = jsonresp.get("missingUsers")
@@ -534,3 +562,45 @@ def _create_user_from_info(ui: UserInfo) -> User | None:
 
     # In any case, do not allow updating the email or username
     return create_or_update_user(ui, update_username=False, update_email=False)
+
+
+def _handle_item_right_actions(
+    item_right_actions: list[ItemRightActionData], curr_user: User
+) -> None:
+    # Group actions by item ID, also check for permission
+    item_actions: dict[int, list[ItemRightActionData]] = {}
+    items: dict[int, Block] = {}
+
+    for action in item_right_actions:
+        # Items can be declared either as path or ID, so it's easier to find_by_path for everything
+        item = Item.find_by_path(action.item, fallback_to_id=True)
+        if not item:
+            raise NotExist()
+
+        if item.block.id not in item_actions:
+            # TODO: Use key
+            verify_access(item, AccessType.manage, user=curr_user)
+            item_actions[item.block.id] = []
+            items[item.block.id] = item.block
+
+        item_actions[item.block.id].append(action)
+
+    # Apply actions as we go
+    for item_id, actions in item_actions.items():
+        item = items[item_id]
+        for action in actions:
+            group = UserGroup.get_by_name(action.group)
+            access_type = action.accessType or AccessType.view
+            if not group:
+                raise NotExist(f"Group '{action.group}' does not exist")
+            match action.action:
+                case "add":
+                    grant_access(
+                        group,
+                        item,
+                        access_type,
+                        accessible_from=action.accessibleFrom,
+                        accessible_to=action.accessibleTo,
+                    )
+                case "expire":
+                    expire_access(group, item, access_type)

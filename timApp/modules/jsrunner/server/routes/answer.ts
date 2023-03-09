@@ -11,6 +11,7 @@ import type {
     ErrorList,
     IError,
     IGroupData,
+    IItemRightActionData,
     IJsRunnerMarkup,
 } from "../../shared/jsrunnertypes";
 import type {
@@ -65,6 +66,7 @@ type RunnerResult =
           fatalError?: never;
           outdata: Record<string, unknown>;
           groups: IGroupData;
+          itemRightActions: IItemRightActionData[];
           newUsers: NewUserData[];
       }
     | {output: string; fatalError: IError; errorprg: string};
@@ -212,6 +214,7 @@ function runner(d: IRunnerData): RunnerResult {
             errors,
             outdata: gtools.outdata,
             groups: gtools.groups,
+            itemRightActions: gtools.itemRightActions,
             newUsers: gtools.newUsers,
         };
     } catch (e) {
@@ -332,6 +335,7 @@ router.put("/", async (req, res, next) => {
             r = {
                 savedata: result.res,
                 groups: result.groups,
+                itemRightActions: result.itemRightActions,
                 newUsers: result.newUsers,
                 web: {
                     output: result.output,
