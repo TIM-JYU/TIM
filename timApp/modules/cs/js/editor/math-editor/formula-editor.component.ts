@@ -21,7 +21,7 @@ import type {
     MathFieldMethods,
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
-import type {IEditor} from "../editor";
+import {IEditor} from "../editor";
 
 /**
  * Field which has the focus
@@ -79,7 +79,7 @@ export class FormulaEditorComponent implements OnInit, IEditor {
 
     content: string = "";
 
-    @Output() okEvent = new EventEmitter<FormulaResult>();
+    @Output() okEvent = new EventEmitter<void>();
     @Output() cancelEvent = new EventEmitter<void>();
 
     isMultilineFormulaControl = new FormControl(true);
@@ -93,6 +93,7 @@ export class FormulaEditorComponent implements OnInit, IEditor {
     set visible(isVis: boolean) {
         this._visible = isVis;
         if (this.formulaDialog && isVis) {
+            this.content = this.editor?.content ?? this.content;
             this.formulaDialog.nativeElement.show();
         } else if (this.formulaDialog) {
             this.formulaDialog.nativeElement.close();
@@ -100,9 +101,15 @@ export class FormulaEditorComponent implements OnInit, IEditor {
     }
     private _visible: boolean = false;
 
+    @Input() editor?: IEditor;
+
     constructor() {}
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        this.latexInputControl.valueChanges.subscribe((value) => {
+            this.updateFormulaToEditor();
+        });
+    }
 
     focus(): void {}
 
@@ -161,30 +168,43 @@ export class FormulaEditorComponent implements OnInit, IEditor {
         this.latexInputControl.setValue("");
     }
 
-    handleFormulaOk() {
+    formatLatex(latex: string, isMultiline: boolean): string {
+        const wrapSymbol = isMultiline ? "$$" : "$";
+        if (isMultiline) {
+            const multilineLatex = latex.split("\n").join("\\\\\n");
+            return `${wrapSymbol}\n${multilineLatex}\\\\\n${wrapSymbol}\n`;
+        }
+        return `${wrapSymbol}${latex}${wrapSymbol}`;
+    }
+
+    updateFormulaToEditor() {
         if (
             this.latexInputControl.value &&
             this.isMultilineFormulaControl.value !== null
         ) {
             const isMultiline = this.isMultilineFormulaControl.value;
-            // latex textarea has linebreaks so return them if multiline
-            // mathfField doesn't so it can be used for non multiline return value
-            if (isMultiline) {
-                this.okEvent.emit({
-                    latex: this.latexInputControl.value ?? "",
-                    isMultiline: isMultiline,
-                });
-            } else {
-                this.okEvent.emit({
-                    latex: this.mathField.latex() ?? "",
-                    isMultiline: isMultiline,
-                });
+            const latex = isMultiline
+                ? this.latexInputControl.value
+                : this.mathField.latex();
+            if (typeof latex === "string") {
+                const formulaLatex = this.formatLatex(latex, isMultiline);
+                if (this.editor) {
+                    this.editor.content = this.content + formulaLatex;
+                }
             }
         }
+    }
+
+    handleFormulaOk() {
+        this.updateFormulaToEditor();
+        this.okEvent.emit();
         this.clearFields();
     }
 
     handleFormulaCancel() {
+        if (this.editor) {
+            this.editor.content = this.content;
+        }
         this.cancelEvent.emit();
         this.clearFields();
     }
