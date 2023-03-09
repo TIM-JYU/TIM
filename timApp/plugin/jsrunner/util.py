@@ -136,7 +136,7 @@ class ItemRightActionData:
     group: str
     action: Literal["add", "expire"]
     accessType: AccessType | None = None
-    manageKey: str | None = None  # TODO: Implement
+    manageKey: str | None = None
     accessibleFrom: datetime | None = None
     accessibleTo: datetime | None = None
 
@@ -578,8 +578,20 @@ def _handle_item_right_actions(
             raise NotExist()
 
         if item.block.id not in item_actions:
-            # TODO: Use key
-            verify_access(item, AccessType.manage, user=curr_user)
+            needs_verify_access = True
+            if action.manageKey and isinstance(item, DocInfo):
+                settings = item.document.get_settings()
+                if settings.manage_key() == action.manageKey:
+                    needs_verify_access = False
+
+            if needs_verify_access:
+                verify_access(
+                    item,
+                    AccessType.manage,
+                    user=curr_user,
+                    message=f"You don't have permission to manage rights in document '{item.path}'",
+                )
+
             item_actions[item.block.id] = []
             items[item.block.id] = item.block
 
@@ -604,3 +616,6 @@ def _handle_item_right_actions(
                     )
                 case "expire":
                     expire_access(group, item, access_type)
+
+    # Flush so that access rights are correct for any other JSRunner operations
+    db.session.flush()

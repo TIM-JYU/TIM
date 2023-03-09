@@ -94,6 +94,7 @@ class DocSettingTypes:
     answerBrowser: AnswerBrowserInfo
     groupSelfJoin: GroupSelfJoinSettings
     showValidAnswersOnly: bool
+    manageKey: str
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -197,6 +198,7 @@ class DocSettings:
     def get_safe_dict(self) -> dict:
         result = dict(self.__dict.values)
         result.pop("macros", None)
+        result.pop("manageKey", None)
         return result
 
     def global_plugin_attrs(self) -> dict:
@@ -638,6 +640,9 @@ class DocSettings:
         return self.get_setting_or_default(
             "groupSelfJoin", GroupSelfJoinSettings.default()
         )
+
+    def manage_key(self) -> str | None:
+        return self.get("manageKey", None)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
