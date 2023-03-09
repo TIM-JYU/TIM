@@ -54,7 +54,7 @@ export class MathEditorComponent implements OnInit, IEditor {
 
     /**
      * Add inputted formula to editor
-     * @param formulaLatex latex string that was inputted
+     * @param result inputted data
      */
     handleOk(result: FormulaResult) {
         const {latex, isMultiline} = result;

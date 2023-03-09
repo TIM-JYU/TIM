@@ -10,7 +10,6 @@ import {
     Component,
     ElementRef,
     EventEmitter,
-    Input,
     Output,
     ViewChild,
 } from "@angular/core";
@@ -21,7 +20,6 @@ import type {
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
 import type {IEditor} from "../editor";
-import {AceEditorComponent} from "../ace";
 
 /**
  * Field which has the focus
@@ -90,7 +88,7 @@ export class FormulaEditorComponent implements OnInit, IEditor {
 
     focus(): void {}
 
-    editHandler(field: any) {
+    editHandler(field: MathFieldMethods) {
         // write changes in visual field to latex field if visual field
         // was the one modified
         if (this.activeEditor === ActiveEditorType.Visual) {
@@ -99,20 +97,20 @@ export class FormulaEditorComponent implements OnInit, IEditor {
         }
     }
 
-    enterHandler(field: any) {
+    enterHandler(field: MathFieldMethods) {
         console.log("enter");
     }
 
     async loadMathQuill() {
         const elem = this.visualInput.nativeElement;
-        elem.addEventListener("click", (e: MouseEvent) => {
+        elem.addEventListener("click", (_e: MouseEvent) => {
             this.activeEditor = ActiveEditorType.Visual;
         });
         const config: MathQuillConfig = {
             spaceBehavesLikeTab: true,
             handlers: {
-                edit: (field: any) => this.editHandler(field),
-                enter: (field: any) => this.enterHandler(field),
+                edit: (field: MathFieldMethods) => this.editHandler(field),
+                enter: (field: MathFieldMethods) => this.enterHandler(field),
             },
         };
         const mq = (await import("vendor/mathquill/mathquill")).default;
