@@ -152,7 +152,7 @@ points: '2:1'</code></pre>
         self.login_test1()
         d = self.create_doc(
             initial_par="""
-#- {#t plugin=qst question=""}
+#- {#t plugin=qst question="false"}
 answerFieldType: radio
 answerLimit: 1
 defaultPoints: -0.5
@@ -232,7 +232,7 @@ rows:
         d = self.create_doc()
         pars = d.document.add_text(
             """
-#- {#t plugin="qst" question=""}
+#- {#t plugin="qst" question="false"}
 answerFieldType: checkbox
 expl: {}
 headers:
@@ -266,7 +266,7 @@ randomizedRows: 2
         d.document.delete_paragraph(pars[0].get_id())
         d.document.add_text(
             """
-#- {#t plugin="qst" question=""}
+#- {#t plugin="qst" question="false"}
 answerFieldType: checkbox
 expl: {}
 headers:
@@ -310,7 +310,7 @@ rows:
         d = self.create_doc()
         d.document.add_text(
             """
-#- {#checkbox plugin="qst" question=""}
+#- {#checkbox plugin="qst" question="false"}
 answerFieldType: checkbox
 expl: {}
 headers:
@@ -328,7 +328,7 @@ rows:
 - Second
 - Third
 
-#- {#radio question="" plugin="qst"}
+#- {#radio question="false" plugin="qst"}
 answerFieldType: radio
 expl: {}
 headers: []
@@ -342,7 +342,7 @@ rows:
 - Wrong
 - No answer
 
-#- {#onlydefault question="" plugin="qst"}
+#- {#onlydefault question="false" plugin="qst"}
 answerFieldType: radio
 expl: {}
 headers: []
