@@ -220,9 +220,9 @@ const DateString = t.brand(
 export const ItemRightActionT = t.intersection([
     t.type({
         action: t.union([t.literal("add"), t.literal("expire")]),
+        manageKey: t.string,
     }),
     t.partial({
-        manageKey: t.string,
         accessType: t.union([
             t.literal("view"),
             t.literal("edit"),
@@ -1222,7 +1222,7 @@ export class GTools extends ToolsBase {
      * @param group Group name on which to perform the action.
      * @param action Action to perform. This is an object with the following fields:
      *              - action: Right action type. Available actions are "add" (adds a new right) or "expire" (expires an existing right).
-     *              - manageKey (optional): Management key of the document. Only required if the user executing the JSRunner does not have at least Manage right to the target item.
+     *              - manageKey: Management key of the document. This must be provided to set the rights.
      *              - accessType (optional): Access type to apply. Available types are "view", "edit", "teacher", "see_answers" and "manage". Default: "view".
      *              - accessibleFrom (optional): Date string (ISO format) from which the right is valid. Default: now.
      *              - accessibleTo (optional): Date string (ISO format) until which the right is valid. Default: never.

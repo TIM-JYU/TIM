@@ -14,13 +14,13 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     AccessDenied,
     verify_task_access,
-    verify_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
+from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import Item
 from timApp.messaging.messagelist.messagelist_utils import (
@@ -135,8 +135,8 @@ class ItemRightActionData:
     item: str
     group: str
     action: Literal["add", "expire"]
+    manageKey: str
     accessType: AccessType | None = None
-    manageKey: str | None = None
     accessibleFrom: datetime | None = None
     accessibleTo: datetime | None = None
 
@@ -577,20 +577,18 @@ def _handle_item_right_actions(
         if not item:
             raise NotExist()
 
-        if item.block.id not in item_actions:
-            needs_verify_access = True
-            if action.manageKey and isinstance(item, DocInfo):
-                settings = item.document.get_settings()
-                if settings.manage_key() == action.manageKey:
-                    needs_verify_access = False
+        # TODO: Allow changing folder rights when the plugins can be "signed"
+        #   (currently, it's dangerous to just verify permissions)
+        if isinstance(item, Folder):
+            raise RouteException("Managing folder rights is not yet supported")
 
-            if needs_verify_access:
-                verify_access(
-                    item,
-                    AccessType.manage,
-                    user=curr_user,
-                    message=f"You don't have permission to manage rights in document '{item.path}'",
-                )
+        if item.block.id not in item_actions:
+            if isinstance(item, DocInfo):
+                settings = item.document.get_settings()
+                if settings.manage_key() != action.manageKey:
+                    raise RouteException(
+                        f"Invalid manage key for document '{item.path}'"
+                    )
 
             item_actions[item.block.id] = []
             items[item.block.id] = item.block
