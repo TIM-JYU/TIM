@@ -1,6 +1,6 @@
 Monivalinta
 Ruksi ruutuun tyyppinen monivalinta
-``` {#PLUGINNAMEHERE question="" plugin="qst"}
+``` {#PLUGINNAMEHERE plugin="qst"}
 answerFieldType: checkbox
 answerLimit: 1
 expl: {}
