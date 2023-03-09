@@ -1,6 +1,6 @@
 True/False
 Kysymys jossa on monta True/False tyyppistä vaihtoehto
-``` {#PLUGINNAMEHERE dquestion="true" plugin="qst"}
+``` {#PLUGINNAMEHERE question="" plugin="qst"}
 answerFieldType: radio
 answerLimit: 1
 expl: {}
