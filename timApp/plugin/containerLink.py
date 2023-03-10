@@ -371,6 +371,9 @@ def convert_md(
     html_markups = call_dumbo(
         markups, f"/{outtype}keys", options=options, data_opts=plugin_opts
     )
+    if isinstance(html_markups, dict) and "error" in html_markups:
+        # TODO: Notify user of failed MD conversion or do safe parsing
+        return
     for p, h in zip(plugin_data, html_markups):
         p.clear()
         p.update(h)

@@ -154,12 +154,18 @@ export class EditingHandler {
                     $this[0],
                     "addTemplateAbove"
                 );
-                return this.addParagraph(
-                    e.originalEvent,
-                    EditType.AddAbove,
-                    par,
-                    options
-                );
+
+                return (async () => {
+                    await this.addParagraph(
+                        e.originalEvent,
+                        EditType.AddAbove,
+                        par,
+                        options
+                    );
+                    if ($this.hasClass("refreshAfterAdd")) {
+                        location.reload();
+                    }
+                })();
             });
 
             onClick(".addTemplateBelow", ($this, e) => {
@@ -168,12 +174,17 @@ export class EditingHandler {
                     $this[0],
                     "addTemplateBelow"
                 );
-                return this.addParagraph(
-                    e.originalEvent,
-                    EditType.AddBelow,
-                    par,
-                    options
-                );
+                return (async () => {
+                    await this.addParagraph(
+                        e.originalEvent,
+                        EditType.AddBelow,
+                        par,
+                        options
+                    );
+                    if ($this.hasClass("refreshAfterAdd")) {
+                        location.reload();
+                    }
+                })();
             });
 
             onClick(".addBelow", ($this, e) => {

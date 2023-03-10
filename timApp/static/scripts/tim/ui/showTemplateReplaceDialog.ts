@@ -7,13 +7,15 @@ import {showInputDialog} from "tim/ui/showInputDialog";
 export const TemplateParam = t.intersection([
     t.type({
         default: t.string,
-        text: t.string,
     }),
     t.partial({
         pattern: t.string,
         error: t.string,
+        text: t.string,
         what: t.string,
+        useDefault: t.boolean,
         flags: t.string,
+        select: t.array(t.string),
     }),
 ]);
 
@@ -24,25 +26,40 @@ export async function showTemplateReplaceDialog(
     param: ITemplateParam
 ): Promise<string> {
     const re = new RegExp(param.pattern ?? ".*");
-    const replace = await to2(
-        showInputDialog({
-            isInput: InputDialogKind.InputAndValidator,
-            text: param.text,
-            title: "Parameter",
-            okText: "OK",
-            defaultValue: param.default,
-            validator: (input) =>
-                new Promise<Result<string, string>>((res) => {
-                    if (!input.match(re)) {
-                        return res({
-                            ok: false,
-                            result: param.error ?? "",
-                        });
-                    }
-                    return res({ok: true, result: input});
-                }),
-        })
-    );
+
+    let extraOptions = {};
+    if (param.select) {
+        extraOptions = {
+            inputType: "select",
+            options: param.select,
+        };
+    }
+
+    let replace;
+    if (param.useDefault) {
+        replace = {ok: true, result: param.default};
+    } else {
+        replace = await to2(
+            showInputDialog({
+                isInput: InputDialogKind.InputAndValidator,
+                text: param.text ?? `Replacement for ${param.default}`,
+                title: "Parameter",
+                okText: "OK",
+                defaultValue: param.default,
+                validator: (input) =>
+                    new Promise<Result<string, string>>((res) => {
+                        if (!input.match(re)) {
+                            return res({
+                                ok: false,
+                                result: param.error ?? "",
+                            });
+                        }
+                        return res({ok: true, result: input});
+                    }),
+                ...extraOptions,
+            })
+        );
+    }
     if (!replace.ok) {
         return "";
     }
@@ -64,8 +81,8 @@ export async function replaceTemplateValues(data: string): Promise<string> {
             const jso = JSON.parse(s);
             if (TemplateParam.is(jso)) {
                 replaceList.push(jso);
-                rows.shift();
             }
+            rows.shift(); // Don't stay in the loop
         } catch (e) {
             return "" + e + "\n" + s;
         }

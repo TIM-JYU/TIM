@@ -94,6 +94,7 @@ class DocSettingTypes:
     answerBrowser: AnswerBrowserInfo
     groupSelfJoin: GroupSelfJoinSettings
     showValidAnswersOnly: bool
+    manageKey: str
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -197,6 +198,7 @@ class DocSettings:
     def get_safe_dict(self) -> dict:
         result = dict(self.__dict.values)
         result.pop("macros", None)
+        result.pop("manageKey", None)
         return result
 
     def global_plugin_attrs(self) -> dict:
@@ -639,6 +641,9 @@ class DocSettings:
             "groupSelfJoin", GroupSelfJoinSettings.default()
         )
 
+    def manage_key(self) -> str | None:
+        return self.get("manageKey", None)
+
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     result, _ = __resolve_final_settings_impl(pars)
@@ -677,7 +682,9 @@ def __resolve_final_settings_impl(
                 # so that we always get the original markdown.
                 tr_attr = curr.get_attr("r")
                 curr.set_attr("r", None)
-                refs = curr.get_referenced_pars()
+                refs = curr.get_referenced_pars(
+                    blind_settings=False
+                )  # Don't blind when resolving and parsing settings
                 curr.set_attr("r", tr_attr)
             except InvalidReferenceException:
                 break

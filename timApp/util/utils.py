@@ -193,19 +193,24 @@ def remove_path_special_chars(item_path: str) -> str:
 accent_map = str.maketrans(
     "ãàáäâåẽèéëêìíïîõòóöôùúüûñç·/,:;", "aaaaaaeeeeeiiiiooooouuuunc-----"
 )
+accent_map_underscored = str.maketrans(
+    "ãàáäâåẽèéëêìíïîõòóöôùúüûñç·/,:;", "aaaaaaeeeeeiiiiooooouuuunc_____"
+)
 
 
-def slugify(s: str) -> str:
+def slugify(s: str, underscored: bool = False) -> str:
     """
     Slugify a string into a URL-friendly string.
     :param s: The string to slugify.
+    :param underscored: If True, replace spaces with underscores instead of dashes.
     :return: Slugified string.
     """
     s = s.strip().lower()
-    s = s.translate(accent_map)
+    s = s.translate(accent_map_underscored if underscored else accent_map)
     s = re.sub(r"[^a-z0-9 _.-]", "", s)
-    s = re.sub(r"\s+", "-", s)
-    s = re.sub(r"-+", "-", s)
+    s = re.sub(r"\s+", "_" if underscored else "-", s)
+    s = re.sub(r"-+", "_" if underscored else "-", s)
+    s = re.sub(r"_+", "_" if underscored else "-", s)
     return s
 
 

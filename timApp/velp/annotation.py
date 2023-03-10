@@ -28,8 +28,10 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
 from timApp.peerreview.util.peerreview_utils import (
     has_review_access,
-    get_reviews_to_user,
-    is_peerreview_enabled,
+    get_reviews_targeting_user,
+    get_reviews_where_user_is_reviewer,
+    get_all_reviews,
+    get_reviews_related_to_user,
 )
 from timApp.timdb.sqa import db
 from timApp.user.user import User, has_no_higher_right
@@ -275,16 +277,28 @@ def anonymize_annotations(anns: list[Annotation], current_user_id: int) -> None:
 @annotations.get("/<int:doc_id>/get_annotations")
 def get_annotations(doc_id: int, only_own: bool = False) -> Response:
     """Returns all annotations with comments user can see, e.g. has access to them in a document.
+    Also returns all PeerReview rows user can see
 
     :param doc_id: ID of the document
-    :param only_own: If True, only returns annotations of this user.
+    :param only_own: If True, only returns annotations made by this user and peer_reviews where this user is the reviewer.
     """
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
 
     current_user = get_current_user_object()
     results = get_annotations_with_comments_in_document(current_user, d, only_own)
+    if not only_own:
+        # TODO: check use cases (only_own == not in view tab)
+        #  teachermode should be able to browse all prs when changing user in ab
+        #  review tab needs probably only reviews where reviewer is current user
+        if has_teacher_access(d):
+            peer_reviews = get_all_reviews(d)
+        else:
+            peer_reviews = get_reviews_related_to_user(d, current_user)
+    else:
+        peer_reviews = get_reviews_targeting_user(d, current_user)
 
+    # TODO: Fully anonymize peer_reviews if doc setting requires it
     if should_anonymize_annotations(d, current_user):
         curruser_id = current_user.id
         anonymize_annotations(results, curruser_id)
@@ -293,10 +307,15 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
         #  - peerreview might be disabled later, but the annotation should remain anonymous to target
         #  - in future peerreview pairing may be changeable, but anonymization info should persist
         #  - instead of querying peer_reviews every time annotation could directly contain info about anonymization
-        revs = get_reviews_to_user(d, current_user)
+        revs = get_reviews_targeting_user(d, current_user)
         revset = {r.reviewer_id for r in revs}
         for ann in results:
             if ann.annotator.id != current_user.id and ann.annotator_id in revset:
                 ann.annotator.hide_name = True
+        for p in peer_reviews:
+            if p.reviewer_id != current_user.id:
+                p.reviewer.hide_name = True
 
-    return no_cache_json_response(results, date_conversion=True)
+    return no_cache_json_response(
+        {"annotations": results, "peer_reviews": peer_reviews}, date_conversion=True
+    )

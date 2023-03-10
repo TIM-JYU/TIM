@@ -44,6 +44,8 @@ export const PeerReviewData = t.type({
     reviewed: t.boolean,
     answer_id: nullable(t.Int),
     task_name: nullable(t.string),
+    points: nullable(t.number),
+    comment: nullable(t.string),
 });
 
 // export type UserFields = t.type({id: t.Int, fields: t.string});
@@ -64,7 +66,7 @@ export const JsrunnerAnswer = t.type({
         data: t.array(UserFieldData),
         aliases: AliasData,
         velps: t.array(VelpData),
-        peerreviews: t.array(PeerReviewData),
+        peerreviews: t.union([t.null, t.array(PeerReviewData)]),
     }),
     taskID: t.string,
 });

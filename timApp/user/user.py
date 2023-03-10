@@ -180,6 +180,7 @@ class UserOrigin(Enum):
     Facebook = 7
     Google = 8
     Twitter = 9
+    JSRunner = 10  # JSRunner can create new users that can be managed by JSRunner
 
     def to_contact_origin(self):
         if self == UserOrigin.Email:

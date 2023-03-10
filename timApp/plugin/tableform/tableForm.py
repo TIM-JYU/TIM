@@ -18,7 +18,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
-from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
+from timApp.plugin.jsrunner.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.plugin.plugin import (
     find_plugin_from_document,
     TaskNotFoundException,

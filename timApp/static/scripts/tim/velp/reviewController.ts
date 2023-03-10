@@ -45,6 +45,7 @@ import type {
     IAnnotationInterval,
     IVelp,
     IVelpUI,
+    PeerReview,
 } from "tim/velp/velptypes";
 import {
     Annotation,
@@ -114,12 +115,15 @@ export class ReviewController {
     private velpSelection?: VelpSelectionController; // initialized through onInit
     private lastOpenedAnnotation = 0;
 
+    public peerReviews: PeerReview[];
+
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
         this.velpMode = documentglobals().velpMode;
         this.teacherMode = documentglobals().teacherMode;
         this.item = documentglobals().curr_item;
         this.annotations = [];
+        this.peerReviews = [];
         this.zIndex = 3;
     }
 
@@ -147,21 +151,22 @@ export class ReviewController {
      */
     async loadDocumentAnnotations() {
         const response = await to(
-            $http.get<Record<string, unknown>[]>(
-                `/${this.item.id}/get_annotations`,
-                {
-                    params: {
-                        only_own: !this.teacherMode,
-                    },
-                }
-            )
+            $http.get<{
+                annotations: Record<string, unknown>[];
+                peer_reviews: PeerReview[];
+            }>(`/${this.item.id}/get_annotations`, {
+                params: {
+                    only_own: !this.teacherMode,
+                },
+            })
         );
         if (!response.ok) {
             return;
         }
         const deserialize = (a: Record<string, unknown>[]) =>
             jsonSerializer.deserializeObjectArray(a, Annotation);
-        const annotations = deserialize(response.result.data);
+        const annotations = deserialize(response.result.data.annotations);
+        this.peerReviews = response.result.data.peer_reviews;
         const isValidAnnotation = (
             res: ReturnType<typeof deserialize>
         ): res is Annotation[] =>
@@ -507,6 +512,15 @@ export class ReviewController {
             uniqueUsers.set(ann.annotator.id, ann.annotator);
         });
         return Array.from(uniqueUsers.values());
+    }
+
+    getReviews(taskId: TaskId, userId: number): PeerReview[] {
+        return this.peerReviews.filter(
+            (p) =>
+                p.reviewable_id == userId &&
+                p.task_name == taskId.name &&
+                p.block_id == taskId.docId
+        );
     }
 
     /**

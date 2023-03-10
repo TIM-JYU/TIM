@@ -11,7 +11,7 @@ import requests
 from flask import render_template_string
 from marshmallow.utils import missing
 
-from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
+from timApp.plugin.jsrunner.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode

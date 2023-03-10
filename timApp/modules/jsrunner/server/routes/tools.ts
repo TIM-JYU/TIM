@@ -15,6 +15,7 @@ import {widenFields} from "tim/util/common";
 import type {
     IError,
     IGroupData,
+    IItemRightActionData,
     IJsRunnerMarkup,
     INumbersObject,
 } from "../../shared/jsrunnertypes";
@@ -203,6 +204,37 @@ const NewUserDataT = t.intersection([
 
 // TODO: Figure out why this has to be exported from here (otherwise rollup fails)
 export type NewUserData = t.TypeOf<typeof NewUserDataT>;
+
+const DateString = t.brand(
+    t.string,
+    (s): s is t.Branded<string, {readonly DateValidator: unique symbol}> => {
+        const d = new Date(s);
+        return !isNaN(d.getTime());
+    },
+    "DateValidator"
+);
+
+// TODO: Add all possible right actions. The current implementation is missing
+//      - Confirming an existing right
+//      - Removing a right
+export const ItemRightActionT = t.intersection([
+    t.type({
+        action: t.union([t.literal("add"), t.literal("expire")]),
+        manageKey: t.string,
+    }),
+    t.partial({
+        accessType: t.union([
+            t.literal("view"),
+            t.literal("edit"),
+            t.literal("teacher"),
+            t.literal("see_answers"),
+            t.literal("manage"),
+            // Don't allow owner for now via JSRunner as it can maybe be a security issue
+        ]),
+        accessibleFrom: DateString,
+        accessibleTo: DateString,
+    }),
+]);
 
 // const dummyGTools: GTools = new GTools(
 
@@ -1030,6 +1062,7 @@ export class GTools extends ToolsBase {
     public stats: Record<string, Stats> = {};
     public tools: Tools;
     groups: IGroupData = {};
+    itemRightActions: IItemRightActionData[] = [];
     newUsers: NewUserData[] = [];
 
     constructor(
@@ -1179,6 +1212,33 @@ export class GTools extends ToolsBase {
         }
         v[name] = uids;
     }
+
+    /**
+     * Adds a right action to be performed on an item (document or folder).
+     *
+     * The action will be performed after JSRunner has finished.
+     *
+     * @param item Item to which to apply the action (can be either a path or an ID).
+     * @param group Group name on which to perform the action.
+     * @param action Action to perform. This is an object with the following fields:
+     *              - action: Right action type. Available actions are "add" (adds a new right) or "expire" (expires an existing right).
+     *              - manageKey: Management key of the document. This must be provided to set the rights.
+     *              - accessType (optional): Access type to apply. Available types are "view", "edit", "teacher", "see_answers" and "manage". Default: "view".
+     *              - accessibleFrom (optional): Date string (ISO format) from which the right is valid. Default: now.
+     *              - accessibleTo (optional): Date string (ISO format) until which the right is valid. Default: never.
+     */
+    addItemRightAction(item: unknown, group: unknown, action: unknown) {
+        if (!checkString(item)) {
+            throw genericTypeError("item", item);
+        }
+        if (!checkString(group)) {
+            throw genericTypeError("group", group);
+        }
+        if (!ItemRightActionT.is(action)) {
+            throw genericTypeError("action", action);
+        }
+        this.itemRightActions.push({item, group, ...action});
+    }
 }
 
 export interface IToolsResult {
@@ -1196,7 +1256,7 @@ export class Tools extends ToolsBase {
         markup: IJsRunnerMarkup,
         aliases: AliasDataT,
         protected velps: VelpDataT[],
-        protected peerreviews: PeerReviewDataT[]
+        protected peerreviewdata: PeerReviewDataT[] | null
     ) {
         super(currDoc, markup, aliases);
     }
@@ -1637,7 +1697,7 @@ export class Tools extends ToolsBase {
     }
 
     /**
-     * Print velp-points of current user in one task
+     * Get velp-points of current user in one task
      */
     getVelpPoints(task: string) {
         const peerreviewers = this.getPeerReviewsForUser().map((pr) => pr.id);
@@ -1662,14 +1722,23 @@ export class Tools extends ToolsBase {
     }
 
     /**
-     * Print every row in peer_review table where document_id matches jsrunner origin doc id
+     * Return every row in peer_review table where document_id matches jsrunner origin doc id
      */
     getAllPeerReviews(): PeerReviewDataT[] {
         return this.peerreviews;
     }
 
+    get peerreviews(): PeerReviewDataT[] {
+        if (this.peerreviewdata == null) {
+            throw new Error(
+                "Attribute peerReview: true is required in jsrunner markup"
+            );
+        }
+        return this.peerreviewdata;
+    }
+
     /**
-     * Print every row from peer_review table where document_id matches
+     * Return every row from peer_review table where document_id matches
      * jsrunner origin doc id and reviewer is current user
      */
     getPeerReviewsByUser(): PeerReviewDataT[] {
@@ -1679,7 +1748,7 @@ export class Tools extends ToolsBase {
     }
 
     /**
-     * Print every row from peer_review table where document_id matches
+     * Get every row from peer_review table where document_id matches
      * jsrunner origin doc id and target is current user
      */
     getPeerReviewsForUser(): PeerReviewDataT[] {
@@ -1690,6 +1759,7 @@ export class Tools extends ToolsBase {
 
     /**
      * Print reviewers and received points of current user
+     * // TODO: Check if correct
      */
     getPeerReviewersForUser(usersObject: Users): string[] {
         const reviewers = this.getPeerReviewsForUser().map(
@@ -1699,7 +1769,7 @@ export class Tools extends ToolsBase {
     }
 
     /*
-     * Print reviewers and received points of current user
+     * Get reviewers and velp points given by reviewers for the current user
      */
     getReviews(task: string, usersObject?: Users): PeerReviewerUser[] {
         const users = usersObject ? usersObject : this.users;

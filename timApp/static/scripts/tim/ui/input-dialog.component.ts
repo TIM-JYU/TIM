@@ -24,7 +24,16 @@ export type InputDialogParams<T> = {
           defaultValue: string;
           validator: (s: string) => Promise<Result<T, string>>;
       }
-);
+) &
+    (
+        | {
+              inputType?: "select";
+              options: string[];
+          }
+        | {
+              inputType?: "textarea";
+          }
+    );
 
 @Component({
     selector: "tim-input-dialog",
@@ -41,9 +50,17 @@ export type InputDialogParams<T> = {
                            class="form-control"
                            focusMe
                            type="text"
-                           *ngIf="isInput"
+                           *ngIf="isInput && (data.inputType === 'textarea' || data.inputType === undefined)"
                            [(ngModel)]="value"
                            (ngModelChange)="clearError()">
+                    <select (keydown.enter)="ok()"
+                            class="form-control"
+                            focusMe
+                            *ngIf="isInput && data.inputType === 'select'"
+                            [(ngModel)]="value"
+                            (ngModelChange)="clearError()">
+                        <option *ngFor="let option of selectOptions" [value]="option">{{option}}</option>
+                    </select>
                     <tim-alert *ngIf="error" severity="danger">
                         {{ error }}
                     </tim-alert>
@@ -70,6 +87,13 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
 
     getTitle() {
         return this.data.title;
+    }
+
+    get selectOptions() {
+        if (this.data.inputType !== "select") {
+            return [];
+        }
+        return this.data.options;
     }
 
     ngOnInit() {
