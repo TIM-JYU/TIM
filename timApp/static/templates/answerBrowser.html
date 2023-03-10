@@ -201,8 +201,16 @@
                                     <ng-container i18n>Peer review: </ng-container>
                                 </label>
                                <div class="peer-review-area">
-                                    <textarea class="peer-review-area" [(ngModel)]="reviewComment" *ngIf="isPeerReview" rows="2" name="reviewComment" [placeholder]="isPeerReview ? 'Add your review' : 'No review given'"></textarea>
-                                    <div #peerReviewContentDiv class="peer-review-render math" [innerHtml]="reviewComment | purify" *ngIf="!isPeerReview"></div>
+                                <textarea class="peer-review-area"
+                                          (keydown.control.s)="$event.preventDefault(); saveReview()"
+                                          (keydown.meta.s)="$event.preventDefault(); saveReview()"
+                                          [(ngModel)]="reviewComment" *ngIf="isPeerReview"
+                                          rows="2"
+                                          name="reviewComment"
+                                          [placeholder]="isPeerReview ? 'Add your review' : 'No review given'">
+
+                                </textarea>
+                                <div #peerReviewContentDiv class="peer-review-render math" [innerHtml]="reviewComment | purify" *ngIf="!isPeerReview"></div>
                                </div>
                                <div class="ab-option-row">
                                    <span><ng-container i18n>Points:</ng-container>
@@ -213,6 +221,8 @@
                                                   (blur)="shouldFocus = false"
                                                   [(ngModel)]="reviewPoints"
                                                   (keydown)="handlePointScroll($event)"
+                                                  (keydown.control.s)="$event.preventDefault(); saveReview()"
+                                                  (keydown.meta.s)="$event.preventDefault(); saveReview()"
                                                   [disabled]="!isPeerReview"
                                                   name="reviewPoints"
                                                   type="number"
