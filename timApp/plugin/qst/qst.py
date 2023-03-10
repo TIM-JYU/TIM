@@ -857,7 +857,6 @@ def question_convert_js_to_yaml(markup: dict, is_task: bool, task_id: str | None
     taskid = re.sub("[^A-Za-z0-9]", "", taskid)
     if task_id:
         taskid = task_id
-    qst = is_task
     markup.pop("question", None)  # old attribute
     markup.pop("taskId", None)
     markup.pop("qst", None)
@@ -915,7 +914,7 @@ def get_question_data_from_document(
     markup = plugindata.get("markup")
     return QuestionInDocument(
         markup=normalize_question_json(markup),
-        qst=not par.is_question(),
+        qst=par.is_question(),
         taskId=par.get_attr("taskId"),
         docId=d.id,
         parId=par_id,
