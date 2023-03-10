@@ -210,7 +210,9 @@
                                           [placeholder]="isPeerReview ? 'Add your review' : 'No review given'">
 
                                 </textarea>
-                                <div #peerReviewContentDiv class="peer-review-render math" [innerHtml]="reviewComment | purify" *ngIf="!isPeerReview"></div>
+                                   <div #peerReviewContentDiv *ngIf="!isPeerReview">
+                                       <div class="peer-review-render math" [innerHtml]="reviewComment | purify"></div>
+                                   </div>
                                </div>
                                <div class="ab-option-row">
                                    <span><ng-container i18n>Points:</ng-container>
