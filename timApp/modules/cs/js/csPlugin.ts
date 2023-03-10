@@ -1558,6 +1558,10 @@ export class CsController extends CsBase implements ITimComponent {
         return this.english ? "Add formula" : "Lisää kaava";
     }
 
+    get instructionsText() {
+        return this.english ? "Instructions" : "Ohjeet";
+    }
+
     get forcedupload() {
         return this.type === "upload" && !this.markup.button;
     }
@@ -3829,7 +3833,7 @@ ${fhtml}
             <div *ngIf="formulaEditor">
                     <button (click)="onFormulaEditorAddFormula()">{{addFormulaText}}</button>
                     <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet" target="_blank">                
-                        <span class="glyphicon glyphicon-question-sign" title="Ohjeet"></span>
+                        <span class="glyphicon glyphicon-question-sign" title="{{instructionsText}}"></span>
                     </a>
             </div>
             <div class="csRunCode">
