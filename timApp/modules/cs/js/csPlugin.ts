@@ -59,7 +59,6 @@ import {getInt} from "./util/util";
 import type {IFile, IFileSpecification} from "./util/file-select";
 import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
-import type {FormulaResult} from "./editor/math-editor/formula-editor.component";
 
 // TODO better name?
 interface Vid {
@@ -984,6 +983,7 @@ export class CsController extends CsBase implements ITimComponent {
     muokattu: boolean;
     noeditor!: boolean;
     formulaEditorOpen = false;
+
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
     postcode?: string;
@@ -1732,19 +1732,8 @@ export class CsController extends CsBase implements ITimComponent {
      * Write inputted formula to current editor
      * @param result formula that was typed
      */
-    onFormulaEditorCloseOk(result: FormulaResult) {
+    onFormulaEditorCloseOk() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
-        const {latex, isMultiline} = result;
-        const wrapSymbol = isMultiline ? "$$" : "$";
-
-        if (isMultiline) {
-            const multilineLatex = latex.split("\n").join("\\\\\n");
-            const mathContent = `${wrapSymbol}\n${multilineLatex}\\\\\n${wrapSymbol}\n`;
-            this.editor?.insert(mathContent);
-        } else {
-            const mathContent = `${wrapSymbol}${latex}${wrapSymbol}`;
-            this.editor?.insert(mathContent);
-        }
     }
 
     onFormulaEditorCloseCancel() {
@@ -3837,11 +3826,12 @@ ${fhtml}
                     </a>
             </div>
             <div class="csRunCode">
-                <div *ngIf="formulaEditor">
+                <div *ngIf="formulaEditor && editor">
                     <cs-formula-editor 
-                            (okEvent)="onFormulaEditorCloseOk($event)"
+                            (okEvent)="onFormulaEditorCloseOk()"
                             (cancelEvent)="onFormulaEditorCloseCancel()"
                             [visible]="formulaEditorOpen"
+                            [editor]="editor"
                     ></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
