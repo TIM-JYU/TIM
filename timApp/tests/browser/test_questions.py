@@ -325,7 +325,8 @@ class QuestionTest(BrowserTest):
         qst_par = d.document.get_paragraphs()[0]
         qst_md = qst_par.get_markdown()
 
-        self.assertEqual(expected_yaml, YamlBlock.from_markdown(qst_md))
+        # For some reason, default time limit gets set for non-lecture tasks here, instead of undefined
+        self.assertEqual(expected_yaml, YamlBlock.from_markdown(qst_md).values)
         if answer_type_choice == "Text area":
             textareas = qst.find_elements(By.CSS_SELECTOR, "textarea")
             textareas[0].click()
