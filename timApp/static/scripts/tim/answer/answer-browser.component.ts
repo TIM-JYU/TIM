@@ -157,6 +157,8 @@ export class AnswerBrowserComponent
     @Input() public taskId!: TaskId;
     @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
     @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
+    @ViewChild("peerReviewContentDiv")
+    peerReviewElement?: ElementRef<HTMLDivElement>;
     loading: number; // Answerbrowser is fetching data
     updating = false; // Plugin html is reloading
     viewctrl!: Require<ViewCtrl>;
@@ -1529,13 +1531,20 @@ export class AnswerBrowserComponent
                     ) / this.filteredPeerReviews.length;
                 this.reviewComment = this.filteredPeerReviews
                     .map((r) => r.comment)
-                    .join("\n---\n");
+                    .join("\n\n---\n\n");
             } else {
                 this.reviewPoints = undefined;
-                this.reviewComment = undefined;
+                this.reviewComment = this.isPeerReview
+                    ? undefined
+                    : $localize`(no reviews given)`;
             }
             this.savedReviewPoints = this.reviewPoints;
             this.savedReviewComment = this.reviewComment;
+            if (!this.isPeerReview && this.peerReviewElement) {
+                ParCompiler.processAllMathDelayed(
+                    $(this.peerReviewElement.nativeElement)
+                );
+            }
         }
     }
 

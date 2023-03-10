@@ -200,11 +200,9 @@
                                 <label class="inline">
                                     <ng-container i18n>Peer review: </ng-container>
                                 </label>
-                                <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length == 1 && this.reviewPoints == undefined"> (no points given)</ng-container>
-                                <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length > 1"> (average of {{peerReviews.length}} reviews)</ng-container>
-                                <ng-container i18n *ngIf="!isPeerReview && filteredPeerReviews.length == 0"> (no reviews given)</ng-container>
                                <div class="peer-review-area">
-                                    <textarea class="peer-review-area" [(ngModel)]="reviewComment" [disabled]="!isPeerReview" rows="2" name="reviewComment" [placeholder]="isPeerReview ? 'Add your review' : 'No review given'"></textarea>
+                                    <textarea class="peer-review-area" [(ngModel)]="reviewComment" *ngIf="isPeerReview" rows="2" name="reviewComment" [placeholder]="isPeerReview ? 'Add your review' : 'No review given'"></textarea>
+                                    <div #peerReviewContentDiv class="peer-review-render math" [innerHtml]="reviewComment | purify" *ngIf="!isPeerReview"></div>
                                </div>
                                <div class="ab-option-row">
                                    <span><ng-container i18n>Points:</ng-container>
@@ -227,6 +225,9 @@
                                            class="timButton btn-xs"
                                            *ngIf="isPeerReview"
                                            [disabled]="reviewPoints == savedReviewPoints && reviewComment == savedReviewComment">Save your review</button>
+                                    <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length == 1 && this.reviewPoints == undefined"> (no points given)</ng-container>
+                                    <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length > 1"> (average of {{peerReviews.length}} reviews)</ng-container>
+                                    <ng-container i18n *ngIf="!isPeerReview && filteredPeerReviews.length == 0"> (no reviews given)</ng-container>
                                </div>
                             </form>
                  </div>

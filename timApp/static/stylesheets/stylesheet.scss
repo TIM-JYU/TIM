@@ -1248,6 +1248,15 @@ p.docsettings {
     width: 100%;
 }
 
+.peer-review-render{
+    padding: 2px;
+    resize: both;
+    white-space: pre-line;
+    height: 6em;
+    border: 1px solid;
+    overflow-y: scroll
+}
+
 .less-opacity {
     opacity: 0.66;
 }
