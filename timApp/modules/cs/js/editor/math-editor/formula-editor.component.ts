@@ -31,10 +31,21 @@ enum ActiveEditorType {
     Latex = "latex",
 }
 
-export type FormulaResult = {
-    latex: string;
-    isMultiline: boolean;
+/**
+ * editor.content split at current cursor location in editor
+ */
+type BeforeAndAfter = {
+    before: string;
+    after: string;
 };
+
+const CURSOR_MARKER = "│";
+
+/**
+ * OldContent is split into two at cursor location if insert operation is supported
+ * or else just the content
+ */
+type OldContent = BeforeAndAfter | string;
 
 @Component({
     selector: "cs-formula-editor",
@@ -66,7 +77,7 @@ export type FormulaResult = {
     `,
     styleUrls: ["./formula-editor.component.scss"],
 })
-export class FormulaEditorComponent implements OnInit, IEditor {
+export class FormulaEditorComponent implements OnInit {
     latexInputControl = new FormControl("");
     @ViewChild("latexInput") latexInput!: ElementRef<HTMLTextAreaElement>;
 
@@ -77,7 +88,7 @@ export class FormulaEditorComponent implements OnInit, IEditor {
 
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
 
-    content: string = "";
+    oldContent!: OldContent;
 
     @Output() okEvent = new EventEmitter<void>();
     @Output() cancelEvent = new EventEmitter<void>();
@@ -93,7 +104,7 @@ export class FormulaEditorComponent implements OnInit, IEditor {
     set visible(isVis: boolean) {
         this._visible = isVis;
         if (this.formulaDialog && isVis) {
-            this.content = this.editor?.content ?? this.content;
+            this.oldContent = this.parseOldContent(this.editor.content);
             this.formulaDialog.nativeElement.show();
         } else if (this.formulaDialog) {
             this.formulaDialog.nativeElement.close();
@@ -101,7 +112,7 @@ export class FormulaEditorComponent implements OnInit, IEditor {
     }
     private _visible: boolean = false;
 
-    @Input() editor?: IEditor;
+    @Input() editor!: IEditor;
 
     constructor() {}
 
@@ -111,7 +122,26 @@ export class FormulaEditorComponent implements OnInit, IEditor {
         });
     }
 
-    focus(): void {}
+    /**
+     * Splits string into two parts if possible at cursor location
+     * @param str
+     */
+    parseOldContent(str: string): OldContent {
+        if (!this.editor.insert) {
+            return str;
+        }
+        // add cursor character to know where cursor is
+        this.editor.insert(CURSOR_MARKER);
+        const cursorI = this.editor.content.indexOf(CURSOR_MARKER);
+        // split into two ignoring the cursor character
+        const result = {
+            before: this.editor.content.slice(0, cursorI),
+            after: this.editor.content.slice(cursorI + 1),
+        };
+        // also remove added cursor character from editor
+        this.editor.content = result.before + result.after;
+        return result;
+    }
 
     editHandler(field: MathFieldMethods) {
         // write changes in visual field to latex field if visual field
@@ -189,7 +219,14 @@ export class FormulaEditorComponent implements OnInit, IEditor {
             if (typeof latex === "string") {
                 const formulaLatex = this.formatLatex(latex, isMultiline);
                 if (this.editor) {
-                    this.editor.content = this.content + formulaLatex;
+                    if (typeof this.oldContent === "string") {
+                        this.editor.content = this.oldContent + formulaLatex;
+                    } else {
+                        this.editor.content =
+                            this.oldContent.before +
+                            formulaLatex +
+                            this.oldContent.after;
+                    }
                 }
             }
         }
@@ -203,11 +240,14 @@ export class FormulaEditorComponent implements OnInit, IEditor {
 
     handleFormulaCancel() {
         if (this.editor) {
-            this.editor.content = this.content;
+            if (typeof this.oldContent === "string") {
+                this.editor.content = this.oldContent;
+            } else {
+                this.editor.content =
+                    this.oldContent.before + this.oldContent.after;
+            }
         }
         this.cancelEvent.emit();
         this.clearFields();
     }
-
-    setReadOnly(b: boolean): void {}
 }

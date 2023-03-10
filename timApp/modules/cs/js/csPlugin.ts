@@ -59,7 +59,6 @@ import {getInt} from "./util/util";
 import type {IFile, IFileSpecification} from "./util/file-select";
 import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
-import type {FormulaResult} from "./editor/math-editor/formula-editor.component";
 
 // TODO better name?
 interface Vid {
@@ -3819,7 +3818,7 @@ ${fhtml}
                     </a>
             </div>
             <div class="csRunCode">
-                <div *ngIf="formulaEditor">
+                <div *ngIf="formulaEditor && editor">
                     <cs-formula-editor 
                             (okEvent)="onFormulaEditorCloseOk()"
                             (cancelEvent)="onFormulaEditorCloseCancel()"
