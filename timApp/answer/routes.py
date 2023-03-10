@@ -9,13 +9,12 @@ from typing import Union, Any, Callable, TypedDict
 from flask import Response
 from flask import current_app
 from flask import request
-from marshmallow import validates_schema, ValidationError
 from marshmallow.utils import missing
 from sqlalchemy import func
 from sqlalchemy.orm import lazyload, joinedload
 from werkzeug.exceptions import NotFound
 
-from timApp.answer.answer import Answer
+from timApp.answer.answer import Answer, AnswerData
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import (
     get_existing_answers_info,
@@ -31,7 +30,6 @@ from timApp.answer.answers import (
 )
 from timApp.answer.backup import send_answer_backup_if_enabled
 from timApp.answer.exportedanswer import ExportedAnswer
-from timApp.answer.jsrunner_util import save_fields
 from timApp.auth.accesshelper import (
     verify_logged_in,
     get_doc_or_abort,
@@ -92,7 +90,16 @@ from timApp.peerreview.util.peerreview_utils import (
     get_reviews_for_document,
 )
 from timApp.plugin.containerLink import call_plugin_answer
-from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
+from timApp.plugin.jsrunner.jsrunner import (
+    jsrunner_run,
+    JsRunnerParams,
+    JsRunnerError,
+    JsRunnerMarkupModel,
+    JsRunnerMarkupSchema,
+    JsRunnerAnswerModel,
+    JsRunnerAnswerSchema,
+)
+from timApp.plugin.jsrunner.util import save_fields
 from timApp.plugin.plugin import (
     Plugin,
     PluginWrap,
@@ -144,10 +151,8 @@ from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str
 from timApp.velp.annotations import get_annotations_with_comments_in_document
 from tim_common.dumboclient import call_dumbo
-from tim_common.markupmodels import GenericMarkupModel, asdict_skip_missing
-from tim_common.marshmallow_dataclass import class_schema
+from tim_common.markupmodels import asdict_skip_missing
 from tim_common.pluginserver_flask import value_or_default
-from tim_common.utils import Missing
 
 PRE_POST_ERROR = """
 You must have at least one
@@ -543,82 +548,6 @@ def get_answer_md(task_id: str, user_id: int) -> Response:
         loaded_content = ""
     loaded_content = call_dumbo(loaded_content, path="/mdkeys", options=dumbo_opts)
     return json_response({"content": loaded_content, "user_id": user_id})
-
-
-@dataclass
-class JsRunnerMarkupModel(GenericMarkupModel):
-    fields: (
-        list[str] | Missing
-    ) = missing  # This is actually required, but we cannot use non-default arguments here...
-    autoadd: bool | Missing = missing
-    autoUpdateTables: bool | Missing = True
-    creditField: str | Missing = missing
-    defaultPoints: float | Missing = missing
-    failGrade: str | Missing = missing
-    fieldhelper: bool | Missing = missing
-    gradeField: str | Missing = missing
-    peerReviewField: str | Missing = missing
-    gradingScale: dict[Any, Any] | Missing = missing
-    group: str | Missing = missing
-    groups: list[str] | Missing = missing
-    includeUsers: MembershipFilter | Missing = field(
-        default=MembershipFilter.Current, metadata={"by_value": True}
-    )
-    selectIncludeUsers: bool = False
-    paramFields: list[str] | Missing = missing
-    postprogram: str | Missing = missing
-    preprogram: str | Missing = missing
-    program: str | Missing = missing
-    overrideGrade: bool = False
-    showInView: bool = False
-    canOverwritePoints: bool = False
-    confirmText: str | Missing = missing
-    timeout: int | Missing = missing
-    updateFields: list[str] | Missing = missing
-    nextRunner: str | Missing = missing
-    timeZoneDiff: int | Missing = missing
-    peerReview: bool | Missing = missing
-
-    @validates_schema(skip_on_field_errors=True)
-    def validate_schema(self, data: dict, **_: dict) -> None:
-        if data.get("fields") is None:
-            raise ValidationError(
-                "Missing data for required field.", field_name="fields"
-            )
-        if data.get("group") is None and data.get("groups") is None:
-            raise ValidationError("Either group or groups must be given.")
-
-
-JsRunnerMarkupSchema = class_schema(JsRunnerMarkupModel)
-
-
-@dataclass
-class JsRunnerInputModel:
-    nosave: bool | Missing = missing
-    userNames: list[str] | Missing = missing
-    paramComps: dict[str, str] | Missing = missing
-    includeUsers: MembershipFilter | Missing = field(
-        default=missing, metadata={"by_value": True}
-    )
-
-
-@dataclass
-class RefFrom:
-    docId: int
-    par: str
-
-
-AnswerData = dict[str, Any]
-
-
-@dataclass
-class JsRunnerAnswerModel:
-    input: JsRunnerInputModel
-    ref_from: RefFrom | None = None
-    abData: AnswerData | Missing = missing
-
-
-JsRunnerAnswerSchema = class_schema(JsRunnerAnswerModel)
 
 
 @answers.post("/multiSendEmail/<doc_id>")

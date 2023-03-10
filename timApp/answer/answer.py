@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from sqlalchemy import func
 
@@ -111,3 +112,6 @@ class Answer(db.Model):
     @property
     def has_many_collaborators(self) -> bool:
         return len(self.users_all) > 1
+
+
+AnswerData = dict[str, Any]

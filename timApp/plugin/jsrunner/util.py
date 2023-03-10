@@ -32,7 +32,7 @@ from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group, verify_group_edit_access
-from timApp.user.user import User, UserInfo
+from timApp.user.user import User, UserInfo, UserOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import RouteException
@@ -118,8 +118,8 @@ def handle_jsrunner_groups(groupdata: JsrunnerGroups | None, curr_user: User) ->
 class NewUserInfo:
     full_name: str
     username: str
-    email: str | None
-    password: str | None
+    email: str | None = None
+    password: str | None = None
 
 
 NewUserInfoSchema = class_schema(NewUserInfo)
@@ -451,6 +451,7 @@ def _create_new_users(
             email=u.email,
             username=u.username,
             password=u.password,
+            origin=UserOrigin.JSRunner,
         )
         for u in users
     ]
@@ -520,14 +521,16 @@ def _create_user_from_info(ui: UserInfo) -> User | None:
         # Approximate real name with the help of email.
         # This won't be fully accurate, but we can't do better.
         ui.full_name = approximate_real_name(ui.email)
-    # Since this function can be called by users, ensure that they cannot overwrite any existing user info
-    # (not even the username)
+
     user = None
     if ui.username:
         user = User.get_by_name(ui.username)
     if not user and ui.email:
         user = User.get_by_email(ui.email)
-    if user:
+
+    # If the user wasn't created by JSRunner, don't overwrite it
+    if user and user.origin != UserOrigin.JSRunner:
         return user
 
+    # In any case, do not allow updating the email or username
     return create_or_update_user(ui, update_username=False, update_email=False)
