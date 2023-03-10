@@ -188,11 +188,11 @@ function isAskedQuestion(
                     </div>
                     <tim-question-matrix *ngIf="question.questionType" [qctrl]="this"></tim-question-matrix>
                     <div class="checkbox">
-                        <label><input type="checkbox" [(ngModel)]="qst" name="documentQuestion"/> Document
+                        <label><input type="checkbox" [(ngModel)]="qst" name="documentQuestion"/> Lecture
                             question</label>
                     </div>
                     <div class="form-group form-horz-flex"
-                         *ngIf="qst">
+                         *ngIf="!qst">
                         <label for="answerLimit">Answer limit</label>
                         <input [(ngModel)]="pluginMarkup.answerLimit"
                                id="answerLimit"
@@ -203,7 +203,7 @@ function isAskedQuestion(
                                min="1"
                                step="1"/>
                     </div>
-                    <div class="form-horz-flex" *ngIf="!qst">
+                    <div class="form-horz-flex" *ngIf="qst">
                         <label>
                             Duration
                         </label>
