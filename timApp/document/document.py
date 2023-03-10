@@ -522,7 +522,7 @@ class Document:
         for p in pars:
             if p.is_reference():
                 try:
-                    referenced_pars = p.get_referenced_pars()
+                    referenced_pars = p.get_referenced_pars(blind_settings=False)
                 except TimDbException:
                     pass
                 else:
@@ -1048,7 +1048,7 @@ class Document:
         for p in source:
             if p.is_reference():
                 try:
-                    referenced_pars = p.get_referenced_pars()
+                    referenced_pars = p.get_referenced_pars(blind_settings=False)
                 except TimDbException:
                     pass
                 else:

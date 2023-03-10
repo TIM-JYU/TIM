@@ -5,7 +5,11 @@ import {
     IncludeUsersOption,
     withDefault,
 } from "tim/plugin/attributes";
-import type {IToolsResult, NewUserData} from "../server/routes/tools";
+import type {
+    ItemRightActionT,
+    IToolsResult,
+    NewUserData,
+} from "../server/routes/tools";
 
 export {IncludeUsersOption} from "tim/plugin/attributes";
 
@@ -62,6 +66,12 @@ export interface IGroupData {
     remove?: Record<string, number[]>;
 }
 
+export interface IItemRightActionData
+    extends t.TypeOf<typeof ItemRightActionT> {
+    item: string;
+    group: string;
+}
+
 export interface IError {
     msg: string;
     stackTrace?: string;
@@ -89,6 +99,7 @@ interface AnswerReturnSuccess {
     };
     savedata: IToolsResult[];
     groups: IGroupData;
+    itemRightActions: IItemRightActionData[];
     newUsers: NewUserData[];
 }
 
