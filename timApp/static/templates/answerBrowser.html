@@ -200,18 +200,27 @@
                                 <label class="inline">
                                     <ng-container i18n>Peer review: </ng-container>
                                 </label>
-                               <div class="peer-review-area">
-                                <textarea i18n-placeholder class="peer-review-area"
+                               <ng-container *ngIf="isPeerReview">
+                                    <input [(ngModel)]="previewingPeerReview"
+                                               name="previewingPeerReview"
+                                               [value]="false"
+                                               type="radio"> Edit
+                                    <input [(ngModel)]="previewingPeerReview"
+                                               name="previewingPeerReview"
+                                               [value]="true"
+                                               type="radio"> Preview
+                               </ng-container>
+                               <div class="peer-review-resize-area">
+                                <textarea i18n-placeholder class="peer-review-text"
                                           (keydown.control.s)="$event.preventDefault(); saveReview()"
                                           (keydown.meta.s)="$event.preventDefault(); saveReview()"
-                                          [(ngModel)]="reviewComment" *ngIf="isPeerReview"
+                                          [(ngModel)]="reviewComment" *ngIf="isPeerReview && !previewingPeerReview"
                                           rows="2"
                                           name="reviewComment"
                                           placeholder="Add your review">
-
                                 </textarea>
-                                   <div #peerReviewContentDiv *ngIf="!isPeerReview">
-                                       <div class="peer-review-render math" [innerHtml]="reviewComment | purify"></div>
+                                   <div #peerReviewContentDiv class="peer-review-render" *ngIf="!isPeerReview || previewingPeerReview">
+                                       <div class="math" [innerHtml]="reviewComment | purify"></div>
                                    </div>
                                </div>
                                <div class="ab-option-row">
@@ -237,6 +246,7 @@
                                            class="timButton btn-xs"
                                            *ngIf="isPeerReview"
                                            [disabled]="reviewPoints == savedReviewPoints && reviewComment == savedReviewComment">Save your review</button>
+
                                     <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length == 1 && this.reviewPoints == undefined">(no points given)</ng-container>
                                     <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length > 1">(average of {{peerReviews.length}} reviews)</ng-container>
                                     <ng-container i18n *ngIf="!isPeerReview && filteredPeerReviews.length == 0">(no reviews given)</ng-container>

@@ -222,6 +222,7 @@ export class AnswerBrowserComponent
     formMode = false;
     showBrowseAnswers = true;
     isPeerReview = false;
+    previewingPeerReview = false;
     peerReviewEnabled = false;
     showNewTask = false;
     buttonNewTask = $localize`New task`;
@@ -1548,7 +1549,7 @@ export class AnswerBrowserComponent
             }
             this.savedReviewPoints = this.reviewPoints;
             this.savedReviewComment = this.reviewComment;
-            if (!this.isPeerReview && this.peerReviewElementRef) {
+            if (this.peerReviewElementRef) {
                 ParCompiler.processAllMathDelayed(
                     $(this.peerReviewElementRef.nativeElement)
                 );

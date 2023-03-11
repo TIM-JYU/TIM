@@ -1244,17 +1244,30 @@ p.docsettings {
     display: inline;
 }
 
-.peer-review-area {
+.peer-review-area{
     width: 100%;
+}
+
+.peer-review-resize-area{
+    width: 100%;
+    height: 6em;
+    resize: both;
+    overflow-y: auto;
+    padding: 2px;
+    border: 1px solid;
+}
+.peer-review-text {
+    width: 100%;
+    resize: none;
+    height: 100%;
+    overflow: hidden;
+    border: none;
 }
 
 .peer-review-render{
     padding: 2px;
-    resize: both;
-    white-space: pre-line;
-    height: 6em;
-    border: 1px solid;
-    overflow-y: scroll
+    white-space: break-spaces;
+    height: 100%;
 }
 
 .less-opacity {
