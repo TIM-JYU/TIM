@@ -1741,15 +1741,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     onFormulaEditorCloseCancel() {
-        if (
-            confirm(
-                this.english
-                    ? "Are you sure? Cancel will not save changes."
-                    : "Oletko varma? Peruuttaminen ei tallenna muutoksia."
-            )
-        ) {
-            this.formulaEditorOpen = !this.formulaEditorOpen;
-        }
+        this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
     onFormulaEditorAddFormula() {

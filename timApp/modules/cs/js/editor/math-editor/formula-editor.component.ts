@@ -249,15 +249,23 @@ export class FormulaEditorComponent implements OnInit {
     }
 
     handleFormulaCancel() {
-        if (this.editor) {
-            if (typeof this.oldContent === "string") {
-                this.editor.content = this.oldContent;
-            } else {
-                this.editor.content =
-                    this.oldContent.before + this.oldContent.after;
+        if (
+            confirm(
+                this.english
+                    ? "Are you sure? Cancel will not save changes."
+                    : "Oletko varma? Peruuttaminen ei tallenna muutoksia."
+            )
+        ) {
+            if (this.editor) {
+                if (typeof this.oldContent === "string") {
+                    this.editor.content = this.oldContent;
+                } else {
+                    this.editor.content =
+                        this.oldContent.before + this.oldContent.after;
+                }
             }
+            this.cancelEvent.emit();
+            this.clearFields();
         }
-        this.cancelEvent.emit();
-        this.clearFields();
     }
 }
