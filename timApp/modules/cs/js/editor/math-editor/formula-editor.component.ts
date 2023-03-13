@@ -58,14 +58,14 @@ type OldContent = BeforeAndAfter | string;
                           (click)="handleLatexFocus()"
                           (keyup)="handleLatexInput()"
                           [formControl]="latexInputControl"
-                          placeholder="{{getLatexPlaceholder}}">
+                          placeholder="Write LaTeX" i18n-placeholder>
                 </textarea>                    
             </div>
     
             <div class="formula-button-container">
                 <div class="formula-buttons">
                     <button class="timButton" (click)="handleFormulaOk()">Ok</button>
-                    <button class="timButton" (click)="handleFormulaCancel()">{{getCancelText}}</button>                                        
+                    <button class="timButton" (click)="handleFormulaCancel()" i18n>Cancel</button>                                        
                 </div>
     
                 <label class="font-weight-normal">
@@ -113,8 +113,6 @@ export class FormulaEditorComponent implements OnInit {
     private _visible: boolean = false;
 
     @Input() editor!: IEditor;
-
-    @Input() english!: boolean;
 
     constructor() {}
 
@@ -240,22 +238,8 @@ export class FormulaEditorComponent implements OnInit {
         this.clearFields();
     }
 
-    get getCancelText() {
-        return this.english ? "Cancel " : "Peruuta ";
-    }
-
-    get getLatexPlaceholder() {
-        return this.english ? "Write LaTeX " : "Kirjoita LaTeXia ";
-    }
-
     handleFormulaCancel() {
-        if (
-            confirm(
-                this.english
-                    ? "Are you sure? Cancel will not save changes."
-                    : "Oletko varma? Peruuttaminen ei tallenna muutoksia."
-            )
-        ) {
+        if (confirm($localize`Are you sure? Cancel will clear the editor.`)) {
             if (this.editor) {
                 if (typeof this.oldContent === "string") {
                     this.editor.content = this.oldContent;

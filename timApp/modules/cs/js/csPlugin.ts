@@ -1554,18 +1554,6 @@ export class CsController extends CsBase implements ITimComponent {
         return this.english ? "language: " : "kieli: ";
     }
 
-    get addFormulaText() {
-        return this.english ? "Add formula" : "Lisää kaava";
-    }
-
-    get editFormulaText() {
-        return this.english ? "Edit formula" : "Muokkaa kaavaa";
-    }
-
-    get instructionsText() {
-        return this.english ? "Instructions" : "Ohjeet";
-    }
-
     get forcedupload() {
         return this.type === "upload" && !this.markup.button;
     }
@@ -3829,10 +3817,10 @@ ${fhtml}
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
             <div *ngIf="formulaEditor">
-                    <button (click)="onFormulaEditorAddFormula()">{{addFormulaText}}</button>
-                    <button (click)="onFormulaEditorEditFormula()">{{editFormulaText}}</button>
+                    <button (click)="onFormulaEditorAddFormula()" i18n>Add formula</button>
+                    <button (click)="onFormulaEditorEditFormula()" i18n>Edit formula</button>
                     <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet" target="_blank">                
-                        <span class="glyphicon glyphicon-question-sign" title="{{instructionsText}}"></span>
+                        <span class="glyphicon glyphicon-question-sign" title="Instructions" i18n-title></span>
                     </a>
             </div>
             <div class="csRunCode">
@@ -3842,7 +3830,6 @@ ${fhtml}
                             (cancelEvent)="onFormulaEditorCloseCancel()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
-                            [english]="english"
                     ></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>

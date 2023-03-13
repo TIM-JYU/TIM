@@ -7867,11 +7867,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4518343884091856656" datatype="html">
-        <source><x id="START_LINK" ctype="x-a" equiv-text="ocusMe>"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to continue.</source>
-        <target state="translated"><x id="START_LINK" ctype="x-a" equiv-text="ocusMe>"/>Virkistä sivu<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> jatkaaksesi.</target>
+        <source><x id="START_LINK" ctype="x-a" equiv-text="focusMe&gt;"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> the page to continue.</source>
+        <target state="new"><x id="START_LINK" ctype="x-a" equiv-text="focusMe&gt;"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> the page to continue.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">306,307</context>
+          <context context-type="linenumber">312,314</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6393364220046549775" datatype="html">
@@ -7976,6 +7976,46 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/templates/answerBrowser.html</context>
           <context context-type="linenumber">226,227</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2728988666732167287" datatype="html">
+        <source>Add formula</source>
+        <target state="new">Lisää kaava</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">3820,3821</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5761867735291610079" datatype="html">
+        <source>Edit formula</source>
+        <target state="new">Muokkaa kaavaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">3821,3822</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7290374659252540217" datatype="html">
+        <source>Instructions</source>
+        <target state="new">Ohjeet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">3823</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8841302097138919041" datatype="html">
+        <source>Write LaTeX</source>
+        <target state="new">Kirjoita LaTeXia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">61</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4412792846121727001" datatype="html">
+        <source>Are you sure? Cancel will clear the editor.</source>
+        <target state="new">Oletko varma? Peruminen tyhjentää editorin.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">242</context>
         </context-group>
       </trans-unit>
     </body>
