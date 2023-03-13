@@ -204,22 +204,26 @@
                                     <input [(ngModel)]="previewingPeerReview"
                                                name="previewingPeerReview"
                                                [value]="false"
+                                               (ngModelChange)="peerReviewPreviewChanged()"
                                                type="radio"> Edit
                                     <input [(ngModel)]="previewingPeerReview"
                                                name="previewingPeerReview"
                                                [value]="true"
+                                                (ngModelChange)="peerReviewPreviewChanged()"
                                                type="radio"> Preview
                                </ng-container>
-                               <div class="peer-review-resize-area">
-                                <textarea i18n-placeholder class="peer-review-text"
-                                          (keydown.control.s)="$event.preventDefault(); saveReview()"
-                                          (keydown.meta.s)="$event.preventDefault(); saveReview()"
-                                          [(ngModel)]="reviewComment" *ngIf="isPeerReview && !previewingPeerReview"
-                                          rows="2"
-                                          name="reviewComment"
-                                          placeholder="Add your review">
-                                </textarea>
-                                   <div #peerReviewContentDiv class="peer-review-render" *ngIf="!isPeerReview || previewingPeerReview">
+                               <div class="peer-review-area">
+                                    <textarea i18n-placeholder class="peer-review-text"
+                                              #peerReviewEditArea
+                                              (keydown.control.s)="$event.preventDefault(); saveReview()"
+                                              (keydown.meta.s)="$event.preventDefault(); saveReview()"
+                                              [(ngModel)]="reviewComment"
+                                              [hidden]="!isPeerReview || previewingPeerReview"
+                                              rows="6"
+                                              name="reviewComment"
+                                              placeholder="Add your review">
+                                    </textarea>
+                                   <div #peerReviewContentDiv class="peer-review-render" [hidden]="isPeerReview && !previewingPeerReview">
                                        <div class="math" [innerHtml]="reviewComment | purify"></div>
                                    </div>
                                </div>

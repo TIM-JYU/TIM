@@ -1248,26 +1248,19 @@ p.docsettings {
     width: 100%;
 }
 
-.peer-review-resize-area{
-    width: 100%;
-    height: 6em;
-    resize: both;
-    overflow-y: auto;
-    padding: 2px;
-    border: 1px solid;
-}
 .peer-review-text {
     width: 100%;
-    resize: none;
-    height: 100%;
-    overflow: hidden;
-    border: none;
+    resize: both;
+    border: 1px solid;
 }
 
 .peer-review-render{
     padding: 2px;
     white-space: break-spaces;
-    height: 100%;
+    overflow-y: auto;
+    resize: both;
+    border: 1px solid;
+    height: 10em
 }
 
 .less-opacity {
