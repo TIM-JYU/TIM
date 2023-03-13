@@ -1749,7 +1749,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     onFormulaEditorEditFormula() {
-        //TODO
+        // TODO
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
