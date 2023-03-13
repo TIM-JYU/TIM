@@ -1558,6 +1558,10 @@ export class CsController extends CsBase implements ITimComponent {
         return this.english ? "Add formula" : "Lisää kaava";
     }
 
+    get editFormulaText() {
+        return this.english ? "Edit formula" : "Muokkaa kaavaa";
+    }
+
     get instructionsText() {
         return this.english ? "Instructions" : "Ohjeet";
     }
@@ -1741,6 +1745,11 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     onFormulaEditorAddFormula() {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
+    }
+
+    onFormulaEditorEditFormula() {
+        //TODO
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
@@ -3821,6 +3830,7 @@ ${fhtml}
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
             <div *ngIf="formulaEditor">
                     <button (click)="onFormulaEditorAddFormula()">{{addFormulaText}}</button>
+                    <button (click)="onFormulaEditorEditFormula()">{{editFormulaText}}</button>
                     <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet" target="_blank">                
                         <span class="glyphicon glyphicon-question-sign" title="{{instructionsText}}"></span>
                     </a>
@@ -3832,7 +3842,7 @@ ${fhtml}
                             (cancelEvent)="onFormulaEditorCloseCancel()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
-                            [language]=this.english
+                            [language]=english
                     ></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
