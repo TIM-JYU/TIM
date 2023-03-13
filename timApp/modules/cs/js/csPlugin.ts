@@ -3832,6 +3832,7 @@ ${fhtml}
                             (cancelEvent)="onFormulaEditorCloseCancel()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
+                            [language]=this.english
                     ></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>

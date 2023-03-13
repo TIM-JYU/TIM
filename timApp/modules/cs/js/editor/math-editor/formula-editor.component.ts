@@ -65,7 +65,7 @@ type OldContent = BeforeAndAfter | string;
             <div class="formula-button-container">
                 <div class="formula-buttons">
                     <button class="timButton" (click)="handleFormulaOk()">Ok</button>
-                    <button class="timButton" (click)="handleFormulaCancel()">Cancel</button>                                        
+                    <button class="timButton" (click)="handleFormulaCancel()">{{getCancelText}}</button>                                        
                 </div>
     
                 <label class="font-weight-normal">
@@ -113,6 +113,8 @@ export class FormulaEditorComponent implements OnInit {
     private _visible: boolean = false;
 
     @Input() editor!: IEditor;
+
+    @Input() language!: boolean;
 
     constructor() {}
 
@@ -236,6 +238,10 @@ export class FormulaEditorComponent implements OnInit {
         this.updateFormulaToEditor();
         this.okEvent.emit();
         this.clearFields();
+    }
+
+    get getCancelText() {
+        return this.language ? "Cancel " : "Peruuta ";
     }
 
     handleFormulaCancel() {
