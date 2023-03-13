@@ -58,7 +58,7 @@ type OldContent = BeforeAndAfter | string;
                           (click)="handleLatexFocus()"
                           (keyup)="handleLatexInput()"
                           [formControl]="latexInputControl"
-                          placeholder="write LaTeX">
+                          placeholder="{{getLatexPlaceholder}}">
                 </textarea>                    
             </div>
     
@@ -242,6 +242,10 @@ export class FormulaEditorComponent implements OnInit {
 
     get getCancelText() {
         return this.language ? "Cancel " : "Peruuta ";
+    }
+
+    get getLatexPlaceholder() {
+        return this.language ? "Write LaTeX " : "Kirjoita LaTeXia ";
     }
 
     handleFormulaCancel() {
