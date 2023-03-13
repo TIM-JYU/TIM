@@ -435,6 +435,9 @@ export class TextfieldPluginComponent
             if (this.markup.showname == 2) {
                 this.userword = u.name;
             }
+            if (this.markup.showname == 3) {
+                this.userword = u.email ?? "";
+            }
         } else {
             this.userword = this.markup.initword ?? "";
         }
