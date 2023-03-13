@@ -114,7 +114,7 @@ export class FormulaEditorComponent implements OnInit {
 
     @Input() editor!: IEditor;
 
-    @Input() language!: boolean;
+    @Input() english!: boolean;
 
     constructor() {}
 
@@ -241,11 +241,11 @@ export class FormulaEditorComponent implements OnInit {
     }
 
     get getCancelText() {
-        return this.language ? "Cancel " : "Peruuta ";
+        return this.english ? "Cancel " : "Peruuta ";
     }
 
     get getLatexPlaceholder() {
-        return this.language ? "Write LaTeX " : "Kirjoita LaTeXia ";
+        return this.english ? "Write LaTeX " : "Kirjoita LaTeXia ";
     }
 
     handleFormulaCancel() {
