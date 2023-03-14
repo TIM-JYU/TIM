@@ -7770,7 +7770,7 @@
       </trans-unit>
       <trans-unit id="4518343884091856656" datatype="html">
         <source><x id="START_LINK" ctype="x-a" equiv-text="focusMe>"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to continue.</source>
-        <target state="new"><x id="START_LINK" ctype="x-a" equiv-text="focusMe>"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to continue.</target>
+        <target state="translated"><x id="START_LINK" ctype="x-a" equiv-text="focusMe>"/>Uppdatera<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> sidan för att fortsätta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">312,314</context>
