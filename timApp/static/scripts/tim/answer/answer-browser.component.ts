@@ -209,6 +209,9 @@ export class AnswerBrowserComponent
         }
         el.style.height = this.peerReviewResizeHeight;
         el.style.width = this.peerReviewResizeWidth;
+        if (this.previewingPeerReview) {
+            this.renderPeerReviewMath();
+        }
     }
 
     savePeerReviewResize() {
@@ -1607,11 +1610,15 @@ export class AnswerBrowserComponent
             this.savedReviewPoints = this.reviewPoints;
             this.savedReviewComment = this.reviewComment;
             this.peerReviewLoaded = true;
-            if (this.peerReviewElementRef) {
-                ParCompiler.processAllMathDelayed(
-                    $(this.peerReviewElementRef.nativeElement)
-                );
-            }
+            this.renderPeerReviewMath();
+        }
+    }
+
+    renderPeerReviewMath() {
+        if (this.peerReviewElementRef) {
+            ParCompiler.processAllMathDelayed(
+                $(this.peerReviewElementRef.nativeElement)
+            );
         }
     }
 
