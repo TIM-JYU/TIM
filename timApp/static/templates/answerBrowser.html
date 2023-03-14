@@ -197,24 +197,28 @@
                     </div><!-- end flex-->
                  <div class="flex review-row">
                            <form (ngSubmit)="saveReview()" *ngIf="hasPeerReviewers || isPeerReview" class="point-form peer-review-area form-inline">
-                                <label class="inline">
-                                    <ng-container i18n>Peer review: </ng-container>
-                                </label>
-                               <ng-container *ngIf="isPeerReview">
-                                    <label class="radio-inline"><input [(ngModel)]="previewingPeerReview"
-                                               name="previewingPeerReview"
-                                               [value]="false"
-                                               (ngModelChange)="peerReviewPreviewChanged()"
-                                           type="radio"> <ng-container i18n>Edit</ng-container>
-                                   </label>
-                                    <label class="radio-inline">
-                                    <input [(ngModel)]="previewingPeerReview"
-                                               name="previewingPeerReview"
-                                               [value]="true"
-                                                (ngModelChange)="peerReviewPreviewChanged()"
-                                           type="radio"> <ng-container i18n>Preview</ng-container>
-                                   </label>
-                               </ng-container>
+                               <span class="ab-option-row">
+                                   <span>
+                                       <label class="inline">
+                                            <ng-container i18n>Peer review: </ng-container>
+                                        </label>
+                                   </span>
+                                   <span *ngIf="isPeerReview">
+                                        <label class="radio-inline"><input [(ngModel)]="previewingPeerReview"
+                                                   name="previewingPeerReview"
+                                                   [value]="false"
+                                                   (ngModelChange)="peerReviewPreviewChanged()"
+                                               type="radio"> <ng-container i18n>Edit</ng-container>
+                                       </label>
+                                        <label class="radio-inline">
+                                        <input [(ngModel)]="previewingPeerReview"
+                                                   name="previewingPeerReview"
+                                                   [value]="true"
+                                                    (ngModelChange)="peerReviewPreviewChanged()"
+                                               type="radio"> <ng-container i18n>Preview</ng-container>
+                                       </label>
+                                   </span>
+                               </span>
                                <div class="peer-review-area">
                                     <textarea i18n-placeholder class="peer-review-text"
                                               #peerReviewEditArea
