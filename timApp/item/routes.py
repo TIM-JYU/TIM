@@ -734,12 +734,14 @@ def render_doc_view(
                     ):
                         flash(f"You don't have access to group '{ug.name}'.")
                         ugs_without_access.append(ug)
-            if ugs:
+            # We allow empty `groups` option to hide all answers by default.
+            # In that case, users can use the `groups` URL parameter to show answers.
+            if ugs is not None:
                 user_list = [u.id for ug in ugs for u in ug.users]
         user_list = get_points_by_rule(
             points_sum_rule, task_ids, user_list, show_valid_only=show_valid_only
         )
-        if ugs:
+        if ugs is not None:
             user_list = add_missing_users_from_groups(
                 user_list, list(set(ugs) - set(ugs_without_access))
             )
