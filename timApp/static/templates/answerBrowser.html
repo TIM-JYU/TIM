@@ -115,7 +115,7 @@
                                     <i class="glyphicon glyphicon-ok"></i>
                                 </button>
                             </form>
-<!--in ab-option-row span elements have right margin, use div if selecting multiple elements for *ngIf -->
+<!--in ab-option-row span elements have right margin-->
                             <div *ngIf="selectedAnswer">
 
                             <span class="inline" *ngIf="points !== null && !(showTeacher() || (giveCustomPoints && allowCustomPoints())) && taskInfo?.pointsText">
@@ -195,16 +195,44 @@
                         </div>
                         </span>
                     </div><!-- end flex-->
-                 <div class="flex ab-option-row review-row">
+                 <div class="flex review-row">
                            <form (ngSubmit)="saveReview()" *ngIf="hasPeerReviewers || isPeerReview" class="point-form peer-review-area form-inline">
-                                <label class="inline">
-                                    <ng-container i18n>Peer review: </ng-container>
-                                </label>
-                                <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length == 1 && this.reviewPoints == undefined"> (no points given)</ng-container>
-                                <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length > 1"> (average of {{peerReviews.length}} reviews)</ng-container>
-                                <ng-container i18n *ngIf="!isPeerReview && filteredPeerReviews.length == 0"> (no reviews given)</ng-container>
+                               <span class="ab-option-row">
+                                   <span>
+                                       <label class="inline">
+                                            <ng-container i18n>Peer review: </ng-container>
+                                        </label>
+                                   </span>
+                                   <span *ngIf="isPeerReview">
+                                        <label class="radio-inline"><input [(ngModel)]="previewingPeerReview"
+                                                   name="previewingPeerReview"
+                                                   [value]="false"
+                                                   (ngModelChange)="peerReviewPreviewChanged()"
+                                               type="radio"> <ng-container i18n>Edit</ng-container>
+                                       </label>
+                                        <label class="radio-inline">
+                                        <input [(ngModel)]="previewingPeerReview"
+                                                   name="previewingPeerReview"
+                                                   [value]="true"
+                                                    (ngModelChange)="peerReviewPreviewChanged()"
+                                               type="radio"> <ng-container i18n>Preview</ng-container>
+                                       </label>
+                                   </span>
+                               </span>
                                <div class="peer-review-area">
-                                    <textarea class="peer-review-area" [(ngModel)]="reviewComment" [disabled]="!isPeerReview" rows="2" name="reviewComment" [placeholder]="isPeerReview ? 'Add your review' : 'No review given'"></textarea>
+                                    <textarea i18n-placeholder class="peer-review-text"
+                                              #peerReviewEditArea
+                                              (keydown.control.s)="$event.preventDefault(); saveReview()"
+                                              (keydown.meta.s)="$event.preventDefault(); saveReview()"
+                                              [(ngModel)]="reviewComment"
+                                              [hidden]="!isPeerReview || previewingPeerReview"
+                                              rows="6"
+                                              name="reviewComment"
+                                              placeholder="Add your review">
+                                    </textarea>
+                                   <div #peerReviewContentDiv class="peer-review-render" [hidden]="isPeerReview && !previewingPeerReview">
+                                       <div class="math" [innerHtml]="reviewComment | purify"></div>
+                                   </div>
                                </div>
                                <div class="ab-option-row">
                                    <span><ng-container i18n>Points:</ng-container>
@@ -215,6 +243,8 @@
                                                   (blur)="shouldFocus = false"
                                                   [(ngModel)]="reviewPoints"
                                                   (keydown)="handlePointScroll($event)"
+                                                  (keydown.control.s)="$event.preventDefault(); saveReview()"
+                                                  (keydown.meta.s)="$event.preventDefault(); saveReview()"
                                                   [disabled]="!isPeerReview"
                                                   name="reviewPoints"
                                                   type="number"
@@ -227,6 +257,10 @@
                                            class="timButton btn-xs"
                                            *ngIf="isPeerReview"
                                            [disabled]="reviewPoints == savedReviewPoints && reviewComment == savedReviewComment">Save your review</button>
+
+                                    <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length == 1 && this.reviewPoints == undefined">(no points given)</ng-container>
+                                    <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length > 1">(average of {{peerReviews.length}} reviews)</ng-container>
+                                    <ng-container i18n *ngIf="!isPeerReview && filteredPeerReviews.length == 0">(no reviews given)</ng-container>
                                </div>
                             </form>
                  </div>

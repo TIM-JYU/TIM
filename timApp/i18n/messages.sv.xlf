@@ -7769,11 +7769,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4518343884091856656" datatype="html">
-        <source><x id="START_LINK" ctype="x-a" equiv-text="ocusMe>"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to continue.</source>
-        <target state="translated"><x id="START_LINK" ctype="x-a" equiv-text="ocusMe>"/>Uppdatera<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> sidan för att fortsätta.</target>
+        <source><x id="START_LINK" ctype="x-a" equiv-text="focusMe>"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to continue.</source>
+        <target state="translated"><x id="START_LINK" ctype="x-a" equiv-text="focusMe>"/>Uppdatera<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> sidan för att fortsätta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">306,307</context>
+          <context context-type="linenumber">312,314</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6393364220046549775" datatype="html">
@@ -7848,36 +7848,52 @@
           <context context-type="linenumber">201</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4458576809160517635" datatype="html">
-        <source> (no points given)</source>
-        <target state="translated"> (inga poäng ges)</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
-          <context context-type="linenumber">203</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3365234171765176059" datatype="html">
-        <source> (average of <x id="INTERPOLATION" equiv-text="{{peerReviews.length}}"/> reviews)</source>
-        <target state="translated"> (genomsnitt av <x id="INTERPOLATION" equiv-text="{{peerReviews.length}}"/> recensioner)</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
-          <context context-type="linenumber">204,205</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8484486376764744044" datatype="html">
-        <source> (no reviews given)</source>
-        <target state="translated"> (inga recensioner ges)</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
-          <context context-type="linenumber">205</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="4252733983010879653" datatype="html">
         <source>Save your review</source>
         <target state="translated">Spara din recension</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/templates/answerBrowser.html</context>
           <context context-type="linenumber">226,227</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4958705091035749812" datatype="html">
+        <source>(no reviews given)</source>
+        <target state="translated">(inga recensioner ges)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1547,1545</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6796532343204294212" datatype="html">
+        <source>Add your review</source>
+        <target state="translated">Lägg till din recension</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">210,212</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5047027031469424130" datatype="html">
+        <source>(no points given)</source>
+        <target state="translated">(inga poäng ges)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">240</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5993276252268776410" datatype="html">
+        <source>(average of <x id="INTERPOLATION" equiv-text="{{peerReviews.length}}"/> reviews)</source>
+        <target state="translated">(genomsnitt av <x id="INTERPOLATION" equiv-text="{{peerReviews.length}}"/> recensioner)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">241,242</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1295614462098694869" datatype="html">
+        <source>Preview</source>
+        <target state="translated">Förhandsvisa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">213</context>
         </context-group>
       </trans-unit>
     </body>

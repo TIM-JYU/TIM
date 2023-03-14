@@ -1244,8 +1244,23 @@ p.docsettings {
     display: inline;
 }
 
-.peer-review-area {
+.peer-review-area{
     width: 100%;
+}
+
+.peer-review-text {
+    width: 100%;
+    resize: both;
+    border: 1px solid;
+}
+
+.peer-review-render{
+    padding: 2px;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    resize: both;
+    border: 1px solid;
+    height: 10em
 }
 
 .less-opacity {
