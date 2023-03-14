@@ -1256,7 +1256,7 @@ p.docsettings {
 
 .peer-review-render{
     padding: 2px;
-    white-space: break-spaces;
+    white-space: pre-wrap;
     overflow-y: auto;
     resize: both;
     border: 1px solid;
