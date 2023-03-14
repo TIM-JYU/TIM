@@ -248,6 +248,8 @@ export class PareditorController extends DialogController<
     private availableTranslators: string[] = [];
     private originalDocument: boolean = true;
 
+    private formulaEditorOpen: boolean = false;
+
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
 
@@ -1071,8 +1073,12 @@ ${backTicks}
     getVisibleTabs() {
         // Upload tab is shown separately in the template because
         // it has special content that cannot be placed under "extra".
+
         return this.tabs.filter(
-            (tab) => (!tab.show || tab.show()) && tab.name !== "Upload"
+            (tab) =>
+                (!tab.show || tab.show()) &&
+                tab.name !== "Upload" &&
+                tab.name !== "TeX"
         );
     }
 
@@ -1742,6 +1748,14 @@ ${backTicks}
             }
             this.translationInProgress = false;
         }
+    }
+
+    /**
+     * Toggle formula editor visibility
+     */
+    onFormulaEditorAddFormula() {
+        console.log(this.editor?.getEditorText());
+        this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
     /**

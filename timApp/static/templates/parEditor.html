@@ -3,6 +3,16 @@
         <tim-editor-entry ng-repeat="e in t.entries" data="e"></tim-editor-entry>
         <div ng-if="t.extra" ng-bind-html="t.extra"></div>
     </uib-tab>
+      <uib-tab heading="TeX" index="'tex'">
+            <div ng-if="$ctrl.editor !== undefined">
+              <button ng-click="$ctrl.onFormulaEditorAddFormula()">Add formula</button>
+              <cs-formula-editor
+                      [visible]="$ctrl.formulaEditorOpen"
+                      [editor]="$ctrl.editor"
+              ></cs-formula-editor>
+            </div>
+
+      </uib-tab>
     <uib-tab heading="Upload" index="'upload'" ng-show="$ctrl.getOptions().showImageUpload">
         <span>
             <input type="file" ngf-select="$ctrl.onFilesSelect($files, $invalidFiles)" ngf-multiple="true">
