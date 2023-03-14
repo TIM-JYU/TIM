@@ -201,16 +201,19 @@
                                     <ng-container i18n>Peer review: </ng-container>
                                 </label>
                                <ng-container *ngIf="isPeerReview">
-                                    <input [(ngModel)]="previewingPeerReview"
+                                    <label class="radio-inline"><input [(ngModel)]="previewingPeerReview"
                                                name="previewingPeerReview"
                                                [value]="false"
                                                (ngModelChange)="peerReviewPreviewChanged()"
-                                               type="radio"> Edit
+                                           type="radio"> <ng-container i18n>Edit</ng-container>
+                                   </label>
+                                    <label class="radio-inline">
                                     <input [(ngModel)]="previewingPeerReview"
                                                name="previewingPeerReview"
                                                [value]="true"
                                                 (ngModelChange)="peerReviewPreviewChanged()"
-                                               type="radio"> Preview
+                                           type="radio"> <ng-container i18n>Preview</ng-container>
+                                   </label>
                                </ng-container>
                                <div class="peer-review-area">
                                     <textarea i18n-placeholder class="peer-review-text"
