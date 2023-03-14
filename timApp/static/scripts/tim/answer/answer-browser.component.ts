@@ -1578,7 +1578,7 @@ export class AnswerBrowserComponent
         }
         this.refreshPeerReview();
     }
-    peerReviewLoaded = false;
+
     refreshPeerReview() {
         if (this.hasPeerReviewers || this.isPeerReview) {
             this.filteredPeerReviews = this.peerReviews.filter(
@@ -1609,7 +1609,6 @@ export class AnswerBrowserComponent
             }
             this.savedReviewPoints = this.reviewPoints;
             this.savedReviewComment = this.reviewComment;
-            this.peerReviewLoaded = true;
             this.renderPeerReviewMath();
         }
     }
