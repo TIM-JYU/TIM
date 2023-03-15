@@ -7,11 +7,6 @@ import filelock
 from flask import render_template_string, Response, current_app
 
 from timApp.answer.backup import sync_user_group_memberships_if_enabled
-from timApp.answer.jsrunner_util import (
-    FieldSaveUserEntry,
-    FieldSaveRequest,
-    save_fields,
-)
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -39,6 +34,11 @@ from timApp.item.manage import (
     add_perm,
     log_right,
     remove_perm,
+)
+from timApp.plugin.jsrunner.util import (
+    FieldSaveUserEntry,
+    FieldSaveRequest,
+    save_fields,
 )
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.sqa import db

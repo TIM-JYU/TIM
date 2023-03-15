@@ -75,6 +75,35 @@ class ReplaceAccessAction(Enum):
     AlwaysReplace = "always_replace"
 
 
+def expire_access(
+    group: UserGroup,
+    block: ItemBase | Block,
+    access_type: AccessType,
+) -> tuple[BlockAccess | None, bool]:
+    """Expires access to a group for a block.
+
+    :param group: The group to which to grant view access.
+    :param block: The block for which to grant view access.
+    :param access_type: The kind of access. Possible values are listed in accesstype table.
+    :return: The BlockAccess object if there was previous access. Also returns whether the access was expired before.
+    """
+    ba: BlockAccess | None = BlockAccess.query.filter_by(
+        type=access_type.value,
+        block_id=block.id,
+        usergroup_id=group.id,
+    ).first()
+    if not ba:
+        return None, False
+    if ba.expired:
+        return ba, True
+    ba.accessible_to = get_current_time()
+    if ba.duration:
+        ba.duration = None
+        ba.duration_from = None
+        ba.duration_to = None
+    return ba, False
+
+
 def grant_access(
     group: UserGroup,
     block: ItemBase | Block,

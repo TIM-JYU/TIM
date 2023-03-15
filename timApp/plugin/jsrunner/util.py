@@ -2,7 +2,8 @@ import copy
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import TypedDict, Any, DefaultDict
+from datetime import datetime
+from typing import TypedDict, Any, DefaultDict, Literal
 
 from sqlalchemy import func
 
@@ -19,6 +20,9 @@ from timApp.auth.login import create_or_update_user
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
+from timApp.folder.folder import Folder
+from timApp.item.block import Block
+from timApp.item.item import Item
 from timApp.messaging.messagelist.messagelist_utils import (
     UserGroupDiff,
     sync_usergroup_messagelist_members,
@@ -32,10 +36,11 @@ from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group, verify_group_edit_access
-from timApp.user.user import User, UserInfo
+from timApp.user.user import User, UserInfo, UserOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
-from timApp.util.flask.requesthelper import RouteException
+from timApp.user.userutils import grant_access, expire_access
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.utils import is_valid_email, approximate_real_name
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -118,11 +123,25 @@ def handle_jsrunner_groups(groupdata: JsrunnerGroups | None, curr_user: User) ->
 class NewUserInfo:
     full_name: str
     username: str
-    email: str | None
-    password: str | None
+    email: str | None = None
+    password: str | None = None
 
 
 NewUserInfoSchema = class_schema(NewUserInfo)
+
+
+@dataclass
+class ItemRightActionData:
+    item: str
+    group: str
+    action: Literal["add", "expire"]
+    manageKey: str
+    accessType: AccessType | None = None
+    accessibleFrom: datetime | None = None
+    accessibleTo: datetime | None = None
+
+
+ItemRightActionSchema = class_schema(ItemRightActionData)
 
 
 @dataclass
@@ -147,6 +166,7 @@ class FieldSaveRequest(TypedDict, total=False):
     missingUsers: Any | None
     groups: JsrunnerGroups | None
     newUsers: dict | None
+    itemRightActions: dict | None
 
 
 def save_fields(
@@ -174,6 +194,14 @@ def save_fields(
         if new_users:
             verify_user_create_right(curr_user)
             groups = _create_new_users(new_users, groups)
+
+    item_right_actions_json: dict | None = jsonresp.get("itemRightActions")
+    if item_right_actions_json:
+        item_right_actions: list[ItemRightActionData] = ItemRightActionSchema().load(
+            item_right_actions_json, many=True
+        )
+        if item_right_actions:
+            _handle_item_right_actions(item_right_actions, curr_user)
 
     handle_jsrunner_groups(groups, curr_user)
     missing_users = jsonresp.get("missingUsers")
@@ -451,6 +479,7 @@ def _create_new_users(
             email=u.email,
             username=u.username,
             password=u.password,
+            origin=UserOrigin.JSRunner,
         )
         for u in users
     ]
@@ -520,14 +549,71 @@ def _create_user_from_info(ui: UserInfo) -> User | None:
         # Approximate real name with the help of email.
         # This won't be fully accurate, but we can't do better.
         ui.full_name = approximate_real_name(ui.email)
-    # Since this function can be called by users, ensure that they cannot overwrite any existing user info
-    # (not even the username)
+
     user = None
     if ui.username:
         user = User.get_by_name(ui.username)
     if not user and ui.email:
         user = User.get_by_email(ui.email)
-    if user:
+
+    # If the user wasn't created by JSRunner, don't overwrite it
+    if user and user.origin != UserOrigin.JSRunner:
         return user
 
+    # In any case, do not allow updating the email or username
     return create_or_update_user(ui, update_username=False, update_email=False)
+
+
+def _handle_item_right_actions(
+    item_right_actions: list[ItemRightActionData], curr_user: User
+) -> None:
+    # Group actions by item ID, also check for permission
+    item_actions: dict[int, list[ItemRightActionData]] = {}
+    items: dict[int, Block] = {}
+
+    for action in item_right_actions:
+        # Items can be declared either as path or ID, so it's easier to find_by_path for everything
+        item = Item.find_by_path(action.item, fallback_to_id=True)
+        if not item:
+            raise NotExist()
+
+        # TODO: Allow changing folder rights when the plugins can be "signed"
+        #   (currently, it's dangerous to just verify permissions)
+        if isinstance(item, Folder):
+            raise RouteException("Managing folder rights is not yet supported")
+
+        if item.block.id not in item_actions:
+            if isinstance(item, DocInfo):
+                settings = item.document.get_settings()
+                if settings.manage_key() != action.manageKey:
+                    raise RouteException(
+                        f"Invalid manage key for document '{item.path}'"
+                    )
+
+            item_actions[item.block.id] = []
+            items[item.block.id] = item.block
+
+        item_actions[item.block.id].append(action)
+
+    # Apply actions as we go
+    for item_id, actions in item_actions.items():
+        item = items[item_id]
+        for action in actions:
+            group = UserGroup.get_by_name(action.group)
+            access_type = action.accessType or AccessType.view
+            if not group:
+                raise NotExist(f"Group '{action.group}' does not exist")
+            match action.action:
+                case "add":
+                    grant_access(
+                        group,
+                        item,
+                        access_type,
+                        accessible_from=action.accessibleFrom,
+                        accessible_to=action.accessibleTo,
+                    )
+                case "expire":
+                    expire_access(group, item, access_type)
+
+    # Flush so that access rights are correct for any other JSRunner operations
+    db.session.flush()

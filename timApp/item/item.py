@@ -206,3 +206,26 @@ class Item(ItemBase):
             else:
                 raise NotImplementedError
         return None
+
+    @staticmethod
+    def find_by_path(path: str, fallback_to_id: bool = False) -> Item | None:
+        """
+        Finds an item by path. If the item is not found, None is returned.
+
+        :param path: The path of the item to find.
+        :param fallback_to_id: If True, the path is treated as an ID if the item is not found by path.
+        :return: The item, or None if not found.
+        """
+        from timApp.document.docentry import DocEntry
+
+        doc = DocEntry.find_by_path(path, fallback_to_id)
+        if doc:
+            return doc
+
+        from timApp.folder.folder import Folder
+
+        folder = Folder.find_by_path(path, fallback_to_id)
+        if folder:
+            return folder
+
+        return None

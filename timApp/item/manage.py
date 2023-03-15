@@ -14,11 +14,6 @@ from isodate import Duration
 from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
 
-from timApp.answer.jsrunner_util import (
-    save_fields,
-    FieldSaveRequest,
-    FieldSaveUserEntry,
-)
 from timApp.auth.accesshelper import (
     verify_manage_access,
     verify_ownership,
@@ -53,6 +48,11 @@ from timApp.item.validation import (
     validate_item_and_create_intermediate_folders,
     has_special_chars,
 )
+from timApp.plugin.jsrunner.util import (
+    save_fields,
+    FieldSaveRequest,
+    FieldSaveUserEntry,
+)
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
@@ -67,6 +67,7 @@ from timApp.user.userutils import (
     grant_default_access,
     is_some_default_right_document,
     ReplaceAccessAction,
+    expire_access,
 )
 from timApp.util.flask.requesthelper import (
     get_option,
@@ -393,20 +394,11 @@ def is_velp_group_in_document(vg: VelpGroup, d: ItemOrBlock) -> bool:
 @manage_page.get("/permissions/expire/<int:doc_id>/<username>")
 def expire_permission_url(doc_id: int, username: str, redir: str | None = None):
     g, i = get_group_and_doc(doc_id, username)
-    ba: BlockAccess | None = BlockAccess.query.filter_by(
-        type=AccessType.view.value,
-        block_id=i.id,
-        usergroup_id=g.id,
-    ).first()
+    ba, was_expired = expire_access(g, i, AccessType.view)
     if not ba:
         return raise_or_redirect("Right not found.", redir)
-    if ba.expired:
+    if was_expired:
         return raise_or_redirect("Right is already expired.", redir)
-    ba.accessible_to = get_current_time()
-    if ba.duration:
-        ba.duration = None
-        ba.duration_from = None
-        ba.duration_to = None
     # also expire permissions for document's velp groups
     expire_doc_velp_groups_perms(i.id, g)
 

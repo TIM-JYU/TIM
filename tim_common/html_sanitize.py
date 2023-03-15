@@ -94,6 +94,7 @@ TIM_SAFE_TAGS = [
     "tim-images",
     "importdata-runner",
     "tim-table",
+    "group-join",
     # raw AngularJS components:
     "tim-rights-editor",
     "tim-self-expire",

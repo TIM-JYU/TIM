@@ -137,6 +137,7 @@ const TableFormMarkup = t.intersection([
         openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
         open: withDefault(t.boolean, true),
         reportFilter: withDefault(t.string, ""),
+        downloadAsExcelFile: withDefault(t.string, ""),
     }),
 ]);
 
@@ -1053,6 +1054,7 @@ export class TableFormComponent
             usernames: this.markup.usernames,
             emails: this.markup.emails,
             reportFilter: this.markup.reportFilter,
+            downloadAsExcelFile: this.markup.downloadAsExcelFile,
         };
         let filterParams;
         const timTable = this.getTimTable();

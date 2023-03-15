@@ -5,7 +5,7 @@ import os
 import shelve
 from collections import defaultdict
 from copy import copy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import commonmark
 import filelock
@@ -41,6 +41,11 @@ if TYPE_CHECKING:
     from timApp.document.docinfo import DocInfo
 
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "mt", "settings"}
+
+BLINDED_SETTINGS_TEXT = """```
+# Setting paragraphs cannot be shown via references
+```
+"""
 
 # TODO: a bit short name for global variable
 se = SandboxedEnvironment(autoescape=True)
@@ -1026,17 +1031,25 @@ class DocParagraph:
         return self.get_attr("r") == "tr" and self.get_attr("rp") is not None
 
     def get_referenced_pars(
-        self, view_ctx: ViewContext | None = None
+        self, view_ctx: ViewContext | None = None, blind_settings: bool = True
     ) -> list[DocParagraph]:
         cached = self.ref_pars.get(view_ctx)
         if cached is not None:
             return cached
-        pars = [create_final_par(p, view_ctx) for p in self.get_referenced_pars_impl()]
+        pars = [
+            create_final_par(p, view_ctx)
+            for p in self.get_referenced_pars_impl(
+                referrer=self, blind_settings=blind_settings
+            )
+        ]
         self.ref_pars[view_ctx] = pars
         return pars
 
     def get_referenced_pars_impl(
-        self, visited_pars: list[tuple[int, str]] | None = None
+        self,
+        visited_pars: list[tuple[int, str]] | None = None,
+        referrer: Optional["DocParagraph"] = None,
+        blind_settings: bool = True,
     ) -> list[DocParagraph]:
         """Returns the paragraphs that are referenced by this paragraph.
 
@@ -1044,6 +1057,8 @@ class DocParagraph:
         will also be resolved, and so on, until we get a list of non-reference paragraphs.
 
         :param visited_pars: A list of already visited paragraphs to prevent infinite recursion.
+        :param referrer: The paragraph that is referencing this paragraph.
+        :param blind_settings: Whether to hide the settings of referenced paragraph.
         :return: The list of resolved paragraphs.
 
         """
@@ -1095,7 +1110,9 @@ class DocParagraph:
                 )
 
             if par.is_reference():
-                ref_pars = par.get_referenced_pars_impl(visited_pars=visited_pars)
+                ref_pars = par.get_referenced_pars_impl(
+                    visited_pars=visited_pars, referrer=self
+                )
             else:
                 ref_pars = [par]
         elif self.is_area_reference():
@@ -1109,12 +1126,26 @@ class DocParagraph:
                 p.prev_deref = self
                 if p.is_reference():
                     ref_pars.extend(
-                        p.get_referenced_pars_impl(visited_pars=visited_pars)
+                        p.get_referenced_pars_impl(
+                            visited_pars=visited_pars, referrer=self
+                        )
                     )
                 else:
                     ref_pars.append(p)
         else:
             assert False
+
+        if referrer and blind_settings:
+            # Prevent setting pars from leaking via references
+            # The only exception are translation documents
+            for p in ref_pars:
+                if p.get_attr("settings", None) is None:
+                    continue
+                if referrer.is_translation():
+                    tls = {tl.doc_id for tl in p.doc.docinfo.translations}
+                    if referrer.doc.doc_id in tls:
+                        continue
+                p.md = BLINDED_SETTINGS_TEXT
         return ref_pars
 
     def is_dynamic(self) -> bool:
