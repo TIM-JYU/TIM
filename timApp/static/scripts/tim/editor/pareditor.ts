@@ -248,6 +248,8 @@ export class PareditorController extends DialogController<
     private availableTranslators: string[] = [];
     private originalDocument: boolean = true;
 
+    private formulaEditorOpen: boolean = false;
+
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
 
@@ -883,33 +885,7 @@ ${backTicks}
                 name: "Characters",
             },
             {
-                entries: [
-                    {
-                        title: "",
-                        func: () => this.editor!.surroundClicked("$", "$"),
-                        name: "TeX equation",
-                    },
-                    {
-                        title: "Insert aligned TeX block (Alt-Ctrl-B)",
-                        func: () => this.editor!.texBlockInsertClicked(),
-                        name: "TeX block",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.indexClicked(),
-                        name: "X&#x2093;",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.powerClicked(),
-                        name: "X&#x207f;",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.squareClicked(),
-                        name: "&radic;",
-                    },
-                ],
+                entries: [],
                 name: "TeX",
             },
             {
@@ -1071,6 +1047,7 @@ ${backTicks}
     getVisibleTabs() {
         // Upload tab is shown separately in the template because
         // it has special content that cannot be placed under "extra".
+
         return this.tabs.filter(
             (tab) => (!tab.show || tab.show()) && tab.name !== "Upload"
         );
@@ -1742,6 +1719,21 @@ ${backTicks}
             }
             this.translationInProgress = false;
         }
+    }
+
+    /**
+     * Toggle formula editor visibility
+     */
+    onFormulaEditorAddFormula() {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
+    }
+
+    onFormulaEditorCloseOk() {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
+    }
+
+    onFormulaEditorCloseCancel() {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
     /**

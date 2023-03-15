@@ -9,6 +9,7 @@ import {
     EditorType,
     focusAfter,
 } from "tim/editor/BaseParEditor";
+import type {IEditor} from "../../../../modules/cs/js/editor/editor";
 import AceAjax = Ace;
 import IAceEditor = Ace.Editor;
 
@@ -24,7 +25,7 @@ type EditorElementEventHandler<TType extends string> = JQuery.TypeEventHandler<
     TType
 >;
 
-export class AceParEditor extends BaseParEditor {
+export class AceParEditor extends BaseParEditor implements IEditor {
     public editor: IAceEditor;
     private snippetManager: ISnippetManager;
     private ace: IAce;
@@ -786,5 +787,20 @@ export class AceParEditor extends BaseParEditor {
 
     setAutoCompletion(enable: boolean) {
         this.editor.setOptions({enableLiveAutocompletion: enable});
+    }
+
+    get content(): string {
+        return this.getEditorText();
+    }
+    set content(value: string) {
+        this.setEditorText(value);
+    }
+
+    insert(str: string): void {
+        this.editor.insert(str);
+    }
+
+    setReadOnly(b: boolean): void {
+        this.editor.setReadOnly(b);
     }
 }
