@@ -1218,6 +1218,9 @@ class RunTest(Language, Modifier):
         if not self.run_cmd:
             return -1, "", "No test command (`testCmd`) present in plugin markup", ""
         code, out, err, pwddir = self.runself([], uargs=self.run_cmd)
+        # FIXME: Introduce some kind of setting to override this behaviour
+        if is_compile_error(out, err):
+            return -3, out, err, pwddir
         out, err = check_comtest(self, "runtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
 

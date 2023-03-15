@@ -21,7 +21,7 @@ import type {
 import {TagType} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {genericglobals, someglobals} from "tim/util/globals";
-import {getViewName, to} from "tim/util/utils";
+import {getUrlParams, getViewName, to} from "tim/util/utils";
 
 /**
  * Checks if the tag type is course code.
@@ -127,7 +127,19 @@ export class HeaderComponent implements OnInit {
         if (!this.item) {
             return "";
         }
-        return `/${link.route}/${this.item.path}${location.search}`;
+        return `/${link.route}/${this.item.path}${this.sanitizeSearch()}`;
+    }
+
+    sanitizeSearch(): string {
+        if (getViewName() != "review") {
+            return location.search;
+        } else {
+            const urlParams = getUrlParams();
+            urlParams.delete("b");
+            urlParams.delete("size");
+            const str = urlParams.toString();
+            return `${str.length > 0 ? "?" : ""}${str}`;
+        }
     }
 
     getMainCourseDocPath() {

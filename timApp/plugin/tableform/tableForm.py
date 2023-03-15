@@ -1,11 +1,12 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
+import io
 import json
 from dataclasses import dataclass, asdict, field
 from typing import Any, TypedDict, Sequence
 
-from flask import render_template_string, Response
+from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
@@ -37,7 +38,11 @@ from timApp.util.flask.requesthelper import (
     view_ctx_with_urlmacros,
     NotExist,
 )
-from timApp.util.flask.responsehelper import csv_string, json_response, text_response
+from timApp.util.flask.responsehelper import (
+    csv_string,
+    json_response,
+    text_response,
+)
 from timApp.util.get_fields import (
     get_fields_and_users,
     MembershipFilter,
@@ -133,6 +138,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     report: bool | Missing = missing
     reportButton: str | Missing | None = missing
     reportFilter: str | Missing | None = missing
+    downloadAsExcelFile: str | Missing | None = missing
     runScripts: list[str | RunScriptModel] | Missing = missing
     saveStyles: bool | Missing = True
     separator: str | Missing | None = missing
@@ -310,6 +316,7 @@ class GenerateCSVModel:
     filterFields: list[str] = field(default_factory=list)
     filterValues: list[str] = field(default_factory=list)
     anonNames: bool = False
+    downloadAsExcelFile: str | Missing = missing
 
 
 GenerateCSVSchema = class_schema(GenerateCSVModel)
@@ -538,6 +545,19 @@ def gen_csv(args: GenerateCSVModel) -> Response | str:
             csv, output = jsrunner_run(params)
         except JsRunnerError as e:
             raise RouteException("Error in JavaScript: " + str(e)) from e
+
+    if args.downloadAsExcelFile and isinstance(args.downloadAsExcelFile, str):
+        file_name = args.downloadAsExcelFile
+        output_content = output + csv
+        # Re-encode to UTF-8-BOM since that's what Excel opens by default
+        file_io = io.BytesIO(output_content.encode("utf-8-sig"))
+        return send_file(
+            file_io,
+            as_attachment=True,
+            download_name=file_name,
+            mimetype="text/csv",
+        )
+
     return text_response(output + csv)
 
 

@@ -157,6 +157,76 @@ export class AnswerBrowserComponent
     @Input() public taskId!: TaskId;
     @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
     @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
+    peerReviewResizeWidth = "";
+    peerReviewResizeHeight = "";
+    peerReviewResizeObserver?: ResizeObserver;
+    peerReviewElementRef?: ElementRef<HTMLDivElement>;
+    @ViewChild("peerReviewContentDiv") set peerReviewContentDiv(
+        el: ElementRef<HTMLDivElement> | undefined
+    ) {
+        if (!el || this.peerReviewElementRef == el) {
+            return;
+        }
+
+        this.peerReviewElementRef = el;
+        ParCompiler.processAllMath($(el.nativeElement));
+        if (this.isPeerReview) {
+            if (!this.peerReviewResizeObserver) {
+                this.peerReviewResizeObserver = new ResizeObserver(() =>
+                    this.savePeerReviewResize()
+                );
+            }
+            this.peerReviewResizeObserver.observe(el.nativeElement);
+        }
+    }
+
+    peerReviewEditAreaRef?: ElementRef<HTMLTextAreaElement>;
+    @ViewChild("peerReviewEditArea") set peerReviewEditArea(
+        el: ElementRef<HTMLTextAreaElement> | undefined
+    ) {
+        if (!el || this.peerReviewEditAreaRef == el) {
+            return;
+        }
+        this.peerReviewEditAreaRef = el;
+        if (this.isPeerReview) {
+            if (!this.peerReviewResizeObserver) {
+                this.peerReviewResizeObserver = new ResizeObserver(() =>
+                    this.savePeerReviewResize()
+                );
+            }
+            this.peerReviewResizeObserver.observe(el.nativeElement);
+        }
+    }
+
+    peerReviewPreviewChanged() {
+        let el: HTMLElement;
+        if (this.previewingPeerReview && this.peerReviewElementRef) {
+            el = this.peerReviewElementRef.nativeElement;
+        } else if (this.peerReviewEditAreaRef) {
+            el = this.peerReviewEditAreaRef.nativeElement;
+        } else {
+            return;
+        }
+        el.style.height = this.peerReviewResizeHeight;
+        el.style.width = this.peerReviewResizeWidth;
+        if (this.previewingPeerReview) {
+            this.renderPeerReviewMath();
+        }
+    }
+
+    savePeerReviewResize() {
+        let el: HTMLElement;
+        if (this.previewingPeerReview && this.peerReviewElementRef) {
+            el = this.peerReviewElementRef.nativeElement;
+        } else if (this.peerReviewEditAreaRef) {
+            el = this.peerReviewEditAreaRef.nativeElement;
+        } else {
+            return;
+        }
+        this.peerReviewResizeWidth = el.style.width || el.offsetWidth + "px";
+        this.peerReviewResizeHeight = el.style.height || el.offsetHeight + "px";
+    }
+
     loading: number; // Answerbrowser is fetching data
     updating = false; // Plugin html is reloading
     viewctrl!: Require<ViewCtrl>;
@@ -206,12 +276,14 @@ export class AnswerBrowserComponent
     private modelAnswerFetched = false;
     modelAnswerHtml?: string;
     modelAnswerVisible = false;
+    hideModelAnswerPanel = false;
     isValidAnswer = false;
     hidden: boolean = false;
     showDelete = false;
     formMode = false;
     showBrowseAnswers = true;
     isPeerReview = false;
+    previewingPeerReview = false;
     peerReviewEnabled = false;
     showNewTask = false;
     buttonNewTask = $localize`New task`;
@@ -1529,13 +1601,24 @@ export class AnswerBrowserComponent
                     ) / this.filteredPeerReviews.length;
                 this.reviewComment = this.filteredPeerReviews
                     .map((r) => r.comment)
-                    .join("\n---\n");
+                    .join("\n\n---\n\n");
             } else {
                 this.reviewPoints = undefined;
-                this.reviewComment = undefined;
+                this.reviewComment = this.isPeerReview
+                    ? undefined
+                    : $localize`(no reviews given)`;
             }
             this.savedReviewPoints = this.reviewPoints;
             this.savedReviewComment = this.reviewComment;
+            this.renderPeerReviewMath();
+        }
+    }
+
+    renderPeerReviewMath() {
+        if (this.peerReviewElementRef) {
+            ParCompiler.processAllMathDelayed(
+                $(this.peerReviewElementRef.nativeElement)
+            );
         }
     }
 
@@ -1583,6 +1666,13 @@ export class AnswerBrowserComponent
         this.taskInfo = r.result.data;
         if (r.result.data.modelAnswer) {
             this.modelAnswer = r.result.data.modelAnswer;
+            // Don't show "Show model answer" when it's disabled for viewers
+            if (
+                this.modelAnswer.disabled &&
+                !this.viewctrl.item.rights.teacher
+            ) {
+                this.hideModelAnswerPanel = true;
+            }
             this.onlyValid = false;
             if (this.answers.length > 0) {
                 this.onOnlyValidChanged();
