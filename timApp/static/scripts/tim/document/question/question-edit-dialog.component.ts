@@ -482,6 +482,9 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
         }
         this.rows = rows;
 
+        // TODO: timeLimit should only be set for lecture questions, but it is probably beneficial to keep it anyway --
+        //       it doesn't affect document tasks, and having it in the markup limits the amount of manual work when
+        //       converting lecture questions to doc tasks and vice versa.
         if (json.timeLimit && json.timeLimit > 0) {
             this.ui.durationType = "seconds";
             this.ui.durationAmount = json.timeLimit;
