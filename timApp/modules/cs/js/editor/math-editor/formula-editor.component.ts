@@ -48,6 +48,9 @@ type OldContent = BeforeAndAfter | string;
     selector: "cs-formula-editor",
     template: `
         <dialog #formulaDialog class="formula-editor-dialog">
+            <div class="add-formula-buttons">
+                <button class="timButton" (click)="addFormula()">sqrt</button>
+            </div>
             <div class="formula-container">
                 <span class="visual-input" #visualInput></span>
     
@@ -269,6 +272,15 @@ export class FormulaEditorComponent {
             // clearing fields triggers update to editor content
             // rewrite it
             this.editor.content = finalContent;
+        }
+    }
+
+    addFormula() {
+        if (this.activeEditor === ActiveEditorType.Latex) {
+            const pos = this.latexInput.nativeElement.selectionStart;
+            // rest of the code not done yet
+        } else {
+            this.mathField.cmd("\\sqrt");
         }
     }
 }
