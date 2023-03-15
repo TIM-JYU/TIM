@@ -6,7 +6,6 @@
  * @date 28.2.2023
  */
 
-import type {OnInit} from "@angular/core";
 import {
     Component,
     ElementRef,
@@ -39,11 +38,9 @@ type BeforeAndAfter = {
     after: string;
 };
 
-const CURSOR_MARKER = "│";
-
 /**
  * OldContent is split into two at cursor location if insert operation is supported
- * or else just the content
+ * or else just the content: string
  */
 type OldContent = BeforeAndAfter | string;
 
@@ -77,7 +74,7 @@ type OldContent = BeforeAndAfter | string;
     `,
     styleUrls: ["./formula-editor.component.scss"],
 })
-export class FormulaEditorComponent implements OnInit {
+export class FormulaEditorComponent {
     latexInputControl = new FormControl("");
     @ViewChild("latexInput") latexInput!: ElementRef<HTMLTextAreaElement>;
 
@@ -116,10 +113,20 @@ export class FormulaEditorComponent implements OnInit {
 
     constructor() {}
 
-    ngOnInit(): void {
-        this.latexInputControl.valueChanges.subscribe((value) => {
-            this.updateFormulaToEditor();
-        });
+    /**
+     * Finds cursor location from editor
+     * @return index in editor.content or -1 if editor.insert not defined
+     */
+    findCursorLocation(): number {
+        if (!this.editor.insert) {
+            return -1;
+        }
+        const cursorMarker = "│";
+
+        // add cursor character to know where cursor is
+        this.editor.insert(cursorMarker);
+        // find its index
+        return this.editor.content.indexOf(cursorMarker);
     }
 
     /**
@@ -127,12 +134,10 @@ export class FormulaEditorComponent implements OnInit {
      * @param str
      */
     parseOldContent(str: string): OldContent {
-        if (!this.editor.insert) {
+        const cursorI = this.findCursorLocation();
+        if (cursorI === -1) {
             return str;
         }
-        // add cursor character to know where cursor is
-        this.editor.insert(CURSOR_MARKER);
-        const cursorI = this.editor.content.indexOf(CURSOR_MARKER);
         // split into two ignoring the cursor character
         const result = {
             before: this.editor.content.slice(0, cursorI),
@@ -143,12 +148,16 @@ export class FormulaEditorComponent implements OnInit {
         return result;
     }
 
+    /**
+     * write changes in visual field to latex field if visual field
+     * is the one being typed
+     * @param field reference to mathField
+     */
     editHandler(field: MathFieldMethods) {
-        // write changes in visual field to latex field if visual field
-        // was the one modified
         if (this.activeEditor === ActiveEditorType.Visual) {
             const latex = field.latex();
             this.latexInputControl.setValue(latex);
+            this.updateFormulaToEditor();
         }
     }
 
@@ -182,14 +191,17 @@ export class FormulaEditorComponent implements OnInit {
         this.activeEditor = ActiveEditorType.Latex;
     }
 
+    /**
+     * write changes in latex field to visual field if latex field
+     * is the one being typed in.
+     */
     handleLatexInput() {
-        // write changes in latex field to visual field if latex field
-        // was the one modified
         if (
             this.activeEditor === ActiveEditorType.Latex &&
             this.latexInputControl.value !== null
         ) {
             this.mathField.latex(this.latexInputControl.value);
+            this.updateFormulaToEditor();
         }
     }
 
@@ -207,9 +219,12 @@ export class FormulaEditorComponent implements OnInit {
         return `${wrapSymbol}${latex}${wrapSymbol}`;
     }
 
+    /**
+     * Updates editor text with current formula text
+     */
     updateFormulaToEditor() {
         if (
-            this.latexInputControl.value &&
+            this.latexInputControl.value !== null &&
             this.isMultilineFormulaControl.value !== null
         ) {
             const isMultiline = this.isMultilineFormulaControl.value;
@@ -218,15 +233,13 @@ export class FormulaEditorComponent implements OnInit {
                 : this.mathField.latex();
             if (typeof latex === "string") {
                 const formulaLatex = this.formatLatex(latex, isMultiline);
-                if (this.editor) {
-                    if (typeof this.oldContent === "string") {
-                        this.editor.content = this.oldContent + formulaLatex;
-                    } else {
-                        this.editor.content =
-                            this.oldContent.before +
-                            formulaLatex +
-                            this.oldContent.after;
-                    }
+                if (typeof this.oldContent === "string") {
+                    this.editor.content = this.oldContent + formulaLatex;
+                } else {
+                    this.editor.content =
+                        this.oldContent.before +
+                        formulaLatex +
+                        this.oldContent.after;
                 }
             }
         }
@@ -234,22 +247,28 @@ export class FormulaEditorComponent implements OnInit {
 
     handleFormulaOk() {
         this.updateFormulaToEditor();
+        const finalContent = this.editor.content;
         this.okEvent.emit();
         this.clearFields();
+        // clearing fields triggers update to editor content
+        // rewrite it
+        this.editor.content = finalContent;
     }
 
     handleFormulaCancel() {
         if (confirm($localize`Are you sure? Cancel will clear the editor.`)) {
-            if (this.editor) {
-                if (typeof this.oldContent === "string") {
-                    this.editor.content = this.oldContent;
-                } else {
-                    this.editor.content =
-                        this.oldContent.before + this.oldContent.after;
-                }
+            if (typeof this.oldContent === "string") {
+                this.editor.content = this.oldContent;
+            } else {
+                this.editor.content =
+                    this.oldContent.before + this.oldContent.after;
             }
+            const finalContent = this.editor.content;
             this.cancelEvent.emit();
             this.clearFields();
+            // clearing fields triggers update to editor content
+            // rewrite it
+            this.editor.content = finalContent;
         }
     }
 }

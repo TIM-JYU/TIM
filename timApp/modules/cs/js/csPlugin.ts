@@ -3877,7 +3877,7 @@ ${fhtml}
                        [maxRows]="maxrows"
                        [disabled]="true">
             </cs-editor>
-            <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']">
+            <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']" [hidden]="formulaEditorOpen">
                 <p class="csRunMenu">
                     <button *ngIf="isRun && buttonText()"
                             [disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved() && isText)"
