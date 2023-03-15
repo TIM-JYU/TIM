@@ -350,7 +350,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
     private newQuestion(data: INewQuestionParams) {
         this.setEmptyMarkup(data.qst);
         this.titleChanged = false;
-        if (this.qst) {
+        if (!this.qst) {
             this.ui.durationAmount = undefined; // default no time
         }
     }
@@ -886,7 +886,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
             this.customError = "You must have at least one row.";
         }
         let timeLimit: number | undefined;
-        if (this.ui.durationAmount != null) {
+        if (this.ui.durationAmount != undefined) {
             timeLimit = moment
                 .duration(this.ui.durationAmount, this.ui.durationType)
                 .asSeconds();
