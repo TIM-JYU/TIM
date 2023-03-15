@@ -5,6 +5,7 @@ import {
     Directive,
     ElementRef,
     ViewChild,
+    HostListener,
 } from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {SafeResourceUrl} from "@angular/platform-browser";
@@ -1729,6 +1730,11 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     onFormulaEditorCloseCancel() {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
+    }
+
+    @HostListener("window:keydown.control.e", ["$event"])
+    handleKeyDown(event: KeyboardEvent) {
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
