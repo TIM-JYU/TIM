@@ -1735,7 +1735,9 @@ export class CsController extends CsBase implements ITimComponent {
 
     @HostListener("window:keydown.control.e", ["$event"])
     handleKeyDown(event: KeyboardEvent) {
-        this.formulaEditorOpen = !this.formulaEditorOpen;
+        if (this.formulaEditor) {
+            this.formulaEditorOpen = !this.formulaEditorOpen;
+        }
     }
 
     onFormulaEditorAddFormula() {

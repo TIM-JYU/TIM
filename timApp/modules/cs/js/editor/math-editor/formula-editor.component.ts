@@ -256,19 +256,25 @@ export class FormulaEditorComponent {
     }
 
     handleFormulaCancel() {
-        if (confirm($localize`Are you sure? Cancel will clear the editor.`)) {
-            if (typeof this.oldContent === "string") {
-                this.editor.content = this.oldContent;
-            } else {
-                this.editor.content =
-                    this.oldContent.before + this.oldContent.after;
+        if (this.editor.content != "") {
+            if (
+                confirm($localize`Are you sure? Cancel will clear the editor.`)
+            ) {
+                if (typeof this.oldContent === "string") {
+                    this.editor.content = this.oldContent;
+                } else {
+                    this.editor.content =
+                        this.oldContent.before + this.oldContent.after;
+                }
+                const finalContent = this.editor.content;
+                this.cancelEvent.emit();
+                this.clearFields();
+                // clearing fields triggers update to editor content
+                // rewrite it
+                this.editor.content = finalContent;
             }
-            const finalContent = this.editor.content;
+        } else {
             this.cancelEvent.emit();
-            this.clearFields();
-            // clearing fields triggers update to editor content
-            // rewrite it
-            this.editor.content = finalContent;
         }
     }
 }
