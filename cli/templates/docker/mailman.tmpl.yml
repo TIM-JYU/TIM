@@ -1,5 +1,5 @@
  mailman-core:
-   image: timimages/mailman-core:latest
+   image: ${compose.images_repository}/mailman-core:latest
    restart: unless-stopped
    volumes:
      - ./mailman/db:/opt/mailmandb
@@ -14,7 +14,7 @@
      INIT_DEV: 1
      TIM_DEV: 1
  mailman-web:
-   image: timimages/mailman-web:latest
+   image: ${compose.images_repository}/mailman-web:latest
    restart: unless-stopped
    depends_on:
      - mailman-core

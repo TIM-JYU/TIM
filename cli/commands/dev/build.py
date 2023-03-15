@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import List, Optional, Callable, Dict, NamedTuple
 
+from cli.config import get_config
 from cli.docker.run import run_docker
 from cli.docker.service_variables import tim_image_tag, csplugin_image_tag
 from cli.util.logging import log_info
@@ -27,7 +28,8 @@ If no tag is specified, the task is built with all tags.
 
 
 def build_tim(_: Optional[str], no_cache: bool) -> Optional[str]:
-    image_name = f"timimages/tim:{tim_image_tag()}"
+    config = get_config()
+    image_name = f"{config.images_repository}/tim:{tim_image_tag()}"
     cwd = Path.cwd()
     dockerfile = cwd / "timApp" / "Dockerfile"
     run_docker(
@@ -46,7 +48,8 @@ def build_tim(_: Optional[str], no_cache: bool) -> Optional[str]:
 
 def build_csplugin(tag: Optional[str], no_cache: bool) -> Optional[str]:
     assert tag is not None
-    image_name = f"timimages/cs3:{tag}-{csplugin_image_tag()}"
+    config = get_config()
+    image_name = f"{config.images_repository}/cs3:{tag}-{csplugin_image_tag()}"
     context = Path.cwd() / "timApp" / "modules" / "cs"
     run_docker(
         [

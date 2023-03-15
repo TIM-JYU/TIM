@@ -45,6 +45,10 @@ class TIMConfig(ConfigParser):
     def host(self) -> str:
         return self.get("tim", "host")
 
+    @property
+    def images_repository(self) -> str:
+        return self.get("compose", "images_repository")
+
     def add_comment(self, section: str, option: str, comment: str) -> None:
         self._comment_lines[(section, option)] = comment.strip()
 
