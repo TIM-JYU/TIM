@@ -24,11 +24,12 @@ def create_yaml(
     question_type: str,
     choices: ChoiceList,
     points_str: str | None = None,
+    answer_limit: int | None = None,
+    time_limit: int | None = None,
     headers=None,
     matrix_type=None,
 ):
     headers = headers or []
-    # TODO: timeLimit missing (for lecture question)
     # TODO: matrixType useless?
     return {
         "answerFieldType": field_type,
@@ -38,8 +39,9 @@ def create_yaml(
         "questionText": "Is Moon made of cheese?",
         "questionTitle": "Moon problem",
         "questionType": question_type,
-        "answerLimit": 1,
+        **({"answerLimit": answer_limit} if answer_limit else {}),
         "rows": [c[0] for c in choices],
+        **({"timeLimit": time_limit} if time_limit else {}),
         **({"points": points_str} if points_str else {}),
     }
 
@@ -324,9 +326,9 @@ class QuestionTest(BrowserTest):
         d.document.clear_mem_cache()
         qst_par = d.document.get_paragraphs()[0]
         qst_md = qst_par.get_markdown()
-
         # For some reason, default time limit gets set for non-lecture tasks here, instead of undefined
         self.assertEqual(expected_yaml, YamlBlock.from_markdown(qst_md).values)
+
         if answer_type_choice == "Text area":
             textareas = qst.find_elements(By.CSS_SELECTOR, "textarea")
             textareas[0].click()
