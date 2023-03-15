@@ -57,7 +57,7 @@ export const CURSOR = "⁞";
 export interface IEditor {
     content: string;
 
-    setSelection?(): void;
+    setSelection?(start: number): void;
     doWrap?(wrap: number): void;
     insert?(str: string): void;
     setReadOnly(b: boolean): void;

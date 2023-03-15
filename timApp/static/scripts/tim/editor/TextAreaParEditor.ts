@@ -21,8 +21,9 @@ import {
     EditorType,
     focusAfter,
 } from "tim/editor/BaseParEditor";
+import type {IEditor} from "../../../../modules/cs/js/editor/editor";
 
-export class TextAreaParEditor extends BaseParEditor {
+export class TextAreaParEditor extends BaseParEditor implements IEditor {
     public editor: JQuery;
     private editorElement: HTMLTextAreaElement;
     type: EditorType.Textarea = EditorType.Textarea;
@@ -717,4 +718,24 @@ export class TextAreaParEditor extends BaseParEditor {
     replaceTranslation(translatedText: string) {
         this.replaceSelectedText(translatedText, "select");
     }
+
+    get content(): string {
+        return this.getEditorText();
+    }
+    set content(value: string) {
+        this.setEditorText(value);
+    }
+
+    doWrap(wrap: number): void {}
+
+    insert(str: string): void {
+        const [start, end] = this.getPosition();
+        const value = this.getEditorText();
+        const before = value.slice(0, start);
+        const after = value.slice(end);
+        const newValue = before + str + after;
+        this.setEditorText(newValue);
+    }
+
+    setReadOnly(b: boolean): void {}
 }

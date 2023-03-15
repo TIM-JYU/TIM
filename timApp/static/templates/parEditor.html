@@ -1,18 +1,18 @@
   <uib-tabset ng-show="$ctrl.proeditor" active="$ctrl.activeTab">
     <uib-tab ng-repeat="t in $ctrl.getVisibleTabs()" heading="{{ t.name }}" index="$ctrl.getTabIndex(t)">
+        <div ng-if="t.name === 'TeX' && $ctrl.editor !== undefined">
+          <button ng-click="$ctrl.onFormulaEditorAddFormula()">Add formula</button>
+          <cs-formula-editor
+                  (ok-event)="$ctrl.onFormulaEditorCloseOk()"
+                  (cancel-event)="$ctrl.onFormulaEditorCloseCancel()"
+                  [visible]="$ctrl.formulaEditorOpen"
+                  [editor]="$ctrl.editor"
+          ></cs-formula-editor>
+        </div>
         <tim-editor-entry ng-repeat="e in t.entries" data="e"></tim-editor-entry>
         <div ng-if="t.extra" ng-bind-html="t.extra"></div>
     </uib-tab>
-      <uib-tab heading="TeX" index="'tex'">
-            <div ng-if="$ctrl.editor !== undefined">
-              <button ng-click="$ctrl.onFormulaEditorAddFormula()">Add formula</button>
-              <cs-formula-editor
-                      [visible]="$ctrl.formulaEditorOpen"
-                      [editor]="$ctrl.editor"
-              ></cs-formula-editor>
-            </div>
 
-      </uib-tab>
     <uib-tab heading="Upload" index="'upload'" ng-show="$ctrl.getOptions().showImageUpload">
         <span>
             <input type="file" ngf-select="$ctrl.onFilesSelect($files, $invalidFiles)" ngf-multiple="true">
@@ -25,6 +25,7 @@
         </span>
         <tim-editor-entry ng-repeat="e in $ctrl.getUploadTab().entries" data="e"></tim-editor-entry>
     </uib-tab>
+
     <uib-tab heading="Help" index="'help'">
         <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank"
                 title="General TIM Help">TIM
@@ -55,6 +56,7 @@
             <b ng-show="!$ctrl.translatorAvailable">{{$ctrl.errorMessage}}</b>
         </div>
     </uib-tab>
+
   </uib-tabset>
   <div id="editorflex" class="stacked"><div id="editorbox">
     <div class="editorContainer">

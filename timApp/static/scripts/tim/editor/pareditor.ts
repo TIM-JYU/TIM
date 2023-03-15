@@ -885,33 +885,7 @@ ${backTicks}
                 name: "Characters",
             },
             {
-                entries: [
-                    {
-                        title: "",
-                        func: () => this.editor!.surroundClicked("$", "$"),
-                        name: "TeX equation",
-                    },
-                    {
-                        title: "Insert aligned TeX block (Alt-Ctrl-B)",
-                        func: () => this.editor!.texBlockInsertClicked(),
-                        name: "TeX block",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.indexClicked(),
-                        name: "X&#x2093;",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.powerClicked(),
-                        name: "X&#x207f;",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.squareClicked(),
-                        name: "&radic;",
-                    },
-                ],
+                entries: [],
                 name: "TeX",
             },
             {
@@ -1075,10 +1049,7 @@ ${backTicks}
         // it has special content that cannot be placed under "extra".
 
         return this.tabs.filter(
-            (tab) =>
-                (!tab.show || tab.show()) &&
-                tab.name !== "Upload" &&
-                tab.name !== "TeX"
+            (tab) => (!tab.show || tab.show()) && tab.name !== "Upload"
         );
     }
 
@@ -1754,7 +1725,14 @@ ${backTicks}
      * Toggle formula editor visibility
      */
     onFormulaEditorAddFormula() {
-        console.log(this.editor?.getEditorText());
+        this.formulaEditorOpen = !this.formulaEditorOpen;
+    }
+
+    onFormulaEditorCloseOk() {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
+    }
+
+    onFormulaEditorCloseCancel() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
