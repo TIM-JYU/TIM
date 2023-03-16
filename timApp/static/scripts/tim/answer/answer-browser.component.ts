@@ -276,6 +276,7 @@ export class AnswerBrowserComponent
     private modelAnswerFetched = false;
     modelAnswerHtml?: string;
     modelAnswerVisible = false;
+    hideModelAnswerPanel = false;
     isValidAnswer = false;
     hidden: boolean = false;
     showDelete = false;
@@ -1665,6 +1666,13 @@ export class AnswerBrowserComponent
         this.taskInfo = r.result.data;
         if (r.result.data.modelAnswer) {
             this.modelAnswer = r.result.data.modelAnswer;
+            // Don't show "Show model answer" when it's disabled for viewers
+            if (
+                this.modelAnswer.disabled &&
+                !this.viewctrl.item.rights.teacher
+            ) {
+                this.hideModelAnswerPanel = true;
+            }
             this.onlyValid = false;
             if (this.answers.length > 0) {
                 this.onOnlyValidChanged();
