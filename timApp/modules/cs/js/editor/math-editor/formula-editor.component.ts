@@ -215,11 +215,9 @@ export class FormulaEditorComponent {
 
     formatLatex(latex: string, isMultiline: boolean): string {
         const wrapSymbol = isMultiline ? "$$" : "$";
-        if (isMultiline) {
-            const multilineLatex = latex.split("\n").join("\\\\\n");
-            return `${wrapSymbol}\n${multilineLatex}\\\\\n${wrapSymbol}\n`;
-        }
-        return `${wrapSymbol}${latex}${wrapSymbol}`;
+        return isMultiline
+            ? `${wrapSymbol}\n${latex}\n${wrapSymbol}`
+            : `${wrapSymbol}${latex}${wrapSymbol}`;
     }
 
     /**
