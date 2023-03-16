@@ -54,7 +54,7 @@ type OldContent = BeforeAndAfter | string;
             <div class="formula-container">
                 <span class="visual-input" #visualInput></span>
     
-                <textarea name="math-editor-output" #latexInput cols="30" rows="5"
+                <textarea name="math-editor-output" #latexInput cols="30" rows="5" id="latex-textarea"
                           (click)="handleLatexFocus()"
                           (keyup)="handleLatexInput()"
                           [formControl]="latexInputControl"
@@ -275,10 +275,24 @@ export class FormulaEditorComponent {
         }
     }
 
+    /**
+     * Adds formula at the cursor position to both input fields.
+     */
     addFormula() {
         if (this.activeEditor === ActiveEditorType.Latex) {
-            const pos = this.latexInput.nativeElement.selectionStart;
-            // rest of the code not done yet
+            const startPos = this.latexInput.nativeElement.selectionStart;
+            const endPos = this.latexInput.nativeElement.selectionEnd;
+            const oldValue = this.latexInput.nativeElement.value;
+            const newValue =
+                oldValue.substring(0, startPos) +
+                "\\sqrt_{}" +
+                oldValue.substring(endPos, oldValue.length);
+            this.latexInputControl.setValue(newValue);
+            this.latexInput.nativeElement.selectionStart =
+                startPos + newValue.length;
+            this.latexInput.nativeElement.selectionEnd =
+                endPos + newValue.length;
+            this.handleLatexInput();
         } else {
             this.mathField.cmd("\\sqrt");
         }
