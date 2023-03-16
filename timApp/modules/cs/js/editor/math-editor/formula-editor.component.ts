@@ -47,30 +47,33 @@ type OldContent = BeforeAndAfter | string;
 @Component({
     selector: "cs-formula-editor",
     template: `
-        <dialog #formulaDialog class="formula-editor-dialog">
-            <div class="formula-container">
-                <span class="visual-input" #visualInput></span>
-    
-                <textarea name="math-editor-output" #latexInput cols="30" rows="5"
-                          (click)="handleLatexFocus()"
-                          (keyup)="handleLatexInput()"
-                          [formControl]="latexInputControl"
-                          placeholder="Write LaTeX" i18n-placeholder>
-                </textarea>                    
-            </div>
-    
-            <div class="formula-button-container">
-                <div class="formula-buttons">
-                    <button class="timButton" (click)="handleFormulaOk()">Ok</button>
-                    <button class="timButton" (click)="handleFormulaCancel()" i18n>Cancel</button>                                        
+        <div [hidden]="!visible" class="formula-editor">
+            <div class="formula-editor-dialog">
+                <div class="formula-container">
+                    <span class="visual-input" #visualInput></span>
+        
+                    <textarea name="math-editor-output" #latexInput cols="30" rows="5"
+                              (click)="handleLatexFocus()"
+                              (keyup)="handleLatexInput()"
+                              [formControl]="latexInputControl"
+                              placeholder="Write LaTeX" i18n-placeholder>
+                    </textarea>                    
                 </div>
-    
-                <label class="font-weight-normal">
-                    <input type="checkbox" [formControl]="isMultilineFormulaControl"><ng-container i18n>
-                    Multiline</ng-container>
-                </label>
+        
+                <div class="formula-button-container">
+                    <div class="formula-buttons">
+                        <button class="timButton" (click)="handleFormulaOk()">Ok</button>
+                        <button class="timButton" (click)="handleFormulaCancel()" i18n>Cancel</button>                                        
+                    </div>
+        
+                    <label class="font-weight-normal">
+                        <input type="checkbox" [formControl]="isMultilineFormulaControl"><ng-container i18n>
+                        Multiline</ng-container>
+                    </label>
+                </div>
             </div>
-        </dialog>
+        </div>
+            
     `,
     styleUrls: ["./formula-editor.component.scss"],
 })
@@ -92,23 +95,16 @@ export class FormulaEditorComponent {
 
     isMultilineFormulaControl = new FormControl(true);
 
-    @ViewChild("formulaDialog", {static: true})
-    formulaDialog!: ElementRef<HTMLDialogElement>;
-
     @Input()
     get visible(): boolean {
         return this._visible;
     }
     set visible(isVis: boolean) {
         this._visible = isVis;
-        setTimeout(() => {
-            if (this.formulaDialog && isVis) {
-                this.oldContent = this.parseOldContent(this.editor.content);
-                this.formulaDialog.nativeElement.show();
-            } else if (this.formulaDialog) {
-                this.formulaDialog.nativeElement.close();
-            }
-        }, 50);
+        // became visible so save what was in editor
+        if (isVis) {
+            this.oldContent = this.parseOldContent(this.editor.content);
+        }
     }
     private _visible: boolean = false;
 
