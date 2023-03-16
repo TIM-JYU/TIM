@@ -92,7 +92,8 @@ export class FormulaEditorComponent {
 
     isMultilineFormulaControl = new FormControl(true);
 
-    @ViewChild("formulaDialog") formulaDialog!: ElementRef<HTMLDialogElement>;
+    @ViewChild("formulaDialog", {static: true})
+    formulaDialog!: ElementRef<HTMLDialogElement>;
 
     @Input()
     get visible(): boolean {
@@ -100,12 +101,14 @@ export class FormulaEditorComponent {
     }
     set visible(isVis: boolean) {
         this._visible = isVis;
-        if (this.formulaDialog && isVis) {
-            this.oldContent = this.parseOldContent(this.editor.content);
-            this.formulaDialog.nativeElement.show();
-        } else if (this.formulaDialog) {
-            this.formulaDialog.nativeElement.close();
-        }
+        setTimeout(() => {
+            if (this.formulaDialog && isVis) {
+                this.oldContent = this.parseOldContent(this.editor.content);
+                this.formulaDialog.nativeElement.show();
+            } else if (this.formulaDialog) {
+                this.formulaDialog.nativeElement.close();
+            }
+        }, 50);
     }
     private _visible: boolean = false;
 
