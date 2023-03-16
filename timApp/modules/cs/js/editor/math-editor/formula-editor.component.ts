@@ -48,10 +48,13 @@ type OldContent = BeforeAndAfter | string;
     selector: "cs-formula-editor",
     template: `
         <dialog #formulaDialog class="formula-editor-dialog">
+            <div class="add-formula-buttons">
+                <button class="timButton" (click)="addFormula()">sqrt</button>
+            </div>
             <div class="formula-container">
                 <span class="visual-input" #visualInput></span>
     
-                <textarea name="math-editor-output" #latexInput cols="30" rows="5"
+                <textarea name="math-editor-output" #latexInput cols="30" rows="5" id="latex-textarea"
                           (click)="handleLatexFocus()"
                           (keyup)="handleLatexInput()"
                           [formControl]="latexInputControl"
@@ -279,6 +282,29 @@ export class FormulaEditorComponent {
             }
         } else {
             this.cancelEvent.emit();
+        }
+    }
+
+    /**
+     * Adds formula at the cursor position to both input fields.
+     */
+    addFormula() {
+        if (this.activeEditor === ActiveEditorType.Latex) {
+            const startPos = this.latexInput.nativeElement.selectionStart;
+            const endPos = this.latexInput.nativeElement.selectionEnd;
+            const oldValue = this.latexInput.nativeElement.value;
+            const newValue =
+                oldValue.substring(0, startPos) +
+                "\\sqrt_{}" +
+                oldValue.substring(endPos, oldValue.length);
+            this.latexInputControl.setValue(newValue);
+            this.latexInput.nativeElement.selectionStart =
+                startPos + newValue.length;
+            this.latexInput.nativeElement.selectionEnd =
+                endPos + newValue.length;
+            this.handleLatexInput();
+        } else {
+            this.mathField.cmd("\\sqrt");
         }
     }
 }
