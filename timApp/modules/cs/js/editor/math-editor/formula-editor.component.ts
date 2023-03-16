@@ -66,8 +66,8 @@ type OldContent = BeforeAndAfter | string;
                 </div>
     
                 <label class="font-weight-normal">
-                    <input type="checkbox" [formControl]="isMultilineFormulaControl">
-                    Multiline
+                    <input type="checkbox" [formControl]="isMultilineFormulaControl"><ng-container i18n>
+                    Multiline</ng-container>
                 </label>
             </div>
         </dialog>
@@ -256,7 +256,10 @@ export class FormulaEditorComponent {
     }
 
     handleFormulaCancel() {
-        if (this.editor.content != "") {
+        if (
+            this.editor.content != "" ||
+            this.oldContent === this.editor.content
+        ) {
             if (
                 confirm($localize`Are you sure? Cancel will clear the editor.`)
             ) {

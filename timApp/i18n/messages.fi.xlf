@@ -8034,6 +8034,14 @@
           <context context-type="linenumber">242</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4678661104600045414" datatype="html">
+        <source> Multiline</source>
+        <target state="new"> Monirivinen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
