@@ -722,6 +722,31 @@ def expand_macros_for_plugin(par: DocParagraph, macros, env: TimSandboxedEnviron
     return yaml_str
 
 
+def expand_macros_for_plugin_attrs(
+    par: DocParagraph, macros, env: TimSandboxedEnvironment
+) -> dict | None:
+    par_attrs = par.get_attrs()
+    rnd_macros = par.get_rands()
+    if rnd_macros:
+        macros = {**macros, **rnd_macros}
+    exp_attrs_str = str(par_attrs)
+    if not par.get_nomacros():
+        env.counters.task_id = par.attrs.get("taskId", None)
+        env.counters.is_plugin = True
+        exp_attrs_str = expand_macros(
+            exp_attrs_str,
+            macros=macros,
+            settings=par.doc.get_settings(),
+            env=env,
+        )
+        exp_attrs_str = (
+            exp_attrs_str.replace("'", "").replace("{", "").replace("}", "").split(",")
+        )
+        exp_attrs = list(map(lambda x: tuple(x.strip().split(": ")), exp_attrs_str))
+        return dict(exp_attrs)
+    return None
+
+
 def load_markup_from_yaml(
     yaml_str: str, global_attrs: dict[str, str], plugin_type: str
 ):

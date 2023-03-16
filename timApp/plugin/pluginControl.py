@@ -37,6 +37,7 @@ from timApp.plugin.plugin import (
     WANT_FIELDS,
     find_task_ids,
     get_simple_hash_from_par_and_user,
+    expand_macros_for_plugin_attrs,
 )
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
@@ -235,6 +236,14 @@ class PluginPlacement:
         elif plugin_name:
             # We want the expanded markdown here, so can't call Plugin.from_paragraph[_macros] directly.
             macros = macroinfo.get_macros()
+            # We should probably process plugin's block attributes here before the plugin yaml
+            # FIXME: plugin rendering seems to break here for lecture questions (QST)
+            #        if using macros to set the value for the 'question' attr
+            block_attrs = expand_macros_for_plugin_attrs(
+                block, macros, macroinfo.jinja_env
+            )
+            if block_attrs:
+                block.attrs.update(block_attrs)
             md = expand_macros_for_plugin(block, macros, macroinfo.jinja_env)
             p_range = 0, len(md)
             try:
