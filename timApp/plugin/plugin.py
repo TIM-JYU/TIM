@@ -84,6 +84,13 @@ ALLOW_STYLES_PLUGINS = {"textfield", "numericfield", "drag", "dropdown"}
 
 WANT_FIELDS = {"csPlugin"}
 
+ALLOWED_MACRO_PLUGIN_TYPES = {
+    "qst",
+}
+ALLOWED_MACRO_PLUGIN_ATTRS = {
+    "question",
+}
+
 
 class PluginWrap(Enum):
     Nothing = 1
@@ -724,27 +731,42 @@ def expand_macros_for_plugin(par: DocParagraph, macros, env: TimSandboxedEnviron
 
 def expand_macros_for_plugin_attrs(
     par: DocParagraph, macros, env: TimSandboxedEnvironment
-) -> dict | None:
+) -> None:
+    """
+    Expands macros for plugin paragraph/block attributes. Sets attribute values directly.
+    In order to set paragraph classes correctly based on certain plugin block attributes
+    (such as lecture questions), this function needs to run before DocParagraph.prepare(..)
+    (see also function pluginify in timApp/plugin/pluginControl.py).
+
+    :param par: The plugin paragraph.
+    :param macros: Dict of macros
+    :param env: macro environment
+    """
+    plugin_type = par.get_attr("plugin")
+    if plugin_type not in ALLOWED_MACRO_PLUGIN_TYPES or par.get_nomacros():
+        return
     par_attrs = par.get_attrs()
+    expandable_attrs = ""
+    for p_attr in [*par_attrs]:
+        if p_attr in ALLOWED_MACRO_PLUGIN_ATTRS:
+            expandable_attrs += f"{p_attr}: {par.get_attr(p_attr)}, "
     rnd_macros = par.get_rands()
     if rnd_macros:
         macros = {**macros, **rnd_macros}
-    exp_attrs_str = str(par_attrs)
-    if not par.get_nomacros():
-        env.counters.task_id = par.attrs.get("taskId", None)
-        env.counters.is_plugin = True
-        exp_attrs_str = expand_macros(
-            exp_attrs_str,
-            macros=macros,
-            settings=par.doc.get_settings(),
-            env=env,
-        )
-        exp_attrs_str = (
-            exp_attrs_str.replace("'", "").replace("{", "").replace("}", "").split(",")
-        )
-        exp_attrs = list(map(lambda x: tuple(x.strip().split(": ")), exp_attrs_str))
-        return dict(exp_attrs)
-    return None
+
+    env.counters.task_id = par.attrs.get("taskId", None)
+    env.counters.is_plugin = True
+    expanded_attrs = expand_macros(
+        expandable_attrs,
+        macros=macros,
+        settings=par.doc.get_settings(),
+        env=env,
+    )
+    if expanded_attrs:
+        expanded_attrs = expanded_attrs.rstrip(", ").split(", ")
+        exp_attrs = dict(map(lambda x: tuple(x.split(": ")), expanded_attrs))
+        for attr in exp_attrs:
+            par.set_attr(attr, exp_attrs[attr])
 
 
 def load_markup_from_yaml(
