@@ -82,6 +82,7 @@ from timApp.item.partitioning import (
     get_document_areas,
     RequestedViewRange,
     IndexedViewRange,
+    get_area_range,
 )
 from timApp.item.scoreboard import get_score_infos_if_enabled
 from timApp.item.tag import GROUP_TAG_PREFIX
@@ -611,9 +612,18 @@ def render_doc_view(
 
     piece_size = get_piece_size_from_cookie(request)
     areas = None
+    r_view_range = None
     if piece_size:
         areas = get_document_areas(doc_info)
-    r_view_range = RequestedViewRange(b=m.b, e=m.e, size=m.size)
+    if m.area:
+        area = get_area_range(doc_info, m.area)
+        if area is not None:
+            # TODO: RequestedViewRange e returns paragraph e-1 as last paragraph, check if intended
+            r_view_range = RequestedViewRange(b=area[0], e=area[1] + 1, size=None)
+        else:
+            flash(f"Area {m.area} not found")
+    if r_view_range is None:
+        r_view_range = RequestedViewRange(b=m.b, e=m.e, size=m.size)
     load_preamble = m.preamble
     view_range = None
     if piece_size and r_view_range.is_full:
