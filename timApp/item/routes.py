@@ -611,6 +611,7 @@ def render_doc_view(
                 flash(f"Document has incorrect group tags: {seq_to_str(list(missing))}")
 
     piece_size = get_piece_size_from_cookie(request)
+    area = None
     areas = None
     r_view_range = None
     if piece_size:
@@ -834,58 +835,42 @@ def render_doc_view(
         load_plugin_states=not hide_answers,
     )
 
-    if view_ctx.route.is_review:
+    if view_ctx.route.is_review and is_peerreview_enabled(doc_info):
         user_list = []
-        if is_peerreview_enabled(doc_info):
-            if not check_review_grouping(doc_info):
-                try:
-                    if not r_view_range.is_full:
-                        # peer_review pairing generation may be called when only a part of the document is requested,
-                        # however we need to know answerers from every task in the document, so we generate full
-                        # document here
-                        # TODO: alternative approach (separate route, timer etc) for launching peer_review generation
-                        full_document_for_review, _ = get_document(
-                            doc_info, RequestedViewRange(b=None, e=None, size=None)
-                        )
-                        if preamble_pars:
-                            full_document_for_review = (
-                                preamble_pars + full_document_for_review
-                            )
-                        DocParagraph.preload_htmls(
-                            full_document_for_review,
-                            doc_settings,
-                            view_ctx,
-                            clear_cache,
-                        )
-                        full_document_for_review = dereference_pars(
-                            full_document_for_review, context_doc=doc, view_ctx=view_ctx
-                        )
-                        full_document_for_review = post_process_pars(
-                            doc,
-                            full_document_for_review,
-                            user_ctx,
-                            view_ctx,
-                            sanitize=False,
-                            do_lazy=do_lazy,
-                            load_plugin_states=not hide_answers,
-                        )
-                        generate_review_groups(
-                            doc_info, full_document_for_review.plugins
-                        )
-                    else:
-                        generate_review_groups(doc_info, post_process_result.plugins)
-                    set_default_velp_group_selected_and_visible(doc_info)
-                except PeerReviewException as e:
-                    flash(str(e))
-            reviews = get_reviews_where_user_is_reviewer(doc_info, current_user)
-            for review in reviews:
-                user_list.append(review.reviewable_id)
-            user_list = get_points_by_rule(
-                points_sum_rule,
-                task_ids,
-                user_list,
-                show_valid_only=show_valid_only,
+        if not (m.b and m.size == 1) and area is None:
+            raise RouteException(
+                "A single block or an area are required for review view"
             )
+        if m.b and m.size == 1:
+            if not areas:
+                areas = get_document_areas(doc_info)
+                for a in areas:
+                    if a[0] <= view_range.b and a[1] >= view_range.e:
+                        # For now just raise error if someone tries to open a single task inside an area, otherwise
+                        # it might cause errors when we generate pairings across the entire area
+                        # TODO: Redirect to area view or handle area task list generation here
+                        raise RouteException("Requested block is inside an area")
+        tids = []
+        for p in post_process_result.plugins:
+            if p.task_id:
+                tids.append(p.task_id)
+        if len(tids) < 1:
+            raise RouteException("No tasks to review in requested range")
+        if not check_review_grouping(doc_info, tids):
+            try:
+                generate_review_groups(doc_info, post_process_result.plugins)
+                set_default_velp_group_selected_and_visible(doc_info)
+            except PeerReviewException as e:
+                flash(str(e))
+        reviews = get_reviews_where_user_is_reviewer(doc_info, current_user)
+        for review in reviews:
+            user_list.append(review.reviewable_id)
+        user_list = get_points_by_rule(
+            points_sum_rule,
+            task_ids,
+            user_list,
+            show_valid_only=show_valid_only,
+        )
 
     if index is None:
         index = get_index_from_html_list(t.output for t in post_process_result.texts)
