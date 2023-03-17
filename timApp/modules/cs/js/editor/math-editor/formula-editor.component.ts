@@ -182,6 +182,10 @@ export class FormulaEditorComponent {
 
     ngAfterViewInit() {
         void this.loadMathQuill();
+
+        this.isMultilineFormulaControl.valueChanges.subscribe((value) => {
+            this.updateFormulaToEditor();
+        });
     }
 
     handleLatexFocus() {
@@ -209,6 +213,9 @@ export class FormulaEditorComponent {
 
     formatLatex(latex: string, isMultiline: boolean): string {
         const wrapSymbol = isMultiline ? "$$" : "$";
+        if (latex.length === 0) {
+            return "";
+        }
         return isMultiline
             ? `${wrapSymbol}\n${latex}\n${wrapSymbol}`
             : `${wrapSymbol}${latex}${wrapSymbol}`;
