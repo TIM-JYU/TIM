@@ -1162,11 +1162,29 @@ export class AnswerBrowserComponent
     }
 
     getReviewLink() {
-        return `/review/${this.viewctrl.item.path}?${$httpParamSerializer({
-            b: this.getPar()?.originalPar.id ?? "",
-            size: 1,
-            group: getUrlParams().get("group"),
-        })}`;
+        let closestAreaName: string | undefined;
+        const area = this.element.nativeElement.closest(".area");
+        if (area) {
+            for (const c of area.classList) {
+                const m = c.match(/^area_(\S+)$/);
+                if (m) {
+                    closestAreaName = m[1];
+                    break;
+                }
+            }
+        }
+        let blockOrPar;
+        if (closestAreaName) {
+            blockOrPar = $httpParamSerializer({
+                area: closestAreaName,
+            });
+        } else {
+            blockOrPar = $httpParamSerializer({
+                b: this.getPar()?.originalPar.id ?? "",
+                size: 1,
+            });
+        }
+        return `/review/${this.viewctrl.item.path}?${blockOrPar}`;
     }
 
     getModelAnswerLink() {
