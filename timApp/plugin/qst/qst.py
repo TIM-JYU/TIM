@@ -857,7 +857,6 @@ def question_convert_js_to_yaml(markup: dict, is_task: bool, task_id: str | None
     taskid = re.sub("[^A-Za-z0-9]", "", taskid)
     if task_id:
         taskid = task_id
-    qst = is_task
     markup.pop("question", None)  # old attribute
     markup.pop("taskId", None)
     markup.pop("qst", None)
@@ -868,19 +867,12 @@ def question_convert_js_to_yaml(markup: dict, is_task: bool, task_id: str | None
         "utf-8"
     )  # see also .safe_dump
     mdyaml = mdyaml.replace("\n\n", "\n")
-    prefix = " "
-    if qst:
-        prefix = " d"  # like document question
-    result = (
-        "``` {#"
-        + taskid
-        + prefix
-        + 'question="'
-        + "true"
-        + '" plugin="qst"}\n'
-        + mdyaml
-        + "```\n"
-    )
+
+    # Don't add 'dquestion' plugin attribute as it is not needed or processed. Instead, use is_task value
+    # to determine whether question is a document question (ie. task), or a lecture question.
+    question_attr = f' question="{str(is_task).lower()}"'
+
+    result = "``` {#" + taskid + question_attr + ' plugin="qst"}\n' + mdyaml + "```\n"
     return result
 
 
@@ -922,7 +914,7 @@ def get_question_data_from_document(
     markup = plugindata.get("markup")
     return QuestionInDocument(
         markup=normalize_question_json(markup),
-        qst=not par.is_question(),
+        qst=par.is_question(),
         taskId=par.get_attr("taskId"),
         docId=d.id,
         parId=par_id,

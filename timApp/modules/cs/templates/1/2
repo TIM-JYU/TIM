@@ -1,6 +1,6 @@
 Yksi monesta
 Kysymys jossa valitaan yksi monesta (Radiobutton)
-``` {#PLUGINNAMEHERE dquestion="true" plugin="qst"}
+``` {#PLUGINNAMEHERE plugin="qst"}
 answerFieldType: radio
 answerLimit: 1
 expl: {}
