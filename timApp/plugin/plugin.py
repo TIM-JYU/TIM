@@ -746,33 +746,23 @@ def expand_macros_for_plugin_attrs(
     if plugin_type not in ALLOWED_MACRO_PLUGIN_TYPES or par.get_nomacros():
         return
     par_attrs = par.get_attrs()
-    expandable_attrs = ""
-    for p_attr in [*par_attrs]:
-        if p_attr in ALLOWED_MACRO_PLUGIN_ATTRS:
-            expandable_attrs += f"{p_attr}: {par.get_attr(p_attr)}, "
+
     rnd_macros = par.get_rands()
     if rnd_macros:
         macros = {**macros, **rnd_macros}
-
     env.counters.task_id = par.attrs.get("taskId", None)
     env.counters.is_plugin = True
-    expanded_attrs = expand_macros(
-        expandable_attrs,
-        macros=macros,
-        settings=par.doc.get_settings(),
-        env=env,
-    )
-    if expanded_attrs and not has_macro_errors(expanded_attrs):
-        expanded_attrs = expanded_attrs.rstrip(", ").split(", ")
-        # exp_attrs = dict(map(lambda x: tuple(x.split(": ")), expanded_attrs))
-        exp_attrs = dict(
-            map(
-                lambda a0: tuple(map(lambda a1: a1.strip(), a0.split(":"))),
-                expanded_attrs,
+
+    for p_attr in [*par_attrs]:
+        if p_attr in ALLOWED_MACRO_PLUGIN_ATTRS:
+            expanded_val = expand_macros(
+                par.get_attr(p_attr),
+                macros=macros,
+                settings=par.doc.get_settings(),
+                env=env,
             )
-        )
-        for attr in exp_attrs:
-            par.set_attr(attr, exp_attrs[attr])
+            if expanded_val and not has_macro_errors(expanded_val):
+                par.set_attr(p_attr, expanded_val)
 
 
 def has_macro_errors(expanded_input: str) -> bool:
