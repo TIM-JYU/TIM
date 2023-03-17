@@ -762,7 +762,7 @@ def expand_macros_for_plugin_attrs(
         settings=par.doc.get_settings(),
         env=env,
     )
-    if expanded_attrs:
+    if expanded_attrs and not has_macro_errors(expanded_attrs):
         expanded_attrs = expanded_attrs.rstrip(", ").split(", ")
         # exp_attrs = dict(map(lambda x: tuple(x.split(": ")), expanded_attrs))
         exp_attrs = dict(
@@ -773,6 +773,10 @@ def expand_macros_for_plugin_attrs(
         )
         for attr in exp_attrs:
             par.set_attr(attr, exp_attrs[attr])
+
+
+def has_macro_errors(expanded_input: str) -> bool:
+    return '<span class="error"' in expanded_input
 
 
 def load_markup_from_yaml(
