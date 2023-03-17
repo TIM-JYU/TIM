@@ -837,11 +837,10 @@ def render_doc_view(
 
     if view_ctx.route.is_review and is_peerreview_enabled(doc_info):
         user_list = []
-        if not (m.b and m.size == 1) and area is None:
-            raise RouteException(
-                "A single block or an area are required for review view"
-            )
-        if m.b and m.size == 1:
+        if m.area:
+            if area is None:
+                raise RouteException(f"Area {m.area} not found")
+        elif m.b and m.size == 1:
             if not areas:
                 areas = get_document_areas(doc_info)
                 for a in areas:
@@ -850,12 +849,16 @@ def render_doc_view(
                         # it might cause errors when we generate pairings across the entire area
                         # TODO: Redirect to area view or handle area task list generation here
                         raise RouteException("Requested block is inside an area")
+        else:
+            raise RouteException(
+                "A single block or an area are required for review view"
+            )
         tids = []
         for p in post_process_result.plugins:
             if p.task_id:
                 tids.append(p.task_id)
         if len(tids) < 1:
-            raise RouteException("No tasks to review in requested range")
+            raise RouteException("No tasks to review in requested area or block")
         if not check_review_grouping(doc_info, tids):
             try:
                 generate_review_groups(doc_info, post_process_result.plugins)
