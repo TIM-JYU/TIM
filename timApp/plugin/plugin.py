@@ -764,7 +764,13 @@ def expand_macros_for_plugin_attrs(
     )
     if expanded_attrs:
         expanded_attrs = expanded_attrs.rstrip(", ").split(", ")
-        exp_attrs = dict(map(lambda x: tuple(x.split(": ")), expanded_attrs))
+        # exp_attrs = dict(map(lambda x: tuple(x.split(": ")), expanded_attrs))
+        exp_attrs = dict(
+            map(
+                lambda a0: tuple(map(lambda a1: a1.strip(), a0.split(":"))),
+                expanded_attrs,
+            )
+        )
         for attr in exp_attrs:
             par.set_attr(attr, exp_attrs[attr])
 
