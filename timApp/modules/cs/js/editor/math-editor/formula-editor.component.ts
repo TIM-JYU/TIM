@@ -83,12 +83,14 @@ export class FormulaEditorComponent {
 
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
 
-    oldContent!: OldContent;
+    oldContent: OldContent = {before: "", after: ""};
 
     @Output() okEvent = new EventEmitter<void>();
     @Output() cancelEvent = new EventEmitter<void>();
 
     isMultilineFormulaControl = new FormControl(true);
+
+    @Input() editor!: IEditor;
 
     @Input()
     get visible(): boolean {
@@ -102,8 +104,6 @@ export class FormulaEditorComponent {
         }
     }
     private _visible: boolean = false;
-
-    @Input() editor!: IEditor;
 
     constructor() {}
 
