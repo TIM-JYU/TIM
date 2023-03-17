@@ -426,6 +426,7 @@ export class AnswerBrowserComponent
             } else if (this.viewctrl.teacherMode) {
                 this.dimPlugin();
             }
+            this.setReviewerUsers();
             if (!this.isGlobal()) {
                 await this.checkUsers(true); // load users, answers have already been loaded for the currently selected user
             }
@@ -821,7 +822,6 @@ export class AnswerBrowserComponent
                 this.unDimPlugin();
             }
         }
-        this.setReviewerUsers();
         this.isAndSetShowNewTask();
     }
 
