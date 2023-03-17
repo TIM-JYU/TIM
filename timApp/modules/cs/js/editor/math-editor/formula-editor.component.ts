@@ -31,18 +31,13 @@ enum ActiveEditorType {
 }
 
 /**
- * editor.content split at current cursor location in editor
+ * OldContent is split into two at cursor location if insert operation is supported
+ * if not then just put content to before and after can be empty
  */
-type BeforeAndAfter = {
+type OldContent = {
     before: string;
     after: string;
 };
-
-/**
- * OldContent is split into two at cursor location if insert operation is supported
- * or else just the content: string
- */
-type OldContent = BeforeAndAfter | string;
 
 @Component({
     selector: "cs-formula-editor",
@@ -135,7 +130,10 @@ export class FormulaEditorComponent {
     parseOldContent(str: string): OldContent {
         const cursorI = this.findCursorLocation();
         if (cursorI === -1) {
-            return str;
+            return {
+                before: this.editor.content,
+                after: "",
+            };
         }
         // split into two ignoring the cursor character
         const result = {
@@ -230,14 +228,11 @@ export class FormulaEditorComponent {
                 : this.mathField.latex();
             if (typeof latex === "string") {
                 const formulaLatex = this.formatLatex(latex, isMultiline);
-                if (typeof this.oldContent === "string") {
-                    this.editor.content = this.oldContent + formulaLatex;
-                } else {
-                    this.editor.content =
-                        this.oldContent.before +
-                        formulaLatex +
-                        this.oldContent.after;
-                }
+
+                this.editor.content =
+                    this.oldContent.before +
+                    formulaLatex +
+                    this.oldContent.after;
             }
         }
     }
@@ -253,28 +248,21 @@ export class FormulaEditorComponent {
     }
 
     handleFormulaCancel() {
+        // content hasn't changed from what it was before opening formula editor
+        // so cancel
         if (
-            this.editor.content != "" ||
-            this.oldContent === this.editor.content
+            this.oldContent.before + this.oldContent.after ===
+                this.editor.content ||
+            confirm($localize`Are you sure? Cancel will clear the editor.`)
         ) {
-            if (
-                confirm($localize`Are you sure? Cancel will clear the editor.`)
-            ) {
-                if (typeof this.oldContent === "string") {
-                    this.editor.content = this.oldContent;
-                } else {
-                    this.editor.content =
-                        this.oldContent.before + this.oldContent.after;
-                }
-                const finalContent = this.editor.content;
-                this.cancelEvent.emit();
-                this.clearFields();
-                // clearing fields triggers update to editor content
-                // rewrite it
-                this.editor.content = finalContent;
-            }
-        } else {
+            this.editor.content =
+                this.oldContent.before + this.oldContent.after;
+            const finalContent = this.editor.content;
             this.cancelEvent.emit();
+            this.clearFields();
+            // clearing fields triggers update to editor content
+            // rewrite it
+            this.editor.content = finalContent;
         }
     }
 }
