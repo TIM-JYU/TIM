@@ -854,14 +854,33 @@ def render_doc_view(
                 "A single block or an area are required for review view"
             )
         tids = []
-        for p in post_process_result.plugins:
-            if p.task_id:
-                tids.append(p.task_id)
+        # post_process_result.plugins may contain plugins not in the requested range, so find the correct
+        # plugins that match the requested b or are inside the requested area
+        if m.b and m.size == 1:
+            for task in post_process_result.plugins:
+                if task.par.id == m.b and task.task_id:
+                    tids.append(task.task_id)
+                    break
+        else:
+            area_started = False
+            pars_in_area = []
+            for t in post_process_result.texts:
+                if not area_started and t.attrs.get("area") == m.area:
+                    area_started = True
+                    continue
+                if area_started:
+                    if t.attrs.get("area_end") == m.area:
+                        break
+                    else:
+                        pars_in_area.append(t.id)
+            for task in post_process_result.plugins:
+                if task.par.id in pars_in_area and task.task_id:
+                    tids.append(task.task_id)
         if len(tids) < 1:
             raise RouteException("No tasks to review in requested area or block")
         if not check_review_grouping(doc_info, tids):
             try:
-                generate_review_groups(doc_info, post_process_result.plugins)
+                generate_review_groups(doc_info, tids)
                 set_default_velp_group_selected_and_visible(doc_info)
             except PeerReviewException as e:
                 flash(str(e))

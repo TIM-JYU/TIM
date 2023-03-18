@@ -16,15 +16,8 @@ from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.utils import get_current_time
 
 
-def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
-    task_ids = []
-
+def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
     settings = doc.document.get_settings()
-
-    for task in tasks:
-        if task.task_id:
-            task_ids.append(task.task_id)
-
     user_groups = settings.groups()
     user_ids = None
     if user_groups:
