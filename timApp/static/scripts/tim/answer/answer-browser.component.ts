@@ -1635,7 +1635,9 @@ export class AnswerBrowserComponent
     renderPeerReviewMath() {
         if (this.peerReviewElementRef) {
             ParCompiler.processAllMathDelayed(
-                $(this.peerReviewElementRef.nativeElement)
+                $(this.peerReviewElementRef.nativeElement),
+                undefined,
+                true
             );
         }
     }
