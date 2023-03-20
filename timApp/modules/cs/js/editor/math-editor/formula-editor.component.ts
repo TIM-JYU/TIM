@@ -31,11 +31,12 @@ enum ActiveEditorType {
 }
 
 /**
- * OldContent is split into two at cursor location if insert operation is supported
- * if not then just put content to before and after can be empty
+ * OldContent is split into three at cursor location if insert operation is supported
+ * if not then just put content to before and after and editing can be empty
  */
 type OldContent = {
     before: string;
+    editing: string;
     after: string;
 };
 
@@ -83,7 +84,7 @@ export class FormulaEditorComponent {
 
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
 
-    oldContent: OldContent = {before: "", after: ""};
+    oldContent: OldContent = {before: "", editing: "", after: ""};
 
     @Output() okEvent = new EventEmitter<void>();
     @Output() cancelEvent = new EventEmitter<void>();
@@ -101,6 +102,7 @@ export class FormulaEditorComponent {
         // became visible so save what was in editor
         if (isVis) {
             this.oldContent = this.parseOldContent(this.editor.content);
+            this.checkIfEditing();
         }
     }
     private _visible: boolean = false;
@@ -120,11 +122,17 @@ export class FormulaEditorComponent {
         // add cursor character to know where cursor is
         this.editor.insert(cursorMarker);
         // find its index
-        return this.editor.content.indexOf(cursorMarker);
+        const index = this.editor.content.indexOf(cursorMarker);
+        // rewind changes to editor content
+        const before = this.editor.content.slice(0, index);
+        const after = this.editor.content.slice(index + 1);
+        this.editor.content = before + after;
+
+        return index;
     }
 
     /**
-     * Splits string into two parts if possible at cursor location
+     * Splits string into three parts if possible at cursor location
      * @param str
      */
     parseOldContent(str: string): OldContent {
@@ -132,17 +140,35 @@ export class FormulaEditorComponent {
         if (cursorI === -1) {
             return {
                 before: this.editor.content,
+                editing: "",
                 after: "",
             };
         }
-        // split into two ignoring the cursor character
+
+        // form and return the old content
         const result = {
             before: this.editor.content.slice(0, cursorI),
-            after: this.editor.content.slice(cursorI + 1),
+            editing: "",
+            after: this.editor.content.slice(cursorI),
         };
-        // also remove added cursor character from editor
-        this.editor.content = result.before + result.after;
+
         return result;
+    }
+
+    checkIfEditing() {
+        const before = this.oldContent.before;
+        const after = this.oldContent.after;
+
+        // TODO: check if inside formula or not. check also if formula is singleline or multiline.
+
+        // set formula editor values if editing existing formula
+        const insideFormula = false;
+        if (insideFormula) {
+            this.isMultilineFormulaControl.setValue(false);
+            this.latexInputControl.setValue("\\frac{pi}{4}");
+            this.handleLatexFocus();
+            this.handleLatexInput();
+        }
     }
 
     /**
@@ -258,12 +284,16 @@ export class FormulaEditorComponent {
         // content hasn't changed from what it was before opening formula editor
         // so cancel
         if (
-            this.oldContent.before + this.oldContent.after ===
+            this.oldContent.before +
+                this.oldContent.editing +
+                this.oldContent.after ===
                 this.editor.content ||
             confirm($localize`Are you sure? Cancel will clear the editor.`)
         ) {
             this.editor.content =
-                this.oldContent.before + this.oldContent.after;
+                this.oldContent.before +
+                this.oldContent.editing +
+                this.oldContent.after;
             const finalContent = this.editor.content;
             this.cancelEvent.emit();
             this.clearFields();
