@@ -5,7 +5,6 @@ import {
     Directive,
     ElementRef,
     ViewChild,
-    HostListener,
 } from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {SafeResourceUrl} from "@angular/platform-browser";
@@ -1210,6 +1209,11 @@ export class CsController extends CsBase implements ITimComponent {
         if (this.markup.parsons) {
             this.markup.parsons.shuffle = this.initUserCode;
         }
+        if (this.editor.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(() =>
+                this.onFormulaEditorAddFormula()
+            );
+        }
     }
 
     @ViewChild(FileSelectManagerComponent)
@@ -1731,15 +1735,6 @@ export class CsController extends CsBase implements ITimComponent {
 
     onFormulaEditorCloseCancel() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
-    }
-
-    @HostListener("window:keydown.control.e", ["$event"])
-    handleKeyDown(event: KeyboardEvent) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        if (this.formulaEditor && !this.vctrl.editing) {
-            this.onFormulaEditorAddFormula();
-        }
     }
 
     onFormulaEditorAddFormula() {

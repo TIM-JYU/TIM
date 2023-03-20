@@ -30,7 +30,7 @@ export class AceParEditor extends BaseParEditor implements IEditor {
     private snippetManager: ISnippetManager;
     private ace: IAce;
     type: EditorType.Ace = EditorType.Ace;
-
+    formulaFunction = function () {};
     constructor(
         ace: IAce,
         editor: AceAjax.Editor,
@@ -226,6 +226,16 @@ export class AceParEditor extends BaseParEditor implements IEditor {
             },
             exec: () => {
                 this.editor.toggleCommentLines();
+            },
+        });
+        this.editor.commands.addCommand({
+            name: "addFormula",
+            bindKey: {
+                win: "Ctrl-E",
+                mac: "Command-E",
+            },
+            exec: () => {
+                this.formulaFunction();
             },
         });
         this.editor.keyBinding.setKeyboardHandler({
