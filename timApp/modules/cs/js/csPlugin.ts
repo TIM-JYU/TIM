@@ -2441,6 +2441,17 @@ ${fhtml}
         for (const response of resps) {
             this.uploadedFiles.push({path: response.file, type: response.type});
         }
+
+        // Add reference to image to markdown
+        if (this.formulaEditor) {
+            for (let i = 0; i < resps.length; i++) {
+                const caption = `image${i + 1}`;
+                const url = resps[i].file;
+                const markdownImageTag = `![${caption}](${url})`;
+                this.editor?.insert(markdownImageTag);
+                this.editor?.focus();
+            }
+        }
     }
 
     onUploadDone(success: boolean) {
@@ -3819,7 +3830,7 @@ ${fhtml}
                                      (upload)="onUploadResponse($event)"
                                      (uploadDone)="onUploadDone($event)">
                 </file-select-manager>
-                <div class="form-inline small">
+                <div [hidden]="formulaEditor" class="form-inline small">
                     <span *ngFor="let item of uploadedFiles">
                         <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
                     </span>
