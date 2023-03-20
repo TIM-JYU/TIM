@@ -52,7 +52,6 @@ import {
 import type {Require} from "tim/util/utils";
 import {
     getURLParameter,
-    getUrlParams,
     getUrlParamsJSON,
     getViewName,
     to,
