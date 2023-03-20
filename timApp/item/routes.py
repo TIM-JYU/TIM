@@ -886,8 +886,9 @@ def render_doc_view(
                 flash(str(e))
         reviews = get_reviews_where_user_is_reviewer(doc_info, current_user)
         if len(reviews) == 0:
+            # TODO: Check for late answers / missing answers / missing group, return proper messages
             flash(
-                "No reviewable targets found, review was possibly started before your answer"
+                "No reviewable targets found, review was possibly started before your answer or you were not a member of the peer review group"
             )
         for review in reviews:
             user_list.append(review.reviewable_id)
