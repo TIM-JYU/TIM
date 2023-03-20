@@ -1000,7 +1000,8 @@ auto_number_headings: 0${CURSOR}
 
     private getAddLectureQuestionItem(pos: EditPosition): IMenuFunctionEntry {
         return {
-            func: (e) => this.viewctrl.questionHandler.addQuestion(e, pos),
+            func: (e) =>
+                this.viewctrl.questionHandler.addQuestion(e, pos, true),
             desc: "Add lecture question above",
             show:
                 this.viewctrl.lectureCtrl.lectureSettings.lectureMode &&
@@ -1010,10 +1011,10 @@ auto_number_headings: 0${CURSOR}
 
     private getAddQuestionItem(pos: EditPosition): IMenuFunctionEntry {
         return {
-            func: (e) => this.viewctrl.questionHandler.addQuestionQst(e, pos),
+            func: (e) =>
+                this.viewctrl.questionHandler.addQuestion(e, pos, false),
             desc: "Add question above",
-            show: /* this.viewctrl.lectureMode && */ this.viewctrl.item.rights
-                .editable,
+            show: this.viewctrl.item.rights.editable,
         };
     }
 

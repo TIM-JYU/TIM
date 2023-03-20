@@ -1183,7 +1183,7 @@ class DocParagraph:
 
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
-        return self.is_plugin() and bool(self.get_attr("question"))
+        return self.is_plugin() and str(self.get_attr("question")).lower() == "true"
 
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""

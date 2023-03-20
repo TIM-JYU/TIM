@@ -27,7 +27,7 @@ class JsRunnerTest(BrowserTest):
         )
         d = self.create_doc(
             initial_par="""
-``` {#qst1 dquestion="true" plugin="qst"}
+``` {#qst1 question="false" plugin="qst"}
 answerFieldType: radio
 expl: {}
 headers: []

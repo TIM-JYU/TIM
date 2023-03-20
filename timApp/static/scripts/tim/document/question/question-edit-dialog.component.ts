@@ -188,11 +188,11 @@ function isAskedQuestion(
                     </div>
                     <tim-question-matrix *ngIf="question.questionType" [qctrl]="this"></tim-question-matrix>
                     <div class="checkbox">
-                        <label><input type="checkbox" [(ngModel)]="qst" name="documentQuestion"/> Document
+                        <label><input type="checkbox" [(ngModel)]="qst" name="documentQuestion"/> Lecture
                             question</label>
                     </div>
                     <div class="form-group form-horz-flex"
-                         *ngIf="qst">
+                         *ngIf="!qst">
                         <label for="answerLimit">Answer limit</label>
                         <input [(ngModel)]="pluginMarkup.answerLimit"
                                id="answerLimit"
@@ -203,7 +203,7 @@ function isAskedQuestion(
                                min="1"
                                step="1"/>
                     </div>
-                    <div class="form-horz-flex" *ngIf="!qst">
+                    <div class="form-horz-flex" *ngIf="qst">
                         <label>
                             Duration
                         </label>
@@ -350,7 +350,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
     private newQuestion(data: INewQuestionParams) {
         this.setEmptyMarkup(data.qst);
         this.titleChanged = false;
-        if (this.qst) {
+        if (!this.qst) {
             this.ui.durationAmount = undefined; // default no time
         }
     }
@@ -482,6 +482,9 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
         }
         this.rows = rows;
 
+        // TODO: timeLimit should only be set for lecture questions, but it is probably beneficial to keep it anyway --
+        //       it doesn't affect document tasks, and having it in the markup limits the amount of manual work when
+        //       converting lecture questions to doc tasks and vice versa.
         if (json.timeLimit && json.timeLimit > 0) {
             this.ui.durationType = "seconds";
             this.ui.durationAmount = json.timeLimit;
@@ -886,7 +889,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
             this.customError = "You must have at least one row.";
         }
         let timeLimit: number | undefined;
-        if (this.ui.durationAmount != null) {
+        if (this.ui.durationAmount != undefined) {
             timeLimit = moment
                 .duration(this.ui.durationAmount, this.ui.durationType)
                 .asSeconds();
