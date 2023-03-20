@@ -34,6 +34,7 @@ export class NormalEditorComponent implements IEditor {
     @Input() spellcheck?: boolean;
     @ViewChild("area") private area!: ElementRef;
     private editorreadonly: boolean = false;
+    formulaFunction = function () {};
 
     constructor(private cdr: ChangeDetectorRef) {}
 
@@ -82,6 +83,13 @@ export class NormalEditorComponent implements IEditor {
                 }
                 this.insert("    ");
                 return;
+            } else if (event.which === 69) {
+                // e key
+                event.preventDefault();
+                if (event.ctrlKey) {
+                    this.formulaFunction();
+                }
+                return;
             }
         });
     }
@@ -127,5 +135,8 @@ export class NormalEditorComponent implements IEditor {
         element.value = r.s;
         element.selectionStart = start;
         element.selectionEnd = start;
+    }
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
     }
 }

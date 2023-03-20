@@ -742,4 +742,8 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     }
 
     setReadOnly(b: boolean): void {}
+
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+    }
 }

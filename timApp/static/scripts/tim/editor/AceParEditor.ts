@@ -813,4 +813,8 @@ export class AceParEditor extends BaseParEditor implements IEditor {
     setReadOnly(b: boolean): void {
         this.editor.setReadOnly(b);
     }
+
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+    }
 }
