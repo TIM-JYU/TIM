@@ -885,7 +885,13 @@ ${backTicks}
                 name: "Characters",
             },
             {
-                entries: [],
+                entries: [
+                    {
+                        title: "Ctrl-e",
+                        func: () => this.onFormulaEditorAddFormula(),
+                        name: "Add formula",
+                    },
+                ],
                 name: "TeX",
             },
             {
