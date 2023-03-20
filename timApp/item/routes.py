@@ -619,7 +619,7 @@ def render_doc_view(
     if m.area:
         area = get_area_range(doc_info, m.area)
         if area is not None:
-            # TODO: RequestedViewRange e returns paragraph e-1 as last paragraph, check if intended
+            # RequestedViewRange e returns paragraph e-1 as last paragraph, add +1 to render full area
             r_view_range = RequestedViewRange(b=area[0], e=area[1] + 1, size=None)
         else:
             flash(f"Area {m.area} not found")
