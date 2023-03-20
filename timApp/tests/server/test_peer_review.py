@@ -12,15 +12,17 @@ class PeerReviewTest(TimRouteTest):
         d = self.create_doc(
             settings={"peer_review": True},
             initial_par="""
-#- {#t plugin=textfield id="pncoRNT1UeBx"}
+#- {#t plugin=textfield}
 
-#- {area="rev" id="dD1ETkEOSfmo"}
-#- {#ta1 plugin=textfield id="rSmc80DebSUA"}
-#- {#ta2 plugin=textfield id="Lc94A5OahOBn"}
-#- {area_end="rev" id="66zoGlrUCZzo"}
+#- {area="rev"}
+#- {#ta1 plugin=textfield}
+#- {#ta2 plugin=textfield}
+#- {area_end="rev"}
 """,
         )
         url = d.get_url_for_view("review")
+        pars = d.document.get_paragraphs()
+        b = pars[1].id
         self.get(
             url,
             expect_status=400,
@@ -29,13 +31,13 @@ class PeerReviewTest(TimRouteTest):
             },
         )
         self.get(
-            f"{url}?b=pncoRNT1UeBx",
+            f"{url}?b={b}",
             expect_status=400,
             expect_content={
                 "error": "A single block or an area are required for review view"
             },
         )
-        r = self.get(f"{url}?b=pncoRNT1UeBx&size=1")
+        r = self.get(f"{url}?b={b}&size=1")
         self.assertIn(
             "Not enough users to form pairs (0 but at least 2 users needed)", r
         )
@@ -43,14 +45,14 @@ class PeerReviewTest(TimRouteTest):
         self.assertEqual(0, len(rq.all()))
         self.add_answer(d, "t", "x", user=self.test_user_1)
         db.session.commit()
-        r = self.get(f"{url}?b=pncoRNT1UeBx&size=1")
+        r = self.get(f"{url}?b={b}&size=1")
         self.assertIn(
             "Not enough users to form pairs (1 but at least 2 users needed)", r
         )
         self.assertEqual(0, len(rq.all()))
         self.add_answer(d, "t", "x", user=self.test_user_2)
         db.session.commit()
-        r = self.get(f"{url}?b=pncoRNT1UeBx&size=1")
+        r = self.get(f"{url}?b={b}&size=1")
         self.assertNotIn(
             "Not enough users to form pairs (1 but at least 2 users needed)", r
         )
@@ -80,7 +82,7 @@ class PeerReviewTest(TimRouteTest):
         ug.users.append(self.test_user_2)
         ug.users.append(self.test_user_3)
         db.session.commit()
-        self.get(f"{url}?b=pncoRNT1UeBx&size=1")
+        self.get(f"{url}?b={b}&size=1")
         # pairing with group ignores group members who haven't answered the document
         check_peerreview_rows_t()
         PeerReview.query.filter_by(block_id=d.id).delete()
@@ -90,13 +92,13 @@ class PeerReviewTest(TimRouteTest):
         ug.users.append(self.test_user_2)
         d.document.add_setting("group", "testuser3isnothere")
         db.session.commit()
-        self.get(f"{url}?b=pncoRNT1UeBx&size=1")
+        self.get(f"{url}?b={b}&size=1")
         # pairing with group setting ignores users who answered but aren't in the group
         check_peerreview_rows_t()
         PeerReview.query.filter_by(block_id=d.id).delete()
         db.session.commit()
         self.get(
-            f"{url}?b=rSmc80DebSUA&size=1",
+            f"{url}?b={pars[3].id}&size=1",
             expect_status=400,
             expect_content={"error": "Requested block is inside an area"},
         )
