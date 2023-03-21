@@ -1,5 +1,5 @@
 import {isRootFolder} from "tim/item/IItem";
-import {documentglobals, genericglobals} from "tim/util/globals";
+import {genericglobals} from "tim/util/globals";
 
 export interface IItemLink {
     route: string;
@@ -38,7 +38,6 @@ export function getAvailableViews() {
     if (!item) {
         return availableViews;
     }
-    const docSettings = documentglobals().docSettings;
 
     const allowedRoutes = [Views.view];
     if (!isRootFolder(item)) {
@@ -52,9 +51,6 @@ export function getAvailableViews() {
             allowedRoutes.push(Views.answers);
         }
         allowedRoutes.push(Views.lecture, Views.velp, Views.slide);
-        if (docSettings?.peer_review) {
-            allowedRoutes.push(Views.review);
-        }
     }
     availableViews.push(
         ...allowedRoutes.map((r) => ({

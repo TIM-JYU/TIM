@@ -72,8 +72,12 @@ def has_review_access(
     return bool(q.first())
 
 
-def check_review_grouping(doc: DocInfo) -> bool:
-    q = PeerReview.query.filter_by(block_id=doc.id)
+def check_review_grouping(doc: DocInfo, tasks: list[TaskId]) -> bool:
+    # TODO: new tasks may be added to area after pr starts
+    #   => if any tasks in area (list of tasks) has pr rows, then copy the pairings to tasks in list missing pr rows
+    q = PeerReview.query.filter_by(block_id=doc.id).filter(
+        PeerReview.task_name.in_([t.task_name for t in tasks])
+    )
     return bool(q.first())
 
 
