@@ -48,7 +48,6 @@ import {
 } from "tim/ui/showTemplateReplaceDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showInputDialog} from "tim/ui/showInputDialog";
-import type {Result} from "tim/util/utils";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -2453,7 +2452,7 @@ ${fhtml}
                     isInput: InputDialogKind.InputAndValidator,
                     defaultValue: "Image 1",
                     validator: (s) => {
-                        return new Promise((resolve, reject) => {
+                        return new Promise((resolve) => {
                             resolve({ok: true, result: s});
                         });
                     },
@@ -2468,7 +2467,7 @@ ${fhtml}
                         this.editor?.insert(markdownImageTag);
                         this.editor?.focus();
                     })
-                    .catch((e) => {});
+                    .catch((e) => {}); // nothing to catch
             }
         }
     }
