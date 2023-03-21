@@ -3,7 +3,7 @@
         <div ng-if="t.name === 'TeX' && $ctrl.editor" class="formula-editor-tab">
             <button ng-click="$ctrl.onFormulaEditorAddFormula()" class="timButton" title="Ctrl+e">Add formula</button>
 
-            <cs-formula-editor
+            <cs-formula-editor ng-if="$ctrl.formulaEditorOpen"
                                (ok-event)="$ctrl.onFormulaEditorCloseOk()"
                                (cancel-event)="$ctrl.onFormulaEditorCloseCancel()"
                                [editor]="$ctrl.editor"
