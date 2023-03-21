@@ -168,7 +168,7 @@ export class AnswerBrowserComponent
         }
 
         this.peerReviewElementRef = el;
-        ParCompiler.processAllMath($(el.nativeElement));
+        ParCompiler.processAllMath($(el.nativeElement), undefined, true);
         if (this.isPeerReview) {
             if (!this.peerReviewResizeObserver) {
                 this.peerReviewResizeObserver = new ResizeObserver(() =>
