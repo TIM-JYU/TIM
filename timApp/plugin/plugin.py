@@ -480,7 +480,7 @@ class Plugin:
         if tim_info.get("notValid", None):
             return False, tim_info.get("validMsg", "Answer is not valid")
         valid = tim_info.get("valid", True)
-        valid_msg = tim_info.get("validMsg", "ok")
+        valid_msg = tim_info.get("validMsg", "")
         return valid, valid_msg
 
     def is_cached(self) -> bool:
