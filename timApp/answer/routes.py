@@ -1074,6 +1074,7 @@ def post_answer_impl(
                     "save_object": save_object,
                     "tags": tags,
                     "is_valid": is_valid,
+                    "invalid_explanation": explanation,
                     "force_answer": force_answer,
                     "error": "",
                     "web": web,
@@ -1105,6 +1106,7 @@ def post_answer_impl(
                     points = data.get("points", points)
                     save_object = data.get("save_object", save_object)
                     is_valid = data.get("is_valid", is_valid)
+                    explanation = data.get("invalid_explanation", explanation)
                     force_answer = data.get("force_answer", force_answer)
                     allow_save = data.get("allow_save", allow_save)
                     refresh = data.get("refresh", False)
@@ -1183,6 +1185,7 @@ def post_answer_impl(
                     "save_object": save_object,
                     "tags": tags,
                     "is_valid": True,
+                    "invalid_explanation": "ok",
                     "force_answer": force_answer,
                     "error": "",
                     "web": web,
