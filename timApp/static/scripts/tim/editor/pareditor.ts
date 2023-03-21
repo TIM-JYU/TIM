@@ -2323,6 +2323,11 @@ ${backTicks}
                 createCompleter(userWordList, "user"),
             ]);
         }
+        if (this.editor?.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(() =>
+                this.onFormulaEditorAddFormula()
+            );
+        }
         if (initialMode != null) {
             await this.setInitialText();
         } else if (this.editor && oldPosition) {

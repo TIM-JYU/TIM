@@ -280,6 +280,7 @@ export class EditorComponent implements IMultiEditor {
             this.editor.setReadOnly(this.editorreadonly);
             this.content = oldContent;
             this.content_ = undefined;
+            this.addFormulaEditorOpenHandler(this.formulaFunction);
         }
     }
 
@@ -786,5 +787,8 @@ export class EditorComponent implements IMultiEditor {
     }
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
+        if (this.editor?.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(cb);
+        }
     }
 }
