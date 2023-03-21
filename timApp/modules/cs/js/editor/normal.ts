@@ -85,7 +85,6 @@ export class NormalEditorComponent implements IEditor {
                 return;
             } else if (event.which === 69) {
                 // e key
-                event.preventDefault();
                 if (event.ctrlKey) {
                     this.formulaFunction();
                 }
