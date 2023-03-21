@@ -20,8 +20,8 @@ import type {
     MathFieldMethods,
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
-import {IEditor} from "../editor";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {IEditor} from "../editor";
 
 /**
  * Field which has the focus
