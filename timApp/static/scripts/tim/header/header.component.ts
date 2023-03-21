@@ -137,6 +137,7 @@ export class HeaderComponent implements OnInit {
             const urlParams = getUrlParams();
             urlParams.delete("b");
             urlParams.delete("size");
+            urlParams.delete("area");
             const str = urlParams.toString();
             return `${str.length > 0 ? "?" : ""}${str}`;
         }

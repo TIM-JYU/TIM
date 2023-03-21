@@ -26,7 +26,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PurifyModule} from "tim/util/purify.module";
-import {getURLParameter, timeout, toPromise} from "tim/util/utils";
+import {getURLParameter, getViewName, timeout, toPromise} from "tim/util/utils";
 import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {TimDefer} from "tim/util/timdefer";
 import type {ReadonlyMoment} from "tim/util/readonlymoment";
@@ -182,8 +182,9 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         if (r.ok) {
             this.parsedTaskId = r.result;
             if (
-                getURLParameter("task") === this.parsedTaskId.name &&
-                !this.preview
+                (getURLParameter("task") === this.parsedTaskId.name &&
+                    !this.preview) ||
+                getViewName() == "review"
             ) {
                 this.loadPluginAfterInit = true;
             }

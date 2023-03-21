@@ -59,6 +59,7 @@ class PeerReview(db.Model):
             "reviewer_id": self.reviewer_id,
             "reviewer": self.reviewer,
             "reviewable_id": self.reviewable_id,
+            "reviewable": self.reviewable,
             "start_time": self.start_time,
             "end_time": self.end_time,
             "reviewed": self.reviewed,

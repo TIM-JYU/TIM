@@ -9,6 +9,7 @@ from tim_common.marshmallow_dataclass import class_schema
 class DocViewParams:
     """View route parameters that affect document rendering."""
 
+    area: str | None = None
     b: int | str | None = None
     e: int | str | None = None
     edit: str | None = None
