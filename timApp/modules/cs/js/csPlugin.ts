@@ -45,6 +45,8 @@ import {
     showTemplateReplaceDialog,
     TemplateParam,
 } from "tim/ui/showTemplateReplaceDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {showInputDialog} from "tim/ui/showInputDialog";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -2436,6 +2438,33 @@ ${fhtml}
         for (const response of resps) {
             this.uploadedFiles.push({path: response.file, type: response.type});
         }
+
+        // Add reference to image to markdown
+        if (this.formulaEditor) {
+            for (const response of resps) {
+                // ask user to type in caption text for image
+                showInputDialog<string>({
+                    isInput: InputDialogKind.InputAndValidator,
+                    defaultValue: "Image 1",
+                    validator: (s) => {
+                        return new Promise((resolve) => {
+                            resolve({ok: true, result: s});
+                        });
+                    },
+                    text: "Enter image caption",
+                    title: "Caption",
+                    okValue: "",
+                })
+                    .then((caption) => {
+                        // write image tag to editor
+                        const url = response.file;
+                        const markdownImageTag = `![${caption}](${url})`;
+                        this.editor?.insert(markdownImageTag);
+                        this.editor?.focus();
+                    })
+                    .catch((e) => {}); // nothing to catch
+            }
+        }
     }
 
     onUploadDone(success: boolean) {
@@ -3814,7 +3843,7 @@ ${fhtml}
                                      (upload)="onUploadResponse($event)"
                                      (uploadDone)="onUploadDone($event)">
                 </file-select-manager>
-                <div class="form-inline small">
+                <div [hidden]="formulaEditor" class="form-inline small">
                     <span *ngFor="let item of uploadedFiles">
                         <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
                     </span>
