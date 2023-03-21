@@ -4,8 +4,8 @@ import {
     Component,
     Directive,
     ElementRef,
-    ViewChild,
     HostListener,
+    ViewChild,
 } from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {SafeResourceUrl} from "@angular/platform-browser";
@@ -46,6 +46,8 @@ import {
     showTemplateReplaceDialog,
     TemplateParam,
 } from "tim/ui/showTemplateReplaceDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {showInputDialog} from "tim/ui/showInputDialog";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -2444,12 +2446,28 @@ ${fhtml}
 
         // Add reference to image to markdown
         if (this.formulaEditor) {
-            for (let i = 0; i < resps.length; i++) {
-                const caption = `image${i + 1}`;
-                const url = resps[i].file;
-                const markdownImageTag = `![${caption}](${url})`;
-                this.editor?.insert(markdownImageTag);
-                this.editor?.focus();
+            for (const response of resps) {
+                // ask user to type in caption text for image
+                showInputDialog<string>({
+                    isInput: InputDialogKind.InputAndValidator,
+                    defaultValue: "Image 1",
+                    validator: (s) => {
+                        return new Promise((resolve) => {
+                            resolve({ok: true, result: s});
+                        });
+                    },
+                    text: "Enter image caption",
+                    title: "Caption",
+                    okValue: "",
+                })
+                    .then((caption) => {
+                        // write image tag to editor
+                        const url = response.file;
+                        const markdownImageTag = `![${caption}](${url})`;
+                        this.editor?.insert(markdownImageTag);
+                        this.editor?.focus();
+                    })
+                    .catch((e) => {}); // nothing to catch
             }
         }
     }
