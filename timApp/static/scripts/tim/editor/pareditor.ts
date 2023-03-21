@@ -1726,6 +1726,7 @@ ${backTicks}
      */
     onFormulaEditorAddFormula() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
+        this.scope.$digest();
     }
 
     onFormulaEditorCloseOk() {
