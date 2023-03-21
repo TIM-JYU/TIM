@@ -753,7 +753,8 @@ export class ViewCtrl implements IController {
             (this.docSettings.form_mode ?? this.instantUpdateTasks) ||
             getViewName() === "review";
         this.syncAnswerBrowsers =
-            this.docSettings.sync_answerbrowsers ?? this.syncAnswerBrowsers;
+            (this.docSettings.sync_answerbrowsers ?? this.syncAnswerBrowsers) ||
+            getViewName() === "review";
     }
 
     /**
