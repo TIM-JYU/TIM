@@ -821,6 +821,7 @@ export class AnswerBrowserComponent
                 this.unDimPlugin();
             }
         }
+        this.setReviewerUsers();
         this.isAndSetShowNewTask();
     }
 
@@ -1330,7 +1331,6 @@ export class AnswerBrowserComponent
      */
     async getAnswersAndUpdate(forceUpdate?: boolean) {
         // if ( this.isUseCurrentUser(this.taskId) ) { return null; }
-
         if (
             !this.viewctrl.item.rights ||
             !this.viewctrl.item.rights.browse_own_answers
@@ -1388,6 +1388,7 @@ export class AnswerBrowserComponent
                 this.selectedAnswer = undefined;
                 this.dimPlugin();
             }
+
             await this.updateFilteredAndSetNewest();
         }
         this.updating = false;
