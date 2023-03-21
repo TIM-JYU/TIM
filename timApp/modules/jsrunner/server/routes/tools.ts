@@ -1190,7 +1190,7 @@ export class GTools extends ToolsBase {
             );
         }
         const sameEmailIndex = this.newUsers.findIndex(
-            (u) => u.email == data.email
+            (u) => u.username == data.username
         );
         if (sameEmailIndex >= 0) {
             return -sameEmailIndex - 1;
