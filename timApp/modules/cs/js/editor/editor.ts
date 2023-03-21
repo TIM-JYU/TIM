@@ -62,6 +62,7 @@ export interface IEditor {
     insert?(str: string): void;
     setReadOnly(b: boolean): void;
     focus(): void;
+    addFormulaEditorOpenHandler?(cb: () => void): void;
 }
 
 export interface IEditorFile {
@@ -226,6 +227,7 @@ export class EditorComponent implements IMultiEditor {
     private loadedFile?: IFile;
     filenameInput: string = "";
     private editorIndexStorage = new TimStorage("editorIndex", t.number);
+    formulaFunction = function () {};
 
     constructor(private cdr: ChangeDetectorRef) {
         this.showOtherEditor(
@@ -278,6 +280,7 @@ export class EditorComponent implements IMultiEditor {
             this.editor.setReadOnly(this.editorreadonly);
             this.content = oldContent;
             this.content_ = undefined;
+            this.addFormulaEditorOpenHandler(this.formulaFunction);
         }
     }
 
@@ -781,5 +784,11 @@ export class EditorComponent implements IMultiEditor {
 
     focus() {
         this.editor?.focus();
+    }
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+        if (this.editor?.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(cb);
+        }
     }
 }
