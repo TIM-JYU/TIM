@@ -157,10 +157,11 @@ export class FormulaEditorComponent {
      */
     parseOldContent(str: string) {
         if (!this.editor.insert) {
-            return {
+            this.oldContent = {
                 before: this.editor.content,
                 after: "",
             };
+            return;
         }
         const cursorMarker = "│";
 
