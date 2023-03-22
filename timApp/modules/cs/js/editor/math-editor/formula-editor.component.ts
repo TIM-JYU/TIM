@@ -45,6 +45,9 @@ type OldContent = {
     template: `
         <div [hidden]="!visible" class="formula-editor">
             <div class="formula-editor-dialog">
+                <div class="buttons-container">
+                   <button class="timButton" (click)="addFormula()">sqrt</button> 
+                </div>
                 <div class="formula-container">
                     <span class="visual-input" #visualInput></span>
         
@@ -304,6 +307,29 @@ export class FormulaEditorComponent {
             // clearing fields triggers update to editor content
             // rewrite it
             this.editor.content = finalContent;
+        }
+    }
+
+    addFormula() {
+        const formula = "\\sqrt";
+
+        if (this.activeEditor === ActiveEditorType.Latex) {
+            const startPos = this.latexInput.nativeElement.selectionStart;
+            const endPos = this.latexInput.nativeElement.selectionEnd;
+            const oldValue = this.latexInput.nativeElement.value;
+            const newValue =
+                oldValue.substring(0, startPos) +
+                formula +
+                "{}" +
+                oldValue.substring(endPos, oldValue.length);
+            this.latexInputControl.setValue(newValue);
+            this.latexInput.nativeElement.selectionStart =
+                startPos + newValue.length;
+            this.latexInput.nativeElement.selectionEnd =
+                endPos + newValue.length;
+            this.handleLatexInput();
+        } else {
+            this.mathField.cmd(formula);
         }
     }
 }
