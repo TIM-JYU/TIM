@@ -101,8 +101,10 @@ export class FormulaEditorComponent {
         this._visible = isVis;
         // became visible so save what was in editor
         if (isVis) {
-            this.oldContent = this.parseOldContent(this.editor.content);
-            this.checkIfEditing();
+            this.parseOldContent(this.editor.content);
+            const isMulti = this.getInitialMultilineSetting();
+            this.isMultilineFormulaControl.setValue(isMulti);
+            this.parseEditedFormula();
         }
     }
     private _visible: boolean = false;
@@ -110,62 +112,143 @@ export class FormulaEditorComponent {
     constructor() {}
 
     /**
-     * Finds cursor location from editor
-     * @return index in editor.content or -1 if editor.insert not defined
+     * Find the line where cursor is in editor
      */
-    findCursorLocation(): number {
+    getCurrentLine() {
+        const cursorPos = this.getCursorLocation();
+        const text = this.editor.content;
+        let startI = cursorPos;
+        let endI = cursorPos;
+        if (text[startI] === "\n") {
+            startI--;
+        }
+        while (startI >= 0 && text[startI] !== "\n") {
+            startI--;
+        }
+        while (endI < text.length && text[endI] !== "\n") {
+            endI++;
+        }
+        return text.slice(startI + 1, endI);
+    }
+
+    /**
+     * Determine whether the user wants to create a multiline or an inline formula
+     */
+    getInitialMultilineSetting() {
+        const currentLine = this.getCurrentLine();
+        const isTextInLine = currentLine.trim().length > 0;
+        // should be multiline if no real text in line
+        return !isTextInLine;
+    }
+
+    /**
+     * After oldContent is set cursor is between
+     * oldContent parts
+     */
+    getCursorLocation() {
+        return this.oldContent.before.length;
+    }
+
+    /**
+     * Splits string into two parts if possible at cursor location
+     * @param str
+     */
+    parseOldContent(str: string) {
         if (!this.editor.insert) {
-            return -1;
+            this.oldContent = {
+                before: this.editor.content,
+                editing: "",
+                after: "",
+            };
+            return;
         }
         const cursorMarker = "│";
 
         // add cursor character to know where cursor is
         this.editor.insert(cursorMarker);
         // find its index
-        const index = this.editor.content.indexOf(cursorMarker);
-        // rewind changes to editor content
-        const before = this.editor.content.slice(0, index);
-        const after = this.editor.content.slice(index + 1);
-        this.editor.content = before + after;
+        const cursorI = this.editor.content.indexOf(cursorMarker);
+        // also remove added cursor character from editor
+        this.editor.content =
+            this.editor.content.slice(0, cursorI) +
+            this.editor.content.slice(cursorI + 1);
 
-        return index;
-    }
-
-    /**
-     * Splits string into three parts if possible at cursor location
-     * @param str
-     */
-    parseOldContent(str: string): OldContent {
-        const cursorI = this.findCursorLocation();
-        if (cursorI === -1) {
-            return {
-                before: this.editor.content,
-                editing: "",
-                after: "",
-            };
-        }
-
-        // form and return the old content
-        const result = {
+        this.oldContent = {
             before: this.editor.content.slice(0, cursorI),
             editing: "",
             after: this.editor.content.slice(cursorI),
         };
-
-        return result;
     }
 
-    checkIfEditing() {
-        const before = this.oldContent.before;
-        const after = this.oldContent.after;
+    /**
+     * Parses current formula from old content
+     */
+    parseEditedFormula() {
+        let leftIsMultiLine = false;
+        let rightIsMultiLine = false;
+        let leftIndex = this.oldContent.before.length;
+        let rightIndex = 0;
 
-        // TODO: check if inside formula or not. check also if formula is singleline or multiline.
+        while (leftIndex >= 0) {
+            leftIsMultiLine = false;
+            leftIndex = this.oldContent.before.lastIndexOf("$", leftIndex - 1);
+            if (this.oldContent.before.charAt(leftIndex + 1) !== " ") {
+                if (this.oldContent.before.charAt(leftIndex - 1) === "$") {
+                    leftIsMultiLine = true;
+                }
+                break;
+            }
+        }
 
-        // set formula editor values if editing existing formula
-        const insideFormula = false;
-        if (insideFormula) {
-            this.isMultilineFormulaControl.setValue(false);
-            this.latexInputControl.setValue("\\frac{pi}{4}");
+        while (rightIndex >= 0) {
+            rightIsMultiLine = false;
+            rightIndex = this.oldContent.after.indexOf("$", rightIndex + 1);
+            if (this.oldContent.after.charAt(rightIndex - 1) !== " ") {
+                if (this.oldContent.after.charAt(rightIndex + 1) === "$") {
+                    rightIsMultiLine = true;
+                }
+                break;
+            }
+        }
+
+        if (leftIndex >= 0 && rightIndex >= 0) {
+            if (leftIsMultiLine && rightIsMultiLine) {
+                this.oldContent.editing =
+                    this.oldContent.before.slice(leftIndex - 1) +
+                    this.oldContent.after.slice(0, rightIndex + 2);
+                this.oldContent.before = this.oldContent.before.slice(
+                    0,
+                    leftIndex - 1
+                );
+                this.oldContent.after = this.oldContent.after.slice(
+                    rightIndex + 2
+                );
+                this.isMultilineFormulaControl.setValue(true);
+                this.latexInputControl.setValue(
+                    this.oldContent.editing.slice(
+                        3,
+                        this.oldContent.editing.length - 3
+                    )
+                );
+            } else {
+                this.oldContent.editing =
+                    this.oldContent.before.slice(leftIndex) +
+                    this.oldContent.after.slice(0, rightIndex + 1);
+                this.oldContent.before = this.oldContent.before.slice(
+                    0,
+                    leftIndex
+                );
+                this.oldContent.after = this.oldContent.after.slice(
+                    rightIndex + 1
+                );
+                this.isMultilineFormulaControl.setValue(false);
+                this.latexInputControl.setValue(
+                    this.oldContent.editing.slice(
+                        1,
+                        this.oldContent.editing.length - 1
+                    )
+                );
+            }
             this.handleLatexFocus();
             this.handleLatexInput();
         }
