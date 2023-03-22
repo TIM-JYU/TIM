@@ -277,7 +277,7 @@ export class FormulaEditorComponent {
     }
 
     addFormula() {
-        const formula = "\\sqrt{}";
+        const formula = "\\sqrt";
 
         if (this.activeEditor === ActiveEditorType.Latex) {
             const startPos = this.latexInput.nativeElement.selectionStart;
@@ -286,6 +286,7 @@ export class FormulaEditorComponent {
             const newValue =
                 oldValue.substring(0, startPos) +
                 formula +
+                "{}" +
                 oldValue.substring(endPos, oldValue.length);
             this.latexInputControl.setValue(newValue);
             this.latexInput.nativeElement.selectionStart =
@@ -294,7 +295,7 @@ export class FormulaEditorComponent {
                 endPos + newValue.length;
             this.handleLatexInput();
         } else {
-            this.mathField.cmd("\\sqrt");
+            this.mathField.cmd(formula);
         }
     }
 }
