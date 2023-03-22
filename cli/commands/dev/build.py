@@ -27,9 +27,12 @@ If no tag is specified, the task is built with all tags.
 # 2. Specify the task and valid tags in the BUILD_TASKS dictionary.
 
 
-def build_tim(_: Optional[str], no_cache: bool) -> Optional[str]:
+def build_tim(tag: Optional[str], no_cache: bool) -> Optional[List[str]]:
     config = get_config()
-    image_name = f"{config.images_repository}/tim:{tim_image_tag()}"
+    image_suffix = "-base" if tag == "base" else ""
+    image_name = f"{config.images_repository}/tim{image_suffix}"
+    image_name_specific = f"{image_name}:{tim_image_tag()}"
+    image_name_latest = f"{image_name}:latest"
     cwd = Path.cwd()
     dockerfile = cwd / "timApp" / "Dockerfile"
     run_docker(
@@ -37,16 +40,18 @@ def build_tim(_: Optional[str], no_cache: bool) -> Optional[str]:
             "build",
             *(["--no-cache"] if no_cache else []),
             "--tag",
-            image_name,
+            image_name_specific,
+            "--tag",
+            image_name_latest,
             "--file",
             dockerfile.as_posix(),
             cwd.as_posix(),
         ],
     )
-    return image_name
+    return [image_name_specific, image_name_latest]
 
 
-def build_csplugin(tag: Optional[str], no_cache: bool) -> Optional[str]:
+def build_csplugin(tag: Optional[str], no_cache: bool) -> Optional[List[str]]:
     assert tag is not None
     config = get_config()
     image_name = f"{config.images_repository}/cs3:{tag}-{csplugin_image_tag()}"
@@ -62,7 +67,7 @@ def build_csplugin(tag: Optional[str], no_cache: bool) -> Optional[str]:
             context.as_posix(),
         ],
     )
-    return image_name
+    return [image_name]
 
 
 ######################################################
@@ -76,11 +81,11 @@ class Arguments:
 
 class BuildTask(NamedTuple):
     tags: Optional[List[str]]
-    build: Callable[[Optional[str], bool], Optional[str]]
+    build: Callable[[Optional[str], bool], Optional[List[str]]]
 
 
 BUILD_TASKS: Dict[str, BuildTask] = {
-    "tim": BuildTask(None, build_tim),
+    "tim": BuildTask(["base", "complete"], build_tim),
     "csplugin": BuildTask(["base", "complete", "sudo"], build_csplugin),
 }
 
@@ -99,19 +104,19 @@ def run(args: Arguments) -> None:
         if build_tags:
             for tag in build_tags:
                 log_info(f"Building {task}:{tag}")
-                image = build_task.build(tag, args.no_cache)
-                if image:
-                    built_images.append(image)
+                images = build_task.build(tag, args.no_cache)
+                if images:
+                    built_images.extend(images)
         else:
             log_info(f"Building {task}")
-            image = build_task.build(None, args.no_cache)
-            if image:
-                built_images.append(image)
+            images = build_task.build(None, args.no_cache)
+            if images:
+                built_images.extend(images)
 
     if args.push:
-        for image in built_images:
-            log_info(f"Pushing {image}")
-            run_docker(["push", image])
+        for images in built_images:
+            log_info(f"Pushing {images}")
+            run_docker(["push", images])
 
 
 def init(parser: ArgumentParser) -> None:
