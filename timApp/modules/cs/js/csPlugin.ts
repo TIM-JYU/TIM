@@ -985,7 +985,7 @@ export class CsController extends CsBase implements ITimComponent {
     muokattu: boolean;
     noeditor!: boolean;
     formulaEditorOpen = false;
-
+    currentSymbol = "";
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
     postcode?: string;
@@ -2917,8 +2917,13 @@ ${fhtml}
             ip++;
         }
         const text = s.replace(/\\n/g, "\n");
-        this.editor?.insert?.(text);
-        this.editor?.focus();
+        // write the text to formulaeditor if its enabled and open
+        if (this.formulaEditor && this.formulaEditorOpen) {
+            this.currentSymbol = text;
+        } else {
+            this.editor?.insert?.(text);
+            this.editor?.focus();
+        }
     }
 
     getButtonTextHtml(s: string) {
@@ -3864,6 +3869,7 @@ ${fhtml}
                             (cancelEvent)="onFormulaEditorCloseCancel()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
+                            [currentSymbol]="currentSymbol"
                     ></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>

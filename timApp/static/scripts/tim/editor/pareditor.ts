@@ -249,6 +249,7 @@ export class PareditorController extends DialogController<
     private originalDocument: boolean = true;
 
     private formulaEditorOpen: boolean = false;
+    private currentSymbol: string = "";
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
