@@ -45,7 +45,7 @@ type OldContent = {
     selector: "cs-formula-editor",
     template: `
         <div [hidden]="!visible" class="formula-editor">
-            <div class="formula-editor-dialog">
+            <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog>
                 <div class="buttons-container">
                     <button class="timButton" *ngFor="let item of formulas;" (click)="addFormula(item)" 
                      >{{item}}</button>
@@ -63,8 +63,8 @@ type OldContent = {
 
                 <div class="formula-button-container">
                     <div class="formula-buttons">
-                        <button class="timButton" (click)="handleFormulaOk()">Ok</button>
-                        <button class="timButton" (click)="handleFormulaCancel()" i18n>Cancel</button>
+                        <button class="timButton" (click)="handleFormulaOk()" title="Ctrl+s">Ok</button>
+                        <button class="timButton" (click)="handleFormulaCancel()" i18n title="Esc">Cancel</button>        
                     </div>
 
                     <label class="font-weight-normal">
@@ -83,6 +83,9 @@ export class FormulaEditorComponent {
     @ViewChild("latexInput") latexInput!: ElementRef<HTMLTextAreaElement>;
 
     @ViewChild("visualInput") visualInput!: ElementRef<HTMLElement>;
+
+    @ViewChild("formulaEditorDialog")
+    formulaEditorDialog!: ElementRef<HTMLDivElement>;
     MQ!: IMathQuill;
 
     mathField!: MathFieldMethods;
@@ -361,7 +364,7 @@ export class FormulaEditorComponent {
     }
 
     enterHandler(field: MathFieldMethods) {
-        this.handleFormulaOk();
+        // this.handleFormulaOk();
     }
 
     async loadMathQuill() {
@@ -388,6 +391,23 @@ export class FormulaEditorComponent {
         this.isMultilineFormulaControl.valueChanges.subscribe((value) => {
             this.updateFormulaToEditor();
         });
+
+        this.formulaEditorDialog.nativeElement.addEventListener(
+            "keydown",
+            (e) => {
+                if (e.ctrlKey) {
+                    if (e.key === "s") {
+                        this.handleFormulaOk();
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }
+                } else if (e.key === "Escape") {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    void this.handleFormulaCancel();
+                }
+            }
+        );
     }
 
     handleLatexFocus() {
