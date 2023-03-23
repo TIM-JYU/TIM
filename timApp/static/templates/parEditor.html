@@ -8,6 +8,7 @@
                                (cancel-event)="$ctrl.onFormulaEditorCloseCancel()"
                                [editor]="$ctrl.editor"
                                [visible]="$ctrl.formulaEditorOpen"
+                               [currentSymbol]="$ctrl.currentSymbol"
             ></cs-formula-editor>
         </div>
         <tim-editor-entry ng-repeat="e in t.entries" data="e"></tim-editor-entry>
