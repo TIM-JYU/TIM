@@ -22,6 +22,7 @@ import type {
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
 import {IEditor} from "../editor";
+import {KEY_S} from "tim/util/keycodes";
 
 /**
  * Field which has the focus
@@ -62,8 +63,8 @@ type OldContent = {
         
                 <div class="formula-button-container">
                     <div class="formula-buttons">
-                        <button class="timButton" (click)="handleFormulaOk()">Ok</button>
-                        <button class="timButton" (click)="handleFormulaCancel()" i18n>Cancel</button>                                        
+                        <button class="timButton" (click)="handleFormulaOk()" title="Ctrl+s">Ok</button>
+                        <button class="timButton" (click)="handleFormulaCancel()" i18n title="Esc">Cancel</button>                                        
                     </div>
         
                     <label class="font-weight-normal">
@@ -349,7 +350,7 @@ export class FormulaEditorComponent {
     }
 
     enterHandler(field: MathFieldMethods) {
-        this.handleFormulaOk();
+        //this.handleFormulaOk();
     }
 
     async loadMathQuill() {
@@ -380,7 +381,17 @@ export class FormulaEditorComponent {
         this.formulaEditorDialog.nativeElement.addEventListener(
             "keydown",
             (e) => {
-                console.log(e.key, e.ctrlKey);
+                if (e.ctrlKey) {
+                    if (e.key === "s") {
+                        this.handleFormulaOk();
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }
+                } else if (e.key === "Escape") {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    void this.handleFormulaCancel();
+                }
             }
         );
     }
