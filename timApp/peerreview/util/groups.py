@@ -16,15 +16,8 @@ from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.utils import get_current_time
 
 
-def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
-    task_ids = []
-
+def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
     settings = doc.document.get_settings()
-
-    for task in tasks:
-        if task.task_id:
-            task_ids.append(task.task_id)
-
     user_groups = settings.groups()
     user_ids = None
     if user_groups:
@@ -84,13 +77,14 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
             else:
                 pairing[users[idx].id].append(users[x].id)
 
+    # Current logic:
+    # Everyone who answered to any task on the given list of tasks will be accepted into review
+    # PeerReview rows and pairings will be the same for every task, even if target did not answer to some of tasks
+    # If target has an answer in a task, try to add it to PeerReview table. If not, just leave it empty
     for t in task_ids:
         answers: list[Answer] = get_latest_valid_answers_query(t, users).all()
         excluded_users: list[User] = []
         filtered_answers = []
-        if not answers:
-            # Skip tasks that has no answers
-            continue
         for answer in answers:
             if len(answer.users_all) > 1:
                 # TODO: Implement handling for multiple users
@@ -99,12 +93,25 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
                 if answer.users_all[0] not in excluded_users:
                     filtered_answers.append(answer)
                     excluded_users.append(answer.users_all[0])
-
         for reviewer, reviewables in pairing.items():
-            for a in filtered_answers:
-                if a.users_all[0].id in reviewables:
+            for reviewable in reviewables:
+                saved_with_answer = False
+                for a in filtered_answers:
+                    if a.users_all[0].id == reviewable:
+                        save_review_by_answer(
+                            a, t, doc, reviewer, start_time_reviews, end_time_reviews
+                        )
+                        saved_with_answer = True
+                        break
+                if not saved_with_answer:
                     save_review(
-                        a, t, doc, reviewer, start_time_reviews, end_time_reviews
+                        None,
+                        t,
+                        doc,
+                        reviewer,
+                        reviewable,
+                        start_time_reviews,
+                        end_time_reviews,
                     )
 
     db.session.commit()
@@ -115,6 +122,31 @@ class PeerReviewException(Exception):
 
 
 def save_review(
+    answer: Answer | None,
+    task_id: TaskId | None,
+    doc: DocInfo,
+    reviewer_id: int,
+    reviewable_id: int,
+    start_time: datetime,
+    end_time: datetime,
+    reviewed: bool = False,
+) -> PeerReview:
+    review = PeerReview(
+        answer_id=answer.id if answer else None,
+        task_name=task_id.task_name if task_id else None,
+        block_id=doc.id,
+        reviewer_id=reviewer_id,
+        reviewable_id=reviewable_id,
+        start_time=start_time,
+        end_time=end_time,
+        reviewed=reviewed,
+    )
+
+    db.session.add(review)
+    return review
+
+
+def save_review_by_answer(
     answer: Answer,
     task_id: TaskId,
     doc: DocInfo,

@@ -20,6 +20,7 @@ import type {
     MathFieldMethods,
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {IEditor} from "../editor";
 
 /**
@@ -257,13 +258,16 @@ export class FormulaEditorComponent {
         this.editor.content = finalContent;
     }
 
-    handleFormulaCancel() {
+    async handleFormulaCancel() {
         // content hasn't changed from what it was before opening formula editor
         // so cancel
         if (
             this.oldContent.before + this.oldContent.after ===
                 this.editor.content ||
-            confirm($localize`Are you sure? Cancel will clear the editor.`)
+            (await showConfirm(
+                $localize`Are you sure?`,
+                $localize`This will clear the editor.`
+            ))
         ) {
             this.editor.content =
                 this.oldContent.before + this.oldContent.after;

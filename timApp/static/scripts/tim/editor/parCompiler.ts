@@ -141,14 +141,19 @@ export class ParagraphCompiler {
         return compiled;
     }
 
-    public async processAllMathDelayed($elem: JQuery, delay?: number) {
+    public async processAllMathDelayed(
+        $elem: JQuery,
+        delay?: number,
+        singleDollars?: boolean
+    ) {
         await timeout(delay ?? 300);
-        await this.processAllMath($elem);
+        await this.processAllMath($elem, undefined, singleDollars);
     }
 
     public async processAllMath(
         $elem: JQuery,
-        selector: string | undefined = ".math"
+        selector: string | undefined = ".math",
+        singleDollars?: boolean
     ) {
         const katexFailures: Element[] = [];
         const mathelems = selector ? $elem.find(".math") : $elem;
@@ -163,7 +168,8 @@ export class ParagraphCompiler {
             const result = this.processMath(
                 renderMathInElement.default,
                 elem,
-                false
+                false,
+                singleDollars
             );
             if (result != null) {
                 katexFailures.push(result);
@@ -212,18 +218,50 @@ export class ParagraphCompiler {
      * @param katexFunction The KaTeX function that processes the elements.
      * @param elem The HTML element to process.
      * @param tryMathJax true to attempt to process using MathJax if KaTeX fails.
+     * @param singleDollars if true, render inline math between $ signs
      * @returns null if KaTeX processed the element successfully. Otherwise, the failed element.
      */
     public processMath(
         katexFunction: typeof renderMathInElement,
         elem: Element,
-        tryMathJax: boolean
+        tryMathJax: boolean,
+        singleDollars?: boolean
     ): Element | null {
         let lastError: string | undefined;
         katexFunction(elem, {
             errorCallback: (s) => {
                 lastError = s;
             },
+            delimiters: singleDollars
+                ? // add $ to defaults from https://katex.org/docs/autorender.html
+                  [
+                      {left: "$$", right: "$$", display: true},
+                      {left: "$", right: "$", display: false},
+                      {left: "\\(", right: "\\)", display: false},
+                      {
+                          left: "\\begin{equation}",
+                          right: "\\end{equation}",
+                          display: true,
+                      },
+                      {
+                          left: "\\begin{align}",
+                          right: "\\end{align}",
+                          display: true,
+                      },
+                      {
+                          left: "\\begin{alignat}",
+                          right: "\\end{alignat}",
+                          display: true,
+                      },
+                      {
+                          left: "\\begin{gather}",
+                          right: "\\end{gather}",
+                          display: true,
+                      },
+                      {left: "\\begin{CD}", right: "\\end{CD}", display: true},
+                      {left: "\\[", right: "\\]", display: true},
+                  ]
+                : undefined,
         });
         if (!lastError) {
             return null;

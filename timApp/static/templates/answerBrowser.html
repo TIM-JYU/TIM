@@ -154,27 +154,30 @@
                                     <input type="checkbox" (change)="toggleInput()" [(ngModel)]="saveTeacher"><ng-container i18n>Save teacher's fix</ng-container>
                                 </label>
                             </span>
-                            <div class="flex" *ngIf="selectedAnswer">
-                            <span *ngIf="showVelpsCheckBox()">
-                            <label class="checkbox-inline" >
-                                <input type="checkbox" [(ngModel)]="review" (ngModelChange)="reviewToggled()"><ng-container i18n>Velps</ng-container>
-                            </label>
-                            </span>
-                            <div class="input-group input-group-xs" *ngIf="showReviewUserSelector()">
+                            <div class="flex">
+                                <ng-container *ngIf="selectedAnswer">
+                                    <span *ngIf="showVelpsCheckBox()">
+                                    <label class="checkbox-inline" >
+                                        <input type="checkbox" [(ngModel)]="review" (ngModelChange)="reviewToggled()"><ng-container i18n>Velps</ng-container>
+                                    </label>
+                                    </span>
+                                    <button i18n-title *ngIf="showDelete"
+                                            title="Delete answer"
+                                            (click)="deleteAnswer()"
+                                            class="timButton btn-xs btn-danger">
+                                        <i class="glyphicon glyphicon-trash"></i>
+                                    </button>
+                                </ng-container>
+                                <div class="input-group input-group-xs" *ngIf="showReviewUserSelector()">
                                     <select i18n-title class="form-control"
                                             title="List of reviewers"
                                             [(ngModel)]="reviewerUser"
                                             (ngModelChange)="changeReviewerUser()">
-                                         <option i18n [ngValue]="undefined">All reviewers</option>
-                                         <option *ngFor="let user of reviewerUsers" [ngValue]="user">{{(user.real_name + ' (' + user.name + ')')}}</option>
+                                        <option i18n [ngValue]="undefined">All reviewers</option>
+                                        <option *ngFor="let user of reviewerUsers"
+                                                [ngValue]="user">{{(user.real_name + ' (' + user.name + ')')}}</option>
                                     </select>
-                           </div>
-                            <button i18n-title *ngIf="showDelete"
-                                    title="Delete answer"
-                                    (click)="deleteAnswer()"
-                                    class="timButton btn-xs btn-danger">
-                                <i class="glyphicon glyphicon-trash"></i>
-                            </button>
+                                </div>
                             </div>
                         <span *ngIf="selectedAnswerWithUsers">
                         <div class="flex" *ngIf="selectedAnswerWithUsers.users.length > 1">

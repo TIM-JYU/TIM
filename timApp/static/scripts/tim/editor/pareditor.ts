@@ -1726,6 +1726,7 @@ ${backTicks}
      */
     onFormulaEditorAddFormula() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
+        this.scope.$digest();
     }
 
     onFormulaEditorCloseOk() {
@@ -2316,6 +2317,11 @@ ${backTicks}
                 createCompleter(documentglobals().wordList, "document"),
                 createCompleter(userWordList, "user"),
             ]);
+        }
+        if (this.editor?.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(() =>
+                this.onFormulaEditorAddFormula()
+            );
         }
         if (initialMode != null) {
             await this.setInitialText();

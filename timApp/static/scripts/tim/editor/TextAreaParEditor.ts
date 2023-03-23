@@ -12,6 +12,7 @@ import {
     KEY_S,
     KEY_TAB,
     KEY_Y,
+    KEY_E,
 } from "tim/util/keycodes";
 import {$log} from "tim/util/ngimport";
 import type {IEditorCallbacks, SelectionRange} from "tim/editor/BaseParEditor";
@@ -27,7 +28,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     public editor: JQuery;
     private editorElement: HTMLTextAreaElement;
     type: EditorType.Textarea = EditorType.Textarea;
-
+    formulaFunction = function () {};
     constructor(editor: JQuery, callbacks: IEditorCallbacks) {
         super(editor, callbacks);
         this.editor = editor;
@@ -56,6 +57,9 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
                     e.preventDefault();
                 } else if (e.keyCode === KEY_Y) {
                     this.commentClicked();
+                    e.preventDefault();
+                } else if (e.keyCode === KEY_E) {
+                    this.formulaFunction();
                     e.preventDefault();
                 } else if (e.keyCode === KEY_1) {
                     this.headerClicked("#");
@@ -738,4 +742,8 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     }
 
     setReadOnly(b: boolean): void {}
+
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+    }
 }
