@@ -46,33 +46,36 @@ type OldContent = {
         <div [hidden]="!visible" class="formula-editor">
             <div class="formula-editor-dialog">
                 <div class="buttons-container">
-                   <button class="timButton" (click)="addFormula()">sqrt</button> 
+                    <button class="timButton" *ngFor="let item of formulas;" (click)="addFormula(item)" 
+                     >{{item}}</button>
                 </div>
                 <div class="formula-container">
                     <span class="visual-input" #visualInput></span>
-        
+
                     <textarea name="math-editor-output" #latexInput cols="30" rows="5"
                               (click)="handleLatexFocus()"
                               (keyup)="handleLatexInput()"
                               [formControl]="latexInputControl"
                               placeholder="Write LaTeX" i18n-placeholder>
-                    </textarea>                    
+                    </textarea>
                 </div>
-        
+
                 <div class="formula-button-container">
                     <div class="formula-buttons">
                         <button class="timButton" (click)="handleFormulaOk()">Ok</button>
-                        <button class="timButton" (click)="handleFormulaCancel()" i18n>Cancel</button>                                        
+                        <button class="timButton" (click)="handleFormulaCancel()" i18n>Cancel</button>
                     </div>
-        
+
                     <label class="font-weight-normal">
-                        <input type="checkbox" [formControl]="isMultilineFormulaControl"><ng-container i18n>
-                        Multiline</ng-container>
+                        <input type="checkbox" [formControl]="isMultilineFormulaControl">
+                        <ng-container i18n>
+                            Multiline
+                        </ng-container>
                     </label>
                 </div>
             </div>
         </div>
-            
+
     `,
     styleUrls: ["./formula-editor.component.scss"],
 })
@@ -110,6 +113,8 @@ export class FormulaEditorComponent {
         }
     }
     private _visible: boolean = false;
+
+    formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
 
     constructor() {}
 
@@ -311,9 +316,7 @@ export class FormulaEditorComponent {
         }
     }
 
-    addFormula() {
-        const formula = "\\sqrt";
-
+    addFormula(formula: string) {
         if (this.activeEditor === ActiveEditorType.Latex) {
             const startPos = this.latexInput.nativeElement.selectionStart;
             const endPos = this.latexInput.nativeElement.selectionEnd;
@@ -321,7 +324,6 @@ export class FormulaEditorComponent {
             const newValue =
                 oldValue.substring(0, startPos) +
                 formula +
-                "{}" +
                 oldValue.substring(endPos, oldValue.length);
             this.latexInputControl.setValue(newValue);
             this.latexInput.nativeElement.selectionStart =
@@ -330,7 +332,7 @@ export class FormulaEditorComponent {
                 endPos + newValue.length;
             this.handleLatexInput();
         } else {
-            this.mathField.cmd(formula);
+            this.mathField.write(formula);
         }
     }
 }
