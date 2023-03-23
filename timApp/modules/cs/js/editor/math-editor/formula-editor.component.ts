@@ -45,7 +45,7 @@ type OldContent = {
     selector: "cs-formula-editor",
     template: `
         <div [hidden]="!visible" class="formula-editor">
-            <div class="formula-editor-dialog">
+            <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog>
                 <div class="buttons-container">
                    <button class="timButton" (click)="addFormula()">sqrt</button> 
                 </div>
@@ -82,6 +82,9 @@ export class FormulaEditorComponent {
     @ViewChild("latexInput") latexInput!: ElementRef<HTMLTextAreaElement>;
 
     @ViewChild("visualInput") visualInput!: ElementRef<HTMLElement>;
+
+    @ViewChild("formulaEditorDialog")
+    formulaEditorDialog!: ElementRef<HTMLDivElement>;
     MQ!: IMathQuill;
 
     mathField!: MathFieldMethods;
@@ -373,6 +376,13 @@ export class FormulaEditorComponent {
         this.isMultilineFormulaControl.valueChanges.subscribe((value) => {
             this.updateFormulaToEditor();
         });
+
+        this.formulaEditorDialog.nativeElement.addEventListener(
+            "keydown",
+            (e) => {
+                console.log(e.key, e.ctrlKey);
+            }
+        );
     }
 
     handleLatexFocus() {
