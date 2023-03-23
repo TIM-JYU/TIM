@@ -41,6 +41,8 @@ export const PeerReviewData = t.type({
     block_id: t.Int,
     reviewer_id: t.Int,
     reviewable_id: t.Int,
+    reviewer: User,
+    reviewable: User,
     reviewed: t.boolean,
     answer_id: nullable(t.Int),
     task_name: nullable(t.string),

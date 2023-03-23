@@ -27,28 +27,6 @@ export class QuestionHandler {
         }
     }
 
-    // Opens pop-up window to create question.
-    async addQuestionQst(e: MouseEvent, pos: EditPosition) {
-        const parNextId = getNextId(pos);
-        const result = await to2(
-            showQuestionEditDialog({
-                par_id_next: parNextId ?? null,
-                qst: true,
-                docId: this.viewctrl.docId,
-            })
-        );
-        if (!result.ok) {
-            return;
-        }
-        if (result.result.type === "points") {
-            throw new Error("unexpected result type from dialog");
-        }
-        await this.viewctrl.editingHandler.addSavedParToDom(
-            result.result.data,
-            pos
-        );
-    }
-
     async editQst(e: MouseEvent, par: ParContext) {
         const result = await to2(
             fetchAndEditQuestion(this.viewctrl.docId, par.originalPar.id)
@@ -77,14 +55,14 @@ export class QuestionHandler {
         }
     }
 
-    // Event handler for "Add question below"
+    // Event handler for "Add question/lecture question above "
     // Opens pop-up window to create question.
-    async addQuestion(e: MouseEvent, pos: EditPosition) {
+    async addQuestion(e: MouseEvent, pos: EditPosition, isLectureQst: boolean) {
         const parNextId = getNextId(pos);
         const result = await to2(
             showQuestionEditDialog({
                 par_id_next: parNextId ?? null,
-                qst: false,
+                qst: isLectureQst,
                 docId: this.viewctrl.docId,
             })
         );

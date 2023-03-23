@@ -10,7 +10,7 @@ class PostProgramFieldsTest(BrowserTest):
 
         d = self.create_doc(
             initial_par="""
-``` {#qst1 dquestion="true" plugin="qst"}
+``` {#qst1 question="false" plugin="qst"}
 answerFieldType: radio
 expl: {}
 headers: []
@@ -22,7 +22,7 @@ rows:
 - 'No'
 ```
 
-``` {#qst2 dquestion="true" plugin="qst"}
+``` {#qst2 question="false" plugin="qst"}
 answerFieldType: radio
 expl: {}
 headers: []

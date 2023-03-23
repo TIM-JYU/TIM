@@ -52,7 +52,6 @@ import {
 import type {Require} from "tim/util/utils";
 import {
     getURLParameter,
-    getUrlParams,
     getUrlParamsJSON,
     getViewName,
     to,
@@ -169,7 +168,7 @@ export class AnswerBrowserComponent
         }
 
         this.peerReviewElementRef = el;
-        ParCompiler.processAllMath($(el.nativeElement));
+        ParCompiler.processAllMath($(el.nativeElement), undefined, true);
         if (this.isPeerReview) {
             if (!this.peerReviewResizeObserver) {
                 this.peerReviewResizeObserver = new ResizeObserver(() =>
@@ -426,6 +425,7 @@ export class AnswerBrowserComponent
             } else if (this.viewctrl.teacherMode) {
                 this.dimPlugin();
             }
+            this.setReviewerUsers();
             if (!this.isGlobal()) {
                 await this.checkUsers(true); // load users, answers have already been loaded for the currently selected user
             }
@@ -1162,11 +1162,29 @@ export class AnswerBrowserComponent
     }
 
     getReviewLink() {
-        return `/review/${this.viewctrl.item.path}?${$httpParamSerializer({
-            b: this.getPar()?.originalPar.id ?? "",
-            size: 1,
-            group: getUrlParams().get("group"),
-        })}`;
+        let closestAreaName: string | undefined;
+        const area = this.element.nativeElement.closest(".area");
+        if (area) {
+            for (const c of area.classList) {
+                const m = c.match(/^area_(\S+)$/);
+                if (m) {
+                    closestAreaName = m[1];
+                    break;
+                }
+            }
+        }
+        let blockOrPar;
+        if (closestAreaName) {
+            blockOrPar = $httpParamSerializer({
+                area: closestAreaName,
+            });
+        } else {
+            blockOrPar = $httpParamSerializer({
+                b: this.getPar()?.originalPar.id ?? "",
+                size: 1,
+            });
+        }
+        return `/review/${this.viewctrl.item.path}?${blockOrPar}`;
     }
 
     getModelAnswerLink() {
@@ -1313,7 +1331,6 @@ export class AnswerBrowserComponent
      */
     async getAnswersAndUpdate(forceUpdate?: boolean) {
         // if ( this.isUseCurrentUser(this.taskId) ) { return null; }
-
         if (
             !this.viewctrl.item.rights ||
             !this.viewctrl.item.rights.browse_own_answers
@@ -1371,6 +1388,7 @@ export class AnswerBrowserComponent
                 this.selectedAnswer = undefined;
                 this.dimPlugin();
             }
+
             await this.updateFilteredAndSetNewest();
         }
         this.updating = false;
@@ -1617,7 +1635,9 @@ export class AnswerBrowserComponent
     renderPeerReviewMath() {
         if (this.peerReviewElementRef) {
             ParCompiler.processAllMathDelayed(
-                $(this.peerReviewElementRef.nativeElement)
+                $(this.peerReviewElementRef.nativeElement),
+                undefined,
+                true
             );
         }
     }

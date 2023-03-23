@@ -47,7 +47,7 @@ type OldContent = {
         <div [hidden]="!visible" class="formula-editor">
             <div class="formula-editor-dialog">
                 <div class="buttons-container">
-                    <button class="timButton" (click)="addFormula()">sqrt</button>
+                   <button class="timButton" (click)="addFormula()">sqrt</button> 
                 </div>
                 <div class="formula-container">
                     <span class="visual-input" #visualInput></span>

@@ -84,6 +84,13 @@ ALLOW_STYLES_PLUGINS = {"textfield", "numericfield", "drag", "dropdown"}
 
 WANT_FIELDS = {"csPlugin"}
 
+ALLOWED_MACRO_PLUGIN_TYPES = {
+    "qst",
+}
+ALLOWED_MACRO_PLUGIN_ATTRS = {
+    "question",
+}
+
 
 class PluginWrap(Enum):
     Nothing = 1
@@ -473,7 +480,7 @@ class Plugin:
         if tim_info.get("notValid", None):
             return False, tim_info.get("validMsg", "Answer is not valid")
         valid = tim_info.get("valid", True)
-        valid_msg = tim_info.get("validMsg", "ok")
+        valid_msg = tim_info.get("validMsg", "")
         return valid, valid_msg
 
     def is_cached(self) -> bool:
@@ -720,6 +727,46 @@ def expand_macros_for_plugin(par: DocParagraph, macros, env: TimSandboxedEnviron
             env=env,
         )
     return yaml_str
+
+
+def expand_macros_for_plugin_attrs(
+    par: DocParagraph, macros, env: TimSandboxedEnvironment
+) -> None:
+    """
+    Expands macros for plugin paragraph/block attributes. Sets attribute values directly.
+    In order to set paragraph classes correctly based on certain plugin block attributes
+    (such as lecture questions), this function needs to run before DocParagraph.prepare(..)
+    (see also function pluginify in timApp/plugin/pluginControl.py).
+
+    :param par: The plugin paragraph.
+    :param macros: Dict of macros
+    :param env: macro environment
+    """
+    plugin_type = par.get_attr("plugin")
+    if plugin_type not in ALLOWED_MACRO_PLUGIN_TYPES or par.get_nomacros():
+        return
+    par_attrs = par.get_attrs()
+
+    rnd_macros = par.get_rands()
+    if rnd_macros:
+        macros = {**macros, **rnd_macros}
+    env.counters.task_id = par.attrs.get("taskId", None)
+    env.counters.is_plugin = True
+
+    for p_attr in [*par_attrs]:
+        if p_attr in ALLOWED_MACRO_PLUGIN_ATTRS:
+            expanded_val = expand_macros(
+                par.get_attr(p_attr),
+                macros=macros,
+                settings=par.doc.get_settings(),
+                env=env,
+            )
+            if expanded_val and not has_macro_errors(expanded_val):
+                par.set_attr(p_attr, expanded_val)
+
+
+def has_macro_errors(expanded_input: str) -> bool:
+    return '<span class="error"' in expanded_input
 
 
 def load_markup_from_yaml(

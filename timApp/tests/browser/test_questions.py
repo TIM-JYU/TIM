@@ -24,11 +24,12 @@ def create_yaml(
     question_type: str,
     choices: ChoiceList,
     points_str: str | None = None,
+    answer_limit: int | None = None,
+    time_limit: int | None = None,
     headers=None,
     matrix_type=None,
 ):
     headers = headers or []
-    # TODO: timeLimit missing (for lecture question)
     # TODO: matrixType useless?
     return {
         "answerFieldType": field_type,
@@ -38,8 +39,9 @@ def create_yaml(
         "questionText": "Is Moon made of cheese?",
         "questionTitle": "Moon problem",
         "questionType": question_type,
-        "answerLimit": 1,
+        **({"answerLimit": answer_limit} if answer_limit else {}),
         "rows": [c[0] for c in choices],
+        **({"timeLimit": time_limit} if time_limit else {}),
         **({"points": points_str} if points_str else {}),
     }
 
@@ -87,11 +89,16 @@ class QuestionTest(BrowserTest):
             expected_answer='[["2"]]',
             expected_points=1,
             expected_yaml=create_yaml(
-                "radio", "radio-vertical", choices, points_str="1:3;2:1;4:0"
+                "radio",
+                "radio-vertical",
+                choices,
+                points_str="1:3;2:1;4:0",
+                answer_limit=1,
             ),
             headers=[],
             points=points,
             questiontype="radio",
+            answer_limit=1,
             type_choice="Multiple choice (radio button)",
         )
         self.do_question_test(
@@ -100,11 +107,16 @@ class QuestionTest(BrowserTest):
             expected_answer='[["1", "3", "4"]]',
             expected_points=3,
             expected_yaml=create_yaml(
-                "checkbox", "checkbox-vertical", choices, points_str="1:3;2:1;4:0"
+                "checkbox",
+                "checkbox-vertical",
+                choices,
+                points_str="1:3;2:1;4:0",
+                answer_limit=1,
             ),
             headers=[],
             points=points,
             questiontype="checkbox",
+            answer_limit=1,
             type_choice="Multiple choice (checkbox)",
         )
         truefalseheaders = ["Correct", "Wrong"]
@@ -119,10 +131,12 @@ class QuestionTest(BrowserTest):
                 choices[0:2],
                 headers=truefalseheaders,
                 points_str="1:3|1:0;2:1",
+                answer_limit=1,
             ),
             headers=truefalseheaders,
             points=["3", "", "0", "1"],
             questiontype="true-false",
+            answer_limit=1,
             type_choice="True/False",
             adjust_matrix=["Row"],
         )
@@ -142,6 +156,7 @@ class QuestionTest(BrowserTest):
                 headers=matrixheaders,
                 points_str="1:3;3:0;4:-1|2:-5|4:2|1:1|3:0",
                 matrix_type="checkbox",
+                answer_limit=1,
             ),
             headers=matrixheaders,
             points=[
@@ -168,6 +183,7 @@ class QuestionTest(BrowserTest):
             ],
             questiontype="matrix-checkbox",
             type_choice="Many rows and columns",
+            answer_limit=1,
             answer_type_choice="Checkbox",
             adjust_matrix=["Row", "Col"],
         )
@@ -183,6 +199,7 @@ class QuestionTest(BrowserTest):
                 headers=matrixheaders,
                 points_str="1:3;3:0;4:-1|2:-5|4:2|1:1|3:0",
                 matrix_type="radiobutton-horizontal",
+                answer_limit=1,
             ),
             headers=matrixheaders,
             points=[
@@ -209,6 +226,7 @@ class QuestionTest(BrowserTest):
             ],
             questiontype="matrix-radio",
             type_choice="Many rows and columns",
+            answer_limit=1,
             answer_type_choice="Radio Button horizontal",
             adjust_matrix=["Row", "Col"],
         )
@@ -219,12 +237,18 @@ class QuestionTest(BrowserTest):
             expected_answer='[["1st", "2nd", ""], ["4th", "", ""], ["", "", ""], ["", "", ""], ["", "", ""]]',
             expected_points=None,
             expected_yaml=create_yaml(
-                "text", "matrix", choices, headers=matrixheaders, matrix_type="textArea"
+                "text",
+                "matrix",
+                choices,
+                headers=matrixheaders,
+                matrix_type="textArea",
+                answer_limit=1,
             ),
             headers=matrixheaders,
             points=[],
             questiontype="matrix-textarea",
             type_choice="Many rows and columns",
+            answer_limit=1,
             answer_type_choice="Text area",
             adjust_matrix=["Row", "Col"],
         )
@@ -240,6 +264,7 @@ class QuestionTest(BrowserTest):
         points: list[str],
         questiontype: str,
         type_choice: str,
+        answer_limit: int | None,
         answer_type_choice=None,
         adjust_matrix=None,
     ):
@@ -262,6 +287,11 @@ class QuestionTest(BrowserTest):
         questiontitle.send_keys("Moon problem")
         questionselect = Select(find_by_attr_name(dialog, "type"))
         questionselect.select_by_visible_text(type_choice)
+        if answer_limit > 0:
+            question_answer_limit = find_by_attr_name(dialog, "answerLimit")
+            question_answer_limit.click()
+            question_answer_limit.send_keys(answer_limit)
+
         if answer_type_choice:
             answertypeselect = Select(find_by_attr_name(dialog, "answerType"))
             answertypeselect.select_by_visible_text(answer_type_choice)
@@ -324,8 +354,8 @@ class QuestionTest(BrowserTest):
         d.document.clear_mem_cache()
         qst_par = d.document.get_paragraphs()[0]
         qst_md = qst_par.get_markdown()
+        self.assertEqual(expected_yaml, YamlBlock.from_markdown(qst_md).values)
 
-        self.assertEqual(expected_yaml, YamlBlock.from_markdown(qst_md))
         if answer_type_choice == "Text area":
             textareas = qst.find_elements(By.CSS_SELECTOR, "textarea")
             textareas[0].click()

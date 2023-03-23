@@ -699,6 +699,11 @@ a.timButton {
         color: gray;
     }
 
+    [data-area]::after {
+        content: "End area: " attr(data-area);
+        color: gray;
+    }
+
     .areaContent {
         border: 1px solid $basic-color;
         border-radius: 5px;
@@ -896,6 +901,10 @@ pareditor {
             width: auto;
             flex: 1 0 auto;
         }
+    }
+
+    .formula-editor-tab {
+        width: 100%;
     }
 }
 

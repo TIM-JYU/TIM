@@ -37,6 +37,7 @@ from timApp.plugin.plugin import (
     WANT_FIELDS,
     find_task_ids,
     get_simple_hash_from_par_and_user,
+    expand_macros_for_plugin_attrs,
 )
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
@@ -467,6 +468,13 @@ def pluginify(
     # init these for performance as they stay the same for all pars
     md_out = output_format == PluginOutputFormat.MD
     html_out = False if md_out else (output_format == PluginOutputFormat.HTML)
+
+    # We need to expand macros for plugin paragraph/block attributes before calling DocParagraph.prepare,
+    # otherwise some (s)css classes will not be set and the plugins will not render correctly
+    mi = doc.get_settings().get_macroinfo(view_ctx, user_ctx)
+    for par in pars:
+        if par.is_plugin():
+            expand_macros_for_plugin_attrs(par, mi.get_macros(), mi.jinja_env)
 
     html_pars = [par.prepare(view_ctx, use_md=md_out) for par in pars]
 

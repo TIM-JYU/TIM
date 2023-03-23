@@ -1723,9 +1723,13 @@ ${backTicks}
 
     /**
      * Toggle formula editor visibility
+     * @param value
      */
-    onFormulaEditorAddFormula() {
+    onFormulaEditorAddFormula(value: boolean = false) {
         this.formulaEditorOpen = !this.formulaEditorOpen;
+        if (!value) {
+            this.scope.$digest();
+        }
     }
 
     onFormulaEditorCloseOk() {
@@ -2316,6 +2320,11 @@ ${backTicks}
                 createCompleter(documentglobals().wordList, "document"),
                 createCompleter(userWordList, "user"),
             ]);
+        }
+        if (this.editor?.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(() =>
+                this.onFormulaEditorAddFormula()
+            );
         }
         if (initialMode != null) {
             await this.setInitialText();

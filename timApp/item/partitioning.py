@@ -229,6 +229,29 @@ def get_document_areas(doc: DocInfo) -> list[Range]:
     return areas
 
 
+def get_area_range(doc: DocInfo, name: str) -> Range | None:
+    """
+    Gets the range of the area in the document
+    :param doc: Document
+    :param name: Named area to search for
+    :return: Area range if area was found and not broken, else None
+    """
+    pars = doc.document.get_paragraphs()
+    begin = None
+    end = None
+    for i, par in enumerate(pars):
+        area_begin = par.get_attr("area")
+        area_end = par.get_attr("area_end")
+        if area_begin == name:
+            begin = i
+        if area_end == name:
+            end = i
+            break
+    if begin is not None and end is not None:
+        return begin, end
+    return None
+
+
 def adjust_to_areas(areas: list[Range], b: int, e: int) -> Range:
     """
     Ensure range doesn't cut any areas.
