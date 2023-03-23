@@ -345,8 +345,10 @@ export class FormulaEditorComponent {
                 );
             }
             // update editor views to user
-            this.handleLatexFocus();
-            this.handleLatexInput();
+            setTimeout(() => {
+                this.handleLatexFocus();
+                this.handleLatexInput();
+            }, 2);
         }
     }
 
