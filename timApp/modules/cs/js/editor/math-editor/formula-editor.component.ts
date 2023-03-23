@@ -22,7 +22,6 @@ import type {
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
 import {IEditor} from "../editor";
-import {KEY_S} from "tim/util/keycodes";
 
 /**
  * Field which has the focus
@@ -350,7 +349,7 @@ export class FormulaEditorComponent {
     }
 
     enterHandler(field: MathFieldMethods) {
-        //this.handleFormulaOk();
+        // this.handleFormulaOk();
     }
 
     async loadMathQuill() {
