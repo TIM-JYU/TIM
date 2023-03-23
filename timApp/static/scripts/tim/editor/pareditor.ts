@@ -1723,10 +1723,13 @@ ${backTicks}
 
     /**
      * Toggle formula editor visibility
+     * @param value
      */
-    onFormulaEditorAddFormula() {
+    onFormulaEditorAddFormula(value: boolean = false) {
         this.formulaEditorOpen = !this.formulaEditorOpen;
-        this.scope.$digest();
+        if (!value) {
+            this.scope.$digest();
+        }
     }
 
     onFormulaEditorCloseOk() {

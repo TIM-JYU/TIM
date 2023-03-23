@@ -15,12 +15,12 @@ import {
     ViewChild,
 } from "@angular/core";
 import {FormControl} from "@angular/forms";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {
     IMathQuill,
     MathFieldMethods,
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
-import {showConfirm} from "tim/ui/showConfirmDialog";
 import {IEditor} from "../editor";
 
 /**
@@ -104,7 +104,9 @@ export class FormulaEditorComponent {
         this._visible = isVis;
         // became visible so save what was in editor
         if (isVis) {
-            this.oldContent = this.parseOldContent(this.editor.content);
+            this.parseOldContent(this.editor.content);
+            const isMulti = this.getInitialMultilineSetting();
+            this.isMultilineFormulaControl.setValue(isMulti);
         }
     }
     private _visible: boolean = false;
@@ -112,41 +114,70 @@ export class FormulaEditorComponent {
     constructor() {}
 
     /**
-     * Finds cursor location from editor
-     * @return index in editor.content or -1 if editor.insert not defined
+     * Find the line where cursor is in editor
      */
-    findCursorLocation(): number {
-        if (!this.editor.insert) {
-            return -1;
+    getCurrentLine() {
+        const cursorPos = this.getCursorLocation();
+        const text = this.editor.content;
+        let startI = cursorPos;
+        let endI = cursorPos;
+        if (text[startI] === "\n") {
+            startI--;
         }
-        const cursorMarker = "│";
+        while (startI >= 0 && text[startI] !== "\n") {
+            startI--;
+        }
+        while (endI < text.length && text[endI] !== "\n") {
+            endI++;
+        }
+        return text.slice(startI + 1, endI);
+    }
 
-        // add cursor character to know where cursor is
-        this.editor.insert(cursorMarker);
-        // find its index
-        return this.editor.content.indexOf(cursorMarker);
+    /**
+     * Determine whether the user wants to create a multiline or an inline formula
+     */
+    getInitialMultilineSetting() {
+        const currentLine = this.getCurrentLine();
+        const isTextInLine = currentLine.trim().length > 0;
+        // should be multiline if no real text in line
+        return !isTextInLine;
+    }
+
+    /**
+     * After oldContent is set cursor is between
+     * oldContent parts
+     */
+    getCursorLocation() {
+        return this.oldContent.before.length;
     }
 
     /**
      * Splits string into two parts if possible at cursor location
      * @param str
      */
-    parseOldContent(str: string): OldContent {
-        const cursorI = this.findCursorLocation();
-        if (cursorI === -1) {
-            return {
+    parseOldContent(str: string) {
+        if (!this.editor.insert) {
+            this.oldContent = {
                 before: this.editor.content,
                 after: "",
             };
+            return;
         }
-        // split into two ignoring the cursor character
-        const result = {
-            before: this.editor.content.slice(0, cursorI),
-            after: this.editor.content.slice(cursorI + 1),
-        };
+        const cursorMarker = "│";
+
+        // add cursor character to know where cursor is
+        this.editor.insert(cursorMarker);
+        // find its index
+        const cursorI = this.editor.content.indexOf(cursorMarker);
         // also remove added cursor character from editor
-        this.editor.content = result.before + result.after;
-        return result;
+        this.editor.content =
+            this.editor.content.slice(0, cursorI) +
+            this.editor.content.slice(cursorI + 1);
+
+        this.oldContent = {
+            before: this.editor.content.slice(0, cursorI),
+            after: this.editor.content.slice(cursorI),
+        };
     }
 
     /**
