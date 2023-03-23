@@ -116,6 +116,18 @@ export class FormulaEditorComponent {
     }
     private _visible: boolean = false;
 
+    @Input()
+    get currentSymbol(): string {
+        return this.buttonSymbol;
+    }
+    set currentSymbol(value: string) {
+        this.buttonSymbol = value;
+        if (this.mathField) {
+            this.addFormula(value);
+        }
+    }
+    private buttonSymbol: string = "";
+
     formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
 
     constructor() {}
@@ -489,6 +501,7 @@ export class FormulaEditorComponent {
             this.handleLatexInput();
         } else {
             this.mathField.write(formula);
+            this.mathField.latex();
         }
     }
 }
