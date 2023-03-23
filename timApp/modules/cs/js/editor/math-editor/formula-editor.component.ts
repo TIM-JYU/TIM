@@ -32,11 +32,12 @@ enum ActiveEditorType {
 }
 
 /**
- * OldContent is split into two at cursor location if insert operation is supported
- * if not then just put content to before and after can be empty
+ * OldContent is split into three at cursor location if insert operation is supported
+ * if not then just put content to before and after and editing can be empty
  */
 type OldContent = {
     before: string;
+    editing: string;
     after: string;
 };
 
@@ -87,7 +88,7 @@ export class FormulaEditorComponent {
 
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
 
-    oldContent: OldContent = {before: "", after: ""};
+    oldContent: OldContent = {before: "", editing: "", after: ""};
 
     @Output() okEvent = new EventEmitter<void>();
     @Output() cancelEvent = new EventEmitter<void>();
@@ -107,6 +108,7 @@ export class FormulaEditorComponent {
             this.parseOldContent(this.editor.content);
             const isMulti = this.getInitialMultilineSetting();
             this.isMultilineFormulaControl.setValue(isMulti);
+            this.parseEditedFormula();
         }
     }
     private _visible: boolean = false;
@@ -159,6 +161,7 @@ export class FormulaEditorComponent {
         if (!this.editor.insert) {
             this.oldContent = {
                 before: this.editor.content,
+                editing: "",
                 after: "",
             };
             return;
@@ -176,8 +179,157 @@ export class FormulaEditorComponent {
 
         this.oldContent = {
             before: this.editor.content.slice(0, cursorI),
+            editing: "",
             after: this.editor.content.slice(cursorI),
         };
+    }
+
+    /**
+     * General method to find $ and $$ syntax parenthesis from a string
+     */
+    findParenthesisFromString(text: string) {
+        let currentIndex = 0;
+        let stack = [-1, -1];
+        const allParenthesis = [];
+
+        // count all parenthesis from the beginning
+        while (true) {
+            // find next $ symbol
+            currentIndex = text.indexOf("$", currentIndex);
+            // stop if no $ symbol is found
+            if (currentIndex < 0) {
+                break;
+            }
+            // skip \$ symbols
+            if (text.charAt(currentIndex - 1) === "\\") {
+                currentIndex++;
+                continue;
+            }
+            // multiline
+            if (text.charAt(currentIndex + 1) === "$") {
+                // opening does not exist
+                if (stack[1] < 0) {
+                    // if possible set opening to current
+                    if (text.charAt(currentIndex + 2) !== " ") {
+                        stack[1] = currentIndex;
+                    }
+                    // opening exists
+                } else {
+                    // if possible set closing to current
+                    if (text.charAt(currentIndex - 1) !== " ") {
+                        allParenthesis.push([2, stack[1], currentIndex]);
+                        // reset stack
+                        stack = [-1, -1];
+                    } else {
+                        // if possible set opening to current
+                        if (text.charAt(currentIndex + 2) !== " ") {
+                            stack[1] = currentIndex;
+                        }
+                    }
+                }
+                currentIndex += 2;
+                // inline
+            } else {
+                // opening does not exist
+                if (stack[0] < 0) {
+                    // if possible set opening to current
+                    if (text.charAt(currentIndex + 1) !== " ") {
+                        stack[0] = currentIndex;
+                    }
+                    // opening exists
+                } else {
+                    // if possible set closing to current
+                    if (text.charAt(currentIndex - 1) !== " ") {
+                        allParenthesis.push([1, stack[0], currentIndex]);
+                        // reset stack
+                        stack = [-1, -1];
+                    } else {
+                        // if possible set opening to current
+                        if (text.charAt(currentIndex + 1) !== " ") {
+                            stack[0] = currentIndex;
+                        }
+                    }
+                }
+                currentIndex++;
+            }
+        }
+
+        return allParenthesis;
+    }
+
+    /**
+     * Parses current formula from editor content
+     */
+    parseEditedFormula() {
+        // variables to keep track of editor content
+        let leftIndex = -1;
+        let rightIndex = -1;
+        let isMultiLine = false;
+        const before = this.oldContent.before;
+        const text = this.editor.content;
+        const allParenthesis = this.findParenthesisFromString(text);
+
+        // check if cursor is inside any parenthesis
+        for (const entry of allParenthesis) {
+            // parenthesis is completely after cursor
+            if (entry[1] > before.length) {
+                break;
+            }
+            // parenthesis is completely before cursor
+            if (entry[2] < before.length) {
+                continue;
+            }
+            if (entry[0] === 1) {
+                leftIndex = entry[1];
+                rightIndex = entry[2];
+                isMultiLine = false;
+                break;
+            }
+            if (entry[0] === 2) {
+                leftIndex = entry[1];
+                rightIndex = entry[2] + 1;
+                isMultiLine = true;
+                break;
+            }
+        }
+
+        // if inside formula, modify editor content and add current formula to formula editor
+        // otherwise do nothing and keep adding a new formula
+        if (leftIndex >= 0 && rightIndex >= 0) {
+            // start editing a multiline formula
+            if (isMultiLine) {
+                // update old content
+                this.oldContent.before = text.slice(0, leftIndex);
+                this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
+                this.oldContent.after = text.slice(rightIndex + 1);
+                // update formula editor values
+                this.isMultilineFormulaControl.setValue(true);
+                this.latexInputControl.setValue(
+                    this.oldContent.editing.slice(
+                        3,
+                        this.oldContent.editing.length - 3
+                    )
+                );
+            }
+            // start editing an inline formula
+            else {
+                // update old content
+                this.oldContent.before = text.slice(0, leftIndex);
+                this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
+                this.oldContent.after = text.slice(rightIndex + 1);
+                // update formula editor values
+                this.isMultilineFormulaControl.setValue(false);
+                this.latexInputControl.setValue(
+                    this.oldContent.editing.slice(
+                        1,
+                        this.oldContent.editing.length - 1
+                    )
+                );
+            }
+            // update editor views to user
+            this.handleLatexFocus();
+            this.handleLatexInput();
+        }
     }
 
     /**
@@ -293,7 +445,9 @@ export class FormulaEditorComponent {
         // content hasn't changed from what it was before opening formula editor
         // so cancel
         if (
-            this.oldContent.before + this.oldContent.after ===
+            this.oldContent.before +
+                this.oldContent.editing +
+                this.oldContent.after ===
                 this.editor.content ||
             (await showConfirm(
                 $localize`Are you sure?`,
@@ -301,7 +455,9 @@ export class FormulaEditorComponent {
             ))
         ) {
             this.editor.content =
-                this.oldContent.before + this.oldContent.after;
+                this.oldContent.before +
+                this.oldContent.editing +
+                this.oldContent.after;
             const finalContent = this.editor.content;
             this.cancelEvent.emit();
             this.clearFields();
