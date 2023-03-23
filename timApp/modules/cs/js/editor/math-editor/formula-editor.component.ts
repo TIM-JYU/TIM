@@ -15,6 +15,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import {FormControl} from "@angular/forms";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {
     IMathQuill,
     MathFieldMethods,
@@ -45,6 +46,9 @@ type OldContent = {
     template: `
         <div [hidden]="!visible" class="formula-editor">
             <div class="formula-editor-dialog">
+                <div class="buttons-container">
+                    <button class="timButton" (click)="addFormula()">sqrt</button>
+                </div>
                 <div class="formula-container">
                     <span class="visual-input" #visualInput></span>
         
@@ -181,48 +185,124 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Parses current formula from old content
+     * General method to find $ and $$ syntax parenthesis from a string
+     */
+    findParenthesisFromString(text: string) {
+        let currentIndex = 0;
+        let stack = [-1, -1];
+        let allParenthesis = [];
+
+        // count all parenthesis from the beginning
+        while (true) {
+            // find next $ symbol
+            currentIndex = text.indexOf("$", currentIndex);
+            // stop if no $ symbol is found
+            if (currentIndex < 0) {
+                break;
+            }
+            // skip \$ symbols
+            if (text.charAt(currentIndex - 1) === "\\") {
+                currentIndex++;
+                continue;
+            }
+            // multiline
+            if (text.charAt(currentIndex + 1) === "$") {
+                // opening does not exist
+                if (stack[1] < 0) {
+                    // if possible set opening to current
+                    if (text.charAt(currentIndex + 2) !== " ") {
+                        stack[1] = currentIndex;
+                    }
+                    // opening exists
+                } else {
+                    // if possible set closing to current
+                    if (text.charAt(currentIndex - 1) !== " ") {
+                        allParenthesis.push([2, stack[1], currentIndex]);
+                        // reset stack
+                        stack = [-1, -1];
+                    } else {
+                        // if possible set opening to current
+                        if (text.charAt(currentIndex + 2) !== " ") {
+                            stack[1] = currentIndex;
+                        }
+                    }
+                }
+                currentIndex += 2;
+                // inline
+            } else {
+                // opening does not exist
+                if (stack[0] < 0) {
+                    // if possible set opening to current
+                    if (text.charAt(currentIndex + 1) !== " ") {
+                        stack[0] = currentIndex;
+                    }
+                    // opening exists
+                } else {
+                    // if possible set closing to current
+                    if (text.charAt(currentIndex - 1) !== " ") {
+                        allParenthesis.push([1, stack[0], currentIndex]);
+                        // reset stack
+                        stack = [-1, -1];
+                    } else {
+                        // if possible set opening to current
+                        if (text.charAt(currentIndex + 1) !== " ") {
+                            stack[0] = currentIndex;
+                        }
+                    }
+                }
+                currentIndex++;
+            }
+        }
+
+        return allParenthesis;
+    }
+
+    /**
+     * Parses current formula from editor content
      */
     parseEditedFormula() {
-        let leftIsMultiLine = false;
-        let rightIsMultiLine = false;
-        let leftIndex = this.oldContent.before.length;
-        let rightIndex = 0;
+        // variables to keep track of editor content
+        let leftIndex = -1;
+        let rightIndex = -1;
+        let isMultiLine = false;
+        const before = this.oldContent.before;
+        const text = this.editor.content;
+        let allParenthesis = this.findParenthesisFromString(text);
 
-        while (leftIndex >= 0) {
-            leftIsMultiLine = false;
-            leftIndex = this.oldContent.before.lastIndexOf("$", leftIndex - 1);
-            if (this.oldContent.before.charAt(leftIndex + 1) !== " ") {
-                if (this.oldContent.before.charAt(leftIndex - 1) === "$") {
-                    leftIsMultiLine = true;
-                }
+        // check if cursor is inside any parenthesis
+        for (let entry of allParenthesis) {
+            // parenthesis is completely after cursor
+            if (entry[1] > before.length) {
+                break;
+            }
+            // parenthesis is completely before cursor
+            if (entry[2] < before.length) {
+                continue;
+            }
+            if (entry[0] === 1) {
+                leftIndex = entry[1];
+                rightIndex = entry[2];
+                isMultiLine = false;
+                break;
+            }
+            if (entry[0] === 2) {
+                leftIndex = entry[1];
+                rightIndex = entry[2] + 1;
+                isMultiLine = true;
                 break;
             }
         }
 
-        while (rightIndex >= 0) {
-            rightIsMultiLine = false;
-            rightIndex = this.oldContent.after.indexOf("$", rightIndex + 1);
-            if (this.oldContent.after.charAt(rightIndex - 1) !== " ") {
-                if (this.oldContent.after.charAt(rightIndex + 1) === "$") {
-                    rightIsMultiLine = true;
-                }
-                break;
-            }
-        }
-
+        // if inside formula, modify editor content and add current formula to formula editor
+        // otherwise do nothing and keep adding a new formula
         if (leftIndex >= 0 && rightIndex >= 0) {
-            if (leftIsMultiLine && rightIsMultiLine) {
-                this.oldContent.editing =
-                    this.oldContent.before.slice(leftIndex - 1) +
-                    this.oldContent.after.slice(0, rightIndex + 2);
-                this.oldContent.before = this.oldContent.before.slice(
-                    0,
-                    leftIndex - 1
-                );
-                this.oldContent.after = this.oldContent.after.slice(
-                    rightIndex + 2
-                );
+            // start editing a multiline formula
+            if (isMultiLine) {
+                // update old content
+                this.oldContent.before = text.slice(0, leftIndex);
+                this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
+                this.oldContent.after = text.slice(rightIndex + 1);
+                // update formula editor values
                 this.isMultilineFormulaControl.setValue(true);
                 this.latexInputControl.setValue(
                     this.oldContent.editing.slice(
@@ -230,17 +310,14 @@ export class FormulaEditorComponent {
                         this.oldContent.editing.length - 3
                     )
                 );
-            } else {
-                this.oldContent.editing =
-                    this.oldContent.before.slice(leftIndex) +
-                    this.oldContent.after.slice(0, rightIndex + 1);
-                this.oldContent.before = this.oldContent.before.slice(
-                    0,
-                    leftIndex
-                );
-                this.oldContent.after = this.oldContent.after.slice(
-                    rightIndex + 1
-                );
+            }
+            // start editing an inline formula
+            else {
+                // update old content
+                this.oldContent.before = text.slice(0, leftIndex);
+                this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
+                this.oldContent.after = text.slice(rightIndex + 1);
+                // update formula editor values
                 this.isMultilineFormulaControl.setValue(false);
                 this.latexInputControl.setValue(
                     this.oldContent.editing.slice(
@@ -249,6 +326,7 @@ export class FormulaEditorComponent {
                     )
                 );
             }
+            // update editor views to user
             this.handleLatexFocus();
             this.handleLatexInput();
         }
@@ -363,7 +441,7 @@ export class FormulaEditorComponent {
         this.editor.content = finalContent;
     }
 
-    handleFormulaCancel() {
+    async handleFormulaCancel() {
         // content hasn't changed from what it was before opening formula editor
         // so cancel
         if (
@@ -371,7 +449,10 @@ export class FormulaEditorComponent {
                 this.oldContent.editing +
                 this.oldContent.after ===
                 this.editor.content ||
-            confirm($localize`Are you sure? Cancel will clear the editor.`)
+            (await showConfirm(
+                $localize`Are you sure?`,
+                $localize`This will clear the editor.`
+            ))
         ) {
             this.editor.content =
                 this.oldContent.before +
@@ -383,6 +464,29 @@ export class FormulaEditorComponent {
             // clearing fields triggers update to editor content
             // rewrite it
             this.editor.content = finalContent;
+        }
+    }
+
+    addFormula() {
+        const formula = "\\sqrt";
+
+        if (this.activeEditor === ActiveEditorType.Latex) {
+            const startPos = this.latexInput.nativeElement.selectionStart;
+            const endPos = this.latexInput.nativeElement.selectionEnd;
+            const oldValue = this.latexInput.nativeElement.value;
+            const newValue =
+                oldValue.substring(0, startPos) +
+                formula +
+                "{}" +
+                oldValue.substring(endPos, oldValue.length);
+            this.latexInputControl.setValue(newValue);
+            this.latexInput.nativeElement.selectionStart =
+                startPos + newValue.length;
+            this.latexInput.nativeElement.selectionEnd =
+                endPos + newValue.length;
+            this.handleLatexInput();
+        } else {
+            this.mathField.cmd(formula);
         }
     }
 }
