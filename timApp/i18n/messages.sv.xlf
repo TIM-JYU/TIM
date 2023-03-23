@@ -7928,14 +7928,6 @@
           <context context-type="linenumber">61</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4678661104600045414" datatype="html">
-        <source> Multiline</source>
-        <target state="translated"> Flerlinje</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
-          <context context-type="linenumber">70</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7515883357904500238" datatype="html">
         <source>Are you sure?</source>
         <target state="translated">Är du säker?</target>
@@ -7950,6 +7942,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
           <context context-type="linenumber">266,264</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="604592115785316180" datatype="html">
+        <source>Multiline</source>
+        <target state="translated">Flerlinje</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">72</context>
         </context-group>
       </trans-unit>
     </body>

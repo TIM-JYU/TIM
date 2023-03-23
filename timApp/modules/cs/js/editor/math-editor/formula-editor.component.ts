@@ -68,8 +68,8 @@ type OldContent = {
                     </div>
 
                     <label class="font-weight-normal">
-                        <input type="checkbox" [formControl]="isMultilineFormulaControl"><ng-container i18n>
-                        Multiline</ng-container>
+                        <input type="checkbox" [formControl]="isMultilineFormulaControl">
+                        <ng-container i18n>Multiline</ng-container>
                     </label>
                 </div>
             </div>
