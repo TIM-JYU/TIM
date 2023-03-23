@@ -190,7 +190,7 @@ export class FormulaEditorComponent {
     findParenthesisFromString(text: string) {
         let currentIndex = 0;
         let stack = [-1, -1];
-        let allParenthesis = [];
+        const allParenthesis = [];
 
         // count all parenthesis from the beginning
         while (true) {
@@ -267,10 +267,10 @@ export class FormulaEditorComponent {
         let isMultiLine = false;
         const before = this.oldContent.before;
         const text = this.editor.content;
-        let allParenthesis = this.findParenthesisFromString(text);
+        const allParenthesis = this.findParenthesisFromString(text);
 
         // check if cursor is inside any parenthesis
-        for (let entry of allParenthesis) {
+        for (const entry of allParenthesis) {
             // parenthesis is completely after cursor
             if (entry[1] > before.length) {
                 break;
