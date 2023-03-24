@@ -30,6 +30,12 @@ enum ActiveEditorType {
     Visual = "visual",
     Latex = "latex",
 }
+enum FormulaType {
+    Multi = "multi",
+    Inline = "inline",
+}
+
+type FormulaTuple = [FormulaType, number, number];
 
 /**
  * OldContent is split into three at cursor location if insert operation is supported
@@ -212,7 +218,7 @@ export class FormulaEditorComponent {
     findParenthesisFromString(text: string) {
         let currentIndex = 0;
         let stack = [-1, -1];
-        const allParenthesis = [];
+        const allParenthesis: FormulaTuple[] = [];
 
         // count all parenthesis from the beginning
         while (true) {
@@ -239,7 +245,11 @@ export class FormulaEditorComponent {
                 } else {
                     // if possible set closing to current
                     if (text.charAt(currentIndex - 1) !== " ") {
-                        allParenthesis.push([2, stack[1], currentIndex + 1]);
+                        allParenthesis.push([
+                            FormulaType.Multi,
+                            stack[1],
+                            currentIndex + 1,
+                        ]);
                         // reset stack
                         stack = [-1, -1];
                     } else {
@@ -262,7 +272,11 @@ export class FormulaEditorComponent {
                 } else {
                     // if possible set closing to current
                     if (text.charAt(currentIndex - 1) !== " ") {
-                        allParenthesis.push([1, stack[0], currentIndex]);
+                        allParenthesis.push([
+                            FormulaType.Inline,
+                            stack[0],
+                            currentIndex,
+                        ]);
                         // reset stack
                         stack = [-1, -1];
                     } else {
@@ -280,47 +294,65 @@ export class FormulaEditorComponent {
     }
 
     /**
+     * Returns current formula's parenthesis
+     * @param allParenthesis array of parethesis indexes and types
+     * @param cursorIndex index to check if it is inside parenthesis
+     */
+    parseCurrentFormula(
+        allParenthesis: FormulaTuple[],
+        cursorIndex: number
+    ): FormulaTuple {
+        let leftIndex = -1;
+        let rightIndex = -1;
+        let isMultiLine = FormulaType.Inline;
+
+        // check if cursor is inside any parenthesis
+        for (const [formulaType, startI, endI] of allParenthesis) {
+            // parenthesis is completely after cursor
+            if (startI > cursorIndex) {
+                break;
+            }
+            // parenthesis is completely before cursor
+            if (endI < cursorIndex) {
+                continue;
+            }
+            if (formulaType === FormulaType.Inline) {
+                leftIndex = startI;
+                rightIndex = endI;
+                isMultiLine = FormulaType.Inline;
+                break;
+            }
+            if (formulaType === FormulaType.Multi) {
+                leftIndex = startI;
+                rightIndex = endI;
+                isMultiLine = FormulaType.Multi;
+                break;
+            }
+        }
+        return [isMultiLine, leftIndex, rightIndex];
+    }
+
+    /**
      * Parses current formula from editor content
      */
     parseEditedFormula() {
         // variables to keep track of editor content
-        let leftIndex = -1;
-        let rightIndex = -1;
-        let isMultiLine = false;
-        const before = this.oldContent.before;
         const text = this.editor.content;
         const allParenthesis = this.findParenthesisFromString(text);
+        const currentFormula = this.parseCurrentFormula(
+            allParenthesis,
+            this.oldContent.before.length
+        );
 
-        // check if cursor is inside any parenthesis
-        for (const entry of allParenthesis) {
-            // parenthesis is completely after cursor
-            if (entry[1] > before.length) {
-                break;
-            }
-            // parenthesis is completely before cursor
-            if (entry[2] < before.length) {
-                continue;
-            }
-            if (entry[0] === 1) {
-                leftIndex = entry[1];
-                rightIndex = entry[2];
-                isMultiLine = false;
-                break;
-            }
-            if (entry[0] === 2) {
-                leftIndex = entry[1];
-                rightIndex = entry[2];
-                isMultiLine = true;
-                break;
-            }
-        }
+        const leftIndex = currentFormula[1];
+        const rightIndex = currentFormula[2];
 
         // if inside formula, add it to formula editor for modifying
         // otherwise do nothing and keep adding a new formula
         if (leftIndex >= 0 && rightIndex >= 0) {
             this.useExistingParenthesis = true;
             // start editing a multiline formula
-            if (isMultiLine) {
+            if (currentFormula[0] === FormulaType.Multi) {
                 // update old content
                 this.oldContent.before = text.slice(0, leftIndex);
                 this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
