@@ -131,6 +131,10 @@ export class FormulaEditorComponent {
 
     formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
 
+    useExistingParenthesis = false;
+    existingParenthesis = ["", ""];
+    startCounter = 1;
+
     constructor() {}
 
     /**
@@ -235,7 +239,7 @@ export class FormulaEditorComponent {
                 } else {
                     // if possible set closing to current
                     if (text.charAt(currentIndex - 1) !== " ") {
-                        allParenthesis.push([2, stack[1], currentIndex]);
+                        allParenthesis.push([2, stack[1], currentIndex + 1]);
                         // reset stack
                         stack = [-1, -1];
                     } else {
@@ -305,29 +309,37 @@ export class FormulaEditorComponent {
             }
             if (entry[0] === 2) {
                 leftIndex = entry[1];
-                rightIndex = entry[2] + 1;
+                rightIndex = entry[2];
                 isMultiLine = true;
                 break;
             }
         }
 
-        // if inside formula, modify editor content and add current formula to formula editor
+        // if inside formula, add it to formula editor for modifying
         // otherwise do nothing and keep adding a new formula
         if (leftIndex >= 0 && rightIndex >= 0) {
+            this.useExistingParenthesis = true;
             // start editing a multiline formula
             if (isMultiLine) {
                 // update old content
                 this.oldContent.before = text.slice(0, leftIndex);
                 this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
                 this.oldContent.after = text.slice(rightIndex + 1);
+                // find formula and its parenthesis
+                let formula = this.oldContent.editing.slice(2, -2);
+                let trimmed = formula.trimStart();
+                let lenDiff = formula.length - trimmed.length;
+                this.existingParenthesis[0] = "$$" + formula.slice(0, lenDiff);
+                formula = trimmed;
+
+                trimmed = formula.trimEnd();
+                lenDiff = formula.length - trimmed.length;
+                this.existingParenthesis[1] =
+                    "" + formula.slice(formula.length - lenDiff) + "$$";
+                formula = trimmed;
                 // update formula editor values
                 this.isMultilineFormulaControl.setValue(true);
-                this.latexInputControl.setValue(
-                    this.oldContent.editing.slice(
-                        3,
-                        this.oldContent.editing.length - 3
-                    )
-                );
+                this.latexInputControl.setValue(formula);
             }
             // start editing an inline formula
             else {
@@ -335,13 +347,11 @@ export class FormulaEditorComponent {
                 this.oldContent.before = text.slice(0, leftIndex);
                 this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
                 this.oldContent.after = text.slice(rightIndex + 1);
+                this.existingParenthesis = ["$", "$"];
                 // update formula editor values
                 this.isMultilineFormulaControl.setValue(false);
                 this.latexInputControl.setValue(
-                    this.oldContent.editing.slice(
-                        1,
-                        this.oldContent.editing.length - 1
-                    )
+                    this.oldContent.editing.slice(1, -1)
                 );
             }
             // update editor views to user
@@ -350,6 +360,18 @@ export class FormulaEditorComponent {
                 this.handleLatexInput();
             }, 2);
         }
+    }
+
+    /**
+     * Switches from existing parenthesis to user chosen
+     * parenthesis when editing a formula
+     */
+    resetUsingParenthesis() {
+        if (this.startCounter === 1) {
+            this.startCounter--;
+            return;
+        }
+        this.useExistingParenthesis = false;
     }
 
     /**
@@ -391,6 +413,9 @@ export class FormulaEditorComponent {
         void this.loadMathQuill();
 
         this.isMultilineFormulaControl.valueChanges.subscribe((value) => {
+            if (this.useExistingParenthesis) {
+                this.resetUsingParenthesis();
+            }
             this.updateFormulaToEditor();
         });
 
@@ -430,9 +455,11 @@ export class FormulaEditorComponent {
         }
     }
 
-    clearFields() {
+    clearFormulaEditor() {
         this.mathField.latex("");
         this.latexInputControl.setValue("");
+        this.isMultilineFormulaControl.setValue(true);
+        this.startCounter = 1;
     }
 
     formatLatex(latex: string, isMultiline: boolean): string {
@@ -458,7 +485,12 @@ export class FormulaEditorComponent {
                 ? this.latexInputControl.value
                 : this.mathField.latex();
             if (typeof latex === "string") {
-                const formulaLatex = this.formatLatex(latex, isMultiline);
+                const formulaLatex = this.useExistingParenthesis
+                    ? "" +
+                      this.existingParenthesis[0] +
+                      latex +
+                      this.existingParenthesis[1]
+                    : this.formatLatex(latex, isMultiline);
 
                 this.editor.content =
                     this.oldContent.before +
@@ -472,7 +504,7 @@ export class FormulaEditorComponent {
         this.updateFormulaToEditor();
         const finalContent = this.editor.content;
         this.okEvent.emit();
-        this.clearFields();
+        this.clearFormulaEditor();
         // clearing fields triggers update to editor content
         // rewrite it
         this.editor.content = finalContent;
@@ -497,7 +529,7 @@ export class FormulaEditorComponent {
                 this.oldContent.after;
             const finalContent = this.editor.content;
             this.cancelEvent.emit();
-            this.clearFields();
+            this.clearFormulaEditor();
             // clearing fields triggers update to editor content
             // rewrite it
             this.editor.content = finalContent;
