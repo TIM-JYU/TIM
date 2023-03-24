@@ -22,6 +22,7 @@ import type {
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
 import {IEditor} from "../editor";
+import formulas from "./latex-commands";
 
 /**
  * Field which has the focus
@@ -46,9 +47,10 @@ type OldContent = {
     template: `
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog>
-                <div class="buttons-container">
-                    <button class="timButton" *ngFor="let item of formulas;" (click)="addFormula(item)" 
-                     >{{item}}</button>
+                <button (click)="setButtonsVisible(buttonsVisible)">show formulas</button>
+                <div class="buttons-container" [hidden]="!buttonsVisible" >
+                    <button class="btn btn-default" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
+                     ><img src="{{item.svg}}"/></button>
                 </div>
                 <div class="formula-container">
                     <span class="visual-input" #visualInput></span>
@@ -137,7 +139,16 @@ export class FormulaEditorComponent {
     }
     private buttonSymbol: string = "";
 
-    formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
+    formulaArray = formulas;
+    buttonsVisible = false;
+
+    /**
+     * Changes buttons to visible or not visible
+     * @param isVisible are buttons currently visible
+     */
+    setButtonsVisible(isVisible: boolean) {
+        this.buttonsVisible = !isVisible;
+    }
 
     rows: number = 2;
 
@@ -526,6 +537,10 @@ export class FormulaEditorComponent {
         }
     }
 
+    /**
+     * Adds formula to both fields in last known cursor position
+     * @param formula LaTeX-formula to be added to fields
+     */
     addFormula(formula: string) {
         if (this.activeEditor === ActiveEditorType.Latex) {
             const startPos = this.latexInput.nativeElement.selectionStart;
@@ -543,7 +558,6 @@ export class FormulaEditorComponent {
             this.handleLatexInput();
         } else {
             this.mathField.write(formula);
-            this.mathField.latex();
         }
     }
 }
