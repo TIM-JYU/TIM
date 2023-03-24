@@ -175,18 +175,11 @@ def set_default_templates(email_list: MailingList) -> None:
 
     # Build the URI in case because not giving one is interpreted by Mailman as deleting the template form the list.
     try:
-
-        list_id = email_list.rest_data["list_id"]
-        template_base_uri = (
-            "http://localhost/postorius/api/templates/list/" f"{list_id}"
-        )
-        footer_uri = f"{template_base_uri}/list:member:regular:footer"
-        header_uri = f"{template_base_uri}/list:member:regular:header"
-
+        template_base_uri = f"{config.MAILMAN_URL}/empty"
         # These templates don't actually exist, but non-existing templates are substituted with empty strings and that
         # should still fix the broken coding leading to attachments issue.
-        email_list.set_template("list:member:regular:footer", footer_uri)
-        email_list.set_template("list:member:regular:header", header_uri)
+        email_list.set_template("list:member:regular:footer", template_base_uri)
+        email_list.set_template("list:member:regular:header", template_base_uri)
     except HTTPError as e:
         log_mailman(e, "In set_default_templates()")
         raise
