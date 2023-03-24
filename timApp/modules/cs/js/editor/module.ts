@@ -10,6 +10,7 @@ import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
 import {MathEditorComponent} from "./math-editor/math-editor.component";
 import {FormulaEditorComponent} from "./math-editor/formula-editor.component";
+import {FormulaFieldComponent} from "./math-editor/formula-field.component";
 
 @NgModule({
     declarations: [
@@ -21,6 +22,7 @@ import {FormulaEditorComponent} from "./math-editor/formula-editor.component";
         JSParsonsEditorComponent,
         MathEditorComponent,
         FormulaEditorComponent,
+        FormulaFieldComponent,
     ],
     imports: [
         CommonModule,

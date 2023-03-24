@@ -31,6 +31,15 @@ enum ActiveEditorType {
     Latex = "latex",
 }
 
+export type FieldType = {
+    latex: string;
+};
+
+export type Edit = {
+    id: number;
+    latex: string;
+};
+
 /**
  * OldContent is split into three at cursor location if insert operation is supported
  * if not then just put content to before and after and editing can be empty
@@ -50,17 +59,16 @@ type OldContent = {
                     <button class="timButton" *ngFor="let item of formulas;" (click)="addFormula(item)" 
                      >{{item}}</button>
                 </div>
-                <div class="formula-container">
-                    <span class="visual-input" #visualInput></span>
-
-                    <textarea name="math-editor-output" #latexInput cols="30" 
-                              rows="{{rows}}"
-                              (click)="handleLatexFocus()"
-                              (keyup)="handleLatexInput()"
-                              [formControl]="latexInputControl"
-                              placeholder="Write LaTeX" i18n-placeholder
-                              class="formula-area">
-                    </textarea>
+                <div *ngFor="let field of fields; let i=index;" class="field">
+                    <cs-formula-field 
+                        [initialValue]="field.latex" 
+                        (edited)="handleEdited($event)"
+                        (enter)="addField()"
+                        (backspace)="removeField()" 
+                        (focus)="handleFocus($event)"
+                        [isActive]="i === active"
+                        [id]="i">
+                    </cs-formula-field>
                 </div>
 
                 <div class="formula-button-container">
@@ -140,6 +148,38 @@ export class FormulaEditorComponent {
     formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
 
     rows: number = 2;
+
+    fields: FieldType[] = [
+        {
+            latex: "",
+        },
+    ];
+    active: number = 0;
+
+    addField() {
+        this.fields.push({
+            latex: "",
+        });
+        this.active = this.fields.length - 1;
+    }
+
+    removeField() {
+        if (this.fields.length <= 1) {
+            return;
+        }
+        this.fields.splice(this.active, 1);
+        this.active = this.fields.length - 1;
+    }
+
+    handleEdited(res: Edit) {
+        this.fields[res.id].latex = res.latex;
+        this.active = res.id;
+    }
+
+    handleFocus(res: Edit) {
+        this.fields[res.id].latex = res.latex;
+        this.active = res.id;
+    }
 
     /**
      * sets textarea to have as many rows that are necessary to display
@@ -394,27 +434,7 @@ export class FormulaEditorComponent {
         // this.handleFormulaOk();
     }
 
-    async loadMathQuill() {
-        const elem = this.visualInput.nativeElement;
-        elem.addEventListener("click", (_e: MouseEvent) => {
-            this.activeEditor = ActiveEditorType.Visual;
-        });
-        const config: MathQuillConfig = {
-            spaceBehavesLikeTab: true,
-            handlers: {
-                edit: (field: MathFieldMethods) => this.editHandler(field),
-                enter: (field: MathFieldMethods) => this.enterHandler(field),
-            },
-        };
-        const mq = (await import("vendor/mathquill/mathquill")).default;
-        this.MQ = mq.getInterface(2);
-
-        this.mathField = this.MQ.MathField(elem, config);
-    }
-
     ngAfterViewInit() {
-        void this.loadMathQuill();
-
         this.isMultilineFormulaControl.valueChanges.subscribe((value) => {
             this.updateFormulaToEditor();
         });
