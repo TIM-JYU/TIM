@@ -47,7 +47,8 @@ type OldContent = {
     template: `
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog>
-                <div class="buttons-container">
+                <button (click)="setButtonsVisible(buttonsVisible)">show formulas</button>
+                <div class="buttons-container" [hidden]="!buttonsVisible" >
                     <button class="btn btn-default" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
                      ><img src="{{item.svg}}"/></button>
                 </div>
@@ -131,6 +132,11 @@ export class FormulaEditorComponent {
     private buttonSymbol: string = "";
 
     formulaArray = formulas;
+    buttonsVisible = false;
+
+    setButtonsVisible(isVisible: boolean) {
+        this.buttonsVisible = !isVisible;
+    }
 
     constructor() {}
 
