@@ -118,7 +118,7 @@ export class FormulaEditorComponent {
 
             // set focus to visual field, timeout is needed for proper timing
             // maybe could find better way
-            setInterval(() => {
+            setTimeout(() => {
                 this.mathField.focus();
             }, 0);
         }
