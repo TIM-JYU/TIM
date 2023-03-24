@@ -53,11 +53,13 @@ type OldContent = {
                 <div class="formula-container">
                     <span class="visual-input" #visualInput></span>
 
-                    <textarea name="math-editor-output" #latexInput cols="30" rows="5"
+                    <textarea name="math-editor-output" #latexInput cols="30" 
+                              rows="{{rows}}"
                               (click)="handleLatexFocus()"
                               (keyup)="handleLatexInput()"
                               [formControl]="latexInputControl"
-                              placeholder="Write LaTeX" i18n-placeholder>
+                              placeholder="Write LaTeX" i18n-placeholder
+                              class="formula-area">
                     </textarea>
                 </div>
 
@@ -113,6 +115,12 @@ export class FormulaEditorComponent {
             const isMulti = this.getInitialMultilineSetting();
             this.isMultilineFormulaControl.setValue(isMulti);
             this.parseEditedFormula();
+
+            // set focus to visual field, timeout is needed for proper timing
+            // maybe could find better way
+            setInterval(() => {
+                this.mathField.focus();
+            }, 0);
         }
     }
     private _visible: boolean = false;
@@ -130,6 +138,22 @@ export class FormulaEditorComponent {
     private buttonSymbol: string = "";
 
     formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
+
+    rows: number = 2;
+
+    /**
+     * sets textarea to have as many rows that are neccessary to display
+     * its content
+     */
+    updateTextareaRows() {
+        const latex = this.latexInputControl.value;
+        if (latex === null) {
+            return;
+        }
+        // adjust rows in textarea to match how many are needed
+        const nrows = latex.split("\n").length;
+        this.rows = nrows;
+    }
 
     constructor() {}
 
@@ -361,6 +385,7 @@ export class FormulaEditorComponent {
         if (this.activeEditor === ActiveEditorType.Visual) {
             const latex = field.latex();
             this.latexInputControl.setValue(latex);
+            this.updateTextareaRows();
             this.updateFormulaToEditor();
         }
     }
@@ -426,6 +451,7 @@ export class FormulaEditorComponent {
             this.latexInputControl.value !== null
         ) {
             this.mathField.latex(this.latexInputControl.value);
+            this.updateTextareaRows();
             this.updateFormulaToEditor();
         }
     }
@@ -457,14 +483,10 @@ export class FormulaEditorComponent {
             const latex = isMultiline
                 ? this.latexInputControl.value
                 : this.mathField.latex();
-            if (typeof latex === "string") {
-                const formulaLatex = this.formatLatex(latex, isMultiline);
+            const formulaLatex = this.formatLatex(latex, isMultiline);
 
-                this.editor.content =
-                    this.oldContent.before +
-                    formulaLatex +
-                    this.oldContent.after;
-            }
+            this.editor.content =
+                this.oldContent.before + formulaLatex + this.oldContent.after;
         }
     }
 
