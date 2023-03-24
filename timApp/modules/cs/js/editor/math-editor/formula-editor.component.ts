@@ -134,6 +134,10 @@ export class FormulaEditorComponent {
     formulaArray = formulas;
     buttonsVisible = false;
 
+    /**
+     * Changes buttons to visible or not visible
+     * @param isVisible are buttons currently visible
+     */
     setButtonsVisible(isVisible: boolean) {
         this.buttonsVisible = !isVisible;
     }
