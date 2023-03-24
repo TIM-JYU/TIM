@@ -142,7 +142,7 @@ export class FormulaEditorComponent {
     rows: number = 2;
 
     /**
-     * sets textarea to have as many rows that are neccessary to display
+     * sets textarea to have as many rows that are necessary to display
      * its content
      */
     updateTextareaRows() {
