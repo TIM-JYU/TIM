@@ -45,3 +45,14 @@
     flex-direction: row;
     gap: 0.5em;
 }
+
+.symbolButton {
+    border: none;
+    background: none;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.symbolButton:hover{
+    background: #C0C0C0;
+}

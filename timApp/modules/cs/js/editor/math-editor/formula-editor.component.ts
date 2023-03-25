@@ -49,7 +49,7 @@ type OldContent = {
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog>
                 <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
                 <div class="buttons-container" [hidden]="!buttonsVisible" >
-                    <button class="btn btn-default" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
+                    <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
                      ><img src="{{item.svg}}"/></button>
                 </div>
                 <div class="formula-container">
