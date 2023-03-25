@@ -38,9 +38,6 @@ type FieldType = {
     latex: string;
 };
 
-// show one empty field by default when formula editor is opened
-const DEFAULT_FIELDS = [{latex: ""}];
-
 @Component({
     selector: "cs-formula-editor",
     template: `
@@ -88,7 +85,8 @@ export class FormulaEditorComponent implements AfterViewInit {
 
     formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
 
-    fields: FieldType[] = DEFAULT_FIELDS;
+    fields!: FieldType[];
+
     activeFieldsIndex: number = 0;
 
     @ViewChild("formulaEditorDialog")
@@ -112,7 +110,9 @@ export class FormulaEditorComponent implements AfterViewInit {
         this.isVisible = isVis;
         // became visible so save what was in editor
         if (isVis) {
-            this.fields = DEFAULT_FIELDS;
+            this.fields = [{latex: ""}];
+            this.activeFieldsIndex = 0;
+
             this.parseOldContent(this.editor.content);
             const isMulti = this.getInitialMultilineSetting();
             this.isMultilineFormulaControl.setValue(isMulti);
@@ -133,21 +133,36 @@ export class FormulaEditorComponent implements AfterViewInit {
     }
     private buttonSymbol: string = "";
 
+    /**
+     * append new empty field after the current field
+     * and sets it as active
+     */
     addField() {
-        this.fields.push({
-            latex: "",
-        });
-        this.activeFieldsIndex = this.fields.length - 1;
-
+        this.fields = [
+            ...this.fields.slice(0, this.activeFieldsIndex + 1),
+            {latex: ""},
+            ...this.fields.slice(this.activeFieldsIndex + 1),
+        ];
+        this.activeFieldsIndex++;
         this.isMultilineFormulaControl.setValue(this.fields.length > 1);
     }
 
+    /**
+     * removes currently active field
+     * sets the previous one as active
+     */
     removeField() {
+        // don't remove the first field
         if (this.fields.length <= 1) {
             return;
         }
-        this.fields.splice(this.activeFieldsIndex, 1);
-        this.activeFieldsIndex = this.fields.length - 1;
+        this.fields = [
+            ...this.fields.slice(0, this.activeFieldsIndex),
+            ...this.fields.slice(this.activeFieldsIndex + 1),
+        ];
+        if (this.activeFieldsIndex > 0) {
+            this.activeFieldsIndex--;
+        }
 
         this.isMultilineFormulaControl.setValue(this.fields.length > 1);
     }
@@ -459,16 +474,18 @@ export class FormulaEditorComponent implements AfterViewInit {
         }
     }
 
-    clearFields() {
-        this.fields = [];
-    }
     handleFormulaOk() {
         this.updateFormulaToEditor();
         const finalContent = this.editor.content;
-        this.editor.content = finalContent;
-        this.clearFields();
 
         this.okEvent.emit();
+        this.clearFields();
+
+        this.editor.content = finalContent;
+    }
+
+    clearFields() {
+        this.fields = [];
     }
 
     async handleFormulaCancel() {
@@ -484,15 +501,15 @@ export class FormulaEditorComponent implements AfterViewInit {
                 $localize`This will clear the editor.`
             ))
         ) {
-            this.editor.content =
+            const finalContent =
                 this.oldContent.before +
                 this.oldContent.editing +
                 this.oldContent.after;
-            const finalContent = this.editor.content;
+
             this.cancelEvent.emit();
+
             this.clearFields();
-            // clearing fields triggers update to editor content
-            // rewrite it
+
             this.editor.content = finalContent;
         }
     }
