@@ -47,7 +47,7 @@ type OldContent = {
     template: `
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog>
-                <button (click)="setButtonsVisible(buttonsVisible)">show formulas</button>
+                <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
                 <div class="buttons-container" [hidden]="!buttonsVisible" >
                     <button class="btn btn-default" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
                      ><img src="{{item.svg}}"/></button>
@@ -139,8 +139,10 @@ export class FormulaEditorComponent {
     }
     private buttonSymbol: string = "";
 
+    //Array containing default LaTeX-commands for formula buttons
     formulaArray = formulas;
     buttonsVisible = false;
+    showFormulasText = "Show formulas";
 
     /**
      * Changes buttons to visible or not visible
@@ -148,6 +150,11 @@ export class FormulaEditorComponent {
      */
     setButtonsVisible(isVisible: boolean) {
         this.buttonsVisible = !isVisible;
+        if (this.buttonsVisible === true) {
+            this.showFormulasText = "Hide formulas";
+        } else {
+            this.showFormulasText = "Show formulas";
+        }
     }
 
     rows: number = 2;
