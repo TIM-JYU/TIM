@@ -50,7 +50,7 @@ type OldContent = {
                 <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
                 <div class="buttons-container" [hidden]="!buttonsVisible" >
                     <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
-                     ><img src="{{item.svg}}"/></button>
+                     ><img src="{{item.svg}}" alt="{{item.text}}"/></button>
                 </div>
                 <div class="formula-container">
                     <span class="visual-input" #visualInput></span>
@@ -150,7 +150,7 @@ export class FormulaEditorComponent {
      */
     setButtonsVisible(isVisible: boolean) {
         this.buttonsVisible = !isVisible;
-        if (this.buttonsVisible === true) {
+        if (this.buttonsVisible) {
             this.showFormulasText = "Hide formulas";
         } else {
             this.showFormulasText = "Show formulas";
