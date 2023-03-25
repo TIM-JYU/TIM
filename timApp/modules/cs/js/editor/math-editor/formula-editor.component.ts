@@ -38,6 +38,9 @@ type FieldType = {
     latex: string;
 };
 
+// show one empty field by default when formula editor is opened
+const DEFAULT_FIELDS = [{latex: ""}];
+
 @Component({
     selector: "cs-formula-editor",
     template: `
@@ -85,7 +88,7 @@ export class FormulaEditorComponent implements AfterViewInit {
 
     formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
 
-    fields: FieldType[] = [{latex: ""}];
+    fields: FieldType[] = DEFAULT_FIELDS;
     activeFieldsIndex: number = 0;
 
     @ViewChild("formulaEditorDialog")
@@ -109,6 +112,7 @@ export class FormulaEditorComponent implements AfterViewInit {
         this.isVisible = isVis;
         // became visible so save what was in editor
         if (isVis) {
+            this.fields = DEFAULT_FIELDS;
             this.parseOldContent(this.editor.content);
             const isMulti = this.getInitialMultilineSetting();
             this.isMultilineFormulaControl.setValue(isMulti);
@@ -149,7 +153,6 @@ export class FormulaEditorComponent implements AfterViewInit {
     }
 
     handleEdited(res: Edit) {
-        console.log(res);
         this.fields[res.id].latex = res.latex;
         this.activeFieldsIndex = res.id;
         this.updateFormulaToEditor();
@@ -457,16 +460,15 @@ export class FormulaEditorComponent implements AfterViewInit {
     }
 
     clearFields() {
-        this.fields = [{latex: ""}];
+        this.fields = [];
     }
     handleFormulaOk() {
         this.updateFormulaToEditor();
         const finalContent = this.editor.content;
-        this.okEvent.emit();
-        this.clearFields();
-        // clearing fields triggers update to editor content
-        // rewrite it
         this.editor.content = finalContent;
+        this.clearFields();
+
+        this.okEvent.emit();
     }
 
     async handleFormulaCancel() {
