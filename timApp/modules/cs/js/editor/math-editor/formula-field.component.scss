@@ -8,6 +8,9 @@
 
 .visual-input {
     width: 100%;
+}
+
+.active-visual-input {
     min-height: 60px;
 }
 
@@ -16,7 +19,7 @@
 }
 
 .formula-container {
-
+    padding: 0.25em;
 }
 
 .active-field {

@@ -5,7 +5,7 @@
  * @date 28.2.2023
  */
 
-import type {AfterViewChecked, AfterViewInit} from "@angular/core";
+import type {AfterViewInit} from "@angular/core";
 import {
     Component,
     ElementRef,
@@ -18,7 +18,6 @@ import {
 } from "@angular/core";
 import {FormControl} from "@angular/forms";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import type {IMathQuill, MathFieldMethods} from "vendor/mathquill/mathquill";
 import {IEditor} from "../editor";
 import type {Edit} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";

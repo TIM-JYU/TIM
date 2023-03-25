@@ -35,7 +35,8 @@ export type Edit = {
     template: `
         <div class="formula-container" [class.active-field]="isActive">
             <span 
-                    class="visual-input" 
+                    class="visual-input"
+                    [class.active-visual-input]="isActive"
                     #visualInput 
                     (keyup.enter)="enterPressed()" 
                     (keyup.backspace)="backspacePressed()"
