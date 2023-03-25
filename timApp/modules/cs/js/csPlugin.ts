@@ -3856,8 +3856,8 @@ ${fhtml}
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
             <div *ngIf="formulaEditor">
-                    <button class="timButton" (click)="onFormulaEditorAddFormula()" i18n title="Ctrl+e">Add formula</button>
-                    <button class="timButton" (click)="onFormulaEditorEditFormula()" i18n>Edit formula</button>
+                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorAddFormula()" i18n title="Ctrl+e">Add formula</button>
+                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorEditFormula()" i18n>Edit formula</button>
                     <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet" target="_blank">                
                         <span class="glyphicon glyphicon-question-sign" title="Instructions" i18n-title></span>
                     </a>
