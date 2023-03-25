@@ -18,13 +18,9 @@ import {
 } from "@angular/core";
 import {FormControl} from "@angular/forms";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import type {
-    IMathQuill,
-    MathFieldMethods,
-    MathQuillConfig,
-} from "vendor/mathquill/mathquill";
+import type {IMathQuill, MathFieldMethods} from "vendor/mathquill/mathquill";
 import {IEditor} from "../editor";
-import type {Edit, TabEvent} from "./formula-field.component";
+import type {Edit} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
 
@@ -46,8 +42,6 @@ type FieldType = {
     selector: "cs-formula-editor",
     template: `
         <div [hidden]="!visible" class="formula-editor">
-            {{activeFieldsIndex}}
-            {{fields | json}}
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog>
                 <div class="buttons-container">
                     <button class="timButton" *ngFor="let item of formulas;" (click)="addFormula(item)" 
@@ -140,6 +134,8 @@ export class FormulaEditorComponent implements AfterViewInit {
             latex: "",
         });
         this.activeFieldsIndex = this.fields.length - 1;
+
+        this.isMultilineFormulaControl.setValue(this.fields.length > 1);
     }
 
     removeField() {
@@ -148,12 +144,17 @@ export class FormulaEditorComponent implements AfterViewInit {
         }
         this.fields.splice(this.activeFieldsIndex, 1);
         this.activeFieldsIndex = this.fields.length - 1;
+
+        this.isMultilineFormulaControl.setValue(this.fields.length > 1);
     }
 
     handleEdited(res: Edit) {
+        console.log(res);
         this.fields[res.id].latex = res.latex;
         this.activeFieldsIndex = res.id;
         this.updateFormulaToEditor();
+
+        this.isMultilineFormulaControl.setValue(this.fields.length > 1);
     }
 
     handleFocus(res: Edit) {
@@ -421,7 +422,7 @@ export class FormulaEditorComponent implements AfterViewInit {
         if (isMultiline) {
             const latex = this.fields
                 .map((field) => field.latex)
-                .filter((latex) => latex.length > 0)
+                .filter((text) => text.length > 0)
                 .join("\\\\\n");
             if (latex.length === 0) {
                 return undefined;
@@ -442,11 +443,16 @@ export class FormulaEditorComponent implements AfterViewInit {
         if (this.isMultilineFormulaControl.value !== null) {
             const isMultiline = this.isMultilineFormulaControl.value;
             const formulaLatex = this.formatLatex(isMultiline);
+            // If nothing is typed then just show original content
             if (formulaLatex === undefined) {
-                return;
+                this.editor.content =
+                    this.oldContent.before + this.oldContent.after;
+            } else {
+                this.editor.content =
+                    this.oldContent.before +
+                    formulaLatex +
+                    this.oldContent.after;
             }
-            this.editor.content =
-                this.oldContent.before + formulaLatex + this.oldContent.after;
         }
     }
 

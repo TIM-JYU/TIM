@@ -21,8 +21,8 @@ import {FormulaFieldComponent} from "./math-editor/formula-field.component";
         CountBoardComponent,
         JSParsonsEditorComponent,
         MathEditorComponent,
-        FormulaEditorComponent,
         FormulaFieldComponent,
+        FormulaEditorComponent,
     ],
     imports: [
         CommonModule,
