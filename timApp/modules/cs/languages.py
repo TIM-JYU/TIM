@@ -1008,7 +1008,6 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
             flags=re.M,
         )  # prevent remove by next "at"-word
     out = re.sub("\\s+at .*\n", "\n", out, flags=re.M)
-    out = re.sub("\n+", "\n", out, flags=re.M)
     out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
     out = re.sub(self.prgpath + "/", "", out, flags=re.M)
     out = out.strip(" \t\n\r")
