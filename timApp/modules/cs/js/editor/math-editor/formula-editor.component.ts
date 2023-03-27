@@ -1,4 +1,3 @@
-/* eslint no-underscore-dangle: ["error", { "allow": ["isVisible"] }] */
 /**
  * Formula Editor for inputting LaTeX math
  * @author Juha Reinikainen
@@ -452,6 +451,16 @@ export class FormulaEditorComponent implements AfterViewInit {
     }
 
     /**
+     * splits text into lines of latex
+     * @param formula
+     */
+    getMultilineFormulaLines(formula: string): FieldType[] {
+        return formula.split("\n").map((line) => {
+            return {latex: this.trimFromStartAndEnd(line, "\\")};
+        });
+    }
+
+    /**
      * Parses current formula from editor content
      * @return true if editing else false
      */
@@ -493,9 +502,7 @@ export class FormulaEditorComponent implements AfterViewInit {
                 this.existingParenthesis[1] =
                     "" + formula.slice(formula.length - lenDiff) + "$$";
                 formula = trimmed;
-                this.fields = formula.split("\n").map((line) => {
-                    return {latex: this.trimFromStartAndEnd(line, "\\")};
-                });
+                this.fields = this.getMultilineFormulaLines(formula);
 
                 // update formula editor values
                 this.isMultilineFormulaControl.setValue(true);

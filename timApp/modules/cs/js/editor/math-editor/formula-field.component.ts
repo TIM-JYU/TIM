@@ -57,7 +57,8 @@ export type Edit = {
                       (keyup)="handleLatexInput()"
                       [formControl]="latexInputControl"
                       placeholder="Write LaTeX" i18n-placeholder
-                      class="formula-area">
+                      class="formula-area"
+                      (focus)="handleLatexFocus()">
             </textarea>                        
         </div>
 
