@@ -44,6 +44,8 @@ export type Edit = {
                     #visualInput 
                     (keyup.enter)="enterPressed()" 
                     (keyup.backspace)="backspacePressed()"
+                    (keyup.tab)="handleFocus()"
+                    (keyup.shift.tab)="handleFocus()"
                     (click)="handleFocus()"
                     (focus)="handleFocus()">
             </span>
@@ -55,7 +57,8 @@ export type Edit = {
                       (keyup)="handleLatexInput()"
                       [formControl]="latexInputControl"
                       placeholder="Write LaTeX" i18n-placeholder
-                      class="formula-area">
+                      class="formula-area"
+                      (focus)="handleLatexFocus()">
             </textarea>                        
         </div>
 
@@ -135,9 +138,9 @@ export class FormulaFieldComponent {
         elem.addEventListener("click", (_e: MouseEvent) => {
             this.activeEditor = ActiveEditorType.Visual;
         });
-        elem.addEventListener("focusin", (e) => {
-            this.handleFocus();
-        });
+        // elem.addEventListener("focusin", (e) => {
+        //    this.handleFocus();
+        // });
         const config: MathQuillConfig = {
             spaceBehavesLikeTab: true,
             handlers: {
