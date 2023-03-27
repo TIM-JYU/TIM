@@ -41,7 +41,7 @@ type FieldType = {
 
 /**
  * wrapper for pressed button text
- * Object wrapping is neccessary to
+ * Object wrapping is necessary to
  * make angular produce a event for each
  * button press.
  */
