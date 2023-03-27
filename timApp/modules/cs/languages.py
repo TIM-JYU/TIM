@@ -991,7 +991,7 @@ class Kotlin(Java):
         return code, out, err, pwddir
 
 
-def check_comtest(self, ttype, code, out, err, result, points_rule):
+def check_comtest(self, ttype, code, out, err, result, points_rule, filter_output=True):
     if is_compile_error(out, err):
         return out, err
     eri = -1
@@ -1007,11 +1007,12 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
             out,
             flags=re.M,
         )  # prevent remove by next "at"-word
-    out = re.sub("\\s+at .*\n", "\n", out, flags=re.M)
-    out = re.sub("\n+", "\n", out, flags=re.M)
-    out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
-    out = re.sub(self.prgpath + "/", "", out, flags=re.M)
-    out = out.strip(" \t\n\r")
+    if filter_output:
+        out = re.sub("\\s+at .*\n", "\n", out, flags=re.M)
+        out = re.sub("\n+", "\n", out, flags=re.M)
+        out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
+        out = re.sub(self.prgpath + "/", "", out, flags=re.M)
+        out = out.strip(" \t\n\r")
     if ttype == "junit":
         out = re.sub(
             "java:", "java line: ", out, flags=re.M
@@ -1045,10 +1046,11 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
             lni = out.find(" line: ", lni + 8)
         web["comtestError"] = cterr
     else:
-        out = re.sub("^JUnit version.*\n", "", out, flags=re.M)
-        out = re.sub("^Time: .*\n", "", out, flags=re.M)
-        out = re.sub("^.*prg.*cpp.*\n", "", out, flags=re.M)
-        out = re.sub("^ok$", "", out, flags=re.M)
+        if filter_output:
+            out = re.sub("^JUnit version.*\n", "", out, flags=re.M)
+            out = re.sub("^Time: .*\n", "", out, flags=re.M)
+            out = re.sub("^.*prg.*cpp.*\n", "", out, flags=re.M)
+            out = re.sub("^ok$", "", out, flags=re.M)
         give_points(points_rule, "test")
         self.run_points_given = True
     return out, err
@@ -1221,7 +1223,16 @@ class RunTest(Language, Modifier):
         # FIXME: Introduce some kind of setting to override this behaviour
         if is_compile_error(out, err):
             return -3, out, err, pwddir
-        out, err = check_comtest(self, "runtest", code, out, err, result, points_rule)
+        out, err = check_comtest(
+            self,
+            "runtest",
+            code,
+            out,
+            err,
+            result,
+            points_rule,
+            filter_output=False,
+        )
         return code, out, err, pwddir
 
 

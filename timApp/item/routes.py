@@ -1256,7 +1256,7 @@ def create_item_route(
     )
 
 
-@view_page.get("/itemInfo/<item_path>")
+@view_page.get("/itemInfo/<path:item_path>")
 def get_doc_basic_info(item_path: str) -> Response:
     item: Item | None = DocEntry.find_by_path(
         item_path, fallback_to_id=True
