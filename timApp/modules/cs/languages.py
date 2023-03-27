@@ -991,7 +991,9 @@ class Kotlin(Java):
         return code, out, err, pwddir
 
 
-def check_comtest(self, ttype, code, out, err, result, points_rule):
+def check_comtest(
+    self, ttype, code, out, err, result, points_rule, keep_empty_lines=False
+):
     if is_compile_error(out, err):
         return out, err
     eri = -1
@@ -1008,6 +1010,8 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
             flags=re.M,
         )  # prevent remove by next "at"-word
     out = re.sub("\\s+at .*\n", "\n", out, flags=re.M)
+    if not keep_empty_lines:
+        out = re.sub("\n+", "\n", out, flags=re.M)
     out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
     out = re.sub(self.prgpath + "/", "", out, flags=re.M)
     out = out.strip(" \t\n\r")
@@ -1220,7 +1224,16 @@ class RunTest(Language, Modifier):
         # FIXME: Introduce some kind of setting to override this behaviour
         if is_compile_error(out, err):
             return -3, out, err, pwddir
-        out, err = check_comtest(self, "runtest", code, out, err, result, points_rule)
+        out, err = check_comtest(
+            self,
+            "runtest",
+            code,
+            out,
+            err,
+            result,
+            points_rule,
+            keep_empty_lines=True,
+        )
         return code, out, err, pwddir
 
 
