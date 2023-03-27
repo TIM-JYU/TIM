@@ -37,6 +37,16 @@ type FieldType = {
     latex: string;
 };
 
+/**
+ * wrapper for pressed button text
+ * Object wrapping is neccessary to
+ * make angular produce a event for each
+ * button press.
+ */
+type ButtonState = {
+    text: string;
+};
+
 @Component({
     selector: "cs-formula-editor",
     template: `
@@ -121,16 +131,16 @@ export class FormulaEditorComponent implements AfterViewInit {
     private isVisible = false;
 
     @Input()
-    get currentSymbol(): string {
+    get currentSymbol(): ButtonState {
         return this.buttonSymbol;
     }
-    set currentSymbol(value: string) {
+    set currentSymbol(value: ButtonState) {
         this.buttonSymbol = value;
         if (this.fieldComponents !== undefined) {
             this.addFormula(value);
         }
     }
-    private buttonSymbol: string = "";
+    private buttonSymbol: ButtonState = {text: ""};
 
     /**
      * append new empty field after the current field
@@ -513,7 +523,9 @@ export class FormulaEditorComponent implements AfterViewInit {
         }
     }
 
-    addFormula(formula: string) {
+    addFormula(formulaInput: ButtonState | string) {
+        const formula =
+            typeof formulaInput === "string" ? formulaInput : formulaInput.text;
         const activeField = this.fieldComponents.find(
             (item, index) => item.id === this.activeFieldsIndex
         );

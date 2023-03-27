@@ -25,6 +25,10 @@ export enum ActiveEditorType {
     Latex = "latex",
 }
 
+/**
+ * Edit event wrapper that contains the full input
+ * of the active field and its identification number
+ */
 export type Edit = {
     id: number;
     latex: string;
