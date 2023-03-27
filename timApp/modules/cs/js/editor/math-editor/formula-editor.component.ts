@@ -22,6 +22,7 @@ import type {
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
 import {IEditor} from "../editor";
+import formulas from "./latex-commands";
 
 /**
  * Field which has the focus
@@ -52,18 +53,21 @@ type OldContent = {
     template: `
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog>
-                <div class="buttons-container">
-                    <button class="timButton" *ngFor="let item of formulas;" (click)="addFormula(item)" 
-                     >{{item}}</button>
+                <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
+                <div class="buttons-container" [hidden]="!buttonsVisible" >
+                    <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
+                     ><img src="{{item.svg}}" alt="{{item.text}}"/></button>
                 </div>
                 <div class="formula-container">
                     <span class="visual-input" #visualInput></span>
 
-                    <textarea name="math-editor-output" #latexInput cols="30" rows="5"
+                    <textarea name="math-editor-output" #latexInput cols="30" 
+                              rows="{{rows}}"
                               (click)="handleLatexFocus()"
                               (keyup)="handleLatexInput()"
                               [formControl]="latexInputControl"
-                              placeholder="Write LaTeX" i18n-placeholder>
+                              placeholder="Write LaTeX" i18n-placeholder
+                              class="formula-area">
                     </textarea>
                 </div>
 
@@ -119,6 +123,12 @@ export class FormulaEditorComponent {
             const isMulti = this.getInitialMultilineSetting();
             this.isMultilineFormulaControl.setValue(isMulti);
             this.parseEditedFormula();
+
+            // set focus to visual field, timeout is needed for proper timing
+            // maybe could find better way
+            setTimeout(() => {
+                this.mathField.focus();
+            }, 0);
         }
     }
     private _visible: boolean = false;
@@ -135,7 +145,39 @@ export class FormulaEditorComponent {
     }
     private buttonSymbol: string = "";
 
-    formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
+    // Array containing default LaTeX-commands for formula buttons
+    formulaArray = formulas;
+    buttonsVisible = false;
+    showFormulasText = "Show formulas";
+
+    /**
+     * Changes buttons to visible or not visible
+     * @param isVisible are buttons currently visible
+     */
+    setButtonsVisible(isVisible: boolean) {
+        this.buttonsVisible = !isVisible;
+        if (this.buttonsVisible) {
+            this.showFormulasText = "Hide formulas";
+        } else {
+            this.showFormulasText = "Show formulas";
+        }
+    }
+
+    rows: number = 2;
+
+    /**
+     * sets textarea to have as many rows that are necessary to display
+     * its content
+     */
+    updateTextareaRows() {
+        const latex = this.latexInputControl.value;
+        if (latex === null) {
+            return;
+        }
+        // adjust rows in textarea to match how many are needed
+        const nrows = latex.split("\n").length;
+        this.rows = nrows;
+    }
 
     useExistingParenthesis = false;
     existingParenthesis = ["", ""];
@@ -415,6 +457,7 @@ export class FormulaEditorComponent {
         if (this.activeEditor === ActiveEditorType.Visual) {
             const latex = field.latex();
             this.latexInputControl.setValue(latex);
+            this.updateTextareaRows();
             this.updateFormulaToEditor();
         }
     }
@@ -483,6 +526,7 @@ export class FormulaEditorComponent {
             this.latexInputControl.value !== null
         ) {
             this.mathField.latex(this.latexInputControl.value);
+            this.updateTextareaRows();
             this.updateFormulaToEditor();
         }
     }
@@ -568,6 +612,10 @@ export class FormulaEditorComponent {
         }
     }
 
+    /**
+     * Adds formula to both fields in last known cursor position
+     * @param formula LaTeX-formula to be added to fields
+     */
     addFormula(formula: string) {
         if (this.activeEditor === ActiveEditorType.Latex) {
             const startPos = this.latexInput.nativeElement.selectionStart;
@@ -585,7 +633,6 @@ export class FormulaEditorComponent {
             this.handleLatexInput();
         } else {
             this.mathField.write(formula);
-            this.mathField.latex();
         }
     }
 }
