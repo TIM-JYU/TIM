@@ -1,3 +1,4 @@
+/* eslint no-underscore-dangle: ["error", { "allow": ["isVisible"] }] */
 /**
  * Formula Editor for inputting LaTeX math
  * @author Juha Reinikainen
@@ -104,8 +105,8 @@ export class FormulaEditorComponent implements AfterViewInit {
     @ViewChild("formulaEditorDialog")
     formulaEditorDialog!: ElementRef<HTMLDivElement>;
 
-    @Output() okEvent = new EventEmitter<void>();
-    @Output() cancelEvent = new EventEmitter<void>();
+    @Output() okClose = new EventEmitter<void>();
+    @Output() cancelClose = new EventEmitter<void>();
 
     isMultilineFormulaControl = new FormControl(true);
 
@@ -511,7 +512,7 @@ export class FormulaEditorComponent implements AfterViewInit {
         this.updateFormulaToEditor();
         const finalContent = this.editor.content;
 
-        this.okEvent.emit();
+        this.okClose.emit();
         this.clearFields();
 
         this.editor.content = finalContent;
@@ -539,7 +540,7 @@ export class FormulaEditorComponent implements AfterViewInit {
                 this.oldContent.editing +
                 this.oldContent.after;
 
-            this.cancelEvent.emit();
+            this.cancelClose.emit();
 
             this.clearFields();
 
@@ -549,7 +550,7 @@ export class FormulaEditorComponent implements AfterViewInit {
 
     /**
      * Adds formula to both fields in last known cursor position
-     * @param formula LaTeX-formula to be added to fields
+     * @param formulaInput LaTeX-formula to be added to fields
      */
     addFormula(formulaInput: ButtonState | string) {
         const formula =

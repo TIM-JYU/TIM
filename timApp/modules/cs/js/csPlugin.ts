@@ -3865,8 +3865,8 @@ ${fhtml}
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
                     <cs-formula-editor 
-                            (okEvent)="onFormulaEditorCloseOk()"
-                            (cancelEvent)="onFormulaEditorCloseCancel()"
+                            (okClose)="onFormulaEditorCloseOk()"
+                            (cancelClose)="onFormulaEditorCloseCancel()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
                             [currentSymbol]="currentSymbol"
