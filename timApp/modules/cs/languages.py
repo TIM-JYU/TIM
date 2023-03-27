@@ -991,9 +991,7 @@ class Kotlin(Java):
         return code, out, err, pwddir
 
 
-def check_comtest(
-    self, ttype, code, out, err, result, points_rule, keep_empty_lines=False
-):
+def check_comtest(self, ttype, code, out, err, result, points_rule, filter_output=True):
     if is_compile_error(out, err):
         return out, err
     eri = -1
@@ -1009,12 +1007,12 @@ def check_comtest(
             out,
             flags=re.M,
         )  # prevent remove by next "at"-word
-    out = re.sub("\\s+at .*\n", "\n", out, flags=re.M)
-    if not keep_empty_lines:
+    if filter_output:
+        out = re.sub("\\s+at .*\n", "\n", out, flags=re.M)
         out = re.sub("\n+", "\n", out, flags=re.M)
-    out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
-    out = re.sub(self.prgpath + "/", "", out, flags=re.M)
-    out = out.strip(" \t\n\r")
+        out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
+        out = re.sub(self.prgpath + "/", "", out, flags=re.M)
+        out = out.strip(" \t\n\r")
     if ttype == "junit":
         out = re.sub(
             "java:", "java line: ", out, flags=re.M
@@ -1048,10 +1046,11 @@ def check_comtest(
             lni = out.find(" line: ", lni + 8)
         web["comtestError"] = cterr
     else:
-        out = re.sub("^JUnit version.*\n", "", out, flags=re.M)
-        out = re.sub("^Time: .*\n", "", out, flags=re.M)
-        out = re.sub("^.*prg.*cpp.*\n", "", out, flags=re.M)
-        out = re.sub("^ok$", "", out, flags=re.M)
+        if filter_output:
+            out = re.sub("^JUnit version.*\n", "", out, flags=re.M)
+            out = re.sub("^Time: .*\n", "", out, flags=re.M)
+            out = re.sub("^.*prg.*cpp.*\n", "", out, flags=re.M)
+            out = re.sub("^ok$", "", out, flags=re.M)
         give_points(points_rule, "test")
         self.run_points_given = True
     return out, err
@@ -1232,7 +1231,7 @@ class RunTest(Language, Modifier):
             err,
             result,
             points_rule,
-            keep_empty_lines=True,
+            filter_output=False,
         )
         return code, out, err, pwddir
 
