@@ -139,7 +139,7 @@ export class FormulaEditorComponent {
     }
     private buttonSymbol: string = "";
 
-    //Array containing default LaTeX-commands for formula buttons
+    // Array containing default LaTeX-commands for formula buttons
     formulaArray = formulas;
     buttonsVisible = false;
     showFormulasText = "Show formulas";
