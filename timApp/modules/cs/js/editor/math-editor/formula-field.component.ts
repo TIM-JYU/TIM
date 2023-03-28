@@ -97,6 +97,8 @@ export class FormulaFieldComponent {
     @Output() enter = new EventEmitter<number>();
     @Output() backspace = new EventEmitter<number>();
     @Output() focus = new EventEmitter<Edit>();
+    @Output() downArrow = new EventEmitter<number>();
+    @Output() upArrow = new EventEmitter<number>();
 
     rows: number = 2;
 
@@ -142,6 +144,12 @@ export class FormulaFieldComponent {
                 enter: (field: MathFieldMethods) => this.enterHandler(field),
                 deleteOutOf: (direction, field: MathFieldMethods) => {
                     this.handleDeleteOutOf(direction, field);
+                },
+                downOutOf: (field: MathFieldMethods) => {
+                    this.downArrow.emit(this.id);
+                },
+                upOutOf: (field: MathFieldMethods) => {
+                    this.upArrow.emit(this.id);
                 },
             },
         };

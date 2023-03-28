@@ -32,8 +32,10 @@ export interface MathQuillConfig {
         edit?: (mathField: MathFieldMethods) => any;
         enter?: (mathField: MathFieldMethods) => any;
         upOutOf?: (mathField: MathFieldMethods) => any;
+        downOutOf?: (mathField: MathFieldMethods) => any;
         moveOutOf?: (dir: number, mathField: MathFieldMethods) => any;
         deleteOutOf?: (dir: number, mathField: MathFieldMethods) => any;
+        selectOutOf?: (dir: number, mathField: MathFieldMethods) => any;
     };
 }
 export interface BaseMethods {

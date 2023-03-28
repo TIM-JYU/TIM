@@ -77,6 +77,8 @@ type StringPair = [string, string];
                             (enter)="addField()"
                             (backspace)="removeField()" 
                             (focus)="handleFocus($event)"
+                            (upArrow)="handleArrowUp($event)"
+                            (downArrow)="handleArrowDown($event)"
                             [isActive]="i === activeFieldsIndex"
                             [id]="i">
                         </cs-formula-field>
@@ -227,6 +229,18 @@ export class FormulaEditorComponent implements AfterViewInit {
 
     handleFocus(res: Edit) {
         this.activeFieldsIndex = res.id;
+    }
+
+    handleArrowDown(id: number) {
+        if (this.activeFieldsIndex + 1 < this.fields.length) {
+            this.activeFieldsIndex++;
+        }
+    }
+
+    handleArrowUp(id: number) {
+        if (this.activeFieldsIndex > 0) {
+            this.activeFieldsIndex--;
+        }
     }
 
     /**
