@@ -220,7 +220,9 @@ MAILMAN_EVENT_API_KEY = None
 # Link prefix to Postorius Web-UI. If used as is, directs to the mailing lists page.
 MAILMAN_UI_LINK_PREFIX = "https://timlist.it.jyu.fi/postorius/lists/"
 # Link to the Mailman mail templates. Used by mailman.
-MAILMAN_TEMPLATES_URL = "http://localhost/postorius/api/templates/list/{list_id}/{template_name}"
+MAILMAN_TEMPLATES_URL = (
+    "http://localhost/postorius/api/templates/list/{list_id}/{template_name}"
+)
 # Permitted file extensions allowed on message lists. If this grows large, maybe move to an external file and modify
 # getting attachment file extensions from the file instead.
 PERMITTED_ATTACHMENTS = [
