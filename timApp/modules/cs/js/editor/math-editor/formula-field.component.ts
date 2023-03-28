@@ -42,12 +42,11 @@ export type Edit = {
                     class="visual-input"
                     [class.active-visual-input]="isActive"
                     #visualInput 
-                    (keyup.enter)="enterPressed()" 
-                    (keyup.backspace)="backspacePressed()"
                     (keyup.tab)="handleFocus()"
                     (keyup.shift.tab)="handleFocus()"
                     (click)="handleFocus()"
-                    (focus)="handleFocus()">
+                    (focus)="handleFocus()"
+                    (keyup)="handleVisualFocus()">
             </span>
 
             <textarea name="math-editor-output" #latexInput cols="30" 
@@ -135,24 +134,45 @@ export class FormulaFieldComponent {
         const mq = (await import("vendor/mathquill/mathquill")).default;
         this.MQ = mq.getInterface(2);
         const elem = this.visualInput.nativeElement;
-        elem.addEventListener("click", (_e: MouseEvent) => {
-            this.activeEditor = ActiveEditorType.Visual;
-        });
-        // elem.addEventListener("focusin", (e) => {
-        //    this.handleFocus();
-        // });
+
         const config: MathQuillConfig = {
             spaceBehavesLikeTab: true,
             handlers: {
                 edit: (field: MathFieldMethods) => this.editHandler(field),
+                enter: (field: MathFieldMethods) => this.enterHandler(field),
+                deleteOutOf: (direction, field: MathFieldMethods) => {
+                    this.handleDeleteOutOf(direction, field);
+                },
             },
         };
         this.mathField = this.MQ.MathField(elem, config);
         this.mathField.latex(this.initialValue);
     }
 
+    /**
+     * Enter pressed while not inside environment
+     * like \cases
+     * @param field current field
+     */
+    enterHandler(field: MathFieldMethods) {
+        this.enterPressed();
+    }
+
+    /**
+     * Backspace pressed while field is empty
+     * @param direction indicates which direction movement happens
+     * @param field current field
+     */
+    handleDeleteOutOf(direction: number, field: MathFieldMethods) {
+        this.backspacePressed();
+    }
+
     handleLatexFocus() {
         this.activeEditor = ActiveEditorType.Latex;
+    }
+
+    handleVisualFocus() {
+        this.activeEditor = ActiveEditorType.Visual;
     }
 
     /**
@@ -187,6 +207,7 @@ export class FormulaFieldComponent {
     }
 
     handleFocus() {
+        this.activeEditor = ActiveEditorType.Visual;
         this.focus.emit({
             latex: this.latexInputControl.value ?? "",
             id: this.id,

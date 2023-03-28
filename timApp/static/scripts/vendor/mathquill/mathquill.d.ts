@@ -29,10 +29,11 @@ export interface MathQuillConfig {
     autoOperatorNames?: string;
     substituteTextArea?: () => HTMLElement;
     handlers?: {
-        edit?: (mathField: any) => any;
-        enter?: (mathField: any) => any;
-        upOutOf?: (mathField: any) => any;
-        moveOutOf?: (dir: any, mathField: any) => any;
+        edit?: (mathField: MathFieldMethods) => any;
+        enter?: (mathField: MathFieldMethods) => any;
+        upOutOf?: (mathField: MathFieldMethods) => any;
+        moveOutOf?: (dir: number, mathField: MathFieldMethods) => any;
+        deleteOutOf?: (dir: number, mathField: MathFieldMethods) => any;
     };
 }
 export interface BaseMethods {

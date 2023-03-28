@@ -62,7 +62,7 @@ type StringPair = [string, string];
     selector: "cs-formula-editor",
     template: `
         <div [hidden]="!visible" class="formula-editor">
-            <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog>
+            <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
                 <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
                 <div class="buttons-container" [hidden]="!buttonsVisible" >
                     <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
@@ -216,6 +216,9 @@ export class FormulaEditorComponent implements AfterViewInit {
 
     constructor(private cd: ChangeDetectorRef) {}
     handleEdited(res: Edit) {
+        if (res.id < 0 || res.id >= this.fields.length) {
+            return;
+        }
         this.fields[res.id].latex = res.latex;
         this.updateFormulaToEditor();
         this.isMultilineFormulaControl.setValue(this.fields.length > 1);
@@ -543,23 +546,20 @@ export class FormulaEditorComponent implements AfterViewInit {
             }
             this.updateFormulaToEditor();
         });
+    }
 
-        this.formulaEditorDialog.nativeElement.addEventListener(
-            "keydown",
-            (e) => {
-                if (e.ctrlKey) {
-                    if (e.key === "s") {
-                        this.handleFormulaOk();
-                        e.stopPropagation();
-                        e.preventDefault();
-                    }
-                } else if (e.key === "Escape") {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    void this.handleFormulaCancel();
-                }
+    handleDialogEvents(e: KeyboardEvent) {
+        if (e.ctrlKey) {
+            if (e.key === "s") {
+                this.handleFormulaOk();
+                e.stopPropagation();
+                e.preventDefault();
             }
-        );
+        } else if (e.key === "Escape") {
+            e.stopPropagation();
+            e.preventDefault();
+            void this.handleFormulaCancel();
+        }
     }
 
     formatLatex(isMultiline: boolean): string | undefined {
@@ -652,9 +652,8 @@ export class FormulaEditorComponent implements AfterViewInit {
     addFormula(formulaInput: ButtonState | string) {
         const formula =
             typeof formulaInput === "string" ? formulaInput : formulaInput.text;
-        const activeField = this.fieldComponents.find(
-            (item, index) => item.id === this.activeFieldsIndex
-        );
+
+        const activeField = this.getActiveField();
         if (activeField === undefined) {
             return;
         }
@@ -673,8 +672,10 @@ export class FormulaEditorComponent implements AfterViewInit {
             activeField.latexInput.nativeElement.selectionEnd =
                 endPos + newValue.length;
             activeField.handleLatexInput();
+            activeField.latexInput.nativeElement.focus();
         } else {
             activeField.mathField.write(formula);
+            activeField.mathField.focus();
         }
     }
 }
