@@ -45,7 +45,9 @@ export type Edit = {
                     (keyup.shift.tab)="handleFocus()"
                     (click)="handleFocus()"
                     (focus)="handleFocus()"
-                    (keyup)="handleVisualFocus()">
+                    (keyup)="handleVisualFocus()"
+                    (keydown.control.z)="handleUndo()"
+                    (keydown.control.y)="handleRedo()">
             </span>
 
             <textarea name="math-editor-output" #latexInputElement cols="30" 
@@ -56,7 +58,9 @@ export type Edit = {
                       [(ngModel)]="latexInput"
                       placeholder="Write LaTeX" i18n-placeholder
                       class="formula-area"
-                      (focus)="handleLatexFocus()">
+                      (focus)="handleLatexFocus()"
+                      (keydown.control.z)="handleUndo()"
+                      (keydown.control.y)="handleRedo()">
             </textarea>                        
         </div>
 
@@ -75,6 +79,10 @@ export class FormulaFieldComponent {
     mathField!: MathFieldMethods;
 
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
+
+    undoStack: string[] = [];
+    redoStack: string[] = [];
+    defaultValue = "";
 
     @Input() id!: number;
 
@@ -125,6 +133,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
+            this.updateUndoStack();
         }
     }
 
@@ -151,6 +160,9 @@ export class FormulaFieldComponent {
         };
         this.mathField = this.MQ.MathField(elem, config);
         this.mathField.latex(this.initialValue);
+        if (this.initialValue != undefined) {
+            this.defaultValue = this.initialValue;
+        }
     }
 
     /**
@@ -191,6 +203,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
+            this.updateUndoStack();
         }
     }
 
@@ -210,5 +223,40 @@ export class FormulaFieldComponent {
             latex: this.latexInput,
             id: this.id,
         });
+    }
+
+    handleUndo() {
+        const temp = this.undoStack.pop();
+        if (temp != undefined) {
+            this.redoStack.push(temp);
+        }
+        const temp2 = this.undoStack.pop();
+        if (temp2 != undefined) {
+            this.mathField.latex(temp2);
+            this.latexInputControl.setValue(temp2);
+        } else {
+            this.mathField.latex(this.defaultValue);
+            this.latexInputControl.setValue(this.defaultValue);
+        }
+        // this.updateUndoRedoStacks();
+    }
+
+    handleRedo() {
+        const temp = this.redoStack.pop();
+        if (temp != undefined) {
+            this.undoStack.push(this.mathField.latex());
+            this.mathField.latex(temp);
+            this.latexInputControl.setValue(temp);
+        }
+        // this.updateUndoRedoStacks();
+    }
+
+    updateUndoStack() {
+        if (
+            this.mathField.latex() != "" &&
+            this.mathField.latex() != this.undoStack[this.undoStack.length - 1]
+        ) {
+            this.undoStack.push(this.mathField.latex());
+        }
     }
 }
