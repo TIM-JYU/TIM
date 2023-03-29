@@ -64,11 +64,10 @@ type StringPair = [string, string];
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
                 <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
-                <div class="buttons-container" [hidden]="!buttonsVisible" >
+                <div class="buttons-container" class="math display" [hidden]="!buttonsVisible" >
                     <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
-                     ><img src="{{item.svg}}" alt="{{item.text}}"/></button>
+                     >{{item.display}}</button>
                 </div>
-
                 <div class="fields">
                     <div *ngFor="let field of fields; let i=index;" class="field">
                         <cs-formula-field 
