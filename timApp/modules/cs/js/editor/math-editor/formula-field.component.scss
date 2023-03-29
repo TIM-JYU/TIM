@@ -18,11 +18,13 @@
 .active-visual-input {
     min-height: 60px;
     border-color: black;
+    width: 50%;
 }
 
 .formula-area {
     padding: 0.25em;
     font-family: "Courier New", Courier, serif;
+    width: 50%;
 }
 
 .formula-container {
@@ -31,8 +33,7 @@
 
 .active-field {
     display: flex;
-    flex-direction: column;
-    row-gap: 0.5em;
+    flex-direction: row;
     padding: 0.3em;
     border: 2px solid #004494;
 }
