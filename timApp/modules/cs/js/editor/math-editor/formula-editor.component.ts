@@ -455,21 +455,33 @@ export class FormulaEditorComponent {
      * Sets the active field to the line with cursor
      */
     setLineInFormula() {
-        const original = this.editor.content;
         const endI = this.cursorLocation;
+        const before = this.oldContent.before;
+        const beginParenthesis = this.existingParenthesis[0];
+        if (
+            endI >=
+            before.length +
+                this.oldContent.editing.length -
+                this.existingParenthesis[1].length
+        ) {
+            return;
+        }
+        if (endI <= before.length + beginParenthesis.length) {
+            this.activeFieldsIndex = 0;
+            return;
+        }
+
+        const original = this.editor.content;
         const text =
             original[endI] === "\n"
                 ? original.slice(0, endI)
                 : original.slice(0, endI + 1);
 
-        const parenthesisNewLine = this.existingParenthesis[0].includes("\n")
-            ? 1
-            : 0;
-        console.log(
+        const parenthesisNewLine = beginParenthesis.includes("\n") ? 1 : 0;
+        this.activeFieldsIndex =
             text.split("\n").length -
-                this.oldContent.before.split("\n").length -
-                parenthesisNewLine
-        );
+            before.split("\n").length -
+            parenthesisNewLine;
     }
 
     /**
