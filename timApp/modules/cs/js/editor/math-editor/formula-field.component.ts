@@ -46,7 +46,9 @@ export type Edit = {
                     (keyup.shift.tab)="handleFocus()"
                     (click)="handleFocus()"
                     (focus)="handleFocus()"
-                    (keyup)="handleVisualFocus()">
+                    (keyup)="handleVisualFocus()"
+                    (keydown.control.z)="handleUndo()"
+                    (keydown.control.y)="handleRedo()">
             </span>
 
             <textarea name="math-editor-output" #latexInput cols="30" 
@@ -57,7 +59,9 @@ export type Edit = {
                       [formControl]="latexInputControl"
                       placeholder="Write LaTeX" i18n-placeholder
                       class="formula-area"
-                      (focus)="handleLatexFocus()">
+                      (focus)="handleLatexFocus()"
+                      (keydown.control.z)="handleUndo()"
+                      (keydown.control.y)="handleRedo()">
             </textarea>                        
         </div>
 
@@ -75,6 +79,9 @@ export class FormulaFieldComponent {
     mathField!: MathFieldMethods;
 
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
+
+    undoStack: string[] = [];
+    redoStack: string[] = [];
 
     @Input() id!: number;
 
@@ -129,6 +136,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
+            this.updateUndoRedoStacks();
         }
     }
 
@@ -198,6 +206,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
+            //this.updateUndoRedoStacks();
         }
     }
 
@@ -220,5 +229,35 @@ export class FormulaFieldComponent {
             latex: this.latexInputControl.value ?? "",
             id: this.id,
         });
+    }
+
+    handleUndo() {
+        const temp = this.undoStack.pop();
+        if (temp != undefined) {
+            this.redoStack.push(temp);
+        }
+        const temp2 = this.undoStack.pop();
+        if (temp2 != undefined) {
+            this.mathField.latex(temp2);
+        } else {
+            this.mathField.latex("");
+        }
+    }
+
+    handleRedo() {
+        const temp = this.redoStack.pop();
+        if (temp != undefined) {
+            this.undoStack.push(this.mathField.latex());
+            this.mathField.latex(temp);
+        }
+    }
+
+    updateUndoRedoStacks() {
+        if (
+            this.mathField.latex() != "" &&
+            this.mathField.latex() != this.undoStack[this.undoStack.length - 1]
+        ) {
+            this.undoStack.push(this.mathField.latex());
+        }
     }
 }
