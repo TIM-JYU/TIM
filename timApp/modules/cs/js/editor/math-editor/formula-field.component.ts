@@ -206,7 +206,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
-            // this.updateUndoRedoStacks();
+            this.updateUndoRedoStacks();
         }
     }
 
@@ -239,8 +239,10 @@ export class FormulaFieldComponent {
         const temp2 = this.undoStack.pop();
         if (temp2 != undefined) {
             this.mathField.latex(temp2);
+            this.latexInputControl.setValue(temp2);
         } else {
             this.mathField.latex("");
+            this.latexInputControl.setValue("");
         }
     }
 
@@ -249,6 +251,7 @@ export class FormulaFieldComponent {
         if (temp != undefined) {
             this.undoStack.push(this.mathField.latex());
             this.mathField.latex(temp);
+            this.latexInputControl.setValue(temp);
         }
     }
 
