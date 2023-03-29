@@ -3839,7 +3839,7 @@ ${fhtml}
                     | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
                 </p>
             </div>
-            <div class="csUploadContent" *ngIf="upload">
+            <div class="csUploadContent" *ngIf="upload && !this.formulaEditor">
                 <file-select-manager class="small"
                                      [dragAndDrop]="dragAndDrop"
                                      [uploadUrl]="uploadUrl"
@@ -3856,11 +3856,22 @@ ${fhtml}
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
             <div *ngIf="formulaEditor">
+                <div class="button-menu-container">
                     <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorAddFormula()" i18n title="Ctrl+e">Add formula</button>
                     <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorEditFormula()" i18n>Edit formula</button>
+                    <file-select-manager class="small"
+                             [dragAndDrop]="dragAndDrop"
+                             [uploadUrl]="uploadUrl"
+                             [stem]="uploadstem"
+                             (file)="onFileLoad($event)"
+                             (upload)="onUploadResponse($event)"
+                             (uploadDone)="onUploadDone($event)">
+                    </file-select-manager>                    
                     <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet" target="_blank">                
-                        <span class="glyphicon glyphicon-question-sign" title="Instructions" i18n-title></span>
+                        <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions" i18n-title></span>
                     </a>
+                </div>
+
             </div>
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
