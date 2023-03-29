@@ -206,7 +206,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
-            //this.updateUndoRedoStacks();
+            // this.updateUndoRedoStacks();
         }
     }
 
