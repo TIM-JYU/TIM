@@ -63,9 +63,9 @@ type StringPair = [string, string];
     template: `
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
-                <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">formulas</button>
-                <div class="buttons-container" class="math display" [hidden]="!buttonsVisible" >
-                    <button class="symbolButton" title="{{item.text}}" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
+                <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
+                <div class="buttons-container math display" [hidden]="!buttonsVisible" >
+                    <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
                      >{{item.display}}</button>
                 </div>
                 <div class="fields">
@@ -92,7 +92,7 @@ type StringPair = [string, string];
                     </div>
 
                     <label class="font-weight-normal">
-                        <input type="checkbox" [formControl]="isMultilineFormulaControl">
+                        <input type="checkbox" [(ngModel)]="isMultilineFormula" (ngModelChange)="onMultilineFormulaChange()">
                         <ng-container i18n>Multiline</ng-container>
                     </label>
                 </div>
@@ -102,8 +102,10 @@ type StringPair = [string, string];
     `,
     styleUrls: ["./formula-editor.component.scss"],
 })
-export class FormulaEditorComponent implements AfterViewInit {
+export class FormulaEditorComponent {
     oldContent: OldContent = {before: "", editing: "", after: ""};
+
+    formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
 
     fields!: FieldType[];
 
@@ -115,7 +117,7 @@ export class FormulaEditorComponent implements AfterViewInit {
     @Output() okClose = new EventEmitter<void>();
     @Output() cancelClose = new EventEmitter<void>();
 
-    isMultilineFormulaControl = new FormControl(true);
+    isMultilineFormula = true;
 
     @Input() editor!: IEditor;
 
@@ -137,7 +139,7 @@ export class FormulaEditorComponent implements AfterViewInit {
                 this.fields = [{latex: ""}];
                 this.activeFieldsIndex = 0;
                 const isMulti = this.getInitialMultilineSetting();
-                this.isMultilineFormulaControl.setValue(isMulti);
+                this.isMultilineFormula = isMulti;
             }
 
             // this.cd.detectChanges();
@@ -160,6 +162,7 @@ export class FormulaEditorComponent implements AfterViewInit {
     // Array containing default LaTeX-commands for formula buttons
     formulaArray = formulas;
     buttonsVisible = false;
+    showFormulasText = "Show formulas";
 
     /**
      * Changes buttons to visible or not visible
@@ -167,6 +170,11 @@ export class FormulaEditorComponent implements AfterViewInit {
      */
     setButtonsVisible(isVisible: boolean) {
         this.buttonsVisible = !isVisible;
+        if (this.buttonsVisible) {
+            this.showFormulasText = "Hide formulas";
+        } else {
+            this.showFormulasText = "Show formulas";
+        }
     }
 
     /**
@@ -180,7 +188,7 @@ export class FormulaEditorComponent implements AfterViewInit {
             ...this.fields.slice(this.activeFieldsIndex + 1),
         ];
         this.activeFieldsIndex++;
-        this.isMultilineFormulaControl.setValue(this.fields.length > 1);
+        this.isMultilineFormula = this.fields.length > 1;
     }
 
     /**
@@ -200,7 +208,7 @@ export class FormulaEditorComponent implements AfterViewInit {
             this.activeFieldsIndex--;
         }
 
-        this.isMultilineFormulaControl.setValue(this.fields.length > 1);
+        this.isMultilineFormula = this.fields.length > 1;
     }
 
     useExistingParenthesis = false;
@@ -214,7 +222,7 @@ export class FormulaEditorComponent implements AfterViewInit {
         }
         this.fields[res.id].latex = res.latex;
         this.updateFormulaToEditor();
-        this.isMultilineFormulaControl.setValue(this.fields.length > 1);
+        this.isMultilineFormula = this.fields.length > 1;
         this.activeFieldsIndex = res.id;
     }
 
@@ -513,7 +521,7 @@ export class FormulaEditorComponent implements AfterViewInit {
                 this.fields = this.getMultilineFormulaLines(formula);
 
                 // update formula editor values
-                this.isMultilineFormulaControl.setValue(true);
+                this.isMultilineFormula = true;
             }
             // start editing an inline formula
             else {
@@ -525,7 +533,7 @@ export class FormulaEditorComponent implements AfterViewInit {
 
                 this.fields = [{latex: text.slice(leftIndex + 1, rightIndex)}];
                 // update formula editor values
-                this.isMultilineFormulaControl.setValue(false);
+                this.isMultilineFormula = false;
             }
             return true;
         }
@@ -544,13 +552,11 @@ export class FormulaEditorComponent implements AfterViewInit {
         this.useExistingParenthesis = false;
     }
 
-    ngAfterViewInit() {
-        this.isMultilineFormulaControl.valueChanges.subscribe((value) => {
-            if (this.useExistingParenthesis) {
-                this.resetUsingParenthesis();
-            }
-            this.updateFormulaToEditor();
-        });
+    onMultilineFormulaChange() {
+        if (this.useExistingParenthesis) {
+            this.resetUsingParenthesis();
+        }
+        this.updateFormulaToEditor();
     }
 
     handleDialogEvents(e: KeyboardEvent) {
@@ -590,22 +596,18 @@ export class FormulaEditorComponent implements AfterViewInit {
      * Updates editor text with current formula text
      */
     updateFormulaToEditor() {
-        if (this.isMultilineFormulaControl.value !== null) {
-            const isMultiline =
-                (this.useExistingParenthesis &&
-                    this.existingParenthesis[0] === "$$") ||
-                this.isMultilineFormulaControl.value;
-            const formulaLatex = this.formatLatex(isMultiline);
-            // If nothing is typed then just show original content
-            if (formulaLatex === undefined) {
-                this.editor.content =
-                    this.oldContent.before + this.oldContent.after;
-            } else {
-                this.editor.content =
-                    this.oldContent.before +
-                    formulaLatex +
-                    this.oldContent.after;
-            }
+        const isMultiline =
+            (this.useExistingParenthesis &&
+                this.existingParenthesis[0] === "$$") ||
+            this.isMultilineFormula;
+        const formulaLatex = this.formatLatex(isMultiline);
+        // If nothing is typed then just show original content
+        if (formulaLatex === undefined) {
+            this.editor.content =
+                this.oldContent.before + this.oldContent.after;
+        } else {
+            this.editor.content =
+                this.oldContent.before + formulaLatex + this.oldContent.after;
         }
     }
 
@@ -664,20 +666,21 @@ export class FormulaEditorComponent implements AfterViewInit {
         }
         if (activeField.activeEditor === ActiveEditorType.Latex) {
             const startPos =
-                activeField.latexInput.nativeElement.selectionStart;
-            const endPos = activeField.latexInput.nativeElement.selectionEnd;
-            const oldValue = activeField.latexInput.nativeElement.value;
+                activeField.latexInputElement.nativeElement.selectionStart;
+            const endPos =
+                activeField.latexInputElement.nativeElement.selectionEnd;
+            const oldValue = activeField.latexInputElement.nativeElement.value;
             const newValue =
                 oldValue.substring(0, startPos) +
                 formula +
                 oldValue.substring(endPos, oldValue.length);
-            activeField.latexInputControl.setValue(newValue);
-            activeField.latexInput.nativeElement.selectionStart =
+            activeField.latexInput = newValue;
+            activeField.latexInputElement.nativeElement.selectionStart =
                 startPos + newValue.length;
-            activeField.latexInput.nativeElement.selectionEnd =
+            activeField.latexInputElement.nativeElement.selectionEnd =
                 endPos + newValue.length;
             activeField.handleLatexInput();
-            activeField.latexInput.nativeElement.focus();
+            activeField.latexInputElement.nativeElement.focus();
         } else {
             activeField.mathField.write(formula);
             activeField.mathField.focus();
