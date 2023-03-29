@@ -24,13 +24,7 @@ import {FormulaFieldComponent} from "./math-editor/formula-field.component";
         FormulaFieldComponent,
         FormulaEditorComponent,
     ],
-    imports: [
-        CommonModule,
-        FormsModule,
-        TimUtilityModule,
-        CsUtilityModule,
-        ReactiveFormsModule,
-    ],
+    imports: [CommonModule, FormsModule, TimUtilityModule, CsUtilityModule],
     exports: [
         CountBoardComponent,
         EditorComponent,
