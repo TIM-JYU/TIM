@@ -63,9 +63,9 @@ type StringPair = [string, string];
     template: `
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
-                <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
+                <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">formulas</button>
                 <div class="buttons-container" class="math display" [hidden]="!buttonsVisible" >
-                    <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
+                    <button class="symbolButton" title="{{item.text}}" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
                      >{{item.display}}</button>
                 </div>
                 <div class="fields">
@@ -104,8 +104,6 @@ type StringPair = [string, string];
 })
 export class FormulaEditorComponent implements AfterViewInit {
     oldContent: OldContent = {before: "", editing: "", after: ""};
-
-    formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
 
     fields!: FieldType[];
 
@@ -162,7 +160,6 @@ export class FormulaEditorComponent implements AfterViewInit {
     // Array containing default LaTeX-commands for formula buttons
     formulaArray = formulas;
     buttonsVisible = false;
-    showFormulasText = "Show formulas";
 
     /**
      * Changes buttons to visible or not visible
@@ -170,11 +167,6 @@ export class FormulaEditorComponent implements AfterViewInit {
      */
     setButtonsVisible(isVisible: boolean) {
         this.buttonsVisible = !isVisible;
-        if (this.buttonsVisible) {
-            this.showFormulasText = "Hide formulas";
-        } else {
-            this.showFormulasText = "Show formulas";
-        }
     }
 
     /**
