@@ -49,7 +49,7 @@ type FieldType = {
 /**
  * wrapper for pressed button text
  * Object wrapping is necessary to
- * make angular produce a event for each
+ * make angular produce an event for each
  * button press.
  */
 type ButtonState = {
@@ -104,11 +104,17 @@ type StringPair = [string, string];
 export class FormulaEditorComponent implements AfterViewInit {
     oldContent: OldContent = {before: "", editing: "", after: ""};
 
-    formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
-
     fields!: FieldType[];
 
     activeFieldsIndex: number = 0;
+
+    cursorLocation: number = -1;
+
+    useExistingParenthesis: boolean = false;
+
+    keepExistingParenthesis: boolean = false;
+
+    existingParenthesis: StringPair = ["", ""];
 
     @ViewChild("formulaEditorDialog")
     formulaEditorDialog!: ElementRef<HTMLDivElement>;
@@ -132,6 +138,7 @@ export class FormulaEditorComponent implements AfterViewInit {
         // became visible so save what was in editor
         if (isVis) {
             this.parseOldContent(this.editor.content);
+            this.cursorLocation = this.oldContent.before.length;
             const isEditing = this.parseEditedFormula();
             // initialize adding new formula
             if (!isEditing) {
@@ -140,8 +147,6 @@ export class FormulaEditorComponent implements AfterViewInit {
                 const isMulti = this.getInitialMultilineSetting();
                 this.isMultilineFormulaControl.setValue(isMulti);
             }
-
-            // this.cd.detectChanges();
         }
     }
     private isVisible = false;
@@ -156,6 +161,7 @@ export class FormulaEditorComponent implements AfterViewInit {
             this.addFormula(value);
         }
     }
+
     private buttonSymbol: ButtonState = {text: ""};
 
     // Array containing default LaTeX-commands for formula buttons
@@ -188,6 +194,7 @@ export class FormulaEditorComponent implements AfterViewInit {
         ];
         this.activeFieldsIndex++;
         this.isMultilineFormulaControl.setValue(this.fields.length > 1);
+        this.useExistingParenthesis = false;
     }
 
     /**
@@ -208,17 +215,14 @@ export class FormulaEditorComponent implements AfterViewInit {
         }
 
         this.isMultilineFormulaControl.setValue(this.fields.length > 1);
+        this.useExistingParenthesis = false;
     }
-
-    useExistingParenthesis = false;
-    existingParenthesis: StringPair = ["", ""];
-    startCounter = 1;
 
     constructor(private cd: ChangeDetectorRef) {}
     handleEdited(res: Edit) {
         this.fields[res.id].latex = res.latex;
         this.updateFormulaToEditor();
-        this.isMultilineFormulaControl.setValue(this.fields.length > 1);
+        //this.isMultilineFormulaControl.setValue(this.fields.length > 1);
         this.activeFieldsIndex = res.id;
     }
 
@@ -261,7 +265,7 @@ export class FormulaEditorComponent implements AfterViewInit {
      * oldContent parts
      */
     getCursorLocation() {
-        return this.oldContent.before.length;
+        return this.cursorLocation;
     }
 
     /**
@@ -396,10 +400,6 @@ export class FormulaEditorComponent implements AfterViewInit {
         allParenthesis: FormulaTuple[],
         cursorIndex: number
     ): FormulaTuple | undefined {
-        let leftIndex = -1;
-        let rightIndex = -1;
-        let isMultiLine = FormulaType.Inline;
-
         // check if cursor is inside any parenthesis
         for (const [formulaType, startI, endI] of allParenthesis) {
             // parenthesis is completely after cursor
@@ -410,39 +410,19 @@ export class FormulaEditorComponent implements AfterViewInit {
             if (endI < cursorIndex) {
                 continue;
             }
-            if (formulaType === FormulaType.Inline) {
-                leftIndex = startI;
-                rightIndex = endI;
-                isMultiLine = FormulaType.Inline;
-                break;
-            }
-            if (formulaType === FormulaType.Multi) {
-                leftIndex = startI;
-                rightIndex = endI;
-                isMultiLine = FormulaType.Multi;
-                break;
-            }
+            return [formulaType, startI, endI];
         }
-        if (leftIndex === -1 || rightIndex === -1) {
-            return undefined;
-        }
-        return [isMultiLine, leftIndex, rightIndex];
+        return undefined;
     }
 
     /**
-     * https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
      * trim character from start and end
      * @param str string to trim
      * @param ch character to trim
      */
-    trimFromStartAndEnd(str: string, ch: string): string {
+    trimCharFromEnd(str: string, ch: string): string {
         let start = 0;
         let end = str.length;
-
-        while (start < end && str[start] === ch) {
-            ++start;
-        }
-
         while (end > start && str[end - 1] === ch) {
             --end;
         }
@@ -456,8 +436,28 @@ export class FormulaEditorComponent implements AfterViewInit {
      */
     getMultilineFormulaLines(formula: string): FieldType[] {
         return formula.split("\n").map((line) => {
-            return {latex: this.trimFromStartAndEnd(line, "\\")};
+            return {latex: this.trimCharFromEnd(line, "\\")};
         });
+    }
+
+    /**
+     * Sets the active field to the line with cursor
+     */
+    setLineInFormula() {
+        const original = this.editor.content;
+        const endI = this.cursorLocation;
+        const text =
+            original[endI] === "\n"
+                ? original.slice(0, endI)
+                : original.slice(0, endI + 1);
+
+        const parenthesisNewLine = this.existingParenthesis[0].includes("\n")
+            ? 1
+            : 0;
+        this.activeFieldsIndex =
+            text.split("\n").length -
+            this.oldContent.before.split("\n").length -
+            parenthesisNewLine;
     }
 
     /**
@@ -465,32 +465,31 @@ export class FormulaEditorComponent implements AfterViewInit {
      * @return true if editing else false
      */
     parseEditedFormula(): boolean {
-        // variables to keep track of editor content
+        // check if cursor is inside a formula
         const text = this.editor.content;
         const allParenthesis = this.findParenthesisFromString(text);
         const currentFormula = this.parseCurrentFormula(
             allParenthesis,
             this.getCursorLocation()
         );
-        // wasn't inside a formula
+        // cursor wasn't inside a formula
         if (currentFormula === undefined) {
             return false;
         }
 
         const leftIndex = currentFormula[1];
         const rightIndex = currentFormula[2];
-
-        // if inside formula, add it to formula editor for modifying
-        // otherwise do nothing and keep adding a new formula
+        // if inside formula, add it to formula editor for editing
         if (leftIndex >= 0 && rightIndex >= 0) {
             this.useExistingParenthesis = true;
+            this.keepExistingParenthesis = true;
             // start editing a multiline formula
             if (currentFormula[0] === FormulaType.Multi) {
                 // update old content
                 this.oldContent.before = text.slice(0, leftIndex);
                 this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
                 this.oldContent.after = text.slice(rightIndex + 1);
-                // find formula and its parenthesis
+                // separate formula and parenthesis
                 let formula = this.oldContent.editing.slice(2, -2);
                 let trimmed = formula.trimStart();
                 let lenDiff = formula.length - trimmed.length;
@@ -502,46 +501,38 @@ export class FormulaEditorComponent implements AfterViewInit {
                 this.existingParenthesis[1] =
                     "" + formula.slice(formula.length - lenDiff) + "$$";
                 formula = trimmed;
+                // update formula editor content and values
                 this.fields = this.getMultilineFormulaLines(formula);
-
-                // update formula editor values
-                this.isMultilineFormulaControl.setValue(true);
+                setTimeout(() => {
+                    this.isMultilineFormulaControl.setValue(true);
+                    this.setLineInFormula();
+                }, 30);
             }
             // start editing an inline formula
             else {
-                // update old content
+                // update old content and current parenthesis
                 this.oldContent.before = text.slice(0, leftIndex);
                 this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
                 this.oldContent.after = text.slice(rightIndex + 1);
                 this.existingParenthesis = ["$", "$"];
-
+                // update formula editor content and values
                 this.fields = [{latex: text.slice(leftIndex + 1, rightIndex)}];
-                // update formula editor values
-                this.isMultilineFormulaControl.setValue(false);
+                setTimeout(() => {
+                    this.isMultilineFormulaControl.setValue(false);
+                }, 30);
             }
             return true;
         }
         return false;
     }
 
-    /**
-     * Switches from existing parenthesis to user chosen
-     * parenthesis when editing a formula
-     */
-    resetUsingParenthesis() {
-        if (this.startCounter === 1) {
-            this.startCounter--;
-            return;
-        }
-        this.useExistingParenthesis = false;
-    }
-
     ngAfterViewInit() {
         this.isMultilineFormulaControl.valueChanges.subscribe((value) => {
-            if (this.useExistingParenthesis) {
-                this.resetUsingParenthesis();
+            if (!this.keepExistingParenthesis) {
+                this.useExistingParenthesis = false;
             }
             this.updateFormulaToEditor();
+            this.keepExistingParenthesis = false;
         });
 
         this.formulaEditorDialog.nativeElement.addEventListener(
@@ -572,6 +563,9 @@ export class FormulaEditorComponent implements AfterViewInit {
             if (latex.length === 0) {
                 return undefined;
             }
+            if (this.useExistingParenthesis) {
+                return `${this.existingParenthesis[0]}${latex}${this.existingParenthesis[1]}`;
+            }
             return `${wrapSymbol}\n${latex}\n${wrapSymbol}`;
         }
         const latex = this.fields[0].latex;
@@ -586,10 +580,7 @@ export class FormulaEditorComponent implements AfterViewInit {
      */
     updateFormulaToEditor() {
         if (this.isMultilineFormulaControl.value !== null) {
-            const isMultiline =
-                (this.useExistingParenthesis &&
-                    this.existingParenthesis[0] === "$$") ||
-                this.isMultilineFormulaControl.value;
+            const isMultiline = this.isMultilineFormulaControl.value;
             const formulaLatex = this.formatLatex(isMultiline);
             // If nothing is typed then just show original content
             if (formulaLatex === undefined) {
@@ -616,7 +607,9 @@ export class FormulaEditorComponent implements AfterViewInit {
 
     clearFields() {
         this.fields = [];
-        this.startCounter = 1;
+        this.useExistingParenthesis = false;
+        this.keepExistingParenthesis = false;
+        this.cursorLocation = -1;
     }
 
     async handleFormulaCancel() {
