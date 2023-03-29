@@ -82,6 +82,7 @@ export class FormulaFieldComponent {
 
     undoStack: string[] = [];
     redoStack: string[] = [];
+    defaultValue = "";
 
     @Input() id!: number;
 
@@ -163,6 +164,9 @@ export class FormulaFieldComponent {
         };
         this.mathField = this.MQ.MathField(elem, config);
         this.mathField.latex(this.initialValue);
+        if (this.initialValue != undefined) {
+            this.defaultValue = this.initialValue;
+        }
     }
 
     /**
@@ -241,9 +245,10 @@ export class FormulaFieldComponent {
             this.mathField.latex(temp2);
             this.latexInputControl.setValue(temp2);
         } else {
-            this.mathField.latex("");
-            this.latexInputControl.setValue("");
+            this.mathField.latex(this.defaultValue);
+            this.latexInputControl.setValue(this.defaultValue);
         }
+        // this.updateUndoRedoStacks();
     }
 
     handleRedo() {
@@ -253,6 +258,7 @@ export class FormulaFieldComponent {
             this.mathField.latex(temp);
             this.latexInputControl.setValue(temp);
         }
+        // this.updateUndoRedoStacks();
     }
 
     updateUndoRedoStacks() {
