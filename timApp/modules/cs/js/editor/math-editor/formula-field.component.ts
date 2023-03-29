@@ -137,7 +137,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
-            this.updateUndoRedoStacks();
+            this.updateUndoStack();
         }
     }
 
@@ -210,7 +210,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
-            this.updateUndoRedoStacks();
+            this.updateUndoStack();
         }
     }
 
@@ -261,7 +261,7 @@ export class FormulaFieldComponent {
         // this.updateUndoRedoStacks();
     }
 
-    updateUndoRedoStacks() {
+    updateUndoStack() {
         if (
             this.mathField.latex() != "" &&
             this.mathField.latex() != this.undoStack[this.undoStack.length - 1]
