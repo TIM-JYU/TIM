@@ -113,8 +113,6 @@ export class FormulaEditorComponent {
 
     useExistingParenthesis: boolean = false;
 
-    keepExistingParenthesis: boolean = false;
-
     existingParenthesis: StringPair = ["", ""];
 
     @ViewChild("formulaEditorDialog")
@@ -469,10 +467,11 @@ export class FormulaEditorComponent {
         const parenthesisNewLine = this.existingParenthesis[0].includes("\n")
             ? 1
             : 0;
-        this.activeFieldsIndex =
+        console.log(
             text.split("\n").length -
-            this.oldContent.before.split("\n").length -
-            parenthesisNewLine;
+                this.oldContent.before.split("\n").length -
+                parenthesisNewLine
+        );
     }
 
     /**
@@ -497,7 +496,6 @@ export class FormulaEditorComponent {
         // if inside formula, add it to formula editor for editing
         if (leftIndex >= 0 && rightIndex >= 0) {
             this.useExistingParenthesis = true;
-            this.keepExistingParenthesis = true;
             // start editing a multiline formula
             if (currentFormula[0] === FormulaType.Multi) {
                 // update old content
@@ -542,11 +540,8 @@ export class FormulaEditorComponent {
     }
 
     onMultilineFormulaChange() {
-        if (!this.keepExistingParenthesis) {
-                this.useExistingParenthesis = false;
-            }
-            this.updateFormulaToEditor();
-            this.keepExistingParenthesis = false;
+        this.useExistingParenthesis = false;
+        this.updateFormulaToEditor();
     }
 
     handleDialogEvents(e: KeyboardEvent) {
@@ -614,7 +609,6 @@ export class FormulaEditorComponent {
     clearFields() {
         this.fields = [];
         this.useExistingParenthesis = false;
-        this.keepExistingParenthesis = false;
         this.cursorLocation = -1;
     }
 
