@@ -985,7 +985,7 @@ export class CsController extends CsBase implements ITimComponent {
     muokattu: boolean;
     noeditor!: boolean;
     formulaEditorOpen = false;
-    currentSymbol = "";
+    currentSymbol = {text: ""};
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
     postcode?: string;
@@ -2919,7 +2919,7 @@ ${fhtml}
         const text = s.replace(/\\n/g, "\n");
         // write the text to formulaeditor if its enabled and open
         if (this.formulaEditor && this.formulaEditorOpen) {
-            this.currentSymbol = text;
+            this.currentSymbol = {text: text};
         } else {
             this.editor?.insert?.(text);
             this.editor?.focus();
@@ -3865,8 +3865,8 @@ ${fhtml}
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
                     <cs-formula-editor 
-                            (okEvent)="onFormulaEditorCloseOk()"
-                            (cancelEvent)="onFormulaEditorCloseCancel()"
+                            (okClose)="onFormulaEditorCloseOk()"
+                            (cancelClose)="onFormulaEditorCloseCancel()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
                             [currentSymbol]="currentSymbol"
