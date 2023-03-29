@@ -49,12 +49,12 @@ export type Edit = {
                     (keyup)="handleVisualFocus()">
             </span>
 
-            <textarea name="math-editor-output" #latexInput cols="30" 
+            <textarea name="math-editor-output" #latexInputElement cols="30" 
                       *ngIf="isActive" 
                       rows="{{rows}}"
                       (click)="handleLatexFocus()"
                       (keyup)="handleLatexInput()"
-                      [formControl]="latexInputControl"
+                      [(ngModel)]="latexInput"
                       placeholder="Write LaTeX" i18n-placeholder
                       class="formula-area"
                       (focus)="handleLatexFocus()">
@@ -65,8 +65,9 @@ export type Edit = {
     styleUrls: ["./formula-field.component.scss"],
 })
 export class FormulaFieldComponent {
-    latexInputControl = new FormControl("");
-    @ViewChild("latexInput") latexInput!: ElementRef<HTMLTextAreaElement>;
+    latexInput = "";
+    @ViewChild("latexInputElement")
+    latexInputElement!: ElementRef<HTMLTextAreaElement>;
 
     @ViewChild("visualInput") visualInput!: ElementRef<HTMLElement>;
 
@@ -107,12 +108,8 @@ export class FormulaFieldComponent {
      * its content
      */
     updateTextareaRows() {
-        const latex = this.latexInputControl.value;
-        if (latex === null) {
-            return;
-        }
         // adjust rows in textarea to match how many are needed
-        this.rows = latex.split("\n").length;
+        this.rows = this.latexInput.split("\n").length;
     }
 
     /**
@@ -123,9 +120,9 @@ export class FormulaFieldComponent {
     editHandler(field: MathFieldMethods) {
         if (this.activeEditor === ActiveEditorType.Visual) {
             const latex = field.latex();
-            this.latexInputControl.setValue(latex);
+            this.latexInput = latex;
             this.edited.emit({
-                latex: this.latexInputControl.value ?? "",
+                latex: this.latexInput,
                 id: this.id,
             });
             this.updateTextareaRows();
@@ -188,13 +185,10 @@ export class FormulaFieldComponent {
      * is the one being typed in.
      */
     handleLatexInput() {
-        if (
-            this.activeEditor === ActiveEditorType.Latex &&
-            this.latexInputControl.value !== null
-        ) {
-            this.mathField.latex(this.latexInputControl.value);
+        if (this.activeEditor === ActiveEditorType.Latex) {
+            this.mathField.latex(this.latexInput);
             this.edited.emit({
-                latex: this.latexInputControl.value ?? "",
+                latex: this.latexInput,
                 id: this.id,
             });
             this.updateTextareaRows();
@@ -206,10 +200,7 @@ export class FormulaFieldComponent {
     }
 
     backspacePressed() {
-        if (
-            this.latexInputControl.value !== null &&
-            this.latexInputControl.value.length === 0
-        ) {
+        if (this.latexInput.length === 0) {
             this.backspace.emit(this.id);
         }
     }
@@ -217,7 +208,7 @@ export class FormulaFieldComponent {
     handleFocus() {
         this.activeEditor = ActiveEditorType.Visual;
         this.focus.emit({
-            latex: this.latexInputControl.value ?? "",
+            latex: this.latexInput,
             id: this.id,
         });
     }
