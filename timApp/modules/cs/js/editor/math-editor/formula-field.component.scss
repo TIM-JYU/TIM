@@ -8,14 +8,23 @@
 
 .visual-input {
     width: 100%;
+    border-color: lightgrey;
+}
+
+.visual-input:hover {
+    border-color: black;
 }
 
 .active-visual-input {
     min-height: 60px;
+    border-color: black;
+    width: 50%;
 }
 
 .formula-area {
     padding: 0.25em;
+    font-family: "Courier New", Courier, serif;
+    width: 50%;
 }
 
 .formula-container {
@@ -24,9 +33,7 @@
 
 .active-field {
     display: flex;
-    flex-direction: column;
-    row-gap: 1em;
-    padding: 0.25em;
-    border: 1px solid black;
-    border-radius: 5px;
+    flex-direction: row;
+    padding: 0.3em;
+    border: 2px solid #004494;
 }

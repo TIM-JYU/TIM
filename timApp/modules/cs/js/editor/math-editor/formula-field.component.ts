@@ -42,20 +42,19 @@ export type Edit = {
                     class="visual-input"
                     [class.active-visual-input]="isActive"
                     #visualInput 
-                    (keyup.enter)="enterPressed()" 
-                    (keyup.backspace)="backspacePressed()"
                     (keyup.tab)="handleFocus()"
                     (keyup.shift.tab)="handleFocus()"
                     (click)="handleFocus()"
-                    (focus)="handleFocus()">
+                    (focus)="handleFocus()"
+                    (keyup)="handleVisualFocus()">
             </span>
 
-            <textarea name="math-editor-output" #latexInput cols="30" 
+            <textarea name="math-editor-output" #latexInputElement cols="30" 
                       *ngIf="isActive" 
                       rows="{{rows}}"
                       (click)="handleLatexFocus()"
                       (keyup)="handleLatexInput()"
-                      [formControl]="latexInputControl"
+                      [(ngModel)]="latexInput"
                       placeholder="Write LaTeX" i18n-placeholder
                       class="formula-area"
                       (focus)="handleLatexFocus()">
@@ -66,8 +65,9 @@ export type Edit = {
     styleUrls: ["./formula-field.component.scss"],
 })
 export class FormulaFieldComponent {
-    latexInputControl = new FormControl("");
-    @ViewChild("latexInput") latexInput!: ElementRef<HTMLTextAreaElement>;
+    latexInput = "";
+    @ViewChild("latexInputElement")
+    latexInputElement!: ElementRef<HTMLTextAreaElement>;
 
     @ViewChild("visualInput") visualInput!: ElementRef<HTMLElement>;
 
@@ -98,6 +98,8 @@ export class FormulaFieldComponent {
     @Output() enter = new EventEmitter<number>();
     @Output() backspace = new EventEmitter<number>();
     @Output() focus = new EventEmitter<Edit>();
+    @Output() downArrow = new EventEmitter<number>();
+    @Output() upArrow = new EventEmitter<number>();
 
     rows: number = 2;
 
@@ -106,12 +108,8 @@ export class FormulaFieldComponent {
      * its content
      */
     updateTextareaRows() {
-        const latex = this.latexInputControl.value;
-        if (latex === null) {
-            return;
-        }
         // adjust rows in textarea to match how many are needed
-        this.rows = latex.split("\n").length;
+        this.rows = this.latexInput.split("\n").length;
     }
 
     /**
@@ -122,9 +120,9 @@ export class FormulaFieldComponent {
     editHandler(field: MathFieldMethods) {
         if (this.activeEditor === ActiveEditorType.Visual) {
             const latex = field.latex();
-            this.latexInputControl.setValue(latex);
+            this.latexInput = latex;
             this.edited.emit({
-                latex: this.latexInputControl.value ?? "",
+                latex: this.latexInput,
                 id: this.id,
             });
             this.updateTextareaRows();
@@ -135,24 +133,51 @@ export class FormulaFieldComponent {
         const mq = (await import("vendor/mathquill/mathquill")).default;
         this.MQ = mq.getInterface(2);
         const elem = this.visualInput.nativeElement;
-        elem.addEventListener("click", (_e: MouseEvent) => {
-            this.activeEditor = ActiveEditorType.Visual;
-        });
-        // elem.addEventListener("focusin", (e) => {
-        //    this.handleFocus();
-        // });
+
         const config: MathQuillConfig = {
             spaceBehavesLikeTab: true,
             handlers: {
                 edit: (field: MathFieldMethods) => this.editHandler(field),
+                enter: (field: MathFieldMethods) => this.enterHandler(field),
+                deleteOutOf: (direction, field: MathFieldMethods) => {
+                    this.handleDeleteOutOf(direction, field);
+                },
+                downOutOf: (field: MathFieldMethods) => {
+                    this.downArrow.emit(this.id);
+                },
+                upOutOf: (field: MathFieldMethods) => {
+                    this.upArrow.emit(this.id);
+                },
             },
         };
         this.mathField = this.MQ.MathField(elem, config);
         this.mathField.latex(this.initialValue);
     }
 
+    /**
+     * Enter pressed while not inside environment
+     * like \cases
+     * @param field current field
+     */
+    enterHandler(field: MathFieldMethods) {
+        this.enterPressed();
+    }
+
+    /**
+     * Backspace pressed while field is empty
+     * @param direction indicates which direction movement happens
+     * @param field current field
+     */
+    handleDeleteOutOf(direction: number, field: MathFieldMethods) {
+        this.backspacePressed();
+    }
+
     handleLatexFocus() {
         this.activeEditor = ActiveEditorType.Latex;
+    }
+
+    handleVisualFocus() {
+        this.activeEditor = ActiveEditorType.Visual;
     }
 
     /**
@@ -160,13 +185,10 @@ export class FormulaFieldComponent {
      * is the one being typed in.
      */
     handleLatexInput() {
-        if (
-            this.activeEditor === ActiveEditorType.Latex &&
-            this.latexInputControl.value !== null
-        ) {
-            this.mathField.latex(this.latexInputControl.value);
+        if (this.activeEditor === ActiveEditorType.Latex) {
+            this.mathField.latex(this.latexInput);
             this.edited.emit({
-                latex: this.latexInputControl.value ?? "",
+                latex: this.latexInput,
                 id: this.id,
             });
             this.updateTextareaRows();
@@ -178,17 +200,15 @@ export class FormulaFieldComponent {
     }
 
     backspacePressed() {
-        if (
-            this.latexInputControl.value !== null &&
-            this.latexInputControl.value.length === 0
-        ) {
+        if (this.latexInput.length === 0) {
             this.backspace.emit(this.id);
         }
     }
 
     handleFocus() {
+        this.activeEditor = ActiveEditorType.Visual;
         this.focus.emit({
-            latex: this.latexInputControl.value ?? "",
+            latex: this.latexInput,
             id: this.id,
         });
     }
