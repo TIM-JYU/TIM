@@ -222,7 +222,7 @@ export class FormulaEditorComponent implements AfterViewInit {
     handleEdited(res: Edit) {
         this.fields[res.id].latex = res.latex;
         this.updateFormulaToEditor();
-        //this.isMultilineFormulaControl.setValue(this.fields.length > 1);
+        // this.isMultilineFormulaControl.setValue(this.fields.length > 1);
         this.activeFieldsIndex = res.id;
     }
 
@@ -416,18 +416,17 @@ export class FormulaEditorComponent implements AfterViewInit {
     }
 
     /**
-     * trim character from start and end
+     * trim character from end
      * @param str string to trim
      * @param ch character to trim
      */
     trimCharFromEnd(str: string, ch: string): string {
-        let start = 0;
+        const start = 0;
         let end = str.length;
         while (end > start && str[end - 1] === ch) {
             --end;
         }
-
-        return start > 0 || end < str.length ? str.substring(start, end) : str;
+        return end < str.length ? str.slice(start, end) : str;
     }
 
     /**
