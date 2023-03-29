@@ -5,7 +5,6 @@
  * @date 28.2.2023
  */
 
-import type {AfterViewInit} from "@angular/core";
 import {
     Component,
     ElementRef,
@@ -17,7 +16,6 @@ import {
     ViewChildren,
     ChangeDetectorRef,
 } from "@angular/core";
-import {FormControl} from "@angular/forms";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {IEditor} from "../editor";
 import formulas from "./latex-commands";

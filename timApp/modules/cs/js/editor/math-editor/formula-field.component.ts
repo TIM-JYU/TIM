@@ -13,7 +13,6 @@ import {
     Output,
     ViewChild,
 } from "@angular/core";
-import {FormControl} from "@angular/forms";
 import type {IMathQuill} from "vendor/mathquill/mathquill";
 import type {
     MathFieldMethods,
