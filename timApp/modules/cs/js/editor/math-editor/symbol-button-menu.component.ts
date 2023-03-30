@@ -1,16 +1,5 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import formulas from "./latex-commands";
-import {ActiveEditorType} from "./formula-field.component";
-
-/**
- * wrapper for pressed button text
- * Object wrapping is necessary to
- * make angular produce an event for each
- * button press.
- */
-type ButtonState = {
-    text: string;
-};
 
 @Component({
     selector: "symbol-button-menu",
