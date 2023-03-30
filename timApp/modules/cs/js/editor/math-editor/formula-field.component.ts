@@ -66,11 +66,11 @@ export type Edit = {
             </div>
             
             <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
-                <button type="button" class="btn btn-default" (click)="handleAddLine()" i18n title="Add line below">
+                <button type="button" class="btn btn-default" (click)="handleAddLine()" title="Add line below" i18n-title>
                     <span class="glyphicon glyphicon-plus"></span>
                 </button>
                 
-                <button type="button" class="btn btn-default" (click)="handleRemoveLine()" i18n title="Remove current line">
+                <button type="button" class="btn btn-default" (click)="handleRemoveLine()" title="Remove current line" i18n-title>
                     <span class="glyphicon glyphicon-remove"></span>
                 </button>
             </div>
