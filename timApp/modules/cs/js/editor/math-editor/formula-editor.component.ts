@@ -68,16 +68,18 @@ type StringPair = [string, string];
                 </div>
                 <div class="fields">
                     <div *ngFor="let field of fields; let i=index;" class="field">
-                        <cs-formula-field
-                                [initialValue]="field.latex"
-                                (edited)="handleEdited($event)"
-                                (enter)="addField()"
-                                (backspace)="removeField()"
-                                (focus)="handleFocus($event)"
-                                (upArrow)="handleArrowUp($event)"
-                                (downArrow)="handleArrowDown($event)"
-                                [isActive]="i === activeFieldsIndex"
-                                [id]="i">
+                        <cs-formula-field 
+                            [initialValue]="field.latex" 
+                            (edited)="handleEdited($event)"
+                            (enter)="addField()"
+                            (backspace)="removeField()" 
+                            (focus)="handleFocus($event)"
+                            (upArrow)="handleArrowUp($event)"
+                            (downArrow)="handleArrowDown($event)"
+                            (add)="addField()"
+                            (delete)="removeField()"
+                            [isActive]="i === activeFieldsIndex"
+                            [id]="i">
                         </cs-formula-field>
                     </div>
                 </div>

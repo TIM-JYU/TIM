@@ -3805,8 +3805,7 @@ ${fhtml}
     selector: "cs-runner",
     template: `
         <!--suppress TypeScriptUnresolvedVariable -->
-        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex"
-             [ngStyle]="csRunDivStyle">
+        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex" [ngStyle]="csRunDivStyle">
             <tim-markup-error class="csMarkupError" *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 class="csHeader" *ngIf="header" [innerHTML]="header | purify"></h4>
             <div class="csAllSelector" *ngIf="isAll">
@@ -3817,8 +3816,7 @@ ${fhtml}
                     </select>
                 </div>
             </div>
-            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify" (keydown)="elementSelectAll($event)"
-               tabindex="0"></p>
+            <p [hidden]="formulaEditor && formulaEditorOpen" *ngIf="stem" class="stem" [innerHTML]="stem | purify" (keydown)="elementSelectAll($event)" tabindex="0"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
