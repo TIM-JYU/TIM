@@ -150,7 +150,9 @@ export class FormulaFieldComponent {
      */
     editHandler(field: MathFieldMethods) {
         if (this.activeEditor === ActiveEditorType.Visual) {
-            if (this.undoRedo != this.undoRedoCodes.NOCHANGE) return;
+            if (this.undoRedo != this.undoRedoCodes.NOCHANGE) {
+                return;
+            }
             this.latexInput = field.latex();
             this.edited.emit({
                 latex: this.latexInput,
