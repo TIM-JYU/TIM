@@ -11,6 +11,7 @@ import {ParsonsEditorComponent} from "./parsons";
 import {MathEditorComponent} from "./math-editor/math-editor.component";
 import {FormulaEditorComponent} from "./math-editor/formula-editor.component";
 import {FormulaFieldComponent} from "./math-editor/formula-field.component";
+import {SymbolButtonMenuComponent} from "./math-editor/symbol-button-menu.component";
 
 @NgModule({
     declarations: [
@@ -23,6 +24,7 @@ import {FormulaFieldComponent} from "./math-editor/formula-field.component";
         MathEditorComponent,
         FormulaFieldComponent,
         FormulaEditorComponent,
+        SymbolButtonMenuComponent,
     ],
     imports: [CommonModule, FormsModule, TimUtilityModule, CsUtilityModule],
     exports: [
