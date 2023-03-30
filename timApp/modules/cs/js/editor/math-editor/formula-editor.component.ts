@@ -62,9 +62,9 @@ type StringPair = [string, string];
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
                 <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
-                <div class="buttons-container math display" [hidden]="!buttonsVisible" >
-                    <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
-                     >{{item.display}}</button>
+                <div class="buttons-container math display" [hidden]="!buttonsVisible">
+                    <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)"
+                    >{{item.display}}</button>
                 </div>
                 <div class="fields">
                     <div *ngFor="let field of fields; let i=index;" class="field">
@@ -81,18 +81,19 @@ type StringPair = [string, string];
                             [isActive]="i === activeFieldsIndex"
                             [id]="i">
                         </cs-formula-field>
-                    </div>                    
+                    </div>
                 </div>
 
 
                 <div class="formula-button-container">
                     <div class="formula-buttons">
                         <button class="timButton" (click)="handleFormulaOk()" title="Ctrl+s">Ok</button>
-                        <button class="timButton" (click)="handleFormulaCancel()" i18n title="Esc">Cancel</button>        
+                        <button class="timButton" (click)="handleFormulaCancel()" i18n title="Esc">Cancel</button>
                     </div>
 
                     <label class="font-weight-normal">
-                        <input type="checkbox" [(ngModel)]="isMultilineFormula" (ngModelChange)="onMultilineFormulaChange()">
+                        <input type="checkbox" [(ngModel)]="isMultilineFormula"
+                               (ngModelChange)="onMultilineFormulaChange()">
                         <ng-container i18n>Multiline</ng-container>
                     </label>
                 </div>
@@ -126,6 +127,7 @@ export class FormulaEditorComponent {
     get visible(): boolean {
         return this.isVisible;
     }
+
     set visible(isVis: boolean) {
         this.isVisible = isVis;
         // became visible so save what was in editor
@@ -143,18 +145,21 @@ export class FormulaEditorComponent {
             // this.cd.detectChanges();
         }
     }
+
     private isVisible = false;
 
     @Input()
     get currentSymbol(): ButtonState {
         return this.buttonSymbol;
     }
+
     set currentSymbol(value: ButtonState) {
         this.buttonSymbol = value;
         if (this.fieldComponents !== undefined) {
             this.addFormula(value);
         }
     }
+
     private buttonSymbol: ButtonState = {text: ""};
 
     // Array containing default LaTeX-commands for formula buttons
@@ -214,6 +219,7 @@ export class FormulaEditorComponent {
     startCounter = 1;
 
     constructor(private cd: ChangeDetectorRef) {}
+
     handleEdited(res: Edit) {
         if (res.id < 0 || res.id >= this.fields.length) {
             return;
@@ -557,6 +563,9 @@ export class FormulaEditorComponent {
         this.updateFormulaToEditor();
     }
 
+    /**
+     * Handler for keys being pressed, used for shortcuts to save or close the editor
+     */
     handleDialogEvents(e: KeyboardEvent) {
         if (e.ctrlKey) {
             if (e.key === "s") {

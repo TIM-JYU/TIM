@@ -98,10 +98,12 @@ export class FormulaFieldComponent {
     @Input() id!: number;
 
     @Input() initialValue!: string;
+
     @Input()
     get isActive(): boolean {
         return this.active;
     }
+
     set isActive(value: boolean) {
         this.active = value;
         if (value) {
@@ -110,6 +112,7 @@ export class FormulaFieldComponent {
             }, 50);
         }
     }
+
     private active = false;
 
     @Output() edited = new EventEmitter<Edit>();
@@ -246,32 +249,39 @@ export class FormulaFieldComponent {
         });
     }
 
+    /**
+     * Undo latest change in formula editor.
+     */
     handleUndo() {
         const temp = this.undoStack.pop();
-        if (temp != undefined) {
+        if (temp) {
             this.redoStack.push(temp);
         }
         const temp2 = this.undoStack.pop();
-        if (temp2 != undefined) {
+        if (temp2) {
             this.mathField.latex(temp2);
             this.latexInput = temp2;
         } else {
             this.mathField.latex(this.defaultValue);
             this.latexInput = this.defaultValue;
         }
-        // this.updateUndoRedoStacks();
     }
 
+    /**
+     * Revert last undo in the formula editor.
+     */
     handleRedo() {
         const temp = this.redoStack.pop();
-        if (temp != undefined) {
+        if (temp) {
             this.undoStack.push(this.mathField.latex());
             this.mathField.latex(temp);
             this.latexInput = temp;
         }
-        // this.updateUndoRedoStacks();
     }
 
+    /**
+     * Save previous change, so it can be restored with undo.
+     */
     updateUndoStack() {
         if (
             this.mathField.latex() != "" &&

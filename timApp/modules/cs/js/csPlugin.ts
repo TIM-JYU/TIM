@@ -616,6 +616,7 @@ const UploadedFile = t.type({
     path: t.string,
     type: t.string,
 });
+
 interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 
 const GitDefaultsMarkup = t.partial({
@@ -861,6 +862,7 @@ export class CsBase extends AngularPluginBase<
     get usercode(): string {
         return this.usercode_;
     }
+
     set usercode(str: string) {
         this.usercode_ = str;
     }
@@ -1303,6 +1305,7 @@ export class CsController extends CsBase implements ITimComponent {
     get userinput() {
         return this.userinput_;
     }
+
     set userinput(str: string) {
         const tmp = this.userinput_;
         this.userinput_ = str;
@@ -1315,6 +1318,7 @@ export class CsController extends CsBase implements ITimComponent {
     get userargs() {
         return this.userargs_;
     }
+
     set userargs(str: string) {
         const tmp = this.userargs_;
         this.userargs_ = str;
@@ -1735,6 +1739,7 @@ export class CsController extends CsBase implements ITimComponent {
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
+    // TODO: Remove these 3 identical functions
     onFormulaEditorCloseCancel() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
@@ -1744,7 +1749,6 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     onFormulaEditorEditFormula() {
-        // TODO
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
@@ -3857,25 +3861,31 @@ ${fhtml}
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
             <div *ngIf="formulaEditor">
                 <div class="button-menu-container">
-                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorAddFormula()" i18n title="Ctrl+e">Add formula</button>
-                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorEditFormula()" i18n>Edit formula</button>
+                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorAddFormula()" i18n
+                            title="Ctrl+e">Add formula
+                    </button>
+                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorEditFormula()" i18n>
+                        Edit formula
+                    </button>
                     <file-select-manager class="small"
-                             [dragAndDrop]="dragAndDrop"
-                             [uploadUrl]="uploadUrl"
-                             [stem]="uploadstem"
-                             (file)="onFileLoad($event)"
-                             (upload)="onUploadResponse($event)"
-                             (uploadDone)="onUploadDone($event)">
-                    </file-select-manager>                    
-                    <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet" target="_blank">                
-                        <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions" i18n-title></span>
+                                         [dragAndDrop]="dragAndDrop"
+                                         [uploadUrl]="uploadUrl"
+                                         [stem]="uploadstem"
+                                         (file)="onFileLoad($event)"
+                                         (upload)="onUploadResponse($event)"
+                                         (uploadDone)="onUploadDone($event)">
+                    </file-select-manager>
+                    <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet"
+                       target="_blank">
+                        <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions"
+                              i18n-title></span>
                     </a>
                 </div>
 
             </div>
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
-                    <cs-formula-editor 
+                    <cs-formula-editor
                             (okClose)="onFormulaEditorCloseOk()"
                             (cancelClose)="onFormulaEditorCloseCancel()"
                             [visible]="formulaEditorOpen"
@@ -3922,7 +3932,7 @@ ${fhtml}
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
             <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
-                        (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify" ></button>
+                        (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
                        [maxRows]="maxrows"
@@ -3982,7 +3992,8 @@ ${fhtml}
                           class="inputSmall"
                           style="float: right;"
                           title="Run time in sec {{runtime}}">{{oneruntime}}</span>
-                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2" class="inputSmall" style="float: right;"
+                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2" class="inputSmall"
+                          style="float: right;"
                           title="Put 0 to no wrap">
                 <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()"
                         style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
@@ -4017,7 +4028,7 @@ ${fhtml}
                     <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"></label>
                     <tim-close-button (click)="closeError()"></tim-close-button>
                 </p>
-                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                <a class="copyErrorLink" *ngIf="markup.copyErrorLink"
                    (click)="copyString(error, $event)"
                    title="Copy text to clipboard"
                 >{{markup.copyErrorLink}}</a>
@@ -4030,7 +4041,7 @@ ${fhtml}
                 <p class="pull-right" *ngIf="!markup['noclose']">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
-                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                <a class="copyErrorLink" *ngIf="markup.copyErrorLink"
                    (click)="copyString(fetchError, $event)"
                    title="Copy text to clipboard"
                 >{{markup.copyErrorLink}}</a>
@@ -4039,12 +4050,13 @@ ${fhtml}
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <div class="consoleDiv" *ngIf="result" >
-                <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
+            <div class="consoleDiv" *ngIf="result">
+                <a class="copyConsoleLink" *ngIf="markup.copyConsoleLink"
                    (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
                 >{{markup.copyConsoleLink}}</a>
-                <pre id="resultConsole"  class="console" (keydown)="elementSelectAll($event)" tabindex="0">{{result}}</pre>
+                <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)"
+                     tabindex="0">{{result}}</pre>
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
             <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0">
@@ -4078,8 +4090,10 @@ ${fhtml}
                            [height]="height"
             ></tim-variables> <!-- TODO: why direct markup.jsparam does not work -->
             <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
-            <video class="csVideo" *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls="" autoplay></video>
-            <video class="csAudio" *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
+            <video class="csVideo" *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls=""
+                   autoplay></video>
+            <video class="csAudio" *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true"
+                   width="300"
                    height="40"></video>
             <div *ngIf="docURL" class="docurl">
                 <p class="pull-right">
