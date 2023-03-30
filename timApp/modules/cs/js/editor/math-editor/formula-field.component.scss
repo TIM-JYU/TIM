@@ -6,34 +6,66 @@
     @import 'static/scripts/vendor/mathquill/mathquill';
 }
 
-.visual-input {
-    width: 100%;
-    border-color: lightgrey;
-}
+.formula-field {
+    .formula-field-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+        justify-content: center;
+    }
 
-.visual-input:hover {
-    border-color: black;
-}
+    .input-container {
+        padding: 0.25em;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
 
-.active-visual-input {
-    min-height: 60px;
-    border-color: black;
-    width: 50%;
-}
+        .visual-input {
+            width: 100%;
+            border-color: black;
+        }
 
-.formula-area {
-    padding: 0.25em;
-    font-family: "Courier New", Courier, serif;
-    width: 50%;
-}
+        .active-visual-input {
+            min-height: 60px;
+            border-color: black;
+            width: 100%;
+        }
 
-.formula-container {
-    padding: 0.25em;
+        .visual-input:hover {
+            border-color: black;
+        }
+
+        .formula-area {
+            padding: 0.25em;
+            font-family: "Courier New", Courier, serif;
+            width: 100%;
+        }
+    }
 }
 
 .active-field {
-    display: flex;
-    flex-direction: row;
     padding: 0.3em;
     border: 2px solid #004494;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+
+
+@media only screen and (min-width: 500px) {
+    .formula-field {
+        .input-container {
+            flex-direction: row;
+
+            .active-visual-input {
+                width: 50%;
+            }
+
+            .formula-area {
+                width: 50%;
+            }
+        }
+    }
+
 }
