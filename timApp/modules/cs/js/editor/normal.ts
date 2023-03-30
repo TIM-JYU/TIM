@@ -135,6 +135,7 @@ export class NormalEditorComponent implements IEditor {
         element.selectionStart = start;
         element.selectionEnd = start;
     }
+
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
     }

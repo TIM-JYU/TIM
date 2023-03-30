@@ -238,7 +238,6 @@ export class FormulaFieldComponent {
             this.mathField.latex(this.defaultValue);
             this.latexInput = this.defaultValue;
         }
-        // this.updateUndoRedoStacks();
     }
 
     handleRedo() {
@@ -248,7 +247,6 @@ export class FormulaFieldComponent {
             this.mathField.latex(temp);
             this.latexInput = temp;
         }
-        // this.updateUndoRedoStacks();
     }
 
     updateUndoStack() {
