@@ -68,6 +68,9 @@ type StringPair = [string, string];
                     <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)" 
                      >{{item.display}}</button>
                 </div>
+                <symbol-button-menu>
+                    
+                </symbol-button-menu>
                 <div class="fields">
                     <div *ngFor="let field of fields; let i=index;" class="field">
                         <cs-formula-field 
@@ -104,8 +107,6 @@ type StringPair = [string, string];
 })
 export class FormulaEditorComponent {
     oldContent: OldContent = {before: "", editing: "", after: ""};
-
-    formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
 
     fields!: FieldType[];
 
