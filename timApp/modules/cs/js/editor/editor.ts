@@ -227,7 +227,7 @@ export class EditorComponent implements IMultiEditor {
     private loadedFile?: IFile;
     filenameInput: string = "";
     private editorIndexStorage = new TimStorage("editorIndex", t.number);
-    formulaFunction = function () {};
+    formulaFunction?: () => void;
 
     constructor(private cdr: ChangeDetectorRef) {
         this.showOtherEditor(
@@ -280,7 +280,9 @@ export class EditorComponent implements IMultiEditor {
             this.editor.setReadOnly(this.editorreadonly);
             this.content = oldContent;
             this.content_ = undefined;
-            this.addFormulaEditorOpenHandler(this.formulaFunction);
+            if (this.formulaFunction) {
+                this.addFormulaEditorOpenHandler(this.formulaFunction);
+            }
         }
     }
 

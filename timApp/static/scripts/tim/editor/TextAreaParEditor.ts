@@ -28,7 +28,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     public editor: JQuery;
     private editorElement: HTMLTextAreaElement;
     type: EditorType.Textarea = EditorType.Textarea;
-    formulaFunction = function () {};
+    formulaFunction?: () => void;
     constructor(editor: JQuery, callbacks: IEditorCallbacks) {
         super(editor, callbacks);
         this.editor = editor;
@@ -59,7 +59,9 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
                     this.commentClicked();
                     e.preventDefault();
                 } else if (e.keyCode === KEY_E) {
-                    this.formulaFunction();
+                    if (this.formulaFunction) {
+                        this.formulaFunction();
+                    }
                     e.preventDefault();
                 } else if (e.keyCode === KEY_1) {
                     this.headerClicked("#");

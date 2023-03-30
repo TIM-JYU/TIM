@@ -34,7 +34,7 @@ export class NormalEditorComponent implements IEditor {
     @Input() spellcheck?: boolean;
     @ViewChild("area") private area!: ElementRef;
     private editorreadonly: boolean = false;
-    formulaFunction = function () {};
+    formulaFunction?: () => void;
 
     constructor(private cdr: ChangeDetectorRef) {}
 
@@ -86,7 +86,9 @@ export class NormalEditorComponent implements IEditor {
             } else if (event.which === 69) {
                 // e key
                 if (event.ctrlKey) {
-                    this.formulaFunction();
+                    if (this.formulaFunction) {
+                        this.formulaFunction();
+                    }
                 }
                 return;
             }
