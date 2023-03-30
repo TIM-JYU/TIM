@@ -38,10 +38,10 @@ export type Edit = {
     template: `
         <div class="formula-field" [class.active-field]="isActive">
             <div class="input-container">
-                <span 
+                <span
                         class="visual-input"
                         [class.active-visual-input]="isActive"
-                        #visualInput 
+                        #visualInput
                         (keyup.tab)="handleFocus()"
                         (keyup.shift.tab)="handleFocus()"
                         (click)="handleFocus()"
@@ -50,9 +50,9 @@ export type Edit = {
                         (keydown.control.z)="handleUndo()"
                         (keydown.control.y)="handleRedo()">
                 </span>
-    
-                <textarea name="math-editor-output" #latexInputElement cols="30" 
-                          *ngIf="isActive" 
+
+                <textarea name="math-editor-output" #latexInputElement cols="30"
+                          *ngIf="isActive"
                           rows="{{rows}}"
                           (click)="handleLatexFocus()"
                           (keyup)="handleLatexInput()"
@@ -62,15 +62,17 @@ export type Edit = {
                           (focus)="handleLatexFocus()"
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
-                </textarea>                                       
+                </textarea>
             </div>
-            
+
             <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
-                <button type="button" class="btn btn-default" (click)="handleAddLine()" title="Add line below" i18n-title>
+                <button type="button" class="btn btn-default" (click)="handleAddLine()" title="Add line below"
+                        i18n-title>
                     <span class="glyphicon glyphicon-plus"></span>
                 </button>
-                
-                <button type="button" class="btn btn-default" (click)="handleRemoveLine()" title="Remove current line" i18n-title>
+
+                <button type="button" class="btn btn-default" (click)="handleRemoveLine()" title="Remove current line"
+                        i18n-title>
                     <span class="glyphicon glyphicon-remove"></span>
                 </button>
             </div>
@@ -259,7 +261,9 @@ export class FormulaFieldComponent {
      * Undo latest change in formula editor.
      */
     handleUndo() {
-        if (this.undoStack.length === 1) return;
+        if (this.undoStack.length === 1) {
+            return;
+        }
         this.undoRedo = this.undoRedoCodes.UNDO;
         const temp = this.undoStack.pop();
         if (temp != undefined) {
@@ -274,7 +278,9 @@ export class FormulaFieldComponent {
      * Revert last undo in the formula editor.
      */
     handleRedo() {
-        if (this.redoStack.length === 0) return;
+        if (this.redoStack.length === 0) {
+            return;
+        }
         this.undoRedo = this.undoRedoCodes.REDO;
         this.mathField.latex(this.redoStack[this.redoStack.length - 1]);
         const temp = this.redoStack.pop();
