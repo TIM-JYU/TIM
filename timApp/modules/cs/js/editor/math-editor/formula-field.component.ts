@@ -95,7 +95,6 @@ export class FormulaFieldComponent {
 
     undoStack: string[] = [];
     redoStack: string[] = [];
-    defaultValue = "";
     undoRedoCodes = {
         UNDO: -1,
         REDO: 1,
@@ -186,9 +185,6 @@ export class FormulaFieldComponent {
         };
         this.mathField = this.MQ.MathField(elem, config);
         this.mathField.latex(this.initialValue);
-        if (this.initialValue != undefined) {
-            this.defaultValue = this.initialValue;
-        }
     }
 
     /**
