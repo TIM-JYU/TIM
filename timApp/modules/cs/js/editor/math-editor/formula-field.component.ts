@@ -36,34 +36,44 @@ export type Edit = {
 @Component({
     selector: "cs-formula-field",
     template: `
-        <div class="formula-container" [class.active-field]="isActive">
-            <span 
-                    class="visual-input"
-                    [class.active-visual-input]="isActive"
-                    #visualInput 
-                    (keyup.tab)="handleFocus()"
-                    (keyup.shift.tab)="handleFocus()"
-                    (click)="handleFocus()"
-                    (focus)="handleFocus()"
-                    (keyup)="handleVisualFocus()"
-                    (keydown.control.z)="handleUndo()"
-                    (keydown.control.y)="handleRedo()">
-            </span>
-
-            <textarea name="math-editor-output" #latexInputElement cols="30" 
-                      *ngIf="isActive" 
-                      rows="{{rows}}"
-                      (click)="handleLatexFocus()"
-                      (keyup)="handleLatexInput()"
-                      [(ngModel)]="latexInput"
-                      placeholder="Write LaTeX" i18n-placeholder
-                      class="formula-area"
-                      (focus)="handleLatexFocus()"
-                      (keydown.control.z)="handleUndo()"
-                      (keydown.control.y)="handleRedo()">
-            </textarea>                        
+        <div class="formula-field" [class.active-field]="isActive">
+            <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
+                <button type="button" class="btn btn-default" (click)="handleAddLine()" i18n title="Add line below">
+                    <span class="glyphicon glyphicon-plus"></span>
+                </button>
+                
+                <button type="button" class="btn btn-default" (click)="handleRemoveLine()" i18n title="Remove current line">
+                    <span class="glyphicon glyphicon-remove"></span>
+                </button>
+            </div>
+            <div class="input-container">
+                <span 
+                        class="visual-input"
+                        [class.active-visual-input]="isActive"
+                        #visualInput 
+                        (keyup.tab)="handleFocus()"
+                        (keyup.shift.tab)="handleFocus()"
+                        (click)="handleFocus()"
+                        (focus)="handleFocus()"
+                        (keyup)="handleVisualFocus()"
+                        (keydown.control.z)="handleUndo()"
+                        (keydown.control.y)="handleRedo()">
+                </span>
+    
+                <textarea name="math-editor-output" #latexInputElement cols="30" 
+                          *ngIf="isActive" 
+                          rows="{{rows}}"
+                          (click)="handleLatexFocus()"
+                          (keyup)="handleLatexInput()"
+                          [(ngModel)]="latexInput"
+                          placeholder="Write LaTeX" i18n-placeholder
+                          class="formula-area"
+                          (focus)="handleLatexFocus()"
+                          (keydown.control.z)="handleUndo()"
+                          (keydown.control.y)="handleRedo()">
+                </textarea>                                       
+            </div>
         </div>
-
     `,
     styleUrls: ["./formula-field.component.scss"],
 })
@@ -107,6 +117,8 @@ export class FormulaFieldComponent {
     @Output() focus = new EventEmitter<Edit>();
     @Output() downArrow = new EventEmitter<number>();
     @Output() upArrow = new EventEmitter<number>();
+    @Output() delete = new EventEmitter<number>();
+    @Output() add = new EventEmitter<number>();
 
     rows: number = 2;
 
@@ -209,6 +221,14 @@ export class FormulaFieldComponent {
 
     enterPressed() {
         this.enter.emit(this.id);
+    }
+
+    handleAddLine() {
+        this.add.emit(this.id);
+    }
+
+    handleRemoveLine() {
+        this.delete.emit(this.id);
     }
 
     backspacePressed() {

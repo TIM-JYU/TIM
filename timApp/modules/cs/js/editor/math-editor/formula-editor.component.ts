@@ -76,6 +76,8 @@ type StringPair = [string, string];
                             (focus)="handleFocus($event)"
                             (upArrow)="handleArrowUp($event)"
                             (downArrow)="handleArrowDown($event)"
+                            (add)="addField()"
+                            (delete)="removeField()"
                             [isActive]="i === activeFieldsIndex"
                             [id]="i">
                         </cs-formula-field>
