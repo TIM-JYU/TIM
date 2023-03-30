@@ -399,6 +399,11 @@ class Language:
         if self.just_compile:
             args = []
 
+        extra_cmd = df(extra, "")
+        before_run = self.query.jso.get("markup", {}).get("beforeRun", None)
+        if before_run:
+            extra_cmd = before_run + ";" + extra_cmd
+
         mounts = self.query.jso.get("markup", {}).get("mounts", [])
         save_run_cmd = None
         save_test_run_cmd = None
@@ -421,7 +426,7 @@ class Language:
             stdin=df(stdin, self.stdin),
             uargs=uargs,
             code=df(code, "utf-8"),
-            extra=df(extra, ""),
+            extra=extra_cmd,
             ulimit=df(ulimit, self.ulimit),
             no_x11=df(no_x11, self.no_x11),
             savestate=df(savestate, self.savestate),
