@@ -22,7 +22,7 @@ export class AceEditorComponent implements IEditor {
     private content_?: string;
     private editorreadonly: boolean = false;
     private disabled_: boolean = false;
-    formulaFunction = function () {};
+    formulaFunction?: () => void;
     @ViewChild("area") area!: ElementRef;
     @Input() placeholder: string = ""; // TODO: make this work
 
@@ -136,7 +136,9 @@ export class AceEditorComponent implements IEditor {
                 mac: "Command-E",
             },
             exec: () => {
-                this.formulaFunction();
+                if (this.formulaFunction) {
+                    this.formulaFunction();
+                }
             },
         });
     }
@@ -195,6 +197,10 @@ export class AceEditorComponent implements IEditor {
         editor.selection.moveCursorToPosition(cursor);
         editor.selection.clearSelection();
     }
+
+    /**
+     * Save function that opens the formula editor.
+     */
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
     }

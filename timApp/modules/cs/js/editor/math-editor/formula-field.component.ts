@@ -13,7 +13,6 @@ import {
     Output,
     ViewChild,
 } from "@angular/core";
-import {FormControl} from "@angular/forms";
 import type {IMathQuill} from "vendor/mathquill/mathquill";
 import type {
     MathFieldMethods,
@@ -37,30 +36,45 @@ export type Edit = {
 @Component({
     selector: "cs-formula-field",
     template: `
-        <div class="formula-container" [class.active-field]="isActive">
-            <span 
-                    class="visual-input"
-                    [class.active-visual-input]="isActive"
-                    #visualInput 
-                    (keyup.tab)="handleFocus()"
-                    (keyup.shift.tab)="handleFocus()"
-                    (click)="handleFocus()"
-                    (focus)="handleFocus()"
-                    (keyup)="handleVisualFocus()">
-            </span>
-
-            <textarea name="math-editor-output" #latexInputElement cols="30" 
-                      *ngIf="isActive" 
-                      rows="{{rows}}"
-                      (click)="handleLatexFocus()"
-                      (keyup)="handleLatexInput()"
-                      [(ngModel)]="latexInput"
-                      placeholder="Write LaTeX" i18n-placeholder
-                      class="formula-area"
-                      (focus)="handleLatexFocus()">
-            </textarea>                        
+        <div class="formula-field" [class.active-field]="isActive">
+            <div class="input-container">
+                <span 
+                        class="visual-input"
+                        [class.active-visual-input]="isActive"
+                        #visualInput 
+                        (keyup.tab)="handleFocus()"
+                        (keyup.shift.tab)="handleFocus()"
+                        (click)="handleFocus()"
+                        (focus)="handleFocus()"
+                        (keyup)="handleVisualFocus()"
+                        (keydown.control.z)="handleUndo()"
+                        (keydown.control.y)="handleRedo()">
+                </span>
+    
+                <textarea name="math-editor-output" #latexInputElement cols="30" 
+                          *ngIf="isActive" 
+                          rows="{{rows}}"
+                          (click)="handleLatexFocus()"
+                          (keyup)="handleLatexInput()"
+                          [(ngModel)]="latexInput"
+                          placeholder="Write LaTeX" i18n-placeholder
+                          class="formula-area"
+                          (focus)="handleLatexFocus()"
+                          (keydown.control.z)="handleUndo()"
+                          (keydown.control.y)="handleRedo()">
+                </textarea>                                       
+            </div>
+            
+            <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
+                <button type="button" class="btn btn-default" (click)="handleAddLine()" i18n title="Add line below">
+                    <span class="glyphicon glyphicon-plus"></span>
+                </button>
+                
+                <button type="button" class="btn btn-default" (click)="handleRemoveLine()" i18n title="Remove current line">
+                    <span class="glyphicon glyphicon-remove"></span>
+                </button>
+            </div>
         </div>
-
     `,
     styleUrls: ["./formula-field.component.scss"],
 })
@@ -77,13 +91,19 @@ export class FormulaFieldComponent {
 
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
 
+    undoStack: string[] = [];
+    redoStack: string[] = [];
+    defaultValue = "";
+
     @Input() id!: number;
 
     @Input() initialValue!: string;
+
     @Input()
     get isActive(): boolean {
         return this.active;
     }
+
     set isActive(value: boolean) {
         this.active = value;
         if (value) {
@@ -92,6 +112,7 @@ export class FormulaFieldComponent {
             }, 50);
         }
     }
+
     private active = false;
 
     @Output() edited = new EventEmitter<Edit>();
@@ -100,6 +121,8 @@ export class FormulaFieldComponent {
     @Output() focus = new EventEmitter<Edit>();
     @Output() downArrow = new EventEmitter<number>();
     @Output() upArrow = new EventEmitter<number>();
+    @Output() delete = new EventEmitter<number>();
+    @Output() add = new EventEmitter<number>();
 
     rows: number = 2;
 
@@ -126,6 +149,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
+            this.updateUndoStack();
         }
     }
 
@@ -152,6 +176,9 @@ export class FormulaFieldComponent {
         };
         this.mathField = this.MQ.MathField(elem, config);
         this.mathField.latex(this.initialValue);
+        if (this.initialValue != undefined) {
+            this.defaultValue = this.initialValue;
+        }
     }
 
     /**
@@ -192,11 +219,20 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
+            this.updateUndoStack();
         }
     }
 
     enterPressed() {
         this.enter.emit(this.id);
+    }
+
+    handleAddLine() {
+        this.add.emit(this.id);
+    }
+
+    handleRemoveLine() {
+        this.delete.emit(this.id);
     }
 
     backspacePressed() {
@@ -211,5 +247,47 @@ export class FormulaFieldComponent {
             latex: this.latexInput,
             id: this.id,
         });
+    }
+
+    /**
+     * Undo latest change in formula editor.
+     */
+    handleUndo() {
+        const temp = this.undoStack.pop();
+        if (temp) {
+            this.redoStack.push(temp);
+        }
+        const temp2 = this.undoStack.pop();
+        if (temp2) {
+            this.mathField.latex(temp2);
+            this.latexInput = temp2;
+        } else {
+            this.mathField.latex(this.defaultValue);
+            this.latexInput = this.defaultValue;
+        }
+    }
+
+    /**
+     * Revert last undo in the formula editor.
+     */
+    handleRedo() {
+        const temp = this.redoStack.pop();
+        if (temp) {
+            this.undoStack.push(this.mathField.latex());
+            this.mathField.latex(temp);
+            this.latexInput = temp;
+        }
+    }
+
+    /**
+     * Save previous change, so it can be restored with undo.
+     */
+    updateUndoStack() {
+        if (
+            this.mathField.latex() != "" &&
+            this.mathField.latex() != this.undoStack[this.undoStack.length - 1]
+        ) {
+            this.undoStack.push(this.mathField.latex());
+        }
     }
 }
