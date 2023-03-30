@@ -94,6 +94,12 @@ export class FormulaFieldComponent {
     undoStack: string[] = [];
     redoStack: string[] = [];
     defaultValue = "";
+    undoRedoCodes = {
+        UNDO: -1,
+        REDO: 1,
+        NOCHANGE: 0,
+    };
+    undoRedo = 0;
 
     @Input() id!: number;
 
@@ -142,14 +148,14 @@ export class FormulaFieldComponent {
      */
     editHandler(field: MathFieldMethods) {
         if (this.activeEditor === ActiveEditorType.Visual) {
-            const latex = field.latex();
-            this.latexInput = latex;
+            if (this.undoRedo != this.undoRedoCodes.NOCHANGE) return;
+            this.latexInput = field.latex();
             this.edited.emit({
                 latex: this.latexInput,
                 id: this.id,
             });
             this.updateTextareaRows();
-            this.updateUndoStack();
+            this.updateUndoRedoStack();
         }
     }
 
@@ -219,7 +225,7 @@ export class FormulaFieldComponent {
                 id: this.id,
             });
             this.updateTextareaRows();
-            this.updateUndoStack();
+            this.updateUndoRedoStack();
         }
     }
 
@@ -253,41 +259,45 @@ export class FormulaFieldComponent {
      * Undo latest change in formula editor.
      */
     handleUndo() {
+        if (this.undoStack.length === 1) return;
+        this.undoRedo = this.undoRedoCodes.UNDO;
         const temp = this.undoStack.pop();
-        if (temp) {
+        if (temp != undefined) {
             this.redoStack.push(temp);
         }
-        const temp2 = this.undoStack.pop();
-        if (temp2) {
-            this.mathField.latex(temp2);
-            this.latexInput = temp2;
-        } else {
-            this.mathField.latex(this.defaultValue);
-            this.latexInput = this.defaultValue;
-        }
+        this.mathField.latex(this.undoStack[this.undoStack.length - 1]);
+        this.latexInput = this.undoStack[this.undoStack.length - 1];
+        this.updateUndoRedoStack();
     }
 
     /**
      * Revert last undo in the formula editor.
      */
     handleRedo() {
+        if (this.redoStack.length === 0) return;
+        this.undoRedo = this.undoRedoCodes.REDO;
+        this.mathField.latex(this.redoStack[this.redoStack.length - 1]);
         const temp = this.redoStack.pop();
-        if (temp) {
-            this.undoStack.push(this.mathField.latex());
-            this.mathField.latex(temp);
+        if (temp != undefined) {
             this.latexInput = temp;
         }
+        this.updateUndoRedoStack();
     }
 
     /**
      * Save previous change, so it can be restored with undo.
      */
-    updateUndoStack() {
+    updateUndoRedoStack() {
+        const latex = this.latexInput;
         if (
-            this.mathField.latex() != "" &&
-            this.mathField.latex() != this.undoStack[this.undoStack.length - 1]
+            this.undoRedo >= this.undoRedoCodes.NOCHANGE &&
+            this.undoStack[this.undoStack.length - 1] != latex
         ) {
-            this.undoStack.push(this.mathField.latex());
+            if (this.undoRedo === this.undoRedoCodes.NOCHANGE) {
+                this.redoStack = [];
+            }
+            this.undoStack.push(latex);
         }
+        setTimeout(() => (this.undoRedo = this.undoRedoCodes.NOCHANGE), 2);
     }
 }
