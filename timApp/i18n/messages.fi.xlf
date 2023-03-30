@@ -8050,6 +8050,22 @@
           <context context-type="linenumber">3870</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2134512399270831650" datatype="html">
+        <source>Add line below</source>
+        <target state="translated">Lisää rivi alle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5745429171954110212" datatype="html">
+        <source>Remove current line</source>
+        <target state="translated">Poista nykyinen rivi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
+          <context context-type="linenumber">73</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
