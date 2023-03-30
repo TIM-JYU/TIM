@@ -814,6 +814,9 @@ export class AceParEditor extends BaseParEditor implements IEditor {
         this.editor.setReadOnly(b);
     }
 
+    /**
+     * Save function that opens the formula editor.
+     */
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
     }

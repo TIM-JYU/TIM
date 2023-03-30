@@ -195,6 +195,10 @@ export class AceEditorComponent implements IEditor {
         editor.selection.moveCursorToPosition(cursor);
         editor.selection.clearSelection();
     }
+
+    /**
+     * Save function that opens the formula editor.
+     */
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
     }

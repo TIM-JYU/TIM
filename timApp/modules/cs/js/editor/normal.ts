@@ -135,6 +135,10 @@ export class NormalEditorComponent implements IEditor {
         element.selectionStart = start;
         element.selectionEnd = start;
     }
+
+    /**
+     * Save function that opens the formula editor.
+     */
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
     }
