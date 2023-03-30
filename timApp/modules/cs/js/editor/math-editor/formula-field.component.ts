@@ -37,15 +37,6 @@ export type Edit = {
     selector: "cs-formula-field",
     template: `
         <div class="formula-field" [class.active-field]="isActive">
-            <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
-                <button type="button" class="btn btn-default" (click)="handleAddLine()" i18n title="Add line below">
-                    <span class="glyphicon glyphicon-plus"></span>
-                </button>
-                
-                <button type="button" class="btn btn-default" (click)="handleRemoveLine()" i18n title="Remove current line">
-                    <span class="glyphicon glyphicon-remove"></span>
-                </button>
-            </div>
             <div class="input-container">
                 <span 
                         class="visual-input"
@@ -72,6 +63,16 @@ export type Edit = {
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
                 </textarea>                                       
+            </div>
+            
+            <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
+                <button type="button" class="btn btn-default" (click)="handleAddLine()" i18n title="Add line below">
+                    <span class="glyphicon glyphicon-plus"></span>
+                </button>
+                
+                <button type="button" class="btn btn-default" (click)="handleRemoveLine()" i18n title="Remove current line">
+                    <span class="glyphicon glyphicon-remove"></span>
+                </button>
             </div>
         </div>
     `,

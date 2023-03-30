@@ -9,16 +9,16 @@
 .formula-field {
     .formula-field-buttons {
         display: flex;
-        flex-direction: row;
-        justify-content: flex-end;
+        flex-direction: column;
         gap: 0.5em;
-        padding: 0.25em;
+        justify-content: center;
     }
 
     .input-container {
         padding: 0.25em;
         display: flex;
         flex-direction: column;
+        width: 100%;
 
         .visual-input {
             width: 100%;
@@ -46,6 +46,9 @@
 .active-field {
     padding: 0.3em;
     border: 2px solid #004494;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
 }
 
 
