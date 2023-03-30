@@ -203,6 +203,7 @@ def save_extra_files(query, extra_files, prgpath):
         return
     ie = 0
     for extra_file in extra_files:
+        extra_file_perms = extra_file.get("perms")
         ie += 1
         efilename = prgpath + "/extrafile" + str(ie)
         if "name" in extra_file:
@@ -213,7 +214,7 @@ def save_extra_files(query, extra_files, prgpath):
             # noinspection PyBroadException
             try:
                 s = replace_random(query, extra_file["text"])
-                if not write_safe(efilename, s):
+                if not write_safe(efilename, s, others_permissions=extra_file_perms):
                     print(f"Tried to write to unsafe path: {efilename}")
             except:
                 print("Can not write", efilename)
@@ -224,9 +225,14 @@ def save_extra_files(query, extra_files, prgpath):
                     lines = get_url_lines_as_string(
                         replace_random(query, extra_file["file"]), headers
                     )
-                    write_safe(efilename, lines)
+                    write_safe(efilename, lines, others_permissions=extra_file_perms)
                 else:
-                    write_safe(efilename, urlopen(extra_file["file"]).read(), "wb")
+                    write_safe(
+                        efilename,
+                        urlopen(extra_file["file"]).read(),
+                        "wb",
+                        others_permissions=extra_file_perms,
+                    )
             except Exception as e:
                 print(str(e))
                 print("XXXXXXXXXXXXXXXXXXXXXXXX Could no file cache: \n", efilename)

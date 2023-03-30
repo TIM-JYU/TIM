@@ -28,13 +28,19 @@ def is_safe_path(path: str | Path):
     return True
 
 
-def write_safe(path: str, content: str, write_type: str = "w") -> bool:
+def write_safe(
+    path: str,
+    content: str,
+    write_type: str = "w",
+    others_permissions: str | None = None,
+) -> bool:
     """
     Write contents to a file but only if the absolute path is not in DENY_PATH_LIST.
 
     :param path: Path to write the file to
     :param content: Contents to write
     :param write_type: File open mode.
+    :param others_permissions: Permissions of non-root users.
     :return: True, if write was successful
     """
     p = Path(path)
@@ -43,6 +49,18 @@ def write_safe(path: str, content: str, write_type: str = "w") -> bool:
     encoding = "utf-8" if "b" not in write_type else None
     with p.open(write_type, encoding=encoding) as f:
         f.write(content)
+    if others_permissions is not None:
+        # Convert rwx permissions to octal
+        other_perms = 0
+        if "x" in others_permissions:
+            other_perms |= 1
+        if "w" in others_permissions:
+            other_perms |= 2
+        if "r" in others_permissions:
+            other_perms |= 4
+        current_perms = os.stat(p).st_mode
+        new_perms = (current_perms & (~0o7)) | other_perms
+        os.chmod(p, new_perms)
     return True
 
 
