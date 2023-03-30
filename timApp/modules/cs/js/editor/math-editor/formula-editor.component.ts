@@ -18,11 +18,9 @@ import {
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {IEditor} from "../editor";
-import formulas from "./latex-commands";
 import type {Edit} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
-import {SymbolButtonMenuComponent} from "./symbol-button-menu.component";
 
 enum FormulaType {
     Multi = "multi",
@@ -166,24 +164,6 @@ export class FormulaEditorComponent {
     }
 
     private buttonSymbol: ButtonState = {text: ""};
-
-    // Array containing default LaTeX-commands for formula buttons
-    formulaArray = formulas;
-    buttonsVisible = false;
-    showFormulasText = "Show formulas";
-
-    /**
-     * Changes buttons to visible or not visible
-     * @param isVisible are buttons currently visible
-     */
-    setButtonsVisible(isVisible: boolean) {
-        this.buttonsVisible = !isVisible;
-        if (this.buttonsVisible) {
-            this.showFormulasText = "Hide formulas";
-        } else {
-            this.showFormulasText = "Show formulas";
-        }
-    }
 
     /**
      * append new empty field after the current field
