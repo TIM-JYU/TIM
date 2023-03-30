@@ -19,6 +19,9 @@ import {
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {IEditor} from "../editor";
 import formulas from "./latex-commands";
+import type {Edit} from "./formula-field.component";
+import {ActiveEditorType} from "./formula-field.component";
+import {FormulaFieldComponent} from "./formula-field.component";
 
 enum FormulaType {
     Multi = "multi",
@@ -26,9 +29,6 @@ enum FormulaType {
 }
 
 type FormulaTuple = [FormulaType, number, number];
-import type {Edit} from "./formula-field.component";
-import {ActiveEditorType} from "./formula-field.component";
-import {FormulaFieldComponent} from "./formula-field.component";
 
 /**
  * OldContent is split into three at cursor location if insert operation is supported
@@ -312,7 +312,9 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * General method to find $ and $$ syntax parenthesis from a string
+     * Method to find $ and $$ syntax parenthesis from a string.
+     * @param text String where the parenthesis are looked for.
+     * @return Array containing types and indexes of parenthesis.
      */
     findParenthesisFromString(text: string) {
         let currentIndex = 0;
@@ -405,8 +407,10 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Parses current formula from editor content
-     * if not inside formula then return undefined
+     * Finds current formula from list of parenthesis.
+     * @param allParenthesis List of parenthesis types and indexes.
+     * @param cursorIndex Index of the cursor.
+     * @return Parenthesis in which the cursor is.
      */
     parseCurrentFormula(
         allParenthesis: FormulaTuple[],
@@ -428,9 +432,10 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * trim character from end
-     * @param str string to trim
-     * @param ch character to trim
+     * Trims a specific character from the end of a string.
+     * @param str String to be trim.
+     * @param ch Character to trim.
+     * @return Trimmed string.
      */
     trimCharFromEnd(str: string, ch: string): string {
         const start = 0;
@@ -452,9 +457,10 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Sets the active field to the line with cursor
+     * Sets the active field to the line with cursor.
      */
     setLineInFormula() {
+        let fieldIndex = 0;
         const endI = this.cursorLocation;
         const before = this.oldContent.before;
         const beginParenthesis = this.existingParenthesis[0];
@@ -466,27 +472,29 @@ export class FormulaEditorComponent {
         ) {
             return;
         }
-        if (endI <= before.length + beginParenthesis.length) {
-            this.activeFieldsIndex = 0;
-            return;
-        }
 
         const original = this.editor.content;
         const text =
             original[endI] === "\n"
                 ? original.slice(0, endI)
                 : original.slice(0, endI + 1);
-
         const parenthesisNewLine = beginParenthesis.includes("\n") ? 1 : 0;
-        this.activeFieldsIndex =
+        fieldIndex =
             text.split("\n").length -
             before.split("\n").length -
             parenthesisNewLine;
+        if (endI <= before.length + beginParenthesis.length) {
+            fieldIndex = 0;
+        }
+
+        setTimeout(() => {
+            this.activeFieldsIndex = fieldIndex;
+        }, 30);
     }
 
     /**
-     * Parses current formula from editor content
-     * @return true if editing else false
+     * Parses current formula from editor content.
+     * @return True if editing a formula else false.
      */
     parseEditedFormula(): boolean {
         // check if cursor is inside a formula
@@ -526,10 +534,8 @@ export class FormulaEditorComponent {
                 formula = trimmed;
                 // update formula editor content and values
                 this.fields = this.getMultilineFormulaLines(formula);
-                setTimeout(() => {
-                    this.isMultilineFormula = true;
-                    this.setLineInFormula();
-                }, 30);
+                this.isMultilineFormula = true;
+                this.setLineInFormula();
             }
             // start editing an inline formula
             else {
@@ -540,15 +546,16 @@ export class FormulaEditorComponent {
                 this.existingParenthesis = ["$", "$"];
                 // update formula editor content and values
                 this.fields = [{latex: text.slice(leftIndex + 1, rightIndex)}];
-                setTimeout(() => {
-                    this.isMultilineFormula = false;
-                }, 30);
+                this.isMultilineFormula = false;
             }
             return true;
         }
         return false;
     }
 
+    /**
+     * Updates editor text when multiline value changes.
+     */
     onMultilineFormulaChange() {
         this.useExistingParenthesis = false;
         this.updateFormulaToEditor();
@@ -591,7 +598,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Updates editor text with current formula text
+     * Updates editor text with current formula text.
      */
     updateFormulaToEditor() {
         const isMultiline = this.isMultilineFormula;
@@ -599,7 +606,9 @@ export class FormulaEditorComponent {
         // If nothing is typed then just show original content
         if (formulaLatex === undefined) {
             this.editor.content =
-                this.oldContent.before + this.oldContent.after;
+                this.oldContent.before +
+                this.oldContent.editing +
+                this.oldContent.after;
         } else {
             this.editor.content =
                 this.oldContent.before + formulaLatex + this.oldContent.after;
@@ -616,6 +625,9 @@ export class FormulaEditorComponent {
         this.editor.content = finalContent;
     }
 
+    /**
+     * Resets the formula editor when it is closed.
+     */
     clearFields() {
         this.fields = [];
         this.useExistingParenthesis = false;
@@ -623,34 +635,30 @@ export class FormulaEditorComponent {
     }
 
     async handleFormulaCancel() {
+        const oldContent =
+            this.oldContent.before +
+            this.oldContent.editing +
+            this.oldContent.after;
         // content hasn't changed from what it was before opening formula editor
         // so cancel
         if (
-            this.oldContent.before +
-                this.oldContent.editing +
-                this.oldContent.after ===
-                this.editor.content ||
+            oldContent === this.editor.content ||
             (await showConfirm(
                 $localize`Are you sure?`,
                 $localize`This will clear the editor.`
             ))
         ) {
-            const finalContent =
-                this.oldContent.before +
-                this.oldContent.editing +
-                this.oldContent.after;
-
             this.cancelClose.emit();
 
             this.clearFields();
 
-            this.editor.content = finalContent;
+            this.editor.content = oldContent;
         }
     }
 
     /**
-     * Adds formula to both fields in last known cursor position
-     * @param formulaInput LaTeX-formula to be added to fields
+     * Adds formula to both fields in last known cursor position.
+     * @param formulaInput LaTeX-formula to be added to fields.
      */
     addFormula(formulaInput: ButtonState | string) {
         const formula =
