@@ -103,8 +103,6 @@ type StringPair = [string, string];
 export class FormulaEditorComponent {
     oldContent: OldContent = {before: "", editing: "", after: ""};
 
-    formulas: string[] = ["\\sqrt{ }", "\\int_{ }^{ }", "\\frac{ }{ }"];
-
     fields!: FieldType[];
 
     activeFieldsIndex: number = 0;

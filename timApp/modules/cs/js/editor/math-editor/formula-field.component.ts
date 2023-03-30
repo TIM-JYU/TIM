@@ -233,10 +233,10 @@ export class FormulaFieldComponent {
         const temp2 = this.undoStack.pop();
         if (temp2 != undefined) {
             this.mathField.latex(temp2);
-            this.latexInputControl.setValue(temp2);
+            this.latexInput = temp2;
         } else {
             this.mathField.latex(this.defaultValue);
-            this.latexInputControl.setValue(this.defaultValue);
+            this.latexInput = this.defaultValue;
         }
         // this.updateUndoRedoStacks();
     }
@@ -246,7 +246,7 @@ export class FormulaFieldComponent {
         if (temp != undefined) {
             this.undoStack.push(this.mathField.latex());
             this.mathField.latex(temp);
-            this.latexInputControl.setValue(temp);
+            this.latexInput = temp;
         }
         // this.updateUndoRedoStacks();
     }
