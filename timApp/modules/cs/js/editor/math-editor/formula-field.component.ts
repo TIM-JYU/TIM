@@ -225,6 +225,9 @@ export class FormulaFieldComponent {
         });
     }
 
+    /**
+     * Undo latest change in formula editor.
+     */
     handleUndo() {
         const temp = this.undoStack.pop();
         if (temp != undefined) {
@@ -240,6 +243,9 @@ export class FormulaFieldComponent {
         }
     }
 
+    /**
+     * Revert last undo in the formula editor.
+     */
     handleRedo() {
         const temp = this.redoStack.pop();
         if (temp != undefined) {
@@ -249,6 +255,9 @@ export class FormulaFieldComponent {
         }
     }
 
+    /**
+     * Save previous change, so it can be restored with undo.
+     */
     updateUndoStack() {
         if (
             this.mathField.latex() != "" &&

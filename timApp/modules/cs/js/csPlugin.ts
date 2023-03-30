@@ -1735,6 +1735,7 @@ export class CsController extends CsBase implements ITimComponent {
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
+    // TODO: Remove these 3 identical functions
     onFormulaEditorCloseCancel() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
@@ -1744,7 +1745,6 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     onFormulaEditorEditFormula() {
-        // TODO
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 

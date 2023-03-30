@@ -786,6 +786,9 @@ export class EditorComponent implements IMultiEditor {
         this.editor?.focus();
     }
 
+    /**
+     * Save function that opens the formula editor.
+     */
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
         if (this.editor?.addFormulaEditorOpenHandler) {

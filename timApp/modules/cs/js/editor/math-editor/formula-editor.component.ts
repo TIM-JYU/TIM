@@ -555,6 +555,9 @@ export class FormulaEditorComponent {
         this.updateFormulaToEditor();
     }
 
+    /**
+     * Handler for keys being pressed, used for shortcuts to save or close the editor
+     */
     handleDialogEvents(e: KeyboardEvent) {
         if (e.ctrlKey) {
             if (e.key === "s") {
