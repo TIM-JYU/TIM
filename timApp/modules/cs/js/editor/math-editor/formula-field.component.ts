@@ -37,10 +37,10 @@ export type Edit = {
     selector: "cs-formula-field",
     template: `
         <div class="formula-container" [class.active-field]="isActive">
-            <span 
+            <span
                     class="visual-input"
                     [class.active-visual-input]="isActive"
-                    #visualInput 
+                    #visualInput
                     (keyup.tab)="handleFocus()"
                     (keyup.shift.tab)="handleFocus()"
                     (click)="handleFocus()"
@@ -50,8 +50,8 @@ export type Edit = {
                     (keydown.control.y)="handleRedo()">
             </span>
 
-            <textarea name="math-editor-output" #latexInputElement cols="30" 
-                      *ngIf="isActive" 
+            <textarea name="math-editor-output" #latexInputElement cols="30"
+                      *ngIf="isActive"
                       rows="{{rows}}"
                       (click)="handleLatexFocus()"
                       (keyup)="handleLatexInput()"
@@ -61,7 +61,7 @@ export type Edit = {
                       (focus)="handleLatexFocus()"
                       (keydown.control.z)="handleUndo()"
                       (keydown.control.y)="handleRedo()">
-            </textarea>                        
+            </textarea>
         </div>
 
     `,
@@ -87,10 +87,12 @@ export class FormulaFieldComponent {
     @Input() id!: number;
 
     @Input() initialValue!: string;
+
     @Input()
     get isActive(): boolean {
         return this.active;
     }
+
     set isActive(value: boolean) {
         this.active = value;
         if (value) {
@@ -99,6 +101,7 @@ export class FormulaFieldComponent {
             }, 50);
         }
     }
+
     private active = false;
 
     @Output() edited = new EventEmitter<Edit>();
@@ -230,11 +233,11 @@ export class FormulaFieldComponent {
      */
     handleUndo() {
         const temp = this.undoStack.pop();
-        if (temp != undefined) {
+        if (temp) {
             this.redoStack.push(temp);
         }
         const temp2 = this.undoStack.pop();
-        if (temp2 != undefined) {
+        if (temp2) {
             this.mathField.latex(temp2);
             this.latexInput = temp2;
         } else {
@@ -248,7 +251,7 @@ export class FormulaFieldComponent {
      */
     handleRedo() {
         const temp = this.redoStack.pop();
-        if (temp != undefined) {
+        if (temp) {
             this.undoStack.push(this.mathField.latex());
             this.mathField.latex(temp);
             this.latexInput = temp;
