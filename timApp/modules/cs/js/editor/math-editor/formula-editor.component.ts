@@ -585,6 +585,11 @@ export class FormulaEditorComponent {
         }
     }
 
+    /**
+     * Formats LaTex string for the editor.
+     * @param isMultiline True if added formula should be multiline, else false.
+     * @return Formatted string or undefined if string needs to be added.
+     */
     formatLatex(isMultiline: boolean): string | undefined {
         const wrapSymbol = isMultiline ? "$$" : "$";
         if (isMultiline) {
