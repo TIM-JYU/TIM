@@ -22,6 +22,7 @@ import formulas from "./latex-commands";
 import type {Edit} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
+import {SymbolButtonMenuComponent} from "./symbol-button-menu.component";
 
 enum FormulaType {
     Multi = "multi",
@@ -61,13 +62,9 @@ type StringPair = [string, string];
     template: `
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
-                <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
-                <div class="buttons-container math display" [hidden]="!buttonsVisible">
-                    <button class="symbolButton" *ngFor="let item of formulaArray;" (click)="addFormula(item.text)"
-                    >{{item.display}}</button>
-                </div>
-                <symbol-button-menu>
-                    
+                <symbol-button-menu
+                        (setFormula)="addFormula($event)"
+                >
                 </symbol-button-menu>
                 <div class="fields">
                     <div *ngFor="let field of fields; let i=index;" class="field">
