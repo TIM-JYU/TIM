@@ -10,19 +10,22 @@ info = {"help": "Compile JavaScript files for production mode"}
 
 class Arguments:
     npmi: bool
+    target: str
     args: List[str]
 
 
-def js(run_npmi: bool, extra_args: List[str]) -> None:
+def js(run_npmi: bool, extra_args: List[str], target: str = "browser") -> None:
     if run_npmi or needs_npmi():
         log_info("Running `npm install` to install build dependencies.")
         npmi()
-    run_npm(["run", "buildtools"], "timApp/modules/jsrunner/server", True)
-    run_npm(["run", "b", "--", *extra_args], "timApp")
+    if target in ("server", "browser"):
+        run_npm(["run", "buildtools"], "timApp/modules/jsrunner/server", True)
+    if target in ("browser",):
+        run_npm(["run", "b", "--", *extra_args], "timApp")
 
 
 def run(args: Arguments) -> None:
-    js(args.npmi, args.args)
+    js(args.npmi, args.args, args.target)
 
 
 def init(parser: ArgumentParser) -> None:
@@ -30,6 +33,12 @@ def init(parser: ArgumentParser) -> None:
         "--npmi",
         help="Run `npm install` to install TIM dependencies.",
         action="store_true",
+    )
+    parser.add_argument(
+        "--target",
+        help="Build only the specified JS (for server-only or for both).",
+        choices=["server", "browser"],
+        default="browser",
     )
     parser.add_argument(
         "args", nargs=REMAINDER, help="Arguments to pass to docker-compose"

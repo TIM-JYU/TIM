@@ -22,12 +22,12 @@ from modifiers import Modifier
 from points import give_points
 from run import (
     generate_filename,
-    CS3_TAG,
     get_imgsource,
     run2_subdir,
     copy_file,
     wait_file,
     run,
+    CS3_IMAGE,
 )
 from tim_common.cs_sanitizer import cs_min_sanitize
 from tim_common.fileParams import (
@@ -135,7 +135,7 @@ class Language:
             query.jso,
             "markup",
             "dockercontainer",
-            f"timimages/cs3:{CS3_TAG}",
+            CS3_IMAGE,
         )
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
@@ -2209,7 +2209,7 @@ class Octave(Language):
             self.query.jso,
             "markup",
             "dockercontainer",
-            f"timimages/cs3:{CS3_TAG}",
+            CS3_IMAGE,
         )
         code, out, err, pwddir = self.runself(
             ["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],

@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
  tim:
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   build:
     dockerfile: ./timApp/Dockerfile
     context: ./
@@ -53,7 +53,7 @@ services:
    - prod
    - dev
  timagent:
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   profiles:
    - dev
   command: sleep infinity
@@ -106,7 +106,7 @@ services:
   environment:
    POSTGRES_PASSWORD: postgresql
  csplugin:
-  image: timimages/cs3:${csplugin.target}-${csplugin.image_tag}
+  image: ${compose.images_repository}/cs3:${csplugin.target}-${csplugin.image_tag}
   build:
    context: ./timApp/modules/cs
    target: ${csplugin.target}
@@ -129,7 +129,7 @@ services:
   environment:
    PYTHONUNBUFFERED: "1"
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
-   CSPLUGIN_IMAGE_TAG: ${csplugin.target}-${csplugin.image_tag}
+   CSPLUGIN_IMAGE: "${compose.images_repository}/cs3:${csplugin.target}-${csplugin.image_tag}"
    TIM_ROOT: ${default.dir}
    TIM_HOST: ${tim.host}
    CASSANDRA_ENABLED: ${ "1" if csplugin.is_cassandra_enabled else "0" }
@@ -140,13 +140,13 @@ services:
 ${ partial("docker", "csplugin_cassandra.tmpl.yml") if csplugin.is_cassandra_enabled else "" }
 ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled else "" }
  haskellplugins:
-  image: timimages/haskellplugins:2022-10-14-ecb29513e0759a32a49ce5efb4373794f073190e
+  image: ${compose.images_repository}/haskellplugins:2022-10-14-ecb29513e0759a32a49ce5efb4373794f073190e
   restart: unless-stopped
   logging:
    driver: none
   read_only: true
  showfile:
-  image: timimages/cs3:${csplugin.target}-${csplugin.image_tag}
+  image: ${compose.images_repository}/cs3:${csplugin.target}-${csplugin.image_tag}
   volumes:
    - ./timApp/modules/svn:/app/svn:ro
    - ./tim_common:/app/tim_common:ro
@@ -159,7 +159,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
     - /tmp
  imagex:
-  image: timimages/cs3:${csplugin.target}-${csplugin.image_tag}
+  image: ${compose.images_repository}/cs3:${csplugin.target}-${csplugin.image_tag}
   volumes:
    - ./timApp/modules/imagex:/app/imagex:ro
    - ./tim_common:/app/tim_common:ro
@@ -170,7 +170,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   restart: unless-stopped
   read_only: true
  pali:
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   volumes:
    - ./timApp/modules/pali:/app/pali:ro
    - ./tim_common:/app/tim_common:ro
@@ -184,7 +184,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
    - /tmp
  fields:
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   build: ./timApp/modules/fields
   volumes:
    - ./timApp/modules/fields:/app/fields:ro
@@ -198,7 +198,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
    - /tmp
  jsrunner:
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   volumes:
    - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:rw
    - ./timApp/static/scripts:/timApp/static/scripts:ro
@@ -211,7 +211,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    - /root/.config
    - /tmp
  drag:
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   volumes:
    - ./timApp/modules/drag:/app/drag:ro
    - ./tim_common:/app/tim_common:ro
@@ -224,7 +224,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
    - /tmp
  feedback:
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   volumes:
    - ./timApp/modules/feedback:/app/feedback:ro
    - ./tim_common:/app/tim_common:ro
@@ -237,7 +237,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
    - /tmp
  dumbo:
-  image: timimages/dumbo:latest
+  image: ${compose.images_repository}/dumbo:latest
   volumes:
    - ./Dumbo/cache:/dumbo_cache
    - ./Dumbo/tmp:/dumbo_tmp
@@ -253,7 +253,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   volumes:
    - redis_data:/data
  celery:
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   command: celery worker -A timApp.tim_celery.celery --concurrency 4
   profiles:
    - prod
@@ -281,7 +281,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
    - /tmp
  celery-beat:
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   profiles:
    - prod
    - dev
@@ -317,20 +317,20 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   profiles:
    - prod
    - dev
-  image: timimages/goemaxima:2020113001-latest
+  image: ${compose.images_repository}/goemaxima:2020113001-latest
   restart: unless-stopped
  stack-api-server:
   profiles:
    - prod
    - dev
-  image: timimages/stack-api:latest
+  image: ${compose.images_repository}/stack-api:latest
   depends_on:
    - maxima
   restart: unless-stopped
   environment:
    BROWSER_URL: ${tim.host}
  oiko:
-  image: timimages/oiko:latest
+  image: ${compose.images_repository}/oiko:latest
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -369,7 +369,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
      )
  }
  mailman-test:
-  image: timimages/mailman-core:dev
+  image: ${compose.images_repository}/mailman-core:dev
   restart: unless-stopped
   profiles:
    - test
@@ -386,7 +386,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   profiles:
    - test
    - dev
-  image: timimages/tim:${tim.image_tag}
+  image: ${compose.images_repository}/tim:${tim.image_tag}
   command: ${ f'''${{TEST_COMMAND:-{"python3 -m unittest discover tests/ 'test_*.py' ." if not tim.is_dev else "sleep infinity"}}}''' }
   volumes:
    - .:/service:rw
