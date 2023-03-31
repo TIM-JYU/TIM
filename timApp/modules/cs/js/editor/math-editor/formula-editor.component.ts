@@ -18,7 +18,7 @@ import {
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {IEditor} from "../editor";
-import type {Edit} from "./formula-field.component";
+import type {Edit, LineAdd} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
 
@@ -69,12 +69,12 @@ type StringPair = [string, string];
                         <cs-formula-field 
                             [initialValue]="field.latex" 
                             (edited)="handleEdited($event)"
-                            (enter)="addField()"
+                            (enter)="addField($event)"
                             (backspace)="removeField()" 
                             (focus)="handleFocus($event)"
                             (upArrow)="handleArrowUp($event)"
                             (downArrow)="handleArrowDown($event)"
-                            (add)="addField()"
+                            (add)="addField($event)"
                             (delete)="removeField()"
                             [isActive]="i === activeFieldsIndex"
                             [id]="i">
@@ -169,15 +169,25 @@ export class FormulaEditorComponent {
      * append new empty field after the current field
      * and sets it as active
      */
-    addField() {
-        this.fields = [
-            ...this.fields.slice(0, this.activeFieldsIndex + 1),
-            {latex: ""},
-            ...this.fields.slice(this.activeFieldsIndex + 1),
-        ];
-        this.activeFieldsIndex++;
-        this.isMultilineFormula = this.fields.length > 1;
-        this.useExistingParenthesis = false;
+    addField(lineAdd: LineAdd) {
+        if (!lineAdd || lineAdd.addBelow) {
+            this.fields = [
+                ...this.fields.slice(0, this.activeFieldsIndex + 1),
+                {latex: ""},
+                ...this.fields.slice(this.activeFieldsIndex + 1),
+            ];
+            this.activeFieldsIndex++;
+            this.isMultilineFormula = this.fields.length > 1;
+            this.useExistingParenthesis = false;
+        } else {
+            this.fields = [
+                ...this.fields.slice(0, this.activeFieldsIndex),
+                {latex: ""},
+                ...this.fields.slice(this.activeFieldsIndex),
+            ];
+            this.isMultilineFormula = this.fields.length > 1;
+            this.useExistingParenthesis = false;
+        }
     }
 
     /**
