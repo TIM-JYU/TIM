@@ -5,7 +5,9 @@
  * @date 24.3.2023
  */
 
+import type {AfterViewInit} from "@angular/core";
 import {
+    ChangeDetectorRef,
     Component,
     ElementRef,
     EventEmitter,
@@ -80,19 +82,10 @@ export type Edit = {
     `,
     styleUrls: ["./formula-field.component.scss"],
 })
-export class FormulaFieldComponent {
+export class FormulaFieldComponent implements AfterViewInit {
     latexInput = "";
-    @ViewChild("latexInputElement")
-    latexInputElement!: ElementRef<HTMLTextAreaElement>;
-
-    @ViewChild("visualInput") visualInput!: ElementRef<HTMLElement>;
-
+    rows: number = 2;
     MQ!: IMathQuill;
-
-    mathField!: MathFieldMethods;
-
-    activeEditor: ActiveEditorType = ActiveEditorType.Visual;
-
     undoStack: string[] = [];
     redoStack: string[] = [];
     undoRedoCodes = {
@@ -101,6 +94,16 @@ export class FormulaFieldComponent {
         NOCHANGE: 0,
     };
     undoRedo = 0;
+
+    mathField!: MathFieldMethods;
+
+    activeEditor: ActiveEditorType = ActiveEditorType.Visual;
+    private active = false;
+
+    @ViewChild("latexInputElement")
+    latexInputElement!: ElementRef<HTMLTextAreaElement>;
+
+    @ViewChild("visualInput") visualInput!: ElementRef<HTMLElement>;
 
     @Input() id!: number;
 
@@ -114,13 +117,11 @@ export class FormulaFieldComponent {
     set isActive(value: boolean) {
         this.active = value;
         if (value) {
-            setTimeout(() => {
+            if (this.mathField) {
                 this.mathField.focus();
-            }, 50);
+            }
         }
     }
-
-    private active = false;
 
     @Output() edited = new EventEmitter<Edit>();
     @Output() enter = new EventEmitter<number>();
@@ -131,7 +132,7 @@ export class FormulaFieldComponent {
     @Output() delete = new EventEmitter<number>();
     @Output() add = new EventEmitter<number>();
 
-    rows: number = 2;
+    constructor(private cd: ChangeDetectorRef) {}
 
     /**
      * sets textarea to have as many rows that are necessary to display
@@ -168,7 +169,7 @@ export class FormulaFieldComponent {
         const elem = this.visualInput.nativeElement;
 
         const config: MathQuillConfig = {
-            spaceBehavesLikeTab: true,
+            spaceBehavesLikeTab: false,
             handlers: {
                 edit: (field: MathFieldMethods) => this.editHandler(field),
                 enter: (field: MathFieldMethods) => this.enterHandler(field),
@@ -185,6 +186,7 @@ export class FormulaFieldComponent {
         };
         this.mathField = this.MQ.MathField(elem, config);
         this.mathField.latex(this.initialValue);
+        this.mathField.focus();
     }
 
     /**

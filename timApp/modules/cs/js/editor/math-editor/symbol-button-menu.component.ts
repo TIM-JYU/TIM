@@ -1,5 +1,16 @@
 import {Component, EventEmitter, Output} from "@angular/core";
-import formulas from "./latex-commands";
+import {FORMULAS} from "./latex-commands";
+
+/**
+ * Text is command in text format \frac{}{}
+ * command is what mathquill accepts \frac
+ * useWrite is needed to write some commands like \overline{\text{i}}
+ */
+export type FormulaEvent = {
+    text: string;
+    command: string;
+    useWrite: boolean;
+};
 
 @Component({
     selector: "symbol-button-menu",
@@ -7,7 +18,7 @@ import formulas from "./latex-commands";
         <div class="symbol-button-menu">
             <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
             <div class="buttons-container math display" [hidden]="!buttonsVisible" >
-                <button class="symbol-button" *ngFor="let item of formulaArray;" (mousedown)="addFormula(item.text)"
+                <button class="symbol-button" *ngFor="let item of formulaArray;" (mousedown)="addFormula(item.text, item.command, item.useWrite)"
                  >{{item.display}}</button>
             </div>
         </div>
@@ -15,14 +26,18 @@ import formulas from "./latex-commands";
     styleUrls: ["./formula-editor.component.scss"],
 })
 export class SymbolButtonMenuComponent {
-    formulaArray = formulas;
-    buttonsVisible = false;
+    formulaArray = FORMULAS;
+    buttonsVisible = true;
     showFormulasText = "Show formulas";
 
-    @Output() setFormula = new EventEmitter<string>();
+    @Output() setFormula = new EventEmitter<FormulaEvent>();
 
-    addFormula(formula: string) {
-        this.setFormula.emit(formula);
+    addFormula(formula: string, command: string, useWrite: boolean = false) {
+        this.setFormula.emit({
+            text: formula,
+            command: command,
+            useWrite: useWrite,
+        });
     }
 
     /**

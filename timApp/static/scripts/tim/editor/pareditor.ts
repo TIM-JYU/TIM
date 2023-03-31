@@ -34,6 +34,7 @@ import type {IPluginInfoResponse} from "tim/editor/parCompiler";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {RestampDialogClose} from "tim/editor/restamp-dialog.component";
 import {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
+import type {FormulaEvent} from "../../../../modules/cs/js/editor/math-editor/symbol-button-menu.component";
 
 markAsUsed(rangyinputs);
 
@@ -249,7 +250,11 @@ export class PareditorController extends DialogController<
     private originalDocument: boolean = true;
 
     private formulaEditorOpen: boolean = false;
-    private currentSymbol: string = "";
+    private currentSymbol: FormulaEvent = {
+        text: "",
+        command: "",
+        useWrite: true,
+    };
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1733,12 +1738,11 @@ ${backTicks}
         }
     }
 
-    onFormulaEditorCloseOk() {
+    toggleFormulaEditor() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
-    }
-
-    onFormulaEditorCloseCancel() {
-        this.formulaEditorOpen = !this.formulaEditorOpen;
+        setTimeout(() => {
+            this.editor?.focus();
+        }, 0);
     }
 
     /**

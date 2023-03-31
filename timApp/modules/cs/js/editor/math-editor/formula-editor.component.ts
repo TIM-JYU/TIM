@@ -21,6 +21,7 @@ import {IEditor} from "../editor";
 import type {Edit} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
+import {FormulaEvent} from "./symbol-button-menu.component";
 
 enum FormulaType {
     Multi = "multi",
@@ -41,16 +42,6 @@ type OldContent = {
 
 type FieldType = {
     latex: string;
-};
-
-/**
- * wrapper for pressed button text
- * Object wrapping is necessary to
- * make angular produce an event for each
- * button press.
- */
-type ButtonState = {
-    text: string;
 };
 
 type StringPair = [string, string];
@@ -119,6 +110,7 @@ export class FormulaEditorComponent {
 
     @Output() okClose = new EventEmitter<void>();
     @Output() cancelClose = new EventEmitter<void>();
+    @Output() focusBack = new EventEmitter<void>();
 
     isMultilineFormula = true;
 
@@ -152,18 +144,22 @@ export class FormulaEditorComponent {
     private isVisible = false;
 
     @Input()
-    get currentSymbol(): ButtonState {
+    get currentSymbol(): FormulaEvent {
         return this.buttonSymbol;
     }
 
-    set currentSymbol(value: ButtonState) {
+    set currentSymbol(value: FormulaEvent) {
         this.buttonSymbol = value;
-        if (this.fieldComponents !== undefined) {
+        if (this.fieldComponents) {
             this.addFormula(value);
         }
     }
 
-    private buttonSymbol: ButtonState = {text: ""};
+    private buttonSymbol: FormulaEvent = {
+        text: "",
+        command: "",
+        useWrite: false,
+    };
 
     /**
      * append new empty field after the current field
@@ -655,15 +651,15 @@ export class FormulaEditorComponent {
      * Adds formula to both fields in last known cursor position.
      * @param formulaInput LaTeX-formula to be added to fields.
      */
-    addFormula(formulaInput: ButtonState | string) {
-        const formula =
-            typeof formulaInput === "string" ? formulaInput : formulaInput.text;
-
+    addFormula(formulaInput: FormulaEvent) {
         const activeField = this.getActiveField();
         if (activeField === undefined) {
             return;
         }
+
         if (activeField.activeEditor === ActiveEditorType.Latex) {
+            const formula = formulaInput.text;
+
             const startPos =
                 activeField.latexInputElement.nativeElement.selectionStart;
             const endPos =
@@ -681,8 +677,20 @@ export class FormulaEditorComponent {
             activeField.handleLatexInput();
             activeField.latexInputElement.nativeElement.focus();
         } else {
-            activeField.mathField.write(formula);
-            activeField.mathField.focus();
+            let formula = "";
+            if (formulaInput.useWrite) {
+                activeField.mathField.write(formulaInput.text);
+                formula = formulaInput.text;
+            } else {
+                activeField.mathField.typedText(formulaInput.command);
+                formula = formulaInput.command;
+            }
+            if (~formula.indexOf("\\")) {
+                activeField.mathField.keystroke("Spacebar");
+            }
+            setTimeout(() => {
+                activeField.mathField.focus();
+            }, 0);
         }
     }
 }
