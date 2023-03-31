@@ -7968,6 +7968,14 @@
           <context context-type="linenumber">73</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2210700601124842596" datatype="html">
+        <source>Add line above</source>
+        <target state="translated">Lägg till rad ovan</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
+          <context context-type="linenumber">74,75</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
