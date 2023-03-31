@@ -33,6 +33,11 @@ export type Edit = {
     latex: string;
 };
 
+export type LineAdd = {
+    id: number;
+    addBelow: boolean;
+};
+
 @Component({
     selector: "cs-formula-field",
     template: `
@@ -66,7 +71,7 @@ export type Edit = {
             </div>
 
             <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
-                <button type="button" class="btn btn-default" (click)="handleAddLine()" title="Add line below"
+                <button type="button" class="btn btn-default" (click)="handleAddLine(false)" title="Add line above"
                         i18n-title>
                     <span class="glyphicon glyphicon-plus"></span>
                 </button>
@@ -74,6 +79,11 @@ export type Edit = {
                 <button type="button" class="btn btn-default" (click)="handleRemoveLine()" title="Remove current line"
                         i18n-title>
                     <span class="glyphicon glyphicon-remove"></span>
+                </button>
+                
+                <button type="button" class="btn btn-default" (click)="handleAddLine(true)" title="Add line below"
+                        i18n-title>
+                    <span class="glyphicon glyphicon-plus"></span>
                 </button>
             </div>
         </div>
@@ -123,13 +133,13 @@ export class FormulaFieldComponent {
     private active = false;
 
     @Output() edited = new EventEmitter<Edit>();
-    @Output() enter = new EventEmitter<number>();
+    @Output() enter = new EventEmitter<LineAdd>();
     @Output() backspace = new EventEmitter<number>();
     @Output() focus = new EventEmitter<Edit>();
     @Output() downArrow = new EventEmitter<number>();
     @Output() upArrow = new EventEmitter<number>();
     @Output() delete = new EventEmitter<number>();
-    @Output() add = new EventEmitter<number>();
+    @Output() add = new EventEmitter<LineAdd>();
 
     rows: number = 2;
 
@@ -230,11 +240,11 @@ export class FormulaFieldComponent {
     }
 
     enterPressed() {
-        this.enter.emit(this.id);
+        this.enter.emit({id: this.id, addBelow: true});
     }
 
-    handleAddLine() {
-        this.add.emit(this.id);
+    handleAddLine(addBelow: boolean) {
+        this.add.emit({id: this.id, addBelow: addBelow});
     }
 
     handleRemoveLine() {
