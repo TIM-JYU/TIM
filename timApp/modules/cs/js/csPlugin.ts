@@ -3859,12 +3859,12 @@ ${fhtml}
                 </div>
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
-            <div *ngIf="formulaEditor">
+            <div *ngIf="formulaEditor" [hidden]="formulaEditorOpen">
                 <div class="button-menu-container">
-                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorAddFormula()" i18n
+                    <button class="timButton" (click)="onFormulaEditorAddFormula()" i18n
                             title="Ctrl+e">Add formula
                     </button>
-                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorEditFormula()" i18n>
+                    <button class="timButton" (click)="onFormulaEditorEditFormula()" i18n>
                         Edit formula
                     </button>
                     <file-select-manager class="small"
@@ -3881,7 +3881,6 @@ ${fhtml}
                               i18n-title></span>
                     </a>
                 </div>
-
             </div>
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
