@@ -36,6 +36,13 @@ Name of the Docker Compose project.
 Modify only if there are multiple TIM instances in the same host.
 """,
         ),
+        "images_repository": (
+            "ghcr.io/tim-jyu",
+            """
+Docker images repository to use when pulling images.
+With this, you can self-host custom images if need-be.
+""",
+        ),
     },
     "tim": {
         "host": (

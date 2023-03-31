@@ -1,11 +1,25 @@
 name: Run tests
 
-on: push
+on: [push, pull_request]
 
 jobs:
+  skip_check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+        - id: skip_check
+          uses: fkirc/skip-duplicate-actions@v5
+          with:
+              concurrent_skipping: 'same_content_newer'
+              skip_after_successful_duplicate: 'true'
+
   ci_tests:
     name: CI tests (${{ matrix.test_module }})
     runs-on: ubuntu-latest
+
+    needs: skip_check
+    if: needs.skip_check.outputs.should_skip != 'true'
 
     strategy:
       matrix:
@@ -21,6 +35,7 @@ jobs:
           submodules: true
       - name: Cache Angular build assets
         uses: actions/cache@v3
+        if: "${{ matrix.test_module == 'browser' }}"
         with:
           path: timApp/.angular/cache
           key: ${{ runner.os }}-angular-cache-${{ hashFiles('**/*.ts') }}
@@ -28,6 +43,7 @@ jobs:
             ${{ runner.os }}-angular-cache-
       - name: Cache node modules
         uses: actions/cache@v3
+        if: "${{ matrix.test_module == 'browser' || matrix.test_module == 'server'  }}"
         with:
           path: |
             timApp/node_modules
@@ -43,9 +59,11 @@ jobs:
       - name: Download images
         run: ./tim dc pull --quiet
       - name: Install dependencies
+        if: "${{ matrix.test_module == 'browser' || matrix.test_module == 'server'  }}"
         run: ./tim npmi
       - name: Compile JS
-        run: ./tim js
+        if: "${{ matrix.test_module == 'browser' || matrix.test_module == 'server'  }}"
+        run: ./tim js --target ${{ matrix.test_module }}
       - name: Run tests
         run: ./tim test --dc-up ${{ matrix.test_module }}
         timeout-minutes: 40

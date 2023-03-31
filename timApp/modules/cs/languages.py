@@ -22,12 +22,12 @@ from modifiers import Modifier
 from points import give_points
 from run import (
     generate_filename,
-    CS3_TAG,
     get_imgsource,
     run2_subdir,
     copy_file,
     wait_file,
     run,
+    CS3_IMAGE,
 )
 from tim_common.cs_sanitizer import cs_min_sanitize
 from tim_common.fileParams import (
@@ -135,7 +135,7 @@ class Language:
             query.jso,
             "markup",
             "dockercontainer",
-            f"timimages/cs3:{CS3_TAG}",
+            CS3_IMAGE,
         )
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
@@ -399,6 +399,11 @@ class Language:
         if self.just_compile:
             args = []
 
+        extra_cmd = df(extra, "")
+        before_run = self.query.jso.get("markup", {}).get("beforeRun", None)
+        if before_run:
+            extra_cmd = before_run + ";" + extra_cmd
+
         mounts = self.query.jso.get("markup", {}).get("mounts", [])
         save_run_cmd = None
         save_test_run_cmd = None
@@ -421,7 +426,7 @@ class Language:
             stdin=df(stdin, self.stdin),
             uargs=uargs,
             code=df(code, "utf-8"),
-            extra=df(extra, ""),
+            extra=extra_cmd,
             ulimit=df(ulimit, self.ulimit),
             no_x11=df(no_x11, self.no_x11),
             savestate=df(savestate, self.savestate),
@@ -2204,7 +2209,7 @@ class Octave(Language):
             self.query.jso,
             "markup",
             "dockercontainer",
-            f"timimages/cs3:{CS3_TAG}",
+            CS3_IMAGE,
         )
         code, out, err, pwddir = self.runself(
             ["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],

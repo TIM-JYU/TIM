@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04 as base
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
     APT_CLEANUP="rm -rf /var/lib/apt/lists /dvisvgm-2.4 /usr/share/doc ~/.cache"
@@ -90,6 +90,8 @@ RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/$
  cd / && \
  ${APT_CLEANUP} && \
  rm -rf /dvisvgm-$DVISVGM_VERSION
+
+FROM base as complete
 
 # Install Python, pip and other necessary packages
 

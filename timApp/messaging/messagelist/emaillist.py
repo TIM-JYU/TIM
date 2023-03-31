@@ -175,11 +175,17 @@ def set_default_templates(email_list: MailingList) -> None:
 
     # Build the URI in case because not giving one is interpreted by Mailman as deleting the template form the list.
     try:
-        template_base_uri = f"{config.MAILMAN_URL}/empty"
-        # These templates don't actually exist, but non-existing templates are substituted with empty strings and that
-        # should still fix the broken coding leading to attachments issue.
-        email_list.set_template("list:member:regular:footer", template_base_uri)
-        email_list.set_template("list:member:regular:header", template_base_uri)
+        list_id: str = email_list.rest_data["list_id"]
+        template_url: str = app.config["MAILMAN_TEMPLATES_URL"]
+
+        def set_template(template_name: str) -> None:
+            url = template_url.format_map(
+                {"list_id": list_id, "template_name": template_name}
+            )
+            email_list.set_template(template_name, url)
+
+        set_template("list:member:regular:footer")
+        set_template("list:member:regular:header")
     except HTTPError as e:
         log_mailman(e, "In set_default_templates()")
         raise

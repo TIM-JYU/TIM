@@ -12,7 +12,8 @@ from subprocess import PIPE, Popen
 from file_util import write_safe, is_safe_path, rm_safe
 from tim_common.fileParams import mkdirs, tquote, get_param
 
-CS3_TAG = os.environ.get("CSPLUGIN_IMAGE_TAG", "")
+CS3_IMAGE = os.environ.get("CSPLUGIN_IMAGE", "")
+CS3_TAG = CS3_IMAGE.split(":")[-1]
 
 
 def wait_file(f1, tries=10):
@@ -150,7 +151,7 @@ def run2(
     ulimit=None,
     no_x11=False,
     savestate="",
-    dockercontainer=f"timimages/cs3:{CS3_TAG}",
+    dockercontainer=CS3_IMAGE,
     compile_commandline="",
     mounts=[],
     extra_mappings=None,
