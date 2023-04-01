@@ -1752,6 +1752,19 @@ export class CsController extends CsBase implements ITimComponent {
         this.formulaEditorOpen = !this.formulaEditorOpen;
     }
 
+    /**
+     * Returns all templateButtons that have math.
+     */
+    mathTemplateButtons() {
+        const mathButtons: ITemplateButton[] = [];
+        this.templateButtons.forEach(function (button) {
+            if (button.hasMath) {
+                mathButtons.push(button);
+            }
+        });
+        return mathButtons;
+    }
+
     get count() {
         return this.markup.count;
     }
@@ -3891,6 +3904,7 @@ ${fhtml}
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
                             [currentSymbol]="currentSymbol"
+                            [templateButtons]="this.mathTemplateButtons()"
                     ></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
@@ -3930,7 +3944,7 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
+            <div #runSnippets class="csRunSnippets" [hidden]="formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
                         (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
             </div>

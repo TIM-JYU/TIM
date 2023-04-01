@@ -62,6 +62,7 @@ type StringPair = [string, string];
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
                 <symbol-button-menu
                         (setFormula)="addFormula($event)"
+                        [templateButtons]="this.templateButtons"
                 >
                 </symbol-button-menu>
                 <div class="fields">
@@ -119,6 +120,8 @@ export class FormulaEditorComponent {
 
     @Output() okClose = new EventEmitter<void>();
     @Output() cancelClose = new EventEmitter<void>();
+
+    @Input() templateButtons: any;
 
     isMultilineFormula = true;
 
