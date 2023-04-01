@@ -1,5 +1,4 @@
-import {Component, EventEmitter, Output} from "@angular/core";
-import {FORMULAS} from "./latex-commands";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 
 /**
  * Text is command in text format \frac{}{}
@@ -16,21 +15,18 @@ export type FormulaEvent = {
     selector: "symbol-button-menu",
     template: `
         <div class="symbol-button-menu">
-            <button class="timButton" (click)="setButtonsVisible(buttonsVisible)">{{showFormulasText}}</button>
-            <div class="buttons-container math display" [hidden]="!buttonsVisible" >
-                <button class="symbol-button" *ngFor="let item of formulaArray;" (mousedown)="addFormula(item.text, item.command, item.useWrite)"
-                 >{{item.display}}</button>
+            <div class="buttons-container math display">
+                <button class="symbol-button" *ngFor="let item of templateButtons;" (mousedown)="addFormula(item.data, item.data, true)"
+                 >{{item.text}}</button>
             </div>
         </div>
     `,
     styleUrls: ["./formula-editor.component.scss"],
 })
 export class SymbolButtonMenuComponent {
-    formulaArray = FORMULAS;
-    buttonsVisible = true;
-    showFormulasText = "Show formulas";
-
     @Output() setFormula = new EventEmitter<FormulaEvent>();
+
+    @Input() templateButtons: any;
 
     addFormula(formula: string, command: string, useWrite: boolean = false) {
         this.setFormula.emit({
@@ -38,18 +34,5 @@ export class SymbolButtonMenuComponent {
             command: command,
             useWrite: useWrite,
         });
-    }
-
-    /**
-     * Changes buttons to visible or not visible
-     * @param isVisible are buttons currently visible
-     */
-    setButtonsVisible(isVisible: boolean) {
-        this.buttonsVisible = !isVisible;
-        if (this.buttonsVisible) {
-            this.showFormulasText = "Hide formulas";
-        } else {
-            this.showFormulasText = "Show formulas";
-        }
     }
 }
