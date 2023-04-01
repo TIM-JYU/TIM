@@ -61,6 +61,7 @@ import {getInt} from "./util/util";
 import type {IFile, IFileSpecification} from "./util/file-select";
 import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
+import type {FormulaEvent} from "./editor/math-editor/symbol-button-menu.component";
 
 // TODO better name?
 interface Vid {
@@ -987,7 +988,7 @@ export class CsController extends CsBase implements ITimComponent {
     muokattu: boolean;
     noeditor!: boolean;
     formulaEditorOpen = false;
-    currentSymbol = {text: ""};
+    currentSymbol: FormulaEvent = {text: "", command: "", useWrite: true};
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
     postcode?: string;
@@ -1214,9 +1215,9 @@ export class CsController extends CsBase implements ITimComponent {
             this.markup.parsons.shuffle = this.initUserCode;
         }
         if (this.editor.addFormulaEditorOpenHandler) {
-            this.editor.addFormulaEditorOpenHandler(() =>
-                this.onFormulaEditorAddFormula()
-            );
+            this.editor.addFormulaEditorOpenHandler(() => {
+                this.toggleFormulaEditor();
+            });
         }
     }
 
@@ -1731,38 +1732,11 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.formulaEditor;
     }
 
-    /**
-     * Write inputted formula to current editor
-     * @param result formula that was typed
-     */
-    onFormulaEditorCloseOk() {
+    toggleFormulaEditor() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
-    }
-
-    // TODO: Remove these 3 identical functions
-    onFormulaEditorCloseCancel() {
-        this.formulaEditorOpen = !this.formulaEditorOpen;
-    }
-
-    onFormulaEditorAddFormula() {
-        this.formulaEditorOpen = !this.formulaEditorOpen;
-    }
-
-    onFormulaEditorEditFormula() {
-        this.formulaEditorOpen = !this.formulaEditorOpen;
-    }
-
-    /**
-     * Returns all templateButtons that have math.
-     */
-    mathTemplateButtons() {
-        const mathButtons: ITemplateButton[] = [];
-        this.templateButtons.forEach(function (button) {
-            if (button.hasMath) {
-                mathButtons.push(button);
-            }
-        });
-        return mathButtons;
+        setTimeout(() => {
+            this.editor?.focus();
+        }, 0);
     }
 
     get count() {
@@ -2936,7 +2910,7 @@ ${fhtml}
         const text = s.replace(/\\n/g, "\n");
         // write the text to formulaeditor if its enabled and open
         if (this.formulaEditor && this.formulaEditorOpen) {
-            this.currentSymbol = {text: text};
+            this.currentSymbol = {text: text, command: text, useWrite: true};
         } else {
             this.editor?.insert?.(text);
             this.editor?.focus();
@@ -3872,12 +3846,12 @@ ${fhtml}
                 </div>
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
-            <div *ngIf="formulaEditor">
+            <div *ngIf="formulaEditor" [hidden]="formulaEditorOpen">
                 <div class="button-menu-container">
-                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorAddFormula()" i18n
+                    <button class="timButton" (click)="toggleFormulaEditor()" i18n
                             title="Ctrl+e">Add formula
                     </button>
-                    <button class="timButton" [hidden]="formulaEditorOpen" (click)="onFormulaEditorEditFormula()" i18n>
+                    <button class="timButton" (click)="toggleFormulaEditor()" i18n>
                         Edit formula
                     </button>
                     <file-select-manager class="small"
@@ -3894,17 +3868,15 @@ ${fhtml}
                               i18n-title></span>
                     </a>
                 </div>
-
             </div>
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
                     <cs-formula-editor
-                            (okClose)="onFormulaEditorCloseOk()"
-                            (cancelClose)="onFormulaEditorCloseCancel()"
+                            (okClose)="toggleFormulaEditor()"
+                            (cancelClose)="toggleFormulaEditor()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
                             [currentSymbol]="currentSymbol"
-                            [templateButtons]="this.mathTemplateButtons()"
                     ></cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
@@ -3944,7 +3916,7 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div #runSnippets class="csRunSnippets" [hidden]="formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
+            <div [hidden]="formulaEditor" #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
                         (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
             </div>

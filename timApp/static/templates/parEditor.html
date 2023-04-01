@@ -4,8 +4,8 @@
             <button ng-click="$ctrl.onFormulaEditorAddFormula(true)" class="timButton" title="Ctrl+e">Add formula</button>
 
             <cs-formula-editor ng-if="$ctrl.formulaEditorOpen"
-                               (ok-close)="$ctrl.onFormulaEditorCloseOk()"
-                               (cancel-close)="$ctrl.onFormulaEditorCloseCancel()"
+                               (ok-close)="$ctrl.toggleFormulaEditor()"
+                               (cancel-close)="$ctrl.toggleFormulaEditor()"
                                [editor]="$ctrl.editor"
                                [visible]="$ctrl.formulaEditorOpen"
                                [currentSymbol]="$ctrl.currentSymbol"
