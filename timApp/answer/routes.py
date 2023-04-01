@@ -1805,7 +1805,10 @@ def get_all_answers_list_plain(
     if print_answers:
         jointext = "\n\n----------------------------------------------------------------------------------\n"
     text = jointext.join(all_answers)
-    return Response(text, mimetype="text/plain")
+    try:
+        return Response(text, mimetype="text/plain")
+    except UnicodeEncodeError:
+        return Response(text.encode("utf-8", "surrogatepass"), mimetype="text/plain")
 
 
 def get_all_answers_as_list(
