@@ -3787,8 +3787,11 @@ ${fhtml}
         return this.runChanged;
     }
 
+    /**
+     * Return array consisting of ITemplateButtons, that have math.
+     */
     mathTemplateButtons() {
-        let mathButtons: ITemplateButton[] = [];
+        const mathButtons: ITemplateButton[] = [];
         this.templateButtons.forEach(function (button) {
             if (button.hasMath) {
                 mathButtons.push(button);
@@ -3927,7 +3930,7 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div  #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
+            <div  #runSnippets class="csRunSnippets" [hidden]="formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
                         (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
             </div>

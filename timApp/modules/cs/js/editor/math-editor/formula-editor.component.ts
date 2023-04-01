@@ -662,6 +662,7 @@ export class FormulaEditorComponent {
 
     /**
      * Adds formula to both fields in last known cursor position.
+     * TODO: There is maybe unused code in this function, that needs to be removed.
      * @param formulaInput LaTeX-formula to be added to fields.
      */
     addFormula(formulaInput: FormulaEvent) {
@@ -670,8 +671,11 @@ export class FormulaEditorComponent {
             return;
         }
 
+        const cursorPosition = formulaInput.text.indexOf("⁞");
+        const formulaWithoutCursor = formulaInput.text.replace("⁞", "");
+
         if (activeField.activeEditor === ActiveEditorType.Latex) {
-            const formula = formulaInput.text;
+            const formula = formulaWithoutCursor;
 
             const startPos =
                 activeField.latexInputElement.nativeElement.selectionStart;
@@ -683,16 +687,14 @@ export class FormulaEditorComponent {
                 formula +
                 oldValue.substring(endPos, oldValue.length);
             activeField.latexInput = newValue;
-            activeField.latexInputElement.nativeElement.selectionStart =
-                startPos + newValue.length;
-            activeField.latexInputElement.nativeElement.selectionEnd =
-                endPos + newValue.length;
             activeField.handleLatexInput();
-            activeField.latexInputElement.nativeElement.focus();
+            setTimeout(() => {
+                activeField.latexInputElement.nativeElement.focus();
+            }, 0);
         } else {
             let formula = "";
             if (formulaInput.useWrite) {
-                activeField.mathField.write(formulaInput.text);
+                activeField.mathField.write(formulaWithoutCursor);
                 formula = formulaInput.text;
             } else {
                 activeField.mathField.typedText(formulaInput.command);
