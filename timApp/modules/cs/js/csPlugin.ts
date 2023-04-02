@@ -2907,7 +2907,11 @@ ${fhtml}
             }
             ip++;
         }
-        const text = s.replace(/\\n/g, "\n");
+        let text = s.replace(/\\n/g, "\n");
+        // Don't replace in latex as commands like \ne wouldn't work
+        if (this.formulaEditor) {
+            text = s;
+        }
         // write the text to formulaeditor if its enabled and open
         if (this.formulaEditor && this.formulaEditorOpen) {
             this.currentSymbol = {text: text, command: text, useWrite: true};
