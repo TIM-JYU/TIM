@@ -704,7 +704,7 @@ export class FormulaEditorComponent {
                 activeField.mathField.typedText(formulaInput.command);
                 formula = formulaInput.command;
             }
-            if (~formula.indexOf("\\")) {
+            if (formula.includes("\\")) {
                 activeField.mathField.keystroke("Spacebar");
             }
             setTimeout(() => {
