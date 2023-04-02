@@ -1,4 +1,5 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {ITemplateButton} from "../../csPlugin";
 
 /**
  * Text is command in text format \frac{}{}
@@ -26,7 +27,7 @@ export type FormulaEvent = {
 export class SymbolButtonMenuComponent {
     @Output() setFormula = new EventEmitter<FormulaEvent>();
 
-    @Input() templateButtons: any;
+    @Input() templateButtons: ITemplateButton[] = [];
 
     addFormula(formula: string, command: string, useWrite: boolean = false) {
         this.setFormula.emit({
