@@ -57,7 +57,12 @@ def json_response_and_commit(jsondata, status_code=200):
 
 
 def text_response(data: str, status_code: int = 200) -> Response:
-    response = Response(data, mimetype="text/plain")
+    try:
+        response = Response(data, mimetype="text/plain")
+    except UnicodeEncodeError:
+        response = Response(
+            data.encode("utf-8", "surrogatepass"), mimetype="text/plain"
+        )
     response.status_code = status_code
     return response
 
