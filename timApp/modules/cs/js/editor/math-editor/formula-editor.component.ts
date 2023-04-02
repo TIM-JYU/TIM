@@ -689,6 +689,10 @@ export class FormulaEditorComponent {
             activeField.latexInput = newValue;
             activeField.handleLatexInput();
             setTimeout(() => {
+                activeField.latexInputElement.nativeElement.selectionStart =
+                    startPos + cursorPosition;
+                activeField.latexInputElement.nativeElement.selectionEnd =
+                    endPos + cursorPosition;
                 activeField.latexInputElement.nativeElement.focus();
             }, 0);
         } else {
