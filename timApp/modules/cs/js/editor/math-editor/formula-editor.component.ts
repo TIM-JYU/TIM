@@ -18,6 +18,7 @@ import {
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {IEditor} from "../editor";
+import type {ITemplateButton} from "../../csPlugin";
 import type {Edit, LineAdd} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
@@ -113,7 +114,7 @@ export class FormulaEditorComponent {
     @Output() cancelClose = new EventEmitter<void>();
     @Output() focusBack = new EventEmitter<void>();
 
-    @Input() templateButtons: any;
+    @Input() templateButtons: ITemplateButton[] = [];
 
     isMultilineFormula = true;
 
@@ -689,10 +690,12 @@ export class FormulaEditorComponent {
             activeField.latexInput = newValue;
             activeField.handleLatexInput();
             setTimeout(() => {
-                activeField.latexInputElement.nativeElement.selectionStart =
-                    startPos + cursorPosition;
-                activeField.latexInputElement.nativeElement.selectionEnd =
-                    endPos + cursorPosition;
+                if (cursorPosition !== -1) {
+                    activeField.latexInputElement.nativeElement.selectionStart =
+                        startPos + cursorPosition;
+                    activeField.latexInputElement.nativeElement.selectionEnd =
+                        endPos + cursorPosition;
+                }
                 activeField.latexInputElement.nativeElement.focus();
             }, 0);
         } else {

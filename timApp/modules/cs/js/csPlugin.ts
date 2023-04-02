@@ -472,7 +472,7 @@ const TemplateButton = t.intersection([
     }),
 ]);
 
-interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
+export interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
  * This defines the required format for the csPlugin YAML markup.
