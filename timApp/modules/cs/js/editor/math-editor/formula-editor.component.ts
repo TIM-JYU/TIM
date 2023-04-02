@@ -209,6 +209,7 @@ export class FormulaEditorComponent {
 
         this.isMultilineFormula = this.fields.length > 1;
         this.useExistingParenthesis = false;
+        this.updateFormulaToEditor();
     }
 
     constructor(private cd: ChangeDetectorRef) {}
@@ -219,7 +220,6 @@ export class FormulaEditorComponent {
         }
         this.fields[res.id].latex = res.latex;
         this.updateFormulaToEditor();
-        // this.isMultilineFormulaControl.setValue(this.fields.length > 1);
         this.activeFieldsIndex = res.id;
     }
 
