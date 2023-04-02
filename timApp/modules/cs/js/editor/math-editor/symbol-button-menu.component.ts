@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
-import {ITemplateButton} from "../../csPlugin";
+import type {ITemplateButton} from "../../csPlugin";
 
 /**
  * Text is command in text format \frac{}{}

@@ -18,11 +18,11 @@ import {
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {IEditor} from "../editor";
+import type {ITemplateButton} from "../../csPlugin";
 import type {Edit, LineAdd} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
 import {FormulaEvent} from "./symbol-button-menu.component";
-import {ITemplateButton} from "../../csPlugin";
 
 enum FormulaType {
     Multi = "multi",
