@@ -17,7 +17,7 @@ export type FormulaEvent = {
     template: `
         <div class="symbol-button-menu">
             <div class="buttons-container math display">
-                <button class="symbol-button" *ngFor="let item of templateButtons;" (mousedown)="addFormula(item.data, item.data, true)"
+                <button class="symbol-button" title="{{item.expl}}" *ngFor="let item of templateButtons;" (mousedown)="addFormula(item.data, item.data, true)"
                  >{{item.text}}</button>
             </div>
         </div>
