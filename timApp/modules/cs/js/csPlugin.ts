@@ -3863,39 +3863,26 @@ ${fhtml}
                 </div>
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
-            <div *ngIf="formulaEditor" [hidden]="formulaEditorOpen">
-                <div class="button-menu-container">
-                    <button class="timButton" (click)="toggleFormulaEditor()" i18n
-                            title="Ctrl+e">Add formula
-                    </button>
-                    <button class="timButton" (click)="toggleFormulaEditor()" i18n>
-                        Edit formula
-                    </button>
-                    <file-select-manager class="small"
-                                         [dragAndDrop]="dragAndDrop"
-                                         [uploadUrl]="uploadUrl"
-                                         [stem]="uploadstem"
-                                         (file)="onFileLoad($event)"
-                                         (upload)="onUploadResponse($event)"
-                                         (uploadDone)="onUploadDone($event)">
-                    </file-select-manager>
-                    <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet"
-                       target="_blank">
-                        <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions"
-                              i18n-title></span>
-                    </a>
-                </div>
-            </div>
+
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
                     <cs-formula-editor
                             (okClose)="toggleFormulaEditor()"
                             (cancelClose)="toggleFormulaEditor()"
+                            (toggle)="toggleFormulaEditor()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
                             [currentSymbol]="currentSymbol"
-                            [templateButtons]="this.mathTemplateButtons()"
-                    ></cs-formula-editor>
+                            [templateButtons]="this.mathTemplateButtons()">
+                            <file-select-manager class="small"
+                                 [dragAndDrop]="dragAndDrop"
+                                 [uploadUrl]="uploadUrl"
+                                 [stem]="uploadstem"
+                                 (file)="onFileLoad($event)"
+                                 (upload)="onUploadResponse($event)"
+                                 (uploadDone)="onUploadDone($event)">
+                            </file-select-manager>
+                    </cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
                 <div class="csEditorAreaDiv" [hidden]="formulaEditor && formulaEditorOpen">
@@ -3934,7 +3921,7 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div  #runSnippets class="csRunSnippets" [hidden]="formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
+            <div  #runSnippets class="csRunSnippets" [hidden]="formulaEditor" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
                         (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
             </div>
