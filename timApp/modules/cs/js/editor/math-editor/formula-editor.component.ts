@@ -676,21 +676,28 @@ export class FormulaEditorComponent {
 
     /**
      * Moves cursor to where cursor symbol is
+     * and deletes the cursor symbol
      * @param mathField
      */
     setMathQuillCursor(activeField: FormulaFieldComponent) {
         const span = activeField.visualInput.nativeElement;
         const cursor = "⁞";
         const children = span.getElementsByTagName("span");
-        activeField.mathField.focus();
         for (const child of children) {
             if (child.textContent === cursor) {
-                child.click();
-                console.log(child, child.textContent);
+                // clicks at position where cursor is
+                child.dispatchEvent(
+                    new MouseEvent("mousedown", {
+                        bubbles: true,
+                    })
+                );
+                // removes cursor symbol
+                activeField.mathField.keystroke("Right Backspace");
                 return;
             }
         }
-        console.log("not found");
+        // put focus to field even if it doesn't have cursor symbol
+        activeField.mathField.focus();
     }
 
     /**
@@ -740,18 +747,8 @@ export class FormulaEditorComponent {
                 activeField.latexInputElement.nativeElement.focus();
             }, 0);
         } else {
-            let formula = "";
-            if (formulaInput.useWrite) {
-                console.log("write");
-                activeField.mathField.write(formulaInput.text);
-                formula = formulaInput.text;
-            } else {
-                activeField.mathField.typedText(formulaInput.command);
-                formula = formulaInput.command;
-            }
-            if (formula.includes("\\")) {
-                activeField.mathField.keystroke("Spacebar");
-            }
+            activeField.mathField.write(formulaInput.text);
+
             setTimeout(() => {
                 this.setMathQuillCursor(activeField);
                 // activeField.mathField.focus();
