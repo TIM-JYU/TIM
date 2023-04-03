@@ -17,6 +17,7 @@ import {
     ChangeDetectorRef,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import type {MathFieldMethods} from "vendor/mathquill/mathquill";
 import {IEditor} from "../editor";
 import type {ITemplateButton} from "../../csPlugin";
 import type {Edit, LineAdd} from "./formula-field.component";
@@ -662,6 +663,25 @@ export class FormulaEditorComponent {
     }
 
     /**
+     * Moves cursor to where cursor symbol is
+     * @param mathField
+     */
+    setMathQuillCursor(activeField: FormulaFieldComponent) {
+        const span = activeField.visualInput.nativeElement;
+        const cursor = "⁞";
+        const children = span.getElementsByTagName("span");
+        activeField.mathField.focus();
+        for (const child of children) {
+            if (child.textContent === cursor) {
+                child.click();
+                console.log(child, child.textContent);
+                return;
+            }
+        }
+        console.log("not found");
+    }
+
+    /**
      * Adds formula to both fields in last known cursor position.
      * TODO: There is maybe unused code in this function, that needs to be removed.
      * @param formulaInput LaTeX-formula to be added to fields.
@@ -701,7 +721,8 @@ export class FormulaEditorComponent {
         } else {
             let formula = "";
             if (formulaInput.useWrite) {
-                activeField.mathField.write(formulaWithoutCursor);
+                console.log("write");
+                activeField.mathField.write(formulaInput.text);
                 formula = formulaInput.text;
             } else {
                 activeField.mathField.typedText(formulaInput.command);
@@ -711,7 +732,8 @@ export class FormulaEditorComponent {
                 activeField.mathField.keystroke("Spacebar");
             }
             setTimeout(() => {
-                activeField.mathField.focus();
+                this.setMathQuillCursor(activeField);
+                // activeField.mathField.focus();
             }, 0);
         }
     }
