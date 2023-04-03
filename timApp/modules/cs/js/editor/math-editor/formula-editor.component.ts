@@ -18,7 +18,6 @@ import {
     ContentChild,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import type {MathFieldMethods} from "vendor/mathquill/mathquill";
 import {IEditor} from "../editor";
 import type {ITemplateButton} from "../../csPlugin";
 import {FileSelectManagerComponent} from "../../util/file-select";
@@ -676,8 +675,8 @@ export class FormulaEditorComponent {
 
     /**
      * Moves cursor to where cursor symbol is
-     * and deletes the cursor symbol
-     * @param mathField
+     * and deletes the cursor symbol.
+     * @param activeField field being edited
      */
     setMathQuillCursor(activeField: FormulaFieldComponent) {
         const span = activeField.visualInput.nativeElement;
