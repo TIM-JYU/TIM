@@ -133,7 +133,7 @@ export class FormulaEditorComponent {
     fieldComponents!: QueryList<FormulaFieldComponent>;
 
     @ContentChild(FileSelectManagerComponent)
-    fileSelector!: FileSelectManagerComponent;
+    fileSelector?: FileSelectManagerComponent;
 
     @Input()
     get visible(): boolean {
@@ -685,7 +685,9 @@ export class FormulaEditorComponent {
         // write to TIM editor
         if (!this.visible) {
             this.editor.insert?.(formulaWithoutCursor);
-            this.editor.focus();
+            setTimeout(() => {
+                this.editor.focus();
+            }, 0);
             return;
         }
 

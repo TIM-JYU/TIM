@@ -34,19 +34,20 @@
   font-size: 150%;
 }
 
-.symbol-button-menu {
-  padding: 0.25em;
-}
-
 .symbol-button-menu-open {
   border: 1px solid black;
-
 }
 
 .symbol-menu-container {
-  padding: 0.5em 1em 0.5em 1em;
+  padding: 0.5em;
   border: 1px solid black;
   border-radius: 0.5em;
+  margin-bottom: 1em;
+}
+
+symbol-menu-container-open {
+  padding: 0.5em 0.5em 0.5em 0.5em;
+
 }
 
 .symbol-button {

@@ -1,3 +1,12 @@
+/**
+ * Symbol button menu to add LaTeX by pressing buttons
+ *
+ * @author Jaakko Palm
+ * @author Juha Reinikainen
+ * @licence MIT
+ * @date 30.3.2023
+ */
+
 import {
     Component,
     ContentChild,
@@ -34,7 +43,7 @@ enum ButtonMenuState {
 @Component({
     selector: "symbol-button-menu",
     template: `
-        <div class="symbol-menu-container">
+        <div class="symbol-menu-container" [class.symbol-menu-container-open]="isOpen()">
             <div class="symbol-button-menu" [class.symbol-button-menu-open]="isOpen()">
                 <div class="buttons-container math display" [hidden]="!isOpen()">
                     <button class="symbol-button" title="{{item.expl}}" *ngFor="let item of templateButtons;" (mousedown)="addFormula(item.data, item.data, true)"
@@ -85,8 +94,9 @@ export class SymbolButtonMenuComponent {
     @Output() toggle = new EventEmitter<void>();
 
     @Input() formulaEditorOpen: boolean = false;
+
     @ContentChild(FileSelectManagerComponent)
-    fileSelector!: FileSelectManagerComponent;
+    fileSelector?: FileSelectManagerComponent;
 
     addFormula(formula: string, command: string, useWrite: boolean = false) {
         this.setFormula.emit({
@@ -96,18 +106,30 @@ export class SymbolButtonMenuComponent {
         });
     }
 
+    /**
+     * Tells to open formula editor.
+     */
     toggleFormulaEditor() {
         this.toggle.emit();
     }
 
+    /**
+     * Shows buttons.
+     */
     openMenu() {
         this.buttonMenuState = ButtonMenuState.Open;
     }
 
+    /**
+     * Hides buttons.
+     */
     closeMenu() {
         this.buttonMenuState = ButtonMenuState.Closed;
     }
 
+    /**
+     * Tells whether buttons should be visible
+     */
     isOpen() {
         return this.buttonMenuState === ButtonMenuState.Open;
     }
