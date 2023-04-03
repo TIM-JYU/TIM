@@ -15,11 +15,13 @@ import {
     ViewChild,
     ViewChildren,
     ChangeDetectorRef,
+    ContentChild,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {MathFieldMethods} from "vendor/mathquill/mathquill";
 import {IEditor} from "../editor";
 import type {ITemplateButton} from "../../csPlugin";
+import {FileSelectManagerComponent} from "../../util/file-select";
 import type {Edit, LineAdd} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
@@ -51,13 +53,19 @@ type StringPair = [string, string];
 @Component({
     selector: "cs-formula-editor",
     template: `
+        <div>
+            <symbol-button-menu
+                    (setFormula)="addFormula($event)"
+                    (toggle)="toggleEditor()"
+                    [templateButtons]="templateButtons"
+                    [formulaEditorOpen]="visible"
+            >
+                <ng-content></ng-content>
+            </symbol-button-menu>            
+        </div>
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
-                <symbol-button-menu
-                        (setFormula)="addFormula($event)"
-                        [templateButtons]="this.templateButtons"
-                >
-                </symbol-button-menu>
+
                 <div class="fields">
                     <div *ngFor="let field of fields; let i=index;" class="field">
                         <cs-formula-field 
@@ -114,6 +122,7 @@ export class FormulaEditorComponent {
     @Output() okClose = new EventEmitter<void>();
     @Output() cancelClose = new EventEmitter<void>();
     @Output() focusBack = new EventEmitter<void>();
+    @Output() toggle = new EventEmitter<void>();
 
     @Input() templateButtons: ITemplateButton[] = [];
 
@@ -123,6 +132,9 @@ export class FormulaEditorComponent {
 
     @ViewChildren(FormulaFieldComponent)
     fieldComponents!: QueryList<FormulaFieldComponent>;
+
+    @ContentChild(FileSelectManagerComponent)
+    fileSelector?: FileSelectManagerComponent;
 
     @Input()
     get visible(): boolean {
@@ -687,13 +699,22 @@ export class FormulaEditorComponent {
      * @param formulaInput LaTeX-formula to be added to fields.
      */
     addFormula(formulaInput: FormulaEvent) {
+        const cursorPosition = formulaInput.text.indexOf("⁞");
+        const formulaWithoutCursor = formulaInput.text.replace("⁞", "");
+
+        // write to TIM editor
+        if (!this.visible) {
+            this.editor.insert?.(formulaWithoutCursor);
+            setTimeout(() => {
+                this.editor.focus();
+            }, 0);
+            return;
+        }
+
         const activeField = this.getActiveField();
         if (activeField === undefined) {
             return;
         }
-
-        const cursorPosition = formulaInput.text.indexOf("⁞");
-        const formulaWithoutCursor = formulaInput.text.replace("⁞", "");
 
         if (activeField.activeEditor === ActiveEditorType.Latex) {
             const formula = formulaWithoutCursor;
@@ -736,5 +757,9 @@ export class FormulaEditorComponent {
                 // activeField.mathField.focus();
             }, 0);
         }
+    }
+
+    toggleEditor() {
+        this.toggle.emit();
     }
 }
