@@ -1,5 +1,10 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {
+    Component,
+    HostBinding,
+    NgModule,
+    ViewContainerRef,
+} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
@@ -85,6 +90,13 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     isInput = false;
     asyncContent = true;
 
+    // This is needed to set focus programmatically on non-input elements
+    @HostBinding("attr.tabindex") tabindex = "-1";
+
+    constructor(private viewRef: ViewContainerRef) {
+        super();
+    }
+
     getTitle() {
         return this.data.title;
     }
@@ -105,6 +117,15 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
         }
         if (this.data.asyncContent == false) {
             this.asyncContent = false;
+        }
+    }
+
+    ngAfterViewInit() {
+        super.ngAfterViewInit();
+        // Grab focus when there is no input, this allows keybindings to be processed by this modal
+        if (!this.isInput) {
+            const el = this.viewRef.element.nativeElement as HTMLElement;
+            el.focus();
         }
     }
 
