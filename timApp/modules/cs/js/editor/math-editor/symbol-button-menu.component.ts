@@ -44,13 +44,6 @@ enum ButtonMenuState {
     selector: "symbol-button-menu",
     template: `
         <div class="symbol-menu-container" [class.symbol-menu-container-open]="isOpen()">
-            <div class="symbol-button-menu" [class.symbol-button-menu-open]="isOpen()">
-                <div class="buttons-container math display" [hidden]="!isOpen()">
-                    <button class="symbol-button" title="{{item.expl}}" *ngFor="let item of templateButtons;" (mousedown)="addFormula(item.data, item.data, true)"
-                     >{{item.text}}</button>
-                </div>
-            </div>
-            
             <div class="button-menu-container" [class.button-menu-container-no-left]="formulaEditorOpen">
                 <div class="button-menu-left" [hidden]="formulaEditorOpen">
                     <button class="timButton formula-button" (click)="toggleFormulaEditor()" i18n
@@ -79,6 +72,14 @@ enum ButtonMenuState {
                     </a>                        
                 </div>
             </div>
+           
+            <div class="symbol-button-menu" [class.symbol-button-menu-open]="isOpen()">
+                <div class="buttons-container math display" [hidden]="!isOpen()">
+                    <button class="symbol-button" title="{{item.expl}}" *ngFor="let item of templateButtons;" (mousedown)="addFormula(item.data, item.data, true)"
+                     >{{item.text}}</button>
+                </div>
+            </div>
+           
         </div>
 
     `,

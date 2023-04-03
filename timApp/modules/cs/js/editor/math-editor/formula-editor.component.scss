@@ -1,8 +1,9 @@
 .formula-editor {
     display: flex;
     justify-content: center;
-    box-shadow: rgba(0, 0, 0, 0.25) 10px 14px 28px, rgba(0, 0, 0, 0.22) 0px 0px 5px;
+    box-shadow: rgba(0, 0, 0, 0.25) 10px 10px 10px, rgba(0, 0, 0, 0.22) 0px 0px 5px;
     padding: 0.5em;
+    margin: 0.5em;
 }
 
 .formula-editor-dialog {

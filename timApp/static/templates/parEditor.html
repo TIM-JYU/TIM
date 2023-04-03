@@ -1,13 +1,12 @@
 <uib-tabset ng-show="$ctrl.proeditor" active="$ctrl.activeTab">
     <uib-tab ng-repeat="t in $ctrl.getVisibleTabs()" heading="{{ t.name }}" index="$ctrl.getTabIndex(t)">
         <div ng-if="t.name === 'TeX' && $ctrl.editor" class="formula-editor-tab">
-            <button ng-click="$ctrl.onFormulaEditorAddFormula(true)" class="timButton" title="Ctrl+e">Add formula</button>
-
-            <cs-formula-editor ng-if="$ctrl.formulaEditorOpen"
+            <cs-formula-editor
                                (ok-close)="$ctrl.toggleFormulaEditor()"
                                (cancel-close)="$ctrl.toggleFormulaEditor()"
-                               [editor]="$ctrl.editor"
+                               (toggle)="$ctrl.toggleFormulaEditor()"
                                [visible]="$ctrl.formulaEditorOpen"
+                               [editor]="$ctrl.editor"
                                [currentSymbol]="$ctrl.currentSymbol"
             ></cs-formula-editor>
         </div>
