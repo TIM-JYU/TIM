@@ -132,7 +132,12 @@ from timApp.util.flask.requesthelper import (
     get_from_url,
     view_ctx_with_urlmacros,
 )
-from timApp.util.flask.responsehelper import json_response, ok_response, to_dict
+from timApp.util.flask.responsehelper import (
+    json_response,
+    ok_response,
+    to_dict,
+    text_response,
+)
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import (
     get_fields_and_users,
@@ -1805,7 +1810,7 @@ def get_all_answers_list_plain(
     if print_answers:
         jointext = "\n\n----------------------------------------------------------------------------------\n"
     text = jointext.join(all_answers)
-    return Response(text, mimetype="text/plain")
+    return text_response(text)
 
 
 def get_all_answers_as_list(
