@@ -7962,7 +7962,7 @@
       </trans-unit>
       <trans-unit id="7486361580112552685" datatype="html">
         <source>Formula </source>
-        <target state="translated">Kaava </target>
+        <target state="translated">Formel </target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
           <context context-type="linenumber">48,49</context>
