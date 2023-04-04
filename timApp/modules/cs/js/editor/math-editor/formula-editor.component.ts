@@ -674,6 +674,32 @@ export class FormulaEditorComponent {
     }
 
     /**
+     * Moves cursor to where cursor symbol is
+     * and deletes the cursor symbol.
+     * @param activeField field being edited
+     */
+    setMathQuillCursor(activeField: FormulaFieldComponent) {
+        const span = activeField.visualInput.nativeElement;
+        const cursor = "⁞";
+        const children = span.getElementsByTagName("span");
+        for (const child of children) {
+            if (child.textContent === cursor) {
+                // clicks at position where cursor is
+                child.dispatchEvent(
+                    new MouseEvent("mousedown", {
+                        bubbles: true,
+                    })
+                );
+                // removes cursor symbol
+                activeField.mathField.keystroke("Right Backspace");
+                return;
+            }
+        }
+        // put focus to field even if it doesn't have cursor symbol
+        activeField.mathField.focus();
+    }
+
+    /**
      * Adds formula to both fields in last known cursor position.
      * TODO: There is maybe unused code in this function, that needs to be removed.
      * @param formulaInput LaTeX-formula to be added to fields.
@@ -720,19 +746,11 @@ export class FormulaEditorComponent {
                 activeField.latexInputElement.nativeElement.focus();
             }, 0);
         } else {
-            let formula = "";
-            if (formulaInput.useWrite) {
-                activeField.mathField.write(formulaWithoutCursor);
-                formula = formulaInput.text;
-            } else {
-                activeField.mathField.typedText(formulaInput.command);
-                formula = formulaInput.command;
-            }
-            if (formula.includes("\\")) {
-                activeField.mathField.keystroke("Spacebar");
-            }
+            activeField.mathField.write(formulaInput.text);
+
             setTimeout(() => {
-                activeField.mathField.focus();
+                this.setMathQuillCursor(activeField);
+                // activeField.mathField.focus();
             }, 0);
         }
     }
