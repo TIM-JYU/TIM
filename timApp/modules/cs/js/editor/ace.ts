@@ -204,4 +204,8 @@ export class AceEditorComponent implements IEditor {
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
     }
+
+    moveCursorToContentIndex(index: number) {
+        console.log("ace");
+    }
 }

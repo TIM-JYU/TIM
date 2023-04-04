@@ -9,11 +9,10 @@
 import type {IEditor} from "../editor";
 
 /**
- * Moves cursor inside clicked formula in preview in editor
- * and opens formula editor.
- * @param event mouse click event
+ * Gets latex from preview
+ * @param event
  */
-export function selectFormulaFromPreview(event: MouseEvent, editor: IEditor) {
+function getLatexFromPreview(event: MouseEvent): string | undefined {
     const endParent = document.querySelector(".csrunPreview");
     // probably not inside preview
     if (!endParent) {
@@ -34,10 +33,25 @@ export function selectFormulaFromPreview(event: MouseEvent, editor: IEditor) {
                 return;
             }
             const latex = annotation.textContent.trim();
-            console.log(latex);
-            return;
+            return latex;
         }
         current = current.parentElement;
     }
-    console.log("not found");
+}
+
+/**
+ * Moves cursor inside clicked formula in preview in editor
+ * and opens formula editor.
+ * @param event mouse click event
+ * @param editor editor containing latex that was rendered to preview
+ */
+export function selectFormulaFromPreview(event: MouseEvent, editor: IEditor) {
+    const latex = getLatexFromPreview(event);
+    if (!latex) {
+        return;
+    }
+    const i = editor.content.indexOf(latex);
+    console.log(JSON.stringify(latex), JSON.stringify(editor.content), i);
+    editor.focus();
+    editor.moveCursorToContentIndex?.(i);
 }

@@ -54,7 +54,7 @@ import type {
 import {CsParsonsOptions} from "./cs-parsons/csparsons";
 import type {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
-import type {EditorComponent, IEditor} from "./editor/editor";
+import type {EditorComponent} from "./editor/editor";
 import {CURSOR, EditorFile, Mode} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
 import {getInt} from "./util/util";

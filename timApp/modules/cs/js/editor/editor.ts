@@ -63,6 +63,8 @@ export interface IEditor {
     setReadOnly(b: boolean): void;
     focus(): void;
     addFormulaEditorOpenHandler?(cb: () => void): void;
+
+    moveCursorToContentIndex?(index: number): void;
 }
 
 export interface IEditorFile {
