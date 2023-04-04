@@ -690,8 +690,10 @@ export class FormulaEditorComponent {
                         bubbles: true,
                     })
                 );
+
                 // removes cursor symbol
                 activeField.mathField.keystroke("Right Backspace");
+
                 return;
             }
         }
@@ -710,7 +712,7 @@ export class FormulaEditorComponent {
 
         // write to TIM editor
         if (!this.visible) {
-            this.editor.insert?.(formulaWithoutCursor);
+            this.editor.insert?.(formulaInput.text);
             setTimeout(() => {
                 this.editor.focus();
             }, 0);
@@ -750,7 +752,6 @@ export class FormulaEditorComponent {
 
             setTimeout(() => {
                 this.setMathQuillCursor(activeField);
-                // activeField.mathField.focus();
             }, 0);
         }
     }
