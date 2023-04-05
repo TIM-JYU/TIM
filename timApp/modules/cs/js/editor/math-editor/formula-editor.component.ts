@@ -453,9 +453,9 @@ export class FormulaEditorComponent {
     findMatrixFromString(formula: string): NumPair[] {
         let bIndex = 0;
         let eIndex = 0;
-        let bStack: number[] = [];
-        let eStack: number[] = [];
-        let allMatrix: NumPair[] = [];
+        const bStack: number[] = [];
+        const eStack: number[] = [];
+        const allMatrix: NumPair[] = [];
 
         while (true) {
             // find next begin and end keywords
@@ -517,7 +517,7 @@ export class FormulaEditorComponent {
             }
         }
         // shift end indexes from the start of keyword to actual end of matrix
-        for (const i in allMatrix) {
+        for (let i = 0; i < allMatrix.length; i++) {
             const newLine = formula.indexOf("\n", allMatrix[i][1]);
             if (newLine < 0) {
                 allMatrix[i][1] = formula.length - 1;
