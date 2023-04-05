@@ -1754,7 +1754,10 @@ export class CsController extends CsBase implements ITimComponent {
         if (!this.formulaEditor || this.formulaEditorOpen || !this.editor) {
             return;
         }
-        selectFormulaFromPreview(event, this.editor);
+        const success = selectFormulaFromPreview(event, this.editor);
+        if (success) {
+            this.toggleFormulaEditor();
+        }
     }
 
     get count() {

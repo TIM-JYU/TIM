@@ -799,4 +799,8 @@ export class EditorComponent implements IMultiEditor {
             this.editor.addFormulaEditorOpenHandler(cb);
         }
     }
+
+    moveCursorToContentIndex(index: number) {
+        this.editor?.moveCursorToContentIndex?.(index);
+    }
 }

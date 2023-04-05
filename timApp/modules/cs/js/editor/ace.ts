@@ -206,6 +206,14 @@ export class AceEditorComponent implements IEditor {
     }
 
     moveCursorToContentIndex(index: number) {
-        console.log("ace");
+        const pos = this.aceEditor
+            ?.getSession()
+            .getDocument()
+            .indexToPosition(index, 0);
+        if (!pos) {
+            return;
+        }
+        this.aceEditor?.moveCursorToPosition(pos);
+        this.aceEditor?.clearSelection();
     }
 }
