@@ -683,20 +683,26 @@ export class FormulaEditorComponent {
         const cursor = "⁞";
         const children = span.getElementsByTagName("span");
         for (const child of children) {
-            if (child.textContent === cursor) {
+            // try to pick the correct element to click
+            // textContent comparison is not enough to find
+            // the unique, correct element to click
+            if (
+                child.textContent === cursor &&
+                child.hasAttribute("mathquill-command-id") &&
+                !child.classList.contains("mq-non-leaf")
+            ) {
                 // clicks at position where cursor is
                 child.dispatchEvent(
                     new MouseEvent("mousedown", {
                         bubbles: true,
                     })
                 );
-
                 // removes cursor symbol
                 activeField.mathField.keystroke("Right Backspace");
-
                 return;
             }
         }
+
         // put focus to field even if it doesn't have cursor symbol
         activeField.mathField.focus();
     }
