@@ -11,7 +11,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {getViewName, toPromise} from "tim/util/utils";
+import {getUrlParams, getViewName, toPromise} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
@@ -114,6 +114,17 @@ export class GroupJoinComponent extends AngularPluginBase<
             (this.joined && this.markup.leave);
 
         this.docPath = `/${getViewName()}/${documentglobals().curr_item.path}`;
+
+        const params = getUrlParams();
+        const groupJoin = params.get("groupJoin");
+        if (
+            this.enabled &&
+            groupJoin &&
+            this.getTaskId()?.name == groupJoin &&
+            !this.isPreview()
+        ) {
+            void this.process();
+        }
     }
 
     get status() {
