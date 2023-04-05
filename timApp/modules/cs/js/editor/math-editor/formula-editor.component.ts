@@ -517,7 +517,7 @@ export class FormulaEditorComponent {
             }
         }
         // shift end indexes from the start of keyword to actual end of matrix
-        for (let i = 0; i < allMatrix.length; i++) {
+        for (const i of allMatrix.keys()) {
             const newLine = formula.indexOf("\n", allMatrix[i][1]);
             if (newLine < 0) {
                 allMatrix[i][1] = formula.length - 1;
