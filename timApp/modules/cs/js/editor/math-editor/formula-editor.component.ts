@@ -683,7 +683,14 @@ export class FormulaEditorComponent {
         const cursor = "⁞";
         const children = span.getElementsByTagName("span");
         for (const child of children) {
-            if (child.textContent === cursor) {
+            // try to pick the correct element to click
+            // textContent comparison is not enough to find
+            // the unique, correct element to click
+            if (
+                child.textContent === cursor &&
+                child.hasAttribute("mathquill-command-id") &&
+                !child.classList.contains("mq-non-leaf")
+            ) {
                 // clicks at position where cursor is
                 child.dispatchEvent(
                     new MouseEvent("mousedown", {
@@ -695,6 +702,7 @@ export class FormulaEditorComponent {
                 return;
             }
         }
+
         // put focus to field even if it doesn't have cursor symbol
         activeField.mathField.focus();
     }
@@ -710,7 +718,7 @@ export class FormulaEditorComponent {
 
         // write to TIM editor
         if (!this.visible) {
-            this.editor.insert?.(formulaWithoutCursor);
+            this.editor.insert?.(formulaInput.text);
             setTimeout(() => {
                 this.editor.focus();
             }, 0);
@@ -750,7 +758,6 @@ export class FormulaEditorComponent {
 
             setTimeout(() => {
                 this.setMathQuillCursor(activeField);
-                // activeField.mathField.focus();
             }, 0);
         }
     }
