@@ -1739,11 +1739,17 @@ ${backTicks}
         }
     }
 
+    /**
+     * Changes formula editor visibility and put focus to editor
+     * if formula editor was open.
+     */
     toggleFormulaEditor() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
-        setTimeout(() => {
-            this.editor?.focus();
-        }, 0);
+        if (!this.formulaEditorOpen) {
+            setTimeout(() => {
+                this.editor?.focus();
+            }, 0);
+        }
     }
 
     enableFormulaEditor() {

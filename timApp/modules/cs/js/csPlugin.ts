@@ -62,6 +62,7 @@ import type {IFile, IFileSpecification} from "./util/file-select";
 import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
 import type {FormulaEvent} from "./editor/math-editor/symbol-button-menu.component";
+import {selectFormulaFromPreview} from "./editor/math-editor/formula-utils";
 
 // TODO better name?
 interface Vid {
@@ -1732,11 +1733,31 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.formulaEditor;
     }
 
+    /**
+     * Changes formula editor visibility and puts
+     */
     toggleFormulaEditor() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
-        setTimeout(() => {
-            this.editor?.focus();
-        }, 0);
+        if (!this.formulaEditorOpen) {
+            setTimeout(() => {
+                this.editor?.focus();
+            }, 0);
+        }
+    }
+
+    /**
+     * Moves cursor inside clicked formula in preview in editor
+     * and opens formula editor.
+     * @param event mouse click event
+     */
+    handleSelectFormulaFromPreview(event: MouseEvent) {
+        if (!this.formulaEditor || this.formulaEditorOpen || !this.editor) {
+            return;
+        }
+        const success = selectFormulaFromPreview(event, this.editor);
+        if (success) {
+            this.toggleFormulaEditor();
+        }
     }
 
     get count() {
@@ -4050,7 +4071,7 @@ ${fhtml}
                      tabindex="0">{{result}}</pre>
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
-            <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0">
+            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor && !formulaEditorOpen" (keydown)="elementSelectAll($event)" tabindex="0" (click)="handleSelectFormulaFromPreview($event)">
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
                      caption="Preview"
