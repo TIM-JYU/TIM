@@ -446,16 +446,16 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Method to find all begin and end syntax matrix from a string.
-     * @param formula String where the matrix are looked for.
-     * @return Array containing indexes of matrix.
+     * Method to find all begin and end syntax matrices from a string.
+     * @param formula String where the matrices are looked for.
+     * @return Array containing indexes of matrices.
      */
     findMatrixFromString(formula: string): NumPair[] {
         let bIndex = 0;
         let eIndex = 0;
         const bStack: number[] = [];
         const eStack: number[] = [];
-        const allMatrix: NumPair[] = [];
+        const allMatrices: NumPair[] = [];
 
         while (true) {
             // find next begin and end keywords
@@ -465,7 +465,7 @@ export class FormulaEditorComponent {
             if (eIndex < 0) {
                 // add possible keywords from stacks to actual list
                 if (eStack.length > 0) {
-                    allMatrix.push([
+                    allMatrices.push([
                         bStack[bStack.length - 1],
                         eStack[eStack.length - 1],
                     ]);
@@ -486,14 +486,14 @@ export class FormulaEditorComponent {
                     i--;
                 }
                 // add only the outermost begin and end to list
-                allMatrix.push([bStack[i + 1], eStack[eStack.length - 1]]);
+                allMatrices.push([bStack[i + 1], eStack[eStack.length - 1]]);
                 break;
             }
             // begin and end are found, but begin is first. add begin to stack.
             if (bIndex < eIndex) {
                 // add possible keywords from stacks to actual list
                 if (eStack.length > 0) {
-                    allMatrix.push([
+                    allMatrices.push([
                         bStack[bStack.length - 1],
                         eStack[eStack.length - 1],
                     ]);
@@ -517,27 +517,28 @@ export class FormulaEditorComponent {
             }
         }
         // shift end indexes from the start of keyword to actual end of matrix
-        for (const i of allMatrix.keys()) {
-            const newLine = formula.indexOf("\n", allMatrix[i][1]);
+        for (const i of allMatrices.keys()) {
+            const newLine = formula.indexOf("\n", allMatrices[i][1]);
             if (newLine < 0) {
-                allMatrix[i][1] = formula.length - 1;
+                allMatrices[i][1] = formula.length - 1;
             } else {
-                allMatrix[i][1] = newLine - 1;
+                allMatrices[i][1] = newLine - 1;
             }
         }
-        return allMatrix;
+        return allMatrices;
     }
 
     /**
      * splits text into lines of latex
      * @param formula
+     * @param allMatrices
      */
     getMultilineFormulaLines(
         formula: string,
-        allMatrix: NumPair[]
+        allMatrices: NumPair[]
     ): FieldType[] {
-        // split all line breaks if no matrix exists
-        if (allMatrix.length < 1) {
+        // split all line breaks if no matrices exists
+        if (allMatrices.length < 1) {
             return formula.split("\n").map((line) => {
                 return {latex: this.trimCharFromEnd(line, "\\")};
             });
@@ -545,27 +546,32 @@ export class FormulaEditorComponent {
             let allFields: string[] = [];
             // split and add lines before first matrix
             allFields = allFields.concat(
-                formula.slice(0, allMatrix[0][0]).split("\n")
+                formula.slice(0, allMatrices[0][0]).split("\n")
             );
             // add first matrix
-            allFields.push(formula.slice(allMatrix[0][0], allMatrix[0][1] + 1));
-            for (let i = 0; i < allMatrix.length - 1; i++) {
-                // split and add lines between matrix
+            allFields.push(
+                formula.slice(allMatrices[0][0], allMatrices[0][1] + 1)
+            );
+            for (let i = 0; i < allMatrices.length - 1; i++) {
+                // split and add lines between matrices
                 allFields = allFields.concat(
                     formula
-                        .slice(allMatrix[i][1] + 1, allMatrix[i + 1][0])
+                        .slice(allMatrices[i][1] + 1, allMatrices[i + 1][0])
                         .split("\n")
                 );
                 // add matrix after the lines
                 allFields.push(
-                    formula.slice(allMatrix[i + 1][0], allMatrix[i + 1][1] + 1)
+                    formula.slice(
+                        allMatrices[i + 1][0],
+                        allMatrices[i + 1][1] + 1
+                    )
                 );
             }
             // split and add lines after last matrix
             allFields = allFields.concat(
                 formula
                     .slice(
-                        allMatrix[allMatrix.length - 1][1] + 1,
+                        allMatrices[allMatrices.length - 1][1] + 1,
                         formula.length
                     )
                     .split("\n")
@@ -581,38 +587,34 @@ export class FormulaEditorComponent {
     /**
      * Sets the active field to the line with cursor.
      */
-    setLineInFormula() {
+    setMultilineActiveField(fields: FieldType[]) {
         const cursorI = this.cursorLocation;
         const before = this.oldContent.before;
-        const editing =
+        const beforeAndEditing =
             before.length +
             this.oldContent.editing.length -
             this.existingParenthesis[1].length;
         // if cursor is at end, let active field set automatically to last
-        if (cursorI >= editing) {
+        if (cursorI >= beforeAndEditing) {
             return;
         }
-        // default field to set active is first
+        // calculate field index, default value to set is first
         let fieldIndex = 0;
-        const beginParenthesis = this.existingParenthesis[0];
-        // check if active field needs to be counted
-        if (cursorI > before.length + beginParenthesis.length) {
-            const original = this.editor.content;
-            // count active field from line breaks
-            const parenthesisNewLine = beginParenthesis.includes("\n") ? 1 : 0;
-            const text =
-                original[cursorI] === "\n"
-                    ? original.slice(0, cursorI)
-                    : original.slice(0, cursorI + 1);
-            fieldIndex =
-                text.split("\n").length -
-                before.split("\n").length -
-                parenthesisNewLine;
+        if (fields.length > 1) {
+            let currentText =
+                before.length +
+                this.existingParenthesis[0].length +
+                fields[0]["latex"].length +
+                2;
+            while (cursorI > currentText && fieldIndex < fields.length) {
+                fieldIndex++;
+                currentText += fields[fieldIndex]["latex"].length + 3;
+            }
         }
         // set active field after timeout
         setTimeout(() => {
             this.activeFieldsIndex = fieldIndex;
-        }, 30);
+        }, 35);
     }
 
     /**
@@ -656,12 +658,14 @@ export class FormulaEditorComponent {
                     "" + formula.slice(formula.length - lenDiff) + "$$";
                 formula = trimmed;
                 // update formula editor content and values
-                const allMatrix = this.findMatrixFromString(formula);
-                this.fields = this.getMultilineFormulaLines(formula, allMatrix);
+                const allMatrices = this.findMatrixFromString(formula);
+                const allFields = this.getMultilineFormulaLines(
+                    formula,
+                    allMatrices
+                );
+                this.fields = allFields;
                 this.isMultilineFormula = true;
-                if (allMatrix.length < 1) {
-                    this.setLineInFormula();
-                }
+                this.setMultilineActiveField(allFields);
             }
             // start editing an inline formula
             else {
