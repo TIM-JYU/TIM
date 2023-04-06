@@ -604,11 +604,11 @@ export class FormulaEditorComponent {
             let currentText =
                 before.length +
                 this.existingParenthesis[0].length +
-                fields[0]["latex"].length +
+                fields[0].latex.length +
                 2;
             while (cursorI > currentText && fieldIndex < fields.length) {
                 fieldIndex++;
-                currentText += fields[fieldIndex]["latex"].length + 3;
+                currentText += fields[fieldIndex].latex.length + 3;
             }
         }
         // set active field after timeout
