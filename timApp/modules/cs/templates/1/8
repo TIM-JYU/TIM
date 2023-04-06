@@ -1,6 +1,6 @@
 Matematiikkakysymys
 Kysymys, johon käyttäjä voi kirjoittaa matemaattisia kaavoja
-``` {#Plugin1 plugin="csPlugin"}
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
 type: md
 # highlight:
 placeholder: "Kirjoita kaavaa"
@@ -14,19 +14,26 @@ autoupdate: 1000
 formulaEditor: true
 upload: true
 buttons: |!!
-[ "$", "$⁞$", "Kaava" ]
-[ "$$", "$$⁞$$", "Kaavaikkuna" ]
 [ "\\( \\pi \\)", "\\pi", "pii", "math" ]
+[ "\\[\\sin \\]", "\\sin", "sini", "math"]
+[ "\\[\\cos \\]", "\\cos", "cosini", "math"]
+[ "\\[\\tan \\]", "\\tan", "tangentti", "math"]
 [ "\\( \\overline{\\text{i}} \\)", "\\overline{\\text{i}}", "Vektori i", "math" ]
 [ "\\( \\overline{\\text{j}} \\)", "\\overline{\\text{j}}", "Vektori j", "math" ]
 [ "\\( \\overline{\\text{k}} \\)", "\\overline{\\text{k}}", "Vektori k", "math" ]
 [ "\\[ \\frac{\\square}{\\square} \\]", "\\frac{⁞}{}", "Murtoluku", "math" ]
 [ "\\(f(\\square)\\)", "f(⁞)", "math"]
-[ "\\(\\sqrt{\\square}\\)", "\\sqrt{\\?}", "math"]
+[ "\\(\\sqrt{\\square}\\)", "\\sqrt{⁞}", "Neliöjuuri","math"]
 [ "\\( \\square^n \\)", "^n", "Potenssi", "math" ]
-["\\[ \\lim_{\\square} \\]", "\\lim_{⁞}", "Raja-arvo", "math"]
-["\\[ \\sum_{\\square}^{\\square} \\]", "\\sum_{⁞}^{}", "Summa", "math"]
-["\\[\\int_\\square^\\square\\]", "\\int_{⁞}^{}", "Integraali", "math"]
-["\\[\\bigg/_{\\!\\!\\!\\!\\!{ \\square }}^{ \\square }\\]", "\\bigg/_{\\!\\!\\!\\!\\!{}}^{}", "Sijoitusmerkki", "math"]
+[ "\\[ \\lim_{\\square} \\]", "\\lim_{⁞}", "Raja-arvo", "math"]
+[ "\\[ \\sum_{\\square}^{\\square} \\]", "\\sum_{⁞}^{}", "Summa", "math"]
+[ "\\[\\int_\\square^\\square\\]", "\\int_{⁞}^{}", "Integraali", "math"]
+[ "\\[\\bigg/_{\\!\\!\\!\\!\\!{ \\square }}^{ \\square }\\]", "\\bigg/_{\\!\\!\\!\\!\\!{}}^{}", "Sijoitusmerkki", "math"]
+[ "\\[\\overrightarrow{\\square}\\]", "\\overrightarrow{⁞}", "Nuoli oikealle" ,"math"]
+[ "\\[\\overleftarrow{\\square}\\]", "\\overleftarrow{⁞}", "Nuoli vasemmalle" ,"math"]
+[ "\\[\\binom{\\square}{\\square}\\]", "\\binom{⁞}{}", "Binomiaalinen kerroin", "math"]
+[ "\\[\\begin{cases}\\square&\\square\\\\\\square&\\square\\end{cases}\\]", "\\begin{cases}⁞&\\\\&\\end{cases}", "Yhtälöryhmä", "math"]
+[ "\\[\\begin{matrix}\\square&\\square\\\\\\square&\\square\\end{matrix}\\]", "\\begin{matrix}⁞&\\\\&\\end{matrix}", "Matriisi", "math"]
+[ "\\[\\begin{array}{l|l}\\square&\\square\\\\\\hline\\square&\\square\\end{array}\\]", "\\begin{array}{l|l}⁞&\\\\\\hline&\\end{array}", "Taulukko", "math"]
 !!
 ```
