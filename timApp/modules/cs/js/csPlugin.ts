@@ -4071,7 +4071,7 @@ ${fhtml}
                      tabindex="0">{{result}}</pre>
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
-            <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0" (click)="handleSelectFormulaFromPreview($event)">
+            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor && !formulaEditorOpen" (keydown)="elementSelectAll($event)" tabindex="0" (click)="handleSelectFormulaFromPreview($event)">
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
                      caption="Preview"

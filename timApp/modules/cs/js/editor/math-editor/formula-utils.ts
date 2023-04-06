@@ -50,10 +50,17 @@ function getLatexFromPreview(event: MouseEvent): PreviewFormula | undefined {
     return undefined;
 }
 
+/**
+ * Moves past formulas before this and returns where
+ * to start looking for clicked formula
+ * @param clicked clicked formula in preview
+ * @param editor editor containing formulas
+ * @return index in editor.content or -1 if couldn't find
+ */
 function movePastFormulasBeforeClicked(
     clicked: PreviewFormula,
     editor: IEditor
-) {
+): number {
     const previewElement = document.querySelector(".csrunPreview");
     // probably not inside preview
     if (!previewElement) {
@@ -97,7 +104,6 @@ export function selectFormulaFromPreview(event: MouseEvent, editor: IEditor) {
     if (startI === -1) {
         return false;
     }
-    console.log(startI);
     const i = editor.content.indexOf(clickedPreviewFormula.latex, startI);
     if (i === -1) {
         return false;
