@@ -751,4 +751,8 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
     }
+
+    moveCursorToContentIndex(index: number) {
+        this.editor.setSelection(index, index);
+    }
 }

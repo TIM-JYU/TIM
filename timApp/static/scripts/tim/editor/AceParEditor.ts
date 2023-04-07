@@ -822,4 +822,16 @@ export class AceParEditor extends BaseParEditor implements IEditor {
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
     }
+
+    moveCursorToContentIndex(index: number) {
+        const pos = this.editor
+            .getSession()
+            .getDocument()
+            .indexToPosition(index, 0);
+        if (!pos) {
+            return;
+        }
+        this.editor.moveCursorToPosition(pos);
+        this.editor.clearSelection();
+    }
 }
