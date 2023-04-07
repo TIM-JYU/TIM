@@ -626,7 +626,7 @@ export class FormulaEditorComponent {
         // set active field after timeout
         setTimeout(() => {
             this.activeFieldsIndex = fieldIndex;
-        }, 35);
+        }, 70);
     }
 
     /**
