@@ -470,6 +470,7 @@ const TemplateButton = t.intersection([
         expl: t.string,
         hasMath: t.boolean,
         placeholders: t.array(TemplateParam),
+        isSymbol: t.boolean,
     }),
 ]);
 
@@ -2027,6 +2028,9 @@ ${fhtml}
                 }
                 item.hasMath = (parsed as string[]).some(
                     (x, i) => i >= 2 && x == "math"
+                );
+                item.isSymbol = (parsed as string[]).some(
+                    (x, i) => i >= 2 && x == "symbol"
                 );
                 for (let i = 3; i < parsed.length; i++) {
                     const p = parsed[i];
@@ -3813,12 +3817,12 @@ ${fhtml}
     }
 
     /**
-     * Return array consisting of ITemplateButtons, that have math.
+     * Return array consisting of ITemplateButtons, that are marked as symbols.
      */
-    mathTemplateButtons() {
+    symbolTemplateButtons() {
         const mathButtons: ITemplateButton[] = [];
         this.templateButtons.forEach(function (button) {
-            if (button.hasMath) {
+            if (button.isSymbol) {
                 mathButtons.push(button);
             }
         });
@@ -3830,7 +3834,8 @@ ${fhtml}
     selector: "cs-runner",
     template: `
         <!--suppress TypeScriptUnresolvedVariable -->
-        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex" [ngStyle]="csRunDivStyle">
+        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex"
+             [ngStyle]="csRunDivStyle">
             <tim-markup-error class="csMarkupError" *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 class="csHeader" *ngIf="header" [innerHTML]="header | purify"></h4>
             <div class="csAllSelector" *ngIf="isAll">
@@ -3841,7 +3846,8 @@ ${fhtml}
                     </select>
                 </div>
             </div>
-            <p [hidden]="formulaEditor && formulaEditorOpen" *ngIf="stem" class="stem" [innerHTML]="stem | purify" (keydown)="elementSelectAll($event)" tabindex="0"></p>
+            <p [hidden]="formulaEditor && formulaEditorOpen" *ngIf="stem" class="stem" [innerHTML]="stem | purify"
+               (keydown)="elementSelectAll($event)" tabindex="0"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
@@ -3894,15 +3900,15 @@ ${fhtml}
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
                             [currentSymbol]="currentSymbol"
-                            [templateButtons]="this.mathTemplateButtons()">
-                            <file-select-manager class="small"
-                                 [dragAndDrop]="dragAndDrop"
-                                 [uploadUrl]="uploadUrl"
-                                 [stem]="uploadstem"
-                                 (file)="onFileLoad($event)"
-                                 (upload)="onUploadResponse($event)"
-                                 (uploadDone)="onUploadDone($event)">
-                            </file-select-manager>
+                            [templateButtons]="this.symbolTemplateButtons()">
+                        <file-select-manager class="small"
+                                             [dragAndDrop]="dragAndDrop"
+                                             [uploadUrl]="uploadUrl"
+                                             [stem]="uploadstem"
+                                             (file)="onFileLoad($event)"
+                                             (upload)="onUploadResponse($event)"
+                                             (uploadDone)="onUploadDone($event)">
+                        </file-select-manager>
                     </cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
@@ -3942,7 +3948,7 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div  #runSnippets class="csRunSnippets" [hidden]="formulaEditor" *ngIf="templateButtonsCount && !noeditor">
+            <div #runSnippets class="csRunSnippets" [hidden]="formulaEditor" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
                         (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
             </div>
