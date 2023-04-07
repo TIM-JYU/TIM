@@ -20,9 +20,14 @@ type PreviewFormula = {
 /**
  * Gets latex from preview
  * @param event
+ * @param parentSelector parameter to querySelector to find where
+ * preview ends e.g. .csrunPreview in csplugin
  */
-function getLatexFromPreview(event: MouseEvent): PreviewFormula | undefined {
-    const endParent = document.querySelector(".csrunPreview");
+function getLatexFromPreview(
+    event: MouseEvent,
+    parentSelector: string
+): PreviewFormula | undefined {
+    const endParent = document.querySelector(parentSelector);
     // probably not inside preview
     if (!endParent) {
         return undefined;
@@ -55,11 +60,14 @@ function getLatexFromPreview(event: MouseEvent): PreviewFormula | undefined {
  * to start looking for clicked formula
  * @param clicked clicked formula in preview
  * @param editor editor containing formulas
+ * @param parentSelector parameter to querySelector to find where
+ * preview ends e.g. .csrunPreview in csplugin
  * @return index in editor.content or -1 if couldn't find
  */
 function movePastFormulasBeforeClicked(
     clicked: PreviewFormula,
-    editor: IEditor
+    editor: IEditor,
+    parentSelector: string
 ): number {
     const previewElement = document.querySelector(".csrunPreview");
     // probably not inside preview
@@ -93,14 +101,24 @@ function movePastFormulasBeforeClicked(
  * Moves cursor inside clicked formula in preview in editor
  * @param event mouse click event
  * @param editor editor containing latex that was rendered to preview
+ * @param parentSelector parameter to querySelector to find where
+ * preview ends e.g. .csrunPreview in csplugin
  * @return whether the formula was found and cursor was moved to it
  */
-export function selectFormulaFromPreview(event: MouseEvent, editor: IEditor) {
-    const clickedPreviewFormula = getLatexFromPreview(event);
+export function selectFormulaFromPreview(
+    event: MouseEvent,
+    editor: IEditor,
+    parentSelector: string
+) {
+    const clickedPreviewFormula = getLatexFromPreview(event, parentSelector);
     if (!clickedPreviewFormula) {
         return false;
     }
-    const startI = movePastFormulasBeforeClicked(clickedPreviewFormula, editor);
+    const startI = movePastFormulasBeforeClicked(
+        clickedPreviewFormula,
+        editor,
+        parentSelector
+    );
     if (startI === -1) {
         return false;
     }

@@ -161,7 +161,11 @@
          ng-show="$ctrl.proeditor"
          id="currpreview">
         <div class="draggable-content">
-            <div class="previewcontent paragraphs fullsize"></div>
+            <div
+                    class="previewcontent paragraphs fullsize"
+                    ng-class="{'csrun-clicking': $ctrl.formulaEditor && !$ctrl.formulaEditorOpen}"
+                    ng-click="$ctrl.handleSelectFormulaFromPreview($event)">
+            </div>
         </div>
     </div>
     <div tim-draggable-fixed

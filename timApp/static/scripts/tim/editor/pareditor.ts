@@ -35,6 +35,7 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {RestampDialogClose} from "tim/editor/restamp-dialog.component";
 import {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
 import type {FormulaEvent} from "../../../../modules/cs/js/editor/math-editor/symbol-button-menu.component";
+import {selectFormulaFromPreview} from "../../../../modules/cs/js/editor/math-editor/formula-utils";
 
 markAsUsed(rangyinputs);
 
@@ -1749,6 +1750,25 @@ ${backTicks}
             setTimeout(() => {
                 this.editor?.focus();
             }, 0);
+        }
+    }
+
+    /**
+     * Moves cursor inside clicked formula in preview in editor
+     * and opens formula editor.
+     * @param event mouse click event
+     */
+    handleSelectFormulaFromPreview(event: MouseEvent) {
+        if (!this.formulaEditor || this.formulaEditorOpen || !this.editor) {
+            return;
+        }
+        const success = selectFormulaFromPreview(
+            event,
+            this.editor,
+            ".previewcontent"
+        );
+        if (success) {
+            this.toggleFormulaEditor();
         }
     }
 
