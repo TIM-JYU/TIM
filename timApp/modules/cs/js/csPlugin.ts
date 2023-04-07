@@ -3817,16 +3817,24 @@ ${fhtml}
     }
 
     /**
-     * Return array consisting of ITemplateButtons, that are marked as symbols.
+     * Returns array of ITemplateButtons depending on if symbolbuttons or regular templatebuttons are asked.
+     * @param symbols True if symbolbuttons are asked, false if regular templatebuttons.
      */
-    symbolTemplateButtons() {
-        const mathButtons: ITemplateButton[] = [];
+    symbolTemplateButtons(symbols: boolean) {
+        const symbolButtons: ITemplateButton[] = [];
+        const notSymbolButtons: ITemplateButton[] = [];
         this.templateButtons.forEach(function (button) {
             if (button.isSymbol) {
-                mathButtons.push(button);
+                symbolButtons.push(button);
+            } else {
+                notSymbolButtons.push(button);
             }
         });
-        return mathButtons;
+
+        if (symbols) {
+            return symbolButtons;
+        }
+        return notSymbolButtons;
     }
 }
 
@@ -3900,7 +3908,7 @@ ${fhtml}
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
                             [currentSymbol]="currentSymbol"
-                            [templateButtons]="this.symbolTemplateButtons()">
+                            [templateButtons]="this.symbolTemplateButtons(true)">
                         <file-select-manager class="small"
                                              [dragAndDrop]="dragAndDrop"
                                              [uploadUrl]="uploadUrl"
@@ -3948,8 +3956,8 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div #runSnippets class="csRunSnippets" [hidden]="formulaEditor" *ngIf="templateButtonsCount && !noeditor">
-                <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
+            <div #runSnippets class="csRunSnippets" [hidden]="this.formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
+                <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of this.symbolTemplateButtons(false);"
                         (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
