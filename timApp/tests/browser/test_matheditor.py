@@ -80,6 +80,8 @@ formulaEditor: true
         self.wait_until_present_and_vis(".ace_content")
         texbutton = self.find_element_by_text("TeX", "a")
         texbutton.click()
+        openeditorbutton = self.find_element_by_text("Open formulaeditor")
+        openeditorbutton.click()
         openformulabutton = self.find_element(xpath="//button[@title='Ctrl+e']")
         openformulabutton.click()
         latexfield = self.find_element(xpath="//textarea[@name='math-editor-output']")
