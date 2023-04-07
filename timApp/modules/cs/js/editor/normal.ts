@@ -32,20 +32,19 @@ export class NormalEditorComponent implements IEditor {
     @Input() placeholder: string = "";
     @Input() disabled: boolean = false;
     @Input() spellcheck?: boolean;
-    @ViewChild("area") private area!: ElementRef;
+    @ViewChild("area") private area!: ElementRef<HTMLTextAreaElement>;
     private editorreadonly: boolean = false;
     formulaFunction?: () => void;
 
     constructor(private cdr: ChangeDetectorRef) {}
 
     focus() {
-        const element = this.area.nativeElement as HTMLTextAreaElement;
+        const element = this.area.nativeElement;
         element.focus();
     }
 
     setReadOnly(b: boolean) {
         this.editorreadonly = b;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         this.area.nativeElement.readOnly = b;
     }
 
@@ -96,7 +95,7 @@ export class NormalEditorComponent implements IEditor {
     }
 
     insert(str: string, strPos?: number): void {
-        const txtarea = this.area.nativeElement as HTMLTextAreaElement;
+        const txtarea = this.area.nativeElement;
         // const scrollPos = txtarea.scrollTop;
         txtarea.focus();
         const endPos = strPos ?? txtarea.selectionEnd ?? 0;
@@ -129,7 +128,7 @@ export class NormalEditorComponent implements IEditor {
             return;
         }
 
-        const element = this.area.nativeElement as HTMLTextAreaElement;
+        const element = this.area.nativeElement;
         const start = element.selectionStart;
 
         this.content = r.s;
@@ -143,5 +142,13 @@ export class NormalEditorComponent implements IEditor {
      */
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
+    }
+
+    moveCursorToContentIndex(index: number) {
+        if (index < 0 || index >= this.content.length) {
+            return;
+        }
+        this.area.nativeElement.selectionStart = index;
+        this.area.nativeElement.selectionEnd = index;
     }
 }

@@ -15,10 +15,12 @@ import {
     ViewChild,
     ViewChildren,
     ChangeDetectorRef,
+    ContentChild,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {IEditor} from "../editor";
 import type {ITemplateButton} from "../../csPlugin";
+import {FileSelectManagerComponent} from "../../util/file-select";
 import type {Edit, LineAdd} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
@@ -52,13 +54,19 @@ type NumPair = [number, number];
 @Component({
     selector: "cs-formula-editor",
     template: `
+        <div>
+            <symbol-button-menu
+                    (setFormula)="addFormula($event)"
+                    (toggle)="toggleEditor()"
+                    [templateButtons]="templateButtons"
+                    [formulaEditorOpen]="visible"
+            >
+                <ng-content></ng-content>
+            </symbol-button-menu>            
+        </div>
         <div [hidden]="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
-                <symbol-button-menu
-                        (setFormula)="addFormula($event)"
-                        [templateButtons]="this.templateButtons"
-                >
-                </symbol-button-menu>
+
                 <div class="fields">
                     <div *ngFor="let field of fields; let i=index;" class="field">
                         <cs-formula-field 
@@ -115,6 +123,7 @@ export class FormulaEditorComponent {
     @Output() okClose = new EventEmitter<void>();
     @Output() cancelClose = new EventEmitter<void>();
     @Output() focusBack = new EventEmitter<void>();
+    @Output() toggle = new EventEmitter<void>();
 
     @Input() templateButtons: ITemplateButton[] = [];
 
@@ -124,6 +133,9 @@ export class FormulaEditorComponent {
 
     @ViewChildren(FormulaFieldComponent)
     fieldComponents!: QueryList<FormulaFieldComponent>;
+
+    @ContentChild(FileSelectManagerComponent)
+    fileSelector?: FileSelectManagerComponent;
 
     @Input()
     get visible(): boolean {
@@ -795,18 +807,61 @@ export class FormulaEditorComponent {
     }
 
     /**
+     * Moves cursor to where cursor symbol is
+     * and deletes the cursor symbol.
+     * @param activeField field being edited
+     */
+    setMathQuillCursor(activeField: FormulaFieldComponent) {
+        const span = activeField.visualInput.nativeElement;
+        const cursor = "⁞";
+        const children = span.getElementsByTagName("span");
+        for (const child of children) {
+            // try to pick the correct element to click
+            // textContent comparison is not enough to find
+            // the unique, correct element to click
+            if (
+                child.textContent === cursor &&
+                child.hasAttribute("mathquill-command-id") &&
+                !child.classList.contains("mq-non-leaf")
+            ) {
+                // clicks at position where cursor is
+                child.dispatchEvent(
+                    new MouseEvent("mousedown", {
+                        bubbles: true,
+                    })
+                );
+                // removes cursor symbol
+                activeField.mathField.keystroke("Right Backspace");
+                return;
+            }
+        }
+
+        // put focus to field even if it doesn't have cursor symbol
+        activeField.mathField.focus();
+    }
+
+    /**
      * Adds formula to both fields in last known cursor position.
      * TODO: There is maybe unused code in this function, that needs to be removed.
      * @param formulaInput LaTeX-formula to be added to fields.
      */
     addFormula(formulaInput: FormulaEvent) {
+        const cursorPosition = formulaInput.text.indexOf("⁞");
+        const formulaWithoutCursor = formulaInput.text.replace("⁞", "");
+
+        // write to TIM editor
+        if (!this.visible) {
+            this.editor.insert?.(formulaInput.text);
+            setTimeout(() => {
+                this.editor.focus();
+            }, 0);
+            return;
+        }
+
         const activeField = this.getActiveField();
         if (activeField === undefined) {
             return;
         }
-
-        const cursorPosition = formulaInput.text.indexOf("⁞");
-        const formulaWithoutCursor = formulaInput.text.replace("⁞", "");
 
         if (activeField.activeEditor === ActiveEditorType.Latex) {
             const formula = formulaWithoutCursor;
@@ -832,20 +887,15 @@ export class FormulaEditorComponent {
                 activeField.latexInputElement.nativeElement.focus();
             }, 0);
         } else {
-            let formula = "";
-            if (formulaInput.useWrite) {
-                activeField.mathField.write(formulaWithoutCursor);
-                formula = formulaInput.text;
-            } else {
-                activeField.mathField.typedText(formulaInput.command);
-                formula = formulaInput.command;
-            }
-            if (formula.includes("\\")) {
-                activeField.mathField.keystroke("Spacebar");
-            }
+            activeField.mathField.write(formulaInput.text);
+
             setTimeout(() => {
-                activeField.mathField.focus();
+                this.setMathQuillCursor(activeField);
             }, 0);
         }
+    }
+
+    toggleEditor() {
+        this.toggle.emit();
     }
 }

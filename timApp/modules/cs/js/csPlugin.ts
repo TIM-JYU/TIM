@@ -62,6 +62,7 @@ import type {IFile, IFileSpecification} from "./util/file-select";
 import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
 import type {FormulaEvent} from "./editor/math-editor/symbol-button-menu.component";
+import {selectFormulaFromPreview} from "./editor/math-editor/formula-utils";
 
 // TODO better name?
 interface Vid {
@@ -469,6 +470,7 @@ const TemplateButton = t.intersection([
         expl: t.string,
         hasMath: t.boolean,
         placeholders: t.array(TemplateParam),
+        isSymbol: t.boolean,
     }),
 ]);
 
@@ -1732,11 +1734,31 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.formulaEditor;
     }
 
+    /**
+     * Changes formula editor visibility and puts
+     */
     toggleFormulaEditor() {
         this.formulaEditorOpen = !this.formulaEditorOpen;
-        setTimeout(() => {
-            this.editor?.focus();
-        }, 0);
+        if (!this.formulaEditorOpen) {
+            setTimeout(() => {
+                this.editor?.focus();
+            }, 0);
+        }
+    }
+
+    /**
+     * Moves cursor inside clicked formula in preview in editor
+     * and opens formula editor.
+     * @param event mouse click event
+     */
+    handleSelectFormulaFromPreview(event: MouseEvent) {
+        if (!this.formulaEditor || this.formulaEditorOpen || !this.editor) {
+            return;
+        }
+        const success = selectFormulaFromPreview(event, this.editor);
+        if (success) {
+            this.toggleFormulaEditor();
+        }
     }
 
     get count() {
@@ -2006,6 +2028,9 @@ ${fhtml}
                 }
                 item.hasMath = (parsed as string[]).some(
                     (x, i) => i >= 2 && x == "math"
+                );
+                item.isSymbol = (parsed as string[]).some(
+                    (x, i) => i >= 2 && x == "symbol"
                 );
                 for (let i = 3; i < parsed.length; i++) {
                     const p = parsed[i];
@@ -3792,16 +3817,24 @@ ${fhtml}
     }
 
     /**
-     * Return array consisting of ITemplateButtons, that have math.
+     * Returns array of ITemplateButtons depending on if symbolbuttons or regular templatebuttons are asked.
+     * @param symbols True if symbolbuttons are asked, false if regular templatebuttons.
      */
-    mathTemplateButtons() {
-        const mathButtons: ITemplateButton[] = [];
+    symbolTemplateButtons(symbols: boolean) {
+        const symbolButtons: ITemplateButton[] = [];
+        const notSymbolButtons: ITemplateButton[] = [];
         this.templateButtons.forEach(function (button) {
-            if (button.hasMath) {
-                mathButtons.push(button);
+            if (button.isSymbol) {
+                symbolButtons.push(button);
+            } else {
+                notSymbolButtons.push(button);
             }
         });
-        return mathButtons;
+
+        if (symbols) {
+            return symbolButtons;
+        }
+        return notSymbolButtons;
     }
 }
 
@@ -3809,7 +3842,8 @@ ${fhtml}
     selector: "cs-runner",
     template: `
         <!--suppress TypeScriptUnresolvedVariable -->
-        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex" [ngStyle]="csRunDivStyle">
+        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex"
+             [ngStyle]="csRunDivStyle">
             <tim-markup-error class="csMarkupError" *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 class="csHeader" *ngIf="header" [innerHTML]="header | purify"></h4>
             <div class="csAllSelector" *ngIf="isAll">
@@ -3820,7 +3854,8 @@ ${fhtml}
                     </select>
                 </div>
             </div>
-            <p [hidden]="formulaEditor && formulaEditorOpen" *ngIf="stem" class="stem" [innerHTML]="stem | purify" (keydown)="elementSelectAll($event)" tabindex="0"></p>
+            <p [hidden]="formulaEditor && formulaEditorOpen" *ngIf="stem" class="stem" [innerHTML]="stem | purify"
+               (keydown)="elementSelectAll($event)" tabindex="0"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
@@ -3863,39 +3898,26 @@ ${fhtml}
                 </div>
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
-            <div *ngIf="formulaEditor" [hidden]="formulaEditorOpen">
-                <div class="button-menu-container">
-                    <button class="timButton" (click)="toggleFormulaEditor()" i18n
-                            title="Ctrl+e">Add formula
-                    </button>
-                    <button class="timButton" (click)="toggleFormulaEditor()" i18n>
-                        Edit formula
-                    </button>
-                    <file-select-manager class="small"
-                                         [dragAndDrop]="dragAndDrop"
-                                         [uploadUrl]="uploadUrl"
-                                         [stem]="uploadstem"
-                                         (file)="onFileLoad($event)"
-                                         (upload)="onUploadResponse($event)"
-                                         (uploadDone)="onUploadDone($event)">
-                    </file-select-manager>
-                    <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet"
-                       target="_blank">
-                        <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions"
-                              i18n-title></span>
-                    </a>
-                </div>
-            </div>
+
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
                     <cs-formula-editor
                             (okClose)="toggleFormulaEditor()"
                             (cancelClose)="toggleFormulaEditor()"
+                            (toggle)="toggleFormulaEditor()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
                             [currentSymbol]="currentSymbol"
-                            [templateButtons]="this.mathTemplateButtons()"
-                    ></cs-formula-editor>
+                            [templateButtons]="this.symbolTemplateButtons(true)">
+                        <file-select-manager class="small"
+                                             [dragAndDrop]="dragAndDrop"
+                                             [uploadUrl]="uploadUrl"
+                                             [stem]="uploadstem"
+                                             (file)="onFileLoad($event)"
+                                             (upload)="onUploadResponse($event)"
+                                             (uploadDone)="onUploadDone($event)">
+                        </file-select-manager>
+                    </cs-formula-editor>
                 </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
                 <div class="csEditorAreaDiv" [hidden]="formulaEditor && formulaEditorOpen">
@@ -3934,8 +3956,8 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div  #runSnippets class="csRunSnippets" [hidden]="formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
-                <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
+            <div #runSnippets class="csRunSnippets" [hidden]="this.formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
+                <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of this.symbolTemplateButtons(false);"
                         (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
@@ -4063,7 +4085,7 @@ ${fhtml}
                      tabindex="0">{{result}}</pre>
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
-            <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0">
+            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor && !formulaEditorOpen" (keydown)="elementSelectAll($event)" tabindex="0" (click)="handleSelectFormulaFromPreview($event)">
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
                      caption="Preview"

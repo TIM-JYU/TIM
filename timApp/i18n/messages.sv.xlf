@@ -7936,22 +7936,6 @@
           <context context-type="linenumber">72</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7475593675566815429" datatype="html">
-        <source>Add formula </source>
-        <target state="translated">Lägg till formel </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">3867,3868</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7779496259491218954" datatype="html">
-        <source> Edit formula </source>
-        <target state="translated"> Redigera formel </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">3870</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2134512399270831650" datatype="html">
         <source>Add line below</source>
         <target state="translated">Lägg till rad nedan</target>
@@ -7974,6 +7958,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
           <context context-type="linenumber">74,75</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7486361580112552685" datatype="html">
+        <source>Formula </source>
+        <target state="translated">Formel </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
+          <context context-type="linenumber">48,49</context>
         </context-group>
       </trans-unit>
     </body>
