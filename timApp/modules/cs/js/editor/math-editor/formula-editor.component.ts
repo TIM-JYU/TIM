@@ -49,6 +49,8 @@ type FieldType = {
 
 type StringPair = [string, string];
 
+type NumPair = [number, number];
+
 @Component({
     selector: "cs-formula-editor",
     template: `
@@ -456,49 +458,175 @@ export class FormulaEditorComponent {
     }
 
     /**
+     * Method to find all begin and end syntax matrices from a string.
+     * @param formula String where the matrices are looked for.
+     * @return Array containing indexes of matrices.
+     */
+    findMatrixFromString(formula: string): NumPair[] {
+        let bIndex = 0;
+        let eIndex = 0;
+        const bStack: number[] = [];
+        const eStack: number[] = [];
+        const allMatrices: NumPair[] = [];
+
+        while (true) {
+            // find next begin and end keywords
+            bIndex = formula.indexOf("\\begin", bIndex);
+            eIndex = formula.indexOf("\\end", eIndex);
+            // stop if no end is found
+            if (eIndex < 0) {
+                // add possible keywords from stacks to actual list
+                if (eStack.length > 0) {
+                    allMatrices.push([
+                        bStack[bStack.length - 1],
+                        eStack[eStack.length - 1],
+                    ]);
+                }
+                break;
+            }
+            // try to find ends to existing begins, if no more begins are found
+            if (bIndex < 0) {
+                let i = bStack.length - 1;
+                // run loop until all begins have end pairs, or no more ends are found
+                while (i >= 0) {
+                    eIndex = formula.indexOf("\\end", eIndex);
+                    if (eIndex < 0) {
+                        break;
+                    }
+                    eStack.push(eIndex);
+                    eIndex += 3;
+                    i--;
+                }
+                // add only the outermost begin and end to list
+                allMatrices.push([bStack[i + 1], eStack[eStack.length - 1]]);
+                break;
+            }
+            // begin and end are found, but begin is first. add begin to stack.
+            if (bIndex < eIndex) {
+                // add possible keywords from stacks to actual list
+                if (eStack.length > 0) {
+                    allMatrices.push([
+                        bStack[bStack.length - 1],
+                        eStack[eStack.length - 1],
+                    ]);
+                    // reset stacks
+                    bStack.length = 0;
+                    eStack.length = 0;
+                }
+                bStack.push(bIndex);
+                bIndex += 5;
+            } else {
+                // add end to stack only if it has a begin pair
+                if (bStack.length > eStack.length) {
+                    // remove inner begin and end from stacks
+                    if (eStack.length > 0) {
+                        bStack.pop();
+                        eStack.shift();
+                    }
+                    eStack.push(eIndex);
+                }
+                eIndex += 3;
+            }
+        }
+        // shift end indexes from the start of keyword to actual end of matrix
+        for (const i of allMatrices.keys()) {
+            const newLine = formula.indexOf("\n", allMatrices[i][1]);
+            if (newLine < 0) {
+                allMatrices[i][1] = formula.length - 1;
+            } else {
+                allMatrices[i][1] = newLine - 1;
+            }
+        }
+        return allMatrices;
+    }
+
+    /**
      * splits text into lines of latex
      * @param formula
+     * @param allMatrices
      */
-    getMultilineFormulaLines(formula: string): FieldType[] {
-        return formula.split("\n").map((line) => {
-            return {latex: this.trimCharFromEnd(line, "\\")};
-        });
+    getMultilineFormulaLines(
+        formula: string,
+        allMatrices: NumPair[]
+    ): FieldType[] {
+        // split all line breaks if no matrices exists
+        if (allMatrices.length < 1) {
+            return formula.split("\n").map((line) => {
+                return {latex: this.trimCharFromEnd(line, "\\")};
+            });
+        } else {
+            let allFields: string[] = [];
+            // split and add lines before first matrix
+            allFields = allFields.concat(
+                formula.slice(0, allMatrices[0][0]).split("\n")
+            );
+            // add first matrix
+            allFields.push(
+                formula.slice(allMatrices[0][0], allMatrices[0][1] + 1)
+            );
+            for (let i = 0; i < allMatrices.length - 1; i++) {
+                // split and add lines between matrices
+                allFields = allFields.concat(
+                    formula
+                        .slice(allMatrices[i][1] + 1, allMatrices[i + 1][0])
+                        .split("\n")
+                );
+                // add matrix after the lines
+                allFields.push(
+                    formula.slice(
+                        allMatrices[i + 1][0],
+                        allMatrices[i + 1][1] + 1
+                    )
+                );
+            }
+            // split and add lines after last matrix
+            allFields = allFields.concat(
+                formula
+                    .slice(
+                        allMatrices[allMatrices.length - 1][1] + 1,
+                        formula.length
+                    )
+                    .split("\n")
+            );
+            // remove empty lines and then return trimmed lines
+            allFields = allFields.filter((line) => line.length > 0);
+            return allFields.map((line) => {
+                return {latex: this.trimCharFromEnd(line, "\\")};
+            });
+        }
     }
 
     /**
      * Sets the active field to the line with cursor.
      */
-    setLineInFormula() {
-        let fieldIndex = 0;
-        const endI = this.cursorLocation;
+    setMultilineActiveField(fields: FieldType[]) {
+        const cursorI = this.cursorLocation;
         const before = this.oldContent.before;
-        const beginParenthesis = this.existingParenthesis[0];
-        if (
-            endI >=
+        const beforeAndEditing =
             before.length +
-                this.oldContent.editing.length -
-                this.existingParenthesis[1].length
-        ) {
+            this.oldContent.editing.length -
+            this.existingParenthesis[1].length;
+        // if cursor is at end, let active field set automatically to last
+        if (cursorI >= beforeAndEditing) {
             return;
         }
-
-        const original = this.editor.content;
-        const text =
-            original[endI] === "\n"
-                ? original.slice(0, endI)
-                : original.slice(0, endI + 1);
-        const parenthesisNewLine = beginParenthesis.includes("\n") ? 1 : 0;
-        fieldIndex =
-            text.split("\n").length -
-            before.split("\n").length -
-            parenthesisNewLine;
-        if (endI <= before.length + beginParenthesis.length) {
-            fieldIndex = 0;
+        // calculate field index, default value to set is first
+        let fieldIndex = 0;
+        if (fields.length > 1) {
+            let currentText =
+                before.length +
+                this.existingParenthesis[0].length +
+                fields[0].latex.length +
+                2;
+            while (cursorI > currentText && fieldIndex < fields.length) {
+                fieldIndex++;
+                currentText += fields[fieldIndex].latex.length + 3;
+            }
         }
-
+        // set active field after timeout
         setTimeout(() => {
             this.activeFieldsIndex = fieldIndex;
-        }, 30);
+        }, 70);
     }
 
     /**
@@ -542,9 +670,14 @@ export class FormulaEditorComponent {
                     "" + formula.slice(formula.length - lenDiff) + "$$";
                 formula = trimmed;
                 // update formula editor content and values
-                this.fields = this.getMultilineFormulaLines(formula);
+                const allMatrices = this.findMatrixFromString(formula);
+                const allFields = this.getMultilineFormulaLines(
+                    formula,
+                    allMatrices
+                );
+                this.fields = allFields;
                 this.isMultilineFormula = true;
-                this.setLineInFormula();
+                this.setMultilineActiveField(allFields);
             }
             // start editing an inline formula
             else {
