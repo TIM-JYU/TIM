@@ -11,7 +11,9 @@
                                [currentSymbol]="$ctrl.currentSymbol"
             ></cs-formula-editor>
         </div>
+
         <tim-editor-entry ng-repeat="e in t.entries" data="e"></tim-editor-entry>
+
         <div ng-if="t.extra" ng-bind-html="t.extra"></div>
     </uib-tab>
 
@@ -68,7 +70,7 @@
     </uib-tab>
 
 </uib-tabset>
-<div id="editorflex" class="stacked">
+<div id="editorflex" class="stacked" ng-hide="$ctrl.formulaEditor && $ctrl.formulaEditorOpen">
     <div id="editorbox">
         <div class="editorContainer">
         </div>
