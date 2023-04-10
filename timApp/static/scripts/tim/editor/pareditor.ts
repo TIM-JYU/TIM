@@ -1743,13 +1743,17 @@ ${backTicks}
     /**
      * Changes formula editor visibility and put focus to editor
      * if formula editor was open.
+     * @param doDigest whether to run digest
      */
-    toggleFormulaEditor() {
+    toggleFormulaEditor(doDigest: boolean = true) {
         this.formulaEditorOpen = !this.formulaEditorOpen;
         if (!this.formulaEditorOpen) {
             setTimeout(() => {
                 this.editor?.focus();
             }, 0);
+        }
+        if (doDigest) {
+            this.scope.$digest();
         }
     }
 
@@ -1762,13 +1766,18 @@ ${backTicks}
         if (!this.formulaEditor || this.formulaEditorOpen || !this.editor) {
             return;
         }
+        // this should be unique
+        const previewRoot = document.querySelector(".previewcontent");
+        if (!previewRoot) {
+            return;
+        }
         const success = selectFormulaFromPreview(
             event,
             this.editor,
-            ".previewcontent"
+            previewRoot
         );
         if (success) {
-            this.toggleFormulaEditor();
+            this.toggleFormulaEditor(false);
         }
     }
 

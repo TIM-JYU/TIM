@@ -8,7 +8,6 @@ import {EditorComponent, JSParsonsEditorComponent} from "./editor";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
-import {MathEditorComponent} from "./math-editor/math-editor.component";
 import {FormulaEditorComponent} from "./math-editor/formula-editor.component";
 import {FormulaFieldComponent} from "./math-editor/formula-field.component";
 import {SymbolButtonMenuComponent} from "./math-editor/symbol-button-menu.component";
@@ -21,7 +20,6 @@ import {SymbolButtonMenuComponent} from "./math-editor/symbol-button-menu.compon
         ParsonsEditorComponent,
         CountBoardComponent,
         JSParsonsEditorComponent,
-        MathEditorComponent,
         FormulaFieldComponent,
         FormulaEditorComponent,
         SymbolButtonMenuComponent,

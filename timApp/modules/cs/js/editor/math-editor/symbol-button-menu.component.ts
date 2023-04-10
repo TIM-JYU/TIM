@@ -88,16 +88,16 @@ enum ButtonMenuState {
 export class SymbolButtonMenuComponent {
     buttonMenuState: ButtonMenuState = ButtonMenuState.Open;
 
+    @ContentChild(FileSelectManagerComponent)
+    fileSelector?: FileSelectManagerComponent;
+
+    @Input() formulaEditorOpen: boolean = false;
+
     @Output() setFormula = new EventEmitter<FormulaEvent>();
 
     @Input() templateButtons: ITemplateButton[] = [];
 
     @Output() toggle = new EventEmitter<void>();
-
-    @Input() formulaEditorOpen: boolean = false;
-
-    @ContentChild(FileSelectManagerComponent)
-    fileSelector?: FileSelectManagerComponent;
 
     addFormula(formula: string, command: string, useWrite: boolean = false) {
         this.setFormula.emit({
