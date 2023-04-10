@@ -470,7 +470,7 @@ const TemplateButton = t.intersection([
         expl: t.string,
         hasMath: t.boolean,
         placeholders: t.array(TemplateParam),
-        isSymbol: t.boolean,
+        isSymbol: t.string,
     }),
 ]);
 
@@ -2033,9 +2033,12 @@ ${fhtml}
                 item.hasMath = (parsed as string[]).some(
                     (x, i) => i >= 2 && x == "math"
                 );
-                item.isSymbol = (parsed as string[]).some(
-                    (x, i) => i >= 2 && x == "symbol"
-                );
+                const containsSymbol = parsed.indexOf("symbol");
+                if (containsSymbol !== -1 && containsSymbol > 1) {
+                    item.isSymbol = "symbol";
+                } else {
+                    item.isSymbol = "notSymbol";
+                }
                 for (let i = 3; i < parsed.length; i++) {
                     const p = parsed[i];
                     if (!(p instanceof Array)) {
@@ -3828,7 +3831,7 @@ ${fhtml}
         const symbolButtons: ITemplateButton[] = [];
         const notSymbolButtons: ITemplateButton[] = [];
         this.templateButtons.forEach(function (button) {
-            if (button.isSymbol) {
+            if (button.isSymbol === "symbol") {
                 symbolButtons.push(button);
             } else {
                 notSymbolButtons.push(button);

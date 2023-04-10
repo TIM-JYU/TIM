@@ -18,9 +18,9 @@ import type {ITemplateButton} from "../../csPlugin";
 import {FileSelectManagerComponent} from "../../util/file-select";
 
 /**
- * Text is command in text format \frac{}{}
- * command is what mathquill accepts \frac
- * useWrite is needed to write some commands like \overline{\text{i}}
+ * Text is command in text format \frac{}{}.
+ * Command is what mathquill accepts \frac.
+ * useWrite is needed to write some commands like \overline{\text{i}}.
  */
 export type FormulaEvent = {
     text: string;
@@ -29,10 +29,10 @@ export type FormulaEvent = {
 };
 
 /**
- * Button menu can be either
- * closed (buttons not visible)
- * open (buttons visible)
- * expanded (all buttons visible)
+ * Button menu can be either:
+ * closed (buttons not visible),
+ * open (buttons visible),
+ * expanded (all buttons visible).
  */
 enum ButtonMenuState {
     Closed = 0,
@@ -129,7 +129,7 @@ export class SymbolButtonMenuComponent {
     }
 
     /**
-     * Tells whether buttons should be visible
+     * Tells whether buttons should be visible.
      */
     isOpen() {
         return this.buttonMenuState === ButtonMenuState.Open;

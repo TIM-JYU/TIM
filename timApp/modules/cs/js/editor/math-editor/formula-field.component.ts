@@ -28,7 +28,7 @@ export enum ActiveEditorType {
 
 /**
  * Edit event wrapper that contains the full input
- * of the active field and its identification number
+ * of the active field and its identification number.
  */
 export type Edit = {
     id: number;
@@ -145,8 +145,8 @@ export class FormulaFieldComponent implements AfterViewInit {
     constructor(private cd: ChangeDetectorRef) {}
 
     /**
-     * sets textarea to have as many rows that are necessary to display
-     * its content
+     * Sets textarea to have as many rows that are necessary to display
+     * its content.
      */
     updateTextareaRows() {
         // adjust rows in textarea to match how many are needed
@@ -154,9 +154,9 @@ export class FormulaFieldComponent implements AfterViewInit {
     }
 
     /**
-     * write changes in visual field to latex field if visual field
-     * is the one being typed
-     * @param field reference to mathField
+     * write changes in visual field to LaTeX field if visual field
+     * is the one being typed.
+     * @param field reference to mathField.
      */
     editHandler(field: MathFieldMethods) {
         if (this.activeEditor === ActiveEditorType.Visual) {
@@ -201,17 +201,17 @@ export class FormulaFieldComponent implements AfterViewInit {
 
     /**
      * Enter pressed while not inside environment
-     * like \cases
-     * @param field current field
+     * like \cases.
+     * @param field current field.
      */
     enterHandler(field: MathFieldMethods) {
         this.enterPressed();
     }
 
     /**
-     * Backspace pressed while field is empty
-     * @param direction indicates which direction movement happens
-     * @param field current field
+     * Backspace pressed while field is empty.
+     * @param direction indicates which direction movement happens.
+     * @param field current field.
      */
     handleDeleteOutOf(direction: number, field: MathFieldMethods) {
         this.backspacePressed();
@@ -226,7 +226,7 @@ export class FormulaFieldComponent implements AfterViewInit {
     }
 
     /**
-     * write changes in latex field to visual field if latex field
+     * Write changes in latex field to visual field if latex field
      * is the one being typed in.
      */
     handleLatexInput() {

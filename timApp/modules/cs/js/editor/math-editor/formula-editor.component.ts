@@ -35,7 +35,7 @@ type FormulaTuple = [FormulaType, number, number];
 
 /**
  * OldContent is split into three at cursor location if insert operation is supported
- * if not then just put content to before and after and editing can be empty
+ * if not then just put content to before and after and editing can be empty.
  */
 type OldContent = {
     before: string;
@@ -180,8 +180,8 @@ export class FormulaEditorComponent {
     };
 
     /**
-     * append new empty field after the current field
-     * and sets it as active
+     * Append new empty field after the current field
+     * and sets it as active.
      */
     addField(lineAdd: LineAdd) {
         if (!lineAdd || lineAdd.addBelow) {
@@ -205,8 +205,8 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * removes currently active field
-     * sets the previous one as active
+     * Removes currently active field
+     * sets the previous one as active.
      */
     removeField() {
         // don't remove the first field
@@ -254,7 +254,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Find the line where cursor is in editor
+     * Find the line where cursor is in editor.
      */
     getCurrentLine() {
         const cursorPos = this.getCursorLocation();
@@ -274,7 +274,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Determine whether the user wants to create a multiline or an inline formula
+     * Determine whether the user wants to create a multiline or an inline formula.
      */
     getInitialMultilineSetting() {
         const currentLine = this.getCurrentLine();
@@ -285,14 +285,14 @@ export class FormulaEditorComponent {
 
     /**
      * After oldContent is set cursor is between
-     * oldContent parts
+     * oldContent parts.
      */
     getCursorLocation() {
         return this.cursorLocation;
     }
 
     /**
-     * Splits string into two parts if possible at cursor location
+     * Splits string into two parts if possible at cursor location.
      * @param str
      */
     parseOldContent(str: string) {
@@ -406,7 +406,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Formulafield component that is being currently edited
+     * Formulafield component that is being currently edited.
      */
     getActiveField() {
         if (this.fieldComponents === undefined) {
@@ -541,7 +541,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * splits text into lines of latex
+     * splits text into lines of LaTeX.
      * @param formula
      * @param allMatrices
      */
@@ -704,7 +704,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Handler for keys being pressed, used for shortcuts to save or close the editor
+     * Handler for keys being pressed, used for shortcuts to save or close the editor.
      */
     handleDialogEvents(e: KeyboardEvent) {
         if (e.ctrlKey) {
@@ -721,7 +721,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Formats LaTex string for the editor.
+     * Formats LaTeX string for the editor.
      * @param isMultiline True if added formula should be multiline, else false.
      * @return Formatted string or undefined if string needs to be added.
      */
@@ -842,7 +842,6 @@ export class FormulaEditorComponent {
 
     /**
      * Adds formula to both fields in last known cursor position.
-     * TODO: There is maybe unused code in this function, that needs to be removed.
      * @param formulaInput LaTeX-formula to be added to fields.
      */
     addFormula(formulaInput: FormulaEvent) {
