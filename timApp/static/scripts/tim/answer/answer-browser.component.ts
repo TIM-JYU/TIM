@@ -377,7 +377,7 @@ export class AnswerBrowserComponent
             // TODO: implement secure initial user check (including user via urlParam), change answer here if needed
         }
         this.saveTeacher =
-            (this.viewctrl.docSettings.save_teacher &&
+            ((markup?.saveTeacher ?? this.viewctrl.docSettings.save_teacher) &&
                 this.viewctrl.teacherMode) ??
             false;
         this.showDelete = isAdmin() && getURLParameter("showAdmin") != null;
