@@ -9,8 +9,8 @@
 import type {IEditor} from "../editor";
 
 /**
- * preview formula is inside parent .math class element
- * and contains latex as a string
+ * Preview formula is inside parent .math class element
+ * and contains latex as a string.
  */
 type PreviewFormula = {
     latex: string;
@@ -18,21 +18,14 @@ type PreviewFormula = {
 };
 
 /**
- * Gets latex from preview
+ * Gets latex from preview.
  * @param event
- * @param parentSelector parameter to querySelector to find where
- * preview ends e.g. .csrunPreview in csplugin
+ * @param previewRoot preview root element
  */
 function getLatexFromPreview(
     event: MouseEvent,
-    parentSelector: string
+    previewRoot: Element
 ): PreviewFormula | undefined {
-    const endParent = document.querySelector(parentSelector);
-    // probably not inside preview
-    if (!endParent) {
-        return undefined;
-    }
-
     // try to find root of formula
     let current = event.target;
     if (!current || !(current instanceof Element)) {
@@ -40,8 +33,8 @@ function getLatexFromPreview(
     }
 
     // traverse parents until element with math class is found
-    // or until .csrunPreview which indicates we probably weren't inside any formula
-    while (current !== endParent && current instanceof Element) {
+    // or until previewRoot which indicates we probably weren't inside any formula
+    while (current !== previewRoot && current instanceof Element) {
         if (current.classList.contains("math")) {
             const annotation = current.querySelector("annotation");
             if (!annotation || !annotation.textContent) {
@@ -57,27 +50,21 @@ function getLatexFromPreview(
 
 /**
  * Moves past formulas before this and returns where
- * to start looking for clicked formula
+ * to start looking for clicked formula.
  * @param clicked clicked formula in preview
  * @param editor editor containing formulas
- * @param parentSelector parameter to querySelector to find where
- * preview ends e.g. .csrunPreview in csplugin
+ * @param previewRoot preview root element
  * @return index in editor.content or -1 if couldn't find
  */
 function movePastFormulasBeforeClicked(
     clicked: PreviewFormula,
     editor: IEditor,
-    parentSelector: string
+    previewRoot: Element
 ): number {
-    const previewElement = document.querySelector(".csrunPreview");
-    // probably not inside preview
-    if (!previewElement) {
-        return -1;
-    }
     let index = 0;
     const content = editor.content;
 
-    for (const mathElem of previewElement.querySelectorAll(".math")) {
+    for (const mathElem of previewRoot.querySelectorAll(".math")) {
         // stop when clicked element is reached
         if (mathElem === clicked.element) {
             return index;
@@ -98,26 +85,25 @@ function movePastFormulasBeforeClicked(
 }
 
 /**
- * Moves cursor inside clicked formula in preview in editor
+ * Moves cursor inside clicked formula in preview in editor.
  * @param event mouse click event
  * @param editor editor containing latex that was rendered to preview
- * @param parentSelector parameter to querySelector to find where
- * preview ends e.g. .csrunPreview in csplugin
+ * @param previewRoot preview root element
  * @return whether the formula was found and cursor was moved to it
  */
 export function selectFormulaFromPreview(
     event: MouseEvent,
     editor: IEditor,
-    parentSelector: string
+    previewRoot: Element
 ) {
-    const clickedPreviewFormula = getLatexFromPreview(event, parentSelector);
+    const clickedPreviewFormula = getLatexFromPreview(event, previewRoot);
     if (!clickedPreviewFormula) {
         return false;
     }
     const startI = movePastFormulasBeforeClicked(
         clickedPreviewFormula,
         editor,
-        parentSelector
+        previewRoot
     );
     if (startI === -1) {
         return false;

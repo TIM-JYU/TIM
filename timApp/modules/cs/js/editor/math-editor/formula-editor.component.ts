@@ -18,7 +18,7 @@ import {
     ContentChild,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import {IEditor} from "../editor";
+import {CURSOR, IEditor} from "../editor";
 import type {ITemplateButton} from "../../csPlugin";
 import {FileSelectManagerComponent} from "../../util/file-select";
 import type {Edit, LineAdd} from "./formula-field.component";
@@ -109,6 +109,8 @@ export class FormulaEditorComponent {
 
     fields!: FieldType[];
 
+    isMultilineFormula = true;
+
     activeFieldsIndex: number = 0;
 
     cursorLocation: number = -1;
@@ -117,8 +119,21 @@ export class FormulaEditorComponent {
 
     existingParenthesis: StringPair = ["", ""];
 
+    private buttonSymbol: FormulaEvent = {
+        text: "",
+        command: "",
+        useWrite: false,
+    };
+    private isVisible = false;
+
     @ViewChild("formulaEditorDialog")
     formulaEditorDialog!: ElementRef<HTMLDivElement>;
+
+    @ViewChildren(FormulaFieldComponent)
+    fieldComponents!: QueryList<FormulaFieldComponent>;
+
+    @ContentChild(FileSelectManagerComponent)
+    fileSelector?: FileSelectManagerComponent;
 
     @Output() okClose = new EventEmitter<void>();
     @Output() cancelClose = new EventEmitter<void>();
@@ -127,15 +142,9 @@ export class FormulaEditorComponent {
 
     @Input() templateButtons: ITemplateButton[] = [];
 
-    isMultilineFormula = true;
-
     @Input() editor!: IEditor;
 
-    @ViewChildren(FormulaFieldComponent)
-    fieldComponents!: QueryList<FormulaFieldComponent>;
-
-    @ContentChild(FileSelectManagerComponent)
-    fileSelector?: FileSelectManagerComponent;
+    constructor(private cd: ChangeDetectorRef) {}
 
     @Input()
     get visible(): boolean {
@@ -159,8 +168,6 @@ export class FormulaEditorComponent {
         }
     }
 
-    private isVisible = false;
-
     @Input()
     get currentSymbol(): FormulaEvent {
         return this.buttonSymbol;
@@ -172,12 +179,6 @@ export class FormulaEditorComponent {
             this.addFormula(value);
         }
     }
-
-    private buttonSymbol: FormulaEvent = {
-        text: "",
-        command: "",
-        useWrite: false,
-    };
 
     /**
      * Append new empty field after the current field
@@ -225,8 +226,6 @@ export class FormulaEditorComponent {
         this.useExistingParenthesis = false;
         this.updateFormulaToEditor();
     }
-
-    constructor(private cd: ChangeDetectorRef) {}
 
     handleEdited(res: Edit) {
         if (res.id < 0 || res.id >= this.fields.length) {
@@ -409,7 +408,7 @@ export class FormulaEditorComponent {
      * Formulafield component that is being currently edited.
      */
     getActiveField() {
-        if (this.fieldComponents === undefined) {
+        if (!this.fieldComponents) {
             return undefined;
         }
         return this.fieldComponents.find(
@@ -642,7 +641,7 @@ export class FormulaEditorComponent {
             this.getCursorLocation()
         );
         // cursor wasn't inside a formula
-        if (currentFormula === undefined) {
+        if (!currentFormula) {
             return false;
         }
 
@@ -813,7 +812,7 @@ export class FormulaEditorComponent {
      */
     setMathQuillCursor(activeField: FormulaFieldComponent) {
         const span = activeField.visualInput.nativeElement;
-        const cursor = "⁞";
+        const cursor = CURSOR;
         const children = span.getElementsByTagName("span");
         for (const child of children) {
             // try to pick the correct element to click
@@ -845,8 +844,8 @@ export class FormulaEditorComponent {
      * @param formulaInput LaTeX-formula to be added to fields.
      */
     addFormula(formulaInput: FormulaEvent) {
-        const cursorPosition = formulaInput.text.indexOf("⁞");
-        const formulaWithoutCursor = formulaInput.text.replace("⁞", "");
+        const cursorPosition = formulaInput.text.indexOf(CURSOR);
+        const formulaWithoutCursor = formulaInput.text.replace(CURSOR, "");
 
         // write to TIM editor
         if (!this.visible) {
@@ -858,7 +857,7 @@ export class FormulaEditorComponent {
         }
 
         const activeField = this.getActiveField();
-        if (activeField === undefined) {
+        if (!activeField) {
             return;
         }
 

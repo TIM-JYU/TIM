@@ -115,9 +115,20 @@ export class FormulaFieldComponent implements AfterViewInit {
 
     @ViewChild("visualInput") visualInput!: ElementRef<HTMLElement>;
 
+    @Output() edited = new EventEmitter<Edit>();
+    @Output() enter = new EventEmitter<LineAdd>();
+    @Output() backspace = new EventEmitter<number>();
+    @Output() focus = new EventEmitter<Edit>();
+    @Output() downArrow = new EventEmitter<number>();
+    @Output() upArrow = new EventEmitter<number>();
+    @Output() delete = new EventEmitter<number>();
+    @Output() add = new EventEmitter<LineAdd>();
+
     @Input() id!: number;
 
     @Input() initialValue!: string;
+
+    constructor(private cd: ChangeDetectorRef) {}
 
     @Input()
     get isActive(): boolean {
@@ -132,17 +143,6 @@ export class FormulaFieldComponent implements AfterViewInit {
             }
         }
     }
-
-    @Output() edited = new EventEmitter<Edit>();
-    @Output() enter = new EventEmitter<LineAdd>();
-    @Output() backspace = new EventEmitter<number>();
-    @Output() focus = new EventEmitter<Edit>();
-    @Output() downArrow = new EventEmitter<number>();
-    @Output() upArrow = new EventEmitter<number>();
-    @Output() delete = new EventEmitter<number>();
-    @Output() add = new EventEmitter<LineAdd>();
-
-    constructor(private cd: ChangeDetectorRef) {}
 
     /**
      * Sets textarea to have as many rows that are necessary to display
