@@ -1737,11 +1737,18 @@ export class CsController extends CsBase implements ITimComponent {
 
     /**
      * Changes formula editor visibility and puts
+     * focus to main editor if closed and
+     * sets cursor position if given.
+     * @param cursorIndex position in editor.content to
+     * move cursor to
      */
-    toggleFormulaEditor() {
+    toggleFormulaEditor(cursorIndex: number = -1) {
         this.formulaEditorOpen = !this.formulaEditorOpen;
         if (!this.formulaEditorOpen) {
             setTimeout(() => {
+                if (cursorIndex !== -1) {
+                    this.editor?.moveCursorToContentIndex(cursorIndex);
+                }
                 this.editor?.focus();
             }, 0);
         }
@@ -3912,8 +3919,8 @@ ${fhtml}
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
                     <cs-formula-editor
-                            (okClose)="toggleFormulaEditor()"
-                            (cancelClose)="toggleFormulaEditor()"
+                            (okClose)="toggleFormulaEditor($event)"
+                            (cancelClose)="toggleFormulaEditor($event)"
                             (toggle)="toggleFormulaEditor()"
                             [visible]="formulaEditorOpen"
                             [editor]="editor"
