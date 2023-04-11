@@ -1980,6 +1980,24 @@ class Racket(Language):
         return code, out, err, pwddir
 
 
+class Scheme(Language):
+    ttype = "scheme"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.scm"
+        self.fileext = "scm"
+        self.pure_exename = f"./{self.filename}.scm"
+        self.imgdest = f"/csgenerated/{self.rndname}.png"
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(
+            ["guile", "--no-auto-compile", self.pure_exename]
+        )
+        out, err = self.copy_image(result, code, out, err, points_rule)
+        return code, out, err, pwddir
+
+
 class FS(Language):
     ttype = "fs"
 

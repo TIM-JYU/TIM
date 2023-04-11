@@ -386,6 +386,9 @@ RUN add-apt-repository ppa:plt/racket && \
     apt-get update && \
     bash -c "${APT_INSTALL} racket && ${APT_CLEANUP}"
 
+# Install Guile 3
+RUN bash -c "${APT_INSTALL} guile-3.0 && ${APT_CLEANUP}"
+
 USER agent
 
 FROM complete as sudo

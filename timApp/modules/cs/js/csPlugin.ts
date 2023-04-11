@@ -229,6 +229,7 @@ class LanguageTypes {
         vars: {ace: "text", comment: "//"},
         r: {ace: "r", comment: "#"},
         racket: {ace: "scheme", comment: ";"},
+        scheme: {ace: "scheme", comment: ";"},
         ts: {ace: "typescript", comment: "//"},
         maxima: {ace: "matlab", comment: "/* */"},
         elixir: {ace: "elixir", comment: "#"},
