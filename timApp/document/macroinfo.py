@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from html import escape
 from typing import TYPE_CHECKING, Any, Mapping
 
+from flask import session
 from marshmallow import missing
 
 from timApp.document.usercontext import UserContext
@@ -42,6 +43,9 @@ class MacroInfo:
 
         doc = self.doc
         self.macro_map["host"] = app.config["TIM_HOST"]
+        self.macro_map["last_referrers"] = (
+            session.get("last_referrers", []) if session else []
+        )
         if doc is not None:
             docinfo = doc.get_docinfo()
             self.macro_map.update(

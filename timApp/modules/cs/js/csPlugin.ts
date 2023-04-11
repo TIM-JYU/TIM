@@ -221,7 +221,7 @@ class LanguageTypes {
         mathcheck: {ace: "text", comment: ""},
         html: {ace: "html", comment: "<!-- -->"},
         processing: {ace: "javascript", comment: "//"},
-        rust: {ace: "text", comment: "//"},
+        rust: {ace: "rust", comment: "//"},
         wescheme: {ace: "scheme", comment: "--"},
         ping: {ace: "text", comment: ""},
         kotlin: {ace: "kotlin", comment: "//"},
@@ -232,6 +232,7 @@ class LanguageTypes {
         viz: {ace: "text", comment: "//"},
         vars: {ace: "text", comment: "//"},
         r: {ace: "r", comment: "#"},
+        racket: {ace: "scheme", comment: ";"},
         ts: {ace: "typescript", comment: "//"},
         maxima: {ace: "matlab", comment: "/* */"},
         elixir: {ace: "elixir", comment: "#"},
@@ -2037,10 +2038,14 @@ ${fhtml}
                     (x, i) => i >= 2 && x == "math"
                 );
                 const containsSymbol = parsed.indexOf("symbol");
+                const containsCommonSymbol = parsed.indexOf("commonSymbol");
                 if (containsSymbol !== -1 && containsSymbol > 1) {
                     item.isSymbol = "symbol";
-                } else {
-                    item.isSymbol = "notSymbol";
+                } else if (
+                    containsCommonSymbol !== -1 &&
+                    containsCommonSymbol > 1
+                ) {
+                    item.isSymbol = "commonSymbol";
                 }
                 for (let i = 3; i < parsed.length; i++) {
                     const p = parsed[i];
@@ -3833,7 +3838,10 @@ ${fhtml}
         const symbolButtons: ITemplateButton[] = [];
         const notSymbolButtons: ITemplateButton[] = [];
         this.templateButtons.forEach(function (button) {
-            if (button.isSymbol === "symbol") {
+            if (
+                button.isSymbol === "symbol" ||
+                button.isSymbol === "commonSymbol"
+            ) {
                 symbolButtons.push(button);
             } else {
                 notSymbolButtons.push(button);

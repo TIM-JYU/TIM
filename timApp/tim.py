@@ -1,5 +1,6 @@
 import time
 import traceback
+from urllib.parse import urlparse
 
 import bs4
 from bs4 import BeautifulSoup
@@ -313,8 +314,11 @@ LOG_BEFORE_REQUESTS = app.config["LOG_BEFORE_REQUESTS"]
 def preprocess_request():
     session.permanent = True
     g.request_start_time = time.monotonic()
+    # Log the request before it is processed.
     if LOG_BEFORE_REQUESTS:
         log_info(get_request_message(include_time=False, is_before=True))
+
+    # Redirect to a canonical URL if the path contains double slashes or ends with a slash.
     if request.method == "GET":
         p = request.path
         if "//" in p or (p.endswith("/") and p != "/"):
@@ -323,6 +327,23 @@ def preprocess_request():
             if query_str:
                 fixed_url = f"{fixed_url}?{query_str}"
             return redirect(fixed_url)
+
+        # Also, capture the referrer to the session if it is different from the current URL domain.
+        if request.referrer:
+            # Check if referrer is different from the request domain.
+            try:
+                referrer_domain = urlparse(request.referrer).netloc
+            except ValueError:
+                referrer_domain = None
+            last_referrers = session.get("last_referrers", [])
+            if (
+                referrer_domain
+                and referrer_domain != request.host
+                and referrer_domain not in last_referrers
+            ):
+                last_referrers.append(referrer_domain)
+                # Only leave the last 5 referrers.
+                session["last_referrers"] = last_referrers[-3:]
 
 
 def should_log_request():

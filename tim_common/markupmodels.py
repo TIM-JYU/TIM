@@ -141,6 +141,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     postprogram: str | Missing = missing
     postoutput: str | Missing = missing
     previousTask: PreviousTaskInfo | None | Missing = missing
+    saveTeacher: bool | None | Missing = missing
     showPoints: bool | None | Missing = missing
     starttime: PluginDateTime | datetime | None | Missing = missing
     showInView: bool | Missing = missing

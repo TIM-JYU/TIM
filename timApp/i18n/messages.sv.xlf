@@ -7968,6 +7968,14 @@
           <context context-type="linenumber">48,49</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6963601602339779130" datatype="html">
+        <source>Show more symbols</source>
+        <target state="translated">Visa fler symboler</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
+          <context context-type="linenumber">65</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -32,7 +32,7 @@ export interface IDocSettings {
     hideBrowser?: boolean;
     login?: ILoginSettings;
     timeLeft?: ITimeLeftSettings;
-    save_teacher?: boolean;
+    saveTeacher?: boolean;
     show_scoreboard?: boolean;
     exam_mode?: string;
     sidemenu_initial_state?: string;
