@@ -135,8 +135,8 @@ export class FormulaEditorComponent {
     @ContentChild(FileSelectManagerComponent)
     fileSelector?: FileSelectManagerComponent;
 
-    @Output() okClose = new EventEmitter<void>();
-    @Output() cancelClose = new EventEmitter<void>();
+    @Output() okClose = new EventEmitter<number>();
+    @Output() cancelClose = new EventEmitter<number>();
     @Output() focusBack = new EventEmitter<void>();
     @Output() toggle = new EventEmitter<void>();
 
@@ -768,7 +768,7 @@ export class FormulaEditorComponent {
         this.updateFormulaToEditor();
         const finalContent = this.editor.content;
 
-        this.okClose.emit();
+        this.okClose.emit(this.cursorLocation);
         this.clearFields();
 
         this.editor.content = finalContent;
@@ -797,7 +797,7 @@ export class FormulaEditorComponent {
                 $localize`This will clear the editor.`
             ))
         ) {
-            this.cancelClose.emit();
+            this.cancelClose.emit(this.cursorLocation);
 
             this.clearFields();
 
