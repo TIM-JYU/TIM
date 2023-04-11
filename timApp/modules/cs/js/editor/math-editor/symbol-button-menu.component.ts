@@ -52,11 +52,17 @@ enum ButtonMenuState {
 
                     <div class="file-select-button">
                         <ng-content></ng-content>                        
-                    </div>                        
+                    </div>
                 </div>
 
                 <div class="button-menu-right">
-                    <button *ngIf="!isOpen(); else elseBlock" type="button" class="btn btn-default" (click)="openMenu()">
+                    <div class="common-symbol-buttons math display">
+                        <button class="symbol-button" *ngFor="let item of this.splitCommonSymbols(true)"
+                            title="{{item.expl}}" (mousedown)="addFormula(item.data, item.data, true)" 
+                         >{{item.text}}</button>
+                    </div>
+                    <button *ngIf="!isOpen(); else elseBlock" type="button" class="btn btn-default" (click)="openMenu()"
+                    title="Show more symbols">
                       <span class="glyphicon glyphicon-menu-down"></span>
                     </button>
                    <ng-template #elseBlock>
@@ -75,7 +81,8 @@ enum ButtonMenuState {
            
             <div class="symbol-button-menu" [class.symbol-button-menu-open]="isOpen()">
                 <div class="buttons-container math display" [hidden]="!isOpen()">
-                    <button class="symbol-button" title="{{item.expl}}" *ngFor="let item of templateButtons;" (mousedown)="addFormula(item.data, item.data, true)"
+                    <button class="symbol-button" title="{{item.expl}}" *ngFor="let item of this.splitCommonSymbols(false);" 
+                            (mousedown)="addFormula(item.data, item.data, true)"
                      >{{item.text}}</button>
                 </div>
             </div>
@@ -86,7 +93,7 @@ enum ButtonMenuState {
     styleUrls: ["./symbol-button-menu.component.scss"],
 })
 export class SymbolButtonMenuComponent {
-    buttonMenuState: ButtonMenuState = ButtonMenuState.Open;
+    buttonMenuState: ButtonMenuState = ButtonMenuState.Closed;
 
     @ContentChild(FileSelectManagerComponent)
     fileSelector?: FileSelectManagerComponent;
@@ -133,5 +140,28 @@ export class SymbolButtonMenuComponent {
      */
     isOpen() {
         return this.buttonMenuState === ButtonMenuState.Open;
+    }
+
+    /**
+     * Splits templateButtons to common and not common buttons.
+     * @param isCommon Returns common if true, not common if false.
+     */
+    splitCommonSymbols(isCommon: boolean) {
+        const symbolButtons: ITemplateButton[] = [];
+        const commonSymbolButtons: ITemplateButton[] = [];
+
+        this.templateButtons.forEach(function (button) {
+            if (button.isSymbol === "symbol") {
+                symbolButtons.push(button);
+            } else {
+                commonSymbolButtons.push(button);
+            }
+        });
+
+        if (isCommon) {
+            return commonSymbolButtons;
+        }
+
+        return symbolButtons;
     }
 }

@@ -893,7 +893,23 @@ ${backTicks}
                 name: "Characters",
             },
             {
-                entries: [],
+                entries: [
+                    {
+                        title: "",
+                        func: () => this.editor!.indexClicked(),
+                        name: "X&#x2093;",
+                    },
+                    {
+                        title: "",
+                        func: () => this.editor!.powerClicked(),
+                        name: "X&#x207f;",
+                    },
+                    {
+                        title: "",
+                        func: () => this.editor!.squareClicked(),
+                        name: "&radic;",
+                    },
+                ],
                 name: "TeX",
             },
             {

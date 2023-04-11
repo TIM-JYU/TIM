@@ -17,7 +17,7 @@ buttons: |!!
 [ "\\( \\pi \\)", "\\pi", "Pii", "symbol"]
 [ "\\[\\sin \\]", "\\sin", "Sini", "symbol"]
 [ "\\[\\cos \\]", "\\cos", "Kosini", "symbol"]
-[ "\\[\\tan \\]", "\\tan", "tangentti", "symbol"]
+[ "\\[\\tan \\]", "\\tan", "Tangentti", "symbol"]
 [ "\\( \\overline{\\text{i}} \\)", "\\overline{\\text{i}}", "Vektori i", "symbol"]
 [ "\\( \\overline{\\text{j}} \\)", "\\overline{\\text{j}}", "Vektori j", "symbol"]
 [ "\\( \\overline{\\text{k}} \\)", "\\overline{\\text{k}}", "Vektori k", "symbol"]
