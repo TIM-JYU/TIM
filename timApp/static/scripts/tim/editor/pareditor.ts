@@ -1761,10 +1761,13 @@ ${backTicks}
      * if formula editor was open.
      * @param doDigest whether to run digest
      */
-    toggleFormulaEditor(doDigest: boolean = true) {
+    toggleFormulaEditor(doDigest: boolean = true, cursorIndex: number = -1) {
         this.formulaEditorOpen = !this.formulaEditorOpen;
         if (!this.formulaEditorOpen) {
             setTimeout(() => {
+                if (cursorIndex !== -1) {
+                    this.editor?.moveCursorToContentIndex(cursorIndex);
+                }
                 this.editor?.focus();
             }, 0);
         }

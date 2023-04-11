@@ -720,9 +720,9 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Formats LaTeX string for the editor.
+     * Formats formula to LaTeX string.
      * @param isMultiline True if added formula should be multiline, else false.
-     * @return Formatted string or undefined if string needs to be added.
+     * @return Formatted string or undefined if resulting formula is empty
      */
     formatLatex(isMultiline: boolean): string | undefined {
         const wrapSymbol = isMultiline ? "$$" : "$";
@@ -739,6 +739,7 @@ export class FormulaEditorComponent {
             }
             return `${wrapSymbol}\n${latex}\n${wrapSymbol}`;
         }
+        // fields.length should be 1
         const latex = this.fields[0].latex;
         if (latex.length === 0) {
             return undefined;
@@ -755,9 +756,7 @@ export class FormulaEditorComponent {
         // If nothing is typed then just show original content
         if (formulaLatex === undefined) {
             this.editor.content =
-                this.oldContent.before +
-                this.oldContent.editing +
-                this.oldContent.after;
+                this.oldContent.before + this.oldContent.after;
         } else {
             this.editor.content =
                 this.oldContent.before + formulaLatex + this.oldContent.after;
@@ -768,7 +767,17 @@ export class FormulaEditorComponent {
         this.updateFormulaToEditor();
         const finalContent = this.editor.content;
 
-        this.okClose.emit(this.cursorLocation);
+        const isMultiline = this.isMultilineFormula;
+        const currentFormulaLength = this.formatLatex(isMultiline)?.length ?? 0;
+        // adding new formula
+        if (this.oldContent.editing.length === 0) {
+            const endPos = this.oldContent.before.length + currentFormulaLength;
+            this.okClose.emit(endPos);
+        } else {
+            // modifying formula
+            const endPos = this.oldContent.before.length + currentFormulaLength;
+            this.okClose.emit(endPos);
+        }
         this.clearFields();
 
         this.editor.content = finalContent;
@@ -797,7 +806,17 @@ export class FormulaEditorComponent {
                 $localize`This will clear the editor.`
             ))
         ) {
-            this.cancelClose.emit(this.cursorLocation);
+            // cancelling creation of a new formula
+            if (this.oldContent.editing === "") {
+                const endPos = this.oldContent.before.length;
+                this.cancelClose.emit(endPos);
+            } else {
+                // cancelling editing formula
+                const endPos =
+                    this.oldContent.before.length +
+                    this.oldContent.editing.length;
+                this.cancelClose.emit(endPos);
+            }
 
             this.clearFields();
 
