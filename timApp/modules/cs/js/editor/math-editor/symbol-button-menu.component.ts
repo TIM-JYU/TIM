@@ -44,23 +44,27 @@ enum ButtonMenuState {
     selector: "symbol-button-menu",
     template: `
         <div class="symbol-menu-container" [class.symbol-menu-container-open]="isOpen()">
-            <div class="button-menu-container" [class.button-menu-container-no-left]="formulaEditorOpen">
-                <div class="button-menu-left" [hidden]="formulaEditorOpen">
-                    <button class="timButton formula-button" (click)="toggleFormulaEditor()" i18n
-                            title="Ctrl+e">Formula
-                    </button>
-
-                    <div class="file-select-button">
-                        <ng-content></ng-content>                        
+            <div class="button-menu-container">
+                <div class="button-menu-left">
+                    <div [hidden]="formulaEditorOpen" class="formula-controls">
+                        <button class="timButton formula-button" (click)="toggleFormulaEditor()" i18n
+                                title="Ctrl+e">Formula
+                        </button>
+    
+                        <div class="file-select-button">
+                            <ng-content></ng-content>                        
+                        </div>                        
                     </div>
-                </div>
-
-                <div class="button-menu-right">
+                    
                     <div class="common-symbol-buttons math display">
                         <button class="symbol-button" *ngFor="let item of this.splitCommonSymbols(true)"
                             title="{{item.expl}}" (mousedown)="addFormula(item.data, item.data, true)" 
                          >{{item.text}}</button>
                     </div>
+                </div>
+                
+                <div class="button-menu-right">
+
                     <button *ngIf="!isOpen(); else elseBlock" type="button" class="btn btn-default" (click)="openMenu()"
                     title="Show more symbols" i18n-title>
                       <span class="glyphicon glyphicon-menu-down"></span>
