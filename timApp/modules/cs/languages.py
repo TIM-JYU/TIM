@@ -1964,6 +1964,22 @@ class R(Language):
         return code, out, err, pwddir
 
 
+class Racket(Language):
+    ttype = "racket"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.rkt"
+        self.fileext = "rkt"
+        self.pure_exename = f"./{self.filename}.rkt"
+        self.imgdest = f"/csgenerated/{self.rndname}.png"
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(["racket", self.pure_exename])
+        out, err = self.copy_image(result, code, out, err, points_rule)
+        return code, out, err, pwddir
+
+
 class FS(Language):
     ttype = "fs"
 
