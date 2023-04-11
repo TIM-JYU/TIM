@@ -2,7 +2,7 @@
     <uib-tab ng-repeat="t in $ctrl.getVisibleTabs()" heading="{{ t.name }}" index="$ctrl.getTabIndex(t)">
         <div class="TeXTab">
             <div ng-if="t.name === 'TeX' && $ctrl.editor" class="formula-editor-tab">
-                <cs-formula-editor
+                <cs-formula-editor ng-if="$ctrl.formulaEditor"
                                (ok-close)="$ctrl.toggleFormulaEditor()"
                                (cancel-close)="$ctrl.toggleFormulaEditor()"
                                (toggle)="$ctrl.toggleFormulaEditor()"
@@ -78,7 +78,7 @@
             <button class="timButton save" ng-disabled="$ctrl.saving" title="Save (Ctrl-S)"
                     ng-click="$ctrl.saveClicked()">Save
             </button>
-            <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.cancelClicked()">Cancel</button>
+            <button class="timButton cancel" ng-disabled="$ctrl.saving" ng-click="$ctrl.cancelClicked()">Cancel</button>
             <span ng-show="$ctrl.proeditor">
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete"
                 ng-click="$ctrl.deleteClicked()">Delete</button>
