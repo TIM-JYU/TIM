@@ -913,6 +913,7 @@ class CachedPluginFinder:
 def find_plugin_from_document(
     d: Document, task_id: TaskId, u: UserContext, view_ctx: ViewContext
 ) -> Plugin:
+    d.insert_preamble_pars()
     used_hint = False
     with d.__iter__() as it:
         for p in it:
