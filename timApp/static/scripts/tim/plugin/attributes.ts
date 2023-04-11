@@ -59,6 +59,7 @@ export const GenericPluginMarkup = t.partial({
     answerBrowser: nullable(AnswerBrowserSettings),
     warningFilter: nullable(t.string),
     previousTask: nullable(previousTaskType),
+    saveTeacher: t.boolean,
     spellcheck: t.boolean,
 });
 
