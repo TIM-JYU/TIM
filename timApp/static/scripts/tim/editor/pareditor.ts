@@ -1797,10 +1797,6 @@ ${backTicks}
         }
     }
 
-    enableFormulaEditor() {
-        this.formulaEditor = true;
-    }
-
     /**
      * Checks whether translation may be done.
      * @param editText The editor's text, used for comparison to original block's text in trdiff
