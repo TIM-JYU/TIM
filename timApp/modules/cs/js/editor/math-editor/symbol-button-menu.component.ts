@@ -62,7 +62,7 @@ enum ButtonMenuState {
                          >{{item.text}}</button>
                     </div>
                     <button *ngIf="!isOpen(); else elseBlock" type="button" class="btn btn-default" (click)="openMenu()"
-                    title="Show more symbols">
+                    title="Show more symbols" i18n-title>
                       <span class="glyphicon glyphicon-menu-down"></span>
                     </button>
                    <ng-template #elseBlock>
