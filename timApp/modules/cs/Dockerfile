@@ -381,6 +381,11 @@ RUN python3.10 -m pip install coverage && bash -c "${APT_CLEANUP}"
 
 RUN bash -c "${APT_INSTALL} openscad && ${APT_CLEANUP}"
 
+# Install Racket via ppa:plt/racket
+RUN add-apt-repository ppa:plt/racket && \
+    apt-get update && \
+    bash -c "${APT_INSTALL} racket && ${APT_CLEANUP}"
+
 USER agent
 
 FROM complete as sudo
