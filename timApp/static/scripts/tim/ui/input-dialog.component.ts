@@ -1,10 +1,5 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {
-    Component,
-    HostBinding,
-    NgModule,
-    ViewContainerRef,
-} from "@angular/core";
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
@@ -50,7 +45,7 @@ export type InputDialogParams<T> = {
                     {{getTitle()}}
                 </ng-container>
                 <ng-container body>
-                    <p [innerHtml]="text()"></p>
+                    <p tabindex="-1" #textEl [innerHtml]="text()"></p>
                     <input (keydown.enter)="ok()"
                            class="form-control"
                            focusMe
@@ -89,13 +84,7 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     error?: string;
     isInput = false;
     asyncContent = true;
-
-    // This is needed to set focus programmatically on non-input elements
-    @HostBinding("attr.tabindex") tabindex = "-1";
-
-    constructor(private viewRef: ViewContainerRef) {
-        super();
-    }
+    @ViewChild("textEl") textEl!: ElementRef<HTMLElement>;
 
     getTitle() {
         return this.data.title;
@@ -124,8 +113,7 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
         super.ngAfterViewInit();
         // Grab focus when there is no input, this allows keybindings to be processed by this modal
         if (!this.isInput) {
-            const el = this.viewRef.element.nativeElement as HTMLElement;
-            el.focus();
+            this.textEl.nativeElement.focus();
         }
     }
 
