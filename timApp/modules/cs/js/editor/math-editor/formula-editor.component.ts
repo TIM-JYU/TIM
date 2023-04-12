@@ -94,7 +94,8 @@ type NumPair = [number, number];
 
                     <label class="font-weight-normal">
                         <input type="checkbox" [(ngModel)]="isMultilineFormula"
-                               (ngModelChange)="onMultilineFormulaChange()">
+                               (ngModelChange)="onMultilineFormulaChange()" 
+                               title="Outputs formula in multiple lines" i18n-title>
                         <ng-container i18n>Multiline</ng-container>
                     </label>
                 </div>

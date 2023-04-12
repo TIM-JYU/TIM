@@ -70,7 +70,7 @@ enum ButtonMenuState {
                       <span class="glyphicon glyphicon-menu-down"></span>
                     </button>
                    <ng-template #elseBlock>
-                    <button type="button" class="btn btn-default" (click)="closeMenu()">
+                    <button type="button" class="btn btn-default" (click)="closeMenu()" title="Show less symbols" i18n-title>
                       <span class="glyphicon glyphicon-menu-up"></span>
                     </button>                       
                    </ng-template>

@@ -7976,6 +7976,22 @@
           <context context-type="linenumber">65</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5731126650524323607" datatype="html">
+        <source>Outputs formula in multiple lines</source>
+        <target state="translated">Matar ut formel i flera rader</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1957004543475680060" datatype="html">
+        <source>Show less symbols</source>
+        <target state="translated">Visa färre symboler</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
+          <context context-type="linenumber">73</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
