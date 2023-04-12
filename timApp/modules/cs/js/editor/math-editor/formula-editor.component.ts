@@ -93,7 +93,7 @@ type NumPair = [number, number];
                     </div>
 
                     <label class="font-weight-normal">
-                        <input type="checkbox" [(ngModel)]="isMultilineFormula"
+                        <input [disabled]="isDisabled" type="checkbox" [(ngModel)]="isMultilineFormula"
                                (ngModelChange)="onMultilineFormulaChange()" 
                                title="Outputs formula in multiple lines" i18n-title>
                         <ng-container i18n>Multiline</ng-container>
@@ -126,6 +126,8 @@ export class FormulaEditorComponent {
         useWrite: false,
     };
     private isVisible = false;
+
+    isDisabled = false;
 
     @ViewChild("formulaEditorDialog")
     formulaEditorDialog!: ElementRef<HTMLDivElement>;
@@ -204,6 +206,7 @@ export class FormulaEditorComponent {
             this.isMultilineFormula = this.fields.length > 1;
             this.useExistingParenthesis = false;
         }
+        this.isDisabled = true;
     }
 
     /**
@@ -224,6 +227,7 @@ export class FormulaEditorComponent {
         }
 
         this.isMultilineFormula = this.fields.length > 1;
+        this.isDisabled = this.fields.length > 1;
         this.useExistingParenthesis = false;
         this.updateFormulaToEditor();
     }
@@ -677,6 +681,7 @@ export class FormulaEditorComponent {
                 );
                 this.fields = allFields;
                 this.isMultilineFormula = true;
+                this.isDisabled = true;
                 this.setMultilineActiveField(allFields);
             }
             // start editing an inline formula
@@ -689,6 +694,7 @@ export class FormulaEditorComponent {
                 // update formula editor content and values
                 this.fields = [{latex: text.slice(leftIndex + 1, rightIndex)}];
                 this.isMultilineFormula = false;
+                this.isDisabled = false;
             }
             return true;
         }
@@ -791,6 +797,7 @@ export class FormulaEditorComponent {
         this.fields = [];
         this.useExistingParenthesis = false;
         this.cursorLocation = -1;
+        this.isDisabled = false;
     }
 
     async handleFormulaCancel() {
