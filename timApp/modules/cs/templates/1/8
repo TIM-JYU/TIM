@@ -32,8 +32,8 @@ buttons: |!!
 [ "\\[\\overrightarrow{\\square}\\]", "\\overrightarrow{⁞}", "\\overrightarrow{ }", "symbol"]
 [ "\\[\\overleftarrow{\\square}\\]", "\\overleftarrow{⁞}", "\\overleftarrow{ }", "symbol"]
 [ "\\[\\binom{\\square}{\\square}\\]", "\\binom{⁞}{}", "\\binom{ }{}", "symbol"]
-[ "\\[\\begin{cases}\\square&\\square\\\\\\square&\\square\\end{cases}\\]", "\\begin{cases}⁞&\\\\&\\end{cases}", "\\begin{cases}⁞&\\\\&\\end{cases}", "symbol"]
-[ "\\[\\begin{matrix}\\square&\\square\\\\\\square&\\square\\end{matrix}\\]", "\\begin{matrix}⁞&\\\\&\\end{matrix}", "\\begin{matrix}⁞&\\\\&\\end{matrix}", "symbol"]
+[ "\\[\\begin{cases}\\square&\\square\\\\\\square&\\square\\end{cases}\\]", "\\begin{cases}⁞&\\\\&\\end{cases}", "\\begin{cases} &\\\\&\\end{cases}", "symbol"]
+[ "\\[\\begin{matrix}\\square&\\square\\\\\\square&\\square\\end{matrix}\\]", "\\begin{matrix}⁞&\\\\&\\end{matrix}", "\\begin{matrix} &\\\\&\\end{matrix}", "symbol"]
 [ "\\[\\begin{array}{l|l}\\square&\\square\\\\\\hline\\square&\\square\\end{array}\\]", "\\begin{array}{l|l}⁞&\\\\\\hline&\\end{array}", "\\begin{array}{l|l} &\\\\\\hline&\\end{array}", "symbol"]
 !!
 ```
