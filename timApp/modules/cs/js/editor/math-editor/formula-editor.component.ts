@@ -64,7 +64,7 @@ type NumPair = [number, number];
                 <ng-content></ng-content>
             </symbol-button-menu>            
         </div>
-        <div [hidden]="!visible" class="formula-editor">
+        <div *ngIf="!visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
 
                 <div class="fields">

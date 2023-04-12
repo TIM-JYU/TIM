@@ -114,9 +114,7 @@ class ParEditorTest(BrowserTest):
         prefs.use_document_word_list = False
         self.current_user.set_prefs(prefs)
         db.session.commit()
-        cancelbutton = self.find_element(xpath="//button[@class='timButton cancel']")
-        cancelbutton.click()
-        "get_cancel_button(pareditor).click()"
+        get_cancel_button(pareditor).click()
         alert = self.drv.switch_to.alert
         alert.accept()
         self.goto_document(d)
