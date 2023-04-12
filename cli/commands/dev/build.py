@@ -114,9 +114,9 @@ def run(args: Arguments) -> None:
                 built_images.extend(images)
 
     if args.push:
-        for images in built_images:
-            log_info(f"Pushing {images}")
-            run_docker(["push", images])
+        for image in built_images:
+            log_info(f"Pushing {image}")
+            run_docker(["push", image])
 
 
 def init(parser: ArgumentParser) -> None:
