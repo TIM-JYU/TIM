@@ -681,7 +681,7 @@ export class FormulaEditorComponent {
                 );
                 this.fields = allFields;
                 this.isMultilineFormula = true;
-                this.isDisabled = true;
+                this.isDisabled = this.fields.length > 1;
                 this.setMultilineActiveField(allFields);
             }
             // start editing an inline formula
