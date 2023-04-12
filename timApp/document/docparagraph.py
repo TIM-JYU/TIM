@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shelve
+import time
 from collections import defaultdict
 from copy import copy
 from typing import TYPE_CHECKING, Optional
@@ -267,13 +268,25 @@ class DocParagraph:
         """
         try:
             par_path = cls._get_path(doc, par_id, t)
-            with open(par_path) as f:
-                try:
-                    return cls.from_dict(doc, json.loads(f.read()))
-                except json.JSONDecodeError as ex:
-                    raise ValueError(
-                        f"Invalid JSON read from {par_path}: '{ex.doc}'"
-                    ) from ex
+            # We need to retry reading the file in case it is being written to.
+            # This can sometimes happen if the IO is busy,
+            # and we use a file system that doesn't lock files when writing.
+            # FIXME: This is a temporary workaround. We should probably properly lock the file.
+            attempt = 0
+            while True:
+                with open(par_path) as f:
+                    try:
+                        doc_dict = json.loads(f.read())
+                        break
+                    except json.JSONDecodeError as ex:
+                        attempt += 1
+                        if attempt >= 3:
+                            raise ValueError(
+                                f"Invalid JSON read from {par_path}: '{ex.doc}' (aborting after {attempt} attempts)"
+                            ) from ex
+                        else:
+                            time.sleep(0.01)
+            return cls.from_dict(doc, doc_dict)
         except FileNotFoundError:
             doc._raise_not_found(par_id)
 
