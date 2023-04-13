@@ -1211,6 +1211,181 @@ export class CsController extends CsBase implements ITimComponent {
             hasMath: true,
             isSymbol: "symbol",
         },
+        {
+            text: "γ",
+            data: "\\gamma",
+            expl: "\\gamma",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "Δ",
+            data: "\\Delta",
+            expl: "\\Delta",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "δ",
+            data: "\\delta",
+            expl: "\\delta",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "ε",
+            data: "\\varepsilon",
+            expl: "\\varepsilon",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "ζ",
+            data: "\\zeta",
+            expl: "\\zeta",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "η",
+            data: "\\eta",
+            expl: "\\eta",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "θ",
+            data: "\\theta",
+            expl: "\\theta",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "ϑ",
+            data: "\\vartheta",
+            expl: "\\vartheta",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "ι",
+            data: "\\iota",
+            expl: "\\iota",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "κ",
+            data: "\\kappa",
+            expl: "\\kappa",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "Λ",
+            data: "\\Lambda",
+            expl: "\\Lambda",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "λ",
+            data: "\\lambda",
+            expl: "\\lambda",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "λ",
+            data: "\\lambda",
+            expl: "\\lambda",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "≥",
+            data: "\\ge",
+            expl: "\\ge",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "<",
+            data: "<",
+            expl: "<",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: ">",
+            data: ">",
+            expl: ">",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "⇌",
+            data: "\\xrightleftharpoons[]{}",
+            expl: "\\xrightleftharpoons[]{}",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "⇅",
+            data: "⇅",
+            expl: "⇅",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "∠",
+            data: "\\angle",
+            expl: "\\angle",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "∃",
+            data: "\\exists",
+            expl: "\\exists",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "∀",
+            data: "\\forall",
+            expl: "\\forall",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "ℕ",
+            data: "\\mathbb{N}",
+            expl: "\\mathbb{N}",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "ℚ",
+            data: "\\mathbb{Q}",
+            expl: "\\mathbb{Q}",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "∩",
+            data: "\\cap",
+            expl: "\\cap",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+        {
+            text: "∪",
+            data: "\\cup",
+            expl: "\\cup",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
     ];
     templateButtonsCount: number = 0;
     mdHtml?: string;
@@ -4031,14 +4206,7 @@ ${fhtml}
         const notSymbolButtons: ITemplateButton[] = [];
         if (this.markup.abitti) {
             this.abittiButtons.forEach(function (button) {
-                if (
-                    button.isSymbol === "symbol" ||
-                    button.isSymbol === "commonSymbol"
-                ) {
-                    symbolButtons.push(button);
-                } else {
-                    notSymbolButtons.push(button);
-                }
+                symbolButtons.push(button);
             });
         }
         this.templateButtons.forEach(function (button) {
