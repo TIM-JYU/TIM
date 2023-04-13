@@ -7,13 +7,16 @@
  * @date 30.3.2023
  */
 
+import type {AfterViewInit} from "@angular/core";
 import {
     Component,
     ContentChild,
+    ElementRef,
     EventEmitter,
     Input,
     Output,
 } from "@angular/core";
+import {ParCompiler} from "tim/editor/parCompiler";
 import type {ITemplateButton} from "../../csPlugin";
 import {FileSelectManagerComponent} from "../../util/file-select";
 
@@ -96,7 +99,7 @@ enum ButtonMenuState {
     `,
     styleUrls: ["./symbol-button-menu.component.scss"],
 })
-export class SymbolButtonMenuComponent {
+export class SymbolButtonMenuComponent implements AfterViewInit {
     buttonMenuState: ButtonMenuState = ButtonMenuState.Closed;
 
     @ContentChild(FileSelectManagerComponent)
@@ -109,6 +112,8 @@ export class SymbolButtonMenuComponent {
     @Input() templateButtons: ITemplateButton[] = [];
 
     @Output() toggle = new EventEmitter<void>();
+
+    constructor(public el: ElementRef<HTMLElement>) {}
 
     addFormula(formula: string, command: string, useWrite: boolean = false) {
         this.setFormula.emit({
@@ -167,5 +172,9 @@ export class SymbolButtonMenuComponent {
         }
 
         return symbolButtons;
+    }
+
+    ngAfterViewInit(): void {
+        void ParCompiler.processAllMath($(this.el.nativeElement));
     }
 }

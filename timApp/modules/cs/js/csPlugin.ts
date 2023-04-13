@@ -950,6 +950,128 @@ export interface IRunRequest {
     input: IRunRequestInput;
 }
 
+function getButtonTextHtml(s: string) {
+    let ret = s.trim();
+    ret = ret.replace("\\n", "");
+    ret = ret.replace(CURSOR, "");
+    if (ret.length === 0) {
+        ret = "\u00A0";
+    }
+    return ret;
+}
+
+/**
+ * Parses string into buttons.
+ * @param b string containing an array of buttons
+ * @param mdButtons array of markdown buttons
+ */
+export function createTemplateButtons(
+    b: string | undefined,
+    mdButtons: ITemplateButton[] | undefined | null
+) {
+    if (!b && !mdButtons) {
+        return [];
+    }
+    if (!b) {
+        b = "";
+    }
+    if (!mdButtons) {
+        mdButtons = [];
+    }
+    const helloButtons =
+        "public \nclass \nHello \n\\n\n{\n}\n" +
+        "static \nvoid \n Main\n(\n)\n" +
+        '        Console.WriteLine(\n"\nworld!\n;\n ';
+    const typeButtons =
+        "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
+    const charButtons =
+        "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
+    b = b.replace("$hellobuttons$", helloButtons);
+    b = b.replace("$typebuttons$", typeButtons);
+    b = b.replace("$charbuttons$", charButtons);
+    b = b.trim();
+    b = b.replace("$space$", " ");
+    const btns = b.split("\n");
+    for (let i = 0; i < btns.length; i++) {
+        let s = btns[i];
+        if (s.length < 1) {
+            continue;
+        }
+        if (s.startsWith('"') || s.startsWith("'")) {
+            s = s.replace(new RegExp(s[0], "g"), "");
+            btns[i] = s;
+        }
+    }
+    const templateButtons: ITemplateButton[] = [];
+    for (const s of btns) {
+        if (s === "") {
+            continue;
+        }
+        if (!s.startsWith("[")) {
+            templateButtons.push({
+                text: getButtonTextHtml(s),
+                data: s,
+            });
+            continue;
+        }
+        try {
+            const parsed = JSON.parse(s);
+            const item: ITemplateButton = {
+                text: parsed[0],
+                data: parsed[0],
+            };
+            if (parsed.length > 1 && parsed[1] !== "") {
+                item.data = parsed[1];
+            }
+            if (parsed.length > 2 && parsed[2] !== "") {
+                item.expl = parsed[2];
+            }
+            if (parsed.length > 3) {
+                item.placeholders = [];
+            }
+            item.hasMath = (parsed as string[]).some(
+                (x, i) => i >= 2 && x == "math"
+            );
+            const containsSymbol = parsed.indexOf("symbol");
+            const containsCommonSymbol = parsed.indexOf("commonSymbol");
+            if (containsSymbol !== -1 && containsSymbol > 1) {
+                item.isSymbol = "symbol";
+            } else if (
+                containsCommonSymbol !== -1 &&
+                containsCommonSymbol > 1
+            ) {
+                item.isSymbol = "commonSymbol";
+            }
+            for (let i = 3; i < parsed.length; i++) {
+                const p = parsed[i];
+                if (!(p instanceof Array)) {
+                    continue;
+                }
+                const param: ITemplateParam = {
+                    default: p[0] ?? "",
+                    text: p[1] ?? "",
+                    pattern: p[2] ?? "",
+                    error: p[3] ?? "",
+                };
+                if (p.length > 0) {
+                    item.placeholders?.push(param);
+                }
+            }
+            templateButtons.push(item);
+        } catch (e) {
+            templateButtons.push({
+                text: "error",
+                data: "",
+                expl: "" + e,
+            });
+        }
+    }
+    for (const btn of mdButtons) {
+        templateButtons.push(btn);
+    }
+    return templateButtons;
+}
+
 @Directive() // needs this or compiler complains
 export class CsController extends CsBase implements ITimComponent {
     vctrl!: ViewCtrl;
@@ -1974,107 +2096,9 @@ ${fhtml}
     }
 
     createTemplateButtons() {
-        let b = this.markup.buttons;
-        let mdButtons = this.markup.mdButtons;
-        if (!b && !mdButtons) {
-            return;
-        }
-        if (!b) {
-            b = "";
-        }
-        if (!mdButtons) {
-            mdButtons = [];
-        }
-        const helloButtons =
-            "public \nclass \nHello \n\\n\n{\n}\n" +
-            "static \nvoid \n Main\n(\n)\n" +
-            '        Console.WriteLine(\n"\nworld!\n;\n ';
-        const typeButtons =
-            "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
-        const charButtons =
-            "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
-        b = b.replace("$hellobuttons$", helloButtons);
-        b = b.replace("$typebuttons$", typeButtons);
-        b = b.replace("$charbuttons$", charButtons);
-        b = b.trim();
-        b = b.replace("$space$", " ");
-        const btns = b.split("\n");
-        for (let i = 0; i < btns.length; i++) {
-            let s = btns[i];
-            if (s.length < 1) {
-                continue;
-            }
-            if (s.startsWith('"') || s.startsWith("'")) {
-                s = s.replace(new RegExp(s[0], "g"), "");
-                btns[i] = s;
-            }
-        }
-        for (const s of btns) {
-            if (s === "") {
-                continue;
-            }
-            if (!s.startsWith("[")) {
-                this.templateButtons.push({
-                    text: this.getButtonTextHtml(s),
-                    data: s,
-                });
-                continue;
-            }
-            try {
-                const parsed = JSON.parse(s);
-                const item: ITemplateButton = {
-                    text: parsed[0],
-                    data: parsed[0],
-                };
-                if (parsed.length > 1 && parsed[1] !== "") {
-                    item.data = parsed[1];
-                }
-                if (parsed.length > 2 && parsed[2] !== "") {
-                    item.expl = parsed[2];
-                }
-                if (parsed.length > 3) {
-                    item.placeholders = [];
-                }
-                item.hasMath = (parsed as string[]).some(
-                    (x, i) => i >= 2 && x == "math"
-                );
-                const containsSymbol = parsed.indexOf("symbol");
-                const containsCommonSymbol = parsed.indexOf("commonSymbol");
-                if (containsSymbol !== -1 && containsSymbol > 1) {
-                    item.isSymbol = "symbol";
-                } else if (
-                    containsCommonSymbol !== -1 &&
-                    containsCommonSymbol > 1
-                ) {
-                    item.isSymbol = "commonSymbol";
-                }
-                for (let i = 3; i < parsed.length; i++) {
-                    const p = parsed[i];
-                    if (!(p instanceof Array)) {
-                        continue;
-                    }
-                    const param: ITemplateParam = {
-                        default: p[0] ?? "",
-                        text: p[1] ?? "",
-                        pattern: p[2] ?? "",
-                        error: p[3] ?? "",
-                    };
-                    if (p.length > 0) {
-                        item.placeholders?.push(param);
-                    }
-                }
-                this.templateButtons.push(item);
-            } catch (e) {
-                this.templateButtons.push({
-                    text: "error",
-                    data: "",
-                    expl: "" + e,
-                });
-            }
-        }
-        for (const btn of mdButtons) {
-            this.templateButtons.push(btn);
-        }
+        const b = this.markup.buttons;
+        const mdButtons = this.markup.mdButtons;
+        this.templateButtons = createTemplateButtons(b, mdButtons);
         this.templateButtonsCount = this.templateButtons.length;
     }
 
