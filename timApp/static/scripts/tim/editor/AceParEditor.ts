@@ -587,15 +587,18 @@ export class AceParEditor extends BaseParEditor implements IEditor {
 
     @focusAfter
     insertTemplate(text: string) {
+        const pluginnamehere = "PLUGINNAMEHERE";
+        const firstLine = text.split("\n")[0];
+        const hasPluginName = firstLine.includes(pluginnamehere);
         const ci = text.indexOf(CURSOR);
-        if (ci >= 0) {
+        const setCursor = ci >= 0 && !hasPluginName;
+        if (setCursor) {
             text = text.slice(0, ci) + text.slice(ci + 1);
         }
         const range = this.editor.getSelectionRange();
         const start = range.start;
         this.snippetManager.insertSnippet(this.editor, text);
         const line = this.editor.session.getLine(start.row);
-        const pluginnamehere = "PLUGINNAMEHERE";
         const index = line.lastIndexOf(pluginnamehere);
         if (index > -1) {
             range.start.column = index;
@@ -603,7 +606,7 @@ export class AceParEditor extends BaseParEditor implements IEditor {
             range.end.column = index + pluginnamehere.length;
             this.editor.selection.setRange(range, false);
         }
-        if (ci >= 0) {
+        if (setCursor) {
             const pos = this.editor.session
                 .getDocument()
                 .positionToIndex(start, 0);

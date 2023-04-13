@@ -251,7 +251,7 @@ export class PareditorController extends DialogController<
     private originalDocument: boolean = true;
 
     private formulaEditorOpen: boolean = false;
-    private formulaEditor: boolean = false;
+    private formulaEditor: boolean = true;
     private currentSymbol: FormulaEvent = {
         text: "",
         command: "",
@@ -1798,10 +1798,6 @@ ${backTicks}
         if (success) {
             this.toggleFormulaEditor(false);
         }
-    }
-
-    enableFormulaEditor() {
-        this.formulaEditor = true;
     }
 
     /**
