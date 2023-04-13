@@ -1,5 +1,11 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    HostListener,
+    NgModule,
+    ViewChild,
+} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
@@ -85,6 +91,12 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     isInput = false;
     asyncContent = true;
     @ViewChild("textEl") textEl!: ElementRef<HTMLElement>;
+
+    @HostListener("keydown.enter", ["$event"])
+    enterPressed(e: KeyboardEvent) {
+        void this.ok();
+        e.stopPropagation();
+    }
 
     getTitle() {
         return this.data.title;
