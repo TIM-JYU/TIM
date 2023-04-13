@@ -221,7 +221,10 @@ RUN python3.10 -m pip install sympy opencv-contrib-python-headless && bash -c "$
 
 # http://www.scipy.org/install.html
 RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
-RUN python3.10 -m pip install numpy scipy matplotlib pandas statsmodels control scikit-learn networkx && bash -c "${APT_CLEANUP}"
+RUN python3.10 -m pip install numpy scipy matplotlib pandas statsmodels control scikit-learn scikit-image pooch networkx && bash -c "${APT_CLEANUP}"
+# As an additional step, we need to initialize the default datasets of scikit-image
+ENV SKIMAGE_DATADIR=/etc/skimage
+RUN python3.10 -c "import skimage; print(skimage.__version__)"
 
 # pyod
 RUN python3.10 -m pip install pyod && bash -c "${APT_CLEANUP}"
@@ -385,6 +388,9 @@ RUN bash -c "${APT_INSTALL} openscad && ${APT_CLEANUP}"
 RUN add-apt-repository ppa:plt/racket && \
     apt-get update && \
     bash -c "${APT_INSTALL} racket && ${APT_CLEANUP}"
+
+# Install Racket packages
+RUN raco pkg install sicp
 
 # Install Guile 3
 RUN bash -c "${APT_INSTALL} guile-3.0 && ${APT_CLEANUP}"
