@@ -39,6 +39,7 @@ import type {FormulaEvent} from "../../../../modules/cs/js/editor/math-editor/sy
 import {selectFormulaFromPreview} from "../../../../modules/cs/js/editor/math-editor/formula-utils";
 import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
 import {CURSOR} from "../../../../modules/cs/js/editor/editor";
+import {createTemplateButtons} from "../../../../modules/cs/js/csPlugin";
 
 markAsUsed(rangyinputs);
 
@@ -1797,100 +1798,8 @@ ${backTicks}
     }
 
     createTemplateButtons() {
-        let b = this.docSettings?.buttons;
-        if (!b) {
-            b = "";
-        }
-        const helloButtons =
-            "public \nclass \nHello \n\\n\n{\n}\n" +
-            "static \nvoid \n Main\n(\n)\n" +
-            '        Console.WriteLine(\n"\nworld!\n;\n ';
-        const typeButtons =
-            "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
-        const charButtons =
-            "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
-        b = b.replace("$hellobuttons$", helloButtons);
-        b = b.replace("$typebuttons$", typeButtons);
-        b = b.replace("$charbuttons$", charButtons);
-        b = b.trim();
-        b = b.replace("$space$", " ");
-        const btns = b.split("\n");
-        for (let i = 0; i < btns.length; i++) {
-            let s = btns[i];
-            if (s.length < 1) {
-                continue;
-            }
-            if (s.startsWith('"') || s.startsWith("'")) {
-                s = s.replace(new RegExp(s[0], "g"), "");
-                btns[i] = s;
-            }
-        }
-        for (const s of btns) {
-            if (s === "") {
-                continue;
-            }
-            if (!s.startsWith("[")) {
-                this.templateButtons.push({
-                    text: this.getButtonTextHtml(s),
-                    data: s,
-                });
-                continue;
-            }
-            try {
-                const parsed = JSON.parse(s);
-                if (!Array.isArray(parsed)) {
-                    continue;
-                }
-                const item: ITemplateButton = {
-                    text: parsed[0],
-                    data: parsed[0],
-                };
-                if (parsed.length > 1 && parsed[1] !== "") {
-                    item.data = parsed[1];
-                }
-                if (parsed.length > 2 && parsed[2] !== "") {
-                    item.expl = parsed[2];
-                }
-                if (parsed.length > 3) {
-                    item.placeholders = [];
-                }
-                item.hasMath = (parsed as string[]).some(
-                    (x, i) => i >= 2 && x == "math"
-                );
-                const containsSymbol = parsed.indexOf("symbol");
-                const containsCommonSymbol = parsed.indexOf("commonSymbol");
-                if (containsSymbol !== -1 && containsSymbol > 1) {
-                    item.isSymbol = "symbol";
-                } else if (
-                    containsCommonSymbol !== -1 &&
-                    containsCommonSymbol > 1
-                ) {
-                    item.isSymbol = "commonSymbol";
-                }
-                for (let i = 3; i < parsed.length; i++) {
-                    const p = parsed[i];
-                    if (!(p instanceof Array)) {
-                        continue;
-                    }
-                    const param: ITemplateParam = {
-                        default: p[0] ?? "",
-                        text: p[1] ?? "",
-                        pattern: p[2] ?? "",
-                        error: p[3] ?? "",
-                    };
-                    if (p.length > 0) {
-                        item.placeholders?.push(param);
-                    }
-                }
-                this.templateButtons.push(item);
-            } catch (e) {
-                this.templateButtons.push({
-                    text: "error",
-                    data: "",
-                    expl: "" + e,
-                });
-            }
-        }
+        const b = this.docSettings?.buttons;
+        this.templateButtons = createTemplateButtons(b, undefined);
     }
 
     createSymbolButtons() {
