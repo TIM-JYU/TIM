@@ -961,11 +961,13 @@ function getButtonTextHtml(s: string) {
 }
 
 /**
- * parses string into buttons
+ * Parses string into buttons.
+ * @param b string containing an array of buttons
+ * @param mdButtons array of markdown buttons
  */
 export function createTemplateButtons(
     b: string | undefined,
-    mdButtons: any[] | undefined | null
+    mdButtons: ITemplateButton[] | undefined | null
 ) {
     if (!b && !mdButtons) {
         return [];

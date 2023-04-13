@@ -13,7 +13,6 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
-import type {ITemplateParam} from "tim/ui/showTemplateReplaceDialog";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
 import type {IDocument, ILanguage, ITranslator} from "tim/item/IItem";
 import {
@@ -900,23 +899,7 @@ ${backTicks}
                 name: "Characters",
             },
             {
-                entries: [
-                    {
-                        title: "",
-                        func: () => this.editor!.indexClicked(),
-                        name: "X&#x2093;",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.powerClicked(),
-                        name: "X&#x207f;",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.squareClicked(),
-                        name: "&radic;",
-                    },
-                ],
+                entries: [],
                 name: "TeX",
             },
             {
