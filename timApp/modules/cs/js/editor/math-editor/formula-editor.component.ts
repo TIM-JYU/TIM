@@ -165,8 +165,7 @@ export class FormulaEditorComponent {
             if (!isEditing) {
                 this.fields = [{latex: ""}];
                 this.activeFieldsIndex = 0;
-                const isMulti = this.getInitialMultilineSetting();
-                this.isMultilineFormula = isMulti;
+                this.isMultilineFormula = this.getInitialMultilineSetting();
             }
         }
     }
@@ -467,10 +466,13 @@ export class FormulaEditorComponent {
      * @return Array containing indexes of matrices.
      */
     findMatrixFromString(formula: string): NumPair[] {
+        // temporary index variables
         let bIndex = 0;
         let eIndex = 0;
+        // temporary stacks for found indexes
         const bStack: number[] = [];
         const eStack: number[] = [];
+        // list of found matrices
         const allMatrices: NumPair[] = [];
 
         while (true) {
@@ -532,13 +534,19 @@ export class FormulaEditorComponent {
                 eIndex += 3;
             }
         }
-        // shift end indexes from the start of keyword to actual end of matrix
+        // shift indexes from the start of keyword to actual start and end of matrix
         for (const i of allMatrices.keys()) {
-            const newLine = formula.indexOf("\n", allMatrices[i][1]);
-            if (newLine < 0) {
+            const beginNewLine = formula.lastIndexOf("\n", allMatrices[i][0]);
+            if (beginNewLine < 0) {
+                allMatrices[i][0] = 0;
+            } else {
+                allMatrices[i][0] = beginNewLine + 1;
+            }
+            const endNewLine = formula.indexOf("\n", allMatrices[i][1]);
+            if (endNewLine < 0) {
                 allMatrices[i][1] = formula.length - 1;
             } else {
-                allMatrices[i][1] = newLine - 1;
+                allMatrices[i][1] = endNewLine - 1;
             }
         }
         return allMatrices;
