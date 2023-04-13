@@ -708,6 +708,7 @@ const CsMarkupOptional = t.partial({
     normal: nullable(t.string),
     parsons: withDefault(CsParsonsOptions, {}),
     formulaEditor: t.boolean,
+    abitti: t.boolean,
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -765,6 +766,7 @@ const CsMarkupDefaults = t.type({
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
     formulaEditor: withDefault(t.boolean, false),
+    abitti: withDefault(t.boolean, false),
     iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
     indent: withDefault(t.Integer, -1),
     initSimcir: withDefault(t.string, ""),
@@ -1025,6 +1027,191 @@ export class CsController extends CsBase implements ITimComponent {
     wavURL: string = "";
     wrap!: {n: number; auto: boolean};
     templateButtons: ITemplateButton[] = [];
+    abittiButtons: ITemplateButton[] = [
+        {
+            text: "°",
+            data: "°",
+            expl: "°",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "·",
+            data: "\\cdot",
+            expl: "\\cdot",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "×",
+            data: "\\times",
+            expl: "\\times",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+
+        {
+            text: "±",
+            data: "\\pm",
+            expl: "\\pm",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "∞",
+            data: "\\infty",
+            expl: "\\infty",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "²",
+            data: "^2",
+            expl: "^2",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "³",
+            data: "^3",
+            expl: "^2",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "½",
+            data: "\\frac{1}{2}",
+            expl: "\\frac{1}{2}",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "⅓",
+            data: "\\frac{1}{3}",
+            expl: "\\frac{1}{3}",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "π",
+            data: "\\pi",
+            expl: "\\pi",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "‰",
+            data: "‰",
+            expl: "‰",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "α",
+            data: "\\alpha",
+            expl: "\\alpha",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "β",
+            data: "\\beta",
+            expl: "\\beta",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "≠",
+            data: "\\ne",
+            expl: "\\ne",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "≈",
+            data: "\\approx",
+            expl: "\\approx",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "≤",
+            data: "\\le",
+            expl: "\\le",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "∢",
+            data: "\\sphericalangle",
+            expl: "\\sphericalangle",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "|",
+            data: "\\mid",
+            expl: "\\mid",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "‖",
+            data: "\\parallel",
+            expl: "\\parallel",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "→",
+            data: "\\rightarrow",
+            expl: "\\rightarrow",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "⇒",
+            data: "\\Rightarrow",
+            expl: "\\Rightarrow",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "⇔",
+            data: "\\Leftrightarrow",
+            expl: "\\Leftrightarrow",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "∈",
+            data: "\\in",
+            expl: "\\in",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "ℤ",
+            data: "\\mathbb{Z}",
+            expl: "\\mathbb{Z}",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "ℝ",
+            data: "\\mathbb{R}",
+            expl: "\\mathbb{R}",
+            hasMath: true,
+            isSymbol: "commonSymbol",
+        },
+        {
+            text: "Γ",
+            data: "\\Gamma",
+            expl: "\\Gamma",
+            hasMath: true,
+            isSymbol: "symbol",
+        },
+    ];
     templateButtonsCount: number = 0;
     mdHtml?: string;
 
@@ -1734,6 +1921,10 @@ export class CsController extends CsBase implements ITimComponent {
 
     get formulaEditor() {
         return this.markup.formulaEditor;
+    }
+
+    get abitti() {
+        return this.markup.abitti;
     }
 
     /**
@@ -3838,6 +4029,18 @@ ${fhtml}
     symbolTemplateButtons(symbols: boolean) {
         const symbolButtons: ITemplateButton[] = [];
         const notSymbolButtons: ITemplateButton[] = [];
+        if (this.markup.abitti) {
+            this.abittiButtons.forEach(function (button) {
+                if (
+                    button.isSymbol === "symbol" ||
+                    button.isSymbol === "commonSymbol"
+                ) {
+                    symbolButtons.push(button);
+                } else {
+                    notSymbolButtons.push(button);
+                }
+            });
+        }
         this.templateButtons.forEach(function (button) {
             if (
                 button.isSymbol === "symbol" ||
