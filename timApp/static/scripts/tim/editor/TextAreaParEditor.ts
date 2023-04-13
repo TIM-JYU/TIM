@@ -6,13 +6,13 @@ import {
     KEY_4,
     KEY_5,
     KEY_B,
+    KEY_E,
     KEY_ENTER,
     KEY_I,
     KEY_O,
     KEY_S,
     KEY_TAB,
     KEY_Y,
-    KEY_E,
 } from "tim/util/keycodes";
 import {$log} from "tim/util/ngimport";
 import type {IEditorCallbacks, SelectionRange} from "tim/editor/BaseParEditor";
@@ -436,11 +436,14 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
 
     @focusAfter
     insertTemplate(text: string) {
+        const pluginnamehere = "PLUGINNAMEHERE";
+        const firstLine = text.split("\n")[0];
+        const hasPluginName = firstLine.includes(pluginnamehere);
         const ci = text.indexOf(CURSOR);
-        if (ci >= 0) {
+        const setCursor = ci >= 0 && !hasPluginName;
+        if (setCursor) {
             text = text.slice(0, ci) + text.slice(ci + 1);
         }
-        const pluginnamehere = "PLUGINNAMEHERE";
         const searchEndIndex = this.getSelection().start;
         this.replaceSelectedText(text);
         const searchStartIndex = this.getSelection().start;
@@ -451,7 +454,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
         if (index > searchEndIndex) {
             this.setSelection(index, index + pluginnamehere.length);
         }
-        if (ci >= 0) {
+        if (setCursor) {
             this.setSelection(searchEndIndex + ci);
         }
     }
