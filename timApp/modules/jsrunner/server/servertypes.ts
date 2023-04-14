@@ -39,8 +39,6 @@ export const VelpData = t.type({
 export const PeerReviewData = t.type({
     id: t.Int,
     block_id: t.Int,
-    reviewer_id: t.Int,
-    reviewable_id: t.Int,
     reviewer: User,
     reviewable: User,
     reviewed: t.boolean,
