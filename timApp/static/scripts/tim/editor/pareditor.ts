@@ -257,7 +257,6 @@ export class PareditorController extends DialogController<
     private symbolButtons: ITemplateButton[] = [];
 
     private formulaEditorOpen: boolean = false;
-    private formulaEditor: boolean = true;
     private currentSymbol: FormulaEvent = {
         text: "",
         command: "",
@@ -1800,7 +1799,11 @@ ${backTicks}
      * @param event mouse click event
      */
     handleSelectFormulaFromPreview(event: MouseEvent) {
-        if (!this.formulaEditor || this.formulaEditorOpen || !this.editor) {
+        if (
+            this.activeTab !== "tex" ||
+            this.formulaEditorOpen ||
+            !this.editor
+        ) {
             return;
         }
         // this should be unique

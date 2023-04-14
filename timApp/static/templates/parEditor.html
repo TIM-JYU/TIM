@@ -1,7 +1,7 @@
 <uib-tabset ng-show="$ctrl.proeditor" active="$ctrl.activeTab">
     <uib-tab ng-repeat="t in $ctrl.getVisibleTabs()" heading="{{ t.name }}" index="$ctrl.getTabIndex(t)">
             <div ng-if="t.name === 'TeX' && $ctrl.editor" class="formula-editor-tab">
-                <cs-formula-editor ng-if="$ctrl.formulaEditor"
+                <cs-formula-editor
                                (ok-close)="$ctrl.toggleFormulaEditor(true, $event)"
                                (cancel-close)="$ctrl.toggleFormulaEditor(true, $event)"
                                (toggle)="$ctrl.toggleFormulaEditor()"
@@ -69,7 +69,7 @@
     </uib-tab>
 
 </uib-tabset>
-<div id="editorflex" class="stacked" ng-hide="$ctrl.formulaEditor && $ctrl.formulaEditorOpen">
+<div id="editorflex" class="stacked" ng-hide="$ctrl.activeTab == 'tex' && $ctrl.formulaEditorOpen">
     <div id="editorbox">
         <div class="editorContainer">
         </div>
@@ -164,7 +164,7 @@
         <div class="draggable-content">
             <div
                     class="previewcontent paragraphs fullsize"
-                    ng-class="{'csrun-clicking': $ctrl.formulaEditor && !$ctrl.formulaEditorOpen}"
+                    ng-class="{'csrun-clicking': $ctrl.activeTab == 'tex'}"
                     ng-click="$ctrl.handleSelectFormulaFromPreview($event)">
             </div>
         </div>
