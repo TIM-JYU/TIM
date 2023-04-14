@@ -986,9 +986,141 @@ export function createTemplateButtons(
         "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
     const charButtons =
         "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
+    const latexbuttons =
+        '[ "$", "$⁞$", "$ $" ]\n' +
+        // for some reason this requires duplicate dollar signs to work properly
+        '[ "$$$$", "$$$$⁞$$$$", "$$$$ $$$$" ]\n' +
+        '[ "\\\\( ° \\\\)", "°", "°", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\cdot \\\\)", "\\\\cdot", "\\\\cdot", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\times \\\\)", "\\\\times", "\\\\times", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\pm \\\\)", "\\\\pm", "\\\\pm", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\infty \\\\)", "\\\\infty", "\\\\infty", "commonSymbol"]\n' +
+        '[ "\\\\( ^2 \\\\)", "^2", "^2", "commonSymbol"]\n' +
+        '[ "\\\\( ^3 \\\\)", "^3", "^3", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\frac{1}{2} \\\\)", "\\\\frac{1}{2}", "\\\\frac{1}{2}", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\frac{1}{3} \\\\)", "\\\\frac{1}{3}", "\\\\frac{1}{3}", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\pi \\\\)", "\\\\pi", "\\\\pi", "commonSymbol"]\n' +
+        '[ "\\\\( ‰ \\\\)", "‰", "‰", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\alpha \\\\)", "\\\\alpha", "\\\\alpha", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\beta \\\\)", "\\\\beta", "\\\\beta", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\ne \\\\)", "\\\\ne", "\\\\ne", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\approx \\\\)", "\\\\approx", "\\\\approx", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\le \\\\)", "\\\\le", "\\\\le", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\sphericalangle \\\\)", "\\\\sphericalangle", "\\\\sphericalangle", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\mid \\\\)", "\\\\mid", "\\\\mid", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\parallel \\\\)", "\\\\parallel", "\\\\parallel", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\rightarrow \\\\)", "\\\\rightarrow", "\\\\rightarrow", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\Rightarrow \\\\)", "\\\\Rightarrow", "\\\\Rightarrow", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\Leftrightarrow \\\\)", "\\\\Leftrightarrow", "\\\\Leftrightarrow", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\in \\\\)", "\\\\in", "\\\\in", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\mathbb{Z} \\\\)", "\\\\mathbb{Z}", "\\\\mathbb{Z}", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\mathbb{R} \\\\)", "\\\\mathbb{R}", "\\\\mathbb{R}", "commonSymbol"]\n' +
+        '[ "\\\\( \\\\Gamma \\\\)", "\\\\Gamma", "\\\\Gamma", "symbol"]\n' +
+        '[ "\\\\( \\\\gamma \\\\)", "\\\\gamma", "\\\\gamma", "symbol"]\n' +
+        '[ "\\\\( \\\\Delta \\\\)", "\\\\Delta", "\\\\Delta", "symbol"]\n' +
+        '[ "\\\\( \\\\delta \\\\)", "\\\\delta", "\\\\delta", "symbol"]\n' +
+        '[ "\\\\( \\\\varepsilon \\\\)", "\\\\varepsilon", "\\\\varepsilon", "symbol"]\n' +
+        '[ "\\\\( \\\\zeta \\\\)", "\\\\zeta", "\\\\zeta", "symbol"]\n' +
+        '[ "\\\\( \\\\eta \\\\)", "\\\\eta", "\\\\eta", "symbol"]\n' +
+        '[ "\\\\( \\\\theta \\\\)", "\\\\theta", "\\\\theta", "symbol"]\n' +
+        '[ "\\\\( \\\\vartheta \\\\)", "\\\\vartheta", "\\\\vartheta", "symbol"]\n' +
+        '[ "\\\\( \\\\iota \\\\)", "\\\\iota", "\\\\iota", "symbol"]\n' +
+        '[ "\\\\( \\\\kappa \\\\)", "\\\\kappa", "\\\\kappa", "symbol"]\n' +
+        '[ "\\\\( \\\\Lambda \\\\)", "\\\\Lambda", "\\\\Lambda", "symbol"]\n' +
+        '[ "\\\\( \\\\lambda \\\\)", "\\\\lambda", "\\\\lambda", "symbol"]\n' +
+        '[ "\\\\( \\\\mu \\\\)", "\\\\mu", "\\\\mu", "symbol"]\n' +
+        '[ "\\\\( \\\\nu \\\\)", "\\\\nu", "\\\\nu", "symbol"]\n' +
+        '[ "\\\\( \\\\Xi \\\\)", "\\\\Xi", "\\\\Xi", "symbol"]\n' +
+        '[ "\\\\( \\\\xi \\\\)", "\\\\xi", "\\\\xi", "symbol"]\n' +
+        '[ "\\\\( \\\\Pi \\\\)", "\\\\Pi", "\\\\Pi", "symbol"]\n' +
+        '[ "\\\\( \\\\rho \\\\)", "\\\\rho", "\\\\rho", "symbol"]\n' +
+        '[ "\\\\( \\\\Sigma \\\\)", "\\\\Sigma", "\\\\Sigma", "symbol"]\n' +
+        '[ "\\\\( \\\\sigma \\\\)", "\\\\sigma", "\\\\sigma", "symbol"]\n' +
+        '[ "\\\\( \\\\tau \\\\)", "\\\\tau", "\\\\tau", "symbol"]\n' +
+        '[ "\\\\( \\\\Upsilon \\\\)", "\\\\Upsilon", "\\\\Upsilon", "symbol"]\n' +
+        '[ "\\\\( \\\\upsilon \\\\)", "\\\\upsilon", "\\\\upsilon", "symbol"]\n' +
+        '[ "\\\\( \\\\Phi \\\\)", "\\\\Phi", "\\\\Phi", "symbol"]\n' +
+        '[ "\\\\( \\\\phi \\\\)", "\\\\phi", "\\\\phi", "symbol"]\n' +
+        '[ "\\\\( \\\\chi \\\\)", "\\\\chi", "\\\\chi", "symbol"]\n' +
+        '[ "\\\\( \\\\Psi \\\\)", "\\\\Psi", "\\\\Psi", "symbol"]\n' +
+        '[ "\\\\( \\\\psi \\\\)", "\\\\psi", "\\\\psi", "symbol"]\n' +
+        '[ "\\\\( \\\\Omega \\\\)", "\\\\Omega", "\\\\Omega", "symbol"]\n' +
+        '[ "\\\\( \\\\omega \\\\)", "\\\\omega", "\\\\omega", "symbol"]\n' +
+        '[ "\\\\( \\\\partial \\\\)", "\\\\partial", "\\\\partial", "symbol"]\n' +
+        '[ "\\\\( \\\\varphi \\\\)", "\\\\varphi", "\\\\varphi", "symbol"]\n' +
+        '[ "\\\\( \\\\ge \\\\)", "\\\\ge", "\\\\ge", "symbol"]\n' +
+        '[ "\\\\( < \\\\)", "<", "<", "symbol"]\n' +
+        '[ "\\\\( > \\\\)", ">", ">", "symbol"]\n' +
+        '[ "\\\\( \\\\sim \\\\)", "\\\\sim", "\\\\sim", "symbol"]\n' +
+        '[ "\\\\( \\\\equiv \\\\)", "\\\\equiv", "\\\\equiv", "symbol"]\n' +
+        '[ "\\\\( \\\\not\\\\equiv \\\\)", "\\\\not\\\\equiv", "\\\\not\\\\equiv", "symbol"]\n' +
+        '[ "\\\\( \\\\circ \\\\)", "\\\\circ", "\\\\circ", "symbol"]\n' +
+        '[ "\\\\( \\\\ldots \\\\)", "\\\\ldots", "\\\\ldots", "symbol"]\n' +
+        '[ "\\\\( \\\\propto \\\\)", "\\\\propto", "\\\\propto", "symbol"]\n' +
+        '[ "\\\\( \\\\xrightleftharpoons[\\\\square]{\\\\square} \\\\)", "\\\\xrightleftharpoons[⁞]{}", "\\\\xrightleftharpoons[ ]{}", "symbol"]\n' +
+        '[ "\\\\( ⇅ \\\\)", "⇅", "⇅", "symbol"]\n' +
+        '[ "\\\\( \\\\angle \\\\)", "\\\\angle", "\\\\angle", "symbol"]\n' +
+        '[ "\\\\( \\\\uparrow \\\\)", "\\\\uparrow", "\\\\uparrow", "symbol"]\n' +
+        '[ "\\\\( \\\\nearrow \\\\)", "\\\\nearrow", "\\\\nearrow", "symbol"]\n' +
+        '[ "\\\\( \\\\searrow \\\\)", "\\\\searrow", "\\\\searrow", "symbol"]\n' +
+        '[ "\\\\( \\\\downarrow \\\\)", "\\\\downarrow", "\\\\downarrow", "symbol"]\n' +
+        '[ "\\\\( \\\\leftrightarrow \\\\)", "\\\\leftrightarrow", "\\\\leftrightarrow", "symbol"]\n' +
+        '[ "\\\\( \\\\perp \\\\)", "\\\\perp", "\\\\perp", "symbol"]\n' +
+        '[ "\\\\( \\\\exists \\\\)", "\\\\exists", "\\\\exists", "symbol"]\n' +
+        '[ "\\\\( \\\\forall \\\\)", "\\\\forall", "\\\\forall", "symbol"]\n' +
+        '[ "\\\\( \\\\mathbb{N} \\\\)", "\\\\mathbb{N}", "\\\\mathbb{N}", "symbol"]\n' +
+        '[ "\\\\( \\\\mathbb{Q} \\\\)", "\\\\mathbb{Q}", "\\\\mathbb{Q}", "symbol"]\n' +
+        '[ "\\\\( \\\\cap \\\\)", "\\\\cap", "\\\\cap", "symbol"]\n' +
+        '[ "\\\\( \\\\cup \\\\)", "\\\\cup", "\\\\cup", "symbol"]\n' +
+        '[ "\\\\( \\\\setminus \\\\)", "\\\\setminus", "\\\\setminus", "symbol"]\n' +
+        '[ "\\\\( \\\\subset \\\\)", "\\\\subset", "\\\\subset", "symbol"]\n' +
+        '[ "\\\\( \\\\not\\\\subset \\\\)", "\\\\not\\\\subset", "\\\\not\\\\subset", "symbol"]\n' +
+        '[ "\\\\( \\\\notin \\\\)", "\\\\notin", "\\\\notin", "symbol"]\n' +
+        '[ "\\\\( \\\\varnothing \\\\)", "\\\\varnothing", "\\\\varnothing", "symbol"]\n' +
+        '[ "\\\\( \\\\wedge \\\\)", "\\\\wedge", "\\\\wedge", "symbol"]\n' +
+        '[ "\\\\( \\\\vee \\\\)", "\\\\vee", "\\\\vee", "symbol"]\n' +
+        '[ "\\\\( \\\\neg \\\\)", "\\\\neg", "\\\\neg", "symbol"]\n' +
+        '[ "\\\\( \\\\nabla \\\\)", "\\\\nabla", "\\\\nabla", "symbol"]\n' +
+        '[ "\\\\(\\\\sqrt{\\\\square}\\\\)", "\\\\sqrt{⁞}", "\\\\sqrt{ }", "symbol"]\n' +
+        '[ "\\\\( x^{\\\\square} \\\\)", "x^⁞", "x^ ", "symbol" ]\n' +
+        '[ "\\\\[ \\\\frac{\\\\square}{\\\\square} \\\\]", "\\\\frac{⁞}{}", "\\\\frac{ }{}", "symbol" ]\n' +
+        '[ "\\\\[\\\\int_\\\\square^\\\\square\\\\]", "\\\\int_{⁞}^{}", "\\\\int_{ }^{}", "symbol"]\n' +
+        '[ "\\\\[ \\\\lim_{\\\\square} \\\\]", "\\\\lim_{⁞}", "\\\\lim_{ }", "symbol"]\n' +
+        '[ "\\\\[ \\\\overrightarrow{\\\\square} \\\\]", "\\\\overrightarrow{⁞}", "\\\\overrightarrow{ }", "symbol"]\n' +
+        '[ "\\\\[ \\\\overleftarrow{\\\\square} \\\\]", "\\\\overleftarrow{⁞}", "\\\\overleftarrow{ }", "symbol"]\n' +
+        '[ "\\\\( sin \\\\)", "\\\\sin","\\\\sin",  "symbol"]\n' +
+        '[ "\\\\( cos \\\\)", "\\\\cos","\\\\cos",  "symbol"]\n' +
+        '[ "\\\\( tan \\\\)", "\\\\tan","\\\\tan",  "symbol"]\n' +
+        '[ "\\\\( \\\\left|\\\\square\\\\right| \\\\)", "\\\\left|⁞\\\\right|","\\\\left| \\\\right|",  "symbol"]\n' +
+        '[ "\\\\( \\\\left[\\\\square\\\\right] \\\\)", "\\\\left[⁞\\\\right]","\\\\left[ \\\\right]",  "symbol"]\n' +
+        '[ "\\\\( \\\\left]\\\\square\\\\right] \\\\)", "]⁞]","] ]",  "symbol"]\n' +
+        '[ "\\\\[\\\\begin{cases}\\n\\\\square&\\\\square\\\\\\\\\\n\\\\square&\\\\square\\n\\\\end{cases}\\\\]", "\\\\begin{cases}\\n⁞&\\\\\\\\\\n&\\n\\\\end{cases}", "\\\\begin{cases}\\n &\\\\\\\\\\n&\\n\\\\end{cases}", "symbol"]\n' +
+        '[ "\\\\[\\\\begin{matrix}\\n\\\\square&\\\\square\\\\\\\\\\n\\\\square&\\\\square\\n\\\\end{matrix}\\\\]", "\\\\begin{matrix}\\n⁞&\\\\\\\\\\n&\\n\\\\end{matrix}", "\\\\begin{matrix}\\n &\\\\\\\\\\n&\\n\\\\end{matrix}", "symbol"]\n' +
+        '[ "\\\\[ \\\\frac{\\\\square}{\\\\square}^{\\\\text{(}\\\\square} \\\\]", "\\\\frac{a}{b}^{x}", "\\\\frac{a}{b}^{x}", "symbol"]\n' +
+        '[ "\\\\( \\\\binom{\\\\square}{\\\\square} \\\\)", "\\\\binom{⁞}{}","\\\\binom{ }{}",  "symbol"]\n' +
+        '[ "\\\\( \\\\sqrt[\\\\square]{\\\\square} \\\\)", "\\\\sqrt[⁞]{}","\\\\sqrt[ ]{}",  "symbol"]\n' +
+        '[ "\\\\( x_{\\\\square}{} \\\\)", "x_{⁞}","x_{ }",  "symbol"]\n' +
+        '[ "\\\\[ \\\\sum_{\\\\square}^{\\\\square} \\\\]", "\\\\sum_{⁞}^{}", "\\\\sum_{ }^{}", "symbol"]\n' +
+        '[ "\\\\[\\\\bigg/_{\\\\!\\\\!\\\\!\\\\!\\\\!{ \\\\square }}^{ \\\\square }\\\\]", "\\\\bigg/_{\\\\!\\\\!\\\\!\\\\!\\\\!{⁞}}^{}", "\\\\bigg/_{\\\\!\\\\!\\\\!\\\\!\\\\!{ }}^{}", "symbol"]\n' +
+        '[ "\\\\[ \\\\lim_{x\\\\rightarrow\\\\infty} \\\\]", "\\\\lim_{x\\\\rightarrow\\\\infty}", "\\\\lim_{x\\\\rightarrow\\\\infty}", "symbol"]\n' +
+        '[ "\\\\[ \\\\underrightarrow{\\\\square} \\\\]", "\\\\underrightarrow{⁞}","\\\\underrightarrow{ }", "symbol"]\n' +
+        '[ "\\\\[ \\\\overline{\\\\square} \\\\]", "\\\\overline{⁞}", "\\\\overline{ }", "symbol"]\n' +
+        '[ "\\\\( \\\\overline{\\\\text{i}} \\\\)", "\\\\overline{\\\\text{i}}", "\\\\overline{\\\\text{i}}", "symbol" ]\n' +
+        '[ "\\\\( \\\\overline{\\\\text{j}} \\\\)", "\\\\overline{\\\\text{j}}", "\\\\overline{\\\\text{j}}", "symbol" ]\n' +
+        '[ "\\\\( \\\\overline{\\\\text{k}} \\\\)", "\\\\overline{\\\\text{k}}", "\\\\overline{\\\\text{k}}", "symbol" ]\n' +
+        '[ "\\\\( \\\\left(\\\\square\\\\right) \\\\)", "\\\\left(⁞\\\\right)", "\\\\left( \\\\right)", "symbol" ]\n' +
+        '[ "\\\\( ]x[ \\\\)", "]x[", "]x[", "symbol" ]\n' +
+        '[ "\\\\( [x[ \\\\)", "[x[", "[x[", "symbol" ]\n' +
+        '[ "\\\\( \\\\square_{\\\\square}^{\\\\square} \\\\)", "_{⁞}^{}", "_{ }^{}", "symbol" ]\n' +
+        '[ "\\\\[ \\\\begin{array}{l|l}\\n\\\\square&\\\\square\\\\\\\\\\n\\\\hline\\\\square&\\\\square\\n\\\\end{array} \\\\]", "\\\\begin{array}{l|l}\\n⁞&\\\\\\\\\\n\\\\hline&\\n\\\\end{array}", "\\\\begin{array}{l|l}\\n &\\\\\\\\\\n\\\\hline&\\n\\\\end{array}", "symbol"]\n' +
+        '[ "\\\\( ^{x\\\\text{)}}\\\\frac{a}{b} \\\\)", "^{x\\\\text{)}}\\\\frac{a}{b}", "^{x\\\\text{)}}\\\\frac{a}{b}", "symbol" ]\n' +
+        '[ "\\\\( T \\\\)", "\\\\mathrm{⁞}", "\\\\mathrm{ }", "symbol" ]\n' +
+        '[ "\\\\[x=\\\\frac{-b\\\\pm\\\\sqrt{b^2-4ac}}{2a}\\\\]", "x=\\\\frac{-b\\\\pm\\\\sqrt{b^2-4ac}}{2a}", "x=\\\\frac{-b\\\\pm\\\\sqrt{b^2-4ac}}{2a}", "symbol"]\n' +
+        '[ "\\\\[f_X\\\\left(x\\\\right)=\\\\frac{1}{\\\\sigma\\\\sqrt{2\\\\pi}}\\\\text{e}^{-\\\\frac{\\\\left(x-\\\\mu\\\\right)^2}{2\\\\sigma^2}}\\\\]", "f_X\\\\left(x\\\\right)=\\\\frac{1}{\\\\sigma\\\\sqrt{2\\\\pi}}\\\\text{e}^{-\\\\frac{\\\\left(x-\\\\mu\\\\right)^2}{2\\\\sigma^2}}", "f_X\\\\left(x\\\\right)=\\\\frac{1}{\\\\sigma\\\\sqrt{2\\\\pi}}\\\\text{e}^{-\\\\frac{\\\\left(x-\\\\mu\\\\right)^2}{2\\\\sigma^2}}", "symbol"]';
     b = b.replace("$hellobuttons$", helloButtons);
     b = b.replace("$typebuttons$", typeButtons);
     b = b.replace("$charbuttons$", charButtons);
+    b = b.replace("$latexbuttons$", latexbuttons);
     b = b.trim();
     b = b.replace("$space$", " ");
     const btns = b.split("\n");
