@@ -837,4 +837,16 @@ export class AceParEditor extends BaseParEditor implements IEditor {
         this.editor.moveCursorToPosition(pos);
         this.editor.clearSelection();
     }
+
+    /**
+     * Return index value of cursor in editor
+     */
+    cursorIndexPosition(): number {
+        if (!this.editor) {
+            return -1;
+        }
+        const sess = this.editor.getSession();
+        const cursor = this.editor.getCursorPosition();
+        return sess.getDocument().positionToIndex(cursor, 0);
+    }
 }

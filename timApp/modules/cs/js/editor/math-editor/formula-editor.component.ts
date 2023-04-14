@@ -299,30 +299,21 @@ export class FormulaEditorComponent {
      * @param str
      */
     parseOldContent(str: string) {
-        if (!this.editor.insert) {
+        if (!this.editor.cursorIndexPosition) {
             this.oldContent = {
                 before: this.editor.content,
                 editing: "",
                 after: "",
             };
             return;
+        } else {
+            const cursorI = this.editor.cursorIndexPosition();
+            this.oldContent = {
+                before: this.editor.content.slice(0, cursorI),
+                editing: "",
+                after: this.editor.content.slice(cursorI),
+            };
         }
-        const cursorMarker = "│";
-
-        // add cursor character to know where cursor is
-        this.editor.insert(cursorMarker);
-        // find its index
-        const cursorI = this.editor.content.indexOf(cursorMarker);
-        // also remove added cursor character from editor
-        this.editor.content =
-            this.editor.content.slice(0, cursorI) +
-            this.editor.content.slice(cursorI + 1);
-
-        this.oldContent = {
-            before: this.editor.content.slice(0, cursorI),
-            editing: "",
-            after: this.editor.content.slice(cursorI),
-        };
     }
 
     /**

@@ -758,4 +758,11 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     moveCursorToContentIndex(index: number) {
         this.editor.setSelection(index, index);
     }
+
+    /**
+     * Return index value of cursor in editor
+     */
+    cursorIndexPosition(): number {
+        return this.getSelection().start;
+    }
 }

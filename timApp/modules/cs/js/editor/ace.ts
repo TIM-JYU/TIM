@@ -216,4 +216,16 @@ export class AceEditorComponent implements IEditor {
         this.aceEditor?.moveCursorToPosition(pos);
         this.aceEditor?.clearSelection();
     }
+
+    /**
+     * Return index value of cursor in editor
+     */
+    cursorIndexPosition(): number {
+        if (!this.aceEditor) {
+            return -1;
+        }
+        const sess = this.aceEditor.getSession();
+        const cursor = this.aceEditor.getCursorPosition();
+        return sess.getDocument().positionToIndex(cursor, 0);
+    }
 }

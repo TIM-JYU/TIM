@@ -63,12 +63,12 @@ export interface IEditor {
     setReadOnly(b: boolean): void;
     focus(): void;
     addFormulaEditorOpenHandler?(cb: () => void): void;
-
     /**
      * moves cursor to index in content string
      * @param index index in content
      */
     moveCursorToContentIndex?(index: number): void;
+    cursorIndexPosition?(): number;
 }
 
 export interface IEditorFile {
@@ -806,5 +806,15 @@ export class EditorComponent implements IMultiEditor {
 
     moveCursorToContentIndex(index: number) {
         this.editor?.moveCursorToContentIndex?.(index);
+    }
+
+    /**
+     * Return index value of cursor in editor
+     */
+    cursorIndexPosition(): number {
+        if (this.editor?.cursorIndexPosition) {
+            return this.editor?.cursorIndexPosition();
+        }
+        return -1;
     }
 }
