@@ -59,9 +59,8 @@ export class PeerReview {
     @JsonProperty() public answer_id!: number;
     @JsonProperty() public task_name!: string;
     @JsonProperty() public block_id!: number;
-    @JsonProperty() public reviewer_id!: number;
     @JsonProperty() public reviewer!: IUser;
-    @JsonProperty() public reviewable_id!: number;
+    @JsonProperty() public reviewable!: IUser;
     @JsonProperty() public points?: number;
     @JsonProperty() public comment?: string;
     @JsonProperty() public reviewed?: boolean;

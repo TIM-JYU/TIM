@@ -1647,7 +1647,7 @@ export class Tools extends ToolsBase {
      */
     getVelpTaskPoints(task: string): number {
         const peerreviewers = this.getPeerReviewsForUser().map(
-            (pr) => pr.reviewer_id
+            (pr) => pr.reviewer.id
         );
         const sum = this.velps
             .filter(
@@ -1743,7 +1743,7 @@ export class Tools extends ToolsBase {
      */
     getPeerReviewsByUser(): PeerReviewDataT[] {
         return this.getAllPeerReviews().filter(
-            (rev) => rev.reviewer_id == this.data.user.id
+            (rev) => rev.reviewer.id == this.data.user.id
         );
     }
 
@@ -1753,7 +1753,7 @@ export class Tools extends ToolsBase {
      */
     getPeerReviewsForUser(): PeerReviewDataT[] {
         return this.getAllPeerReviews().filter(
-            (rev) => rev.reviewable_id == this.data.user.id
+            (rev) => rev.reviewable.id == this.data.user.id
         );
     }
 
@@ -1763,7 +1763,7 @@ export class Tools extends ToolsBase {
      */
     getPeerReviewersForUser(usersObject: Users): string[] {
         const reviewers = this.getPeerReviewsForUser().map(
-            (reviewer) => usersObject[reviewer.reviewer_id]
+            (reviewer) => usersObject[reviewer.reviewer.id]
         );
         return reviewers;
     }
@@ -1777,8 +1777,8 @@ export class Tools extends ToolsBase {
             .filter((pr) => pr.task_name === task)
             .map((pr) => {
                 return {
-                    id: pr?.reviewer_id,
-                    name: users[pr?.reviewer_id],
+                    id: pr?.reviewer.id,
+                    name: users[pr?.reviewer.id],
                     points: [0],
                 };
             });
@@ -1851,7 +1851,7 @@ export class Tools extends ToolsBase {
             (pr) => pr.task_name === task
         );
         const initialReviewers = reviewers.map((reviewer) =>
-            reviewer.reviewer_id.toString()
+            reviewer.reviewer.id.toString()
         );
         const userIds = Object.keys(users);
         const updatedReviewers = fields

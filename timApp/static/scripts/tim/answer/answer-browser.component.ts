@@ -1605,7 +1605,7 @@ export class AnswerBrowserComponent
             );
             if (this.reviewerUser) {
                 this.filteredPeerReviews = this.filteredPeerReviews.filter(
-                    (p) => p.reviewer_id == this.reviewerUser!.id
+                    (p) => p.reviewer.id == this.reviewerUser!.id
                 );
             }
             if (this.filteredPeerReviews.length == 1) {
