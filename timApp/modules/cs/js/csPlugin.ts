@@ -1995,7 +1995,7 @@ ${fhtml}
             "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
         const latexbuttons =
             '[ "$", "$⁞$", "$ $" ]\n' +
-            //for some reason this requires duplicate dollar signs to work properly
+            // for some reason this requires duplicate dollar signs to work properly
             '[ "$$$$", "$$$$⁞$$$$", "$$$$ $$$$" ]\n' +
             '[ "\\\\( ° \\\\)", "°", "°", "commonSymbol"]\n' +
             '[ "\\\\( \\\\cdot \\\\)", "\\\\cdot", "\\\\cdot", "commonSymbol"]\n' +
