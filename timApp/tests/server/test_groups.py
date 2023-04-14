@@ -72,7 +72,7 @@ class GroupTest(TimRouteTest):
             )
             self.json_post(
                 f"/groups/addmember/{groupname}",
-                {"names": f"{t1},{t2},{t3},{t4},{t5}".split(",")},
+                {"names": f"{t1},{t2},{t3},{t4}@example.com,{t4},{t5}".split(",")},
                 expect_content={
                     "already_belongs": [t1, t3],
                     "added": [t2, t4],

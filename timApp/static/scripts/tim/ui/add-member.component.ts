@@ -16,7 +16,7 @@ interface IAddmemberResponse {
                 Lisää ryhmän jäseniä
             </tim-plugin-header>
             <p stem>
-                Lisää käyttäjätunnukset allekkain tai pilkuilla eroteltuina.
+                Lisää käyttäjätunnukset tai tunnuksia vastaavat sähköpostiosoitteet allekkain tai pilkuilla eroteltuina.
                 Ei haittaa, vaikka listassa olisi jo lisättyjä jäseniä; heitä ei lisätä toista kertaa.
             </p>
             <ng-container body>

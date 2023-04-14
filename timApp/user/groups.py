@@ -59,8 +59,12 @@ def verify_groupadmin(
     return True
 
 
-def get_uid_gid(group_name, usernames) -> tuple[UserGroup, list[User]]:
-    users = User.query.filter(User.name.in_(usernames)).all()
+def get_uid_gid(
+    group_name: str, usernames_or_emails: list[str]
+) -> tuple[UserGroup, list[User]]:
+    users = User.query.filter(
+        User.name.in_(usernames_or_emails) | User.email.in_(usernames_or_emails)
+    ).all()
     group = UserGroup.query.filter_by(name=group_name).first()
     raise_group_not_found_if_none(group_name, group)
     return group, users
@@ -287,14 +291,28 @@ def verify_group_view_access(ug: UserGroup, user=None, require=True):
     return verify_group_access(ug, view_access_set, user, require=require)
 
 
-def get_member_infos(group_name: str, usernames: list[str]):
-    usernames = get_usernames(usernames)
-    group, users = get_uid_gid(group_name, usernames)
+def get_member_infos(group_name: str, usernames_or_emails: list[str]):
+    usernames_or_emails = get_usernames(usernames_or_emails)
+    usernames_or_emails_set = set(usernames_or_emails)
+    group, users = get_uid_gid(group_name, usernames_or_emails)
     verify_group_edit_access(group)
     existing_usernames = {u.name for u in users}
+    existing_emails = {u.email for u in users}
+    email_username_map = {u.email: u.name for u in users}
     existing_ids = {u.id for u in group.users}
-    not_exist = [name for name in usernames if name not in existing_usernames]
-    return existing_ids, group, not_exist, usernames, users
+    not_exist = [
+        name
+        for name in usernames_or_emails
+        if name not in existing_usernames and name not in existing_emails
+    ]
+    usernames_or_emails_cleaned = []
+    for name in usernames_or_emails:
+        # If the name is an email and the username is already in the list, skip it
+        if (usr := email_username_map.get(name)) and usr in usernames_or_emails_set:
+            continue
+        usernames_or_emails_cleaned.append(name)
+
+    return existing_ids, group, not_exist, usernames_or_emails_cleaned, users
 
 
 @dataclass
@@ -308,12 +326,14 @@ NamesModelSchema = class_schema(NamesModel)
 @groups.post("/addmember/<group_name>")
 def add_member(group_name: str) -> Response:
     nm: NamesModel = load_data_from_req(NamesModelSchema)
-    existing_ids, group, not_exist, usernames, users = get_member_infos(
+    existing_ids, group, not_exist, usernames_or_emails, users = get_member_infos(
         group_name, nm.names
     )
-    if set(nm.names) & SPECIAL_USERNAMES:
+    if set(usernames_or_emails) & SPECIAL_USERNAMES:
         raise RouteException("Cannot add special users.")
-    already_exists = {u.name for u in group.users} & set(usernames)
+    user_names = {u.name for u in group.users}
+    user_emails = {u.email for u in group.users}
+    already_exists = (user_names | user_emails) & set(usernames_or_emails)
     added = []
     curr = get_current_user_object()
     for u in users:
@@ -333,9 +353,7 @@ def add_member(group_name: str) -> Response:
 @groups.post("/removemember/<group_name>")
 def remove_member(group_name: str) -> Response:
     nm: NamesModel = load_data_from_req(NamesModelSchema)
-    existing_ids, group, not_exist, usernames, users = get_member_infos(
-        group_name, nm.names
-    )
+    existing_ids, group, not_exist, _, users = get_member_infos(group_name, nm.names)
     removed = []
     does_not_belong = []
     ensure_manually_added = group.is_sisu
