@@ -517,7 +517,7 @@ export class ReviewController {
     getReviews(taskId: TaskId, userId: number): PeerReview[] {
         return this.peerReviews.filter(
             (p) =>
-                p.reviewable_id == userId &&
+                p.reviewable.id == userId &&
                 p.task_name == taskId.name &&
                 p.block_id == taskId.docId
         );

@@ -100,9 +100,9 @@ program: |!!
     let compensation = %%peer_review_points%%;
     let maxDiff = %%maxEro%%;
 
-    let peerReviewsByUser = tools.peerreviews.filter(pr => pr.reviewer_id == tools.data.user.id && pr.task_name == "TASK")
+    let peerReviewsByUser = tools.peerreviews.filter(pr => pr.reviewer.id == tools.data.user.id && pr.task_name == "TASK")
     let reviewedPeerReviewsByUser = peerReviewsByUser.filter(pr => pr.reviewed)
-    let peerReviewsForUser = tools.peerreviews.filter(pr => pr.reviewable_id == tools.data.user.id && pr.task_name == "TASK")
+    let peerReviewsForUser = tools.peerreviews.filter(pr => pr.reviewable.id == tools.data.user.id && pr.task_name == "TASK")
     let reviewedPeerReviewsForUser = peerReviewsForUser.filter(pr => pr.reviewed)
 
     // Points received by making peer reviews

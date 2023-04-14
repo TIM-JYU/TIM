@@ -885,13 +885,15 @@ def render_doc_view(
             except PeerReviewException as e:
                 flash(str(e))
         reviews = get_reviews_where_user_is_reviewer(doc_info, current_user)
-        if len(reviews) == 0:
+        tidset = {tid.doc_task for tid in tids}
+        for review in reviews:
+            if f"{review.block_id}.{review.task_name}" in tidset:
+                user_list.append(review.reviewable_id)
+        if len(user_list) == 0:
             # TODO: Check for late answers / missing answers / missing group, return proper messages
             flash(
                 "No reviewable targets found, review was possibly started before your answer or you were not a member of the peer review group"
             )
-        for review in reviews:
-            user_list.append(review.reviewable_id)
         user_list = get_points_by_rule(
             points_sum_rule,
             task_ids,
