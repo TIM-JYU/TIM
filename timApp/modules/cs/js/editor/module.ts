@@ -10,7 +10,10 @@ import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
 import {FormulaEditorComponent} from "./math-editor/formula-editor.component";
 import {FormulaFieldComponent} from "./math-editor/formula-field.component";
-import {SymbolButtonMenuComponent} from "./math-editor/symbol-button-menu.component";
+import {
+    SymbolButtonMenuComponent,
+    SymbolsPipe,
+} from "./math-editor/symbol-button-menu.component";
 
 @NgModule({
     declarations: [
@@ -23,6 +26,7 @@ import {SymbolButtonMenuComponent} from "./math-editor/symbol-button-menu.compon
         FormulaFieldComponent,
         FormulaEditorComponent,
         SymbolButtonMenuComponent,
+        SymbolsPipe,
     ],
     imports: [CommonModule, FormsModule, TimUtilityModule, CsUtilityModule],
     exports: [
@@ -30,6 +34,7 @@ import {SymbolButtonMenuComponent} from "./math-editor/symbol-button-menu.compon
         EditorComponent,
         AceEditorComponent,
         FormulaEditorComponent,
+        SymbolsPipe,
     ],
 })
 export class EditorModule {}

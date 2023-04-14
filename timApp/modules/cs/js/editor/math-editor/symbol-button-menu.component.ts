@@ -7,7 +7,7 @@
  * @date 30.3.2023
  */
 
-import type {AfterViewInit} from "@angular/core";
+import type {AfterViewInit, PipeTransform} from "@angular/core";
 import {
     Component,
     ContentChild,
@@ -15,6 +15,7 @@ import {
     EventEmitter,
     Input,
     Output,
+    Pipe,
 } from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {ITemplateButton} from "../../csPlugin";
@@ -43,6 +44,26 @@ enum ButtonMenuState {
     Expanded = 2,
 }
 
+/**
+ * Filters symbols by type
+ */
+@Pipe({name: "symbols"})
+export class SymbolsPipe implements PipeTransform {
+    /**
+     * @param buttons array of buttons to filter
+     * @param type symbol, commonSymbol or non-symbol
+     * non-symbol returns ones that don't have type or math as a type
+     */
+    transform(buttons: ITemplateButton[], type: string) {
+        if (type === "non-symbol") {
+            return buttons.filter(
+                (button) => !button.isSymbol || button.isSymbol === "math"
+            );
+        }
+        return buttons.filter((button) => button.isSymbol === type);
+    }
+}
+
 @Component({
     selector: "symbol-button-menu",
     template: `
@@ -60,8 +81,10 @@ enum ButtonMenuState {
                     </div>
                     
                     <div class="common-symbol-buttons math display">
-                        <button class="symbol-button" *ngFor="let item of this.splitCommonSymbols(true)"
-                            title="{{item.expl}}" (mousedown)="addFormula(item.data, item.data, true)" 
+                        <button 
+                                class="symbol-button" 
+                                *ngFor="let item of templateButtons | symbols:'commonSymbol'"
+                                title="{{item.expl}}" (mousedown)="addFormula(item.data, item.data, true)" 
                          >{{item.text}}</button>
                     </div>
                 </div>
@@ -88,7 +111,9 @@ enum ButtonMenuState {
            
             <div class="symbol-button-menu" [class.symbol-button-menu-open]="isOpen()">
                 <div class="buttons-container math display" [hidden]="!isOpen()">
-                    <button class="symbol-button" title="{{item.expl}}" *ngFor="let item of this.splitCommonSymbols(false);" 
+                    <button class="symbol-button" 
+                            title="{{item.expl}}" 
+                            *ngFor="let item of templateButtons | symbols:'symbol'" 
                             (mousedown)="addFormula(item.data, item.data, true)"
                      >{{item.text}}</button>
                 </div>
@@ -106,10 +131,9 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
     fileSelector?: FileSelectManagerComponent;
 
     @Input() formulaEditorOpen: boolean = false;
+    @Input() templateButtons!: ITemplateButton[];
 
     @Output() setFormula = new EventEmitter<FormulaEvent>();
-
-    @Input() templateButtons: ITemplateButton[] = [];
 
     @Output() toggle = new EventEmitter<void>();
 
@@ -149,29 +173,6 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
      */
     isOpen() {
         return this.buttonMenuState === ButtonMenuState.Open;
-    }
-
-    /**
-     * Splits templateButtons to common and not common buttons.
-     * @param isCommon Returns common if true, not common if false.
-     */
-    splitCommonSymbols(isCommon: boolean) {
-        const symbolButtons: ITemplateButton[] = [];
-        const commonSymbolButtons: ITemplateButton[] = [];
-
-        this.templateButtons.forEach(function (button) {
-            if (button.isSymbol === "symbol") {
-                symbolButtons.push(button);
-            } else {
-                commonSymbolButtons.push(button);
-            }
-        });
-
-        if (isCommon) {
-            return commonSymbolButtons;
-        }
-
-        return symbolButtons;
     }
 
     ngAfterViewInit(): void {
