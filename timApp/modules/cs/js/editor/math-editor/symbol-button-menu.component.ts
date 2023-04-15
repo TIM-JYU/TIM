@@ -90,7 +90,7 @@ export class SymbolsPipe implements PipeTransform {
                         <button 
                                 class="symbol-button" 
                                 *ngFor="let item of templateButtons | symbols:'commonSymbol'"
-                                title="{{item.expl}}" (mousedown)="addFormula(item.data, item.data, true)" 
+                                title="{{item.expl}}" (mouseup)="addFormula(item.data, item.data, true)" 
                          >{{item.text}}</button>
                     </div>
                 </div>
@@ -120,7 +120,7 @@ export class SymbolsPipe implements PipeTransform {
                     <button class="symbol-button" 
                             title="{{item.expl}}" 
                             *ngFor="let item of templateButtons | symbols:'symbol'" 
-                            (mousedown)="addFormula(item.data, item.data, true)"
+                            (mouseup)="addFormula(item.data, item.data, true)"
                      >{{item.text}}</button>
                 </div>
             </div>
