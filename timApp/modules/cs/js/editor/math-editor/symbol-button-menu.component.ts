@@ -54,13 +54,19 @@ export class SymbolsPipe implements PipeTransform {
      * @param type symbol, commonSymbol or non-symbol
      * non-symbol returns ones that don't have type or math as a type
      */
-    transform(buttons: ITemplateButton[], type: string) {
+    transform(
+        buttons: ITemplateButton[],
+        type: "commonSymbol" | "symbol" | "non-symbol"
+    ) {
         if (type === "non-symbol") {
             return buttons.filter(
                 (button) => !button.isSymbol || button.isSymbol === "math"
             );
         }
-        return buttons.filter((button) => button.isSymbol === type);
+        if (type === "commonSymbol") {
+            return buttons.filter((button) => button.isSymbol === "q");
+        }
+        return buttons.filter((button) => button.isSymbol === "s");
     }
 }
 

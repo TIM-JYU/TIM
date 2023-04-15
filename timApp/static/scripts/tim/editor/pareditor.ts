@@ -37,7 +37,6 @@ import {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
 import type {FormulaEvent} from "../../../../modules/cs/js/editor/math-editor/symbol-button-menu.component";
 import {selectFormulaFromPreview} from "../../../../modules/cs/js/editor/math-editor/formula-utils";
 import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
-import {CURSOR} from "../../../../modules/cs/js/editor/editor";
 import {createTemplateButtons} from "../../../../modules/cs/js/csPlugin";
 
 markAsUsed(rangyinputs);
@@ -254,7 +253,6 @@ export class PareditorController extends DialogController<
     private originalDocument: boolean = true;
 
     private templateButtons: ITemplateButton[] = [];
-    private symbolButtons: ITemplateButton[] = [];
 
     private formulaEditorOpen: boolean = false;
     private currentSymbol: FormulaEvent = {
@@ -1124,7 +1122,6 @@ ${backTicks}
         this.docSettings = documentglobals().docSettings;
 
         this.createTemplateButtons();
-        this.createSymbolButtons();
 
         const saveTag = this.getSaveTag();
         this.storage = {
@@ -1769,28 +1766,9 @@ ${backTicks}
         }
     }
 
-    getButtonTextHtml(s: string) {
-        let ret = s.trim();
-        ret = ret.replace("\\n", "");
-        ret = ret.replace(CURSOR, "");
-        if (ret.length === 0) {
-            ret = "\u00A0";
-        }
-        return ret;
-    }
-
     createTemplateButtons() {
         const b = this.docSettings?.buttons;
         this.templateButtons = createTemplateButtons(b, undefined);
-    }
-
-    createSymbolButtons() {
-        this.symbolButtons = this.templateButtons.filter((button) => {
-            return (
-                button.isSymbol === "symbol" ||
-                button.isSymbol === "commonSymbol"
-            );
-        });
     }
 
     /**

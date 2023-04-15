@@ -3117,16 +3117,6 @@ ${fhtml}
         }
     }
 
-    getButtonTextHtml(s: string) {
-        let ret = s.trim();
-        ret = ret.replace("\\n", "");
-        ret = ret.replace(CURSOR, "");
-        if (ret.length === 0) {
-            ret = "\u00A0";
-        }
-        return ret;
-    }
-
     // Returns the visible index for next item and the desired size
     getVid(dw?: number, dh?: number): Vid {
         taunoNr++;
@@ -3985,27 +3975,6 @@ ${fhtml}
         }
         this.updateCanReset();
         return this.runChanged;
-    }
-
-    /**
-     * Returns array of ITemplateButtons depending on if symbolbuttons or regular templatebuttons are asked.
-     * @param symbols True if symbolbuttons are asked, false if regular templatebuttons.
-     */
-    symbolTemplateButtons(symbols: boolean) {
-        const symbolButtons: ITemplateButton[] = [];
-        const notSymbolButtons: ITemplateButton[] = [];
-        this.templateButtons.forEach(function (button) {
-            if (button.isSymbol === "s" || button.isSymbol === "q") {
-                symbolButtons.push(button);
-            } else {
-                notSymbolButtons.push(button);
-            }
-        });
-
-        if (symbols) {
-            return symbolButtons;
-        }
-        return notSymbolButtons;
     }
 }
 
