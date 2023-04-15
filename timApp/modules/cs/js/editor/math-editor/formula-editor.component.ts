@@ -855,6 +855,11 @@ export class FormulaEditorComponent {
                         bubbles: true,
                     })
                 );
+                child.dispatchEvent(
+                    new MouseEvent("mouseup", {
+                        bubbles: true,
+                    })
+                );
                 // removes cursor symbol
                 activeField.mathField.keystroke("Right Backspace");
                 return;
