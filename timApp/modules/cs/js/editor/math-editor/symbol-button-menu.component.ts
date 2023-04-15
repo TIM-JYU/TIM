@@ -78,7 +78,7 @@ enum ButtonMenuState {
                     </button>                       
                    </ng-template>
                     
-                    <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet"
+                    <a href="/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet"
                        target="_blank">
                         <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions"
                               i18n-title></span>
@@ -160,7 +160,7 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
         const commonSymbolButtons: ITemplateButton[] = [];
 
         this.templateButtons.forEach(function (button) {
-            if (button.isSymbol === "symbol") {
+            if (button.isSymbol === "s") {
                 symbolButtons.push(button);
             } else {
                 commonSymbolButtons.push(button);
