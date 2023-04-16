@@ -182,6 +182,7 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
     }
 
     ngAfterViewInit(): void {
+        // render latex in button texts
         void ParCompiler.processAllMath($(this.el.nativeElement));
     }
 }
