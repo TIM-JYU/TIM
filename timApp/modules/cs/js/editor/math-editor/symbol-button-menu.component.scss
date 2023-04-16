@@ -1,7 +1,6 @@
 .button-menu-container {
   display: flex;
   flex-direction: row;
-  align-items: center;
   padding: 0.5em 0em 0.25em 0em;
   gap: 1em;
 }
@@ -19,18 +18,18 @@
 
 .button-menu-right {
   display: flex;
-  flex-direction: row;
+  flex-direction: column-reverse;
   gap: 1em;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: flex-end;
 }
 
 .common-symbol-buttons {
-  display: flex;
-  flex-direction: row;
   width: 100%;
 }
 
+.common-symbol-buttons-small {
+  display: none;
+}
 
 .help-icon {
   font-size: 150%;
@@ -38,7 +37,8 @@
 
 .formula-controls {
   display: flex;
-  flex-direction: row;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
 }
 
 .symbol-button-menu-open {
@@ -68,3 +68,35 @@ symbol-menu-container-open {
     background: #C0C0C0;
 }
 
+@media (min-width: 400px) {
+  .common-symbol-buttons-small {
+    display: block;
+  }
+}
+
+@media (min-width: 600px) {
+  .button-menu-container {
+    display: flex;
+    flex-direction: row;
+    padding: 0.5em 0em 0.25em 0em;
+    gap: 1em;
+  }
+
+  .common-symbol-buttons-small {
+    display: block;
+  }
+
+  .button-menu-right {
+    display: flex;
+    flex-direction: row;
+    gap: 1em;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .formula-controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+}

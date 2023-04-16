@@ -86,7 +86,7 @@ export class SymbolsPipe implements PipeTransform {
                         </div>                        
                     </div>
                     
-                    <div class="common-symbol-buttons math display">
+                    <div class="common-symbol-buttons math display" [class.common-symbol-buttons-small]="!formulaEditorOpen">
                         <button 
                                 class="symbol-button" 
                                 *ngFor="let item of templateButtons | symbols:'commonSymbol'"
