@@ -14,9 +14,9 @@ formulaEditor: true
 upload: true
 buttons: |!!
 [ "\\[ \\pi \\]", "\\pi", "\\pi", "q"]
-[ "\\[\\sin \\]", "\\sin", "\\sin", "q"]
-[ "\\[\\cos \\]", "\\cos", "\\cos", "q"]
-[ "\\[\\tan \\]", "\\tan", "\\tan", "q"]
+[ "\\[ \\sin \\]", "\\sin", "\\sin", "q"]
+[ "\\[ \\cos \\]", "\\cos", "\\cos", "q"]
+[ "\\[ \\tan \\]", "\\tan", "\\tan", "q"]
 [ "\\[ \\overline{\\text{i}} \\]", "\\overline{\\text{i}}", "\\overline{\\text{i}}", "s"]
 [ "\\[ \\overline{\\text{j}} \\]", "\\overline{\\text{j}}", "\\overline{\\text{j}}", "s"]
 [ "\\[ \\overline{\\text{k}} \\]", "\\overline{\\text{k}}", "\\overline{\\text{k}}", "s"]

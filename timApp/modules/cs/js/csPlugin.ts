@@ -1088,9 +1088,9 @@ export function createTemplateButtons(
         '[ "\\\\[ \\\\lim_{\\\\square} \\\\]", "\\\\lim_{⁞}", "\\\\lim_{ }", "s"]\n' +
         '[ "\\\\[ \\\\overrightarrow{\\\\square} \\\\]", "\\\\overrightarrow{⁞}", "\\\\overrightarrow{ }", "s"]\n' +
         '[ "\\\\[ \\\\overleftarrow{\\\\square} \\\\]", "\\\\overleftarrow{⁞}", "\\\\overleftarrow{ }", "s"]\n' +
-        '[ "\\\\( sin \\\\)", "\\\\sin","\\\\sin",  "s"]\n' +
-        '[ "\\\\( cos \\\\)", "\\\\cos","\\\\cos",  "s"]\n' +
-        '[ "\\\\( tan \\\\)", "\\\\tan","\\\\tan",  "s"]\n' +
+        '[ "\\\\( \\\\sin \\\\)", "\\\\sin","\\\\sin",  "s"]\n' +
+        '[ "\\\\( \\\\cos \\\\)", "\\\\cos","\\\\cos",  "s"]\n' +
+        '[ "\\\\( \\\\tan \\\\)", "\\\\tan","\\\\tan",  "s"]\n' +
         '[ "\\\\( \\\\left|\\\\square\\\\right| \\\\)", "\\\\left|⁞\\\\right|","\\\\left| \\\\right|",  "s"]\n' +
         '[ "\\\\( \\\\left[\\\\square\\\\right] \\\\)", "\\\\left[⁞\\\\right]","\\\\left[ \\\\right]",  "s"]\n' +
         '[ "\\\\( \\\\left]\\\\square\\\\right] \\\\)", "]⁞]","] ]",  "s"]\n' +
