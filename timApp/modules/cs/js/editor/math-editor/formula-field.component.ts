@@ -137,11 +137,6 @@ export class FormulaFieldComponent implements AfterViewInit {
         return this.active;
     }
 
-    @Input()
-    get hasError(): boolean {
-        return this.error;
-    }
-
     set isActive(value: boolean) {
         this.active = value;
         if (value) {
@@ -149,6 +144,11 @@ export class FormulaFieldComponent implements AfterViewInit {
                 this.mathField.focus();
             }
         }
+    }
+
+    @Input()
+    get hasError(): boolean {
+        return this.error;
     }
 
     /**
