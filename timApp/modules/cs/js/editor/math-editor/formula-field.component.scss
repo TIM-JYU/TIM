@@ -39,9 +39,11 @@
         .render-error {
             position: absolute;
             z-index: 2;
-            top: 10px;
-            left: 10px;
+            top: 0;
+            left: 0;
+            padding: 10px 10px;
             color: red;
+            pointer-events: none
         }
 
         .formula-area {

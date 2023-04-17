@@ -175,7 +175,7 @@ export class FormulaFieldComponent implements AfterViewInit {
                 latex: this.latexInput,
                 id: this.id,
             });
-            // setTimeout(() => this.checkError(), 100);
+            setTimeout(() => this.checkError(), 2);
             this.updateTextareaRows();
             this.updateUndoRedoStack();
         }
