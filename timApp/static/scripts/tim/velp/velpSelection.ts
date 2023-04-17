@@ -1,4 +1,4 @@
-import type {IController, IFormController} from "angular";
+import type {IController, IFormController, IScope} from "angular";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
 import type {Binding, Require} from "tim/util/utils";
@@ -44,6 +44,8 @@ const sortLang: string = "fi";
  * Controller for velp selection
  */
 export class VelpSelectionController implements IController {
+    static $inject = ["$scope"];
+
     private initialized = false;
     private labels: ILabelUI[];
     private velpGroups: IVelpGroupUI[];
@@ -83,7 +85,7 @@ export class VelpSelectionController implements IController {
         deleteVelpGroupLockedGroup: string;
     };
 
-    constructor() {
+    constructor(private scope: IScope) {
         this.labels = [];
         this.velpGroups = [];
 
@@ -327,6 +329,9 @@ export class VelpSelectionController implements IController {
 
         this.updateVelpList();
         this.initialized = true;
+        // The promises above might be slow to resolve which seems to cause velps not to show up
+        // Applying another digest cycle seems to fix this
+        this.scope.$applyAsync();
     }
 
     // Methods
