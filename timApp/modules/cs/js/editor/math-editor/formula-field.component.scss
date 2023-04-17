@@ -19,6 +19,7 @@
         display: flex;
         flex-direction: column;
         width: 100%;
+        position: relative;
 
         .visual-input {
             width: 100%;
@@ -33,6 +34,14 @@
 
         .visual-input:hover {
             border-color: black;
+        }
+
+        .render-error {
+            position: absolute;
+            z-index: 2;
+            top: 10px;
+            left: 10px;
+            color: red;
         }
 
         .formula-area {
