@@ -70,7 +70,7 @@ export type LineAdd = {
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
                 </textarea>
-                <span class="render-error" *ngIf="hasError">Virhe LaTeX-koodissa</span>
+                <span class="render-error" *ngIf="hasError" i18n>Error in LaTeX code</span>
             </div>
 
             <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
