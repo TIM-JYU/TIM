@@ -63,6 +63,7 @@
     "dompurify": "^2.4.0",
     "env-cmd": "^10.1.0",
     "fp-ts": "^2.12.3",
+    "html2canvas": "^1.4.1",
     "humanize-duration": "^3.27.3",
     "ifvisible.js": "^1.0.6",
     "io-ts": "^2.2.18",

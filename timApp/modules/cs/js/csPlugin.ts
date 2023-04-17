@@ -62,6 +62,8 @@ import {
 } from "tim/ui/showTemplateReplaceDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showInputDialog} from "tim/ui/showInputDialog";
+import html2canvas from "html2canvas";
+import {slugify} from "tim/util/slugify";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -770,6 +772,7 @@ const CsMarkupOptional = t.partial({
     uploadAcceptMaxSize: t.number,
     showAlwaysSavedText: t.boolean,
     startLineNumber: t.number,
+    mdSaveButton: t.string,
 });
 
 const CsMarkupDefaults = t.type({
@@ -821,6 +824,7 @@ const CsMarkupDefaults = t.type({
     norunmenu: withDefault(t.boolean, false),
     noargs: withDefault(t.boolean, false),
     noclose: withDefault(t.boolean, false),
+    mdSaveButton: withDefault(t.string, ""),
 });
 
 const CsMarkup = t.intersection([
@@ -1206,6 +1210,7 @@ export class CsController extends CsBase implements ITimComponent {
     templateButtons: ITemplateButton[] = [];
     templateButtonsCount: number = 0;
     mdHtml?: string;
+    @ViewChild("mdHtmlDiv") mdHtmlDiv?: ElementRef<HTMLDivElement>;
 
     iframesettings?: {
         src?: SafeResourceUrl;
@@ -2667,6 +2672,14 @@ ${fhtml}
         }
     }
 
+    get mdSaveButton() {
+        const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
+        if (ty !== "md") {
+            return undefined;
+        }
+        return this.markup.mdSaveButton;
+    }
+
     async runCodeCommon(nosave: boolean, _extraMarkUp?: IExtraMarkup) {
         this.hasBeenRun = true;
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
@@ -3668,6 +3681,39 @@ ${fhtml}
         }
     }
 
+    async exportMDAsImg() {
+        if (!this.mdHtmlDiv) {
+            console.log("No MD!");
+            return;
+        }
+
+        const canvas = await html2canvas(this.mdHtmlDiv.nativeElement);
+
+        // Convert to blob
+        const blob = await new Promise<Blob | null>((r) =>
+            canvas.toBlob(r, "image/png")
+        );
+
+        if (!blob) {
+            console.log("No blob!");
+            return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        // Open save dialog
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = slugify(
+            `md_${
+                this.getTaskId()?.docTaskField() ?? "task"
+            }_${new Date().toISOString()}.png`
+        );
+        document.body.appendChild(a);
+        a.click();
+        // Remove after click
+        document.body.removeChild(a);
+    }
+
     async showMD() {
         if (!this.usercode) {
             if (this.mdHtml) {
@@ -4109,6 +4155,10 @@ ${fhtml}
                             (click)="runCode()"
                             [innerHTML]="buttonText()"></button>
                     &nbsp;
+                    <button *ngIf="mdSaveButton" [disabled]="!mdHtml" class="timButton btn-sm"
+                            (click)="exportMDAsImg()">{{mdSaveButton}}
+                    </button>
+                    &nbsp;
                     <button *ngIf="isExternalFetch"
                             [disabled]="isRunning"
                             class="timButton btn-sm"
@@ -4249,7 +4299,7 @@ ${fhtml}
                             style="border:0">
                     </iframe>
                 </div>
-                <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">
+                <div #mdHtmlDiv *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">
                 </div>
             </div>
             <tim-graph-viz class="csGraphViz" *ngIf="isViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>
