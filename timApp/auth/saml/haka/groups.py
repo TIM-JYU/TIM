@@ -1,0 +1,1 @@
+HAKA_USERS_GROUPNAME = "Haka users"

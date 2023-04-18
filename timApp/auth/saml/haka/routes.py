@@ -1,6 +1,7 @@
 import functools
 from typing import Any
 
+from timApp.auth.saml.haka.groups import HAKA_USERS_GROUPNAME
 from timApp.auth.saml.haka.iap_models import (
     IdentityAssuranceProofing,
     RefedsIapLevel,
@@ -44,9 +45,6 @@ def _get_haka_idp_desc(entity_id: str, idp_info: dict) -> IdpDescription | None:
     scopes = [e["text"] for e in scope_elems]
 
     return IdpDescription(display_names, scopes)
-
-
-HAKA_USERS_GROUPNAME = "Haka users"
 
 
 class HakaSamlUserAttributes(BaseSamlUserAttributes):

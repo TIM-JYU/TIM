@@ -33,9 +33,13 @@ export interface IDiscoveryFeedEntry {
     scopes: string[];
 }
 
-export function ssoLogin(entityID: string, addUser?: boolean) {
+export function ssoLogin(
+    entityID: string,
+    addUser?: boolean,
+    service: string = ""
+) {
     redirectTo(
-        "/saml/sso?" +
+        `/saml${service}/sso?` +
             $httpParamSerializer({
                 entityID: entityID,
                 return_to: document.location.toString(),

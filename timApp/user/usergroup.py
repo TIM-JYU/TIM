@@ -8,7 +8,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.auth.auth_models import BlockAccess
-from timApp.auth.saml.haka.routes import HAKA_USERS_GROUPNAME
+from timApp.auth.saml.haka.groups import HAKA_USERS_GROUPNAME
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
 from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageDisplay,

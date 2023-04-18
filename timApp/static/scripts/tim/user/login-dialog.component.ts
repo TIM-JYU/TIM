@@ -16,7 +16,11 @@ import {$http} from "tim/util/ngimport";
 import type {IOkResponse, Result, ToReturn} from "tim/util/utils";
 import {capitalizeFirstLetter, mapSuccess, to} from "tim/util/utils";
 import type {IDiscoveryFeedEntry} from "tim/user/haka-login.component";
-import {HakaLoginComponent, loadIdPs} from "tim/user/haka-login.component";
+import {
+    HakaLoginComponent,
+    loadIdPs,
+    ssoLogin,
+} from "tim/user/haka-login.component";
 import type {ILoginResponse} from "tim/user/userService";
 import {Users} from "tim/user/userService";
 import {CommonModule} from "@angular/common";
@@ -73,7 +77,8 @@ interface ISimpleRegistrationResponse {
 
                             <div class="login-flex-col">
                                 <ng-container *ngIf="!hideVars.emailLogin">
-
+                                       
+                                    <button class="center-block timButton" type="button" (click)="startMpassIdLogin()">MPASSid login</button>
                                     <button *ngIf="(!showSimpleLogin && (!hideVars.hakaLogin || !hideVars.signup))"
                                             class="center-block timButton" type="button"
                                             (click)="beginSimpleLogin()" i18n>
@@ -637,6 +642,14 @@ export class LoginDialogComponent extends AngularDialogComponent<
             await this.continueSimpleLogin();
         }
         this.focusPassword = true;
+    }
+
+    startMpassIdLogin() {
+        ssoLogin(
+            "https://mpass-proxy-test.csc.fi/idp/shibboleth",
+            undefined,
+            "/mpass"
+        );
     }
 }
 
