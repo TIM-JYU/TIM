@@ -1245,6 +1245,7 @@ export class CsController extends CsBase implements ITimComponent {
     private isSimcirUnsaved?: boolean;
     private clearSaved: boolean = false;
     private originalUserInput?: string;
+    exportingMD = false;
 
     @ViewChild("externalEditor")
     set externalEditorViewSetter(newValue: EditorComponent | undefined) {
@@ -3687,6 +3688,8 @@ ${fhtml}
             return;
         }
 
+        this.exportingMD = true;
+
         const canvas = await html2canvas(this.mdHtmlDiv.nativeElement);
 
         // Convert to blob
@@ -3696,6 +3699,7 @@ ${fhtml}
 
         if (!blob) {
             console.log("No blob!");
+            this.exportingMD = false;
             return;
         }
 
@@ -3712,6 +3716,8 @@ ${fhtml}
         a.click();
         // Remove after click
         document.body.removeChild(a);
+
+        this.exportingMD = false;
     }
 
     async showMD() {
@@ -4158,6 +4164,7 @@ ${fhtml}
                     <button *ngIf="mdSaveButton" [disabled]="!mdHtml" class="timButton btn-sm"
                             (click)="exportMDAsImg()">{{mdSaveButton}}
                     </button>
+                    <tim-loading *ngIf="mdSaveButton && exportingMD"></tim-loading>
                     &nbsp;
                     <button *ngIf="isExternalFetch"
                             [disabled]="isRunning"
