@@ -46,6 +46,7 @@ export interface IDocSettings {
     sync_answerbrowsers?: boolean;
     answerBrowser?: IAnswerBrowserSettings;
     loginMessage?: string;
+    buttons?: string;
 }
 
 export interface ISlideDocSettings extends IDocSettings {

@@ -6,6 +6,7 @@ import {
     KEY_4,
     KEY_5,
     KEY_B,
+    KEY_E,
     KEY_ENTER,
     KEY_I,
     KEY_O,
@@ -21,12 +22,13 @@ import {
     EditorType,
     focusAfter,
 } from "tim/editor/BaseParEditor";
+import type {IEditor} from "../../../../modules/cs/js/editor/editor";
 
-export class TextAreaParEditor extends BaseParEditor {
+export class TextAreaParEditor extends BaseParEditor implements IEditor {
     public editor: JQuery;
     private editorElement: HTMLTextAreaElement;
     type: EditorType.Textarea = EditorType.Textarea;
-
+    formulaFunction?: () => void;
     constructor(editor: JQuery, callbacks: IEditorCallbacks) {
         super(editor, callbacks);
         this.editor = editor;
@@ -55,6 +57,11 @@ export class TextAreaParEditor extends BaseParEditor {
                     e.preventDefault();
                 } else if (e.keyCode === KEY_Y) {
                     this.commentClicked();
+                    e.preventDefault();
+                } else if (e.keyCode === KEY_E) {
+                    if (this.formulaFunction) {
+                        this.formulaFunction();
+                    }
                     e.preventDefault();
                 } else if (e.keyCode === KEY_1) {
                     this.headerClicked("#");
@@ -429,11 +436,14 @@ export class TextAreaParEditor extends BaseParEditor {
 
     @focusAfter
     insertTemplate(text: string) {
+        const pluginnamehere = "PLUGINNAMEHERE";
+        const firstLine = text.split("\n")[0];
+        const hasPluginName = firstLine.includes(pluginnamehere);
         const ci = text.indexOf(CURSOR);
-        if (ci >= 0) {
+        const setCursor = ci >= 0 && !hasPluginName;
+        if (setCursor) {
             text = text.slice(0, ci) + text.slice(ci + 1);
         }
-        const pluginnamehere = "PLUGINNAMEHERE";
         const searchEndIndex = this.getSelection().start;
         this.replaceSelectedText(text);
         const searchStartIndex = this.getSelection().start;
@@ -444,7 +454,7 @@ export class TextAreaParEditor extends BaseParEditor {
         if (index > searchEndIndex) {
             this.setSelection(index, index + pluginnamehere.length);
         }
-        if (ci >= 0) {
+        if (setCursor) {
             this.setSelection(searchEndIndex + ci);
         }
     }
@@ -716,5 +726,43 @@ export class TextAreaParEditor extends BaseParEditor {
      */
     replaceTranslation(translatedText: string) {
         this.replaceSelectedText(translatedText, "select");
+    }
+
+    get content(): string {
+        return this.getEditorText();
+    }
+    set content(value: string) {
+        this.setEditorText(value);
+    }
+
+    doWrap(wrap: number): void {}
+
+    insert(str: string): void {
+        const [start, end] = this.getPosition();
+        const value = this.getEditorText();
+        const before = value.slice(0, start);
+        const after = value.slice(end);
+        const newValue = before + str + after;
+        this.setEditorText(newValue);
+    }
+
+    setReadOnly(b: boolean): void {}
+
+    /**
+     * Save function that opens the formula editor.
+     */
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+    }
+
+    moveCursorToContentIndex(index: number) {
+        this.editor.setSelection(index, index);
+    }
+
+    /**
+     * Return index value of cursor in editor
+     */
+    cursorIndexPosition(): number {
+        return this.getSelection().start;
     }
 }

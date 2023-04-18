@@ -57,11 +57,18 @@ export const CURSOR = "⁞";
 export interface IEditor {
     content: string;
 
-    setSelection?(): void;
+    setSelection?(start: number): void;
     doWrap?(wrap: number): void;
     insert?(str: string): void;
     setReadOnly(b: boolean): void;
     focus(): void;
+    addFormulaEditorOpenHandler?(cb: () => void): void;
+    /**
+     * moves cursor to index in content string
+     * @param index index in content
+     */
+    moveCursorToContentIndex?(index: number): void;
+    cursorIndexPosition?(): number;
 }
 
 export interface IEditorFile {
@@ -191,6 +198,7 @@ export class EditorComponent implements IMultiEditor {
     Mode = Mode;
 
     private normalEditor?: NormalEditorComponent;
+
     private aceEditor?: AceEditorComponent;
     parsonsEditor?: ParsonsEditorComponent;
     editorreadonly: boolean = false;
@@ -225,6 +233,7 @@ export class EditorComponent implements IMultiEditor {
     private loadedFile?: IFile;
     filenameInput: string = "";
     private editorIndexStorage = new TimStorage("editorIndex", t.number);
+    formulaFunction?: () => void;
 
     constructor(private cdr: ChangeDetectorRef) {
         this.showOtherEditor(
@@ -277,6 +286,9 @@ export class EditorComponent implements IMultiEditor {
             this.editor.setReadOnly(this.editorreadonly);
             this.content = oldContent;
             this.content_ = undefined;
+            if (this.formulaFunction) {
+                this.addFormulaEditorOpenHandler(this.formulaFunction);
+            }
         }
     }
 
@@ -780,5 +792,29 @@ export class EditorComponent implements IMultiEditor {
 
     focus() {
         this.editor?.focus();
+    }
+
+    /**
+     * Save function that opens the formula editor.
+     */
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+        if (this.editor?.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(cb);
+        }
+    }
+
+    moveCursorToContentIndex(index: number) {
+        this.editor?.moveCursorToContentIndex?.(index);
+    }
+
+    /**
+     * Return index value of cursor in editor
+     */
+    cursorIndexPosition(): number {
+        if (this.editor?.cursorIndexPosition) {
+            return this.editor?.cursorIndexPosition();
+        }
+        return -1;
     }
 }

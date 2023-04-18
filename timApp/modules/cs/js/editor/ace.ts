@@ -22,7 +22,7 @@ export class AceEditorComponent implements IEditor {
     private content_?: string;
     private editorreadonly: boolean = false;
     private disabled_: boolean = false;
-
+    formulaFunction?: () => void;
     @ViewChild("area") area!: ElementRef;
     @Input() placeholder: string = ""; // TODO: make this work
 
@@ -129,6 +129,18 @@ export class AceEditorComponent implements IEditor {
                 this.aceEditor?.toggleCommentLines();
             },
         });
+        this.aceEditor?.commands.addCommand({
+            name: "addFormula",
+            bindKey: {
+                win: "Ctrl-E",
+                mac: "Command-E",
+            },
+            exec: () => {
+                if (this.formulaFunction) {
+                    this.formulaFunction();
+                }
+            },
+        });
     }
 
     get content(): string {
@@ -184,5 +196,36 @@ export class AceEditorComponent implements IEditor {
         cursor = sess.getDocument().indexToPosition(index, 0);
         editor.selection.moveCursorToPosition(cursor);
         editor.selection.clearSelection();
+    }
+
+    /**
+     * Save function that opens the formula editor.
+     */
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+    }
+
+    moveCursorToContentIndex(index: number) {
+        const pos = this.aceEditor
+            ?.getSession()
+            .getDocument()
+            .indexToPosition(index, 0);
+        if (!pos) {
+            return;
+        }
+        this.aceEditor?.moveCursorToPosition(pos);
+        this.aceEditor?.clearSelection();
+    }
+
+    /**
+     * Return index value of cursor in editor
+     */
+    cursorIndexPosition(): number {
+        if (!this.aceEditor) {
+            return -1;
+        }
+        const sess = this.aceEditor.getSession();
+        const cursor = this.aceEditor.getCursorPosition();
+        return sess.getDocument().positionToIndex(cursor, 0);
     }
 }

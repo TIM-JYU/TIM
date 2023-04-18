@@ -45,6 +45,8 @@ import {
     showTemplateReplaceDialog,
     TemplateParam,
 } from "tim/ui/showTemplateReplaceDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {showInputDialog} from "tim/ui/showInputDialog";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -59,6 +61,8 @@ import {getInt} from "./util/util";
 import type {IFile, IFileSpecification} from "./util/file-select";
 import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
+import type {FormulaEvent} from "./editor/math-editor/symbol-button-menu.component";
+import {selectFormulaFromPreview} from "./editor/math-editor/formula-utils";
 
 // TODO better name?
 interface Vid {
@@ -468,10 +472,11 @@ const TemplateButton = t.intersection([
         expl: t.string,
         hasMath: t.boolean,
         placeholders: t.array(TemplateParam),
+        isSymbol: t.string,
     }),
 ]);
 
-interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
+export interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
  * This defines the required format for the csPlugin YAML markup.
@@ -616,6 +621,7 @@ const UploadedFile = t.type({
     path: t.string,
     type: t.string,
 });
+
 interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 
 const GitDefaultsMarkup = t.partial({
@@ -701,6 +707,7 @@ const CsMarkupOptional = t.partial({
     noeditor: t.boolean,
     normal: nullable(t.string),
     parsons: withDefault(CsParsonsOptions, {}),
+    formulaEditor: t.boolean,
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -757,6 +764,7 @@ const CsMarkupDefaults = t.type({
     dragAndDrop: withDefault(t.boolean, true),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
+    formulaEditor: withDefault(t.boolean, false),
     iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
     indent: withDefault(t.Integer, -1),
     initSimcir: withDefault(t.string, ""),
@@ -859,6 +867,7 @@ export class CsBase extends AngularPluginBase<
     get usercode(): string {
         return this.usercode_;
     }
+
     set usercode(str: string) {
         this.usercode_ = str;
     }
@@ -941,6 +950,260 @@ export interface IRunRequest {
     input: IRunRequestInput;
 }
 
+function getButtonTextHtml(s: string) {
+    let ret = s.trim();
+    ret = ret.replace("\\n", "");
+    ret = ret.replace(CURSOR, "");
+    if (ret.length === 0) {
+        ret = "\u00A0";
+    }
+    return ret;
+}
+
+/**
+ * Parses string into buttons.
+ * @param b string containing an array of buttons
+ * @param mdButtons array of markdown buttons
+ */
+export function createTemplateButtons(
+    b: string | undefined,
+    mdButtons: ITemplateButton[] | undefined | null
+) {
+    if (!b && !mdButtons) {
+        return [];
+    }
+    if (!b) {
+        b = "";
+    }
+    if (!mdButtons) {
+        mdButtons = [];
+    }
+    const helloButtons =
+        "public \nclass \nHello \n\\n\n{\n}\n" +
+        "static \nvoid \n Main\n(\n)\n" +
+        '        Console.WriteLine(\n"\nworld!\n;\n ';
+    const typeButtons =
+        "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
+    const charButtons =
+        "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
+    const latexbuttons =
+        '[ "$", "$⁞$", "$ $" ]\n' +
+        // for some reason this requires duplicate dollar signs to work properly
+        '[ "$$$$", "$$$$⁞$$$$", "$$$$ $$$$" ]\n' +
+        '[ "\\\\( ° \\\\)", "°", "°", "q"]\n' +
+        '[ "\\\\( \\\\cdot \\\\)", "\\\\cdot", "\\\\cdot", "q"]\n' +
+        '[ "\\\\( \\\\times \\\\)", "\\\\times", "\\\\times", "q"]\n' +
+        '[ "\\\\( \\\\pm \\\\)", "\\\\pm", "\\\\pm", "q"]\n' +
+        '[ "\\\\( \\\\infty \\\\)", "\\\\infty", "\\\\infty", "q"]\n' +
+        '[ "\\\\( ^2 \\\\)", "^2", "^2", "q"]\n' +
+        '[ "\\\\( ^3 \\\\)", "^3", "^3", "q"]\n' +
+        '[ "\\\\( \\\\frac{1}{2} \\\\)", "\\\\frac{1}{2}", "\\\\frac{1}{2}", "q"]\n' +
+        '[ "\\\\( \\\\frac{1}{3} \\\\)", "\\\\frac{1}{3}", "\\\\frac{1}{3}", "q"]\n' +
+        '[ "\\\\( \\\\pi \\\\)", "\\\\pi", "\\\\pi", "q"]\n' +
+        '[ "\\\\( ‰ \\\\)", "‰", "‰", "q"]\n' +
+        '[ "\\\\( \\\\alpha \\\\)", "\\\\alpha", "\\\\alpha", "q"]\n' +
+        '[ "\\\\( \\\\beta \\\\)", "\\\\beta", "\\\\beta", "q"]\n' +
+        '[ "\\\\( \\\\ne \\\\)", "\\\\ne", "\\\\ne", "q"]\n' +
+        '[ "\\\\( \\\\approx \\\\)", "\\\\approx", "\\\\approx", "q"]\n' +
+        '[ "\\\\( \\\\le \\\\)", "\\\\le", "\\\\le", "q"]\n' +
+        '[ "\\\\( \\\\sphericalangle \\\\)", "\\\\sphericalangle", "\\\\sphericalangle", "q"]\n' +
+        '[ "\\\\( \\\\mid \\\\)", "\\\\mid", "\\\\mid", "q"]\n' +
+        '[ "\\\\( \\\\parallel \\\\)", "\\\\parallel", "\\\\parallel", "q"]\n' +
+        '[ "\\\\( \\\\rightarrow \\\\)", "\\\\rightarrow", "\\\\rightarrow", "q"]\n' +
+        '[ "\\\\( \\\\Rightarrow \\\\)", "\\\\Rightarrow", "\\\\Rightarrow", "q"]\n' +
+        '[ "\\\\( \\\\Leftrightarrow \\\\)", "\\\\Leftrightarrow", "\\\\Leftrightarrow", "q"]\n' +
+        '[ "\\\\( \\\\in \\\\)", "\\\\in", "\\\\in", "q"]\n' +
+        '[ "\\\\( \\\\mathbb{Z} \\\\)", "\\\\mathbb{Z}", "\\\\mathbb{Z}", "q"]\n' +
+        '[ "\\\\( \\\\mathbb{R} \\\\)", "\\\\mathbb{R}", "\\\\mathbb{R}", "q"]\n' +
+        '[ "\\\\( \\\\Gamma \\\\)", "\\\\Gamma", "\\\\Gamma", "s"]\n' +
+        '[ "\\\\( \\\\gamma \\\\)", "\\\\gamma", "\\\\gamma", "s"]\n' +
+        '[ "\\\\( \\\\Delta \\\\)", "\\\\Delta", "\\\\Delta", "s"]\n' +
+        '[ "\\\\( \\\\delta \\\\)", "\\\\delta", "\\\\delta", "s"]\n' +
+        '[ "\\\\( \\\\varepsilon \\\\)", "\\\\varepsilon", "\\\\varepsilon", "s"]\n' +
+        '[ "\\\\( \\\\zeta \\\\)", "\\\\zeta", "\\\\zeta", "s"]\n' +
+        '[ "\\\\( \\\\eta \\\\)", "\\\\eta", "\\\\eta", "s"]\n' +
+        '[ "\\\\( \\\\theta \\\\)", "\\\\theta", "\\\\theta", "s"]\n' +
+        '[ "\\\\( \\\\vartheta \\\\)", "\\\\vartheta", "\\\\vartheta", "s"]\n' +
+        '[ "\\\\( \\\\iota \\\\)", "\\\\iota", "\\\\iota", "s"]\n' +
+        '[ "\\\\( \\\\kappa \\\\)", "\\\\kappa", "\\\\kappa", "s"]\n' +
+        '[ "\\\\( \\\\Lambda \\\\)", "\\\\Lambda", "\\\\Lambda", "s"]\n' +
+        '[ "\\\\( \\\\lambda \\\\)", "\\\\lambda", "\\\\lambda", "s"]\n' +
+        '[ "\\\\( \\\\mu \\\\)", "\\\\mu", "\\\\mu", "s"]\n' +
+        '[ "\\\\( \\\\nu \\\\)", "\\\\nu", "\\\\nu", "s"]\n' +
+        '[ "\\\\( \\\\Xi \\\\)", "\\\\Xi", "\\\\Xi", "s"]\n' +
+        '[ "\\\\( \\\\xi \\\\)", "\\\\xi", "\\\\xi", "s"]\n' +
+        '[ "\\\\( \\\\Pi \\\\)", "\\\\Pi", "\\\\Pi", "s"]\n' +
+        '[ "\\\\( \\\\rho \\\\)", "\\\\rho", "\\\\rho", "s"]\n' +
+        '[ "\\\\( \\\\Sigma \\\\)", "\\\\Sigma", "\\\\Sigma", "s"]\n' +
+        '[ "\\\\( \\\\sigma \\\\)", "\\\\sigma", "\\\\sigma", "s"]\n' +
+        '[ "\\\\( \\\\tau \\\\)", "\\\\tau", "\\\\tau", "s"]\n' +
+        '[ "\\\\( \\\\Upsilon \\\\)", "\\\\Upsilon", "\\\\Upsilon", "s"]\n' +
+        '[ "\\\\( \\\\upsilon \\\\)", "\\\\upsilon", "\\\\upsilon", "s"]\n' +
+        '[ "\\\\( \\\\Phi \\\\)", "\\\\Phi", "\\\\Phi", "s"]\n' +
+        '[ "\\\\( \\\\phi \\\\)", "\\\\phi", "\\\\phi", "s"]\n' +
+        '[ "\\\\( \\\\chi \\\\)", "\\\\chi", "\\\\chi", "s"]\n' +
+        '[ "\\\\( \\\\Psi \\\\)", "\\\\Psi", "\\\\Psi", "s"]\n' +
+        '[ "\\\\( \\\\psi \\\\)", "\\\\psi", "\\\\psi", "s"]\n' +
+        '[ "\\\\( \\\\Omega \\\\)", "\\\\Omega", "\\\\Omega", "s"]\n' +
+        '[ "\\\\( \\\\omega \\\\)", "\\\\omega", "\\\\omega", "s"]\n' +
+        '[ "\\\\( \\\\partial \\\\)", "\\\\partial", "\\\\partial", "s"]\n' +
+        '[ "\\\\( \\\\varphi \\\\)", "\\\\varphi", "\\\\varphi", "s"]\n' +
+        '[ "\\\\( \\\\ge \\\\)", "\\\\ge", "\\\\ge", "s"]\n' +
+        '[ "\\\\( < \\\\)", "<", "<", "s"]\n' +
+        '[ "\\\\( > \\\\)", ">", ">", "s"]\n' +
+        '[ "\\\\( \\\\sim \\\\)", "\\\\sim", "\\\\sim", "s"]\n' +
+        '[ "\\\\( \\\\equiv \\\\)", "\\\\equiv", "\\\\equiv", "s"]\n' +
+        '[ "\\\\( \\\\not\\\\equiv \\\\)", "\\\\not\\\\equiv", "\\\\not\\\\equiv", "s"]\n' +
+        '[ "\\\\( \\\\circ \\\\)", "\\\\circ", "\\\\circ", "s"]\n' +
+        '[ "\\\\( \\\\ldots \\\\)", "\\\\ldots", "\\\\ldots", "s"]\n' +
+        '[ "\\\\( \\\\propto \\\\)", "\\\\propto", "\\\\propto", "s"]\n' +
+        '[ "\\\\( \\\\xrightleftharpoons[\\\\square]{\\\\square} \\\\)", "\\\\xrightleftharpoons[⁞]{}", "\\\\xrightleftharpoons[ ]{}", "s"]\n' +
+        '[ "\\\\( ⇅ \\\\)", "⇅", "⇅", "s"]\n' +
+        '[ "\\\\( \\\\angle \\\\)", "\\\\angle", "\\\\angle", "s"]\n' +
+        '[ "\\\\( \\\\uparrow \\\\)", "\\\\uparrow", "\\\\uparrow", "s"]\n' +
+        '[ "\\\\( \\\\nearrow \\\\)", "\\\\nearrow", "\\\\nearrow", "s"]\n' +
+        '[ "\\\\( \\\\searrow \\\\)", "\\\\searrow", "\\\\searrow", "s"]\n' +
+        '[ "\\\\( \\\\downarrow \\\\)", "\\\\downarrow", "\\\\downarrow", "s"]\n' +
+        '[ "\\\\( \\\\leftrightarrow \\\\)", "\\\\leftrightarrow", "\\\\leftrightarrow", "s"]\n' +
+        '[ "\\\\( \\\\perp \\\\)", "\\\\perp", "\\\\perp", "s"]\n' +
+        '[ "\\\\( \\\\exists \\\\)", "\\\\exists", "\\\\exists", "s"]\n' +
+        '[ "\\\\( \\\\forall \\\\)", "\\\\forall", "\\\\forall", "s"]\n' +
+        '[ "\\\\( \\\\mathbb{N} \\\\)", "\\\\mathbb{N}", "\\\\mathbb{N}", "s"]\n' +
+        '[ "\\\\( \\\\mathbb{Q} \\\\)", "\\\\mathbb{Q}", "\\\\mathbb{Q}", "s"]\n' +
+        '[ "\\\\( \\\\cap \\\\)", "\\\\cap", "\\\\cap", "s"]\n' +
+        '[ "\\\\( \\\\cup \\\\)", "\\\\cup", "\\\\cup", "s"]\n' +
+        '[ "\\\\( \\\\setminus \\\\)", "\\\\setminus", "\\\\setminus", "s"]\n' +
+        '[ "\\\\( \\\\subset \\\\)", "\\\\subset", "\\\\subset", "s"]\n' +
+        '[ "\\\\( \\\\not\\\\subset \\\\)", "\\\\not\\\\subset", "\\\\not\\\\subset", "s"]\n' +
+        '[ "\\\\( \\\\notin \\\\)", "\\\\notin", "\\\\notin", "s"]\n' +
+        '[ "\\\\( \\\\varnothing \\\\)", "\\\\varnothing", "\\\\varnothing", "s"]\n' +
+        '[ "\\\\( \\\\wedge \\\\)", "\\\\wedge", "\\\\wedge", "s"]\n' +
+        '[ "\\\\( \\\\vee \\\\)", "\\\\vee", "\\\\vee", "s"]\n' +
+        '[ "\\\\( \\\\neg \\\\)", "\\\\neg", "\\\\neg", "s"]\n' +
+        '[ "\\\\( \\\\nabla \\\\)", "\\\\nabla", "\\\\nabla", "s"]\n' +
+        '[ "\\\\(\\\\sqrt{\\\\square}\\\\)", "\\\\sqrt{⁞}", "\\\\sqrt{ }", "s"]\n' +
+        '[ "\\\\( x^{\\\\square} \\\\)", "x^⁞", "x^ ", "s" ]\n' +
+        '[ "\\\\[ \\\\frac{\\\\square}{\\\\square} \\\\]", "\\\\frac{⁞}{}", "\\\\frac{ }{}", "s" ]\n' +
+        '[ "\\\\[\\\\int_\\\\square^\\\\square\\\\]", "\\\\int_{⁞}^{}", "\\\\int_{ }^{}", "s"]\n' +
+        '[ "\\\\[ \\\\lim_{\\\\square} \\\\]", "\\\\lim_{⁞}", "\\\\lim_{ }", "s"]\n' +
+        '[ "\\\\[ \\\\overrightarrow{\\\\square} \\\\]", "\\\\overrightarrow{⁞}", "\\\\overrightarrow{ }", "s"]\n' +
+        '[ "\\\\[ \\\\overleftarrow{\\\\square} \\\\]", "\\\\overleftarrow{⁞}", "\\\\overleftarrow{ }", "s"]\n' +
+        '[ "\\\\( \\\\sin \\\\)", "\\\\sin","\\\\sin",  "s"]\n' +
+        '[ "\\\\( \\\\cos \\\\)", "\\\\cos","\\\\cos",  "s"]\n' +
+        '[ "\\\\( \\\\tan \\\\)", "\\\\tan","\\\\tan",  "s"]\n' +
+        '[ "\\\\( \\\\left|\\\\square\\\\right| \\\\)", "\\\\left|⁞\\\\right|","\\\\left| \\\\right|",  "s"]\n' +
+        '[ "\\\\( \\\\left[\\\\square\\\\right] \\\\)", "\\\\left[⁞\\\\right]","\\\\left[ \\\\right]",  "s"]\n' +
+        '[ "\\\\( \\\\left]\\\\square\\\\right] \\\\)", "]⁞]","] ]",  "s"]\n' +
+        '[ "\\\\[\\\\begin{cases}\\n\\\\square&\\\\square\\\\\\\\\\n\\\\square&\\\\square\\n\\\\end{cases}\\\\]", "\\\\begin{cases}\\n⁞&\\\\\\\\\\n&\\n\\\\end{cases}", "\\\\begin{cases}\\n &\\\\\\\\\\n&\\n\\\\end{cases}", "s"]\n' +
+        '[ "\\\\[\\\\begin{matrix}\\n\\\\square&\\\\square\\\\\\\\\\n\\\\square&\\\\square\\n\\\\end{matrix}\\\\]", "\\\\begin{matrix}\\n⁞&\\\\\\\\\\n&\\n\\\\end{matrix}", "\\\\begin{matrix}\\n &\\\\\\\\\\n&\\n\\\\end{matrix}", "s"]\n' +
+        '[ "\\\\[ \\\\frac{\\\\square}{\\\\square}^{\\\\text{(}\\\\square} \\\\]", "\\\\frac{a}{b}^{x}", "\\\\frac{a}{b}^{x}", "s"]\n' +
+        '[ "\\\\( \\\\binom{\\\\square}{\\\\square} \\\\)", "\\\\binom{⁞}{}","\\\\binom{ }{}",  "s"]\n' +
+        '[ "\\\\( \\\\sqrt[\\\\square]{\\\\square} \\\\)", "\\\\sqrt[⁞]{}","\\\\sqrt[ ]{}",  "s"]\n' +
+        '[ "\\\\( x_{\\\\square}{} \\\\)", "x_{⁞}","x_{ }",  "s"]\n' +
+        '[ "\\\\[ \\\\sum_{\\\\square}^{\\\\square} \\\\]", "\\\\sum_{⁞}^{}", "\\\\sum_{ }^{}", "s"]\n' +
+        '[ "\\\\[\\\\bigg/_{\\\\!\\\\!\\\\!\\\\!\\\\!{ \\\\square }}^{ \\\\square }\\\\]", "\\\\bigg/_{\\\\!\\\\!\\\\!\\\\!\\\\!{⁞}}^{}", "\\\\bigg/_{\\\\!\\\\!\\\\!\\\\!\\\\!{ }}^{}", "s"]\n' +
+        '[ "\\\\[ \\\\lim_{x\\\\rightarrow\\\\infty} \\\\]", "\\\\lim_{x\\\\rightarrow\\\\infty}", "\\\\lim_{x\\\\rightarrow\\\\infty}", "s"]\n' +
+        '[ "\\\\[ \\\\underrightarrow{\\\\square} \\\\]", "\\\\underrightarrow{⁞}","\\\\underrightarrow{ }", "s"]\n' +
+        '[ "\\\\[ \\\\overline{\\\\square} \\\\]", "\\\\overline{⁞}", "\\\\overline{ }", "s"]\n' +
+        '[ "\\\\( \\\\overline{\\\\text{i}} \\\\)", "\\\\overline{\\\\text{i}}", "\\\\overline{\\\\text{i}}", "s" ]\n' +
+        '[ "\\\\( \\\\overline{\\\\text{j}} \\\\)", "\\\\overline{\\\\text{j}}", "\\\\overline{\\\\text{j}}", "s" ]\n' +
+        '[ "\\\\( \\\\overline{\\\\text{k}} \\\\)", "\\\\overline{\\\\text{k}}", "\\\\overline{\\\\text{k}}", "s" ]\n' +
+        '[ "\\\\( \\\\left(\\\\square\\\\right) \\\\)", "\\\\left(⁞\\\\right)", "\\\\left( \\\\right)", "s" ]\n' +
+        '[ "\\\\( ]x[ \\\\)", "]x[", "]x[", "s" ]\n' +
+        '[ "\\\\( [x[ \\\\)", "[x[", "[x[", "s" ]\n' +
+        '[ "\\\\( \\\\square_{\\\\square}^{\\\\square} \\\\)", "_{⁞}^{}", "_{ }^{}", "s" ]\n' +
+        '[ "\\\\[ \\\\begin{array}{l|l}\\n\\\\square&\\\\square\\\\\\\\\\n\\\\hline\\\\square&\\\\square\\n\\\\end{array} \\\\]", "\\\\begin{array}{l|l}\\n⁞&\\\\\\\\\\n\\\\hline&\\n\\\\end{array}", "\\\\begin{array}{l|l}\\n &\\\\\\\\\\n\\\\hline&\\n\\\\end{array}", "s"]\n' +
+        '[ "\\\\( ^{x\\\\text{)}}\\\\frac{a}{b} \\\\)", "^{x\\\\text{)}}\\\\frac{a}{b}", "^{x\\\\text{)}}\\\\frac{a}{b}", "s" ]\n' +
+        '[ "\\\\( T \\\\)", "\\\\mathrm{⁞}", "\\\\mathrm{ }", "s" ]\n' +
+        '[ "\\\\[x=\\\\frac{-b\\\\pm\\\\sqrt{b^2-4ac}}{2a}\\\\]", "x=\\\\frac{-b\\\\pm\\\\sqrt{b^2-4ac}}{2a}", "x=\\\\frac{-b\\\\pm\\\\sqrt{b^2-4ac}}{2a}", "s"]\n' +
+        '[ "\\\\[f_X\\\\left(x\\\\right)=\\\\frac{1}{\\\\sigma\\\\sqrt{2\\\\pi}}\\\\text{e}^{-\\\\frac{\\\\left(x-\\\\mu\\\\right)^2}{2\\\\sigma^2}}\\\\]", "f_X\\\\left(x\\\\right)=\\\\frac{1}{\\\\sigma\\\\sqrt{2\\\\pi}}\\\\text{e}^{-\\\\frac{\\\\left(x-\\\\mu\\\\right)^2}{2\\\\sigma^2}}", "f_X\\\\left(x\\\\right)=\\\\frac{1}{\\\\sigma\\\\sqrt{2\\\\pi}}\\\\text{e}^{-\\\\frac{\\\\left(x-\\\\mu\\\\right)^2}{2\\\\sigma^2}}", "s"]';
+    b = b.replace("$hellobuttons$", helloButtons);
+    b = b.replace("$typebuttons$", typeButtons);
+    b = b.replace("$charbuttons$", charButtons);
+    b = b.replace("$latexbuttons$", latexbuttons);
+    b = b.trim();
+    b = b.replace("$space$", " ");
+    const btns = b.split("\n");
+    for (let i = 0; i < btns.length; i++) {
+        let s = btns[i];
+        if (s.length < 1) {
+            continue;
+        }
+        if (s.startsWith('"') || s.startsWith("'")) {
+            s = s.replace(new RegExp(s[0], "g"), "");
+            btns[i] = s;
+        }
+    }
+    const templateButtons: ITemplateButton[] = [];
+    for (const s of btns) {
+        if (s === "") {
+            continue;
+        }
+        if (!s.startsWith("[")) {
+            templateButtons.push({
+                text: getButtonTextHtml(s),
+                data: s,
+            });
+            continue;
+        }
+        try {
+            const parsed = JSON.parse(s);
+            const item: ITemplateButton = {
+                text: parsed[0],
+                data: parsed[0],
+            };
+            if (parsed.length > 1 && parsed[1] !== "") {
+                item.data = parsed[1];
+            }
+            if (parsed.length > 2 && parsed[2] !== "") {
+                item.expl = parsed[2];
+            }
+            if (parsed.length > 3) {
+                item.placeholders = [];
+            }
+            item.hasMath = (parsed as string[]).some(
+                (x, i) => i >= 2 && x == "math"
+            );
+            const containsSymbol = parsed.indexOf("s");
+            const containsCommonSymbol = parsed.indexOf("q");
+            if (containsSymbol !== -1 && containsSymbol > 1) {
+                item.isSymbol = "s";
+            } else if (
+                containsCommonSymbol !== -1 &&
+                containsCommonSymbol > 1
+            ) {
+                item.isSymbol = "q";
+            }
+            for (let i = 3; i < parsed.length; i++) {
+                const p = parsed[i];
+                if (!(p instanceof Array)) {
+                    continue;
+                }
+                const param: ITemplateParam = {
+                    default: p[0] ?? "",
+                    text: p[1] ?? "",
+                    pattern: p[2] ?? "",
+                    error: p[3] ?? "",
+                };
+                if (p.length > 0) {
+                    item.placeholders?.push(param);
+                }
+            }
+            templateButtons.push(item);
+        } catch (e) {
+            templateButtons.push({
+                text: "error",
+                data: "",
+                expl: "" + e,
+            });
+        }
+    }
+    for (const btn of mdButtons) {
+        templateButtons.push(btn);
+    }
+    return templateButtons;
+}
+
 @Directive() // needs this or compiler complains
 export class CsController extends CsBase implements ITimComponent {
     vctrl!: ViewCtrl;
@@ -982,6 +1245,8 @@ export class CsController extends CsBase implements ITimComponent {
     keepErrors: boolean = false;
     muokattu: boolean;
     noeditor!: boolean;
+    formulaEditorOpen = false;
+    currentSymbol: FormulaEvent = {text: "", command: "", useWrite: true};
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
     postcode?: string;
@@ -1207,6 +1472,11 @@ export class CsController extends CsBase implements ITimComponent {
         if (this.markup.parsons) {
             this.markup.parsons.shuffle = this.initUserCode;
         }
+        if (this.editor.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(() => {
+                this.toggleFormulaEditor();
+            });
+        }
     }
 
     @ViewChild(FileSelectManagerComponent)
@@ -1294,6 +1564,7 @@ export class CsController extends CsBase implements ITimComponent {
     get userinput() {
         return this.userinput_;
     }
+
     set userinput(str: string) {
         const tmp = this.userinput_;
         this.userinput_ = str;
@@ -1306,6 +1577,7 @@ export class CsController extends CsBase implements ITimComponent {
     get userargs() {
         return this.userargs_;
     }
+
     set userargs(str: string) {
         const tmp = this.userargs_;
         this.userargs_ = str;
@@ -1714,6 +1986,44 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.editorMode;
     }
 
+    get formulaEditor() {
+        return this.markup.formulaEditor;
+    }
+
+    /**
+     * Changes formula editor visibility and puts
+     * focus to main editor if closed and
+     * sets cursor position if given.
+     * @param cursorIndex position in editor.content to
+     * move cursor to
+     */
+    toggleFormulaEditor(cursorIndex: number = -1) {
+        this.formulaEditorOpen = !this.formulaEditorOpen;
+        if (!this.formulaEditorOpen) {
+            setTimeout(() => {
+                if (cursorIndex !== -1) {
+                    this.editor?.moveCursorToContentIndex(cursorIndex);
+                }
+                this.editor?.focus();
+            }, 0);
+        }
+    }
+
+    /**
+     * Moves cursor inside clicked formula in preview in editor
+     * and opens formula editor.
+     * @param event mouse click event
+     */
+    handleSelectFormulaFromPreview(event: MouseEvent, div: HTMLDivElement) {
+        if (!this.formulaEditor || this.formulaEditorOpen || !this.editor) {
+            return;
+        }
+        const success = selectFormulaFromPreview(event, this.editor, div);
+        if (success) {
+            this.toggleFormulaEditor();
+        }
+    }
+
     get count() {
         return this.markup.count;
     }
@@ -1918,97 +2228,9 @@ ${fhtml}
     }
 
     createTemplateButtons() {
-        let b = this.markup.buttons;
-        let mdButtons = this.markup.mdButtons;
-        if (!b && !mdButtons) {
-            return;
-        }
-        if (!b) {
-            b = "";
-        }
-        if (!mdButtons) {
-            mdButtons = [];
-        }
-        const helloButtons =
-            "public \nclass \nHello \n\\n\n{\n}\n" +
-            "static \nvoid \n Main\n(\n)\n" +
-            '        Console.WriteLine(\n"\nworld!\n;\n ';
-        const typeButtons =
-            "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
-        const charButtons =
-            "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
-        b = b.replace("$hellobuttons$", helloButtons);
-        b = b.replace("$typebuttons$", typeButtons);
-        b = b.replace("$charbuttons$", charButtons);
-        b = b.trim();
-        b = b.replace("$space$", " ");
-        const btns = b.split("\n");
-        for (let i = 0; i < btns.length; i++) {
-            let s = btns[i];
-            if (s.length < 1) {
-                continue;
-            }
-            if (s.startsWith('"') || s.startsWith("'")) {
-                s = s.replace(new RegExp(s[0], "g"), "");
-                btns[i] = s;
-            }
-        }
-        for (const s of btns) {
-            if (s === "") {
-                continue;
-            }
-            if (!s.startsWith("[")) {
-                this.templateButtons.push({
-                    text: this.getButtonTextHtml(s),
-                    data: s,
-                });
-                continue;
-            }
-            try {
-                const parsed = JSON.parse(s);
-                const item: ITemplateButton = {
-                    text: parsed[0],
-                    data: parsed[0],
-                };
-                if (parsed.length > 1 && parsed[1] !== "") {
-                    item.data = parsed[1];
-                }
-                if (parsed.length > 2 && parsed[2] !== "") {
-                    item.expl = parsed[2];
-                }
-                if (parsed.length > 3) {
-                    item.placeholders = [];
-                }
-                item.hasMath = (parsed as string[]).some(
-                    (x, i) => i >= 2 && x == "math"
-                );
-                for (let i = 3; i < parsed.length; i++) {
-                    const p = parsed[i];
-                    if (!(p instanceof Array)) {
-                        continue;
-                    }
-                    const param: ITemplateParam = {
-                        default: p[0] ?? "",
-                        text: p[1] ?? "",
-                        pattern: p[2] ?? "",
-                        error: p[3] ?? "",
-                    };
-                    if (p.length > 0) {
-                        item.placeholders?.push(param);
-                    }
-                }
-                this.templateButtons.push(item);
-            } catch (e) {
-                this.templateButtons.push({
-                    text: "error",
-                    data: "",
-                    expl: "" + e,
-                });
-            }
-        }
-        for (const btn of mdButtons) {
-            this.templateButtons.push(btn);
-        }
+        const b = this.markup.buttons;
+        const mdButtons = this.markup.mdButtons;
+        this.templateButtons = createTemplateButtons(b, mdButtons);
         this.templateButtonsCount = this.templateButtons.length;
     }
 
@@ -2402,6 +2624,33 @@ ${fhtml}
         }
         for (const response of resps) {
             this.uploadedFiles.push({path: response.file, type: response.type});
+        }
+
+        // Add reference to image to markdown
+        if (this.formulaEditor) {
+            for (const response of resps) {
+                // ask user to type in caption text for image
+                showInputDialog<string>({
+                    isInput: InputDialogKind.InputAndValidator,
+                    defaultValue: "Image 1",
+                    validator: (s) => {
+                        return new Promise((resolve) => {
+                            resolve({ok: true, result: s});
+                        });
+                    },
+                    text: "Enter image caption",
+                    title: "Caption",
+                    okValue: "",
+                })
+                    .then((caption) => {
+                        // write image tag to editor
+                        const url = response.file;
+                        const markdownImageTag = `![${caption}](${url})`;
+                        this.editor?.insert(markdownImageTag);
+                        this.editor?.focus();
+                    })
+                    .catch((e) => {}); // nothing to catch
+            }
         }
     }
 
@@ -2854,19 +3103,18 @@ ${fhtml}
             }
             ip++;
         }
-        const text = s.replace(/\\n/g, "\n");
-        this.editor?.insert?.(text);
-        this.editor?.focus();
-    }
-
-    getButtonTextHtml(s: string) {
-        let ret = s.trim();
-        ret = ret.replace("\\n", "");
-        ret = ret.replace(CURSOR, "");
-        if (ret.length === 0) {
-            ret = "\u00A0";
+        let text = s.replace(/\\n/g, "\n");
+        // Don't replace in latex as commands like \ne wouldn't work
+        if (this.formulaEditor) {
+            text = s;
         }
-        return ret;
+        // write the text to formulaeditor if its enabled and open
+        if (this.formulaEditor && this.formulaEditorOpen) {
+            this.currentSymbol = {text: text, command: text, useWrite: true};
+        } else {
+            this.editor?.insert?.(text);
+            this.editor?.focus();
+        }
     }
 
     // Returns the visible index for next item and the desired size
@@ -3734,7 +3982,8 @@ ${fhtml}
     selector: "cs-runner",
     template: `
         <!--suppress TypeScriptUnresolvedVariable -->
-        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex" [ngStyle]="csRunDivStyle">
+        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex"
+             [ngStyle]="csRunDivStyle">
             <tim-markup-error class="csMarkupError" *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 class="csHeader" *ngIf="header" [innerHTML]="header | purify"></h4>
             <div class="csAllSelector" *ngIf="isAll">
@@ -3745,7 +3994,8 @@ ${fhtml}
                     </select>
                 </div>
             </div>
-            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify" (keydown)="elementSelectAll($event)" tabindex="0"></p>
+            <p [hidden]="formulaEditor && formulaEditorOpen" *ngIf="stem" class="stem" [innerHTML]="stem | purify"
+               (keydown)="elementSelectAll($event)" tabindex="0"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
@@ -3772,7 +4022,7 @@ ${fhtml}
                     | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
                 </p>
             </div>
-            <div class="csUploadContent" *ngIf="upload">
+            <div class="csUploadContent" *ngIf="upload && !this.formulaEditor">
                 <file-select-manager class="small"
                                      [dragAndDrop]="dragAndDrop"
                                      [uploadUrl]="uploadUrl"
@@ -3781,16 +4031,36 @@ ${fhtml}
                                      (upload)="onUploadResponse($event)"
                                      (uploadDone)="onUploadDone($event)">
                 </file-select-manager>
-                <div class="form-inline small">
+                <div [hidden]="formulaEditor" class="form-inline small">
                     <span *ngFor="let item of uploadedFiles">
                         <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
                     </span>
                 </div>
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
+
             <div class="csRunCode">
+                <div *ngIf="formulaEditor && editor">
+                    <cs-formula-editor
+                            (okClose)="toggleFormulaEditor($event)"
+                            (cancelClose)="toggleFormulaEditor($event)"
+                            (toggle)="toggleFormulaEditor()"
+                            [visible]="formulaEditorOpen"
+                            [editor]="editor"
+                            [currentSymbol]="currentSymbol"
+                            [templateButtons]="templateButtons">
+                        <file-select-manager class="small"
+                                             [dragAndDrop]="dragAndDrop"
+                                             [uploadUrl]="uploadUrl"
+                                             [stem]="uploadstem"
+                                             (file)="onFileLoad($event)"
+                                             (upload)="onUploadResponse($event)"
+                                             (uploadDone)="onUploadDone($event)">
+                        </file-select-manager>
+                    </cs-formula-editor>
+                </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
-                <div class="csEditorAreaDiv">
+                <div class="csEditorAreaDiv" [hidden]="formulaEditor && formulaEditorOpen">
                     <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
                                [base]="byCode"
                                [minRows]="rows"
@@ -3826,15 +4096,16 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
-                <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
-                        (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify" ></button>
+            <div #runSnippets class="csRunSnippets" [hidden]="this.formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
+                <button [class.math]="item.hasMath" class="btn btn-default" 
+                        *ngFor="let item of templateButtons | symbols:'non-symbol'"
+                        (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
                        [maxRows]="maxrows"
                        [disabled]="true">
             </cs-editor>
-            <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']">
+            <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']" [hidden]="formulaEditorOpen">
                 <p class="csRunMenu">
                     <button *ngIf="isRun && buttonText()"
                             [disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved() && isText)"
@@ -3888,7 +4159,8 @@ ${fhtml}
                           class="inputSmall"
                           style="float: right;"
                           title="Run time in sec {{runtime}}">{{oneruntime}}</span>
-                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2" class="inputSmall" style="float: right;"
+                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2" class="inputSmall"
+                          style="float: right;"
                           title="Put 0 to no wrap">
                 <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()"
                         style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
@@ -3923,7 +4195,7 @@ ${fhtml}
                     <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"></label>
                     <tim-close-button (click)="closeError()"></tim-close-button>
                 </p>
-                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                <a class="copyErrorLink" *ngIf="markup.copyErrorLink"
                    (click)="copyString(error, $event)"
                    title="Copy text to clipboard"
                 >{{markup.copyErrorLink}}</a>
@@ -3936,7 +4208,7 @@ ${fhtml}
                 <p class="pull-right" *ngIf="!markup['noclose']">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
-                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                <a class="copyErrorLink" *ngIf="markup.copyErrorLink"
                    (click)="copyString(fetchError, $event)"
                    title="Copy text to clipboard"
                 >{{markup.copyErrorLink}}</a>
@@ -3945,15 +4217,17 @@ ${fhtml}
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <div class="consoleDiv" *ngIf="result" >
-                <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
+            <div class="consoleDiv" *ngIf="result">
+                <a class="copyConsoleLink" *ngIf="markup.copyConsoleLink"
                    (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
                 >{{markup.copyConsoleLink}}</a>
-                <pre id="resultConsole"  class="console" (keydown)="elementSelectAll($event)" tabindex="0">{{result}}</pre>
+                <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)"
+                     tabindex="0">{{result}}</pre>
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
-            <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0">
+            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor && !formulaEditorOpen" (keydown)="elementSelectAll($event)" tabindex="0" 
+                 (click)="handleSelectFormulaFromPreview($event, preview)" #preview>
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
                      caption="Preview"
@@ -3984,8 +4258,10 @@ ${fhtml}
                            [height]="height"
             ></tim-variables> <!-- TODO: why direct markup.jsparam does not work -->
             <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
-            <video class="csVideo" *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls="" autoplay></video>
-            <video class="csAudio" *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
+            <video class="csVideo" *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls=""
+                   autoplay></video>
+            <video class="csAudio" *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true"
+                   width="300"
                    height="40"></video>
             <div *ngIf="docURL" class="docurl">
                 <p class="pull-right">

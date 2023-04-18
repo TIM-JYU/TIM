@@ -7896,6 +7896,102 @@
           <context context-type="linenumber">213</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7290374659252540217" datatype="html">
+        <source>Instructions</source>
+        <target state="translated">Instruktioner</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">3823</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8841302097138919041" datatype="html">
+        <source>Write LaTeX</source>
+        <target state="translated">Skriva LaTeX</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">61</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7515883357904500238" datatype="html">
+        <source>Are you sure?</source>
+        <target state="translated">Är du säker?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">265,264</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5520655308456220172" datatype="html">
+        <source>This will clear the editor.</source>
+        <target state="translated">Detta kommer att rensa redigeraren.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">266,264</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="604592115785316180" datatype="html">
+        <source>Multiline</source>
+        <target state="translated">Flerlinje</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">72</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2134512399270831650" datatype="html">
+        <source>Add line below</source>
+        <target state="translated">Lägg till rad nedan</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5745429171954110212" datatype="html">
+        <source>Remove current line</source>
+        <target state="translated">Ta bort aktuell linje</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
+          <context context-type="linenumber">73</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2210700601124842596" datatype="html">
+        <source>Add line above</source>
+        <target state="translated">Lägg till rad ovan</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
+          <context context-type="linenumber">74,75</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7486361580112552685" datatype="html">
+        <source>Formula </source>
+        <target state="translated">Formel </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
+          <context context-type="linenumber">48,49</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6963601602339779130" datatype="html">
+        <source>Show more symbols</source>
+        <target state="translated">Visa fler symboler</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
+          <context context-type="linenumber">65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5731126650524323607" datatype="html">
+        <source>Outputs formula in multiple lines</source>
+        <target state="translated">Matar ut formel i flera rader</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1957004543475680060" datatype="html">
+        <source>Show less symbols</source>
+        <target state="translated">Visa färre symboler</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
+          <context context-type="linenumber">73</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
