@@ -21,8 +21,7 @@ import type {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import type {ViewCtrl} from "tim/document/viewctrl";
-import type {ChangeType} from "tim/document/viewctrl";
+import type {ChangeType, ViewCtrl} from "tim/document/viewctrl";
 
 /**
  * Plugin with initialization data passed from the server via JSON.
@@ -260,6 +259,7 @@ export abstract class AngularPluginBase<
                 topfeedback: result.result.topfeedback,
                 valid: result.result.valid,
                 refresh: result.result.refresh,
+                refreshPoints: result.result.refreshPoints,
             });
         } else {
             handleAnswerResponse(dt, {

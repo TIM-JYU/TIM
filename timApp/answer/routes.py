@@ -1125,6 +1125,10 @@ def post_answer_impl(
                     )
 
             if (points or save_object is not None or tags) and allow_save:
+                points_changed = (
+                    answerinfo.latest_answer
+                    and answerinfo.latest_answer.points != points
+                )
                 a = save_answer(
                     users,
                     tid,
@@ -1150,6 +1154,11 @@ def post_answer_impl(
                         curr_user=curr_user,
                     )
                     send_answer_backup_if_enabled(a)
+
+                # This allows to refresh points in the UI
+                # Setting true directly simplifies handling tests
+                if not a and points_changed:
+                    result["refreshPoints"] = True
             else:
                 result["savedNew"] = None
             if noupdate:
@@ -1165,6 +1174,9 @@ def post_answer_impl(
             # TODO: Accept teacher's points or task points depending on context (e.g. button)
             # points = answer_browser_data.get("points", points)
             points = points_to_float(points)
+            points_changed = (
+                answerinfo.latest_answer and answerinfo.latest_answer.points != points
+            )
             a = save_answer(
                 users,
                 tid,
@@ -1180,6 +1192,9 @@ def post_answer_impl(
             )
             # TODO: Could call backup here too, but first we'd need to add support for saver in export/import.
             result["savedNew"] = a.id if a else None
+
+            if not a and points_changed:
+                result["refreshPoints"] = True
         else:
             result["savedNew"] = None
             if postprogram:

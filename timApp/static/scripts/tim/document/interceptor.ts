@@ -127,6 +127,7 @@ timApp.config([
                             savedNew: resp.data.savedNew,
                             valid: resp.data.valid,
                             refresh: resp.data.refresh,
+                            refreshPoints: resp.data.refreshPoints,
                         });
                         return response;
                     },

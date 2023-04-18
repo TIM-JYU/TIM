@@ -187,6 +187,8 @@ export class MMCQ extends MCQBase<null | boolean[]> {
                 feedback: r.result.feedback,
                 topfeedback: r.result.topfeedback,
                 valid: r.result.valid,
+                refresh: r.result.refresh,
+                refreshPoints: r.result.refreshPoints,
             });
         } else {
             handleAnswerResponse(ident, {
@@ -264,6 +266,8 @@ export class MCQ extends MCQBase<number | null> {
                 feedback: r.result.feedback,
                 topfeedback: r.result.topfeedback,
                 valid: r.result.valid,
+                refresh: r.result.refresh,
+                refreshPoints: r.result.refreshPoints,
             });
         } else {
             handleAnswerResponse(ident, {

@@ -123,6 +123,7 @@ export interface IAnswerSaveEvent {
     feedback?: string;
     valid?: boolean;
     refresh?: boolean;
+    refreshPoints?: boolean;
 }
 
 type AnswerLoadCallback = (a: IAnswer) => void;
@@ -296,7 +297,7 @@ export class AnswerBrowserComponent
     }
 
     registerNewAnswer(args: IAnswerSaveEvent) {
-        if (args.savedNew || this.saveTeacher) {
+        if (args.savedNew || this.saveTeacher || args.refreshPoints) {
             if (args.savedNew) {
                 this.loadedAnswer.id = args.savedNew;
                 this.loadedAnswer.valid = args.valid;
@@ -306,7 +307,13 @@ export class AnswerBrowserComponent
             if (this.answers.length == 0 && this.viewctrl.teacherMode) {
                 this.getAvailableUsers();
             }
-            this.getAnswersAndUpdate(args.refresh);
+            this.getAnswersAndUpdate(args.refresh).then(() => {
+                if (args.refreshPoints && this.filteredAnswers.length > 0) {
+                    // Refresh selected answer object since points might have changed
+                    this.selectedAnswer = this.filteredAnswers[0];
+                    this.updatePoints();
+                }
+            });
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
         }
