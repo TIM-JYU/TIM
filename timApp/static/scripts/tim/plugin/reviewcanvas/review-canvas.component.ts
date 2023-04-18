@@ -143,15 +143,18 @@ const PluginFields = t.intersection([
                         </div>
                     </div>
                 </div>
-                <file-select-manager class="small"
-                                     [dragAndDrop]="dragAndDrop"
-                                     [uploadUrl]="uploadUrl"
-                                     [stem]="uploadstem"
-                                     (file)="onFileLoad($event)"
-                                     (upload)="onUploadResponse($event)"
-                                     (uploadDone)="onUploadDone($event)"
-                                     [accept]="'image/*,.pdf'">
-                </file-select-manager>
+                <div class="flex">
+                    <file-select-manager class="small"
+                                         [dragAndDrop]="dragAndDrop"
+                                         [uploadUrl]="uploadUrl"
+                                         [stem]="uploadstem"
+                                         (file)="onFileLoad($event)"
+                                         (upload)="onUploadResponse($event)"
+                                         (uploadDone)="onUploadDone($event)"
+                                         [accept]="'image/*,.pdf'">
+                    </file-select-manager>
+                    <input (paste)="onPaste($event)" i18n-placeholder placeholder="Paste image" size="9" style="font-size: 0.7em;"/>
+                </div>
                 <tim-loading *ngIf="isRunning"></tim-loading>
                 <div *ngIf="error" [innerHTML]="error"></div>
                 <pre *ngIf="result">{{result}}</pre>
@@ -209,6 +212,29 @@ export class ReviewCanvasComponent
 
     uploadedFileName(url: string) {
         return url.split("/").slice(6).join("/");
+    }
+
+    onPaste(event: ClipboardEvent) {
+        const items = event.clipboardData?.items;
+        if (!items || !this.fileSelect) {
+            return;
+        }
+        const blobs: File[] = [];
+        for (const i of items) {
+            if (i.type.startsWith("image") || i.type == "application/pdf") {
+                const blob = i.getAsFile();
+                if (blob !== null) {
+                    blobs.push(blob);
+                }
+            }
+        }
+        if (blobs.length != 0) {
+            const fs = this.fileSelect.fileSelectors;
+            const fss = Object.values(fs);
+            if (fss.length > 0) {
+                fss[0].onFilesGot(blobs);
+            }
+        }
     }
 
     getDefaultMarkup() {

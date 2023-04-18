@@ -7896,6 +7896,14 @@
           <context context-type="linenumber">213</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3450687361324906012" datatype="html">
+        <source>Paste image</source>
+        <target state="translated">Klistra in bild</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
+          <context context-type="linenumber">156</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
