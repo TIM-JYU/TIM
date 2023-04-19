@@ -37,6 +37,7 @@ import {
 } from "tim/plugin/attributes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 import type {
     IFile,
     IFileSpecification,
@@ -153,7 +154,7 @@ const PluginFields = t.intersection([
                                          (uploadDone)="onUploadDone($event)"
                                          [accept]="'image/*,.pdf'">
                     </file-select-manager>
-                    <input (paste)="onPaste($event)" i18n-placeholder placeholder="Paste image" size="9" style="font-size: 0.7em;"/>
+                    <input (paste)="onPaste($event)" i18n-placeholder placeholder="Paste image" [tooltip]="tooltipText" size="9" style="font-size: 0.7em;"/>
                 </div>
                 <tim-loading *ngIf="isRunning"></tim-loading>
                 <div *ngIf="error" [innerHTML]="error"></div>
@@ -362,6 +363,10 @@ export class ReviewCanvasComponent
 
     get inputstem() {
         return this.markup.inputstem ?? null;
+    }
+
+    get tooltipText() {
+        return $localize`You can paste your image directly from clipboard here`;
     }
 
     reset(e: MouseEvent) {
@@ -612,6 +617,7 @@ export class ReviewCanvasComponent
         TimUtilityModule,
         CsUtilityModule,
         PurifyModule,
+        TooltipModule.forRoot(),
     ],
 })
 export class ReviewCanvasModule implements DoBootstrap {

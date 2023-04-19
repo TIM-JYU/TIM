@@ -7904,6 +7904,14 @@
           <context context-type="linenumber">156</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4086839275584995445" datatype="html">
+        <source>You can paste your image directly from clipboard here</source>
+        <target state="translated">Du kan klistra in din bild direkt från urklipp här</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
+          <context context-type="linenumber">369</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
