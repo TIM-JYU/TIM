@@ -7,12 +7,12 @@ import type {
     AfterViewInit,
     ApplicationRef,
     DoBootstrap,
-    ElementRef,
     OnDestroy,
     OnInit,
 } from "@angular/core";
 import {
     Component,
+    ElementRef,
     NgModule,
     QueryList,
     ViewChild,
@@ -37,6 +37,7 @@ import {
 } from "tim/plugin/attributes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {TooltipDirective, TooltipModule} from "ngx-bootstrap/tooltip";
 import type {
     IFile,
     IFileSpecification,
@@ -143,15 +144,19 @@ const PluginFields = t.intersection([
                         </div>
                     </div>
                 </div>
-                <file-select-manager class="small"
-                                     [dragAndDrop]="dragAndDrop"
-                                     [uploadUrl]="uploadUrl"
-                                     [stem]="uploadstem"
-                                     (file)="onFileLoad($event)"
-                                     (upload)="onUploadResponse($event)"
-                                     (uploadDone)="onUploadDone($event)"
-                                     [accept]="'image/*,.pdf'">
-                </file-select-manager>
+                <div class="flex">
+                    <file-select-manager class="small"
+                                         [dragAndDrop]="dragAndDrop"
+                                         [uploadUrl]="uploadUrl"
+                                         [stem]="uploadstem"
+                                         (file)="onFileLoad($event)"
+                                         (upload)="onUploadResponse($event)"
+                                         (uploadDone)="onUploadDone($event)"
+                                         [accept]="'image/*,.pdf'">
+                    </file-select-manager>
+                    <ng-template #tolTemplate>{{ tooltipText }}</ng-template>
+                    <input #pasteInput (focusout)="onPasteFocusout()" (paste)="onPaste($event)" i18n-placeholder placeholder="Paste image" #tooltip="bs-tooltip" [tooltip]="tolTemplate" size="9" style="font-size: 0.7em;"/>
+                </div>
                 <tim-loading *ngIf="isRunning"></tim-loading>
                 <div *ngIf="error" [innerHTML]="error"></div>
                 <pre *ngIf="result">{{result}}</pre>
@@ -199,9 +204,12 @@ export class ReviewCanvasComponent
     dragAndDrop: boolean = true;
     uploadstem?: string;
     uploadedFiles: IUploadedFile[] = [];
+    tooltipText = this.defaultTooltipText();
 
     @ViewChildren("img") imgElements!: QueryList<ElementRef<HTMLImageElement>>;
     @ViewChildren("wraps") wraps!: QueryList<ElementRef<HTMLDivElement>>;
+    @ViewChild("pasteInput") pasteInput?: ElementRef<HTMLInputElement>;
+    @ViewChild("tooltip") pasteTooltip?: TooltipDirective;
 
     // uploadedFiles = new Set((o: IUploadedFile) =>
     //     this.uploadedFileName(o.path)
@@ -209,6 +217,41 @@ export class ReviewCanvasComponent
 
     uploadedFileName(url: string) {
         return url.split("/").slice(6).join("/");
+    }
+
+    onPaste(event: ClipboardEvent) {
+        const items = event.clipboardData?.items;
+        if (!items || !this.fileSelect) {
+            return;
+        }
+        const blobs: File[] = [];
+        for (const i of items) {
+            if (i.type.startsWith("image") || i.type == "application/pdf") {
+                const blob = i.getAsFile();
+                if (blob !== null) {
+                    blobs.push(blob);
+                }
+            }
+        }
+        if (blobs.length != 0) {
+            const fs = this.fileSelect.fileSelectors;
+            const fss = Object.values(fs);
+            if (fss.length > 0) {
+                fss[0].onFilesGot(blobs);
+            }
+        } else {
+            this.tooltipText = $localize`No images found in the clipboard`;
+            if (this.pasteTooltip) {
+                this.pasteTooltip.isOpen = true;
+            }
+        }
+    }
+
+    onPasteFocusout() {
+        if (this.pasteInput) {
+            this.pasteInput.nativeElement.value = "";
+        }
+        this.tooltipText = this.defaultTooltipText();
     }
 
     getDefaultMarkup() {
@@ -338,6 +381,10 @@ export class ReviewCanvasComponent
         return this.markup.inputstem ?? null;
     }
 
+    defaultTooltipText() {
+        return $localize`You can paste your image directly from clipboard here`;
+    }
+
     reset(e: MouseEvent) {
         this.error = undefined;
         this.result = undefined;
@@ -358,6 +405,7 @@ export class ReviewCanvasComponent
     }
 
     onUploadDone(success: boolean) {
+        this.tooltipText = this.defaultTooltipText();
         if (!success) {
             return;
         }
@@ -586,6 +634,7 @@ export class ReviewCanvasComponent
         TimUtilityModule,
         CsUtilityModule,
         PurifyModule,
+        TooltipModule.forRoot(),
     ],
 })
 export class ReviewCanvasModule implements DoBootstrap {

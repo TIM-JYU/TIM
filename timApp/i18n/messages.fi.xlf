@@ -8098,6 +8098,30 @@
           <context context-type="linenumber">73,74</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3450687361324906012" datatype="html">
+        <source>Paste image</source>
+        <target state="translated">Liitä kuva</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
+          <context context-type="linenumber">156</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4086839275584995445" datatype="html">
+        <source>You can paste your image directly from clipboard here</source>
+        <target state="translated">Voit liittää kuvasi suoraan leikepöydältä tähän</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
+          <context context-type="linenumber">369</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1327601550227597143" datatype="html">
+        <source>No images found in the clipboard</source>
+        <target state="translated">Leikepöydältä ei löytynyt kuvia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
+          <context context-type="linenumber">245</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
