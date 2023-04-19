@@ -92,6 +92,5 @@ formulaEditor: true
         )
         savepareditorbutton.click()
         sleep(1)
-        self.save_screenshot()
         mord = self.find_element(xpath="//span[@class='mord']")
         self.assertEqual("12345", mord.text)
