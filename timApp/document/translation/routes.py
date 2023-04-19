@@ -233,8 +233,8 @@ def create_translation_route(
         translate_full_document(tr, src_doc, language, translator)
 
     # Copy source document search relevance value to translation
-    if tr.relevance != doc.relevance:
-        set_blockrelevance(tr.id, doc.relevance)
+    if tr.relevance.relevance != doc.relevance.relevance:
+        set_blockrelevance(tr.id, doc.relevance.relevance)
 
     return json_response(tr)
 
