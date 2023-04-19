@@ -308,7 +308,7 @@ export class FileSelectComponent {
         upload(0);
     }
 
-    async onFilesGot(files: FileList | null) {
+    async onFilesGot(files: FileList | File[] | null) {
         const outFiles: IFile[] = [];
         if (files) {
             if (!this.multiple && files.length > 1) {
@@ -511,6 +511,10 @@ export class FileSelectManagerComponent {
         this.idToFile = nidToFile;
         this.fileInfo = nfileInfo;
         this.cdr.detectChanges();
+    }
+
+    get fileSelectors() {
+        return this.fileSelects;
     }
 
     @ViewChildren(FileSelectComponent)
