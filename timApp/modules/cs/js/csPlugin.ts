@@ -1164,14 +1164,11 @@ export function createTemplateButtons(
             item.hasMath = (parsed as string[]).some(
                 (x, i) => i >= 2 && x == "math"
             );
-            const containsSymbol = parsed.indexOf("s");
-            const containsCommonSymbol = parsed.indexOf("q");
-            const containsTimSymbol = parsed.indexOf("t");
-            if (containsSymbol > 2) {
+            if ((parsed as string[]).some((x, i) => i > 2 && x == "s")) {
                 item.isSymbol = "s";
-            } else if (containsCommonSymbol > 2) {
+            } else if ((parsed as string[]).some((x, i) => i > 2 && x == "q")) {
                 item.isSymbol = "q";
-            } else if (containsTimSymbol > 2) {
+            } else if ((parsed as string[]).some((x, i) => i > 2 && x == "t")) {
                 item.isSymbol = "t";
             }
             for (let i = 3; i < parsed.length; i++) {
