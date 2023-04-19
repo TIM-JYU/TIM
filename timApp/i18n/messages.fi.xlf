@@ -8010,6 +8010,14 @@
           <context context-type="linenumber">369</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1327601550227597143" datatype="html">
+        <source>No images found in the clipboard</source>
+        <target state="translated">Leikepöydältä ei löytynyt kuvia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
+          <context context-type="linenumber">245</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
