@@ -130,14 +130,19 @@ buttons: |!!
         ace_input.send_keys("$")
         open_formula_button = self.find_element(xpath="//button[@title='Ctrl+e']")
         open_formula_button.click()
-        tim_button.click()
+        self.assertFalse(tim_button.is_displayed())
         quick_button.click()
         expand_symbol_menu_button = self.find_element(
             xpath="//button[@title='Show more symbols']"
         )
+        get_out_of_the_way_please = self.find_element(
+            xpath="//div[@class='readline hover click']"
+        )
+        get_out_of_the_way_please.click()
         expand_symbol_menu_button.click()
         symbol_button = self.find_element(xpath="//button[@title='\\tan']")
         symbol_button.click()
         save_formula_button = self.find_element(xpath="//button[@title='Ctrl+s']")
         save_formula_button.click()
-        self.save_screenshot()
+        ace_input = self.find_element(xpath="//div[@class='ace_line'][3]")
+        self.assertEqual("$\\sin\\cos$$\\sin\\tan$", ace_input.text)
