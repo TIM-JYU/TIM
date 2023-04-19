@@ -3689,8 +3689,37 @@ ${fhtml}
         }
 
         this.exportingMD = true;
+        await timeout(); // Let loading icon appear
 
-        const canvas = await html2canvas(this.mdHtmlDiv.nativeElement);
+        const el = this.mdHtmlDiv.nativeElement;
+        const canvas = await html2canvas(el, {
+            ignoreElements: (e) => {
+                const $e = $(e);
+
+                // Allow head element
+                if ($e.closest("head").length > 0) {
+                    return false;
+                }
+
+                // Allow elements that contain the .csMDHTML class
+                if ($e.hasClass("csMDHTML")) {
+                    return false;
+                }
+
+                // Allow if element contains a .csMDHTML element
+                if ($e.find(".csMDHTML").length > 0) {
+                    return false;
+                }
+
+                // Allow if element is the mdContent
+                if ($e.closest(".csMDHTML").length > 0) {
+                    return false;
+                }
+
+                // Skip all other elements to speed up DOM copying
+                return true;
+            },
+        });
 
         // Convert to blob
         const blob = await new Promise<Blob | null>((r) =>
@@ -4306,7 +4335,7 @@ ${fhtml}
                             style="border:0">
                     </iframe>
                 </div>
-                <div #mdHtmlDiv *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">
+                <div class="csMDHTML" #mdHtmlDiv *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">
                 </div>
             </div>
             <tim-graph-viz class="csGraphViz" *ngIf="isViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>
