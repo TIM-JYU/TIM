@@ -53,6 +53,7 @@ export type LineAdd = {
                         (keyup.shift.tab)="handleFocus()"
                         (click)="handleFocus()"
                         (focus)="handleFocus()"
+                        (touchstart)="handleTouch()"
                         (keyup)="handleVisualFocus()"
                         (keydown.control.z)="handleUndo()"
                         (keydown.control.y)="handleRedo()">
@@ -274,6 +275,10 @@ export class FormulaFieldComponent implements AfterViewInit {
             latex: this.latexInput,
             id: this.id,
         });
+    }
+
+    handleTouch() {
+        this.mathField.focus();
     }
 
     /**

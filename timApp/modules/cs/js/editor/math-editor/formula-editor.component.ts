@@ -861,6 +861,7 @@ export class FormulaEditorComponent {
                 );
                 // removes cursor symbol
                 activeField.mathField.keystroke("Right Backspace");
+                activeField.mathField.focus();
                 return;
             }
         }
