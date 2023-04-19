@@ -50,6 +50,7 @@ from timApp.document.translation.translator import (
     TranslateProcessor,
 )
 from timApp.document.translation.language import Language
+from timApp.item.routes import set_blockrelevance
 
 
 def is_valid_language_id(lang_id: str) -> bool:
@@ -230,6 +231,10 @@ def create_translation_route(
     # Run automatic translation if requested
     if translator != "Manual":
         translate_full_document(tr, src_doc, language, translator)
+
+    # Copy source document search relevance value to translation
+    if tr.relevance != doc.relevance:
+        set_blockrelevance(tr.id, doc.relevance)
 
     return json_response(tr)
 
