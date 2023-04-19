@@ -3994,7 +3994,7 @@ ${fhtml}
                     </select>
                 </div>
             </div>
-            <p [hidden]="formulaEditor && formulaEditorOpen" *ngIf="stem" class="stem" [innerHTML]="stem | purify"
+            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"
                (keydown)="elementSelectAll($event)" tabindex="0"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
