@@ -1166,13 +1166,13 @@ export function createTemplateButtons(
             );
             const containsSymbol = parsed.indexOf("s");
             const containsCommonSymbol = parsed.indexOf("q");
-            if (containsSymbol !== -1 && containsSymbol > 1) {
+            const containsTimSymbol = parsed.indexOf("t");
+            if (containsSymbol > 2) {
                 item.isSymbol = "s";
-            } else if (
-                containsCommonSymbol !== -1 &&
-                containsCommonSymbol > 1
-            ) {
+            } else if (containsCommonSymbol > 2) {
                 item.isSymbol = "q";
+            } else if (containsTimSymbol > 2) {
+                item.isSymbol = "t";
             }
             for (let i = 3; i < parsed.length; i++) {
                 const p = parsed[i];

@@ -14,7 +14,6 @@ import {
     QueryList,
     ViewChild,
     ViewChildren,
-    ChangeDetectorRef,
     ContentChild,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
@@ -147,7 +146,7 @@ export class FormulaEditorComponent {
 
     @Input() editor!: IEditor;
 
-    constructor(private cd: ChangeDetectorRef) {}
+    constructor() {}
 
     @Input()
     get visible(): boolean {

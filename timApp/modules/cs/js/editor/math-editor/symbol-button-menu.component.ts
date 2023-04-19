@@ -52,21 +52,25 @@ export class SymbolsPipe implements PipeTransform {
     /**
      * @param buttons array of buttons to filter
      * @param type symbol, commonSymbol or non-symbol
-     * non-symbol returns ones that don't have type or math as a type
+     * Non-symbol returns ones that don't have type or math as a type,
+     * timeditor returns ones that go to formulaeditor but are hidden when editor is open.
      */
     transform(
         buttons: ITemplateButton[],
-        type: "commonSymbol" | "symbol" | "non-symbol"
+        type: "commonSymbol" | "symbol" | "non-symbol" | "timSymbol"
     ) {
-        if (type === "non-symbol") {
-            return buttons.filter(
-                (button) => !button.isSymbol || button.isSymbol === "math"
-            );
+        switch (type) {
+            case "non-symbol":
+                return buttons.filter(
+                    (button) => !button.isSymbol || button.isSymbol === "math"
+                );
+            case "commonSymbol":
+                return buttons.filter((button) => button.isSymbol === "q");
+            case "timSymbol":
+                return buttons.filter((button) => button.isSymbol === "t");
+            default:
+                return buttons.filter((button) => button.isSymbol === "s");
         }
-        if (type === "commonSymbol") {
-            return buttons.filter((button) => button.isSymbol === "q");
-        }
-        return buttons.filter((button) => button.isSymbol === "s");
     }
 }
 
@@ -87,6 +91,12 @@ export class SymbolsPipe implements PipeTransform {
                     </div>
                     
                     <div class="common-symbol-buttons math display" [class.common-symbol-buttons-small]="!formulaEditorOpen">
+                        <button 
+                                [hidden]="formulaEditorOpen"
+                                class="symbol-button" 
+                                *ngFor="let item of templateButtons | symbols:'timSymbol'"
+                                title="{{item.expl}}" (mouseup)="addFormula(item.data, item.data, true)" 
+                         >{{item.text}}</button>
                         <button 
                                 class="symbol-button" 
                                 *ngFor="let item of templateButtons | symbols:'commonSymbol'"
