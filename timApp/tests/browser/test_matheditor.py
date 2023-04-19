@@ -1,5 +1,6 @@
 from selenium.webdriver.common.keys import Keys
 from timApp.tests.browser.browsertest import BrowserTest
+from time import sleep
 
 
 class MathEditorTest(BrowserTest):
@@ -90,5 +91,6 @@ formulaEditor: true
             xpath="//button[@title='Save (Ctrl-S)']"
         )
         savepareditorbutton.click()
+        sleep(1)
         mord = self.find_element(xpath="//span[@class='mord']")
         self.assertEqual("12345", mord.text)
