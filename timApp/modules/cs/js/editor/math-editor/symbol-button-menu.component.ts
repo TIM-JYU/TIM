@@ -65,11 +65,153 @@ export class SymbolsPipe implements PipeTransform {
                     (button) => !button.isSymbol || button.isSymbol === "math"
                 );
             case "commonSymbol":
-                return buttons.filter((button) => button.isSymbol === "q");
+                const commonSymbolButtons = buttons.filter(
+                    (button) => button.isSymbol === "q"
+                );
+                if (commonSymbolButtons.length == 0) {
+                    commonSymbolButtons.push(
+                        {
+                            text: "\\[ \\pi \\]",
+                            data: "\\pi",
+                            expl: "\\pi",
+                            isSymbol: "q",
+                        },
+                        {
+                            text: "\\[ \\sin \\]",
+                            data: "\\sin",
+                            expl: "\\sin",
+                            isSymbol: "q",
+                        },
+                        {
+                            text: "\\[ \\cos \\]",
+                            data: "\\cos",
+                            expl: "\\cos",
+                            isSymbol: "q",
+                        },
+                        {
+                            text: "\\[ \\tan \\]",
+                            data: "\\tan",
+                            expl: "\\tan",
+                            isSymbol: "q",
+                        }
+                    );
+                }
+                return commonSymbolButtons;
+            case "symbol":
+                const symbolButtons = buttons.filter(
+                    (button) => button.isSymbol === "s"
+                );
+                if (symbolButtons.length == 0) {
+                    symbolButtons.push(
+                        {
+                            text: "\\[ \\overline{\\text{i}} \\]",
+                            data: "\\overline{\\text{i}}",
+                            expl: "\\overline{\\text{i}}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\overline{\\text{j}} \\]",
+                            data: "\\overline{\\text{j}}",
+                            expl: "\\overline{\\text{j}}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\overline{\\text{k}} \\]",
+                            data: "\\overline{\\text{k}}",
+                            expl: "\\overline{\\text{k}}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\frac{\\square}{\\square} \\]",
+                            data: "\\frac{⁞}{}",
+                            expl: "\\frac{}{}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ f(\\square) \\]",
+                            data: "f(⁞)",
+                            expl: "f()",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\sqrt{\\square} \\]",
+                            data: "\\sqrt{⁞}",
+                            expl: "\\sqrt{}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\square^n \\]",
+                            data: "⁞^n",
+                            expl: "^n",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\lim_{\\square} \\]",
+                            data: "\\lim_{⁞}",
+                            expl: "\\lim_{}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\sum_{\\square}^{\\square} \\]",
+                            data: "\\sum_{⁞}^{}",
+                            expl: "\\sum_{}^{}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\int_\\square^\\square \\]",
+                            data: "\\int_{⁞}^{}",
+                            expl: "\\int_{}^{}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\bigg/_{\\!\\!\\!\\!\\!{ \\square }}^{ \\square } \\]",
+                            data: "\\bigg/_{\\!\\!\\!\\!\\!{}}^{}",
+                            expl: "\\bigg/_{\\!\\!\\!\\!\\!{}}^{}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\overrightarrow{\\square} \\]",
+                            data: "\\overrightarrow{⁞}",
+                            expl: "\\overrightarrow{ }",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\overleftarrow{\\square} \\]",
+                            data: "\\overleftarrow{⁞}",
+                            expl: "\\overleftarrow{ }",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\binom{\\square}{\\square} \\]",
+                            data: "\\binom{⁞}{}",
+                            expl: "\\binom{}{}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\begin{cases}\\square&\\square\\\\\\square&\\square\\end{cases} \\]",
+                            data: "\\begin{cases}⁞&\\\\&\\end{cases}",
+                            expl: "\\begin{cases} &\\\\&\\end{cases}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\begin{matrix}\\square&\\square\\\\\\square&\\square\\end{matrix} \\]",
+                            data: "\\begin{matrix}⁞&\\\\&\\end{matrix}",
+                            expl: "\\begin{matrix} &\\\\&\\end{matrix}",
+                            isSymbol: "s",
+                        },
+                        {
+                            text: "\\[ \\begin{array}{l|l}\\square&\\square\\\\\\hline\\square&\\square\\end{array} \\]",
+                            data: "\\begin{array}{l|l}⁞&\\\\\\hline&\\end{array}",
+                            expl: "\\begin{array}{l|l}&\\\\\\hline&\\end{array}",
+                            isSymbol: "s",
+                        }
+                    );
+                }
+                return symbolButtons;
             case "timSymbol":
                 return buttons.filter((button) => button.isSymbol === "t");
             default:
-                return buttons.filter((button) => button.isSymbol === "s");
+                throw new Error("No button type defined for pipe");
         }
     }
 }
