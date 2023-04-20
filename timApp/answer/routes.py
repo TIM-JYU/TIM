@@ -1357,8 +1357,14 @@ def preprocess_jsrunner_answer(
     )
     if runnermarkup.peerReview:
         if not curr_user.has_teacher_access(d):
-            raise AccessDenied("Teacher access required to browse all peer reviews")
-        answerdata["peerreviews"] = get_reviews_for_document(d)
+            # TODO: Query reviews targeting current user, needs to implement anonymization if anonymize_reviewers
+            # TODO: Query peer reviews from another document
+            prs = get_reviews_where_user_is_reviewer(d, curr_user)
+            for pr in prs:
+                pr.reviewable.hide_name = True
+            answerdata["peerreviews"] = prs
+        else:
+            answerdata["peerreviews"] = get_reviews_for_document(d)
         answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d)
     else:
         answerdata["peerreviews"] = None
