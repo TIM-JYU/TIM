@@ -1,7 +1,7 @@
 latexButtons
 List of latex buttons for formula editor.
-[ "$", "$⁞$", "$ $" ]
-[ "$$", "$$⁞$$", "$$ $$" ]
+[ "$", "$⁞$", "$ $", "t" ]
+[ "$$", "$$⁞$$", "$$ $$", "t"]
 [ "\\( ° \\)", "°", "°", "q"]
 [ "\\( \\cdot \\)", "\\cdot", "\\cdot", "q"]
 [ "\\( \\times \\)", "\\times", "\\times", "q"]
