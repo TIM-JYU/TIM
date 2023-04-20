@@ -20,6 +20,7 @@ import {
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {ITemplateButton} from "../../csPlugin";
 import {FileSelectManagerComponent} from "../../util/file-select";
+import {DEFAULT_SYMBOL_BUTTONS} from "./default-symbol-buttons";
 
 /**
  * Text is command in text format \frac{}{}.
@@ -45,174 +46,28 @@ enum ButtonMenuState {
 }
 
 /**
- * Filters symbols by type
+ * Filters buttons by type.
  */
 @Pipe({name: "symbols"})
 export class SymbolsPipe implements PipeTransform {
     /**
+     * Filters buttons by type.
      * @param buttons array of buttons to filter
-     * @param type symbol, commonSymbol or non-symbol
-     * Non-symbol returns ones that don't have type or math as a type,
-     * timeditor returns ones that go to formulaeditor but are hidden when editor is open.
+     * @param type ItemplateButton.type defines which buttos are returned
+     *             if undefined or math, math and ones with no type are returned
      */
-    transform(
-        buttons: ITemplateButton[],
-        type: "commonSymbol" | "symbol" | "non-symbol" | "timSymbol"
-    ) {
-        switch (type) {
-            case "non-symbol":
-                return buttons.filter(
-                    (button) => !button.isSymbol || button.isSymbol === "math"
-                );
-            case "commonSymbol":
-                const commonSymbolButtons = buttons.filter(
-                    (button) => button.isSymbol === "q"
-                );
-                if (commonSymbolButtons.length == 0) {
-                    commonSymbolButtons.push(
-                        {
-                            text: "\\[ \\pi \\]",
-                            data: "\\pi",
-                            expl: "\\pi",
-                            isSymbol: "q",
-                        },
-                        {
-                            text: "\\[ \\sin \\]",
-                            data: "\\sin",
-                            expl: "\\sin",
-                            isSymbol: "q",
-                        },
-                        {
-                            text: "\\[ \\cos \\]",
-                            data: "\\cos",
-                            expl: "\\cos",
-                            isSymbol: "q",
-                        },
-                        {
-                            text: "\\[ \\tan \\]",
-                            data: "\\tan",
-                            expl: "\\tan",
-                            isSymbol: "q",
-                        }
-                    );
-                }
-                return commonSymbolButtons;
-            case "symbol":
-                const symbolButtons = buttons.filter(
-                    (button) => button.isSymbol === "s"
-                );
-                if (symbolButtons.length == 0) {
-                    symbolButtons.push(
-                        {
-                            text: "\\[ \\overline{\\text{i}} \\]",
-                            data: "\\overline{\\text{i}}",
-                            expl: "\\overline{\\text{i}}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\overline{\\text{j}} \\]",
-                            data: "\\overline{\\text{j}}",
-                            expl: "\\overline{\\text{j}}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\overline{\\text{k}} \\]",
-                            data: "\\overline{\\text{k}}",
-                            expl: "\\overline{\\text{k}}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\frac{\\square}{\\square} \\]",
-                            data: "\\frac{⁞}{}",
-                            expl: "\\frac{}{}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ f(\\square) \\]",
-                            data: "f(⁞)",
-                            expl: "f()",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\sqrt{\\square} \\]",
-                            data: "\\sqrt{⁞}",
-                            expl: "\\sqrt{}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\square^n \\]",
-                            data: "⁞^n",
-                            expl: "^n",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\lim_{\\square} \\]",
-                            data: "\\lim_{⁞}",
-                            expl: "\\lim_{}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\sum_{\\square}^{\\square} \\]",
-                            data: "\\sum_{⁞}^{}",
-                            expl: "\\sum_{}^{}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\int_\\square^\\square \\]",
-                            data: "\\int_{⁞}^{}",
-                            expl: "\\int_{}^{}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\bigg/_{\\!\\!\\!\\!\\!{ \\square }}^{ \\square } \\]",
-                            data: "\\bigg/_{\\!\\!\\!\\!\\!{}}^{}",
-                            expl: "\\bigg/_{\\!\\!\\!\\!\\!{}}^{}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\overrightarrow{\\square} \\]",
-                            data: "\\overrightarrow{⁞}",
-                            expl: "\\overrightarrow{ }",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\overleftarrow{\\square} \\]",
-                            data: "\\overleftarrow{⁞}",
-                            expl: "\\overleftarrow{ }",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\binom{\\square}{\\square} \\]",
-                            data: "\\binom{⁞}{}",
-                            expl: "\\binom{}{}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\begin{cases}\\square&\\square\\\\\\square&\\square\\end{cases} \\]",
-                            data: "\\begin{cases}⁞&\\\\&\\end{cases}",
-                            expl: "\\begin{cases} &\\\\&\\end{cases}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\begin{matrix}\\square&\\square\\\\\\square&\\square\\end{matrix} \\]",
-                            data: "\\begin{matrix}⁞&\\\\&\\end{matrix}",
-                            expl: "\\begin{matrix} &\\\\&\\end{matrix}",
-                            isSymbol: "s",
-                        },
-                        {
-                            text: "\\[ \\begin{array}{l|l}\\square&\\square\\\\\\hline\\square&\\square\\end{array} \\]",
-                            data: "\\begin{array}{l|l}⁞&\\\\\\hline&\\end{array}",
-                            expl: "\\begin{array}{l|l}&\\\\\\hline&\\end{array}",
-                            isSymbol: "s",
-                        }
-                    );
-                }
-                return symbolButtons;
-            case "timSymbol":
-                return buttons.filter((button) => button.isSymbol === "t");
-            default:
-                throw new Error("No button type defined for pipe");
+    transform(buttons: ITemplateButton[], type?: "q" | "s" | "t") {
+        if (!type) {
+            return buttons.filter(
+                (button) => !button.type || button.type === "math"
+            );
         }
+        if (buttons.length === 0) {
+            return DEFAULT_SYMBOL_BUTTONS.filter(
+                (button) => button.type === type
+            );
+        }
+        return buttons.filter((button) => button.type === type);
     }
 }
 
@@ -236,12 +91,12 @@ export class SymbolsPipe implements PipeTransform {
                         <button 
                                 [hidden]="formulaEditorOpen"
                                 class="symbol-button" 
-                                *ngFor="let item of templateButtons | symbols:'timSymbol'"
+                                *ngFor="let item of templateButtons | symbols:'t'"
                                 title="{{item.expl}}" (mouseup)="addFormula(item.data, item.data, true)" 
                          >{{item.text}}</button>
                         <button 
                                 class="symbol-button" 
-                                *ngFor="let item of templateButtons | symbols:'commonSymbol'"
+                                *ngFor="let item of templateButtons | symbols:'q'"
                                 title="{{item.expl}}" (mouseup)="addFormula(item.data, item.data, true)" 
                          >{{item.text}}</button>
                     </div>
@@ -271,7 +126,7 @@ export class SymbolsPipe implements PipeTransform {
                 <div class="buttons-container math display" [hidden]="!isOpen()">
                     <button class="symbol-button" 
                             title="{{item.expl}}" 
-                            *ngFor="let item of templateButtons | symbols:'symbol'" 
+                            *ngFor="let item of templateButtons | symbols:'s'" 
                             (mouseup)="addFormula(item.data, item.data, true)"
                      >{{item.text}}</button>
                 </div>
