@@ -70,7 +70,7 @@ export class RelevanceEditComponent {
     isInherited: boolean = false;
     errorMessage: string | undefined;
     suggestions = relevanceSuggestions;
-    updateTranslations: boolean = false;
+    updateTranslations: boolean = true;
 
     constructor(private http: HttpClient) {}
 
