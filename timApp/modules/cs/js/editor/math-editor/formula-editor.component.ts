@@ -53,7 +53,7 @@ type NumPair = [number, number];
 @Component({
     selector: "cs-formula-editor",
     template: `
-        <div>
+        <div #symbolButtonMenuDiv>
             <symbol-button-menu
                     (setFormula)="addFormula($event)"
                     (toggle)="toggleEditor()"
@@ -131,6 +131,9 @@ export class FormulaEditorComponent {
     @ViewChild("formulaEditorDialog")
     formulaEditorDialog!: ElementRef<HTMLDivElement>;
 
+    @ViewChild("symbolButtonMenuDiv")
+    symbolButtonMenuDiv!: ElementRef<HTMLDivElement>;
+
     @ViewChildren(FormulaFieldComponent)
     fieldComponents!: QueryList<FormulaFieldComponent>;
 
@@ -165,6 +168,8 @@ export class FormulaEditorComponent {
                 this.fields = [{latex: ""}];
                 this.activeFieldsIndex = 0;
                 this.isMultilineFormula = this.getInitialMultilineSetting();
+            } else {
+                this.symbolButtonMenuDiv.nativeElement.scrollIntoView();
             }
         }
     }
