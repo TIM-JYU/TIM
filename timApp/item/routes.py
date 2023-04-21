@@ -1329,6 +1329,19 @@ def set_blockrelevance(item_id: int, value: int):
     :return: Ok response.
     """
 
+    set_relevance(item_id, value)
+    return ok_response()
+
+
+def set_relevance(item_id: int, value: int) -> None:
+    """
+    Add block relevance or edit if it already exists for the block.
+    :param value: The relevance value.
+    :param item_id: Item id.
+    :return: None. Raises Exception on errors.
+    """
+
+    # TODO For some reason, Flask does not like us calling the blueprinted method directly, hence this extracted method.
     i = Item.find_by_id(item_id)
     if not i:
         raise NotExist("Item not found")
@@ -1355,7 +1368,6 @@ def set_blockrelevance(item_id: int, value: int):
         raise RouteException(
             f"Setting block relevance failed: {get_error_message(e)}: {str(e)}"
         )
-    return ok_response()
 
 
 @view_page.get("/items/relevance/reset/<int:item_id>")
