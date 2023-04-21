@@ -963,7 +963,7 @@ function getButtonTextHtml(s: string) {
 
 /**
  * Creates a list of templatebuttons based on
- * the string b with lines interpretted as buttons
+ * the string b with lines interpreted as buttons
  * as specified in
  * https://tim.jyu.fi/view/tim/ohjeita/csPlugin#buttons
  * and mdButtons containing buttons to add
