@@ -71,11 +71,8 @@ export class RelevanceEditComponent {
     errorMessage: string | undefined;
     suggestions = relevanceSuggestions;
     updateTranslations: boolean = false;
-    http: HttpClient;
 
-    constructor(http: HttpClient) {
-        this.http = http;
-    }
+    constructor(private http: HttpClient) {}
 
     ngOnInit() {
         void this.getRelevance();
