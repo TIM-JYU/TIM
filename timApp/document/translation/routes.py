@@ -38,8 +38,6 @@ from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
 from timApp.document.translation.translation import Translation
 from timApp.item.block import copy_default_rights, BlockType
-from timApp.item.blockrelevance import BlockRelevance
-from timApp.item.item import Item
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, NotExist, RouteException
@@ -52,8 +50,7 @@ from timApp.document.translation.translator import (
     TranslateProcessor,
 )
 from timApp.document.translation.language import Language
-from timApp.item.routes import set_blockrelevance, get_document_relevance, set_relevance
-from timApp.util.utils import get_error_message
+from timApp.item.routes import get_document_relevance, set_relevance
 
 
 def is_valid_language_id(lang_id: str) -> bool:
