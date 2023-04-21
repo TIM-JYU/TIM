@@ -14,6 +14,7 @@ import {
     SymbolButtonMenuComponent,
     SymbolsPipe,
 } from "./math-editor/symbol-button-menu.component";
+import {FormulaEditorLoaderComponent} from "./math-editor/formula-editor-loader.component";
 
 @NgModule({
     declarations: [
@@ -25,6 +26,7 @@ import {
         JSParsonsEditorComponent,
         FormulaFieldComponent,
         FormulaEditorComponent,
+        FormulaEditorLoaderComponent,
         SymbolButtonMenuComponent,
         SymbolsPipe,
     ],
