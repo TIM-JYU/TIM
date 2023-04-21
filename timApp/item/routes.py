@@ -1351,15 +1351,15 @@ def set_relevance(item_id: int, value: int, update_translations: bool = True) ->
 
     relevance_value = value
     check_and_clear_relevance(i, "Changing")
-    block_relevance = BlockRelevance(relevance=relevance_value)
+
     try:
-        i.block.relevance = block_relevance
+        i.block.relevance = BlockRelevance(relevance=relevance_value)
         if update_translations:
             doc = get_doc_or_abort(item_id)
             for tr in doc.translations:
                 tr_item = Item.find_by_id(tr.id)
                 check_and_clear_relevance(tr_item, "Changing")
-                tr_item.block.relevance = block_relevance
+                tr_item.block.relevance = BlockRelevance(relevance=relevance_value)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
