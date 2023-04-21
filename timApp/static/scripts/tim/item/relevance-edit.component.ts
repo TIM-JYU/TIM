@@ -6,11 +6,9 @@
  * the relevance threshold value can be changed by user.
  */
 
-// TODO Refactor to use Angular HttpClient instead of AngularJS $http
-
 import {Component, Input} from "@angular/core";
-import {to} from "tim/util/utils";
-import {$http} from "tim/util/ngimport";
+import {toPromise} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
 import type {IRelevance, IEditableTranslation} from "tim/item/IItem";
 import {getItem, IItem} from "tim/item/IItem";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -73,6 +71,11 @@ export class RelevanceEditComponent {
     errorMessage: string | undefined;
     suggestions = relevanceSuggestions;
     updateTranslations: boolean = false;
+    http: HttpClient;
+
+    constructor(http: HttpClient) {
+        this.http = http;
+    }
 
     ngOnInit() {
         void this.getRelevance();
@@ -83,18 +86,18 @@ export class RelevanceEditComponent {
      */
     private async getRelevance() {
         this.errorMessage = undefined;
-        const r = await to(
-            $http.get<IRelevanceResponse>(
-                `/items/relevance/get/${this.item.id}`
+        const r = await toPromise(
+            this.http.get<IRelevanceResponse>(
+                `/items/relevance/get/` + this.item.id
             )
         );
         if (r.ok) {
             // console.log(r.result.data);
-            this.isDefault = r.result.data.default;
-            this.isInherited = r.result.data.inherited;
-            this.relevance = r.result.data.relevance.relevance;
+            this.isDefault = r.result.default;
+            this.isInherited = r.result.inherited;
+            this.relevance = r.result.relevance.relevance;
         } else {
-            this.errorMessage = r.result.data.error;
+            this.errorMessage = r.result.error.error;
         }
     }
 
@@ -105,8 +108,8 @@ export class RelevanceEditComponent {
      */
     private async setRelevance(itemID: number, newValue: number) {
         this.errorMessage = undefined;
-        const r = await to(
-            $http.post(`/items/relevance/set/${itemID}`, {
+        const r = await toPromise(
+            this.http.post(`/items/relevance/set/` + itemID, {
                 value: newValue,
             })
         );
@@ -114,7 +117,7 @@ export class RelevanceEditComponent {
             this.isDefault = false;
             this.isInherited = false;
         } else {
-            this.errorMessage = r.result.data.error;
+            this.errorMessage = r.result.error.error;
         }
     }
 
@@ -124,16 +127,14 @@ export class RelevanceEditComponent {
      */
     private async resetRelevance(itemID: number) {
         this.errorMessage = undefined;
-        const r = await to(
-            $http.get<IRelevance>(`/items/relevance/reset/${itemID}`)
+        const r = await toPromise(
+            this.http.get<IRelevance>(`/items/relevance/reset/` + itemID)
         );
         if (!r.ok) {
-            this.errorMessage = r.result.data.error;
+            this.errorMessage = r.result.error.error;
         }
         void this.getRelevance();
 
-        // TODO Should resetting a document's relevance value also reset the relevance values
-        //      for translations based on that document? For now, have a checkbox option in the UI.
         if (this.updateTranslations && this.relevance) {
             await this.updateTranslationRelevances(this.relevance);
         }
@@ -161,7 +162,9 @@ export class RelevanceEditComponent {
      * @private
      */
     private async updateTranslationRelevances(sourceRelevance: number) {
-        const translations = await this.getTranslations(this.item.id);
+        const translations: IEditableTranslation[] = await this.getTranslations(
+            this.item.id
+        );
         translations.map((tr) => this.setRelevance(tr.id, sourceRelevance));
     }
 
@@ -171,14 +174,14 @@ export class RelevanceEditComponent {
             return [];
         }
 
-        const r = await to(
-            $http.get<IEditableTranslation[]>("/translations/" + itemID, {})
+        const r = await toPromise(
+            this.http.get<IEditableTranslation[]>("/translations/" + itemID, {})
         );
         if (r.ok) {
-            return r.result.data;
+            return r.result;
         } else {
             await showMessageDialog(
-                `Error loading translations: ${r.result.data.error}`
+                `Error loading translations: ` + r.result.error.error
             );
         }
         return [];
