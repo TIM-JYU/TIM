@@ -6,11 +6,14 @@
  * the relevance threshold value can be changed by user.
  */
 
+// TODO Refactor to use Angular HttpClient instead of AngularJS $http
+
 import {Component, Input} from "@angular/core";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
-import type {IRelevance} from "tim/item/IItem";
-import {IItem} from "tim/item/IItem";
+import type {IRelevance, IEditableTranslation} from "tim/item/IItem";
+import {getItem, IItem} from "tim/item/IItem";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 export const relevanceSuggestions = [
     {value: -100, name: "-100 = Buried"},
@@ -39,6 +42,10 @@ export interface IRelevanceResponse {
                    [typeaheadMinLength]="0"
                    [typeahead]="suggestions">
         </div>
+        <div class="checkbox">
+            <input type="checkbox" [(ngModel)]="updateTranslations" id="cbUpdateTranslationRelevance" style="margin-left: 0">
+            <label for="cbUpdateTranslationRelevance" i18n>Update translations' relevance values</label>
+        </div>
         <div *ngIf="isDefault" class="alert alert-info">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
             Default relevance value. This may be affected by changes in parent directories.
@@ -53,7 +60,7 @@ export interface IRelevanceResponse {
         <div>
             <button class="timButton" (click)="saveClicked()" title="Save new relevance value">Save</button>
             <button class="timButton" (click)="resetClicked()" [disabled]="isDefault"
-                    title="Return default relevance value">Reset
+                    title="Return default relevance value" style="margin-left: 0.3em">Reset
             </button>
         </div>
     `,
@@ -65,6 +72,7 @@ export class RelevanceEditComponent {
     isInherited: boolean = false;
     errorMessage: string | undefined;
     suggestions = relevanceSuggestions;
+    updateTranslations: boolean = false;
 
     ngOnInit() {
         void this.getRelevance();
@@ -92,12 +100,13 @@ export class RelevanceEditComponent {
 
     /**
      * Set new relevance value for the item.
+     * @param itemID id number for the document/item
      * @param newValue Input value.
      */
-    private async setRelevance(newValue: number) {
+    private async setRelevance(itemID: number, newValue: number) {
         this.errorMessage = undefined;
         const r = await to(
-            $http.post(`/items/relevance/set/${this.item.id}`, {
+            $http.post(`/items/relevance/set/${itemID}`, {
                 value: newValue,
             })
         );
@@ -111,28 +120,67 @@ export class RelevanceEditComponent {
 
     /**
      * Return default (or inherited) relevance value.
+     * @param itemID id number for the document/item
      */
-    private async resetRelevance() {
+    private async resetRelevance(itemID: number) {
         this.errorMessage = undefined;
         const r = await to(
-            $http.get<IRelevance>(`/items/relevance/reset/${this.item.id}`)
+            $http.get<IRelevance>(`/items/relevance/reset/${itemID}`)
         );
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
         }
         void this.getRelevance();
+
+        // TODO Should resetting a document's relevance value also reset the relevance values
+        //      for translations based on that document? For now, have a checkbox option in the UI.
+        if (this.updateTranslations && this.relevance) {
+            await this.updateTranslationRelevances(this.relevance);
+        }
     }
 
     async resetClicked() {
-        await this.resetRelevance();
+        await this.resetRelevance(this.item.id);
     }
 
     async saveClicked() {
         if (this.relevance != null) {
-            await this.setRelevance(this.relevance);
+            await this.setRelevance(this.item.id, this.relevance);
+            if (this.updateTranslations) {
+                await this.updateTranslationRelevances(this.relevance);
+            }
         } else {
             this.errorMessage =
                 "Incorrect relevance value: input a whole number!";
         }
+    }
+
+    /**
+     * Update the relevance values for translations based on the current document
+     * @param sourceRelevance relevance value for the source document
+     * @private
+     */
+    private async updateTranslationRelevances(sourceRelevance: number) {
+        const translations = await this.getTranslations(this.item.id);
+        translations.map((tr) => this.setRelevance(tr.id, sourceRelevance));
+    }
+
+    private async getTranslations(itemID: number) {
+        const item = await getItem(itemID);
+        if (item?.isFolder) {
+            return [];
+        }
+
+        const r = await to(
+            $http.get<IEditableTranslation[]>("/translations/" + itemID, {})
+        );
+        if (r.ok) {
+            return r.result.data;
+        } else {
+            await showMessageDialog(
+                `Error loading translations: ${r.result.data.error}`
+            );
+        }
+        return [];
     }
 }
