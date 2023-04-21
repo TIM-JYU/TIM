@@ -1039,25 +1039,49 @@ export function createTemplateButtons(
                 text: parsed[0],
                 data: parsed[0],
             };
-            if (parsed.length > 1 && parsed[1] !== "") {
+            if (
+                parsed.length > 1 &&
+                parsed[1] !== "" &&
+                parsed[1] !== "math" &&
+                parsed[1] !== "s" &&
+                parsed[1] !== "q" &&
+                parsed[1] !== "t"
+            ) {
                 item.data = parsed[1];
+            } else {
+                item.data = item.data.replace("\\[", "");
+                item.data = item.data.replace("\\]", "");
+                item.data = item.data.replace("\\square", "");
             }
-            if (parsed.length > 2 && parsed[2] !== "") {
+            if (
+                parsed.length > 2 &&
+                parsed[2] !== "" &&
+                parsed[2] !== "math" &&
+                parsed[2] !== "s" &&
+                parsed[2] !== "q" &&
+                parsed[2] !== "t"
+            ) {
                 item.expl = parsed[2];
+            } else {
+                item.expl = item.data.replace("⁞", "");
             }
             if (parsed.length > 3) {
                 item.placeholders = [];
             }
             // some index in array after text, data,... contains string "math"
             item.hasMath = (parsed as string[]).some(
-                (x, i) => i >= 2 && x == "math"
+                (x, i) => i >= 1 && x == "math"
             );
             // parse symbol-buttons-menu type parameter
-            if ((parsed as string[]).some((x, i) => i > 2 && x == "s")) {
+            if ((parsed as string[]).some((x, i) => i >= 1 && x == "s")) {
                 item.type = "s";
-            } else if ((parsed as string[]).some((x, i) => i > 2 && x == "q")) {
+            } else if (
+                (parsed as string[]).some((x, i) => i >= 1 && x == "q")
+            ) {
                 item.type = "q";
-            } else if ((parsed as string[]).some((x, i) => i > 2 && x == "t")) {
+            } else if (
+                (parsed as string[]).some((x, i) => i >= 1 && x == "t")
+            ) {
                 item.type = "t";
             }
             // parse extended form
