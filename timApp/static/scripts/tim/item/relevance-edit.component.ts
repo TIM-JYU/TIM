@@ -9,9 +9,8 @@
 import {Component, Input} from "@angular/core";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
-import type {IRelevance, IEditableTranslation} from "tim/item/IItem";
-import {getItem, IItem} from "tim/item/IItem";
-import {showMessageDialog} from "tim/ui/showMessageDialog";
+import type {IRelevance} from "tim/item/IItem";
+import {IItem} from "tim/item/IItem";
 
 export const relevanceSuggestions = [
     {value: -100, name: "-100 = Buried"},
@@ -108,6 +107,7 @@ export class RelevanceEditComponent {
         const r = await toPromise(
             this.http.post(`/items/relevance/set/${itemID}`, {
                 value: newValue,
+                update_translations: this.updateTranslations,
             })
         );
         if (r.ok) {
@@ -125,16 +125,14 @@ export class RelevanceEditComponent {
     private async resetRelevance(itemID: number) {
         this.errorMessage = undefined;
         const r = await toPromise(
-            this.http.get<IRelevance>(`/items/relevance/reset/${itemID}`)
+            this.http.post<IRelevance>(`/items/relevance/reset/${itemID}`, {
+                update_translations: this.updateTranslations,
+            })
         );
         if (!r.ok) {
             this.errorMessage = r.result.error.error;
         }
         void this.getRelevance();
-
-        if (this.updateTranslations && this.relevance) {
-            await this.updateTranslationRelevances(this.relevance);
-        }
     }
 
     async resetClicked() {
@@ -144,43 +142,9 @@ export class RelevanceEditComponent {
     async saveClicked() {
         if (this.relevance != null) {
             await this.setRelevance(this.item.id, this.relevance);
-            if (this.updateTranslations) {
-                await this.updateTranslationRelevances(this.relevance);
-            }
         } else {
             this.errorMessage =
                 "Incorrect relevance value: input a whole number!";
         }
-    }
-
-    /**
-     * Update the relevance values for translations based on the current document
-     * @param sourceRelevance relevance value for the source document
-     * @private
-     */
-    private async updateTranslationRelevances(sourceRelevance: number) {
-        const translations: IEditableTranslation[] = await this.getTranslations(
-            this.item.id
-        );
-        translations.map((tr) => this.setRelevance(tr.id, sourceRelevance));
-    }
-
-    private async getTranslations(itemID: number) {
-        const item = await getItem(itemID);
-        if (item?.isFolder) {
-            return [];
-        }
-
-        const r = await toPromise(
-            this.http.get<IEditableTranslation[]>(`/translations/${itemID}`)
-        );
-        if (r.ok) {
-            return r.result;
-        } else {
-            await showMessageDialog(
-                `Error loading translations: ${r.result.error.error}`
-            );
-        }
-        return [];
     }
 }

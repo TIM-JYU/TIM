@@ -1320,24 +1320,26 @@ def get_item(item_id: int):
 
 
 @view_page.post("/items/relevance/set/<int:item_id>")
-def set_blockrelevance(item_id: int, value: int):
+def set_blockrelevance(item_id: int, value: int, update_translations: bool):
     """
     Add block relevance or edit if it already exists for the block.
 
-    :param value: The relevance value.
     :param item_id: Item id.
+    :param value: The relevance value.
+    :param update_translations: whether to update relevance value for the document's translations as well
     :return: Ok response.
     """
 
-    set_relevance(item_id, value)
+    set_relevance(item_id, value, update_translations)
     return ok_response()
 
 
-def set_relevance(item_id: int, value: int) -> None:
+def set_relevance(item_id: int, value: int, update_translations: bool = True) -> None:
     """
     Add block relevance or edit if it already exists for the block.
-    :param value: The relevance value.
     :param item_id: Item id.
+    :param value: The relevance value.
+    :param update_translations: whether to update relevance value for the document's translations as well
     :return: None. Raises Exception on errors.
     """
 
@@ -1348,20 +1350,16 @@ def set_relevance(item_id: int, value: int) -> None:
     verify_manage_access(i)
 
     relevance_value = value
-    # If block has existing relevance, delete it before adding the new one.
-    blockrelevance = i.relevance
-    if blockrelevance:
-        try:
-            db.session.delete(blockrelevance)
-        except Exception as e:
-            db.session.rollback()
-            raise RouteException(
-                f"Changing block relevance failed: {get_error_message(e)}"
-            )
-    blockrelevance = BlockRelevance(relevance=relevance_value)
-
+    check_and_clear_relevance(i)
+    block_relevance = BlockRelevance(relevance=relevance_value)
     try:
-        i.block.relevance = blockrelevance
+        i.block.relevance = block_relevance
+        if update_translations:
+            doc = get_doc_or_abort(item_id)
+            for tr in doc.translations:
+                tr_item = Item.find_by_id(tr.id)
+                check_and_clear_relevance(tr_item, "Changing")
+                tr_item.block.relevance = block_relevance
         db.session.commit()
     except Exception as e:
         db.session.rollback()
@@ -1370,12 +1368,31 @@ def set_relevance(item_id: int, value: int) -> None:
         )
 
 
-@view_page.get("/items/relevance/reset/<int:item_id>")
-def reset_blockrelevance(item_id: int):
+def check_and_clear_relevance(item: Item, action: str) -> None:
+    """
+    Delete an item's block relevance if it exists
+    :param item: item to modify
+    :param action: What type of action called this function (Changing, Resetting)
+    :return: None. Raises RouteException on errors.
+    """
+    block_relevance = item.relevance
+    if block_relevance:
+        try:
+            db.session.delete(block_relevance)
+        except Exception as e:
+            db.session.rollback()
+            raise RouteException(
+                f"{action} block relevance failed: {get_error_message(e)}"
+            )
+
+
+@view_page.post("/items/relevance/reset/<int:item_id>")
+def reset_blockrelevance(item_id: int, update_translations: bool = True):
     """
     Reset (delete) block relevance.
 
     :param item_id: Item id.
+    :param update_translations: whether to update relevance value for the document's translations as well
     :return: Ok response.
     """
 
@@ -1383,16 +1400,17 @@ def reset_blockrelevance(item_id: int):
     if not i:
         raise NotExist("Item not found")
     verify_manage_access(i)
-    blockrelevance = i.relevance
-    if blockrelevance:
-        try:
-            db.session.delete(blockrelevance)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            raise RouteException(
-                f"Resetting block relevance failed: {get_error_message(e)}"
-            )
+
+    check_and_clear_relevance(i)
+
+    if update_translations:
+        doc = get_doc_or_abort(item_id)
+        for tr in doc.translations:
+            tr_item = Item.find_by_id(tr.id)
+            check_and_clear_relevance(tr_item, "Resetting")
+
+    db.session.commit()
+
     return ok_response()
 
 
