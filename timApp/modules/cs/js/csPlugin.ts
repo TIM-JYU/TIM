@@ -63,6 +63,7 @@ import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
 import type {FormulaEvent} from "./editor/math-editor/symbol-button-menu.component";
 import {selectFormulaFromPreview} from "./editor/math-editor/formula-utils";
+import {LATEX_BUTTONS} from "./editor/math-editor/default-symbol-buttons";
 
 // TODO better name?
 interface Vid {
@@ -961,7 +962,11 @@ function getButtonTextHtml(s: string) {
 }
 
 /**
- * Parses string into buttons.
+ * Creates a list of templatebuttons based on
+ * the string b with lines interpreted as buttons
+ * as specified in
+ * https://tim.jyu.fi/view/tim/ohjeita/csPlugin#buttons
+ * and mdButtons containing buttons to add
  * @param b string containing an array of buttons
  * @param mdButtons array of markdown buttons
  */
@@ -992,32 +997,44 @@ export function createTemplateButtons(
     b = b.replace("$charbuttons$", charButtons);
     b = b.trim();
     b = b.replace("$space$", " ");
-    const btns = b.split("\n");
-    for (let i = 0; i < btns.length; i++) {
-        let s = btns[i];
+    const lines = b.split("\n");
+
+    // removes all " or ' respectively if line starts with them
+    for (let i = 0; i < lines.length; i++) {
+        let s = lines[i];
         if (s.length < 1) {
             continue;
         }
+
         if (s.startsWith('"') || s.startsWith("'")) {
             s = s.replace(new RegExp(s[0], "g"), "");
-            btns[i] = s;
+            lines[i] = s;
         }
     }
     const templateButtons: ITemplateButton[] = [];
 
-    for (const s of btns) {
-        if (s === "") {
+    for (const line of lines) {
+        if (line === "") {
             continue;
         }
-        if (!s.startsWith("[")) {
+        // just string
+        if (!line.startsWith("[")) {
+            // add all latex buttons
+            if (line === "$latexbuttons$") {
+                for (const button of LATEX_BUTTONS) {
+                    templateButtons.push(button);
+                }
+                continue;
+            }
             templateButtons.push({
-                text: getButtonTextHtml(s),
-                data: s,
+                text: getButtonTextHtml(line),
+                data: line,
             });
             continue;
         }
+        // maybe array
         try {
-            const parsed = JSON.parse(s);
+            const parsed = JSON.parse(line);
             const item: ITemplateButton = {
                 text: parsed[0],
                 data: parsed[0],
@@ -1031,9 +1048,11 @@ export function createTemplateButtons(
             if (parsed.length > 3) {
                 item.placeholders = [];
             }
+            // some index in array after text, data,... contains string "math"
             item.hasMath = (parsed as string[]).some(
                 (x, i) => i >= 2 && x == "math"
             );
+            // parse symbol-buttons-menu type parameter
             if ((parsed as string[]).some((x, i) => i > 2 && x == "s")) {
                 item.type = "s";
             } else if ((parsed as string[]).some((x, i) => i > 2 && x == "q")) {
@@ -1041,6 +1060,7 @@ export function createTemplateButtons(
             } else if ((parsed as string[]).some((x, i) => i > 2 && x == "t")) {
                 item.type = "t";
             }
+            // parse extended form
             for (let i = 3; i < parsed.length; i++) {
                 const p = parsed[i];
                 if (!(p instanceof Array)) {
