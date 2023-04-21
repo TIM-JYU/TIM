@@ -77,7 +77,6 @@ import {
 import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
-import {FormulaEditorComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor.component";
 import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
 
 BackspaceDisabler.disable();
