@@ -1350,7 +1350,7 @@ def set_relevance(item_id: int, value: int, update_translations: bool = True) ->
     verify_manage_access(i)
 
     relevance_value = value
-    check_and_clear_relevance(i)
+    check_and_clear_relevance(i, "Changing")
     block_relevance = BlockRelevance(relevance=relevance_value)
     try:
         i.block.relevance = block_relevance
@@ -1401,7 +1401,7 @@ def reset_blockrelevance(item_id: int, update_translations: bool = True):
         raise NotExist("Item not found")
     verify_manage_access(i)
 
-    check_and_clear_relevance(i)
+    check_and_clear_relevance(i, "Resetting")
 
     if update_translations:
         doc = get_doc_or_abort(item_id)
