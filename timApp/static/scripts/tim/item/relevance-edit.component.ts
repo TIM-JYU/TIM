@@ -88,7 +88,7 @@ export class RelevanceEditComponent {
         this.errorMessage = undefined;
         const r = await toPromise(
             this.http.get<IRelevanceResponse>(
-                `/items/relevance/get/` + this.item.id
+                `/items/relevance/get/${this.item.id}`
             )
         );
         if (r.ok) {
@@ -109,7 +109,7 @@ export class RelevanceEditComponent {
     private async setRelevance(itemID: number, newValue: number) {
         this.errorMessage = undefined;
         const r = await toPromise(
-            this.http.post(`/items/relevance/set/` + itemID, {
+            this.http.post(`/items/relevance/set/${itemID}`, {
                 value: newValue,
             })
         );
@@ -128,7 +128,7 @@ export class RelevanceEditComponent {
     private async resetRelevance(itemID: number) {
         this.errorMessage = undefined;
         const r = await toPromise(
-            this.http.get<IRelevance>(`/items/relevance/reset/` + itemID)
+            this.http.get<IRelevance>(`/items/relevance/reset/${itemID}`)
         );
         if (!r.ok) {
             this.errorMessage = r.result.error.error;
@@ -175,13 +175,13 @@ export class RelevanceEditComponent {
         }
 
         const r = await toPromise(
-            this.http.get<IEditableTranslation[]>("/translations/" + itemID, {})
+            this.http.get<IEditableTranslation[]>(`/translations/${itemID}`)
         );
         if (r.ok) {
             return r.result;
         } else {
             await showMessageDialog(
-                `Error loading translations: ` + r.result.error.error
+                `Error loading translations: ${r.result.error.error}`
             );
         }
         return [];
