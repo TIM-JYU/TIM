@@ -92,12 +92,14 @@ export class SymbolsPipe implements PipeTransform {
                                 [hidden]="formulaEditorOpen"
                                 class="symbol-button" 
                                 *ngFor="let item of templateButtons | symbols:'t'"
-                                title="{{item.expl}}" (mouseup)="addFormula(item.data, item.data, true)" 
+                                title="{{item.expl}}" (mouseup)="addFormula($event, item.data, item.data, true)"
+                                (touchend)="addFormula($event, item.data, item.data, true)"
                          >{{item.text}}</button>
                         <button 
                                 class="symbol-button" 
                                 *ngFor="let item of templateButtons | symbols:'q'"
-                                title="{{item.expl}}" (mouseup)="addFormula(item.data, item.data, true)" 
+                                title="{{item.expl}}" (mouseup)="addFormula($event, item.data, item.data, true)" 
+                                (touchend)="addFormula($event, item.data, item.data, true)"
                          >{{item.text}}</button>
                     </div>
                 </div>
@@ -127,7 +129,8 @@ export class SymbolsPipe implements PipeTransform {
                     <button class="symbol-button" 
                             title="{{item.expl}}" 
                             *ngFor="let item of templateButtons | symbols:'s'" 
-                            (mouseup)="addFormula(item.data, item.data, true)"
+                            (mouseup)="addFormula($event, item.data, item.data, true)"
+                            (touchend)="addFormula($event, item.data, item.data, true)"
                      >{{item.text}}</button>
                 </div>
             </div>
@@ -152,7 +155,13 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
 
     constructor(public el: ElementRef<HTMLElement>) {}
 
-    addFormula(formula: string, command: string, useWrite: boolean = false) {
+    addFormula(
+        event: Event,
+        formula: string,
+        command: string,
+        useWrite: boolean = false
+    ) {
+        event.preventDefault();
         this.setFormula.emit({
             text: formula,
             command: command,
