@@ -121,8 +121,6 @@ export class FormulaEditorComponent {
 
     private buttonSymbol: FormulaEvent = {
         text: "",
-        command: "",
-        useWrite: false,
     };
     private isVisible = false;
 
