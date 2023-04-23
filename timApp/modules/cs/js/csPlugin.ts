@@ -1133,7 +1133,7 @@ export class CsController extends CsBase implements ITimComponent {
     muokattu: boolean;
     noeditor!: boolean;
     formulaEditorOpen = false;
-    currentSymbol: FormulaEvent = {text: "", command: "", useWrite: true};
+    currentSymbol: FormulaEvent = {text: ""};
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
     postcode?: string;
@@ -2997,7 +2997,7 @@ ${fhtml}
         }
         // write the text to formulaeditor if its enabled and open
         if (this.formulaEditor && this.formulaEditorOpen) {
-            this.currentSymbol = {text: text, command: text, useWrite: true};
+            this.currentSymbol = {text: text};
         } else {
             this.editor?.insert?.(text);
             this.editor?.focus();

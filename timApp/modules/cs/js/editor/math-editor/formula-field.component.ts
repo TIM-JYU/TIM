@@ -113,6 +113,9 @@ export class FormulaFieldComponent implements AfterViewInit {
     private active = false;
     private error = false;
 
+    @ViewChild("formulaFieldDiv")
+    formulaFieldDiv!: ElementRef<HTMLDivElement>;
+
     @ViewChild("latexInputElement")
     latexInputElement!: ElementRef<HTMLTextAreaElement>;
 

@@ -257,8 +257,6 @@ export class PareditorController extends DialogController<
     private formulaEditorOpen: boolean = false;
     private currentSymbol: FormulaEvent = {
         text: "",
-        command: "",
-        useWrite: true,
     };
 
     constructor(protected element: JQLite, protected scope: IScope) {

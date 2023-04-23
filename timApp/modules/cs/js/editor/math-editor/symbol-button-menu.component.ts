@@ -24,13 +24,9 @@ import {DEFAULT_SYMBOL_BUTTONS} from "./default-symbol-buttons";
 
 /**
  * Text is command in text format \frac{}{}.
- * Command is what mathquill accepts \frac.
- * useWrite is needed to write some commands like \overline{\text{i}}.
  */
 export type FormulaEvent = {
     text: string;
-    command: string;
-    useWrite: boolean;
 };
 
 /**
@@ -46,6 +42,14 @@ enum ButtonMenuState {
 }
 
 /**
+ * Wrapper for clientX,clientY coordinates.
+ */
+type Point = {
+    x: number;
+    y: number;
+};
+
+/**
  * Filters buttons by type.
  */
 @Pipe({name: "symbols"})
@@ -53,7 +57,7 @@ export class SymbolsPipe implements PipeTransform {
     /**
      * Filters buttons by type.
      * @param buttons array of buttons to filter
-     * @param type ItemplateButton.type defines which buttos are returned
+     * @param type ItemplateButton.type defines which buttons are returned
      *             if undefined or math, math and ones with no type are returned
      */
     transform(buttons: ITemplateButton[], type?: "q" | "s" | "t") {
@@ -92,14 +96,20 @@ export class SymbolsPipe implements PipeTransform {
                                 [hidden]="formulaEditorOpen"
                                 class="symbol-button" 
                                 *ngFor="let item of templateButtons | symbols:'t'"
-                                title="{{item.expl}}" (mouseup)="addFormula($event, item.data, item.data, true)"
-                                (touchend)="addFormula($event, item.data, item.data, true)"
+                                title="{{item.expl}}" 
+                                (mouseup)="addFormula($event, item.data)"
+                                (touchend)="addFormula($event, item.data)"
+                                (mousedown)="handleMouseDown($event)"
+                                (touchstart)="handleMouseDown($event)"
                          >{{item.text}}</button>
                         <button 
                                 class="symbol-button" 
                                 *ngFor="let item of templateButtons | symbols:'q'"
-                                title="{{item.expl}}" (mouseup)="addFormula($event, item.data, item.data, true)" 
-                                (touchend)="addFormula($event, item.data, item.data, true)"
+                                title="{{item.expl}}" 
+                                (mouseup)="addFormula($event, item.data)" 
+                                (touchend)="addFormula($event, item.data)"
+                                (mousedown)="handleMouseDown($event)"
+                                (touchstart)="handleMouseDown($event)"
                          >{{item.text}}</button>
                     </div>
                 </div>
@@ -129,8 +139,10 @@ export class SymbolsPipe implements PipeTransform {
                     <button class="symbol-button" 
                             title="{{item.expl}}" 
                             *ngFor="let item of templateButtons | symbols:'s'" 
-                            (mouseup)="addFormula($event, item.data, item.data, true)"
-                            (touchend)="addFormula($event, item.data, item.data, true)"
+                            (mouseup)="addFormula($event, item.data)"
+                            (touchend)="addFormula($event, item.data)"
+                            (mousedown)="handleMouseDown($event)"
+                            (touchstart)="handleMouseDown($event)"
                      >{{item.text}}</button>
                 </div>
             </div>
@@ -142,6 +154,8 @@ export class SymbolsPipe implements PipeTransform {
 })
 export class SymbolButtonMenuComponent implements AfterViewInit {
     buttonMenuState: ButtonMenuState = ButtonMenuState.Closed;
+
+    pressStartPos?: Point;
 
     @ContentChild(FileSelectManagerComponent)
     fileSelector?: FileSelectManagerComponent;
@@ -155,18 +169,62 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
 
     constructor(public el: ElementRef<HTMLElement>) {}
 
-    addFormula(
-        event: Event,
-        formula: string,
-        command: string,
-        useWrite: boolean = false
-    ) {
+    addFormula(event: MouseEvent | TouchEvent, formula: string) {
         event.preventDefault();
+        // don't register button press if it was a drag event
+        if (this.isDragEvent(event)) {
+            return;
+        }
         this.setFormula.emit({
             text: formula,
-            command: command,
-            useWrite: useWrite,
         });
+    }
+
+    /**
+     * Detects drag based on distance between points.
+     * @param event event fired
+     */
+    isDragEvent(event: MouseEvent | TouchEvent): boolean {
+        if (!this.pressStartPos) {
+            return false;
+        }
+        const {x: x1, y: y1} = this.pressStartPos;
+
+        let x2 = x1;
+        let y2 = y1;
+        if (event instanceof MouseEvent) {
+            x2 = event.clientX;
+            y2 = event.clientY;
+        } else {
+            if (event.changedTouches.length === 0) {
+                return false;
+            }
+            x2 = event.changedTouches[0].clientX;
+            y2 = event.changedTouches[0].clientY;
+        }
+
+        // distance between points in pixels
+        const d = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+        // 10 pixels should be more than natural sway
+        return d > 10;
+    }
+
+    /**
+     * Record the start position when button press starts
+     * @param event event fired
+     */
+    handleMouseDown(event: MouseEvent | TouchEvent) {
+        if (event instanceof MouseEvent) {
+            this.pressStartPos = {
+                x: event.clientX,
+                y: event.clientY,
+            };
+        } else {
+            this.pressStartPos = {
+                x: event.touches[0].clientX,
+                y: event.touches[0].clientY,
+            };
+        }
     }
 
     /**

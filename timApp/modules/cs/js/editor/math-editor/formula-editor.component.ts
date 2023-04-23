@@ -121,8 +121,6 @@ export class FormulaEditorComponent {
 
     private buttonSymbol: FormulaEvent = {
         text: "",
-        command: "",
-        useWrite: false,
     };
     private isVisible = false;
 
@@ -264,10 +262,9 @@ export class FormulaEditorComponent {
      * Find the line where cursor is in editor.
      */
     getCurrentLine() {
-        const cursorPos = this.getCursorLocation();
         const text = this.editor.content;
-        let startI = cursorPos;
-        let endI = cursorPos;
+        let startI = this.cursorLocation;
+        let endI = this.cursorLocation;
         if (text[startI] === "\n") {
             startI--;
         }
@@ -288,14 +285,6 @@ export class FormulaEditorComponent {
         const isTextInLine = currentLine.trim().length > 0;
         // should be multiline if no real text in line
         return !isTextInLine;
-    }
-
-    /**
-     * After oldContent is set cursor is between
-     * oldContent parts.
-     */
-    getCursorLocation() {
-        return this.cursorLocation;
     }
 
     /**
@@ -646,7 +635,7 @@ export class FormulaEditorComponent {
         const allParenthesis = this.findParenthesisFromString(text);
         const currentFormula = this.parseCurrentFormula(
             allParenthesis,
-            this.getCursorLocation()
+            this.cursorLocation
         );
         // cursor wasn't inside a formula
         if (!currentFormula) {
