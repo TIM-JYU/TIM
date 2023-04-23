@@ -74,8 +74,8 @@ type NumPair = [number, number];
                             (enter)="addField($event)"
                             (backspace)="removeField()" 
                             (focus)="handleFocus($event)"
-                            (upArrow)="handleArrowUp($event)"
-                            (downArrow)="handleArrowDown($event)"
+                            (upArrow)="handleArrowUp()"
+                            (downArrow)="handleArrowDown()"
                             (add)="addField($event)"
                             (delete)="removeField()"
                             [isActive]="i === activeFieldsIndex"
@@ -158,7 +158,7 @@ export class FormulaEditorComponent {
         this.isVisible = isVis;
         // became visible so save what was in editor
         if (isVis) {
-            this.parseOldContent(this.editor.content);
+            this.parseOldContent();
             this.cursorLocation = this.oldContent.before.length;
             const isEditing = this.parseEditedFormula();
             // initialize adding new formula
@@ -246,13 +246,13 @@ export class FormulaEditorComponent {
         this.activeFieldsIndex = res.id;
     }
 
-    handleArrowDown(id: number) {
+    handleArrowDown() {
         if (this.activeFieldsIndex + 1 < this.fields.length) {
             this.activeFieldsIndex++;
         }
     }
 
-    handleArrowUp(id: number) {
+    handleArrowUp() {
         if (this.activeFieldsIndex > 0) {
             this.activeFieldsIndex--;
         }
@@ -289,9 +289,8 @@ export class FormulaEditorComponent {
 
     /**
      * Splits string into two parts if possible at cursor location.
-     * @param str
      */
-    parseOldContent(str: string) {
+    parseOldContent() {
         if (!this.editor.cursorIndexPosition) {
             this.oldContent = {
                 before: this.editor.content,
@@ -400,7 +399,7 @@ export class FormulaEditorComponent {
             return undefined;
         }
         return this.fieldComponents.find(
-            (item, index) => item.id === this.activeFieldsIndex
+            (item) => item.id === this.activeFieldsIndex
         );
     }
 
@@ -894,11 +893,11 @@ export class FormulaEditorComponent {
             const endPos =
                 activeField.latexInputElement.nativeElement.selectionEnd;
             const oldValue = activeField.latexInputElement.nativeElement.value;
-            const newValue =
+
+            activeField.latexInput =
                 oldValue.substring(0, startPos) +
                 formula +
                 oldValue.substring(endPos, oldValue.length);
-            activeField.latexInput = newValue;
             activeField.handleLatexInput();
             setTimeout(() => {
                 if (cursorPosition !== -1) {
