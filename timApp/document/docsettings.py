@@ -90,6 +90,7 @@ class DocSettingTypes:
     sync_answerbrowsers: bool
     peer_review_start: datetime
     peer_review_stop: datetime
+    peer_review_allow_invalid: bool
     anonymize_reviewers: str
     answerBrowser: AnswerBrowserInfo
     groupSelfJoin: GroupSelfJoinSettings
@@ -609,6 +610,9 @@ class DocSettings:
 
     def peer_review_stop(self) -> datetime | None:
         return self._get_datetime_option("peer_review_stop")
+
+    def peer_review_allow_invalid(self) -> bool | None:
+        return self.get_setting_or_default("peer_review_allow_invalid", False)
 
     def access_denied_message(self) -> str | None:
         return self.get_setting_or_default("access_denied_message", None)
