@@ -94,6 +94,7 @@ type NumPair = [number, number];
 
                     <label class="font-weight-normal">
                         <select
+                                class="form-control"
                                 [(ngModel)]="isMultilineFormula"
                                 (ngModelChange)="onMultilineFormulaChange()"
                         >
