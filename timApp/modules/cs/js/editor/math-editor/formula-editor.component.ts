@@ -791,6 +791,9 @@ export class FormulaEditorComponent {
         this.isDisabled = false;
     }
 
+    /**
+     * Handles cancellation of formula editing. Asks for confirmation as it clears editor data.
+     */
     async handleFormulaCancel() {
         const oldContent =
             this.oldContent.before +
