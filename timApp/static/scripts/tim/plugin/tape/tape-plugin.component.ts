@@ -271,6 +271,25 @@ class JumpIfEmpty extends Jump {
     }
 }
 
+class InvalidCommand extends Command {
+    static Instance = new InvalidCommand();
+
+    constructor() {
+        super("INVALID", "!");
+    }
+
+    public execute(params: CommandParameters<unknown>) {
+        // Skip on purpose
+    }
+
+    toString(param: string | number | undefined): string {
+        if (param === undefined) {
+            return "";
+        }
+        return `${param} // INVALID`;
+    }
+}
+
 // </editor-fold>
 
 /**
@@ -432,11 +451,12 @@ function scrollElementVisibleInParent(
                 <textarea #textAreaRobotProgram class="robotEditArea textAreaRobotProgram" [(ngModel)]="programAsText"
                           *ngIf="textmode"></textarea>
                 <ul class="cmditems list-unstyled listBox programCommandList" *ngIf="!textmode">
-                <li *ngFor="let c of commandList; let i = index" class="command" (click)="selectedCommandIndex = i"
+                <li *ngFor="let c of commandList; let i = index" class="command" [attr.data-command]="c.command.name" (click)="selectedCommandIndex = i"
                     [ngStyle]="{'color': getCommandColor(i), 'background-color': getCommandBackgroundColor(i)}">{{c.getName()}}</li>
                 <li class="command" [ngStyle]="{'color': getCommandColor(commandList.length + 1)}"
                     (click)="selectedCommandIndex = (commandList.length + 1)">-</li>
                 </ul>
+                <p class="red" *ngIf="hasInvalidCommands">Some commands are invalid, they will be ignored</p>
                     <!--- <select [(ngModel)]="selected" size="10">
                     <option *ngFor="let c of commandList" [ngStyle]="{'color': getCommandColor($index)}">{{c.getName()}}</option>
                     </select> --->
@@ -577,6 +597,16 @@ export class TapePluginContent implements PluginJson {
         }
 
         this.checkCommandInView(this.selectedCommandIndex);
+    }
+
+    hasInvalidCommands = false;
+
+    private addInvalidCommand(line: string) {
+        // Strip any comments
+        line = line.split("//")[0].trim();
+        const ins = new CommandInstance(InvalidCommand.Instance, line);
+        this.commandList.push(ins);
+        this.hasInvalidCommands = true;
     }
 
     /**
@@ -784,6 +814,10 @@ export class TapePluginContent implements PluginJson {
         ) {
             this.commandList.splice(this.selectedCommandIndex, 1);
         }
+
+        this.hasInvalidCommands = this.commandList.some(
+            (c) => c.command instanceof InvalidCommand
+        );
         // this.textAll();
     }
 
@@ -804,6 +838,7 @@ export class TapePluginContent implements PluginJson {
             return;
         }
         this.commandList = [];
+        this.hasInvalidCommands = false;
         this.fromText(this.programAsText);
     }
 
@@ -908,14 +943,21 @@ export class TapePluginContent implements PluginJson {
             const command = this.possibleCommandList.find(
                 (c) => c.name === name
             );
+            console.log(name, components, command);
             if (!command) {
+                this.addInvalidCommand(line);
                 continue;
             }
 
+            let ok = true;
             if (components.length === 1) {
-                this.addCommand(command, "");
+                ok = this.addCommand(command, "");
             } else {
-                this.addCommand(command, components[1].trim());
+                ok = this.addCommand(command, components[1].trim());
+            }
+
+            if (!ok) {
+                this.addInvalidCommand(line);
             }
         }
     }
@@ -950,13 +992,30 @@ export class TapePluginContent implements PluginJson {
         return "unset";
     }
 
+    private isCommandInvalid(index: number) {
+        return (
+            index > -1 &&
+            index < this.commandList.length &&
+            this.commandList[index].command instanceof InvalidCommand
+        );
+    }
+
     /**
      * Gets the color of an item in the current program command list.
      * @param index The index of the program command.
      */
     getCommandColor(index: number) {
+        const isInvalid = this.isCommandInvalid(index);
+
         if (index == this.selectedCommandIndex) {
+            if (isInvalid) {
+                return "black";
+            }
             return "red";
+        }
+
+        if (isInvalid) {
+            return "white";
         }
 
         if (index > -1 && index < this.commandList.length) {
@@ -971,6 +1030,10 @@ export class TapePluginContent implements PluginJson {
     getCommandBackgroundColor(index: number) {
         if (index == this.state.instructionPointer) {
             return "yellow";
+        }
+
+        if (this.isCommandInvalid(index)) {
+            return "red";
         }
 
         return "white";

@@ -7,7 +7,6 @@
 
 import type {AfterViewInit} from "@angular/core";
 import {
-    ChangeDetectorRef,
     Component,
     ElementRef,
     EventEmitter,
@@ -113,9 +112,6 @@ export class FormulaFieldComponent implements AfterViewInit {
     private active = false;
     private error = false;
 
-    @ViewChild("formulaFieldDiv")
-    formulaFieldDiv!: ElementRef<HTMLDivElement>;
-
     @ViewChild("latexInputElement")
     latexInputElement!: ElementRef<HTMLTextAreaElement>;
 
@@ -134,7 +130,7 @@ export class FormulaFieldComponent implements AfterViewInit {
 
     @Input() initialValue!: string;
 
-    constructor(private cd: ChangeDetectorRef) {}
+    constructor() {}
 
     @Input()
     get isActive(): boolean {
@@ -167,14 +163,13 @@ export class FormulaFieldComponent implements AfterViewInit {
     /**
      * write changes in visual field to LaTeX field if visual field
      * is the one being typed.
-     * @param field reference to mathField.
      */
-    editHandler(field: MathFieldMethods) {
+    editHandler() {
         if (this.activeEditor === ActiveEditorType.Visual) {
             if (this.undoRedo != this.undoRedoCodes.NOCHANGE) {
                 return;
             }
-            this.latexInput = field.latex();
+            this.latexInput = this.mathField.latex();
             this.edited.emit({
                 latex: this.latexInput,
                 id: this.id,
@@ -193,15 +188,15 @@ export class FormulaFieldComponent implements AfterViewInit {
         const config: MathQuillConfig = {
             spaceBehavesLikeTab: false,
             handlers: {
-                edit: (field: MathFieldMethods) => this.editHandler(field),
-                enter: (field: MathFieldMethods) => this.enterHandler(field),
-                deleteOutOf: (direction, field: MathFieldMethods) => {
-                    this.handleDeleteOutOf(direction, field);
+                edit: () => this.editHandler(),
+                enter: () => this.enterHandler(),
+                deleteOutOf: () => {
+                    this.handleDeleteOutOf();
                 },
-                downOutOf: (field: MathFieldMethods) => {
+                downOutOf: () => {
                     this.downArrow.emit(this.id);
                 },
-                upOutOf: (field: MathFieldMethods) => {
+                upOutOf: () => {
                     this.upArrow.emit(this.id);
                 },
             },
@@ -214,18 +209,15 @@ export class FormulaFieldComponent implements AfterViewInit {
     /**
      * Enter pressed while not inside environment
      * like \cases.
-     * @param field current field.
      */
-    enterHandler(field: MathFieldMethods) {
+    enterHandler() {
         this.enterPressed();
     }
 
     /**
      * Backspace pressed while field is empty.
-     * @param direction indicates which direction movement happens.
-     * @param field current field.
      */
-    handleDeleteOutOf(direction: number, field: MathFieldMethods) {
+    handleDeleteOutOf() {
         this.backspacePressed();
     }
 
