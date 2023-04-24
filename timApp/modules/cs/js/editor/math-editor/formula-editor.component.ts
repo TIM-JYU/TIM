@@ -97,9 +97,9 @@ type NumPair = [number, number];
                                 [(ngModel)]="isMultilineFormula"
                                 (ngModelChange)="onMultilineFormulaChange()"
                         >
-                            <option [ngValue]="'inline'">Inline</option>
-                            <option [ngValue]="'multi'">Multiline</option>
-                            <option [ngValue]="'align'">Align</option>
+                            <option [ngValue]="'inline'" i18n [disabled]="isDisabled">Inline</option>
+                            <option [ngValue]="'multi'" i18n>Multiline</option>
+                            <option [ngValue]="'align'" i18n>Align</option>
                         </select>
                     </label>
                 </div>
