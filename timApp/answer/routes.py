@@ -1356,15 +1356,10 @@ def preprocess_jsrunner_answer(
         else None,
     )
     if runnermarkup.peerReview:
-        if not curr_user.has_teacher_access(d):
-            # TODO: Query reviews targeting current user, needs to implement anonymization if anonymize_reviewers
-            # TODO: Query peer reviews from another document
-            prs = get_reviews_where_user_is_reviewer(d, curr_user)
-            for pr in prs:
-                pr.reviewable.hide_name = True
-            answerdata["peerreviews"] = prs
-        else:
-            answerdata["peerreviews"] = get_reviews_for_document(d)
+        # TODO: Query peer reviews from another document, check need for review anonymization
+        # For now we only query PeerReviews/velps in the same document as the jsrunner, so we assume
+        # that jsrunners runnable by non-teacher users were created by someone with at least edit access
+        answerdata["peerreviews"] = get_reviews_for_document(d)
         answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d)
     else:
         answerdata["peerreviews"] = None
