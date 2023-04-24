@@ -95,8 +95,8 @@ type NumPair = [number, number];
                     <label class="font-weight-normal">
                         <select
                                 class="form-control"
-                                [(ngModel)]="isMultilineFormula"
-                                (ngModelChange)="onMultilineFormulaChange()"
+                                [(ngModel)]="formulaType"
+                                (ngModelChange)="onFormulaTypeChange()"
                         >
                             <option [ngValue]="'inline'" i18n [disabled]="isDisabled">Inline</option>
                             <option [ngValue]="'multi'" i18n>Multiline</option>
@@ -115,7 +115,7 @@ export class FormulaEditorComponent {
 
     fields!: FieldType[];
 
-    isMultilineFormula = FormulaType.Multi;
+    formulaType = FormulaType.Multi;
 
     activeFieldsIndex: number = 0;
 
@@ -171,7 +171,7 @@ export class FormulaEditorComponent {
             if (!isEditing) {
                 this.fields = [{latex: ""}];
                 this.activeFieldsIndex = 0;
-                this.isMultilineFormula = this.getInitialMultilineSetting();
+                this.formulaType = this.getInitialFormulaType();
             } else {
                 this.symbolButtonMenuDiv.nativeElement.scrollIntoView();
             }
@@ -209,8 +209,8 @@ export class FormulaEditorComponent {
                 ...this.fields.slice(this.activeFieldsIndex),
             ];
         }
-        if (this.isMultilineFormula != FormulaType.Align) {
-            this.isMultilineFormula =
+        if (this.formulaType != FormulaType.Align) {
+            this.formulaType =
                 this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
         }
         this.useExistingParenthesis = false;
@@ -234,8 +234,8 @@ export class FormulaEditorComponent {
             this.activeFieldsIndex--;
         }
 
-        if (this.isMultilineFormula != FormulaType.Align) {
-            this.isMultilineFormula =
+        if (this.formulaType != FormulaType.Align) {
+            this.formulaType =
                 this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
         }
         this.isDisabled = this.fields.length > 1;
@@ -288,13 +288,13 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Determine whether the user wants to create a multiline or an inline formula.
+     * Determine formula type based on current cursor location
      */
-    getInitialMultilineSetting() {
+    getInitialFormulaType() {
         const currentLine = this.getCurrentLine();
-        const isTextInLine = currentLine.trim().length > 0;
+        const isEmptyLine = currentLine.trim().length === 0;
         // should be multiline if no real text in line
-        return isTextInLine ? FormulaType.Inline : FormulaType.Multi;
+        return isEmptyLine ? FormulaType.Multi : FormulaType.Inline;
     }
 
     /**
@@ -681,7 +681,7 @@ export class FormulaEditorComponent {
                     allMatrices
                 );
                 this.fields = allFields;
-                this.isMultilineFormula = FormulaType.Multi;
+                this.formulaType = FormulaType.Multi;
                 this.isDisabled = this.fields.length > 1;
                 this.setMultilineActiveField(allFields);
             }
@@ -694,7 +694,7 @@ export class FormulaEditorComponent {
                 this.existingParenthesis = ["$", "$"];
                 // update formula editor content and values
                 this.fields = [{latex: text.slice(leftIndex + 1, rightIndex)}];
-                this.isMultilineFormula = FormulaType.Inline;
+                this.formulaType = FormulaType.Inline;
                 this.isDisabled = false;
             }
             return true;
@@ -705,7 +705,7 @@ export class FormulaEditorComponent {
     /**
      * Updates editor text when multiline value changes.
      */
-    onMultilineFormulaChange() {
+    onFormulaTypeChange() {
         this.useExistingParenthesis = false;
         this.updateFormulaToEditor();
     }
@@ -729,14 +729,13 @@ export class FormulaEditorComponent {
 
     /**
      * Formats formula to LaTeX string.
-     * @param isMultiline True if added formula should be multiline, else false.
      * @return Formatted string or undefined if resulting formula is empty
      */
-    formatLatex(isMultiline: FormulaType): string | undefined {
+    formatLatex(): string | undefined {
         let wrapBegin = "";
         let wrapEnd = "";
         let join = "";
-        switch (isMultiline) {
+        switch (this.formulaType) {
             case FormulaType.Align:
                 wrapBegin = "\\begin{align*}\n";
                 wrapEnd = "\n\\end{align*}";
@@ -751,8 +750,10 @@ export class FormulaEditorComponent {
                 wrapBegin = "$";
                 wrapEnd = "$";
                 break;
+            default:
+                throw Error("undefined case " + this.formulaType);
         }
-        if (isMultiline != FormulaType.Inline) {
+        if (this.formulaType != FormulaType.Inline) {
             const latex = this.fields
                 .map((field) => field.latex)
                 .filter((text) => text.length > 0)
@@ -777,8 +778,7 @@ export class FormulaEditorComponent {
      * Updates editor text with current formula text.
      */
     updateFormulaToEditor() {
-        const isMultiline = this.isMultilineFormula;
-        const formulaLatex = this.formatLatex(isMultiline);
+        const formulaLatex = this.formatLatex();
         // If nothing is typed then just show original content
         if (formulaLatex === undefined) {
             this.editor.content =
@@ -793,8 +793,7 @@ export class FormulaEditorComponent {
         this.updateFormulaToEditor();
         const finalContent = this.editor.content;
 
-        const isMultiline = this.isMultilineFormula;
-        const currentFormulaLength = this.formatLatex(isMultiline)?.length ?? 0;
+        const currentFormulaLength = this.formatLatex()?.length ?? 0;
         // adding new formula
         if (this.oldContent.editing.length === 0) {
             const endPos = this.oldContent.before.length + currentFormulaLength;
