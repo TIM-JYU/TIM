@@ -28,6 +28,7 @@ import {FormulaEvent} from "./symbol-button-menu.component";
 enum FormulaType {
     Multi = "multi",
     Inline = "inline",
+    Align = "align",
 }
 
 type FormulaTuple = [FormulaType, number, number];
@@ -92,10 +93,14 @@ type NumPair = [number, number];
                     </div>
 
                     <label class="font-weight-normal">
-                        <input [disabled]="isDisabled" type="checkbox" [(ngModel)]="isMultilineFormula"
-                               (ngModelChange)="onMultilineFormulaChange()" 
-                               title="Outputs formula in multiple lines" i18n-title>
-                        <ng-container i18n>Multiline</ng-container>
+                        <select
+                                [(ngModel)]="isMultilineFormula"
+                                (ngModelChange)="onMultilineFormulaChange()"
+                        >
+                            <option [ngValue]="'inline'">Inline</option>
+                            <option [ngValue]="'multi'">Multiline</option>
+                            <option [ngValue]="'align'">Align</option>
+                        </select>
                     </label>
                 </div>
             </div>
@@ -109,7 +114,7 @@ export class FormulaEditorComponent {
 
     fields!: FieldType[];
 
-    isMultilineFormula = true;
+    isMultilineFormula = FormulaType.Multi;
 
     activeFieldsIndex: number = 0;
 
@@ -196,17 +201,18 @@ export class FormulaEditorComponent {
                 ...this.fields.slice(this.activeFieldsIndex + 1),
             ];
             this.activeFieldsIndex++;
-            this.isMultilineFormula = this.fields.length > 1;
-            this.useExistingParenthesis = false;
         } else {
             this.fields = [
                 ...this.fields.slice(0, this.activeFieldsIndex),
                 {latex: ""},
                 ...this.fields.slice(this.activeFieldsIndex),
             ];
-            this.isMultilineFormula = this.fields.length > 1;
-            this.useExistingParenthesis = false;
         }
+        if (this.isMultilineFormula != FormulaType.Align) {
+            this.isMultilineFormula =
+                this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
+        }
+        this.useExistingParenthesis = false;
         this.isDisabled = true;
     }
 
@@ -227,7 +233,10 @@ export class FormulaEditorComponent {
             this.activeFieldsIndex--;
         }
 
-        this.isMultilineFormula = this.fields.length > 1;
+        if (this.isMultilineFormula != FormulaType.Align) {
+            this.isMultilineFormula =
+                this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
+        }
         this.isDisabled = this.fields.length > 1;
         this.useExistingParenthesis = false;
         this.updateFormulaToEditor();
@@ -284,7 +293,7 @@ export class FormulaEditorComponent {
         const currentLine = this.getCurrentLine();
         const isTextInLine = currentLine.trim().length > 0;
         // should be multiline if no real text in line
-        return !isTextInLine;
+        return isTextInLine ? FormulaType.Inline : FormulaType.Multi;
     }
 
     /**
@@ -671,7 +680,7 @@ export class FormulaEditorComponent {
                     allMatrices
                 );
                 this.fields = allFields;
-                this.isMultilineFormula = true;
+                this.isMultilineFormula = FormulaType.Multi;
                 this.isDisabled = this.fields.length > 1;
                 this.setMultilineActiveField(allFields);
             }
@@ -684,7 +693,7 @@ export class FormulaEditorComponent {
                 this.existingParenthesis = ["$", "$"];
                 // update formula editor content and values
                 this.fields = [{latex: text.slice(leftIndex + 1, rightIndex)}];
-                this.isMultilineFormula = false;
+                this.isMultilineFormula = FormulaType.Inline;
                 this.isDisabled = false;
             }
             return true;
@@ -722,27 +731,45 @@ export class FormulaEditorComponent {
      * @param isMultiline True if added formula should be multiline, else false.
      * @return Formatted string or undefined if resulting formula is empty
      */
-    formatLatex(isMultiline: boolean): string | undefined {
-        const wrapSymbol = isMultiline ? "$$" : "$";
-        if (isMultiline) {
+    formatLatex(isMultiline: FormulaType): string | undefined {
+        let wrapBegin = "";
+        let wrapEnd = "";
+        let join = "";
+        switch (isMultiline) {
+            case FormulaType.Align:
+                wrapBegin = "\\begin{align*}\n";
+                wrapEnd = "\n\\end{align*}";
+                join = "\\\\\n&";
+                break;
+            case FormulaType.Multi:
+                wrapBegin = "$$\n";
+                wrapEnd = "\n$$";
+                join = "\\\\\n";
+                break;
+            case FormulaType.Inline:
+                wrapBegin = "$";
+                wrapEnd = "$";
+                break;
+        }
+        if (isMultiline != FormulaType.Inline) {
             const latex = this.fields
                 .map((field) => field.latex)
                 .filter((text) => text.length > 0)
-                .join("\\\\\n");
+                .join(join);
             if (latex.length === 0) {
                 return undefined;
             }
             if (this.useExistingParenthesis) {
                 return `${this.existingParenthesis[0]}${latex}${this.existingParenthesis[1]}`;
             }
-            return `${wrapSymbol}\n${latex}\n${wrapSymbol}`;
+            return `${wrapBegin}${latex}${wrapEnd}`;
         }
         // fields.length should be 1
         const latex = this.fields[0].latex;
         if (latex.length === 0) {
             return undefined;
         }
-        return `${wrapSymbol}${latex}${wrapSymbol}`;
+        return `${wrapBegin}${latex}${wrapEnd}`;
     }
 
     /**
