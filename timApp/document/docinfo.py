@@ -5,7 +5,6 @@ from typing import List, Iterable, Generator, Tuple, Optional, TYPE_CHECKING
 
 from sqlalchemy.orm import joinedload
 
-from timApp.auth.accesshelper import verify_manage_access
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.specialnames import (
@@ -16,8 +15,6 @@ from timApp.document.specialnames import (
 from timApp.item.item import Item
 from timApp.notification.notification import Notification
 from timApp.timdb.sqa import db
-from timApp.user.users import get_rights_holders
-from timApp.user.userutils import grant_access
 from timApp.util.utils import get_current_time, partition
 
 if TYPE_CHECKING:
@@ -284,30 +281,3 @@ def find_free_name(destination, item: Item):
         attempt += 1
         short_name = f"{item.short_name}_{attempt}"
     return trash_path
-
-
-def copy_document_rights(source_doc: DocInfo, target_doc: DocInfo) -> None:
-    """
-    Copy access rights from one document to another.
-    Mainly used to inherit parent documents' access rights to translations.
-    Must have manage rights to both documents.
-
-    :param source_doc: the source document to copy right from.
-    :param target_doc: which document to copy the rights to.
-    """
-
-    verify_manage_access(source_doc)
-    verify_manage_access(target_doc)
-
-    src_rights = get_rights_holders(source_doc.id)
-    for r in src_rights:
-        grant_access(
-            r.usergroup,
-            target_doc,
-            r.atype.to_enum(),
-            accessible_from=r.accessible_from,
-            accessible_to=r.accessible_to,
-            duration_from=r.duration_from,
-            duration_to=r.duration_to,
-            duration=r.duration,
-        )
