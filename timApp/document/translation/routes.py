@@ -33,6 +33,7 @@ from timApp.auth.accesshelper import (
     verify_edit_access,
 )
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docinfo import copy_document_rights
 from timApp.document.document import Document
 from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
@@ -225,7 +226,8 @@ def create_translation_route(
     else:
         raise Exception("doc has unexpected type")
     de.trs.append(tr)
-    copy_default_rights(tr, BlockType.Document)
+    # Inherit parent document's rights
+    copy_document_rights(doc, tr)
     db.session.commit()
 
     # Run automatic translation if requested
