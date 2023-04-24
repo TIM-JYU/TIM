@@ -7,8 +7,8 @@
  */
 
 import {Component, Input} from "@angular/core";
-import {to} from "tim/util/utils";
-import {$http} from "tim/util/ngimport";
+import {toPromise} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
 import type {IRelevance} from "tim/item/IItem";
 import {IItem} from "tim/item/IItem";
 
@@ -39,6 +39,10 @@ export interface IRelevanceResponse {
                    [typeaheadMinLength]="0"
                    [typeahead]="suggestions">
         </div>
+        <div class="checkbox">
+            <input type="checkbox" [(ngModel)]="updateTranslations" id="cbUpdateTranslationRelevance" style="margin-left: 0">
+            <label for="cbUpdateTranslationRelevance" i18n>Update translations' relevance values</label>
+        </div>
         <div *ngIf="isDefault" class="alert alert-info">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
             Default relevance value. This may be affected by changes in parent directories.
@@ -53,7 +57,7 @@ export interface IRelevanceResponse {
         <div>
             <button class="timButton" (click)="saveClicked()" title="Save new relevance value">Save</button>
             <button class="timButton" (click)="resetClicked()" [disabled]="isDefault"
-                    title="Return default relevance value">Reset
+                    title="Return default relevance value" style="margin-left: 0.3em">Reset
             </button>
         </div>
     `,
@@ -65,6 +69,9 @@ export class RelevanceEditComponent {
     isInherited: boolean = false;
     errorMessage: string | undefined;
     suggestions = relevanceSuggestions;
+    updateTranslations: boolean = true;
+
+    constructor(private http: HttpClient) {}
 
     ngOnInit() {
         void this.getRelevance();
@@ -75,61 +82,66 @@ export class RelevanceEditComponent {
      */
     private async getRelevance() {
         this.errorMessage = undefined;
-        const r = await to(
-            $http.get<IRelevanceResponse>(
+        const r = await toPromise(
+            this.http.get<IRelevanceResponse>(
                 `/items/relevance/get/${this.item.id}`
             )
         );
         if (r.ok) {
             // console.log(r.result.data);
-            this.isDefault = r.result.data.default;
-            this.isInherited = r.result.data.inherited;
-            this.relevance = r.result.data.relevance.relevance;
+            this.isDefault = r.result.default;
+            this.isInherited = r.result.inherited;
+            this.relevance = r.result.relevance.relevance;
         } else {
-            this.errorMessage = r.result.data.error;
+            this.errorMessage = r.result.error.error;
         }
     }
 
     /**
      * Set new relevance value for the item.
+     * @param itemID id number for the document/item
      * @param newValue Input value.
      */
-    private async setRelevance(newValue: number) {
+    private async setRelevance(itemID: number, newValue: number) {
         this.errorMessage = undefined;
-        const r = await to(
-            $http.post(`/items/relevance/set/${this.item.id}`, {
+        const r = await toPromise(
+            this.http.post(`/items/relevance/set/${itemID}`, {
                 value: newValue,
+                update_translations: this.updateTranslations,
             })
         );
         if (r.ok) {
             this.isDefault = false;
             this.isInherited = false;
         } else {
-            this.errorMessage = r.result.data.error;
+            this.errorMessage = r.result.error.error;
         }
     }
 
     /**
      * Return default (or inherited) relevance value.
+     * @param itemID id number for the document/item
      */
-    private async resetRelevance() {
+    private async resetRelevance(itemID: number) {
         this.errorMessage = undefined;
-        const r = await to(
-            $http.get<IRelevance>(`/items/relevance/reset/${this.item.id}`)
+        const r = await toPromise(
+            this.http.post<IRelevance>(`/items/relevance/reset/${itemID}`, {
+                update_translations: this.updateTranslations,
+            })
         );
         if (!r.ok) {
-            this.errorMessage = r.result.data.error;
+            this.errorMessage = r.result.error.error;
         }
         void this.getRelevance();
     }
 
     async resetClicked() {
-        await this.resetRelevance();
+        await this.resetRelevance(this.item.id);
     }
 
     async saveClicked() {
         if (this.relevance != null) {
-            await this.setRelevance(this.relevance);
+            await this.setRelevance(this.item.id, this.relevance);
         } else {
             this.errorMessage =
                 "Incorrect relevance value: input a whole number!";
