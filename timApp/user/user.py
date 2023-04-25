@@ -1395,6 +1395,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return getattr(self, "anonymize", False)
 
     @property
+    def is_anonymous_guest_user(self):
+        return self.id < 0
+
+    @property
     def is_sisu_teacher(self) -> bool:
         """Whether the user belongs to at least one Sisu teacher group"""
         if self.is_special:

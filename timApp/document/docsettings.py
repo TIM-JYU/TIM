@@ -95,6 +95,7 @@ class DocSettingTypes:
     groupSelfJoin: GroupSelfJoinSettings
     showValidAnswersOnly: bool
     manageKey: str
+    anonymous_login: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -643,6 +644,9 @@ class DocSettings:
 
     def manage_key(self) -> str | None:
         return self.get("manageKey", None)
+
+    def anonymous_login(self) -> bool:
+        return self.get_setting_or_default("anonymous_login", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
