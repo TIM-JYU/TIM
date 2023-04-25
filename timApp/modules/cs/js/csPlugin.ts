@@ -1035,10 +1035,12 @@ export function createTemplateButtons(
         // maybe array
         try {
             const parsed = JSON.parse(line);
-            let defaultData = parsed[0].replace(
-                /\\\\\[|\\\\\]|\\\\square|\s/g,
-                ""
-            );
+            // someone who can comprehend regex can rewrite this
+            // let defaultData = parsed[0].replace(/\\\[|\\\]|\\square|\s/g, "");
+            let defaultData = parsed[0].replace("\\[", "");
+            defaultData = defaultData.replace("\\]", "");
+            defaultData = defaultData.replace(/\\square/g, "");
+            defaultData = defaultData.replace(/\s/g, "");
             const item: ITemplateButton = {
                 text: parsed[0],
                 data: defaultData,
