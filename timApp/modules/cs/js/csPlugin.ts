@@ -1035,69 +1035,59 @@ export function createTemplateButtons(
         // maybe array
         try {
             const parsed = JSON.parse(line);
+            // someone who can comprehend regex can rewrite this
+            // let defaultData = parsed[0].replace(/\\\\[|\\\\]|\\\\square/, "");
+            let defaultData = parsed[0].replace("\\[", "");
+            defaultData = defaultData.replace("\\]", "");
+            defaultData = defaultData.replace(/\\square/g, "");
             const item: ITemplateButton = {
                 text: parsed[0],
-                data: parsed[0],
+                data: defaultData,
+                expl: defaultData,
             };
-            if (
-                parsed.length > 1 &&
-                parsed[1] !== "" &&
-                parsed[1] !== "math" &&
-                parsed[1] !== "s" &&
-                parsed[1] !== "q" &&
-                parsed[1] !== "t"
-            ) {
-                item.data = parsed[1];
-            } else {
-                item.data = item.data.replace("\\[", "");
-                item.data = item.data.replace("\\]", "");
-                item.data = item.data.replace("\\square", "");
-            }
-            if (
-                parsed.length > 2 &&
-                parsed[2] !== "" &&
-                parsed[2] !== "math" &&
-                parsed[2] !== "s" &&
-                parsed[2] !== "q" &&
-                parsed[2] !== "t"
-            ) {
-                item.expl = parsed[2];
-            } else {
-                item.expl = item.data.replace("⁞", "");
-            }
-            if (parsed.length > 3) {
-                item.placeholders = [];
-            }
-            // some index in array after text, data,... contains string "math"
-            item.hasMath = (parsed as string[]).some(
-                (x, i) => i >= 1 && x == "math"
-            );
-            // parse symbol-buttons-menu type parameter
-            if ((parsed as string[]).some((x, i) => i >= 1 && x == "s")) {
-                item.type = "s";
-            } else if (
-                (parsed as string[]).some((x, i) => i >= 1 && x == "q")
-            ) {
-                item.type = "q";
-            } else if (
-                (parsed as string[]).some((x, i) => i >= 1 && x == "t")
-            ) {
-                item.type = "t";
-            }
-            // parse extended form
-            for (let i = 3; i < parsed.length; i++) {
-                const p = parsed[i];
-                if (!(p instanceof Array)) {
-                    continue;
+            const mathAttributes = ["", "math", "s", "q", "t"];
+            function checkForMath(checking: string) {
+                if (mathAttributes.includes(checking)) {
+                    switch (checking) {
+                        case "math":
+                            item.hasMath = true;
+                            break;
+                        case "s":
+                        case "q":
+                        case "t":
+                            item.type = checking;
+                            break;
+                    }
                 }
-                const param: ITemplateParam = {
-                    default: p[0] ?? "",
-                    text: p[1] ?? "",
-                    pattern: p[2] ?? "",
-                    error: p[3] ?? "",
-                };
-                if (p.length > 0) {
-                    item.placeholders?.push(param);
+            }
+            if (parsed.length > 1) {
+                parsed.forEach(checkForMath);
+                if (!mathAttributes.includes(parsed[1])) {
+                    item.data = parsed[1];
+                    item.expl = item.data.replace("⁞", "");
+                }
+                if (parsed.length > 2) {
+                    if (!mathAttributes.includes(parsed[2])) {
+                        item.expl = parsed[2];
+                    }
+                    if (parsed.length > 3) {
+                        item.placeholders = [];
+                        for (let i = 3; i < parsed.length; i++) {
+                            const p = parsed[i];
+                            if (!(p instanceof Array)) {
+                                continue;
+                            }
+                            const param: ITemplateParam = {
+                                default: p[0] ?? "",
+                                text: p[1] ?? "",
+                                pattern: p[2] ?? "",
+                                error: p[3] ?? "",
+                            };
+                            if (p.length > 0) {
+                                item.placeholders?.push(param);
+                            }
+                        }
+                    }
                 }
             }
             templateButtons.push(item);
