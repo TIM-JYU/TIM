@@ -346,7 +346,7 @@ def add_permission(m: PermissionSingleEditModel):
         if m.edit_velp_group_perms:
             add_doc_velp_group_permissions(i, m)
 
-        if m.edit_translation_perms:
+        if m.edit_translation_perms and not isinstance(i, Folder):
             copy_doc_rights_to_translations(i)
 
         db.session.commit()
@@ -535,7 +535,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
 
             if m.edit_translation_perms:
                 parent = get_item_or_abort(i.id)
-                if not parent.is_original_translation:
+                if not parent.is_original_translation or isinstance(parent, Folder):
                     # TODO we should probably follow the chain to the root document just to be safe
                     continue
                 copy_doc_rights_to_translations(parent)
