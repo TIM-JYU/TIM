@@ -12,7 +12,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import get_home_organization_group, app
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
-from timApp.user.personaluniquecode import SchacPersonalUniqueCode
+from timApp.user.personaluniquecode import UserPersonalUniqueCode
 from timApp.user.user import User, UserInfo
 from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
@@ -89,7 +89,7 @@ class SamlSSOResponseMock:
         }
         if not self.mock_missing_uniquecode:
             res["schacPersonalUniqueCode"] = [
-                uq.to_urn() for uq in self.info.unique_codes
+                uq.to_schac_urn() for uq in self.info.unique_codes
             ]
         return res
 
@@ -556,7 +556,7 @@ class TestSignUp(TimRouteTest):
 
     def test_haka_login(self):
         teppo_email = "teppo@mailinator.com"
-        puc = SchacPersonalUniqueCode.parse(
+        puc = UserPersonalUniqueCode.parse_schac_urn(
             "urn:schac:personalUniqueCode:int:studentID:jyu.fi:12345X"
         )
 
@@ -657,7 +657,7 @@ class TestSignUp(TimRouteTest):
                 email="xxxx@example.com",
                 origin=UserOrigin.Haka,
                 unique_codes=[
-                    SchacPersonalUniqueCode(
+                    UserPersonalUniqueCode(
                         codetype="studentID", code="1234X", org="jyu.fi"
                     )
                 ],
@@ -673,7 +673,7 @@ class TestSignUp(TimRouteTest):
                 email="xxxx2@example.com",
                 origin=UserOrigin.Haka,
                 unique_codes=[
-                    SchacPersonalUniqueCode(
+                    UserPersonalUniqueCode(
                         codetype="studentID", code="1234X", org="jyu.fi"
                     )
                 ],
@@ -715,7 +715,7 @@ class TestSignUp(TimRouteTest):
                 email="xxxx@example.com",
                 origin=UserOrigin.Haka,
                 unique_codes=[
-                    SchacPersonalUniqueCode(
+                    UserPersonalUniqueCode(
                         codetype="studentID", code="1234X", org="jyu.fi"
                     )
                 ],

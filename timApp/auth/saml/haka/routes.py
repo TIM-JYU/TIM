@@ -14,7 +14,7 @@ from timApp.auth.saml.service_provider import (
     BaseSamlUserAttributes,
 )
 from timApp.tim_app import app
-from timApp.user.personaluniquecode import SchacPersonalUniqueCode
+from timApp.user.personaluniquecode import UserPersonalUniqueCode
 from timApp.user.userorigin import UserOrigin
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -95,13 +95,13 @@ class HakaSamlUserAttributes(BaseSamlUserAttributes):
         return self.get_attribute("mail", str)
 
     @property
-    def unique_codes(self) -> list[SchacPersonalUniqueCode] | None:
+    def unique_codes(self) -> list[UserPersonalUniqueCode] | None:
         ucs = self.attributes.get("schacPersonalUniqueCode")
         if not ucs:
             return None
         parsed_codes = []
         for uc in ucs:
-            parsed = SchacPersonalUniqueCode.parse(uc)
+            parsed = UserPersonalUniqueCode.parse_schac_urn(uc)
             if not parsed:
                 log_warning(f"Failed to parse unique code: {uc}")
             else:

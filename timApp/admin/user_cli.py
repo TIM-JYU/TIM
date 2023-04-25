@@ -17,10 +17,9 @@ from timApp.admin.import_accounts import import_accounts_impl
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document
-from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
-from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
+from timApp.user.personaluniquecode import UserPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.user import User, UserInfo, deleted_user_suffix
 from timApp.user.usercontact import UserContact
 from timApp.user.usergroup import UserGroup
@@ -28,6 +27,7 @@ from timApp.user.usergroupmember import UserGroupMember
 from timApp.user.userutils import check_password_hash
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.utils import approximate_real_name
+from tim_common.timjsonencoder import TimJsonEncoder
 
 
 def create_user_info_set(u: User) -> set[str]:
@@ -420,7 +420,7 @@ def fix_aalto_student_ids() -> None:
     for u in users_to_fix:
         u.set_unique_codes(
             [
-                SchacPersonalUniqueCode(
+                UserPersonalUniqueCode(
                     code=u.name.split(":")[1], codetype="studentID", org="aalto.fi"
                 )
             ]

@@ -23,7 +23,7 @@ from timApp.auth.saml.utils import (
 from timApp.auth.sessioninfo import logged_in
 from timApp.tim_app import app, csrf
 from timApp.timdb.sqa import db
-from timApp.user.personaluniquecode import SchacPersonalUniqueCode
+from timApp.user.personaluniquecode import UserPersonalUniqueCode
 from timApp.user.user import UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.userorigin import UserOrigin
@@ -106,7 +106,7 @@ class BaseSamlUserAttributes(ABC):
 
     @property
     @abstractmethod
-    def unique_codes(self) -> list[SchacPersonalUniqueCode] | None:
+    def unique_codes(self) -> list[UserPersonalUniqueCode] | None:
         """
         A list of "unique codes" of the user. The values are meant to be unique and allow to identify the user in
         the given organization.
@@ -137,7 +137,7 @@ class BaseSamlUserAttributes(ABC):
             "givenName": self.given_name,
             "sn": self.surname,
             "mail": self.email,
-            "schacPersonalUniqueCode": [uc.to_urn() for uc in ucs] if ucs else [],
+            "schacPersonalUniqueCode": [uc.to_schac_urn() for uc in ucs] if ucs else [],
             "organisation_group": self.organisation_group,
         }
 

@@ -13,8 +13,8 @@ from marshmallow.utils import missing
 
 from timApp.plugin.jsrunner.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
-from timApp.user.hakaorganization import HakaOrganization
-from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
+from timApp.user.externalorganization import ExternalOrganization
+from timApp.user.personaluniquecode import PersonalUniqueCode, UserPersonalUniqueCode
 from timApp.user.user import User, UserInfo
 from timApp.util.utils import widen_fields
 from tim_common.markupmodels import GenericMarkupModel
@@ -368,7 +368,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
         q = (
             User.query.join(PersonalUniqueCode)
             .filter(PersonalUniqueCode.code.in_(idents))
-            .join(HakaOrganization)
+            .join(ExternalOrganization)
             .filter_by(name=org)
             .with_entities(PersonalUniqueCode.code, User)
         )
@@ -421,7 +421,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
                 MissingUser(
                     user=UserInfo(
                         unique_codes=[
-                            SchacPersonalUniqueCode(
+                            UserPersonalUniqueCode(
                                 code=sid, codetype="studentID", org=org
                             )
                         ],
@@ -436,7 +436,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
                 MissingUser(
                     user=UserInfo(
                         unique_codes=[
-                            SchacPersonalUniqueCode(
+                            UserPersonalUniqueCode(
                                 code=sid, codetype="studentID", org=org
                             )
                         ],

@@ -96,7 +96,7 @@ from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.slide.slidestatus import SlideStatus
 from timApp.timdb.sqa import db
 from timApp.user.consentchange import ConsentChange
-from timApp.user.hakaorganization import HakaOrganization
+from timApp.user.externalorganization import ExternalOrganization
 from timApp.user.newuser import NewUser
 from timApp.user.personaluniquecode import PersonalUniqueCode
 from timApp.user.user import User
@@ -168,7 +168,7 @@ all_models = (
     EventTagAttachment,
     ExportedCalendar,
     Folder,
-    HakaOrganization,
+    ExternalOrganization,
     InternalMessage,
     InternalMessageReadReceipt,
     InternalMessageDisplay,

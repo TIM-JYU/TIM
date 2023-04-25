@@ -27,6 +27,7 @@ CONFIG = {
             # "optional_attributes": [
             #     "schacPersonalUniqueCode",
             # ],
+            "authn_requests_signed": True,
             "want_response_signed": False,
             "want_assertions_signed": False,
             "want_assertions_or_response_signed": True,

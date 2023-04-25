@@ -36,8 +36,11 @@ from timApp.notification.notification import Notification, NotificationType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
-from timApp.user.hakaorganization import HakaOrganization, get_home_organization_id
-from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
+from timApp.user.externalorganization import (
+    ExternalOrganization,
+    get_home_organization_id,
+)
+from timApp.user.personaluniquecode import UserPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.preferences import Preferences
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import (
@@ -203,7 +206,7 @@ class UserInfo:
     origin: UserOrigin | None = None
     password: str | None = None
     password_hash: str | None = None
-    unique_codes: list[SchacPersonalUniqueCode] = field(default_factory=list)
+    unique_codes: list[UserPersonalUniqueCode] = field(default_factory=list)
 
     def __post_init__(self):
         assert (
@@ -1082,9 +1085,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                     notify_message_lists=notify_message_lists,
                 )
 
-    def set_unique_codes(self, codes: list[SchacPersonalUniqueCode]):
+    def set_unique_codes(self, codes: list[UserPersonalUniqueCode]):
         for c in codes:
-            ho = HakaOrganization.get_or_create(name=c.org)
+            ho = ExternalOrganization.get_or_create(name=c.org)
             if ho.id is None or self.id is None:
                 db.session.flush()
             puc = PersonalUniqueCode(

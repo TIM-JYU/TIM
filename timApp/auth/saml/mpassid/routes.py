@@ -4,7 +4,7 @@ from timApp.auth.saml.service_provider import (
     IdpDescription,
     BaseSamlUserAttributes,
 )
-from timApp.user.personaluniquecode import SchacPersonalUniqueCode
+from timApp.user.personaluniquecode import UserPersonalUniqueCode
 from timApp.user.user import UserOrigin
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -20,23 +20,29 @@ class MpassidSamlUserAttributes(BaseSamlUserAttributes):
 
     @property
     def surname(self) -> str:
-        pass
+        return self.get_attribute("family_name", str)
 
     @property
     def given_name(self) -> str:
-        pass
+        return self.get_attribute("given_name", str)
 
     @property
     def email(self) -> str:
-        pass
+        return ""
 
     @property
-    def unique_codes(self) -> list[SchacPersonalUniqueCode] | None:
-        pass
+    def unique_codes(self) -> list[UserPersonalUniqueCode] | None:
+        return [
+            UserPersonalUniqueCode(
+                code=self.get_attribute("uid", str),
+                codetype="userID",
+                org="MPASSid",
+            )
+        ]
 
     @property
     def organisation_group(self) -> str | None:
-        pass
+        return None
 
 
 saml_mpassid = add_saml_sp_routes(

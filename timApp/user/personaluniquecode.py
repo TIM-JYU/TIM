@@ -1,10 +1,9 @@
-from typing import Optional
-
 import re
 from dataclasses import dataclass
+from typing import Optional
 
 from timApp.timdb.sqa import db
-from timApp.user.hakaorganization import HakaOrganization
+from timApp.user.externalorganization import ExternalOrganization
 
 
 class PersonalUniqueCode(db.Model):
@@ -17,7 +16,7 @@ class PersonalUniqueCode(db.Model):
 
     org_id = db.Column(
         db.Integer,
-        db.ForeignKey("haka_organization.id"),
+        db.ForeignKey("external_organization.id"),
         nullable=False,
         primary_key=True,
     )
@@ -31,7 +30,7 @@ class PersonalUniqueCode(db.Model):
 
     user = db.relationship("User", back_populates="uniquecodes", lazy="joined")
     organization = db.relationship(
-        "HakaOrganization", back_populates="uniquecodes", lazy="joined"
+        "ExternalOrganization", back_populates="uniquecodes", lazy="joined"
     )
 
     __table_args__ = (db.UniqueConstraint("org_id", "code", "type"),)
@@ -50,14 +49,14 @@ class PersonalUniqueCode(db.Model):
     ) -> Optional["PersonalUniqueCode"]:
         return (
             PersonalUniqueCode.query.filter_by(code=code, type=codetype)
-            .join(HakaOrganization)
+            .join(ExternalOrganization)
             .filter_by(name=org)
             .first()
         )
 
     @staticmethod
-    def find_by_urn(urn: str) -> Optional["PersonalUniqueCode"]:
-        p = SchacPersonalUniqueCode.parse(urn)
+    def find_by_schac_urn(urn: str) -> Optional["PersonalUniqueCode"]:
+        p = UserPersonalUniqueCode.parse_schac_urn(urn)
         if not p:
             return None
         return PersonalUniqueCode.find_by_code(p.code, p.org, p.codetype)
@@ -72,22 +71,40 @@ uc_re = re.compile(
 
 
 @dataclass
-class SchacPersonalUniqueCode:
-    """Represents the 'schacPersonalUniqueCode' Haka attribute."""
+class UserPersonalUniqueCode:
+    """Represents the user's unique identifier within an identity provider.
+
+    Modelled against 'schacPersonalUniqueCode' attribute.
+    """
 
     code: str
+    """
+    Unique identifying code.
+    """
     codetype: str
+    """
+    Type of the code (e.g. student or employee).
+    """
     org: str
+    """
+    The organization that issued the code.
+    """
 
     @staticmethod
-    def parse(urn: str):
+    def parse_schac_urn(urn: str):
+        """
+        Parses the 'schacPersonalUniqueCode' attribute value.
+        """
         match = uc_re.fullmatch(urn)
         if not match:
             return None
         codetype = match.group("type")
         org_name = match.group("org")
         code = match.group("code")
-        return SchacPersonalUniqueCode(code=code, codetype=codetype, org=org_name)
+        return UserPersonalUniqueCode(code=code, codetype=codetype, org=org_name)
 
-    def to_urn(self):
+    def to_schac_urn(self):
+        """
+        Returns the 'schacPersonalUniqueCode' attribute value in URN format.
+        """
         return f"{uc_start}:{self.codetype}:{self.org}:{self.code}"

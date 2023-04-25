@@ -1,13 +1,8 @@
 """Server tests for importData plugin."""
-import json
-from contextlib import contextmanager
-
-import responses
-from requests import PreparedRequest
 
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.timdb.sqa import db
-from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
+from timApp.user.personaluniquecode import UserPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 
@@ -217,7 +212,7 @@ joinProperty: studentID(jyu.fi)
         )
         self.current_user.set_unique_codes(
             [
-                SchacPersonalUniqueCode(code="x", codetype="studentID", org="jyu.fi"),
+                UserPersonalUniqueCode(code="x", codetype="studentID", org="jyu.fi"),
             ]
         )
         db.session.commit()
