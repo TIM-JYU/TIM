@@ -1,5 +1,5 @@
 """Server tests for peer review."""
-
+from timApp.answer.answer import Answer
 from timApp.peerreview.peerreview import PeerReview
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
@@ -137,4 +137,22 @@ class PeerReviewTest(TimRouteTest):
         check_pr_row(3, 4, 2, "ta2", None)
 
         PeerReview.query.filter_by(block_id=d.id).delete()
+        all_answers = Answer.query.all()
+        for a in all_answers:
+            a.users_all = []
         db.session.commit()
+        self.add_answer(d, "t", "x", user=self.test_user_1)
+        self.add_answer(d, "t", "x", user=self.test_user_2, valid=False)
+        db.session.commit()
+        # Invalid answer not accepted in pr pairings unless docsetting peer_review_allow_invalid is true
+        r = self.get(f"{url}?b={b}&size=1")
+        self.assertIn(
+            "Not enough users to form pairs (1 but at least 2 users needed)", r
+        )
+        self.assertEqual(0, len(rq.all()))
+        d.document.add_setting("peer_review_allow_invalid", True)
+        r = self.get(f"{url}?b={b}&size=1")
+        self.assertNotIn(
+            "Not enough users to form pairs (1 but at least 2 users needed)", r
+        )
+        self.assertEqual(2, len(rq.all()))
