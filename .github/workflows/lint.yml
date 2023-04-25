@@ -59,7 +59,7 @@ jobs:
           packages: libxmlsec1-dev libxmlsec1-openssl
           version: "1.0"
       - name: Install Poetry
-        run: pipx install --pip-args \'--pre\' poetry
+        run: pipx install poetry
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
