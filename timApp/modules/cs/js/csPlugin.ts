@@ -1035,34 +1035,31 @@ export function createTemplateButtons(
         // maybe array
         try {
             const parsed = JSON.parse(line);
-            // someone who can comprehend regex can rewrite this
-            // let defaultData = parsed[0].replace(/\\\\[|\\\\]|\\\\square/, "");
-            let defaultData = parsed[0].replace("\\[", "");
-            defaultData = defaultData.replace("\\]", "");
-            defaultData = defaultData.replace(/\\square/g, "");
-            defaultData = defaultData.replace(/\s/g, "");
+            let defaultData = parsed[0].replace(
+                /\\\\\[|\\\\\]|\\\\square|\s/g,
+                ""
+            );
             const item: ITemplateButton = {
                 text: parsed[0],
                 data: defaultData,
                 expl: defaultData,
             };
             const mathAttributes = ["", "math", "s", "q", "t"];
-            function checkForMath(checking: string) {
-                if (mathAttributes.includes(checking)) {
-                    switch (checking) {
-                        case "math":
-                            item.hasMath = true;
-                            break;
-                        case "s":
-                        case "q":
-                        case "t":
-                            item.type = checking;
-                            break;
+            if (parsed.length > 1) {
+                for (const part of parsed) {
+                    if (mathAttributes.includes(part)) {
+                        switch (part) {
+                            case mathAttributes[1]:
+                                item.hasMath = true;
+                                break;
+                            case mathAttributes[2]:
+                            case mathAttributes[3]:
+                            case mathAttributes[4]:
+                                item.type = part;
+                                break;
+                        }
                     }
                 }
-            }
-            if (parsed.length > 1) {
-                parsed.forEach(checkForMath);
                 if (!mathAttributes.includes(parsed[1])) {
                     item.data = parsed[1];
                     item.expl = item.data.replace("⁞", "");
@@ -1072,20 +1069,22 @@ export function createTemplateButtons(
                         item.expl = parsed[2];
                     }
                     if (parsed.length > 3) {
-                        item.placeholders = [];
-                        for (let i = 3; i < parsed.length; i++) {
-                            const p = parsed[i];
-                            if (!(p instanceof Array)) {
-                                continue;
-                            }
-                            const param: ITemplateParam = {
-                                default: p[0] ?? "",
-                                text: p[1] ?? "",
-                                pattern: p[2] ?? "",
-                                error: p[3] ?? "",
-                            };
-                            if (p.length > 0) {
-                                item.placeholders?.push(param);
+                        if (!mathAttributes.includes(parsed[3])) {
+                            item.placeholders = [];
+                            for (let i = 3; i < parsed.length; i++) {
+                                const p = parsed[i];
+                                if (!(p instanceof Array)) {
+                                    continue;
+                                }
+                                const param: ITemplateParam = {
+                                    default: p[0] ?? "",
+                                    text: p[1] ?? "",
+                                    pattern: p[2] ?? "",
+                                    error: p[3] ?? "",
+                                };
+                                if (p.length > 0) {
+                                    item.placeholders?.push(param);
+                                }
                             }
                         }
                     }
