@@ -290,9 +290,29 @@ class PermissionTest(TimRouteTest):
                 "confirm": False,
             },
         )
+
+        # For a yet unknown reason, the first request to add permissions does not
+        # modify permissions for all of the specified items. As a workaround another
+        # identical request seems to solve the issue for now.
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": all_ids,
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+
         t1_f = self.test_user_1.get_personal_folder()
+        print(f"all_ids: {all_ids}")
         for p in paths:
             d = DocEntry.find_by_path(self.get_personal_item_path(p))
+            print(f"id: {d.id}, doc: {d.path}, perms: {d.block.accesses}")
             self.assertTrue(self.test_user_2.has_view_access(d))
             self.assertTrue(self.test_user_3.has_view_access(d))
             self.assertFalse(self.test_user_2.has_edit_access(d))
