@@ -516,7 +516,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         .all()
     )
     a = None
-    velp_groups = None
+    modified_permissions = []
     owned_items_before = set()
     for i in items:
         checked_owner = verify_permission_edit_access(i, m.type)
@@ -526,35 +526,34 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
             accs = add_perm(m, i)
             if accs:
                 a = accs[0]
+                modified_permissions.extend(accs)
             # copy permissions to item's/document's velp groups, if any
             if m.edit_velp_group_perms:
                 # Currently only document velp group permissions are supported
                 if i.type_id == BlockType.Document.value:
                     doc = get_doc_or_abort(i.id)
                     velp_groups = add_velp_group_permissions(m, doc)
-
+                    modified_permissions.extend(velp_groups)
             if m.edit_translation_perms:
                 parent = get_item_or_abort(i.id)
                 if not parent.is_original_translation or isinstance(parent, Folder):
-                    # TODO we should probably follow the chain to the root document just to be safe
                     continue
+                # TODO modify only changed perms here instead of always copying all permissions
                 copy_doc_rights_to_translations(parent)
         else:
             for g in groups:
                 a = remove_perm(g, i, m.type) or a
+                if a:
+                    modified_permissions.append(a)
                 doc = get_doc_or_abort(i.id)
                 # Also remove permissions to item's/document's velp groups and translations, if any
                 if m.edit_velp_group_perms:
                     if i.type_id == BlockType.Document.value:
                         velp_groups = remove_velp_group_perms(doc, g, m.type)
+                        modified_permissions.extend(velp_groups)
                 if m.edit_translation_perms:
-                    action = "added" if m.action == EditOption.Add else "removed"
-                    log_msg = (
-                        f"{action} {a.info_str if a else m.type.__str__().removeprefix('AccessType.')}() for {seq_to_str(m.groups)} in"
-                        if a
-                        else None
-                    )
-                    remove_translation_perms(doc, g, m.type, log_msg)
+                    rm_translations = remove_translation_perms(doc, g, m.type)
+                    modified_permissions.extend(rm_translations)
 
     if m.type == AccessType.owner:
         owned_items_after = set()
@@ -566,15 +565,22 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
             raise AccessDenied("You cannot remove ownership from yourself.")
     if a:
         action = "added" if m.action == EditOption.Add else "removed"
-        log_right(
-            f"{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}"
-        )
-        if velp_groups:
-            for vg in velp_groups:
-                log_right(
-                    f"{action} {vg.info_str} for {seq_to_str(m.groups)} in blocks: "
-                    + f"{seq_to_str(list(str(x) for x in m.ids))}"
-                )
+        for p in modified_permissions:
+            log_right(
+                f"{action} {p.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}"
+            )
+        # if velp_groups:
+        #     for vg in velp_groups:
+        #         log_right(
+        #             f"{action} {vg.info_str} for {seq_to_str(m.groups)} in blocks: "
+        #             + f"{seq_to_str(list(str(x) for x in m.ids))}"
+        #         )
+        # if rm_translations:
+        #     for tr in rm_translations:
+        #         log_right(
+        #             f"{action} {tr.info_str} for {seq_to_str(m.groups)} in blocks: "
+        #             + f"{seq_to_str(list(str(x) for x in m.ids))}"
+        #         )
         db.session.commit()
     return permission_response(m)
 
@@ -714,8 +720,7 @@ def copy_doc_rights_to_translations(
     :return: None.
     """
     for tr in doc.translations:
-        # a parent document's translations includes itself, skip it
-        if tr.id == doc.id:
+        if tr.is_original_translation:
             continue
         copy_rights(doc, tr, get_current_user_object(), copy_expired=False)
         if not log_msg:
@@ -867,22 +872,21 @@ def remove_velp_group_perms(
 
 
 def remove_translation_perms(
-    i: DocInfo | DocEntry, ug: UserGroup, acc: AccessType, log_msg: str | None = None
+    i: DocInfo | DocEntry, ug: UserGroup, acc: AccessType
 ) -> list[BlockAccess]:
     """Remove a UserGroup's permissions to a document's translations
 
     :param i: Parent document for the translations.
     :param ug: UserGroup whose permissions will be removed.
     :param acc: AccessType of the permissions that will be removed.
-    :param log_msg: Optional log message
     """
     rm_groups = []
     for tr in i.translations:
+        if tr.is_original_translation or isinstance(tr, Folder):
+            continue
         a = remove_perm(ug, tr.block, acc)
         if a:
             rm_groups.append(a)
-        if log_msg:
-            log_right(f"{log_msg} {tr.path}")
     return rm_groups
 
 
