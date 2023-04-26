@@ -8,7 +8,7 @@ from typing import Union, Any, ValuesView, Generator
 import attr
 import filelock
 import sass
-from flask import current_app
+from flask import current_app, g
 from flask import flash
 from flask import redirect
 from flask import render_template, make_response, Response, stream_with_context
@@ -31,7 +31,13 @@ from timApp.auth.accesshelper import (
 )
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
-from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
+from timApp.auth.login import log_in_as_anonymous
+from timApp.auth.sessioninfo import (
+    get_current_user_object,
+    logged_in,
+    save_last_page,
+    clear_session,
+)
 from timApp.document.caching import check_doc_cache, set_doc_cache, refresh_doc_expire
 from timApp.document.create_item import (
     create_or_copy_item,
@@ -466,6 +472,20 @@ def goto_view(item_path, model: ViewParams) -> FlaskViewResult:
     )
 
 
+def process_anonymous_access(doc_info: DocInfo, commit: bool = False) -> None:
+    doc_settings = doc_info.document.get_settings()
+    anon_login = doc_settings.anonymous_login()
+    cur_user = get_current_user_object()
+
+    if anon_login and not logged_in():
+        u = log_in_as_anonymous(session)
+        g.user = u
+        if commit:
+            db.session.commit()
+    elif cur_user and cur_user.is_anonymous_guest_user and not anon_login:
+        clear_session()
+
+
 def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskViewResult:
     taketime("view begin", zero=True)
     m: DocViewParams = ViewModelSchema.load(request.args, unknown=EXCLUDE)
@@ -517,6 +537,9 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
 
     if vp.login and not logged_in():
         return render_login(doc_info.document)
+
+    # Commit here early to ensure the created anonymous user is persisted
+    process_anonymous_access(doc_info, commit=True)
 
     should_hide_names = False
     if route == ViewRoute.Review and not verify_teacher_access(doc_info, require=False):
@@ -1320,50 +1343,79 @@ def get_item(item_id: int):
 
 
 @view_page.post("/items/relevance/set/<int:item_id>")
-def set_blockrelevance(item_id: int, value: int):
+def set_blockrelevance(item_id: int, value: int, update_translations: bool):
     """
     Add block relevance or edit if it already exists for the block.
 
-    :param value: The relevance value.
     :param item_id: Item id.
+    :param value: The relevance value.
+    :param update_translations: whether to update relevance value for the document's translations as well
     :return: Ok response.
     """
 
+    set_relevance(item_id, value, update_translations)
+    return ok_response()
+
+
+def set_relevance(item_id: int, value: int, update_translations: bool = True) -> None:
+    """
+    Add block relevance or edit if it already exists for the block.
+    :param item_id: Item id.
+    :param value: The relevance value.
+    :param update_translations: whether to update relevance value for the document's translations as well
+    :return: None. Raises Exception on errors.
+    """
+
+    # TODO For some reason, Flask does not like us calling the blueprinted method directly, hence this extracted method.
     i = Item.find_by_id(item_id)
     if not i:
         raise NotExist("Item not found")
     verify_manage_access(i)
 
     relevance_value = value
-    # If block has existing relevance, delete it before adding the new one.
-    blockrelevance = i.relevance
-    if blockrelevance:
-        try:
-            db.session.delete(blockrelevance)
-        except Exception as e:
-            db.session.rollback()
-            raise RouteException(
-                f"Changing block relevance failed: {get_error_message(e)}"
-            )
-    blockrelevance = BlockRelevance(relevance=relevance_value)
+    check_and_clear_relevance(i, "Changing")
 
     try:
-        i.block.relevance = blockrelevance
+        i.block.relevance = BlockRelevance(relevance=relevance_value)
+        if update_translations:
+            doc = get_doc_or_abort(item_id)
+            for tr in doc.translations:
+                tr_item = Item.find_by_id(tr.id)
+                check_and_clear_relevance(tr_item, "Changing")
+                tr_item.block.relevance = BlockRelevance(relevance=relevance_value)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         raise RouteException(
             f"Setting block relevance failed: {get_error_message(e)}: {str(e)}"
         )
-    return ok_response()
 
 
-@view_page.get("/items/relevance/reset/<int:item_id>")
-def reset_blockrelevance(item_id: int):
+def check_and_clear_relevance(item: Item, action: str) -> None:
+    """
+    Delete an item's block relevance if it exists
+    :param item: item to modify
+    :param action: What type of action called this function (Changing, Resetting)
+    :return: None. Raises RouteException on errors.
+    """
+    block_relevance = item.relevance
+    if block_relevance:
+        try:
+            db.session.delete(block_relevance)
+        except Exception as e:
+            db.session.rollback()
+            raise RouteException(
+                f"{action} block relevance failed: {get_error_message(e)}"
+            )
+
+
+@view_page.post("/items/relevance/reset/<int:item_id>")
+def reset_blockrelevance(item_id: int, update_translations: bool = True):
     """
     Reset (delete) block relevance.
 
     :param item_id: Item id.
+    :param update_translations: whether to update relevance value for the document's translations as well
     :return: Ok response.
     """
 
@@ -1371,16 +1423,17 @@ def reset_blockrelevance(item_id: int):
     if not i:
         raise NotExist("Item not found")
     verify_manage_access(i)
-    blockrelevance = i.relevance
-    if blockrelevance:
-        try:
-            db.session.delete(blockrelevance)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            raise RouteException(
-                f"Resetting block relevance failed: {get_error_message(e)}"
-            )
+
+    check_and_clear_relevance(i, "Resetting")
+
+    if update_translations:
+        doc = get_doc_or_abort(item_id)
+        for tr in doc.translations:
+            tr_item = Item.find_by_id(tr.id)
+            check_and_clear_relevance(tr_item, "Resetting")
+
+    db.session.commit()
+
     return ok_response()
 
 

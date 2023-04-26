@@ -62,7 +62,7 @@ function movePastFormulasBeforeClicked(
     previewRoot: Element
 ): number {
     let index = 0;
-    const content = editor.content;
+    const content = editor.content.replace(/\n/g, " ");
 
     for (const mathElem of previewRoot.querySelectorAll(".math")) {
         // stop when clicked element is reached
@@ -74,7 +74,7 @@ function movePastFormulasBeforeClicked(
         if (!annotation || !annotation.textContent) {
             continue;
         }
-        const latex = annotation.textContent.trim();
+        const latex = annotation.textContent.trim().replace(/\n/g, " ");
         const nextIndex = content.indexOf(latex, index);
         if (nextIndex === -1) {
             return -1;
@@ -108,7 +108,9 @@ export function selectFormulaFromPreview(
     if (startI === -1) {
         return false;
     }
-    const i = editor.content.indexOf(clickedPreviewFormula.latex, startI);
+    const i = editor.content
+        .replace(/\n/g, " ")
+        .indexOf(clickedPreviewFormula.latex.replace(/\n/g, " "), startI);
     if (i === -1) {
         return false;
     }

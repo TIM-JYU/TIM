@@ -90,11 +90,13 @@ class DocSettingTypes:
     sync_answerbrowsers: bool
     peer_review_start: datetime
     peer_review_stop: datetime
+    peer_review_allow_invalid: bool
     anonymize_reviewers: str
     answerBrowser: AnswerBrowserInfo
     groupSelfJoin: GroupSelfJoinSettings
     showValidAnswersOnly: bool
     manageKey: str
+    anonymous_login: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -609,6 +611,9 @@ class DocSettings:
     def peer_review_stop(self) -> datetime | None:
         return self._get_datetime_option("peer_review_stop")
 
+    def peer_review_allow_invalid(self) -> bool | None:
+        return self.get_setting_or_default("peer_review_allow_invalid", False)
+
     def access_denied_message(self) -> str | None:
         return self.get_setting_or_default("access_denied_message", None)
 
@@ -643,6 +648,9 @@ class DocSettings:
 
     def manage_key(self) -> str | None:
         return self.get("manageKey", None)
+
+    def anonymous_login(self) -> bool:
+        return self.get_setting_or_default("anonymous_login", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

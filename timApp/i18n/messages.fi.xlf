@@ -8074,14 +8074,6 @@
           <context context-type="linenumber">65</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5731126650524323607" datatype="html">
-        <source>Outputs formula in multiple lines</source>
-        <target state="translated">Tulostaa kaavan usealla rivillä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
-          <context context-type="linenumber">98</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1957004543475680060" datatype="html">
         <source>Show less symbols</source>
         <target state="translated">Näytä vähemmän symboleita</target>
@@ -8120,6 +8112,30 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
           <context context-type="linenumber">245</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="450937500922433442" datatype="html">
+        <source>Inline</source>
+        <target state="translated">Yksirivinen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">100,101</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6998464152354639086" datatype="html">
+        <source>Align</source>
+        <target state="translated">Tasattu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">102,103</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6427553386757894134" datatype="html">
+        <source>Update translations' relevance values</source>
+        <target state="translated">Päivitä myös käännösten relevanssiarvot</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/relevance-edit.component.ts</context>
+          <context context-type="linenumber">47,48</context>
         </context-group>
       </trans-unit>
     </body>

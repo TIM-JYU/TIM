@@ -417,6 +417,11 @@ export class AnswerBrowserComponent
         }
         if (this.markupSettings.showValidOnly != undefined) {
             this.onlyValid = this.markupSettings.showValidOnly;
+        } else if (
+            this.viewctrl.docSettings.peer_review_allow_invalid &&
+            isPeerReview
+        ) {
+            this.onlyValid = false;
         }
 
         // If task is in form_mode, only last (already loaded) answer should matter.

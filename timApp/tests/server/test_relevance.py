@@ -17,7 +17,13 @@ class RelevanceTest(TimRouteTest):
     def test_set_relevance_and_get(self):
         self.login_test3()
         d = self.create_doc()
-        self.json_post(f"/items/relevance/set/{d.id}", {"value": 100})
+        self.json_post(
+            f"/items/relevance/set/{d.id}",
+            {
+                "value": 100,
+                "update_translations": False,
+            },
+        )
         self.get(
             f"/items/relevance/get/{d.id}",
             expect_content={
@@ -30,8 +36,20 @@ class RelevanceTest(TimRouteTest):
     def test_set_and_replace_relevance_and_get(self):
         self.login_test3()
         d = self.create_doc()
-        self.json_post(f"/items/relevance/set/{d.id}", {"value": 100})
-        self.json_post(f"/items/relevance/set/{d.id}", {"value": 50})
+        self.json_post(
+            f"/items/relevance/set/{d.id}",
+            {
+                "value": 100,
+                "update_translations": False,
+            },
+        )
+        self.json_post(
+            f"/items/relevance/set/{d.id}",
+            {
+                "value": 50,
+                "update_translations": False,
+            },
+        )
         self.get(
             f"/items/relevance/get/{d.id}",
             expect_content={
@@ -46,7 +64,13 @@ class RelevanceTest(TimRouteTest):
         d = self.create_doc(self.get_personal_item_path("a/b/doc"))
 
         # Test inheriting changing the relevance.
-        self.json_post(f"/items/relevance/set/{d.parent.id}", {"value": 0})
+        self.json_post(
+            f"/items/relevance/set/{d.parent.id}",
+            {
+                "value": 0,
+                "update_translations": False,
+            },
+        )
         self.get(
             f"/items/relevance/get/{d.id}",
             expect_content={
@@ -57,7 +81,13 @@ class RelevanceTest(TimRouteTest):
         )
 
         # Test inheritance overridden by target item value.
-        self.json_post(f"/items/relevance/set/{d.id}", {"value": -100})
+        self.json_post(
+            f"/items/relevance/set/{d.id}",
+            {
+                "value": -100,
+                "update_translations": False,
+            },
+        )
         self.get(
             f"/items/relevance/get/{d.id}",
             expect_content={
@@ -71,4 +101,11 @@ class RelevanceTest(TimRouteTest):
         self.login_test3()
         d = self.create_doc()
         self.login_test2()
-        self.json_post(f"/items/relevance/set/{d.id}", {"value": 25}, expect_status=403)
+        self.json_post(
+            f"/items/relevance/set/{d.id}",
+            {
+                "value": 25,
+                "update_translations": False,
+            },
+            expect_status=403,
+        )

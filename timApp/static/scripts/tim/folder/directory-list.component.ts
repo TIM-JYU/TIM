@@ -86,7 +86,7 @@ export class DirectoryListComponent {
         const fg = folderglobals();
         this.itemList = fg.items;
         this.item = fg.curr_item;
-        this.canCreate = Users.isLoggedIn();
+        this.canCreate = Users.isRealUser();
 
         // TODO: Allow to sort all columns instead
         if (
