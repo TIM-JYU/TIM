@@ -172,7 +172,7 @@ def _get_bookmarks_for(user: User) -> Response:
     return json_response(user.bookmarks.as_dict())
 
 
-@bookmarks.get("/get/<int:user_id>")
+@bookmarks.get("/get/<int(signed=True):user_id>")
 def get_bookmarks(user_id: int) -> Response:
     """Gets user bookmark data for a specific user."""
     verify_admin()

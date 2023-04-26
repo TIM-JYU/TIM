@@ -130,7 +130,7 @@ export class FrontPageComponent implements IController {
      * Check whether the current user is logged in.
      */
     isLoggedIn() {
-        return Users.isLoggedIn();
+        return Users.isRealUser();
     }
 
     cancelCreate() {

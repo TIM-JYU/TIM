@@ -35,7 +35,7 @@ export class TabEntryListService {
                 id: "tab-bookmark",
                 icon: "bookmark",
                 title: $localize`Bookmarks`,
-                visible: () => !hide.bookmarks && Users.isLoggedIn(),
+                visible: () => !hide.bookmarks && Users.isRealUser(),
                 component: BookmarksTabComponent,
             },
             {

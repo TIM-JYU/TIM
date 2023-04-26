@@ -45,11 +45,12 @@ const DEFAULT_PIECE_SIZE = 20;
             <h5 i18n>Help</h5>
             <div class="flex cl">
                 <a i18n-title title="Open quick start guide" href="/view/tim/ohjeita/pikaohje" i18n>Quick start</a>
-                <a i18n-title title="Open content creator guide" href="/view/tim/ohjeita/ohjeet" i18n>Content creator guide</a>  
-                <a i18n-title title="Open all guides" href="/view/tim/TIM-ohjeet" i18n>All guides</a>  
+                <a i18n-title title="Open content creator guide" href="/view/tim/ohjeita/ohjeet" i18n>Content creator
+                    guide</a>
+                <a i18n-title title="Open all guides" href="/view/tim/TIM-ohjeet" i18n>All guides</a>
             </div>
         </ng-container>
-        <ng-container *ngIf="users.isLoggedIn()">
+        <ng-container *ngIf="users.isRealUser()">
             <h5 i18n>Customize</h5>
             <a href="/settings" i18n>Customize TIM</a>
         </ng-container>

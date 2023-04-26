@@ -4,7 +4,7 @@ from random import shuffle
 from typing import DefaultDict
 
 from timApp.answer.answer import Answer
-from timApp.answer.answers import get_points_by_rule, get_latest_valid_answers_query
+from timApp.answer.answers import get_points_by_rule, get_latest_answers_query
 from timApp.document.docinfo import DocInfo
 from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.plugin import Plugin
@@ -30,8 +30,8 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
                 .all()
             )
         ]
-
-    points = get_points_by_rule(None, task_ids, user_ids)
+    valid_only = not settings.peer_review_allow_invalid()
+    points = get_points_by_rule(None, task_ids, user_ids, show_valid_only=valid_only)
 
     users = []
     for user in points:
@@ -82,7 +82,7 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
     # PeerReview rows and pairings will be the same for every task, even if target did not answer to some of tasks
     # If target has an answer in a task, try to add it to PeerReview table. If not, just leave it empty
     for t in task_ids:
-        answers: list[Answer] = get_latest_valid_answers_query(t, users).all()
+        answers: list[Answer] = get_latest_answers_query(t, users, valid_only).all()
         excluded_users: list[User] = []
         filtered_answers = []
         for answer in answers:

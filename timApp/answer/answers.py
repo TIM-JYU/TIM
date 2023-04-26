@@ -68,10 +68,14 @@ def get_answers_query(task_id: TaskId, users: list[User], only_valid: bool) -> Q
     return q
 
 
-def get_latest_valid_answers_query(task_id: TaskId, users: list[User]) -> Query:
+def get_latest_answers_query(
+    task_id: TaskId, users: list[User], only_valid: bool
+) -> Query:
+    q = Answer.query.filter_by(task_id=task_id.doc_task)
+    if only_valid:
+        q = q.filter_by(valid=True)
     sq = (
-        Answer.query.filter_by(task_id=task_id.doc_task, valid=True)
-        .join(User, Answer.users)
+        q.join(User, Answer.users)
         .filter(User.id.in_([u.id for u in users]))
         .group_by(User.id)
         .with_entities(func.max(Answer.id).label("aid"), User.id.label("uid"))

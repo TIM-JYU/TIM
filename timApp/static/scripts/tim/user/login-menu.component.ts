@@ -22,7 +22,7 @@ import {Users} from "tim/user/userService";
 })
 export class LoginMenuComponent implements OnInit {
     isLoggedIn() {
-        return Users.isLoggedIn();
+        return Users.isRealUser();
     }
 
     openLoginDialog() {
