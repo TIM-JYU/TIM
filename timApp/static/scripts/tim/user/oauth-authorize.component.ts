@@ -58,7 +58,7 @@ export class OAuthButtonComponent {
 export class OAuthAuthorizeComponent {
     data: IOAuthGlobals = oauthglobals();
     scopeDescriptions = OAUTH_SCOPES;
-    loggedIn = Users.isLoggedIn();
+    loggedIn = Users.isRealUser();
 }
 
 @NgModule({

@@ -174,7 +174,7 @@ PointsType = Union[
 ]
 
 # TODO: loggable route (points in url?)
-@answers.put("/saveReview/<int:user_id>/<task_id>")
+@answers.put("/saveReview/<int(signed=True):user_id>/<task_id>")
 def save_review_points(
     task_id: str, user_id: int, comment: str | None = None, points: PointsType = None
 ) -> Response:
@@ -205,7 +205,7 @@ def save_review_points(
     return json_response(peer_review)
 
 
-@answers.put("/savePoints/<int:user_id>/<int:answer_id>")
+@answers.put("/savePoints/<int(signed=True):user_id>/<int:answer_id>")
 def save_points(answer_id: int, user_id: int, points: PointsType = None) -> Response:
     answer, _ = verify_answer_access(
         answer_id,
@@ -404,14 +404,16 @@ def call_plugin_answer_and_parse(answer_call_data: dict, plugintype: str) -> dic
     return jsonresp
 
 
-@answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:answer_id>")
+@answers.get(
+    "/iframehtml/<plugintype>/<task_id_ext>/<int(signed=True):user_id>/<int:answer_id>"
+)
 def get_iframehtml_answer(
     plugintype: str, task_id_ext: str, user_id: int, answer_id: int | None = None
 ) -> Response:
     return get_iframehtml_answer_impl(plugintype, task_id_ext, user_id, answer_id)
 
 
-@answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>")
+@answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int(signed=True):user_id>")
 def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int) -> Response:
     return get_iframehtml_answer_impl(plugintype, task_id_ext, user_id)
 
@@ -1354,8 +1356,9 @@ def preprocess_jsrunner_answer(
         else None,
     )
     if runnermarkup.peerReview:
-        if not curr_user.has_teacher_access(d):
-            raise AccessDenied("Teacher access required to browse all peer reviews")
+        # TODO: Query peer reviews from another document, check need for review anonymization
+        # For now we only query PeerReviews/velps in the same document as the jsrunner, so we assume
+        # that jsrunners runnable by non-teacher users were created by someone with at least edit access
         answerdata["peerreviews"] = get_reviews_for_document(d)
         answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d)
     else:
@@ -1744,7 +1747,7 @@ def import_answers(
     )
 
 
-@answers.get("/getAnswers/<task_id>/<int:user_id>")
+@answers.get("/getAnswers/<task_id>/<int(signed=True):user_id>")
 def get_answers(task_id: str, user_id: int) -> Response:
     verify_logged_in()
     try:

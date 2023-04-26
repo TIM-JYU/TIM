@@ -40,6 +40,7 @@ export interface IDocSettings {
     peer_review?: boolean;
     peer_review_start?: string;
     peer_review_stop?: string;
+    peer_review_allow_invalid?: boolean;
     max_uncollapsed_toc_items?: number;
     description?: string;
     translator?: string;

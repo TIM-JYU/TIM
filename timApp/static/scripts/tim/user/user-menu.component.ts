@@ -138,7 +138,7 @@ export class UserMenuComponent implements OnInit {
         }
     }
 
-    isLoggedIn = () => Users.isLoggedIn();
+    isLoggedIn = () => Users.isRealUser();
 
     getCurrentUser = () => Users.getCurrent();
     getSessionUsers = () => Users.getSessionUsers();

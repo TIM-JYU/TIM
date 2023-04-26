@@ -8,7 +8,7 @@ from typing import Union, Any, ValuesView, Generator
 import attr
 import filelock
 import sass
-from flask import current_app
+from flask import current_app, g
 from flask import flash
 from flask import redirect
 from flask import render_template, make_response, Response, stream_with_context
@@ -31,7 +31,13 @@ from timApp.auth.accesshelper import (
 )
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
-from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
+from timApp.auth.login import log_in_as_anonymous
+from timApp.auth.sessioninfo import (
+    get_current_user_object,
+    logged_in,
+    save_last_page,
+    clear_session,
+)
 from timApp.document.caching import check_doc_cache, set_doc_cache, refresh_doc_expire
 from timApp.document.create_item import (
     create_or_copy_item,
@@ -466,6 +472,20 @@ def goto_view(item_path, model: ViewParams) -> FlaskViewResult:
     )
 
 
+def process_anonymous_access(doc_info: DocInfo, commit: bool = False) -> None:
+    doc_settings = doc_info.document.get_settings()
+    anon_login = doc_settings.anonymous_login()
+    cur_user = get_current_user_object()
+
+    if anon_login and not logged_in():
+        u = log_in_as_anonymous(session)
+        g.user = u
+        if commit:
+            db.session.commit()
+    elif cur_user and cur_user.is_anonymous_guest_user and not anon_login:
+        clear_session()
+
+
 def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskViewResult:
     taketime("view begin", zero=True)
     m: DocViewParams = ViewModelSchema.load(request.args, unknown=EXCLUDE)
@@ -517,6 +537,9 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
 
     if vp.login and not logged_in():
         return render_login(doc_info.document)
+
+    # Commit here early to ensure the created anonymous user is persisted
+    process_anonymous_access(doc_info, commit=True)
 
     should_hide_names = False
     if route == ViewRoute.Review and not verify_teacher_access(doc_info, require=False):

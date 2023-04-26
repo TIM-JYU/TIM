@@ -14,6 +14,7 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     AccessDenied,
     verify_task_access,
+    verify_teacher_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
@@ -262,6 +263,7 @@ def save_fields(
                         # TODO: Add new reviewer or if reviewable have none
                         pass
                     if new and old and task and current_doc and user_id:
+                        verify_teacher_access(current_doc)
                         change_peerreviewers_for_user(
                             current_doc, task, user_id, old, new
                         )
