@@ -200,7 +200,7 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "q",
     },
     {
-        text: "\\( ‰ \\)",
+        text: "‰",
         data: "‰",
         expl: "‰",
         type: "q",
@@ -548,7 +548,7 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
-        text: "\\( ⇅ \\)",
+        text: "⇅",
         data: "⇅",
         expl: "⇅",
         type: "s",
