@@ -715,7 +715,7 @@ def add_translation_permissions(
         for group in p.group_objects:
             a = grant_access(
                 group,
-                tr.block,
+                tr,
                 p.type,
                 accessible_from=opt.ffrom,
                 accessible_to=opt.to,
