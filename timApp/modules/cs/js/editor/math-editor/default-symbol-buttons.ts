@@ -140,7 +140,7 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
     {text: "$", data: "$$", expl: "$ $", type: "t"},
     {text: "$$", data: "$$⁞$$", expl: "$$ $$", type: "t"},
     {
-        text: "\\( ° \\)",
+        text: "°",
         data: "°",
         expl: "°",
         type: "q",
@@ -494,13 +494,13 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
-        text: "\\( < \\)",
+        text: "<",
         data: "<",
         expl: "<",
         type: "s",
     },
     {
-        text: "\\( > \\)",
+        text: ">",
         data: ">",
         expl: ">",
         type: "s",
@@ -884,9 +884,9 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
-        text: "\\( T \\)",
-        data: "\\mathrm{⁞}",
-        expl: "\\mathrm{ }",
+        text: "\\( \\mathrm{T} \\)",
+        data: "\\mathrm{T}",
+        expl: "\\mathrm{T}",
         type: "s",
     },
     {

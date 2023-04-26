@@ -1039,6 +1039,8 @@ export function createTemplateButtons(
             // const defaultData = parsed[0].replace(/\\\[|\\\]|\\square|\s/g, "");
             let defaultData = parsed[0].replace("\\[", "");
             defaultData = defaultData.replace("\\]", "");
+            defaultData = defaultData.replace("\\)", "");
+            defaultData = defaultData.replace("\\(", "");
             defaultData = defaultData.replace(/\\square/g, "");
             defaultData = defaultData.replace(/\s/g, "");
             const item: ITemplateButton = {
