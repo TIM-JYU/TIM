@@ -505,26 +505,38 @@ export class FormulaEditorComponent {
                     eIndex += 3;
                     i--;
                 }
-                // add only the outermost begin and end to list
+                // add only the outermost beginning and end to list
                 allMatrices.push([bStack[i + 1], eStack[eStack.length - 1]]);
                 break;
             }
-            // begin and end are found, but begin is first. add begin to stack.
+            // begin and end are found, but begin is first
             if (bIndex < eIndex) {
-                // add possible keywords from stacks to actual list
+                // try to add keywords from stacks to actual list
                 if (eStack.length > 0) {
-                    allMatrices.push([
-                        bStack[bStack.length - 1],
-                        eStack[eStack.length - 1],
-                    ]);
-                    // reset stacks
-                    bStack.length = 0;
-                    eStack.length = 0;
+                    if (
+                        formula
+                            .slice(eStack[eStack.length - 1], bIndex)
+                            .includes("\n")
+                    ) {
+                        allMatrices.push([
+                            bStack[bStack.length - 1],
+                            eStack[eStack.length - 1],
+                        ]);
+                        // reset stacks
+                        bStack.length = 0;
+                        eStack.length = 0;
+                        bStack.push(bIndex);
+                    } else {
+                        // ignore begin and remove last end if there is no line break after last matrix
+                        eStack.pop();
+                    }
+                } else {
+                    // add begin to its stack if end stack is empty
+                    bStack.push(bIndex);
                 }
-                bStack.push(bIndex);
                 bIndex += 5;
             } else {
-                // add end to stack only if it has a begin pair
+                // add end to stack only if it has a beginning pair
                 if (bStack.length > eStack.length) {
                     // remove inner begin and end from stacks
                     if (eStack.length > 0) {
