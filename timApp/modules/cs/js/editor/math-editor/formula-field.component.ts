@@ -45,9 +45,6 @@ export type LineAdd = {
     addBelow: boolean;
 };
 
-// wait time before checking for errors in LaTeX
-const ERROR_MESSAGE_DELAY = 1000;
-
 @Component({
     selector: "cs-formula-field",
     template: `
@@ -120,7 +117,6 @@ export class FormulaFieldComponent implements AfterViewInit {
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
     private active = false;
     error = false;
-    activeErrorTimeOutId = -1;
 
     @ViewChild("latexInputElement")
     latexInputElement!: ElementRef<HTMLTextAreaElement>;
@@ -186,7 +182,6 @@ export class FormulaFieldComponent implements AfterViewInit {
                 id: this.id,
             });
 
-            this.checkErrorDelayed();
             this.updateTextareaRows();
             this.updateUndoRedoStack();
         }
@@ -252,7 +247,7 @@ export class FormulaFieldComponent implements AfterViewInit {
                 latex: this.latexInput,
                 id: this.id,
             });
-            this.checkErrorDelayed();
+            this.checkErrors();
             this.updateTextareaRows();
             this.updateUndoRedoStack();
         }
@@ -344,30 +339,8 @@ export class FormulaFieldComponent implements AfterViewInit {
     /**
      * Check if MathQuill produces an error from LaTeX input
      */
-    hasErrors() {
-        return (
-            this.mathField.latex().length === 0 && this.latexInput.length > 0
-        );
-    }
-
-    /**
-     * Displays errors
-     */
-    checkErrorDelayed() {
-        // clear previous delay
-        if (this.activeErrorTimeOutId !== -1) {
-            window.clearTimeout(this.activeErrorTimeOutId);
-        }
-        // if no errors then clear error immediately but don't show error yet if there were any
-        if (!this.hasErrors()) {
-            this.error = false;
-            return;
-        }
-
-        // show error after a delay
-        this.activeErrorTimeOutId = window.setTimeout(() => {
-            // check again to see if error still persists
-            this.error = this.hasErrors();
-        }, ERROR_MESSAGE_DELAY);
+    checkErrors() {
+        this.error =
+            this.mathField.latex().length === 0 && this.latexInput.length > 0;
     }
 }
