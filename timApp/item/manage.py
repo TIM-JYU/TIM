@@ -571,9 +571,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         action = "added" if m.action == EditOption.Add else "removed"
         for p in modified_permissions:
             path = get_item_or_abort(p.block_id).path
-            log_right(
-                f"{action} {p.info_str} for {seq_to_str(m.groups)} in blocks/paths: {seq_to_str(list(str(x) for x in m.ids))} ({path})"
-            )
+            log_right(f"{action} {p.info_str} for {seq_to_str(m.groups)} in {path}")
         db.session.commit()
     return permission_response(m)
 
