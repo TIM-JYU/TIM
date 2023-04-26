@@ -1035,45 +1035,61 @@ export function createTemplateButtons(
         // maybe array
         try {
             const parsed = JSON.parse(line);
+            // someone who can comprehend regex can rewrite this
+            // const defaultData = parsed[0].replace(/\\\[|\\\]|\\square|\s/g, "");
+            let defaultData = parsed[0].replace("\\[", "");
+            defaultData = defaultData.replace("\\]", "");
+            defaultData = defaultData.replace(/\\square/g, "");
+            defaultData = defaultData.replace(/\s/g, "");
             const item: ITemplateButton = {
                 text: parsed[0],
-                data: parsed[0],
+                data: defaultData,
+                expl: defaultData,
             };
-            if (parsed.length > 1 && parsed[1] !== "") {
-                item.data = parsed[1];
-            }
-            if (parsed.length > 2 && parsed[2] !== "") {
-                item.expl = parsed[2];
-            }
-            if (parsed.length > 3) {
-                item.placeholders = [];
-            }
-            // some index in array after text, data,... contains string "math"
-            item.hasMath = (parsed as string[]).some(
-                (x, i) => i >= 2 && x == "math"
-            );
-            // parse symbol-buttons-menu type parameter
-            if ((parsed as string[]).some((x, i) => i > 2 && x == "s")) {
-                item.type = "s";
-            } else if ((parsed as string[]).some((x, i) => i > 2 && x == "q")) {
-                item.type = "q";
-            } else if ((parsed as string[]).some((x, i) => i > 2 && x == "t")) {
-                item.type = "t";
-            }
-            // parse extended form
-            for (let i = 3; i < parsed.length; i++) {
-                const p = parsed[i];
-                if (!(p instanceof Array)) {
-                    continue;
+            const mathAttributes = ["", "math", "s", "q", "t"];
+            if (parsed.length > 1) {
+                for (const part of parsed) {
+                    if (mathAttributes.includes(part)) {
+                        switch (part) {
+                            case mathAttributes[1]:
+                                item.hasMath = true;
+                                break;
+                            case mathAttributes[2]:
+                            case mathAttributes[3]:
+                            case mathAttributes[4]:
+                                item.type = part;
+                                break;
+                        }
+                    }
                 }
-                const param: ITemplateParam = {
-                    default: p[0] ?? "",
-                    text: p[1] ?? "",
-                    pattern: p[2] ?? "",
-                    error: p[3] ?? "",
-                };
-                if (p.length > 0) {
-                    item.placeholders?.push(param);
+                if (!mathAttributes.includes(parsed[1])) {
+                    item.data = parsed[1];
+                    item.expl = item.data.replace("⁞", "");
+                }
+                if (parsed.length > 2) {
+                    if (!mathAttributes.includes(parsed[2])) {
+                        item.expl = parsed[2];
+                    }
+                    if (parsed.length > 3) {
+                        if (!mathAttributes.includes(parsed[3])) {
+                            item.placeholders = [];
+                            for (let i = 3; i < parsed.length; i++) {
+                                const p = parsed[i];
+                                if (!(p instanceof Array)) {
+                                    continue;
+                                }
+                                const param: ITemplateParam = {
+                                    default: p[0] ?? "",
+                                    text: p[1] ?? "",
+                                    pattern: p[2] ?? "",
+                                    error: p[3] ?? "",
+                                };
+                                if (p.length > 0) {
+                                    item.placeholders?.push(param);
+                                }
+                            }
+                        }
+                    }
                 }
             }
             templateButtons.push(item);
