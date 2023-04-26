@@ -1,3 +1,11 @@
+"""
+Runs tests for math editor
+"""
+
+__authors__ = ["Daniel Juola"]
+__license__ = "MIT"
+__date__ = "26.4.2023"
+
 from selenium.webdriver.common.keys import Keys
 from timApp.tests.browser.browsertest import BrowserTest
 from time import sleep

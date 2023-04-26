@@ -1,6 +1,7 @@
 /**
  * Formula Editor for inputting LaTeX math
  * @author Juha Reinikainen
+ * @author Daniel Juola
  * @licence MIT
  * @date 28.2.2023
  */
