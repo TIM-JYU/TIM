@@ -13,17 +13,19 @@ autoupdate: 1000
 formulaEditor: true
 upload: true
 buttons: |!!
+[ "$", "$⁞$", "$ $", "t" ]
+[ "$$", "$$⁞$$", "$$ $$", "t"]
 [ "\\[ \\pi \\]", "\\pi", "\\pi", "q"]
 [ "\\[ \\sin \\]", "\\sin", "\\sin", "q"]
 [ "\\[ \\cos \\]", "\\cos", "\\cos", "q"]
 [ "\\[ \\tan \\]", "\\tan", "\\tan", "q"]
+[ "\\[ \\frac{\\square}{\\square} \\]", "\\frac{⁞}{}", "\\frac{}{}", "q"]
+[ "\\[ f(\\square) \\]", "f(⁞)", "f()", "q"]
+[ "\\[ \\sqrt{\\square} \\]", "\\sqrt{⁞}", "\\sqrt{}", "q"]
+[ "\\[ \\square^n \\]", "⁞^n", "^n", "q"]
 [ "\\[ \\overline{\\text{i}} \\]", "\\overline{\\text{i}}", "\\overline{\\text{i}}", "s"]
 [ "\\[ \\overline{\\text{j}} \\]", "\\overline{\\text{j}}", "\\overline{\\text{j}}", "s"]
 [ "\\[ \\overline{\\text{k}} \\]", "\\overline{\\text{k}}", "\\overline{\\text{k}}", "s"]
-[ "\\[ \\frac{\\square}{\\square} \\]", "\\frac{⁞}{}", "\\frac{}{}", "s"]
-[ "\\[ f(\\square) \\]", "f(⁞)", "f()", "s"]
-[ "\\[ \\sqrt{\\square} \\]", "\\sqrt{⁞}", "\\sqrt{}", "s"]
-[ "\\[ \\square^n \\]", "⁞^n", "^n", "s"]
 [ "\\[ \\lim_{\\square} \\]", "\\lim_{⁞}", "\\lim_{}", "s"]
 [ "\\[ \\sum_{\\square}^{\\square} \\]", "\\sum_{⁞}^{}", "\\sum_{}^{}", "s"]
 [ "\\[ \\int_\\square^\\square \\]", "\\int_{⁞}^{}", "\\int_{}^{}", "s"]

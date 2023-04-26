@@ -5,6 +5,8 @@
 import type {ITemplateButton} from "../../csPlugin";
 
 export const DEFAULT_SYMBOL_BUTTONS: ITemplateButton[] = [
+    {text: "$", data: "$$", expl: "$ $", type: "t"},
+    {text: "$$", data: "$$⁞$$", expl: "$$ $$", type: "t"},
     {
         text: "\\[ \\pi \\]",
         data: "\\pi",
@@ -30,6 +32,30 @@ export const DEFAULT_SYMBOL_BUTTONS: ITemplateButton[] = [
         type: "q",
     },
     {
+        text: "\\[ \\frac{\\square}{\\square} \\]",
+        data: "\\frac{⁞}{}",
+        expl: "\\frac{}{}",
+        type: "q",
+    },
+    {
+        text: "\\[ f(\\square) \\]",
+        data: "f(⁞)",
+        expl: "f()",
+        type: "q",
+    },
+    {
+        text: "\\[ \\sqrt{\\square} \\]",
+        data: "\\sqrt{⁞}",
+        expl: "\\sqrt{}",
+        type: "q",
+    },
+    {
+        text: "\\[ \\square^n \\]",
+        data: "⁞^n",
+        expl: "^n",
+        type: "q",
+    },
+    {
         text: "\\[ \\overline{\\text{i}} \\]",
         data: "\\overline{\\text{i}}",
         expl: "\\overline{\\text{i}}",
@@ -45,30 +71,6 @@ export const DEFAULT_SYMBOL_BUTTONS: ITemplateButton[] = [
         text: "\\[ \\overline{\\text{k}} \\]",
         data: "\\overline{\\text{k}}",
         expl: "\\overline{\\text{k}}",
-        type: "s",
-    },
-    {
-        text: "\\[ \\frac{\\square}{\\square} \\]",
-        data: "\\frac{⁞}{}",
-        expl: "\\frac{}{}",
-        type: "s",
-    },
-    {
-        text: "\\[ f(\\square) \\]",
-        data: "f(⁞)",
-        expl: "f()",
-        type: "s",
-    },
-    {
-        text: "\\[ \\sqrt{\\square} \\]",
-        data: "\\sqrt{⁞}",
-        expl: "\\sqrt{}",
-        type: "s",
-    },
-    {
-        text: "\\[ \\square^n \\]",
-        data: "⁞^n",
-        expl: "^n",
         type: "s",
     },
     {
