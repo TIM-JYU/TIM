@@ -29,7 +29,7 @@ enum FormulaType {
     Multi = "multi",
     Inline = "inline",
     Align = "align",
-    Undefined = "undefined",
+    NotDefined = "undefined",
 }
 
 type FormulaTuple = [FormulaType, number, number];
@@ -429,7 +429,7 @@ export class FormulaEditorComponent {
         for (const [formulaType, startI, endI] of allParenthesis) {
             // parenthesis is completely after cursor
             if (startI > cursorIndex) {
-                return [FormulaType.Undefined, beginning, startI - 1];
+                return [FormulaType.NotDefined, beginning, startI - 1];
             }
             // parenthesis is completely before cursor
             if (endI < cursorIndex) {
@@ -438,7 +438,7 @@ export class FormulaEditorComponent {
             }
             return [formulaType, startI, endI];
         }
-        return [FormulaType.Undefined, beginning, -1];
+        return [FormulaType.NotDefined, beginning, -1];
     }
 
     /**
@@ -613,6 +613,8 @@ export class FormulaEditorComponent {
      * Sets the active field to the line with cursor.
      */
     setMultilineActiveField(fields: FieldType[]) {
+        const firstConstant = this.formulaType === FormulaType.Align ? 0 : 2;
+        const lineConstant = this.formulaType === FormulaType.Align ? 4 : 3;
         const cursorI = this.cursorLocation;
         const before = this.oldContent.before;
         const beforeAndEditing =
@@ -630,10 +632,10 @@ export class FormulaEditorComponent {
                 before.length +
                 this.existingParenthesis[0].length +
                 fields[0].latex.length +
-                2;
+                firstConstant;
             while (cursorI > currentText && fieldIndex < fields.length) {
                 fieldIndex++;
-                currentText += fields[fieldIndex].latex.length + 3;
+                currentText += fields[fieldIndex].latex.length + lineConstant;
             }
         }
         // set active field after timeout
@@ -655,7 +657,7 @@ export class FormulaEditorComponent {
             this.cursorLocation
         );
         // cursor wasn't inside a $ syntax formula
-        if (currentFormula[0] === FormulaType.Undefined) {
+        if (currentFormula[0] === FormulaType.NotDefined) {
             if (currentFormula[2] < 0) {
                 currentFormula[2] = text.length - 1;
             }
@@ -672,7 +674,7 @@ export class FormulaEditorComponent {
                 this.cursorLocation
             );
             // cursor wasn't inside align formula
-            if (currentFormula[0] === FormulaType.Undefined) {
+            if (currentFormula[0] === FormulaType.NotDefined) {
                 return false;
             }
         }
@@ -806,10 +808,18 @@ export class FormulaEditorComponent {
                 throw Error("undefined case " + this.formulaType);
         }
         if (this.formulaType != FormulaType.Inline) {
-            const latex = this.fields
+            const latexList = this.fields
                 .map((field) => field.latex)
-                .filter((text) => text.length > 0)
-                .join(join);
+                .filter((text) => text.length > 0);
+            if (
+                this.formulaType === FormulaType.Align &&
+                latexList.length >= 2
+            ) {
+                const latexBegin =
+                    latexList.shift() + "\n&" + latexList.shift();
+                latexList.unshift(latexBegin);
+            }
+            const latex = latexList.join(join);
             if (latex.length === 0) {
                 return undefined;
             }
