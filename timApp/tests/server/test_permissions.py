@@ -743,6 +743,8 @@ class PermissionTest(TimRouteTest):
         )
         # The original bug was that db.session.commit() was not getting called when it should have,
         # so doing a rollback here should reveal the bug in the assert if it reappears.
+        # TODO this rollback should probably be removed, since it will unconditionally expire session objects.
+        #  This may cause issues with other tests. See https://docs.sqlalchemy.org/en/13/errors.html#error-bhk3
         db.session.rollback()
         d = DocEntry.find_by_id(d.id)
         self.assertFalse(self.test_user_2.has_view_access(d))
@@ -826,3 +828,124 @@ class PermissionTest(TimRouteTest):
         self.assertFalse(self.test_user_2.has_edit_access(d))
         self.assertFalse(self.test_user_2.has_view_access(d))
         self.assertTrue(self.test_user_1.has_ownership(d))
+
+    def test_copy_translation_permissions(self):
+        self.login_test1()
+
+        # test copying doc perms when creating translation
+        d = self.create_doc()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.edit.value,
+                "action": "add",
+                "id": d.id,
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        t = self.create_translation(d, "translation", "en")
+        self.assertTrue(self.test_user_2.has_edit_access(t))
+
+    def test_add_translation_permissions(self):
+        self.login_test1()
+
+        # test adding perms to translations when adding doc perms
+        d = self.create_doc()
+        t = self.create_translation(d, "translation", "en")
+        self.json_put(
+            f"/permissions/add",
+            {
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "id": d.id,
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+
+        self.assertTrue(self.test_user_2.has_view_access(t))
+        self.assertTrue(self.test_user_3.has_view_access(t))
+
+    def test_remove_translation_permissions(self):
+        # test removing perms from translations
+        self.login_test1()
+        d = self.create_doc()
+        self.test_user_2.grant_access(d, AccessType.edit)
+        self.test_user_3.grant_access(d, AccessType.edit)
+        db.session.commit()
+        t = self.create_translation(d, "translation", "en")
+
+        self.assertTrue(self.test_user_2.has_view_access(t))
+        self.assertTrue(self.test_user_3.has_view_access(t))
+
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "group": self.test_user_2.id,
+            },
+        )
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "group": self.test_user_3.id,
+            },
+        )
+
+        self.assertFalse(self.test_user_2.has_view_access(t))
+        self.assertFalse(self.test_user_3.has_view_access(t))
+
+    def test_mass_edit_translation_permissions(self):
+        self.login_test1()
+        d1 = self.create_doc()
+        d2 = self.create_doc()
+        t1 = self.create_translation(d1, "translation 1", "en")
+        t2 = self.create_translation(d2, "translation 2", "en")
+
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": [d1.id, d2.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        db.session.commit()
+
+        self.assertTrue(self.test_user_2.has_view_access(t1))
+        self.assertTrue(self.test_user_2.has_view_access(t2))
+        self.assertTrue(self.test_user_3.has_view_access(t1))
+        self.assertTrue(self.test_user_3.has_view_access(t2))
+
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": [d1.id, d2.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        self.assertFalse(self.test_user_2.has_view_access(t))
+        self.assertFalse(self.test_user_2.has_view_access(t2))
+        self.assertFalse(self.test_user_3.has_view_access(t))
+        self.assertFalse(self.test_user_3.has_view_access(t2))
