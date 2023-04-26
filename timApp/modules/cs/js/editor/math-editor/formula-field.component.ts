@@ -20,6 +20,9 @@ import type {
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
 
+/**
+ * Specifies which field the typed text should go in.
+ */
 export enum ActiveEditorType {
     Visual = "visual",
     Latex = "latex",
@@ -34,6 +37,9 @@ export type Edit = {
     latex: string;
 };
 
+/**
+ * wrapper for line add event info.
+ */
 export type LineAdd = {
     id: number;
     addBelow: boolean;
@@ -70,7 +76,7 @@ export type LineAdd = {
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
                 </textarea>
-                <span class="render-error" *ngIf="hasError" i18n>Error in LaTeX code</span>
+                <span class="render-error" *ngIf="error" i18n>Error in LaTeX code</span>
             </div>
 
             <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
@@ -110,7 +116,7 @@ export class FormulaFieldComponent implements AfterViewInit {
 
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
     private active = false;
-    private error = false;
+    error = false;
 
     @ViewChild("latexInputElement")
     latexInputElement!: ElementRef<HTMLTextAreaElement>;
@@ -130,13 +136,19 @@ export class FormulaFieldComponent implements AfterViewInit {
 
     @Input() initialValue!: string;
 
-    constructor() {}
-
+    /**
+     * Tell whether the field is active.
+     */
     @Input()
     get isActive(): boolean {
         return this.active;
     }
 
+    /**
+     * Sets active status of this field
+     * also sets focus to field
+     * @param value true if should be active false otherwise
+     */
     set isActive(value: boolean) {
         this.active = value;
         if (value) {
@@ -144,11 +156,6 @@ export class FormulaFieldComponent implements AfterViewInit {
                 this.mathField.focus();
             }
         }
-    }
-
-    @Input()
-    get hasError(): boolean {
-        return this.error;
     }
 
     /**
@@ -174,7 +181,7 @@ export class FormulaFieldComponent implements AfterViewInit {
                 latex: this.latexInput,
                 id: this.id,
             });
-            setTimeout(() => this.checkError(), 2);
+
             this.updateTextareaRows();
             this.updateUndoRedoStack();
         }
@@ -240,7 +247,7 @@ export class FormulaFieldComponent implements AfterViewInit {
                 latex: this.latexInput,
                 id: this.id,
             });
-            setTimeout(() => this.checkError(), 2);
+            this.checkErrors();
             this.updateTextareaRows();
             this.updateUndoRedoStack();
         }
@@ -323,18 +330,17 @@ export class FormulaFieldComponent implements AfterViewInit {
             }
             this.undoStack.push(latex);
         }
-        setTimeout(() => (this.undoRedo = this.undoRedoCodes.NOCHANGE), 2);
+        window.setTimeout(
+            () => (this.undoRedo = this.undoRedoCodes.NOCHANGE),
+            2
+        );
     }
 
     /**
      * Check if MathQuill produces an error from LaTeX input
      */
-    checkError() {
-        const fieldValue = this.mathField.latex();
-        if (fieldValue.length === 0 && this.latexInput.length > 0) {
-            this.error = true;
-        } else {
-            this.error = false;
-        }
+    checkErrors() {
+        this.error =
+            this.mathField.latex().length === 0 && this.latexInput.length > 0;
     }
 }

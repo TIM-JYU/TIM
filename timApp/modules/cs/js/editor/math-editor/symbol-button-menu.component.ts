@@ -169,6 +169,11 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
 
     constructor(public el: ElementRef<HTMLElement>) {}
 
+    /**
+     * emits setFormula event with given formula
+     * @param event event fired
+     * @param formula text of formula
+     */
     addFormula(event: MouseEvent | TouchEvent, formula: string) {
         event.preventDefault();
         // don't register button press if it was a drag event
