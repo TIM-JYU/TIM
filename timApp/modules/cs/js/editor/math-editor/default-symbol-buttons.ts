@@ -1,5 +1,9 @@
 /**
- * List of latex symbol buttons for formulaeditor
+ * Lists of latex symbol buttons for formula editor
+ *
+ * @author Juha Reinikainen
+ * @licence MIT
+ * @date 20.4.2023
  */
 
 import type {ITemplateButton} from "../../csPlugin";

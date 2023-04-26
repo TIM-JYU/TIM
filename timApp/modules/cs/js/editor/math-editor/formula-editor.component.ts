@@ -1,5 +1,6 @@
 /**
  * Formula Editor for inputting LaTeX math
+ *
  * @author Juha Reinikainen
  * @author Daniel Juola
  * @licence MIT
@@ -45,6 +46,9 @@ type OldContent = {
     after: string;
 };
 
+/**
+ * Describes content of a field in formula.
+ */
 type FieldType = {
     latex: string;
 };
@@ -155,13 +159,20 @@ export class FormulaEditorComponent {
 
     @Input() editor!: IEditor;
 
-    constructor() {}
-
+    /**
+     * Gets whether formula editor is visible or not
+     */
     @Input()
     get visible(): boolean {
         return this.isVisible;
     }
 
+    /**
+     * Sets visibility status of formula editor and
+     * parses formula from editor if cursor was inside a formula in editor
+     * and sets initial state for formula editor.
+     * @param isVis true if formula editor should be visible else false
+     */
     set visible(isVis: boolean) {
         this.isVisible = isVis;
         // became visible so save what was in editor
@@ -180,11 +191,21 @@ export class FormulaEditorComponent {
         }
     }
 
+    /**
+     * Gets symbol that was pressed.
+     */
     @Input()
     get currentSymbol(): FormulaEvent {
         return this.buttonSymbol;
     }
 
+    /**
+     * Sets symbol that was pressed and adds it to whether editor is active
+     * This approach is used instead of VIewChild to make passing
+     * button press events from outside of this component
+     * in AngularJs code.
+     * @param value formula to add
+     */
     set currentSymbol(value: FormulaEvent) {
         this.buttonSymbol = value;
         if (this.fieldComponents) {
@@ -245,6 +266,12 @@ export class FormulaEditorComponent {
         this.updateFormulaToEditor();
     }
 
+    /**
+     * Sets LaTeX content of a field,
+     * updates changes to preview and
+     * sets edited field as active
+     * @param res edit content
+     */
     handleEdited(res: Edit) {
         if (res.id < 0 || res.id >= this.fields.length) {
             return;
@@ -254,16 +281,26 @@ export class FormulaEditorComponent {
         this.activeFieldsIndex = res.id;
     }
 
+    /**
+     * Sets active field
+     * @param res edit content
+     */
     handleFocus(res: Edit) {
         this.activeFieldsIndex = res.id;
     }
 
+    /**
+     * Sets active field as one after currently active one if one exists.
+     */
     handleArrowDown() {
         if (this.activeFieldsIndex + 1 < this.fields.length) {
             this.activeFieldsIndex++;
         }
     }
 
+    /**
+     * Sets active field as one before currently active one if one exists.
+     */
     handleArrowUp() {
         if (this.activeFieldsIndex > 0) {
             this.activeFieldsIndex--;
@@ -567,7 +604,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * splits text into lines of LaTeX.
+     * Splits text into lines of LaTeX.
      * @param formula
      * @param allMatrices
      */
@@ -864,6 +901,10 @@ export class FormulaEditorComponent {
         }
     }
 
+    /**
+     * Sets content of editor to the content
+     * of formula editor and emits ok event with cursor location in content.
+     */
     handleFormulaOk() {
         this.updateFormulaToEditor();
         const finalContent = this.editor.content;
@@ -1022,6 +1063,9 @@ export class FormulaEditorComponent {
         }
     }
 
+    /**
+     * Emit toggle event.
+     */
     toggleEditor() {
         this.toggle.emit();
     }

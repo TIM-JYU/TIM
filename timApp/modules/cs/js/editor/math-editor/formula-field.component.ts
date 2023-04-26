@@ -1,5 +1,6 @@
 /**
  * Formula Editor field for inputting LaTeX math
+ *
  * @author Juha Reinikainen
  * @author Daniel Juola
  * @licence MIT
@@ -147,7 +148,7 @@ export class FormulaFieldComponent implements AfterViewInit {
 
     /**
      * Sets active status of this field
-     * also sets focus to field
+     * also sets focus to visual field.
      * @param value true if should be active false otherwise
      */
     set isActive(value: boolean) {
@@ -188,6 +189,9 @@ export class FormulaFieldComponent implements AfterViewInit {
         }
     }
 
+    /**
+     * Loads Mathquill and initializes field.
+     */
     async ngAfterViewInit() {
         const mq = (await import("vendor/mathquill/mathquill")).default;
         this.MQ = mq.getInterface(2);
@@ -229,10 +233,16 @@ export class FormulaFieldComponent implements AfterViewInit {
         this.backspacePressed();
     }
 
+    /**
+     * Sets LaTeX textarea as active field.
+     */
     handleLatexFocus() {
         this.activeEditor = ActiveEditorType.Latex;
     }
 
+    /**
+     * Sets visual field as active field.
+     */
     handleVisualFocus() {
         this.activeEditor = ActiveEditorType.Visual;
     }
@@ -254,24 +264,40 @@ export class FormulaFieldComponent implements AfterViewInit {
         }
     }
 
+    /**
+     * Emit enter event.
+     */
     enterPressed() {
         this.enter.emit({id: this.id, addBelow: true});
     }
 
+    /**
+     * Emit add line event.
+     * @param addBelow if true then add field below else after this field
+     */
     handleAddLine(addBelow: boolean) {
         this.add.emit({id: this.id, addBelow: addBelow});
     }
 
+    /**
+     * Emit remove line event.
+     */
     handleRemoveLine() {
         this.delete.emit(this.id);
     }
 
+    /**
+     * Emit backspace event.
+     */
     backspacePressed() {
         if (this.latexInput.length === 0) {
             this.backspace.emit(this.id);
         }
     }
 
+    /**
+     * Emit focus event and sets active editor to visual field.
+     */
     handleFocus() {
         this.activeEditor = ActiveEditorType.Visual;
         this.focus.emit({
@@ -280,6 +306,10 @@ export class FormulaFieldComponent implements AfterViewInit {
         });
     }
 
+    /**
+     * Puts focus to visual field
+     * in order to show virtual keyboard.
+     */
     handleTouch() {
         this.mathField.focus();
     }
@@ -338,7 +368,7 @@ export class FormulaFieldComponent implements AfterViewInit {
     }
 
     /**
-     * Check if MathQuill produces an error from LaTeX input
+     * Check if MathQuill produces an error from LaTeX input.
      */
     checkErrors() {
         this.error =

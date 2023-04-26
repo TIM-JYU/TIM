@@ -1,5 +1,11 @@
 /**
- * Loads formula editor component
+ * Helper component that lazily loads formula editor component.
+ * Passes all inputs to formulaeditor and subscribes to all
+ * its events
+ *
+ * @author Juha Reinikainen
+ * @licence MIT
+ * @data 21.4.2023
  */
 
 import type {OnDestroy, OnInit} from "@angular/core";
@@ -21,7 +27,6 @@ import type {FormulaEditorComponent} from "./formula-editor.component";
     template: `
     <ng-container #formulaEditor></ng-container>
   `,
-    styleUrls: ["./formula-editor-loader.component.scss"],
 })
 export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
     private parEditor!: IEditor;
@@ -37,8 +42,6 @@ export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
     @Output() okClose = new EventEmitter<number>();
     @Output() cancelClose = new EventEmitter<number>();
     @Output() toggle = new EventEmitter<void>();
-
-    constructor() {}
 
     @Input()
     get editor(): IEditor {

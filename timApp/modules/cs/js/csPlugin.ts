@@ -1918,6 +1918,7 @@ export class CsController extends CsBase implements ITimComponent {
      * Moves cursor inside clicked formula in preview in editor
      * and opens formula editor.
      * @param event mouse click event
+     * @param preview root element
      */
     handleSelectFormulaFromPreview(event: MouseEvent, div: HTMLDivElement) {
         if (!this.formulaEditor || this.formulaEditorOpen || !this.editor) {
