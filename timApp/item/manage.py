@@ -347,7 +347,10 @@ def add_permission(m: PermissionSingleEditModel):
             add_doc_velp_group_permissions(i, m)
 
         if m.edit_translation_perms and not isinstance(i, Folder):
-            copy_doc_rights_to_translations(i)
+            tr_perms = add_translation_permissions(m, i)
+            for p in tr_perms:
+                tr = get_item_or_abort(p.block_id)
+                log_right(f"added {p.info_str} for {seq_to_str(m.groups)} in {tr.path}")
 
         db.session.commit()
     return permission_response(m)
@@ -538,8 +541,8 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
                 parent = get_item_or_abort(i.id)
                 if not parent.is_original_translation or isinstance(parent, Folder):
                     continue
-                # TODO modify only changed perms here instead of always copying all permissions
-                copy_doc_rights_to_translations(parent)
+                tr_perms = add_translation_permissions(m, parent)
+                modified_permissions.extend(tr_perms)
         else:
             for g in groups:
                 a = remove_perm(g, i, m.type) or a
@@ -569,18 +572,6 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
             log_right(
                 f"{action} {p.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}"
             )
-        # if velp_groups:
-        #     for vg in velp_groups:
-        #         log_right(
-        #             f"{action} {vg.info_str} for {seq_to_str(m.groups)} in blocks: "
-        #             + f"{seq_to_str(list(str(x) for x in m.ids))}"
-        #         )
-        # if rm_translations:
-        #     for tr in rm_translations:
-        #         log_right(
-        #             f"{action} {tr.info_str} for {seq_to_str(m.groups)} in blocks: "
-        #             + f"{seq_to_str(list(str(x) for x in m.ids))}"
-        #         )
         db.session.commit()
     return permission_response(m)
 
@@ -707,6 +698,35 @@ def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
                 )
                 ap_groups.append(a)
     return ap_groups
+
+
+def add_translation_permissions(
+    p: PermissionEditModel,
+    doc: DocInfo | DocEntry,
+    replace_active_duration: bool = True,
+) -> list[BlockAccess]:
+
+    opt = p.time.effective_opt
+    accs = []
+
+    for tr in doc.translations:
+        if tr.is_original_translation:
+            continue
+        for group in p.group_objects:
+            a = grant_access(
+                group,
+                tr.block,
+                p.type,
+                accessible_from=opt.ffrom,
+                accessible_to=opt.to,
+                duration_from=opt.durationFrom,
+                duration_to=opt.durationTo,
+                duration=opt.duration,
+                require_confirm=False,  # TODO confirmation should propagate to translations from source document
+                replace_active_duration=replace_active_duration,
+            )
+            accs.append(a)
+    return accs
 
 
 def copy_doc_rights_to_translations(
