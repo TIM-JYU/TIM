@@ -1,7 +1,7 @@
 <uib-tabset ng-show="$ctrl.proeditor" active="$ctrl.activeTab">
     <uib-tab ng-repeat="t in $ctrl.getVisibleTabs()" heading="{{ t.name }}" index="$ctrl.getTabIndex(t)">
             <div ng-if="t.name === 'TeX' && $ctrl.editor" class="formula-editor-tab">
-                <cs-formula-editor
+                <cs-formula-editor-loader
                                (ok-close)="$ctrl.toggleFormulaEditor(true, $event)"
                                (cancel-close)="$ctrl.toggleFormulaEditor(true, $event)"
                                (toggle)="$ctrl.toggleFormulaEditor()"
@@ -9,7 +9,9 @@
                                [editor]="$ctrl.editor"
                                [current-symbol]="$ctrl.currentSymbol"
                                [template-buttons]="$ctrl.templateButtons"
-                ></cs-formula-editor>
+                >
+
+                </cs-formula-editor-loader>
             </div>
         <tim-editor-entry ng-repeat="e in t.entries" data="e"></tim-editor-entry>
 
