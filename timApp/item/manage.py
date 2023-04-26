@@ -42,7 +42,7 @@ from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block, copy_default_rights
 from timApp.item.copy_rights import copy_rights
 from timApp.item.deleting import soft_delete_document, get_trash_folder
-from timApp.item.item import Item
+from timApp.item.item import Item, ItemBase
 from timApp.item.validation import (
     validate_item,
     validate_item_and_create_intermediate_folders,
@@ -539,6 +539,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
                     modified_permissions.extend(velp_groups)
             if m.edit_translation_perms:
                 parent = get_item_or_abort(i.id)
+                # Only allow one-way permissions for translations, ie. permissions propagate only from the parent doc
                 if not parent.is_original_translation or isinstance(parent, Folder):
                     continue
                 tr_perms = add_translation_permissions(m, parent)
@@ -569,8 +570,9 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
     if a:
         action = "added" if m.action == EditOption.Add else "removed"
         for p in modified_permissions:
+            path = get_item_or_abort(p.block_id).path
             log_right(
-                f"{action} {p.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}"
+                f"{action} {p.info_str} for {seq_to_str(m.groups)} in blocks/paths: {seq_to_str(list(str(x) for x in m.ids))} ({path})"
             )
         db.session.commit()
     return permission_response(m)
@@ -578,7 +580,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
 
 def add_perm(
     p: PermissionEditModel,
-    item: Item,
+    item: ItemBase | Block,
     replace_active_duration: bool
     | ReplaceAccessAction = ReplaceAccessAction.AlwaysReplace,
 ) -> list[BlockAccess]:
