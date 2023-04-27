@@ -341,17 +341,17 @@ def add_permission(m: PermissionSingleEditModel):
     if accs:
         a = accs[0]
         check_ownership_loss(is_owner, i)
-        log_right(f"added {a.info_str} for {seq_to_str(m.groups)} in {i.path}")
+
+        for perm in accs:
+            item = get_item_or_abort(perm.block.id)
+            log_right(
+                f"added {perm.info_str} for {seq_to_str(m.groups)} in {item.path}"
+            )
 
         # copy permissions to document's velp groups
+        # TODO refactor this into add_perm
         if m.edit_velp_group_perms:
             add_doc_velp_group_permissions(i, m)
-
-        if m.edit_translation_perms and not isinstance(i, Folder):
-            tr_perms = add_translation_permissions(m, i)
-            for p in tr_perms:
-                tr = get_item_or_abort(p.block_id)
-                log_right(f"added {p.info_str} for {seq_to_str(m.groups)} in {tr.path}")
 
         db.session.commit()
     return permission_response(m)
@@ -550,7 +550,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
             accs = add_perm(m, i)
             if accs:
                 a = accs[0]
-                modified_permissions.extend(accs)
+                modified_permissions = accs
             # copy permissions to item's/document's velp groups, if any
             if m.edit_velp_group_perms:
                 # Currently only document velp group permissions are supported
@@ -558,20 +558,13 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
                     doc = get_doc_or_abort(i.id)
                     velp_groups = add_velp_group_permissions(m, doc)
                     modified_permissions.extend(velp_groups)
-            if m.edit_translation_perms:
-                parent = get_item_or_abort(i.id)
-                # Only allow one-way permissions for translations, ie. permissions propagate only from the parent doc
-                if not parent.is_original_translation or isinstance(parent, Folder):
-                    continue
-                tr_perms = add_translation_permissions(m, parent)
-                modified_permissions.extend(tr_perms)
         else:
             for g in groups:
                 a = remove_perm(g, i, m.type) or a
                 if a:
                     modified_permissions.append(a)
                 doc = get_doc_or_abort(i.id)
-                # Also remove permissions to item's/document's velp groups and translations, if any
+                # Also remove permissions to item's/document's velp groups, if any
                 if m.edit_velp_group_perms:
                     if i.type_id == BlockType.Document.value:
                         velp_groups = remove_velp_group_perms(doc, g, m.type)
@@ -608,20 +601,33 @@ def add_perm(
             raise AccessDenied("You cannot add owners to your personal folder.")
     opt = p.time.effective_opt
     accs = []
-    for group in p.group_objects:
-        a = grant_access(
-            group,
-            item,
-            p.type,
-            accessible_from=opt.ffrom,
-            accessible_to=opt.to,
-            duration_from=opt.durationFrom,
-            duration_to=opt.durationTo,
-            duration=opt.duration,
-            require_confirm=p.confirm,
-            replace_active_duration=replace_active_duration,
+
+    # this avoids an unnecessary exception here
+    doc = get_doc_or_abort(item.id) if isinstance(item, DocInfo) else item
+    docs = (
+        doc.translations
+        if (
+            isinstance(doc, DocInfo)
+            and p.edit_translation_perms
+            and doc.is_original_translation
         )
-        accs.append(a)
+        else [doc]
+    )
+    for tr in docs:
+        for group in p.group_objects:
+            a = grant_access(
+                group,
+                tr,
+                p.type,
+                accessible_from=opt.ffrom,
+                accessible_to=opt.to,
+                duration_from=opt.durationFrom,
+                duration_to=opt.durationTo,
+                duration=opt.duration,
+                require_confirm=p.confirm,
+                replace_active_duration=replace_active_duration,
+            )
+            accs.append(a)
     return accs
 
 
@@ -719,35 +725,6 @@ def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
                 )
                 ap_groups.append(a)
     return ap_groups
-
-
-def add_translation_permissions(
-    p: PermissionEditModel,
-    doc: DocInfo | DocEntry,
-    replace_active_duration: bool = True,
-) -> list[BlockAccess]:
-
-    opt = p.time.effective_opt
-    accs = []
-
-    for tr in doc.translations:
-        if tr.is_original_translation:
-            continue
-        for group in p.group_objects:
-            a = grant_access(
-                group,
-                tr,
-                p.type,
-                accessible_from=opt.ffrom,
-                accessible_to=opt.to,
-                duration_from=opt.durationFrom,
-                duration_to=opt.durationTo,
-                duration=opt.duration,
-                require_confirm=p.confirm,
-                replace_active_duration=replace_active_duration,
-            )
-            accs.append(a)
-    return accs
 
 
 @manage_page.put("/permissions/remove", model=PermissionRemoveModel)
