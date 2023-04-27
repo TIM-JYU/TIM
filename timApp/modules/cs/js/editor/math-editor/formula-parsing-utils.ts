@@ -33,18 +33,17 @@ export function parseOldContent(editor: IEditor) {
             editing: "",
             after: "",
         };
-    } else {
-        const cursorI = editor.cursorIndexPosition();
-        return {
-            before: editor.content.slice(0, cursorI),
-            editing: "",
-            after: editor.content.slice(cursorI),
-        };
     }
+    const cursorI = editor.cursorIndexPosition();
+    return {
+        before: editor.content.slice(0, cursorI),
+        editing: "",
+        after: editor.content.slice(cursorI),
+    };
 }
 
 /**
- * Find the line in which a cursor is in a text.
+ * Finds the line in which a cursor is in a text.
  * @param editorContent Text where the line is looked for.
  * @param cursorLocation Cursor position as zero based index.
  * @return Line with cursor as a string.
@@ -65,7 +64,7 @@ export function getCurrentLine(editorContent: string, cursorLocation: number) {
 }
 
 /**
- * Method to find $ and $$ syntax parenthesis from a string.
+ * Finds $ and $$ syntax parenthesis from a string.
  * @param text String where the parenthesis are looked for.
  * @return Array containing types and indexes of parenthesis.
  */
@@ -175,7 +174,7 @@ function parseCurrentFormula(
 }
 
 /**
- * Method to find all begin and end syntax matrices from a string.
+ * Finds all begin and end syntax matrices from a string.
  * @param formula String where the matrices are looked for.
  * @return Array containing indexes of matrices.
  */
@@ -311,8 +310,8 @@ export function parseEditedFormula(
 }
 
 /**
- * https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
  * Trims a specific character from start and end of a string.
+ * https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
  * @param str String to be trimmed.
  * @param startChar Character to trim from start.
  * @param endChar Character to trim from end.

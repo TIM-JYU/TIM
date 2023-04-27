@@ -47,8 +47,9 @@ export enum FormulaType {
 }
 
 /**
- * OldContent is split into three at cursor location if insert operation is supported
- * if not then just put content to before and after and editing can be empty.
+ * Information about text that was in editor when formula editor was opened
+ * split into text before formula, text of formula chosen for editing and text after
+ * formula.
  */
 export type OldContent = {
     before: string;
@@ -199,7 +200,11 @@ export class FormulaEditorComponent {
                 this.activeFieldsIndex = 0;
                 this.formulaType = this.getInitialFormulaType();
             } else {
+                // formula editing
                 this.addEditedFormulaToEditor(currentFormula);
+                // scroll up to button menu so if formula editing
+                // was initialized from preview click user
+                // doesn't have to manually scroll up
                 this.symbolButtonMenuDiv.nativeElement.scrollIntoView();
             }
         }
