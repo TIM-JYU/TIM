@@ -764,26 +764,6 @@ def add_translation_permissions(
     return accs
 
 
-def copy_doc_rights_to_translations(
-    doc: DocInfo | DocEntry, log_msg: str | None = None
-) -> None:
-    """
-    Copies the parent document's rights to its translations.
-
-    :param doc: the parent document as DocInfo or DocEntry object.
-    :param log_msg: message for doc rights to write in log
-    :return: None.
-    """
-    for tr in doc.translations:
-        if tr.is_original_translation:
-            continue
-        copy_rights(doc, tr, get_current_user_object(), copy_expired=False)
-        if not log_msg:
-            log_right(f"copied active permissions from {doc.path} to {tr.path}")
-        else:
-            log_right(log_msg)
-
-
 @manage_page.put("/permissions/remove", model=PermissionRemoveModel)
 def remove_permission(m: PermissionRemoveModel) -> Response:
     i = get_item_or_abort(m.id)
