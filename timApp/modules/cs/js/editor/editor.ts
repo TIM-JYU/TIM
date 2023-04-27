@@ -64,7 +64,7 @@ export interface IEditor {
     focus(): void;
     addFormulaEditorOpenHandler?(cb: () => void): void;
     /**
-     * moves cursor to index in content string
+     * Move cursor to index in content string.
      * @param index index in content
      */
     moveCursorToContentIndex?(index: number): void;

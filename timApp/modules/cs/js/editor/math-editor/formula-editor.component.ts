@@ -216,6 +216,7 @@ export class FormulaEditorComponent {
     /**
      * Append new empty field after the current field
      * and sets it as active.
+     * @param lineAdd which field add came from and whether to add before or after that line
      */
     addField(lineAdd: LineAdd) {
         if (!lineAdd || lineAdd.addBelow) {
@@ -241,8 +242,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Removes currently active field
-     * sets the previous one as active.
+     * Removes currently active field sets the previous one as active.
      */
     removeField() {
         // don't remove the first field

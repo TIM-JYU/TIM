@@ -1915,6 +1915,7 @@ export class CsController extends CsBase implements ITimComponent {
     toggleFormulaEditor(cursorIndex: number = -1) {
         this.formulaEditorOpen = !this.formulaEditorOpen;
         if (!this.formulaEditorOpen) {
+            // without setTimeout editor focus doesn't work
             setTimeout(() => {
                 if (cursorIndex !== -1) {
                     this.editor?.moveCursorToContentIndex(cursorIndex);

@@ -167,7 +167,7 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
 
     @Output() toggle = new EventEmitter<void>();
 
-    constructor(public el: ElementRef<HTMLElement>) {}
+    constructor(private el: ElementRef<HTMLElement>) {}
 
     /**
      * emits setFormula event with given formula
