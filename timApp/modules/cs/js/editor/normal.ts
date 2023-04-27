@@ -155,7 +155,7 @@ export class NormalEditorComponent implements IEditor {
     /**
      * Return index value of cursor in editor
      */
-    cursorIndexPosition(): number {
+    cursorIndexValue(): number {
         return this.area.nativeElement.selectionStart;
     }
 }
