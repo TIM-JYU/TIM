@@ -226,7 +226,7 @@ def create_translation_route(
         raise Exception("doc has unexpected type")
     de.trs.append(tr)
     # Inherit parent document's rights
-    copy_rights(doc, tr, get_current_user_object(), copy_expired=False)
+    copy_rights(doc, tr, None, copy_expired=False)
     db.session.commit()
 
     # Run automatic translation if requested
