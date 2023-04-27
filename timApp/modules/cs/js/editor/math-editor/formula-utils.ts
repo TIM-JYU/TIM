@@ -3,7 +3,7 @@
  *
  * @author Juha Reinikainen
  * @licence MIT
- * @data 4.4.2023
+ * @date 4.4.2023
  */
 
 import type {IEditor} from "../editor";
