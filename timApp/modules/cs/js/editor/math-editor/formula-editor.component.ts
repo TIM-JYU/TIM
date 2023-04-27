@@ -26,9 +26,8 @@ import type {Edit, LineAdd} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
 import {FormulaEvent} from "./symbol-button-menu.component";
+import type {StringPair, FormulaTuple} from "./formula-parsing-utils";
 import {
-    StringPair,
-    FormulaTuple,
     parseOldContent,
     getCurrentLine,
     findMatrixFromString,

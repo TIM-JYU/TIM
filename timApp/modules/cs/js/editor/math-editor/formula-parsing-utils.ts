@@ -6,8 +6,9 @@
  * @date 27.4.2023
  */
 
-import {IEditor} from "../editor";
-import {FieldType, FormulaType} from "./formula-editor.component";
+import type {IEditor} from "../editor";
+import type {FieldType} from "./formula-editor.component";
+import {FormulaType} from "./formula-editor.component";
 
 /**
  * Tuple which will contain the type of formula, and it's start and end index.
