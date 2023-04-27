@@ -13,6 +13,7 @@ from flask import request
 from isodate import Duration
 from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
+from timApp.document.translation.translation import Translation
 
 from timApp.auth.accesshelper import (
     verify_manage_access,
@@ -347,6 +348,10 @@ def add_permission(m: PermissionSingleEditModel):
             add_doc_velp_group_permissions(i, m)
 
         if m.edit_translation_perms and not isinstance(i, Folder):
+            # if document permissions need to be confirmed,
+            # add translation perms only after parent doc's permissions have been confirmed
+            # if not m.confirm:
+            # or is it better to just set translations' require_confirm to the same that was used for the parent?
             tr_perms = add_translation_permissions(m, i)
             for p in tr_perms:
                 tr = get_item_or_abort(p.block_id)
@@ -471,7 +476,6 @@ def expire_doc_translation_perms(doc_id: int, ug: UserGroup) -> None:
 def confirm_permission_url(doc_id: int, username: str, redir: str | None = None):
     g, i = get_group_and_doc(doc_id, username)
     m = PermissionRemoveModel(id=doc_id, type=AccessType.view, group=g.id)
-    # TODO do we need to do this for translations as well (e.g. in case of translated exam documents)?
     return do_confirm_permission(m, i, redir)
 
 
@@ -501,7 +505,38 @@ def do_confirm_permission(
     ug: UserGroup = UserGroup.query.get(m.group)
     log_right(f"confirmed {ba.info_str} for {ug.name} in {i.path}")
     db.session.commit()
+
+    # Iterate the document's translations and confirm permissions for them as well
+    for tr in i.translations:
+        if tr.is_original_translation:
+            continue
+        confirm_translation_permissions(m, tr)
+
     return ok_response() if not redir else safe_redirect(redir)
+
+
+def confirm_translation_permissions(
+    m: PermissionRemoveModel, tr: Translation, redir: str | None = None
+):
+    # for translations we want to use the same permissions model,
+    # but instead of getting the block_id from the model, we need
+    # to use the translation's block id
+    ba: BlockAccess | None = BlockAccess.query.filter_by(
+        type=m.type.value,
+        block_id=tr.block.id,
+        usergroup_id=m.group,
+    ).first()
+    if not ba:
+        return raise_or_redirect("Right not found.", redir)
+    if not ba.require_confirm:
+        return raise_or_redirect(
+            f"{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.",
+            redir,
+        )
+    ba.do_confirm()
+    ug: UserGroup = UserGroup.query.get(m.group)
+    log_right(f"confirmed {ba.info_str} for {ug.name} in {tr.path}")
+    db.session.commit()
 
 
 @manage_page.put("/permissions/edit", model=PermissionMassEditModel)
@@ -722,7 +757,7 @@ def add_translation_permissions(
                 duration_from=opt.durationFrom,
                 duration_to=opt.durationTo,
                 duration=opt.duration,
-                require_confirm=False,  # TODO confirmation should propagate to translations from source document
+                require_confirm=p.confirm,
                 replace_active_duration=replace_active_duration,
             )
             accs.append(a)
