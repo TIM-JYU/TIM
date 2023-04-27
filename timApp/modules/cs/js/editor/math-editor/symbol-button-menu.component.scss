@@ -64,8 +64,15 @@ symbol-menu-container-open {
     vertical-align: middle;
 }
 
-.symbol-button:hover {
-    background: #C0C0C0;
+.symbol-button:active {
+  background-color: #C0C0C0;
+}
+
+
+@media (hover: hover) {
+  .symbol-button:hover {
+      background-color: #C0C0C0;
+  }
 }
 
 @media (min-width: 400px) {
