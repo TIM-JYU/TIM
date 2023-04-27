@@ -348,10 +348,6 @@ def add_permission(m: PermissionSingleEditModel):
             add_doc_velp_group_permissions(i, m)
 
         if m.edit_translation_perms and not isinstance(i, Folder):
-            # if document permissions need to be confirmed,
-            # add translation perms only after parent doc's permissions have been confirmed
-            # if not m.confirm:
-            # or is it better to just set translations' require_confirm to the same that was used for the parent?
             tr_perms = add_translation_permissions(m, i)
             for p in tr_perms:
                 tr = get_item_or_abort(p.block_id)
@@ -487,7 +483,10 @@ def confirm_permission(m: PermissionRemoveModel) -> Response:
 
 
 def do_confirm_permission(
-    m: PermissionRemoveModel, i: DocInfo, redir: str | None = None
+    m: PermissionRemoveModel,
+    i: DocInfo,
+    redir: str | None = None,
+    confirm_translations: bool = True,
 ):
     ba: BlockAccess | None = BlockAccess.query.filter_by(
         type=m.type.value,
@@ -504,39 +503,26 @@ def do_confirm_permission(
     ba.do_confirm()
     ug: UserGroup = UserGroup.query.get(m.group)
     log_right(f"confirmed {ba.info_str} for {ug.name} in {i.path}")
-    db.session.commit()
 
-    # Iterate the document's translations and confirm permissions for them as well
-    for tr in i.translations:
-        if tr.is_original_translation:
-            continue
-        confirm_translation_permissions(m, tr)
+    if confirm_translations and i.is_original_translation:
+        for tr in i.translations:
+            if tr.is_original_translation:
+                continue
+            try:
+                do_confirm_permission(
+                    PermissionRemoveModel(tr.block.id, m.type, m.group),
+                    tr,
+                    redir,
+                    confirm_translations=True,
+                )
+            except RouteException:
+                # TODO Do proper exception management here, user should have a list/dialog shown that specifies
+                #  which permissions were not set (see /static/scripts/tim/item/rightsEditor.ts)
+                pass
+
+    db.session.commit()
 
     return ok_response() if not redir else safe_redirect(redir)
-
-
-def confirm_translation_permissions(
-    m: PermissionRemoveModel, tr: Translation, redir: str | None = None
-):
-    # for translations we want to use the same permissions model,
-    # but instead of getting the block_id from the model, we need
-    # to use the translation's block id
-    ba: BlockAccess | None = BlockAccess.query.filter_by(
-        type=m.type.value,
-        block_id=tr.block.id,
-        usergroup_id=m.group,
-    ).first()
-    if not ba:
-        return raise_or_redirect("Right not found.", redir)
-    if not ba.require_confirm:
-        return raise_or_redirect(
-            f"{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.",
-            redir,
-        )
-    ba.do_confirm()
-    ug: UserGroup = UserGroup.query.get(m.group)
-    log_right(f"confirmed {ba.info_str} for {ug.name} in {tr.path}")
-    db.session.commit()
 
 
 @manage_page.put("/permissions/edit", model=PermissionMassEditModel)
