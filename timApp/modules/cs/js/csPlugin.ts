@@ -1,4 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,no-underscore-dangle */
+/**
+ * Liitännäinen TIM:in plugineja varten
+ *
+ * @author Mika Lehtinen
+ * @author Vesa Lappalainen
+ * @author Denis Zhidkikh
+ * @author Tuomas Laine
+ * @author Simo Lehtinen
+ * @author Jaakko Palm
+ * @author Juha Reinikainen
+ * @author Daniel Juola
+ * @licence MIT
+ * @date 27.4.2023
+ */
 import {
     ChangeDetectorRef,
     Component,
