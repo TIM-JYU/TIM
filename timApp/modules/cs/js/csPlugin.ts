@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,no-underscore-dangle */
 /**
- * Liitännäinen TIM:in plugineja varten
+ * Plugins for TIM editor
  *
  * @author Mika Lehtinen
  * @author Vesa Lappalainen
