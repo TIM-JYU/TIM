@@ -9,6 +9,7 @@ from flask import json, Request
 from lxml import html
 
 from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import dereference_pars
 from timApp.document.prepared_par import PreparedPar
 from timApp.document.randutils import hashfunc
@@ -98,11 +99,12 @@ class RequestedViewRange:
         return self.e
 
 
-def partition_texts(
+def partition_texts_with_index(
     texts: list[PreparedPar], view_range: IndexedViewRange, preamble_count
 ):
     """
     Partition document with preambles taken into account.
+    It is assumed that there are no invisible paragraphs in the view range.
 
     :param texts: List of processed paragraphs.
     :param view_range: Range of normal paragraphs to include.
@@ -119,6 +121,43 @@ def partition_texts(
         if i < preamble_count or i >= b:
             partitioned.append(text)
         i += 1
+    return partitioned
+
+
+def partition_texts(
+    raw_texts: list[DocParagraph],
+    texts: list[PreparedPar],
+    view_range: IndexedViewRange,
+    preamble_count: int,
+) -> list[PreparedPar]:
+    """
+    Partition document with preambles taken into account.
+
+    :param raw_texts: Full document and preamble paragraphs
+    :param texts: List of processed paragraphs.
+    :param view_range: Range of normal paragraphs to include.
+    :return: List of included paragraphs.
+    """
+    # If length of original pars and processed pars match, then we can partition the document normally
+    if len(raw_texts) == len(texts):
+        return partition_texts_with_index(texts, view_range, preamble_count)
+    # Otherwise processing pars caused some paragrahs to disappear, so we compare their ids to the ids
+    # that would normally appear in the requested range
+    partitioned = []
+    try:
+        requested_pars = {
+            d.id for d in raw_texts[view_range.start_index : view_range.end_index]
+        }
+    except IndexError:
+        return texts
+    started = False
+    for text in texts:
+        present = text.id in requested_pars
+        if not present and started:
+            break
+        if present:
+            partitioned.append(text)
+            started = True
     return partitioned
 
 

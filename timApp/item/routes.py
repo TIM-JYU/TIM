@@ -939,7 +939,7 @@ def render_doc_view(
     # If index was in cache, partitioning will be done earlier.
     if view_range.is_restricted and contents_have_changed:
         post_process_result.texts = partition_texts(
-            post_process_result.texts, view_range, preamble_count
+            xs, post_process_result.texts, view_range, preamble_count
         )
 
     if force_hide_names(current_user, doc_info) or view_ctx.hide_names_requested:
