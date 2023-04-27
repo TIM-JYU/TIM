@@ -1049,7 +1049,6 @@ export function createTemplateButtons(
         // maybe array
         try {
             const parsed = JSON.parse(line);
-            // someone who can comprehend regex can rewrite this
             const defaultData = parsed[0].replace(
                 /\\\[|\\\]|\\square|\s|\\\(|\\\)/g,
                 ""
