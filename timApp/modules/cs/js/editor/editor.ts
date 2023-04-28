@@ -83,7 +83,7 @@ export interface IEditor {
      * @param index index in content
      */
     moveCursorToContentIndex?(index: number): void;
-    cursorIndexValue?(): number;
+    cursorPosition?(): number;
 }
 
 export interface IEditorFile {
@@ -824,11 +824,11 @@ export class EditorComponent implements IMultiEditor {
     }
 
     /**
-     * Return index value of cursor in editor
+     * Return position of cursor in editor
      */
-    cursorIndexValue(): number {
-        if (this.editor?.cursorIndexValue) {
-            return this.editor?.cursorIndexValue();
+    cursorPosition(): number {
+        if (this.editor?.cursorPosition) {
+            return this.editor?.cursorPosition();
         }
         return -1;
     }

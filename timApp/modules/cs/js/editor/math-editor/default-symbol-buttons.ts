@@ -137,6 +137,18 @@ export const DEFAULT_SYMBOL_BUTTONS: ITemplateButton[] = [
         expl: "\\begin{array}{l|l}&\\\\\\hline&\\end{array}",
         type: "s",
     },
+    {
+        text: "\\[x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}\\]",
+        data: "x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}",
+        expl: "x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}",
+        type: "s",
+    },
+    {
+        text: "\\[f_X\\left(x\\right)=\\frac{1}{\\sigma\\sqrt{2\\pi}}\\text{e}^{-\\frac{\\left(x-\\mu\\right)^2}{2\\sigma^2}}\\]",
+        data: "f_X\\left(x\\right)=\\frac{1}{\\sigma\\sqrt{2\\pi}}\\text{e}^{-\\frac{\\left(x-\\mu\\right)^2}{2\\sigma^2}}",
+        expl: "f_X\\left(x\\right)=\\frac{1}{\\sigma\\sqrt{2\\pi}}\\text{e}^{-\\frac{\\left(x-\\mu\\right)^2}{2\\sigma^2}}",
+        type: "s",
+    },
 ];
 
 /**
@@ -698,9 +710,21 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
+        text: "\\( \\sqrt[\\square]{\\square} \\)",
+        data: "\\sqrt[⁞]{}",
+        expl: "\\sqrt[ ]{}",
+        type: "s",
+    },
+    {
         text: "\\( x^{\\square} \\)",
         data: "x^⁞",
         expl: "x^ ",
+        type: "s",
+    },
+    {
+        text: "\\( x_{\\square}{} \\)",
+        data: "x_{⁞}",
+        expl: "x_{ }",
         type: "s",
     },
     {
@@ -710,9 +734,27 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
+        text: "\\[ \\frac{\\square}{\\square}^{\\text{(}\\square} \\]",
+        data: "\\frac{a}{b}^{x}",
+        expl: "\\frac{a}{b}^{x}",
+        type: "s",
+    },
+    {
         text: "\\[\\int_\\square^\\square\\]",
         data: "\\int_{⁞}^{}",
         expl: "\\int_{ }^{}",
+        type: "s",
+    },
+    {
+        text: "\\[\\bigg/_{\\!\\!\\!\\!\\!{ \\square }}^{ \\square }\\]",
+        data: "\\bigg/_{\\!\\!\\!\\!\\!{⁞}}^{}",
+        expl: "\\bigg/_{\\!\\!\\!\\!\\!{ }}^{}",
+        type: "s",
+    },
+    {
+        text: "\\[ \\sum_{\\square}^{\\square} \\]",
+        data: "\\sum_{⁞}^{}",
+        expl: "\\sum_{ }^{}",
         type: "s",
     },
     {
@@ -722,15 +764,9 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
-        text: "\\[ \\overrightarrow{\\square} \\]",
-        data: "\\overrightarrow{⁞}",
-        expl: "\\overrightarrow{ }",
-        type: "s",
-    },
-    {
-        text: "\\[ \\overleftarrow{\\square} \\]",
-        data: "\\overleftarrow{⁞}",
-        expl: "\\overleftarrow{ }",
+        text: "\\[ \\lim_{x\\rightarrow\\infty} \\]",
+        data: "\\lim_{x\\rightarrow\\infty}",
+        expl: "\\lim_{x\\rightarrow\\infty}",
         type: "s",
     },
     {
@@ -752,6 +788,24 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
+        text: "\\[ \\overrightarrow{\\square} \\]",
+        data: "\\overrightarrow{⁞}",
+        expl: "\\overrightarrow{ }",
+        type: "s",
+    },
+    {
+        text: "\\[ \\overleftarrow{\\square} \\]",
+        data: "\\overleftarrow{⁞}",
+        expl: "\\overleftarrow{ }",
+        type: "s",
+    },
+    {
+        text: "\\[ \\underrightarrow{\\square} \\]",
+        data: "\\underrightarrow{⁞}",
+        expl: "\\underrightarrow{ }",
+        type: "s",
+    },
+    {
         text: "\\( \\left|\\square\\right| \\)",
         data: "\\left|⁞\\right|",
         expl: "\\left| \\right|",
@@ -770,63 +824,21 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
-        text: "\\[\\begin{cases}\n\\square&\\square\\\\\n\\square&\\square\n\\end{cases}\\]",
-        data: "\\begin{cases}\n⁞&\\\\\n&\n\\end{cases}",
-        expl: "\\begin{cases}\n &\\\\\n&\n\\end{cases}",
+        text: "\\( \\left(\\square\\right) \\)",
+        data: "\\left(⁞\\right)",
+        expl: "\\left( \\right)",
         type: "s",
     },
     {
-        text: "\\[\\begin{matrix}\n\\square&\\square\\\\\n\\square&\\square\n\\end{matrix}\\]",
-        data: "\\begin{matrix}\n⁞&\\\\\n&\n\\end{matrix}",
-        expl: "\\begin{matrix}\n &\\\\\n&\n\\end{matrix}",
+        text: "\\( ]x[ \\)",
+        data: "]x[",
+        expl: "]x[",
         type: "s",
     },
     {
-        text: "\\[ \\frac{\\square}{\\square}^{\\text{(}\\square} \\]",
-        data: "\\frac{a}{b}^{x}",
-        expl: "\\frac{a}{b}^{x}",
-        type: "s",
-    },
-    {
-        text: "\\( \\binom{\\square}{\\square} \\)",
-        data: "\\binom{⁞}{}",
-        expl: "\\binom{ }{}",
-        type: "s",
-    },
-    {
-        text: "\\( \\sqrt[\\square]{\\square} \\)",
-        data: "\\sqrt[⁞]{}",
-        expl: "\\sqrt[ ]{}",
-        type: "s",
-    },
-    {
-        text: "\\( x_{\\square}{} \\)",
-        data: "x_{⁞}",
-        expl: "x_{ }",
-        type: "s",
-    },
-    {
-        text: "\\[ \\sum_{\\square}^{\\square} \\]",
-        data: "\\sum_{⁞}^{}",
-        expl: "\\sum_{ }^{}",
-        type: "s",
-    },
-    {
-        text: "\\[\\bigg/_{\\!\\!\\!\\!\\!{ \\square }}^{ \\square }\\]",
-        data: "\\bigg/_{\\!\\!\\!\\!\\!{⁞}}^{}",
-        expl: "\\bigg/_{\\!\\!\\!\\!\\!{ }}^{}",
-        type: "s",
-    },
-    {
-        text: "\\[ \\lim_{x\\rightarrow\\infty} \\]",
-        data: "\\lim_{x\\rightarrow\\infty}",
-        expl: "\\lim_{x\\rightarrow\\infty}",
-        type: "s",
-    },
-    {
-        text: "\\[ \\underrightarrow{\\square} \\]",
-        data: "\\underrightarrow{⁞}",
-        expl: "\\underrightarrow{ }",
+        text: "\\( [x[ \\)",
+        data: "[x[",
+        expl: "[x[",
         type: "s",
     },
     {
@@ -854,21 +866,21 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
-        text: "\\( \\left(\\square\\right) \\)",
-        data: "\\left(⁞\\right)",
-        expl: "\\left( \\right)",
+        text: "\\[\\begin{cases}\n\\square&\\square\\\\\n\\square&\\square\n\\end{cases}\\]",
+        data: "\\begin{cases}\n⁞&\\\\\n&\n\\end{cases}",
+        expl: "\\begin{cases}\n &\\\\\n&\n\\end{cases}",
         type: "s",
     },
     {
-        text: "\\( ]x[ \\)",
-        data: "]x[",
-        expl: "]x[",
+        text: "\\[\\begin{matrix}\n\\square&\\square\\\\\n\\square&\\square\n\\end{matrix}\\]",
+        data: "\\begin{matrix}\n⁞&\\\\\n&\n\\end{matrix}",
+        expl: "\\begin{matrix}\n &\\\\\n&\n\\end{matrix}",
         type: "s",
     },
     {
-        text: "\\( [x[ \\)",
-        data: "[x[",
-        expl: "[x[",
+        text: "\\( \\binom{\\square}{\\square} \\)",
+        data: "\\binom{⁞}{}",
+        expl: "\\binom{ }{}",
         type: "s",
     },
     {
@@ -878,33 +890,21 @@ export const LATEX_BUTTONS: ITemplateButton[] = [
         type: "s",
     },
     {
-        text: "\\[ \\begin{array}{l|l}\n\\square&\\square\\\\\n\\hline\\square&\\square\n\\end{array} \\]",
-        data: "\\begin{array}{l|l}\n⁞&\\\\\n\\hline&\n\\end{array}",
-        expl: "\\begin{array}{l|l}\n &\\\\\n\\hline&\n\\end{array}",
-        type: "s",
-    },
-    {
         text: "\\( ^{x\\text{)}}\\frac{a}{b} \\)",
         data: "^{x\\text{)}}\\frac{a}{b}",
         expl: "^{x\\text{)}}\\frac{a}{b}",
         type: "s",
     },
     {
+        text: "\\[ \\begin{array}{l|l}\n\\square&\\square\\\\\n\\hline\\square&\\square\n\\end{array} \\]",
+        data: "\\begin{array}{l|l}\n⁞&\\\\\n\\hline&\n\\end{array}",
+        expl: "\\begin{array}{l|l}\n &\\\\\n\\hline&\n\\end{array}",
+        type: "s",
+    },
+    {
         text: "\\( \\mathrm{T} \\)",
         data: "\\mathrm{T}",
         expl: "\\mathrm{T}",
-        type: "s",
-    },
-    {
-        text: "\\[x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}\\]",
-        data: "x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}",
-        expl: "x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}",
-        type: "s",
-    },
-    {
-        text: "\\[f_X\\left(x\\right)=\\frac{1}{\\sigma\\sqrt{2\\pi}}\\text{e}^{-\\frac{\\left(x-\\mu\\right)^2}{2\\sigma^2}}\\]",
-        data: "f_X\\left(x\\right)=\\frac{1}{\\sigma\\sqrt{2\\pi}}\\text{e}^{-\\frac{\\left(x-\\mu\\right)^2}{2\\sigma^2}}",
-        expl: "f_X\\left(x\\right)=\\frac{1}{\\sigma\\sqrt{2\\pi}}\\text{e}^{-\\frac{\\left(x-\\mu\\right)^2}{2\\sigma^2}}",
         type: "s",
     },
 ];

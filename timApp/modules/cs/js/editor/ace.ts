@@ -232,9 +232,9 @@ export class AceEditorComponent implements IEditor {
     }
 
     /**
-     * Return index value of cursor in editor
+     * Return position of cursor in editor
      */
-    cursorIndexValue(): number {
+    cursorPosition(): number {
         if (!this.aceEditor) {
             return -1;
         }
