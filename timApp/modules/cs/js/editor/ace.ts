@@ -220,7 +220,7 @@ export class AceEditorComponent implements IEditor {
     /**
      * Return index value of cursor in editor
      */
-    cursorIndexPosition(): number {
+    cursorIndexValue(): number {
         if (!this.aceEditor) {
             return -1;
         }

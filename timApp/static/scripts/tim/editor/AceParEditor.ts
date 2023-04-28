@@ -841,7 +841,7 @@ export class AceParEditor extends BaseParEditor implements IEditor {
     /**
      * Return index value of cursor in editor
      */
-    cursorIndexPosition(): number {
+    cursorIndexValue(): number {
         if (!this.editor) {
             return -1;
         }

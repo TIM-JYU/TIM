@@ -1,4 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,no-underscore-dangle */
+/**
+ * Plugins for TIM editor
+ *
+ * @author Mika Lehtinen
+ * @author Vesa Lappalainen
+ * @author Denis Zhidkikh
+ * @author Tuomas Laine
+ * @author Simo Lehtinen
+ * @author Jaakko Palm
+ * @author Juha Reinikainen
+ * @author Daniel Juola
+ * @licence MIT
+ * @date 27.4.2023
+ */
 import {
     ChangeDetectorRef,
     Component,
@@ -1034,14 +1048,10 @@ export function createTemplateButtons(
         // maybe array
         try {
             const parsed = JSON.parse(line);
-            // someone who can comprehend regex can rewrite this
-            // const defaultData = parsed[0].replace(/\\\[|\\\]|\\square|\s/g, "");
-            let defaultData = parsed[0].replace("\\[", "");
-            defaultData = defaultData.replace("\\]", "");
-            defaultData = defaultData.replace("\\)", "");
-            defaultData = defaultData.replace("\\(", "");
-            defaultData = defaultData.replace(/\\square/g, "");
-            defaultData = defaultData.replace(/\s/g, "");
+            const defaultData = parsed[0].replace(
+                /\\\[|\\\]|\\square|\s|\\\(|\\\)/g,
+                ""
+            );
             const item: ITemplateButton = {
                 text: parsed[0],
                 data: defaultData,
@@ -1904,6 +1914,7 @@ export class CsController extends CsBase implements ITimComponent {
     toggleFormulaEditor(cursorIndex: number = -1) {
         this.formulaEditorOpen = !this.formulaEditorOpen;
         if (!this.formulaEditorOpen) {
+            // without setTimeout editor focus doesn't work
             setTimeout(() => {
                 if (cursorIndex !== -1) {
                     this.editor?.moveCursorToContentIndex(cursorIndex);
