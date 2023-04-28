@@ -27,14 +27,14 @@ export type StringPair = [string, string];
  * @return String in parts.
  */
 export function parseOldContent(editor: IEditor) {
-    if (!editor.cursorIndexPosition) {
+    if (!editor.cursorIndexValue) {
         return {
             before: editor.content,
             editing: "",
             after: "",
         };
     }
-    const cursorI = editor.cursorIndexPosition();
+    const cursorI = editor.cursorIndexValue();
     return {
         before: editor.content.slice(0, cursorI),
         editing: "",
