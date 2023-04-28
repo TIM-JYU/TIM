@@ -732,8 +732,6 @@ class PermissionTest(TimRouteTest):
         )
         # The original bug was that db.session.commit() was not getting called when it should have,
         # so doing a rollback here should reveal the bug in the assert if it reappears.
-        # TODO this rollback should probably be removed, since it will unconditionally expire session objects.
-        #  This may cause issues with other tests. See https://docs.sqlalchemy.org/en/13/errors.html#error-bhk3
         db.session.rollback()
         d = DocEntry.find_by_id(d.id)
         self.assertFalse(self.test_user_2.has_view_access(d))
