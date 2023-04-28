@@ -340,7 +340,7 @@ export class FormulaEditorComponent {
      * Splits string into two parts if possible at cursor location.
      */
     parseOldContent() {
-        if (!this.editor.cursorIndexValue) {
+        if (!this.editor.cursorPosition) {
             this.oldContent = {
                 before: this.editor.content,
                 editing: "",
@@ -348,7 +348,7 @@ export class FormulaEditorComponent {
             };
             return;
         } else {
-            const cursorI = this.editor.cursorIndexValue();
+            const cursorI = this.editor.cursorPosition();
             this.oldContent = {
                 before: this.editor.content.slice(0, cursorI),
                 editing: "",
