@@ -5,7 +5,7 @@
  *
  * @author Juha Reinikainen
  * @licence MIT
- * @data 21.4.2023
+ * @date 21.4.2023
  */
 
 import type {OnDestroy, OnInit} from "@angular/core";

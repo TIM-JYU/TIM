@@ -976,13 +976,12 @@ function getButtonTextHtml(s: string) {
 }
 
 /**
- * Creates a list of templatebuttons based on
- * the string b with lines interpreted as buttons
- * as specified in
- * https://tim.jyu.fi/view/tim/ohjeita/csPlugin#buttons
- * and mdButtons containing buttons to add
+ * Creates a list of template buttons based on syntax specified at
+ * https://tim.jyu.fi/view/tim/ohjeita/csPlugin#buttons.
+ * Also merges existing markdown template buttons into the parsed list.
  * @param b string containing an array of buttons
- * @param mdButtons array of markdown buttons
+ * @param mdButtons array of markdown buttons to add
+ * @return list of template buttons
  */
 export function createTemplateButtons(
     b: string | undefined,
