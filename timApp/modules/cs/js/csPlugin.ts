@@ -1375,11 +1375,11 @@ export class CsController extends CsBase implements ITimComponent {
         return this.usercode;
     }
 
-    async save() {
+    async save(autosave?: boolean) {
         if (this.preventSave) {
             return {saved: false, message: undefined};
         }
-        await this.runCode();
+        await this.runCode(autosave);
         this.cdr.detectChanges();
         return {saved: true, message: undefined};
     }
@@ -2458,7 +2458,11 @@ ${fhtml}
         }
     }
 
-    async runCodeCommon(nosave: boolean, _extraMarkUp?: IExtraMarkup) {
+    async runCodeCommon(
+        nosave: boolean,
+        _extraMarkUp?: IExtraMarkup,
+        autosave?: boolean
+    ) {
         this.hasBeenRun = true;
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty === "md") {
@@ -2474,7 +2478,7 @@ ${fhtml}
                 return;
             }
         }
-        await this.doRunCode(ty, nosave || this.nosave);
+        await this.doRunCode(ty, nosave || this.nosave, undefined, autosave);
     }
 
     runCodeAuto() {
@@ -2485,8 +2489,8 @@ ${fhtml}
         this.runCodeCommon(nosave || this.nosave);
     }
 
-    async runCode() {
-        await this.runCodeCommon(false);
+    async runCode(autosave?: boolean) {
+        await this.runCodeCommon(false, undefined, autosave);
     }
 
     runTest() {
@@ -2533,7 +2537,8 @@ ${fhtml}
     async doRunCode(
         runType: string,
         nosave: boolean,
-        extraMarkUp?: IExtraMarkup
+        extraMarkUp?: IExtraMarkup,
+        autosave?: boolean
     ) {
         this.connectionErrorMessage = undefined;
         this.error = undefined;
@@ -2704,7 +2709,7 @@ ${fhtml}
 
         const t0run = performance.now();
         const r = await this.postAnswer<IRunResponse>(
-            params,
+            {...params, autosave: autosave},
             new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})
         );
         if (r.ok) {

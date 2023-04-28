@@ -597,6 +597,7 @@ def post_answer(
     input: InputAnswer,
     abData: dict[str, Any] = field(default_factory=dict),
     options: dict[str, Any] = field(default_factory=dict),
+    autosave: bool | None = False,
 ) -> Response:
     """Saves the answer submitted by user for a plugin in the database.
 
@@ -624,6 +625,7 @@ def post_answer(
             get_other_session_users_objs(),
             get_origin_from_request(),
             error=blocked_msg if not allowed else None,
+            autosave=autosave,
         ).result
     )
 
@@ -709,6 +711,7 @@ def post_answer_impl(
     other_session_users: list[User],
     origin: OriginInfo | None,
     error: str | None = None,
+    autosave: bool = False,
 ) -> AnswerRouteResult:
     receive_time = get_current_time()
     tid = TaskId.parse(task_id_ext)
@@ -987,7 +990,7 @@ def post_answer_impl(
     if "save" in jsonresp and not get_task:
         # TODO: RND_SEED: save used rnd_seed for this answer if answer is saved, found from par.get_rnd_seed()
         save_object = jsonresp["save"]
-        tags = save_object.get("tags", [])
+        tags = save_object.get("tags", []) if isinstance(save_object, dict) else []
         tim_info = jsonresp.get("tim_info", {})
         if tim_info.get("noupdate", False):
             noupdate = True
@@ -997,6 +1000,9 @@ def post_answer_impl(
             points *= plugin.points_multiplier()
         elif not multiplier:
             points = None
+
+        if autosave:
+            tags.append("autosave")
 
         def get_name_and_val(name1: str, name2: str = "") -> tuple[str, Any]:
             """
@@ -1257,6 +1263,9 @@ def post_answer_impl(
         pass
     if result_errors:
         result["errors"] = result_errors
+
+    if autosave:
+        result["web"] = {}
 
     return AnswerRouteResult(result=result, plugin=plugin)
 
@@ -1772,6 +1781,7 @@ def get_answers(task_id: str, user_id: int) -> Response:
             Answer.query.filter_by(task_id=tid.doc_task)
             .order_by(Answer.id.desc())
             .options(joinedload(Answer.users_all))
+            .options(joinedload(Answer.tags))
             .all()
         )
         user = curr_user

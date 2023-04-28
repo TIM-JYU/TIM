@@ -223,7 +223,7 @@ export abstract class AngularPluginBase<
     }
 
     protected async postAnswer<U>(
-        answerdata: {input: JsonValue},
+        answerdata: {input: JsonValue; autosave?: boolean},
         headers: HttpHeaders = new HttpHeaders()
     ) {
         const tid = this.pluginMeta.getTaskId();

@@ -1388,6 +1388,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def get_answers_for_task(self, task_id: str):
         return (
             self.answers.options(joinedload(Answer.users_all))
+            .options(joinedload(Answer.tags))
             .order_by(Answer.id.desc())
             .filter_by(task_id=task_id)
         )

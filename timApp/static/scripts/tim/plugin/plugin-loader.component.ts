@@ -1,6 +1,7 @@
 import moment from "moment";
 import type {
     AfterViewInit,
+    ComponentRef,
     DoBootstrap,
     NgModuleRef,
     OnDestroy,
@@ -29,6 +30,7 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {PurifyModule} from "tim/util/purify.module";
 import {getURLParameter, getViewName, timeout, toPromise} from "tim/util/utils";
 import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {isSaveableComponent} from "tim/document/viewctrl";
 import {TimDefer} from "tim/util/timdefer";
 import type {ReadonlyMoment} from "tim/util/readonlymoment";
 import {timLogTime} from "tim/util/timTiming";
@@ -155,6 +157,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
 
     private currentModRef?: NgModuleRef<unknown>;
     private currentModuleType?: Type<unknown>;
+    private currentComponentRef?: ComponentRef<unknown>;
 
     constructor(
         private elementRef: ElementRef<HTMLElement>,
@@ -173,7 +176,16 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
             return;
         }
         if (!this.el.nativeElement.contains(event.relatedTarget)) {
-            console.log(event);
+            if (
+                this.currentComponentRef &&
+                isSaveableComponent(this.currentComponentRef?.instance)
+            ) {
+                const inst = this.currentComponentRef.instance;
+                const unsaved = inst.isUnSaved();
+                if (unsaved) {
+                    void inst.save(true);
+                }
+            }
         }
     }
 
@@ -436,6 +448,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     async setComponent(registeredPlugin: IRegisteredPlugin, json: string) {
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
+        this.currentComponentRef = undefined;
 
         const modRef = this.createModule(registeredPlugin.module);
         const componentRef = await viewContainerRef.createComponent<PluginJson>(
@@ -444,6 +457,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         );
         componentRef.instance.json = json;
         componentRef.changeDetectorRef.detectChanges();
+        this.currentComponentRef = componentRef;
     }
 
     /**

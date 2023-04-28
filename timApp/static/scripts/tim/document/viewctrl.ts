@@ -93,7 +93,21 @@ export interface IUnsavedComponent {
     allowUnsavedLeave?: boolean;
 }
 
-export interface ITimComponent extends IUnsavedComponent {
+export interface ISaveableComponent extends IUnsavedComponent {
+    save: (
+        autosave?: boolean
+    ) => Promise<{saved: boolean; message: string | undefined}>;
+}
+
+export function isSaveableComponent(obj?: unknown): obj is ISaveableComponent {
+    return (
+        obj !== undefined &&
+        (obj as ISaveableComponent).save !== undefined &&
+        (obj as ISaveableComponent).isUnSaved !== undefined
+    );
+}
+
+export interface ITimComponent extends IUnsavedComponent, ISaveableComponent {
     attrsall?: IGenericPluginTopLevelFields<IGenericPluginMarkup>; // TODO: TimTable: implement attrsall.info or extend AngularPluginBase
     getName: () => string | undefined;
     getContent: () => string | undefined;
@@ -103,7 +117,6 @@ export interface ITimComponent extends IUnsavedComponent {
     belongsToArea: (area: string) => boolean;
     formBehavior: () => FormModeOption;
     markup: IGenericPluginMarkup;
-    save: () => Promise<{saved: boolean; message: string | undefined}>;
     getPar: () => ParContext | undefined;
     setPluginWords?: (words: string[]) => void;
     setForceAnswerSave?: (force: boolean) => void;

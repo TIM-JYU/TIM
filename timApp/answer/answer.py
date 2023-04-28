@@ -70,7 +70,7 @@ class Answer(db.Model):
     saver = db.relationship(
         "User", lazy="select", secondary=AnswerSaver.__table__, uselist=False
     )
-    tags = db.relationship("AnswerTag", back_populates="answer")
+    tags = db.relationship("AnswerTag", back_populates="answer", lazy="select")
 
     @property
     def content_as_json(self) -> dict:
@@ -98,6 +98,7 @@ class Answer(db.Model):
             "origin_doc_id": self.origin_doc_id,
             **include_if_loaded("plugin_type", self, "plugin"),
             **include_if_loaded("users_all", self, "users"),
+            **include_if_loaded("tags", self, "tags"),
         }
 
     @property

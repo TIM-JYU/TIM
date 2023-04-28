@@ -11,8 +11,10 @@ class AnswerTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
     tag = db.Column(db.Text, nullable=False)
-
     answer = db.relationship("Answer", back_populates="tags")
+
+    def to_json(self):
+        return self.tag
 
 
 class AnswerUpload(db.Model):
