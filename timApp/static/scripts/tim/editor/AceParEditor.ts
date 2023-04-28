@@ -597,7 +597,10 @@ export class AceParEditor extends BaseParEditor implements IEditor {
         }
         const range = this.editor.getSelectionRange();
         const start = range.start;
-        this.snippetManager.insertSnippet(this.editor, text);
+        this.snippetManager.insertSnippet(
+            this.editor,
+            this.escapeDollarSign(text)
+        );
         const line = this.editor.session.getLine(start.row);
         const index = line.lastIndexOf(pluginnamehere);
         if (index > -1) {
