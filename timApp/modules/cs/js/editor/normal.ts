@@ -1,4 +1,18 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_"] }] */
+/**
+ * Normal text editor
+ *
+ * @author Denis Zhidkikh
+ * @author Juha Reinikainen
+ * @author Mika Lehtinen
+ * @author Tuomas Laine
+ * @author Vesa Lappalainen
+ * @author daaajuol
+ * @author sijualle
+ * @license MIT
+ * @date 29.6.2020
+ */
+
 import $ from "jquery";
 import type {SimpleChanges} from "@angular/core";
 import {

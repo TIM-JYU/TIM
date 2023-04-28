@@ -2,7 +2,7 @@
  * Utility functions for formula editor
  *
  * @author Juha Reinikainen
- * @licence MIT
+ * @license MIT
  * @date 4.4.2023
  */
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,no-underscore-dangle */
 /**
- * Plugins for TIM editor
+ * csPlugin component
  *
  * @author Mika Lehtinen
  * @author Vesa Lappalainen
@@ -10,8 +10,8 @@
  * @author Jaakko Palm
  * @author Juha Reinikainen
  * @author Daniel Juola
- * @licence MIT
- * @date 27.4.2023
+ * @license MIT
+ * @date 3.8.2014
  */
 import {
     ChangeDetectorRef,
