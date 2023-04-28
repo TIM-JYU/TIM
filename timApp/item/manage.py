@@ -603,7 +603,7 @@ def add_perm(
     accs = []
 
     # this avoids an unnecessary exception here
-    doc = get_doc_or_abort(item.id) if isinstance(item, DocInfo) else item
+    doc = item.docentries[0] if isinstance(item, Block) and item.docentries else item
     docs = (
         doc.translations
         if (
