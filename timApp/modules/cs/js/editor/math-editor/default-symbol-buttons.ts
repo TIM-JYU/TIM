@@ -2,7 +2,7 @@
  * Lists of latex symbol buttons for formula editor
  *
  * @author Juha Reinikainen
- * @licence MIT
+ * @license MIT
  * @date 20.4.2023
  */
 

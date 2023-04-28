@@ -4,7 +4,7 @@
  * its events
  *
  * @author Juha Reinikainen
- * @licence MIT
+ * @license MIT
  * @date 21.4.2023
  */
 

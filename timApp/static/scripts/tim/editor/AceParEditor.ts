@@ -1,3 +1,19 @@
+/**
+ * Ace editor for paragraph editing
+ *
+ * @author Denis Zhidkikh
+ * @author Juha Reinikainen
+ * @author Mika Lehtinen
+ * @author Noora Jokela
+ * @author Vesa Lappalainen
+ * @author Vili Moisala
+ * @author Visa Naukkarinen
+ * @author daaajuol
+ * @author sijualle
+ * @license MIT
+ * @date 4.7.2017
+ */
+
 import {Ace} from "ace-builds/src-noconflict/ace";
 import {wrapText} from "tim/document/editing/utils";
 import type {IAce} from "tim/editor/ace";

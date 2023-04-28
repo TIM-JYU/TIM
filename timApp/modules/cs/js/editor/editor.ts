@@ -1,4 +1,19 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "wrap_", "modes_", "fileIndex_", "files_", "modeIndex_", "mayAddFiles_"] }] */
+/**
+ * Editor component
+ *
+ * @author Denis Zhidkikh
+ * @author Juha Reinikainen
+ * @author Mika Lehtinen
+ * @author Simo Lehtinen
+ * @author Tuomas Laine
+ * @author Vesa Lappalainen
+ * @author daaajuol
+ * @author sijualle
+ * @license MIT
+ * @date 29.6.2020
+ */
+
 import {
     ChangeDetectorRef,
     Component,

@@ -1,3 +1,17 @@
+/**
+ * Normal text editor for paragraph editor
+ *
+ * @author Denis Zhidkikh
+ * @author Juha Reinikainen
+ * @author Mika Lehtinen
+ * @author Sami Viitanen
+ * @author Vesa Lappalainen
+ * @author Vili Moisala
+ * @author daaajuol
+ * @license MIT
+ * @date 4.7.2017
+ */
+
 import {wrapText} from "tim/document/editing/utils";
 import {
     KEY_1,

@@ -3,7 +3,7 @@
  *
  * @author Juha Reinikainen
  * @author Daniel Juola
- * @licence MIT
+ * @license MIT
  * @date 24.3.2023
  */
 

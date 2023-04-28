@@ -2,7 +2,7 @@
  * Utility functions for parsing formulas
  *
  * @author Janne Lahti
- * @licence MIT
+ * @license MIT
  * @date 27.4.2023
  */
 

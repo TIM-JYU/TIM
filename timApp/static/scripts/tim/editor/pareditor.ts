@@ -1,3 +1,26 @@
+/**
+ * Paragraph editor component
+ *
+ * @author Denis Zhidkikh
+ * @author Harri Linna
+ * @author Juha Reinikainen
+ * @author Juho Tarkkanen
+ * @author Juuso Valkeejärvi
+ * @author Mika Lehtinen
+ * @author Noora Jokela
+ * @author Rami Pasanen
+ * @author Sami Viitanen
+ * @author Simo Lehtinen
+ * @author Tuomas Porvali
+ * @author Veli-Pekka Oksanen
+ * @author Vesa Lappalainen
+ * @author Vili Moisala
+ * @author Visa Naukkarinen
+ * @author daaajuol
+ * @license MIT
+ * @date 9.2.2015
+ */
+
 import type {IScope} from "angular";
 import angular from "angular";
 import * as t from "io-ts";
