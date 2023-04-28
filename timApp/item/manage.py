@@ -619,7 +619,7 @@ def add_perm(
                 require_confirm=p.confirm,
                 replace_active_duration=replace_active_duration,
             )
-            accs.append((a, d))
+            accs.append(a)
     return accs
 
 
@@ -637,7 +637,7 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
     check_ownership_loss(had_ownership, i)
 
     log_right(
-        f"removed {a[0].info_str} for {ug.name} in {seq_to_str(list(str(x.block.id) for x in a))}"
+        f"removed {a[0].info_str} for {ug.name} in {seq_to_str(list(str(x.block_id) for x in a))}"
     )
 
     db.session.commit()
