@@ -42,7 +42,7 @@ from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block, copy_default_rights
 from timApp.item.copy_rights import copy_rights
 from timApp.item.deleting import soft_delete_document, get_trash_folder
-from timApp.item.item import Item
+from timApp.item.item import Item, ItemBase
 from timApp.item.validation import (
     validate_item,
     validate_item_and_create_intermediate_folders,
@@ -220,12 +220,14 @@ class PermissionEditModelBase:
 @dataclass
 class PermissionEditModel(PermissionEditModelBase):
     edit_velp_group_perms: bool = True
+    edit_translation_perms: bool = True
 
 
 @dataclass
 class PermissionSingleEditModel(PermissionEditModelBase):
     id: int
     edit_velp_group_perms: bool = True
+    edit_translation_perms: bool = True
 
 
 class DefaultItemType(Enum):
@@ -253,6 +255,7 @@ class PermissionRemoveModelBase:
 @dataclass
 class PermissionRemoveModel(PermissionRemoveModelBase):
     edit_velp_group_perms: bool = True
+    edit_translation_perms: bool = True
 
 
 @dataclass
@@ -337,9 +340,15 @@ def add_permission(m: PermissionSingleEditModel):
     if accs:
         a = accs[0]
         check_ownership_loss(is_owner, i)
-        log_right(f"added {a.info_str} for {seq_to_str(m.groups)} in {i.path}")
+
+        for perm in accs:
+            item = get_item_or_abort(perm.block.id)
+            log_right(
+                f"added {perm.info_str} for {seq_to_str(m.groups)} in {item.path}"
+            )
 
         # copy permissions to document's velp groups
+        # TODO refactor this into add_perm
         if m.edit_velp_group_perms:
             add_doc_velp_group_permissions(i, m)
 
@@ -399,8 +408,9 @@ def expire_permission_url(doc_id: int, username: str, redir: str | None = None):
         return raise_or_redirect("Right not found.", redir)
     if was_expired:
         return raise_or_redirect("Right is already expired.", redir)
-    # also expire permissions for document's velp groups
+    # also expire permissions for document's velp groups and translations
     expire_doc_velp_groups_perms(i.id, g)
+    expire_doc_translation_perms(i.id, g)
 
     db.session.commit()
     return ok_response() if not redir else safe_redirect(redir)
@@ -432,6 +442,31 @@ def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
             a.duration, a.duration_from, a.duration_to = None, None, None
 
 
+def expire_doc_translation_perms(doc_id: int, ug: UserGroup) -> None:
+    """Expire view permissions for a document's translations for a specific UserGroup
+
+    :param doc_id: ID for the document
+    :param ug: UserGroup whose permissions will be expired
+    """
+    doc = get_doc_or_abort(doc_id)
+    accs: list[BlockAccess] = []
+    for tr in doc.translations:
+        if tr.id == doc.id:
+            continue
+        # TODO Should this apply to ALL permissions, instead of just 'view'?
+        acc: BlockAccess | None = BlockAccess.query.filter_by(
+            type=AccessType.view.value,
+            block_id=tr.id,
+            usergroup_id=ug.id,
+        ).first()
+        if acc:
+            accs.append(acc)
+    for a in accs:
+        a.accessible_to = get_current_time()
+        if a.duration:
+            a.duration, a.duration_from, a.duration_to = None, None, None
+
+
 @manage_page.get("/permissions/confirm/<int:doc_id>/<username>")
 def confirm_permission_url(doc_id: int, username: str, redir: str | None = None):
     g, i = get_group_and_doc(doc_id, username)
@@ -447,7 +482,10 @@ def confirm_permission(m: PermissionRemoveModel) -> Response:
 
 
 def do_confirm_permission(
-    m: PermissionRemoveModel, i: DocInfo, redir: str | None = None
+    m: PermissionRemoveModel,
+    i: DocInfo,
+    redir: str | None = None,
+    confirm_translations: bool = True,
 ):
     ba: BlockAccess | None = BlockAccess.query.filter_by(
         type=m.type.value,
@@ -464,7 +502,25 @@ def do_confirm_permission(
     ba.do_confirm()
     ug: UserGroup = UserGroup.query.get(m.group)
     log_right(f"confirmed {ba.info_str} for {ug.name} in {i.path}")
+
+    if confirm_translations and i.is_original_translation:
+        for tr in i.translations:
+            if tr.is_original_translation:
+                continue
+            try:
+                do_confirm_permission(
+                    PermissionRemoveModel(tr.block.id, m.type, m.group),
+                    tr,
+                    redir,
+                    confirm_translations=True,
+                )
+            except RouteException:
+                # TODO Do proper exception management here, user should have a list/dialog shown that specifies
+                #  which permissions were not set (see /static/scripts/tim/item/rightsEditor.ts)
+                pass
+
     db.session.commit()
+
     return ok_response() if not redir else safe_redirect(redir)
 
 
@@ -482,8 +538,8 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         .order_by(Block.id)
         .all()
     )
-    a = None
-    velp_groups = None
+
+    modified_permissions = []
     owned_items_before = set()
     for i in items:
         checked_owner = verify_permission_edit_access(i, m.type)
@@ -492,21 +548,25 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         if m.action == EditOption.Add:
             accs = add_perm(m, i)
             if accs:
-                a = accs[0]
+                modified_permissions.extend(accs)
             # copy permissions to item's/document's velp groups, if any
             if m.edit_velp_group_perms:
                 # Currently only document velp group permissions are supported
                 if i.type_id == BlockType.Document.value:
-                    doc = get_doc_or_abort(i.id)
-                    velp_groups = add_velp_group_permissions(m, doc)
+                    doc = DocInfo.find_by_id(i.id)
+                    if doc:
+                        velp_groups = add_velp_group_permissions(m, doc)
+                        modified_permissions.extend(velp_groups)
         else:
             for g in groups:
-                a = remove_perm(g, i, m.type) or a
+                removed = remove_perm(g, i, m.type, m.edit_translation_perms)
+                modified_permissions.extend(removed)
                 # Also remove permissions to item's/document's velp groups, if any
-                if m.edit_velp_group_perms:
+                doc = DocInfo.find_by_id(i.id)
+                if doc and m.edit_velp_group_perms:
                     if i.type_id == BlockType.Document.value:
-                        doc = get_doc_or_abort(i.id)
                         velp_groups = remove_velp_group_perms(doc, g, m.type)
+                        modified_permissions.extend(velp_groups)
 
     if m.type == AccessType.owner:
         owned_items_after = set()
@@ -516,24 +576,21 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
                 owned_items_after.add(i)
         if owned_items_before != owned_items_after:
             raise AccessDenied("You cannot remove ownership from yourself.")
-    if a:
+
+    if modified_permissions:
         action = "added" if m.action == EditOption.Add else "removed"
-        log_right(
-            f"{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}"
-        )
-        if velp_groups:
-            for vg in velp_groups:
-                log_right(
-                    f"{action} {vg.info_str} for {seq_to_str(m.groups)} in blocks: "
-                    + f"{seq_to_str(list(str(x) for x in m.ids))}"
-                )
+        for p in modified_permissions:
+            log_right(
+                f"{action} {p.info_str} for {seq_to_str(m.groups)} in {seq_to_str(list(str(x) for x in m.ids))}"
+            )
         db.session.commit()
+
     return permission_response(m)
 
 
 def add_perm(
     p: PermissionEditModel,
-    item: Item,
+    item: ItemBase | Block,
     replace_active_duration: bool
     | ReplaceAccessAction = ReplaceAccessAction.AlwaysReplace,
 ) -> list[BlockAccess]:
@@ -542,20 +599,32 @@ def add_perm(
             raise AccessDenied("You cannot add owners to your personal folder.")
     opt = p.time.effective_opt
     accs = []
-    for group in p.group_objects:
-        a = grant_access(
-            group,
-            item,
-            p.type,
-            accessible_from=opt.ffrom,
-            accessible_to=opt.to,
-            duration_from=opt.durationFrom,
-            duration_to=opt.durationTo,
-            duration=opt.duration,
-            require_confirm=p.confirm,
-            replace_active_duration=replace_active_duration,
+
+    doc = item.docentries[0] if isinstance(item, Block) and item.docentries else item
+    docs = (
+        doc.translations
+        if (
+            isinstance(doc, DocInfo)
+            and p.edit_translation_perms
+            and doc.is_original_translation
         )
-        accs.append(a)
+        else [doc]
+    )
+    for tr in docs:
+        for group in p.group_objects:
+            a = grant_access(
+                group,
+                tr,
+                p.type,
+                accessible_from=opt.ffrom,
+                accessible_to=opt.to,
+                duration_from=opt.durationFrom,
+                duration_to=opt.durationTo,
+                duration=opt.duration,
+                require_confirm=p.confirm,
+                replace_active_duration=replace_active_duration,
+            )
+            accs.append(a)
     return accs
 
 
@@ -663,18 +732,20 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
     ug: UserGroup = UserGroup.query.filter_by(id=m.group).first()
     if not ug:
         raise RouteException("User group not found")
-    a = remove_perm(ug, i.block, m.type)
+    a = remove_perm(ug, i.block, m.type, m.edit_translation_perms)
     check_ownership_loss(had_ownership, i)
 
-    if a:
-        log_right(f"removed {a.info_str} for {ug.name} in {i.path}")
+    for perm in a:
+        item = get_item_or_abort(perm.block_id)
+        log_right(f"removed {perm.info_str} for {ug.name} in {item.path}")
 
     # Also remove permissions to item's/document's velp groups, if any
     if m.edit_velp_group_perms and isinstance(i, DocInfo | DocEntry):
         rm_groups = remove_velp_group_perms(i, ug, m.type)
         for rm in rm_groups:
-            rm_path = get_doc_or_abort(rm.block_id).path
-            log_right(f"removed {rm.info_str} for {ug.name} in {rm_path}")
+            rm_path = Item.find_by_id(rm.block_id).path
+            if rm_path:
+                log_right(f"removed {rm.info_str} for {ug.name} in {rm_path}")
 
     db.session.commit()
     return ok_response()
@@ -689,6 +760,7 @@ class PermissionClearModelBase:
 @dataclass
 class PermissionClearModel(PermissionClearModelBase):
     edit_velp_group_perms: bool = True
+    edit_translation_perms: bool = True
 
 
 @manage_page.put("/permissions/clear", model=PermissionClearModel)
@@ -702,13 +774,17 @@ def clear_permissions(m: PermissionClearModel) -> Response:
         verify_ownership(i)
         clear_doc_permissions(i, m.type)
 
-        # Clear permissions from document's velp groups
+        # Clear permissions from document's velp groups and translations
         if m.edit_velp_group_perms and isinstance(i, DocInfo | DocEntry):
             vgs = get_groups_from_document_table(i.id, None)
             for vg in vgs:
                 # Only clear perms from velp groups attached to the document
                 if is_velp_group_in_document(vg, i):
                     clear_doc_permissions(vg, m.type)
+
+        if m.edit_translation_perms:
+            for tr in i.translations:
+                clear_doc_permissions(tr, m.type)
 
     db.session.commit()
     return ok_response()
@@ -752,17 +828,50 @@ def self_expire_permission(id: int, set_field: str | None = None) -> Response:
 
     acc.accessible_to = get_current_time()
 
-    # Expire perms for document's velp groups as well
+    # Expire perms for document's velp groups and translations
     if isinstance(i, DocInfo | DocEntry):
         expire_doc_velp_groups_perms(i.id, acc.usergroup)
+        expire_doc_translation_perms(i.id, acc.usergroup)
 
     db.session.commit()
     log_right(f"self-expired view access in {i.path}")
     return ok_response()
 
 
-def remove_perm(group: UserGroup, b: Block, t: AccessType):
-    return remove_access(group, b, t)
+def remove_perm(
+    group: UserGroup, b: Block, t: AccessType, process_translations: bool = True
+) -> list[BlockAccess]:
+    """
+    Remove permissions from items.
+    :param group: UserGroup whose permissions will be revoked.
+    :param b: Item to remove permissions from.
+    :param t: Type of permission to remove.
+    :param process_translations: Whether a document's Translations should also have the corresponding
+                              permissions removed.
+    :return: List of removed permissions.
+    """
+
+    # TODO Fetch velp group docs for this document as well
+    item = b.docentries[0] if (isinstance(b, Block) and b.docentries) else b
+    items = (
+        item.translations
+        if (
+            isinstance(item, DocInfo)
+            and process_translations
+            and item.is_original_translation
+        )
+        else [item]
+    )
+
+    # items = b.translations if (isinstance(b, DocInfo) and process_translations) else [b]
+    removed_perms = []
+    for d in items:
+        perm = remove_access(group, d, t)
+        # remove_access returns None if the permissions wasn't found in the item's BlockAccess list,
+        # we do not want to carry it further
+        if perm:
+            removed_perms.append(perm)
+    return removed_perms
 
 
 def remove_velp_group_perms(
@@ -779,9 +888,9 @@ def remove_velp_group_perms(
     for vg in vgs:
         # Remove perms only from velp groups attached to the document
         if is_velp_group_in_document(vg, i):
-            a = remove_perm(ug, vg.block, acc)
+            a = remove_perm(ug, vg.block, acc, False)
             if a:
-                rm_groups.append(a)
+                rm_groups.extend(a)
     return rm_groups
 
 

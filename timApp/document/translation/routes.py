@@ -33,11 +33,11 @@ from timApp.auth.accesshelper import (
     verify_edit_access,
 )
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.item.copy_rights import copy_rights
 from timApp.document.document import Document
 from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
 from timApp.document.translation.translation import Translation
-from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, NotExist, RouteException
@@ -225,7 +225,8 @@ def create_translation_route(
     else:
         raise Exception("doc has unexpected type")
     de.trs.append(tr)
-    copy_default_rights(tr, BlockType.Document)
+    # Inherit parent document's rights
+    copy_rights(doc, tr, None, copy_expired=False)
     db.session.commit()
 
     # Run automatic translation if requested
