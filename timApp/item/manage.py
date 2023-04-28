@@ -13,7 +13,6 @@ from flask import request
 from isodate import Duration
 from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
-from timApp.document.translation.translation import Translation
 
 from timApp.auth.accesshelper import (
     verify_manage_access,
@@ -581,10 +580,9 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
     if modified_permissions:
         action = "added" if m.action == EditOption.Add else "removed"
         for p in modified_permissions:
-            # TODO This should preferably use the existing and available Block reference
-            #  to avoid db searches
-            path = Item.find_by_id(p.block_id).path
-            log_right(f"{action} {p.info_str} for {seq_to_str(m.groups)} in {path}")
+            log_right(
+                f"{action} {p.info_str} for {seq_to_str(m.groups)} in {seq_to_str(list(str(x) for x in m.ids))}"
+            )
         db.session.commit()
 
     return permission_response(m)
