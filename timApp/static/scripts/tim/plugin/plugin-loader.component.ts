@@ -13,6 +13,7 @@ import {
     ContentChild,
     createNgModule,
     ElementRef,
+    HostListener,
     Input,
     NgModule,
     NgZone,
@@ -103,6 +104,9 @@ function isElement(n: Node): n is Element {
         </div>
 
     `,
+    host: {
+        tabindex: "0",
+    },
     styles: [],
 })
 export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
@@ -157,9 +161,20 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         private http: HttpClient,
         private zone: NgZone,
         private appRef: ApplicationRef,
+        private el: ElementRef<HTMLElement>,
         public vcr: ViewContainerRef
     ) {
         timLogTime("timPluginLoader constructor", "answ", 1);
+    }
+
+    @HostListener("focusout", ["$event"])
+    onBlur(event: FocusEvent) {
+        if (!event.relatedTarget || !(event.relatedTarget instanceof Node)) {
+            return;
+        }
+        if (!this.el.nativeElement.contains(event.relatedTarget)) {
+            console.log(event);
+        }
     }
 
     get loaderElement(): HTMLElement {

@@ -70,6 +70,7 @@ class Answer(db.Model):
     saver = db.relationship(
         "User", lazy="select", secondary=AnswerSaver.__table__, uselist=False
     )
+    tags = db.relationship("AnswerTag", back_populates="answer")
 
     @property
     def content_as_json(self) -> dict:

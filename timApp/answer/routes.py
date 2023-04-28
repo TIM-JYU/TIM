@@ -987,7 +987,7 @@ def post_answer_impl(
     if "save" in jsonresp and not get_task:
         # TODO: RND_SEED: save used rnd_seed for this answer if answer is saved, found from par.get_rnd_seed()
         save_object = jsonresp["save"]
-        tags = []
+        tags = save_object.get("tags", [])
         tim_info = jsonresp.get("tim_info", {})
         if tim_info.get("noupdate", False):
             noupdate = True
@@ -997,11 +997,6 @@ def post_answer_impl(
             points *= plugin.points_multiplier()
         elif not multiplier:
             points = None
-        # Save the new state
-        try:
-            tags = save_object["tags"]
-        except (TypeError, KeyError):
-            pass
 
         def get_name_and_val(name1: str, name2: str = "") -> tuple[str, Any]:
             """

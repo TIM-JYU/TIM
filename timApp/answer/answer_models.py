@@ -12,6 +12,8 @@ class AnswerTag(db.Model):
     answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
     tag = db.Column(db.Text, nullable=False)
 
+    answer = db.relationship("Answer", back_populates="tags")
+
 
 class AnswerUpload(db.Model):
     """Associates uploaded files (Block with type BlockType.AnswerUpload) with Answers."""
