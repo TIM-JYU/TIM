@@ -340,16 +340,9 @@ def add_permission(m: PermissionSingleEditModel):
     if accs:
         check_ownership_loss(is_owner, i)
 
-        for perm in accs:
-            ba, block = perm
-            path = (
-                block.path
-                if isinstance(block, DocInfo)
-                else block.docentries[0].path
-                if not isinstance(block, Folder)
-                else f"{block.location}/{block.name}"
-            )
-            log_right(f"added {ba.info_str} for {seq_to_str(m.groups)} in {path}")
+        log_right(
+            f"added {accs[0].info_str} for {seq_to_str(m.groups)} in {seq_to_str(list(str(x.block.id) for x in accs))}"
+        )
 
         db.session.commit()
     return permission_response(m)
@@ -567,15 +560,9 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
     if modified_permissions:
         action = "added" if m.action == EditOption.Add else "removed"
         for p in modified_permissions:
-            ba, block = p
-            path = (
-                block.path
-                if isinstance(block, DocInfo)
-                else block.docentries[0].path
-                if not isinstance(block, Folder)
-                else f"{block.location}/{block.name}"
+            log_right(
+                f"{action} {p.info_str} for {seq_to_str(m.groups)} in {seq_to_str(list(str(x) for x in m.ids))}"
             )
-            log_right(f"{action} {ba.info_str} for {seq_to_str(m.groups)} in {path}")
         db.session.commit()
 
     return permission_response(m)
@@ -586,7 +573,7 @@ def add_perm(
     item: ItemBase | Block,
     replace_active_duration: bool
     | ReplaceAccessAction = ReplaceAccessAction.AlwaysReplace,
-) -> list[(BlockAccess, Block)]:
+) -> list[BlockAccess]:
     if get_current_user_object().get_personal_folder().id == item.id:
         if p.type == AccessType.owner:
             raise AccessDenied("You cannot add owners to your personal folder.")
@@ -649,16 +636,9 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
     )
     check_ownership_loss(had_ownership, i)
 
-    for perm in a:
-        ba, block = perm
-        path = (
-            block.path
-            if isinstance(block, DocInfo)
-            else block.docentries[0].path
-            if not isinstance(block, Folder)
-            else f"{block.location}/{block.name}"
-        )
-        log_right(f"removed {ba.info_str} for {ug.name} in {path}")
+    log_right(
+        f"removed {a[0].info_str} for {ug.name} in {seq_to_str(list(str(x.block.id) for x in a))}"
+    )
 
     db.session.commit()
     return ok_response()
@@ -757,7 +737,7 @@ def remove_perm(
     t: AccessType,
     process_translations: bool = True,
     process_velp_groups: bool = True,
-) -> list[tuple[BlockAccess, Block]]:
+) -> list[BlockAccess]:
     """
     Remove permissions from items.
     :param group: UserGroup whose permissions will be revoked.
@@ -795,7 +775,7 @@ def remove_perm(
         # remove_access returns None if the permissions wasn't found in the item's BlockAccess list,
         # we do not want to carry it further
         if perm:
-            removed_perms.append((perm, d))
+            removed_perms.append(perm)
     return removed_perms
 
 
