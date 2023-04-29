@@ -1,7 +1,7 @@
 import type {IHttpResponse, IPromise} from "angular";
 import angular from "angular";
-import * as t from "io-ts";
 import type {Props} from "io-ts";
+import * as t from "io-ts";
 import moment from "moment";
 import type {AbstractControl, ValidatorFn} from "@angular/forms";
 import humanizeDuration from "humanize-duration";
@@ -673,7 +673,7 @@ export function numOrStringToNumber(s: number | string) {
     if (typeof s === "number") {
         return s;
     }
-    return parseFloat(s);
+    return parseFloat(s.replace(",", "."));
 }
 
 export function valueOr<

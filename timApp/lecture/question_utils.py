@@ -117,7 +117,9 @@ def create_points_table(points: str) -> list[dict[str, float]]:
                         row_points_dict[col_points[0]] = 1.0
                     else:
                         try:
-                            row_points_dict[col_points[0]] = float(col_points[1])
+                            row_points_dict[col_points[0]] = float(
+                                col_points[1].replace(",", ".")
+                            )
                         except ValueError:
                             pass
             points_table.append(row_points_dict)

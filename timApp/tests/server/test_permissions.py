@@ -1,3 +1,4 @@
+import time
 from datetime import timedelta
 
 from timApp.auth.accesstype import AccessType
@@ -290,6 +291,12 @@ class PermissionTest(TimRouteTest):
                 "confirm": False,
             },
         )
+
+        # Refresh the document blocks to make changes visible
+        for i in all_ids:
+            doc = DocEntry.find_by_id(i)
+            db.session.refresh(doc.block)
+
         t1_f = self.test_user_1.get_personal_folder()
         for p in paths:
             d = DocEntry.find_by_path(self.get_personal_item_path(p))
@@ -808,3 +815,211 @@ class PermissionTest(TimRouteTest):
         self.assertFalse(self.test_user_2.has_edit_access(d))
         self.assertFalse(self.test_user_2.has_view_access(d))
         self.assertTrue(self.test_user_1.has_ownership(d))
+
+    def test_copy_translation_permissions(self):
+        self.login_test1()
+
+        # test copying doc perms when creating translation
+        d = self.create_doc()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.edit.value,
+                "action": "add",
+                "id": d.id,
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        t = self.create_translation(d, "translation", "en")
+        self.assertTrue(self.test_user_2.has_edit_access(t))
+
+    def test_add_translation_permissions(self):
+        self.login_test1()
+
+        # test adding perms to translations when adding doc perms
+        d = self.create_doc()
+        t = self.create_translation(d, "translation", "en")
+        self.json_put(
+            f"/permissions/add",
+            {
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "id": d.id,
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+            expect_status=200,
+        )
+
+        # Refresh the block to make db changes visible
+        t = DocEntry.find_by_id(t.id)
+        db.session.refresh(t.block)
+        # print(t.block.accesses, t.is_original_translation)
+
+        self.assertTrue(self.test_user_2.has_view_access(t))
+        self.assertTrue(self.test_user_3.has_view_access(t))
+
+    def test_remove_translation_permissions(self):
+        # test removing perms from translations
+        self.login_test1()
+        d = self.create_doc()
+        self.test_user_2.grant_access(d, AccessType.edit)
+        self.test_user_3.grant_access(d, AccessType.edit)
+        db.session.commit()
+
+        t = self.create_translation(d, "translation", "en")
+
+        self.assertTrue(self.test_user_2.has_view_access(t))
+        self.assertTrue(self.test_user_3.has_view_access(t))
+
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "group": self.test_user_2.get_personal_group().id,
+            },
+            expect_status=200,
+        )
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "group": self.test_user_3.get_personal_group().id,
+            },
+            expect_status=200,
+        )
+        # Refresh the block to make db changes visible
+        d = DocEntry.find_by_id(d.id)
+        t = DocEntry.find_by_id(t.id)
+        db.session.refresh(d.block)
+        db.session.refresh(t.block)
+
+        self.assertFalse(self.test_user_2.has_view_access(t))
+        self.assertFalse(self.test_user_3.has_view_access(t))
+
+    def test_mass_edit_translation_permissions(self):
+        self.login_test1()
+        d1 = self.create_doc()
+        d2 = self.create_doc()
+        t1 = self.create_translation(d1, "translation 1", "en")
+        t2 = self.create_translation(d2, "translation 2", "en")
+
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": [d1.id, d2.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+
+        # Refresh the blocks to make db changes visible
+        t1 = DocEntry.find_by_id(t1.id)
+        t2 = DocEntry.find_by_id(t2.id)
+        db.session.refresh(t1.block)
+        db.session.refresh(t2.block)
+
+        self.assertTrue(self.test_user_2.has_view_access(t1))
+        self.assertTrue(self.test_user_2.has_view_access(t2))
+        self.assertTrue(self.test_user_3.has_view_access(t1))
+        self.assertTrue(self.test_user_3.has_view_access(t2))
+
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": [d1.id, d2.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+
+        # Refresh the blocks to make db changes visible
+        t1 = DocEntry.find_by_id(t1.id)
+        t2 = DocEntry.find_by_id(t2.id)
+        db.session.refresh(t1.block)
+        db.session.refresh(t2.block)
+
+        self.assertFalse(self.test_user_2.has_view_access(t1))
+        self.assertFalse(self.test_user_2.has_view_access(t2))
+        self.assertFalse(self.test_user_3.has_view_access(t1))
+        self.assertFalse(self.test_user_3.has_view_access(t2))
+
+    def test_confirm_translation_permissions(self):
+        self.login_test1()
+        d = self.create_doc()
+        t1 = self.create_translation(d, "translation 1", "en")
+        t2 = self.create_translation(d, "translation 2", "sv")
+
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "from": None,
+                    "to": get_current_time() + timedelta(days=1),
+                    "type": "range",
+                },
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "groups": ["testuser2", "testuser3"],
+                "confirm": True,
+            },
+            expect_status=200,
+        )
+
+        self.assertFalse(self.test_user_2.has_view_access(d))
+        self.assertFalse(self.test_user_3.has_view_access(d))
+        self.assertFalse(self.test_user_2.has_view_access(t1))
+        self.assertFalse(self.test_user_2.has_view_access(t2))
+        self.assertFalse(self.test_user_3.has_view_access(t1))
+        self.assertFalse(self.test_user_3.has_view_access(t2))
+
+        self.json_put(
+            "/permissions/confirm",
+            {
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "group": self.test_user_2.get_personal_group().id,
+            },
+        )
+
+        self.json_put(
+            "/permissions/confirm",
+            {
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "group": self.test_user_3.get_personal_group().id,
+            },
+        )
+
+        # Refresh the blocks to make db changes visible
+        d = DocEntry.find_by_id(d.id)
+        t1 = DocEntry.find_by_id(t1.id)
+        t2 = DocEntry.find_by_id(t2.id)
+        db.session.refresh(d.block)
+        db.session.refresh(t1.block)
+        db.session.refresh(t2.block)
+
+        self.assertTrue(self.test_user_2.has_view_access(d))
+        self.assertTrue(self.test_user_3.has_view_access(d))
+        self.assertTrue(self.test_user_2.has_view_access(t1))
+        self.assertTrue(self.test_user_2.has_view_access(t2))
+        self.assertTrue(self.test_user_3.has_view_access(t1))
+        self.assertTrue(self.test_user_3.has_view_access(t2))

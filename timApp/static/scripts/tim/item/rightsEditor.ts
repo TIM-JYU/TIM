@@ -58,6 +58,7 @@ class RightsEditorController implements IController {
     private grouprights?: IRight[];
     private showActiveOnly: boolean;
     private editVelpGroupPermissions: boolean;
+    private editTranslationPermissions: boolean;
     private selectedRight: IRight | null;
     private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
@@ -109,6 +110,7 @@ class RightsEditorController implements IController {
         this.selectedRight = null;
         this.showActiveOnly = true;
         this.editVelpGroupPermissions = true;
+        this.editTranslationPermissions = true;
         this.datePickerOptionsFrom = {
             format: dateFormat,
             defaultDate: moment(),
@@ -331,6 +333,7 @@ class RightsEditorController implements IController {
                 item_type: this.defaultItem,
                 type: right.type,
                 edit_velp_group_perms: this.editVelpGroupPermissions,
+                edit_translation_perms: this.editTranslationPermissions,
             })
         );
         return await this.handleResult(r, refresh);
@@ -430,6 +433,7 @@ class RightsEditorController implements IController {
                     groups: groupname.split(/[;\n]/),
                     confirm: this.getEffectiveConfirm(),
                     edit_velp_group_perms: this.editVelpGroupPermissions,
+                    edit_translation_perms: this.editTranslationPermissions,
                 })
             );
             if (r.ok) {
@@ -464,6 +468,8 @@ class RightsEditorController implements IController {
                             item_type: this.defaultItem,
                             edit_velp_group_perms:
                                 this.editVelpGroupPermissions,
+                            edit_translation_perms:
+                                this.editTranslationPermissions,
                         }
                     )
                 );
@@ -695,6 +701,7 @@ class RightsEditorController implements IController {
                 confirm: false,
                 item_type: this.defaultItem,
                 edit_velp_group_perms: this.editVelpGroupPermissions,
+                edit_translation_perms: this.editTranslationPermissions,
             })
         );
         this.loading = false;

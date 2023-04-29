@@ -11,7 +11,7 @@ import {
     makePreview,
     minimizeJson,
 } from "tim/document/question/answer-sheet.component";
-import {TimStorage, to, toPromise} from "tim/util/utils";
+import {numOrStringToNumber, TimStorage, to, toPromise} from "tim/util/utils";
 import {
     KEY_DOWN,
     KEY_ENTER,
@@ -798,7 +798,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
         return (
             id.toString() +
             ":" +
-            (parseFloat(colVal) ?? this.question.defaultPoints ?? 0)
+            (numOrStringToNumber(colVal) ?? this.question.defaultPoints ?? 0)
         );
     }
 

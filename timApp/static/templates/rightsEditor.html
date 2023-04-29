@@ -10,6 +10,11 @@
         <input ng-model="$ctrl.editVelpGroupPermissions" ng-change="$ctrl.editVelpGroupPermissions" type="checkbox" id="editVelpGroupPermsFlag"/> Copy changes to velp groups
     </label>
 </div>
+<div class="checkbox">
+    <label>
+        <input ng-model="$ctrl.editTranslationPermissions" ng-change="$ctrl.editTranslationPermissions" type="checkbox" id="editTranslationPermsFlag"/> Copy changes to translations
+    </label>
+</div>
 <div ng-if="$ctrl.massMode && $ctrl.gridReady"
      ui-grid="$ctrl.gridOptions"
      ui-grid-selection
