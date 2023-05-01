@@ -1,6 +1,5 @@
 latexButtonList
 list of latex buttons
-buttons: |!!
 [ "$", "$⁞$", "$ $", "t" ]
 [ "$$", "$$⁞$$", "$$ $$", "t"]
 [ "°", "°", "°", "q"]
@@ -128,4 +127,3 @@ buttons: |!!
 [ "\\( ^{x\\text{)}}\\frac{a}{b} \\)", "^{x\\text{)}}\\frac{a}{b}", "^{x\\text{)}}\\frac{a}{b}", "s" ]
 [ "\\[ \\begin{array}{l|l}\n\\square&\\square\\\\\n\\hline\\square&\\square\n\\end{array} \\]", "\\begin{array}{l|l}\n⁞&\\\\\n\\hline&\n\\end{array}", "\\begin{array}{l|l}\n &\\\\\n\\hline&\n\\end{array}", "s"]
 [ "\\( \\mathrm{T} \\)", "\\mathrm{T}", "\\mathrm{T}", "s" ]
-!!
