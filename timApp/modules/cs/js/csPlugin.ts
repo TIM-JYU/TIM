@@ -2143,6 +2143,9 @@ ${fhtml}
         );
     }
 
+    /**
+     * Initialize template buttons.
+     */
     createTemplateButtons() {
         const b = this.markup.buttons;
         const mdButtons = this.markup.mdButtons;

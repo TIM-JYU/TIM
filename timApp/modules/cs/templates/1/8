@@ -3,7 +3,11 @@ Kysymys, johon käyttäjä voi kirjoittaa matemaattisia kaavoja
 ``` {plugin="csPlugin" #PLUGINNAMEHERE}
 type: md
 placeholder: "Kirjoita kaavaa"
-stem: "Kirjoita alle kaavaa"
+header: Tehtävä 1
+stem: |!!
+md:
+Ratkaise tehtävä
+!!
 button: Tallenna
 rows: 5
 editorModes: "01"
@@ -36,7 +40,5 @@ buttons: |!!
 [ "\\[ \\begin{cases}\\square&\\square\\\\\\square&\\square\\end{cases} \\]", "\\begin{cases}⁞&\\\\&\\end{cases}", "\\begin{cases} &\\\\&\\end{cases}", "s"]
 [ "\\[ \\begin{matrix}\\square&\\square\\\\\\square&\\square\\end{matrix} \\]", "\\begin{matrix}⁞&\\\\&\\end{matrix}", "\\begin{matrix} &\\\\&\\end{matrix}", "s"]
 [ "\\[ \\begin{array}{l|l}\\square&\\square\\\\\\hline\\square&\\square\\end{array} \\]", "\\begin{array}{l|l}⁞&\\\\\\hline&\\end{array}", "\\begin{array}{l|l} &\\\\\\hline&\\end{array}", "s"]
-[ "\\[x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}\\]", "x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}", "x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}", "s"]
-[ "\\[f_X\\left(x\\right)=\\frac{1}{\\sigma\\sqrt{2\\pi}}\\text{e}^{-\\frac{\\left(x-\\mu\\right)^2}{2\\sigma^2}}\\]", "f_X\\left(x\\right)=\\frac{1}{\\sigma\\sqrt{2\\pi}}\\text{e}^{-\\frac{\\left(x-\\mu\\right)^2}{2\\sigma^2}}", "f_X\\left(x\\right)=\\frac{1}{\\sigma\\sqrt{2\\pi}}\\text{e}^{-\\frac{\\left(x-\\mu\\right)^2}{2\\sigma^2}}", "s"]
 !!
 ```
