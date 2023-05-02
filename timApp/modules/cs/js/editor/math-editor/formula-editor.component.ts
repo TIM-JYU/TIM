@@ -4,6 +4,7 @@
  * @author Juha Reinikainen
  * @author Daniel Juola
  * @author Jaakko Palm
+ * @author Janne Lahti
  * @license MIT
  * @date 28.2.2023
  */
@@ -48,8 +49,8 @@ export enum FormulaType {
 }
 
 /**
- * Information about text that was in editor when formula editor was opened
- * split into text before formula, text of formula chosen for editing and text after
+ * Information about text that was in editor when formula editor was opened.
+ * Split into text before formula, text of formula chosen for editing and text after
  * formula.
  */
 export type OldContent = {
@@ -112,7 +113,7 @@ export type FieldType = {
                                 [(ngModel)]="formulaType"
                                 (ngModelChange)="onFormulaTypeChange()"
                         >
-                            <option [ngValue]="'inline'" i18n [disabled]="isDisabled">Inline</option>
+                            <option [ngValue]="'inline'" i18n [disabled]="inlineDisabled">Inline</option>
                             <option [ngValue]="'multi'" i18n>Multiline</option>
                             <option [ngValue]="'align'" i18n>Align</option>
                         </select>
@@ -144,7 +145,7 @@ export class FormulaEditorComponent {
     };
     private isVisible = false;
 
-    isDisabled = false;
+    inlineDisabled = false;
 
     @ViewChild("formulaEditorDialog")
     formulaEditorDialog!: ElementRef<HTMLDivElement>;
@@ -168,7 +169,7 @@ export class FormulaEditorComponent {
     @Input() editor!: IEditor;
 
     /**
-     * Gets whether formula editor is visible or not
+     * Gets whether formula editor is visible or not.
      */
     @Input()
     get visible(): boolean {
@@ -176,10 +177,10 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Sets visibility status of formula editor and
-     * parses formula from editor if cursor was inside a formula in editor
-     * and sets initial state for formula editor.
-     * @param isVis true if formula editor should be visible else false
+     * Sets visibility status of formula editor and parses
+     * formula from editor if cursor was inside a formula
+     * in editor and sets initial state for formula editor.
+     * @param isVis True if formula editor should be visible else false.
      */
     set visible(isVis: boolean) {
         this.isVisible = isVis;
@@ -191,12 +192,14 @@ export class FormulaEditorComponent {
                 this.editor.content,
                 this.cursorLocation
             );
-            // initialize adding new formula
-            if (
+            // currentFormula[1] and [2] are formula begin and end indexes in a text.
+            // Index < 0 means no suitable begin or end was found.
+            const isNotEditing =
                 currentFormula[0] === FormulaType.NotDefined ||
                 currentFormula[1] < 0 ||
-                currentFormula[2] < 0
-            ) {
+                currentFormula[2] < 0;
+            // initialize adding new formula
+            if (isNotEditing) {
                 this.fields = [{latex: ""}];
                 this.activeFieldsIndex = 0;
                 this.formulaType = this.getInitialFormulaType();
@@ -220,7 +223,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Sets symbol that was pressed and adds it to whether editor is active
+     * Sets symbol that was pressed and adds it to whether editor is active.
      * This approach is used instead of VIewChild to make passing
      * button press events from outside of this component
      * in AngularJs code.
@@ -234,8 +237,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Append new empty field after the current field
-     * and sets it as active.
+     * Append new empty field before or after the current field and sets it as active.
      * @param lineAdd which field add came from and whether to add before or after that line
      */
     addField(lineAdd: LineAdd) {
@@ -258,7 +260,7 @@ export class FormulaEditorComponent {
                 this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
         }
         this.useExistingParenthesis = false;
-        this.isDisabled = true;
+        this.inlineDisabled = true;
     }
 
     /**
@@ -281,7 +283,7 @@ export class FormulaEditorComponent {
             this.formulaType =
                 this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
         }
-        this.isDisabled = this.fields.length > 1;
+        this.inlineDisabled = this.fields.length > 1;
         this.useExistingParenthesis = false;
         this.updateFormulaToEditor();
     }
@@ -289,7 +291,7 @@ export class FormulaEditorComponent {
     /**
      * Sets LaTeX content of a field,
      * updates changes to preview and
-     * sets edited field as active
+     * sets edited field as active.
      * @param res edit content
      */
     handleEdited(res: Edit) {
@@ -302,7 +304,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Sets active field
+     * Sets active field.
      * @param res edit content
      */
     handleFocus(res: Edit) {
@@ -328,7 +330,7 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Determine formula type based on current cursor location
+     * Determine formula type based on current cursor location.
      */
     getInitialFormulaType() {
         const currentLine = getCurrentLine(
@@ -336,7 +338,8 @@ export class FormulaEditorComponent {
             this.cursorLocation
         );
         const isEmptyLine = currentLine.trim().length === 0;
-        // should be multiline if no real text in line
+        // should be multiline if adding formula to empty line,
+        // and inline if adding formula to line with text.
         return isEmptyLine ? FormulaType.Multi : FormulaType.Inline;
     }
 
@@ -353,10 +356,12 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Sets the active field to the line with cursor.
+     * When starting to edit, sets the active field to the line with cursor.
      * @param fields Array containing the LaTeX of the formulas.
      */
     setMultilineActiveField(fields: FieldType[]) {
+        // Constants depend on number characters between formulas.
+        // Number of characters depend on type of the formula.
         const firstConstant = this.formulaType === FormulaType.Align ? 0 : 2;
         const lineConstant = this.formulaType === FormulaType.Align ? 4 : 3;
         const cursorI = this.cursorLocation;
@@ -382,7 +387,8 @@ export class FormulaEditorComponent {
                 currentText += fields[fieldIndex].latex.length + lineConstant;
             }
         }
-        // set active field after timeout
+        // Set active field after timeout. Building formula editor takes a moment.
+        // If value is set before finishing, active field will always be the last.
         setTimeout(() => {
             this.activeFieldsIndex = fieldIndex;
         }, 70);
@@ -406,6 +412,7 @@ export class FormulaEditorComponent {
         let trimmed = "";
         let lenDiff = 0;
         let allFields: FieldType[] = [];
+        // set edited formula based on its type
         switch (currentFormula[0]) {
             case FormulaType.Multi:
                 // separate formula and parenthesis
@@ -457,7 +464,7 @@ export class FormulaEditorComponent {
             default:
                 throw Error("undefined case " + this.formulaType);
         }
-        this.isDisabled = this.fields.length > 1;
+        this.inlineDisabled = this.fields.length > 1;
     }
 
     /**
@@ -506,8 +513,8 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Sets content of editor to the content
-     * of formula editor and emits ok event with cursor location in content.
+     * Sets content of editor to the content of formula editor
+     * and emits ok event with cursor location in content.
      */
     handleFormulaOk() {
         this.updateFormulaToEditor();
@@ -541,7 +548,7 @@ export class FormulaEditorComponent {
         this.fields = [];
         this.useExistingParenthesis = false;
         this.cursorLocation = -1;
-        this.isDisabled = false;
+        this.inlineDisabled = false;
     }
 
     /**
