@@ -34,6 +34,7 @@ from timApp.velp.velp_models import (
     VelpGroupDefaults,
     VelpGroupsInDocument,
 )
+from timApp.velp.velpgroups import get_groups_from_document_table
 
 
 class VelpTest(TimRouteTest):
@@ -432,7 +433,7 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         # Case 1:
         # Test user 2 should initially not be able to access velp group
         self.login_test2()
-        res = self.get(g_doc.url, expect_status=403)
+        self.get(g_doc.url, expect_status=403)
 
         # Should be able to access velp group with view permissions
         self.login_test1()
@@ -450,22 +451,26 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             },
         )
         self.login_test2()
-        res = self.get(g_doc.url, expect_status=200)
+        self.get(g_doc.url, expect_status=200)
 
-        usergroup = UserGroup.query.filter_by(name="testuser2").first()
         self.login_test1()
         self.json_put(
             f"/permissions/remove",
             {
                 "id": d.id,
                 "type": AccessType.view.value,
-                "group": usergroup.id,
+                "group": self.test_user_2.get_personal_group().id,
             },
             expect_status=200,
         )
         # Should no longer be able to access velp group
         self.login_test2()
-        res = self.get(g_doc.url, expect_status=403)
+        vgs = get_groups_from_document_table(
+            d.id, self.test_user_2.get_personal_group().id
+        )
+        for vg in vgs:
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=403)
 
     def test_velp_group_permissions_edit(self):
         d, g_doc = self.setup_velp_group_test()
@@ -496,20 +501,23 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         self.login_test2()
         self.get(g_doc.url, expect_status=200)
 
-        usergroup = UserGroup.query.filter_by(name="testuser2").first()
-
         self.login_test1()
         self.json_put(
             f"/permissions/remove",
             {
                 "id": d.id,
                 "type": AccessType.edit.value,
-                "group": usergroup.id,
+                "group": self.test_user_2.get_personal_group().id,
             },
         )
         # Should no longer be able to access velp group
         self.login_test2()
-        self.get(g_doc.url, expect_status=403)
+        vgs = get_groups_from_document_table(
+            d.id, self.test_user_2.get_personal_group().id
+        )
+        for vg in vgs:
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=403)
 
     def test_velp_group_permissions_teacher(self):
         d, g_doc = self.setup_velp_group_test()
@@ -541,20 +549,23 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         self.login_test2()
         self.get(g_doc.url, expect_status=200)
 
-        usergroup = UserGroup.query.filter_by(name="testuser2").first()
-
         self.login_test1()
         self.json_put(
             f"/permissions/remove",
             {
                 "id": d.id,
                 "type": AccessType.teacher.value,
-                "group": usergroup.id,
+                "group": self.test_user_2.get_personal_group().id,
             },
         )
         # Should no longer be able to access velp group
         self.login_test2()
-        self.get(g_doc.url, expect_status=403)
+        vgs = get_groups_from_document_table(
+            d.id, self.test_user_2.get_personal_group().id
+        )
+        for vg in vgs:
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=403)
 
     def test_velp_group_permissions_manage(self):
         d, g_doc = self.setup_velp_group_test()
@@ -570,7 +581,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
 
         # Case 4:
         # Should be able to access velp group with manage permissions
-        usergroup = UserGroup.query.filter_by(name="testuser2").first()
         self.login_test1()
         self.json_put(
             f"/permissions/add",
@@ -587,20 +597,23 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         self.login_test2()
         self.get(g_doc.url, expect_status=200)
 
-        usergroup = UserGroup.query.filter_by(name="testuser2").first()
-
         self.login_test1()
         self.json_put(
             f"/permissions/remove",
             {
                 "id": d.id,
                 "type": AccessType.manage.value,
-                "group": usergroup.id,
+                "group": self.test_user_2.get_personal_group().id,
             },
         )
         # Should no longer be able to access velp group
         self.login_test2()
-        self.get(g_doc.url, expect_status=403)
+        vgs = get_groups_from_document_table(
+            d.id, self.test_user_2.get_personal_group().id
+        )
+        for vg in vgs:
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=403)
 
     def test_velp_group_permissions_owner(self):
         d, g_doc = self.setup_velp_group_test()
@@ -632,20 +645,23 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         self.login_test2()
         self.get(g_doc.url, expect_status=200)
 
-        usergroup = UserGroup.query.filter_by(name="testuser2").first()
-
         self.login_test1()
         self.json_put(
             f"/permissions/remove",
             {
                 "id": d.id,
                 "type": AccessType.owner.value,
-                "group": usergroup.id,
+                "group": self.test_user_2.get_personal_group().id,
             },
         )
         # Should no longer be able to access velp group
         self.login_test2()
-        self.get(g_doc.url, expect_status=403)
+        vgs = get_groups_from_document_table(
+            d.id, self.test_user_2.get_personal_group().id
+        )
+        for vg in vgs:
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=403)
 
     def test_velp_group_permissions_new_group(self):
         d, g_doc = self.setup_velp_group_test()
@@ -873,19 +889,24 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             },
         )
         self.login_test2()
-        self.get(g_doc1.url, expect_status=200)
-        self.get(g_doc2.url, expect_status=200)
-        self.get(g_doc3.url, expect_status=200)
-        self.get(g_doc4.url, expect_status=200)
-        self.get(g_doc5.url, expect_status=200)
-        self.get(g_doc6.url, expect_status=200)
+        tu2_velp_groups = []
+        tu2id = self.test_user_2.get_personal_group().id
+        tu2_velp_groups.extend(get_groups_from_document_table(d1.id, tu2id))
+        tu2_velp_groups.extend(get_groups_from_document_table(d2.id, tu2id))
+        tu2_velp_groups.extend(get_groups_from_document_table(d3.id, tu2id))
+        for vg in tu2_velp_groups:
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=200)
+
         self.login_test3()
-        self.get(g_doc1.url, expect_status=200)
-        self.get(g_doc2.url, expect_status=200)
-        self.get(g_doc3.url, expect_status=200)
-        self.get(g_doc4.url, expect_status=200)
-        self.get(g_doc5.url, expect_status=200)
-        self.get(g_doc6.url, expect_status=200)
+        tu3_velp_groups = []
+        tu3id = self.test_user_3.get_personal_group().id
+        tu3_velp_groups.extend(get_groups_from_document_table(d1.id, tu3id))
+        tu3_velp_groups.extend(get_groups_from_document_table(d2.id, tu3id))
+        tu3_velp_groups.extend(get_groups_from_document_table(d3.id, tu3id))
+        for vg in tu3_velp_groups:
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=200)
 
         self.login_test1()
         self.json_put(
@@ -1006,12 +1027,22 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             {
                 "id": d.id,
                 "type": AccessType.view.value,
-                "group": self.get_test_user_2_group_id(),
+                "group": self.test_user_2.get_personal_group().id,
             },
         )
         self.login_test2()
         self.get(g_persnl_doc.url, expect_status=200)
-        self.get(g_docmnt_doc.url, expect_status=403)
+
+        # Should not be able to access document groups
+        vgs = get_groups_from_document_table(
+            d.id, self.test_user_2.get_personal_group().id
+        )
+        for vg in vgs:
+            if vg.id != g_docmnt_doc.id:
+                continue
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=403)
+
         self.get(g_folder_doc.url, expect_status=200)
 
         self.login_test1()
@@ -1020,7 +1051,7 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             {
                 "id": g_persnl_doc.id,
                 "type": AccessType.view.value,
-                "group": self.get_test_user_2_group_id(),
+                "group": self.test_user_2.get_personal_group().id,
                 "edit_velp_group_perms": False,
             },
         )
@@ -1029,14 +1060,14 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             {
                 "id": g_folder_doc.id,
                 "type": AccessType.view.value,
-                "group": self.get_test_user_2_group_id(),
+                "group": self.test_user_2.get_personal_group().id,
                 "edit_velp_group_perms": False,
             },
         )
         self.login_test2()
-        self.get(g_persnl_doc.url, expect_status=403)
-        self.get(g_docmnt_doc.url, expect_status=403)
-        self.get(g_folder_doc.url, expect_status=403)
+        for vg in vgs:
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=403)
 
         # Case 13:
         # Should edit permissions only for document velp group
@@ -1094,7 +1125,11 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         )
         self.login_test2()
         self.get(g_persnl_doc.url, expect_status=200)
-        self.get(g_docmnt_doc.url, expect_status=403)
+        for vg in vgs:
+            if vg.id != g_docmnt_doc.id:
+                continue
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=403)
         self.get(g_folder_doc.url, expect_status=200)
 
         self.login_test1()
@@ -1112,9 +1147,9 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             },
         )
         self.login_test2()
-        self.get(g_persnl_doc.url, expect_status=403)
-        self.get(g_docmnt_doc.url, expect_status=403)
-        self.get(g_folder_doc.url, expect_status=403)
+        for vg in vgs:
+            vgd = DocInfo.find_by_id(vg.id)
+            self.get(vgd.url, expect_status=403)
 
     def test_modify_perms_for_no_vg_perms_user(self):
         """Test modifying document permissions (remove, edit, expire, clear)
