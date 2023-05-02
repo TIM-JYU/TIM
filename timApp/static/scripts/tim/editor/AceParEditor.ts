@@ -8,8 +8,8 @@
  * @author Vesa Lappalainen
  * @author Vili Moisala
  * @author Visa Naukkarinen
- * @author daaajuol
- * @author sijualle
+ * @author Daniel Juola
+ * @author Simo Lehtinen
  * @license MIT
  * @date 4.7.2017
  */

@@ -16,7 +16,7 @@
  * @author Vesa Lappalainen
  * @author Vili Moisala
  * @author Visa Naukkarinen
- * @author daaajuol
+ * @author Daniel Juola
  * @license MIT
  * @date 9.2.2015
  */

@@ -7,7 +7,7 @@
  * @author Sami Viitanen
  * @author Vesa Lappalainen
  * @author Vili Moisala
- * @author daaajuol
+ * @author Daniel Juola
  * @license MIT
  * @date 4.7.2017
  */

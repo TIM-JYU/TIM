@@ -8,8 +8,8 @@
  * @author Simo Lehtinen
  * @author Tuomas Laine
  * @author Vesa Lappalainen
- * @author daaajuol
- * @author sijualle
+ * @author Daniel Juola
+ * @author Simo Lehtinen
  * @license MIT
  * @date 29.6.2020
  */
