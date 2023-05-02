@@ -1,5 +1,5 @@
 /**
- * Utility functions for parsing formulas
+ * Utility functions for parsing formulas.
  *
  * @author Janne Lahti
  * @license MIT
@@ -16,13 +16,13 @@ import {FormulaType} from "./formula-editor.component";
 export type FormulaTuple = [FormulaType, number, number];
 
 /**
- * Objects to easily handle a pair of information.
+ * Objects to handle pairs of information.
  */
 type NumPair = [number, number];
 export type StringPair = [string, string];
 
 /**
- * Splits string into two parts if possible at cursor location.
+ * Splits string into two parts at cursor location if possible.
  * @param editor Editor containing the string to split.
  * @return String in parts.
  */
@@ -46,7 +46,7 @@ export function parseOldContent(editor: IEditor) {
  * Finds the line in which a cursor is in a text.
  * @param editorContent Text where the line is looked for.
  * @param cursorLocation Cursor position as zero based index.
- * @return Line with cursor as a string.
+ * @return String of line with cursor.
  */
 export function getCurrentLine(editorContent: string, cursorLocation: number) {
     let startI = cursorLocation;
@@ -278,10 +278,10 @@ export function findMatrixFromString(formula: string): NumPair[] {
 }
 
 /**
- * Parses current formula at cursor location in editor content.
- * @param editorContent Text where formula is tried to parse.
- * @param cursorLocation Cursor zero based index in text.
- * @return Tuple with formula info.
+ * Tries to parse current formula at cursor location in editor content.
+ * @param editorContent Text where formula is parsed.
+ * @param cursorLocation Cursor position as zero based index.
+ * @return Tuple containing formula info or undefined.
  */
 export function parseEditedFormula(
     editorContent: string,
@@ -291,11 +291,12 @@ export function parseEditedFormula(
     const text = editorContent;
     const allParenthesis = findParenthesisFromString(text);
     let currentFormula = parseCurrentFormula(allParenthesis, cursorLocation);
-    // cursor wasn't inside a $ syntax formula
+
     if (currentFormula[0] === FormulaType.NotDefined) {
         if (currentFormula[2] < 0) {
             currentFormula[2] = text.length - 1;
         }
+        // cursor wasn't inside a $ syntax formula
         // check if cursor is inside align formula
         const matrices: FormulaTuple[] = findMatrixFromString(
             text.slice(currentFormula[1], currentFormula[2] + 1)
@@ -388,7 +389,7 @@ export function getMultilineFormulaLines(
  * @param existingParenthesis Start and end marks for edited formula.
  * @param useExistingParenthesis True adds existing parenthesis around
  * formula and false adds defaults based on type.
- * @return Formatted string or undefined if resulting formula is empty
+ * @return Formatted string or undefined if resulting formula is empty.
  */
 export function formatLatex(
     formulaType: FormulaType,

@@ -1,7 +1,8 @@
 /**
- * Utility functions for formula editor
+ * Utility functions for formula editor.
  *
  * @author Juha Reinikainen
+ * @author Janne Lahti
  * @license MIT
  * @date 4.4.2023
  */
@@ -62,8 +63,8 @@ function movePastFormulasBeforeClicked(
     previewRoot: Element
 ): number {
     let index = 0;
-    // inline formulas in editor can have line breaks, but in html they are replaced by spaces
-    // fixed string matching issues by replacing all line breaks with spaces
+    // Inline formulas in editor can have line breaks, but in html they are replaced by spaces.
+    // Fixed string matching issues by replacing all line breaks with spaces.
     const content = editor.content.replace(/\n/g, " ");
 
     for (const mathElem of previewRoot.querySelectorAll(".math")) {
@@ -76,8 +77,8 @@ function movePastFormulasBeforeClicked(
         if (!annotation || !annotation.textContent) {
             continue;
         }
-        // inline formulas in editor can have line breaks, but in html they are replaced by spaces
-        // fixed string matching issues by replacing all line breaks with spaces
+        // Inline formulas in editor can have line breaks, but in html they are replaced by spaces.
+        // Fixed string matching issues by replacing all line breaks with spaces.
         const latex = annotation.textContent.trim().replace(/\n/g, " ");
         const nextIndex = content.indexOf(latex, index);
         if (nextIndex === -1) {
@@ -112,8 +113,8 @@ export function selectFormulaFromPreview(
     if (startI === -1) {
         return false;
     }
-    // inline formulas in editor can have line breaks, but in html they are replaced by spaces
-    // fixed string matching issues by replacing all line breaks with spaces
+    // Inline formulas in editor can have line breaks, but in html they are replaced by spaces.
+    // Fixed string matching issues by replacing all line breaks with spaces.
     const i = editor.content
         .replace(/\n/g, " ")
         .indexOf(clickedPreviewFormula.latex.replace(/\n/g, " "), startI);
