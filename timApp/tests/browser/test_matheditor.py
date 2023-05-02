@@ -4,7 +4,7 @@ Runs tests for math editor
 
 __authors__ = ["Daniel Juola"]
 __license__ = "MIT"
-__date__ = "26.4.2023"
+__date__ = "31.3.2023"
 
 from selenium.webdriver.common.keys import Keys
 from timApp.tests.browser.browsertest import BrowserTest
@@ -13,6 +13,7 @@ from time import sleep
 
 class MathEditorTest(BrowserTest):
     def test_add_formula(self):
+        """Tests adding new formulas with math editor"""
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(
@@ -46,6 +47,7 @@ formulaEditor: true
         self.assertEqual("1234", ace_input.text)
 
     def test_edit_formula(self):
+        """Tests editing existing formulas with math editor"""
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(
@@ -80,6 +82,7 @@ formulaEditor: true
         self.assertEqual("$1234$", ace_input.text)
 
     def test_par_editor(self):
+        """Tests using math editor in paragraph editor"""
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc()
@@ -104,6 +107,7 @@ formulaEditor: true
         self.assertEqual("12345", mord.text)
 
     def test_use_buttons(self):
+        """Tests math editor buttons"""
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(
