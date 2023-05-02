@@ -381,7 +381,7 @@ def raise_or_redirect(message: str, redir: str | None = None) -> Response:
     return safe_redirect(urlunparse(url))
 
 
-def is_velp_group_in_document(vg: VelpGroup, d: ItemOrBlock) -> bool:
+def is_velp_group_in_document(vg: VelpGroup, d: DocInfo) -> bool:
     """Check that the velp group is in the correct path in relation to the parent document"""
     res = False
     vg_path = get_doc_or_abort(vg.id).path
@@ -581,18 +581,17 @@ def add_perm(
     accs = []
 
     doc = item.docentries[0] if isinstance(item, Block) and item.docentries else item
-    docs = (
-        doc.translations
-        if (
-            isinstance(doc, DocInfo)
-            and p.edit_translation_perms
-            and doc.is_original_translation
-        )
-        else [doc]
-    )
+    docs: list[DocInfo | Block] = []
+    if (
+        isinstance(doc, DocInfo)
+        and p.edit_translation_perms
+        and doc.is_original_translation
+    ):
+        docs.extend(doc.translations)
+    else:
+        docs.append(doc)
 
     if p.edit_velp_group_perms:
-        # Unfortunately we have to do a db query here
         if isinstance(item, DocInfo):
             vgs = get_groups_from_document_table(item.id, None)
             for vg in vgs:
@@ -762,11 +761,10 @@ def remove_perm(
     )
 
     if process_velp_groups:
-        # Unfortunately we have to do a db query here
         vgs = get_groups_from_document_table(b.docentries[0].id, None)
         for vg in vgs:
             # Remove perms only from velp groups attached to the document
-            if is_velp_group_in_document(vg, b):
+            if isinstance(b, DocInfo) and is_velp_group_in_document(vg, b):
                 items.append(vg.block)
 
     removed_perms = []
