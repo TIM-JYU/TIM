@@ -1,13 +1,13 @@
 /**
  * Normal text editor for paragraph editor
  *
+ * @author Daniel Juola
  * @author Denis Zhidkikh
  * @author Juha Reinikainen
  * @author Mika Lehtinen
  * @author Sami Viitanen
  * @author Vesa Lappalainen
  * @author Vili Moisala
- * @author Daniel Juola
  * @license MIT
  * @date 4.7.2017
  */

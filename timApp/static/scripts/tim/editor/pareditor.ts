@@ -1,6 +1,7 @@
 /**
  * Paragraph editor component
  *
+ * @author Daniel Juola
  * @author Denis Zhidkikh
  * @author Harri Linna
  * @author Juha Reinikainen
@@ -16,7 +17,6 @@
  * @author Vesa Lappalainen
  * @author Vili Moisala
  * @author Visa Naukkarinen
- * @author Daniel Juola
  * @license MIT
  * @date 9.2.2015
  */

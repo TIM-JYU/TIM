@@ -2,13 +2,13 @@
 /**
  * Ace editor
  *
+ * @author Daniel Juola
  * @author Denis Zhidkikh
  * @author Juha Reinikainen
  * @author Mika Lehtinen
+ * @author Simo Lehtinen
  * @author Tuomas Laine
  * @author Vesa Lappalainen
- * @author Daniel Juola
- * @author Simo Lehtinen
  * @license MIT
  * @date 29.6.2020
  */

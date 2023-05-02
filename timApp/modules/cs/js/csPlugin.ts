@@ -2,14 +2,14 @@
 /**
  * csPlugin component
  *
- * @author Mika Lehtinen
- * @author Vesa Lappalainen
+ * @author Daniel Juola
  * @author Denis Zhidkikh
- * @author Tuomas Laine
- * @author Simo Lehtinen
  * @author Jaakko Palm
  * @author Juha Reinikainen
- * @author Daniel Juola
+ * @author Mika Lehtinen
+ * @author Simo Lehtinen
+ * @author Tuomas Laine
+ * @author Vesa Lappalainen
  * @license MIT
  * @date 3.8.2014
  */

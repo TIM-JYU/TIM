@@ -1,15 +1,15 @@
 /**
  * Ace editor for paragraph editing
  *
+ * @author Daniel Juola
  * @author Denis Zhidkikh
  * @author Juha Reinikainen
  * @author Mika Lehtinen
  * @author Noora Jokela
+ * @author Simo Lehtinen
  * @author Vesa Lappalainen
  * @author Vili Moisala
  * @author Visa Naukkarinen
- * @author Daniel Juola
- * @author Simo Lehtinen
  * @license MIT
  * @date 4.7.2017
  */
