@@ -1,5 +1,6 @@
-latexButtonList
-list of latex buttons
+latexButtonsEditable
+List of latex buttons used in matriculation examinations. Editable.
+buttons: |!!
 [ "$", "$⁞$", "$ $", "t" ]
 [ "$$", "$$⁞$$", "$$ $$", "t"]
 [ "°", "°", "°", "q"]
@@ -127,3 +128,4 @@ list of latex buttons
 [ "\\( ^{x\\text{)}}\\frac{a}{b} \\)", "^{x\\text{)}}\\frac{a}{b}", "^{x\\text{)}}\\frac{a}{b}", "s" ]
 [ "\\[ \\begin{array}{l|l}\n\\square&\\square\\\\\n\\hline\\square&\\square\n\\end{array} \\]", "\\begin{array}{l|l}\n⁞&\\\\\n\\hline&\n\\end{array}", "\\begin{array}{l|l}\n &\\\\\n\\hline&\n\\end{array}", "s"]
 [ "\\( \\mathrm{T} \\)", "\\mathrm{T}", "\\mathrm{T}", "s" ]
+!!

@@ -1,5 +1,5 @@
 latexButtons
-List of latex buttons for formula editor. Same buttons are used in matriculation examination.
+List of latex buttons used in matriculation examinations. Cannot be edited.
 buttons: |!!
 [ "$", "$⁞$", "$ $", "t" ]
 [ "$$", "$$⁞$$", "$$ $$", "t"]
