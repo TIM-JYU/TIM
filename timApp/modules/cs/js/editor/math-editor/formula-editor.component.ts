@@ -655,6 +655,7 @@ export class FormulaEditorComponent {
                 formula +
                 oldValue.substring(endPos, oldValue.length);
             activeField.handleLatexInput();
+            // setTimeout is needed for focus to work
             setTimeout(() => {
                 if (cursorPosition !== -1) {
                     activeField.latexInputElement.nativeElement.selectionStart =
@@ -667,6 +668,7 @@ export class FormulaEditorComponent {
         } else {
             activeField.mathField.write(formulaInput.text);
 
+            // setTimeout is needed for focus to work
             setTimeout(() => {
                 this.setMathQuillCursor(activeField);
             }, 0);
