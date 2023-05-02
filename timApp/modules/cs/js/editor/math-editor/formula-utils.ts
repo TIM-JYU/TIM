@@ -1,8 +1,8 @@
 /**
  * Utility functions for formula editor.
  *
- * @author Juha Reinikainen
  * @author Janne Lahti
+ * @author Juha Reinikainen
  * @license MIT
  * @date 4.4.2023
  */
