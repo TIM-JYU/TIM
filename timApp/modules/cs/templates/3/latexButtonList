@@ -1,5 +1,5 @@
 latexButtonsEditable
-List of latex buttons used in matriculation examinations. Editable.
+List of latex buttons used in matriculation examinations, editable
 buttons: |!!
 [ "$", "$⁞$", "$ $", "t" ]
 [ "$$", "$$⁞$$", "$$ $$", "t"]
