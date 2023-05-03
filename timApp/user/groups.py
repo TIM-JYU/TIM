@@ -326,24 +326,24 @@ NamesModelSchema = class_schema(NamesModel)
 @groups.post("/addmember/<group_name>")
 def add_member(group_name: str) -> Response:
     nm: NamesModel = load_data_from_req(NamesModelSchema)
-    mis = get_member_infos(group_name, nm.names)
-    found_user_names = {u.name for u in mis.users}
+    mi = get_member_infos(group_name, nm.names)
+    found_user_names = {u.name for u in mi.users}
     if found_user_names & SPECIAL_USERNAMES:
         raise RouteException("Cannot add special users.")
-    user_names = {u.name for u in mis.group.users}
+    user_names = {u.name for u in mi.group.users}
     already_exists = user_names & found_user_names
     added = []
     curr = get_current_user_object()
-    for u in mis.users:
-        if u.id not in mis.existing_ids:
-            u.add_to_group(mis.group, added_by=curr)
+    for u in mi.users:
+        if u.id not in mi.existing_ids:
+            u.add_to_group(mi.group, added_by=curr)
             added.append(u.name)
     db.session.commit()
     return json_response(
         {
             "already_belongs": sorted(list(already_exists)),
             "added": sorted(added),
-            "not_exist": sorted(mis.not_exist),
+            "not_exist": sorted(mi.not_exist),
         }
     )
 
@@ -351,27 +351,27 @@ def add_member(group_name: str) -> Response:
 @groups.post("/removemember/<group_name>")
 def remove_member(group_name: str) -> Response:
     nm: NamesModel = load_data_from_req(NamesModelSchema)
-    mis = get_member_infos(group_name, nm.names)
+    mi = get_member_infos(group_name, nm.names)
     removed = []
     does_not_belong = []
-    ensure_manually_added = mis.group.is_sisu
+    ensure_manually_added = mi.group.is_sisu
     su = User.get_scimuser()
-    for u in mis.users:
-        if u.id not in mis.existing_ids:
+    for u in mi.users:
+        if u.id not in mi.existing_ids:
             does_not_belong.append(u.name)
             continue
-        if ensure_manually_added and mis.group.current_memberships[u.id].adder == su:
+        if ensure_manually_added and mi.group.current_memberships[u.id].adder == su:
             raise RouteException(
                 "Cannot remove not-manually-added users from Sisu groups."
             )
-        mis.group.current_memberships[u.id].set_expired()
+        mi.group.current_memberships[u.id].set_expired()
         removed.append(u.name)
     db.session.commit()
     return json_response(
         {
             "removed": sorted(removed),
             "does_not_belong": sorted(does_not_belong),
-            "not_exist": sorted(mis.not_exist),
+            "not_exist": sorted(mi.not_exist),
         }
     )
 
