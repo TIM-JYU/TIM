@@ -1048,7 +1048,8 @@ export function createTemplateButtons(
         // maybe array
         try {
             const parsed = JSON.parse(line);
-            const defaultData = parsed[0].replace(
+            let defaultData = parsed[0].replace("\\square", "⁞");
+            defaultData = defaultData.replace(
                 /\\\[|\\\]|\\square|\s|\\\(|\\\)/g,
                 ""
             );
@@ -1075,8 +1076,8 @@ export function createTemplateButtons(
                 }
                 if (!mathAttributes.includes(parsed[1])) {
                     item.data = parsed[1];
-                    item.expl = item.data.replace("⁞", "");
                 }
+                item.expl = item.data.replace("⁞", "");
                 if (parsed.length > 2) {
                     if (!mathAttributes.includes(parsed[2])) {
                         item.expl = parsed[2];
