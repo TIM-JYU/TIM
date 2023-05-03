@@ -231,39 +231,59 @@ type MatrixElement = string | number;
                 <tr *ngFor="let row of processed.rows; let rowi = index" [ngClass]="getTableRowClass()">
                     <td *ngIf="isMatrix()" [innerHtml]="fixText(row.text) | purify" class="qst-row_text"></td>
                     <td *ngFor="let col of row.columns; let coli = index;" class="qst-td">
-                        <label>
-                            <input *ngIf="isRadio()"
-                                   [ngClass]="getInputClass(rowi, coli)"
+                        <div *ngIf="isRadio()"
+                                 [ngClass]="'qst-radio ' + getInputClass(rowi, coli, answerMatrix[isMatrix() ? rowi : 0][0] === (isMatrix() ? coli: rowi)+1 ? 1: 0)"
+                            >
+                            <label>
+                            <input
                                    [attr.disabled]="disabled || null"
                                    type="radio"
                                    [(ngModel)]="answerMatrix[isMatrix() ? rowi : 0][0]"
                                    (ngModelChange)="signalUpdate()"
                                    [name]="getGroupName(rowi)"
                                    [value]="getInputValue(rowi, coli)">
-                            <input *ngIf="isCheckbox()"
-                                   [ngClass]="getInputClass(rowi, coli)"
+                             &ngsp;<span [innerHtml]="getLabelText(row) | purify"></span>
+                             <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p></label>
+                        </div>    
+                        <div *ngIf="isCheckbox()"
+                                   [ngClass]="'qst-checkBox ' + getInputClass(rowi, coli, answerMatrix[rowi][coli] === 1 ? 1: 0)"
+                            >
+                            <label>
+                            <input
                                    [attr.disabled]="disabled || null"
                                    type="checkbox"
                                    [checked]="answerMatrix[rowi][coli] === 1"
                                    (change)="checkBoxChanged(rowi, coli, $event)"
                                    [name]="getGroupName(rowi)">
+                             &ngsp;<span [innerHtml]="getLabelText(row) | purify"></span>
+                             <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p></label>
+                        </div>    
+                        <div *ngIf="isText()" class="qst-text">
+                            <label>
                             <textarea
                                     class="form-control"
-                                    *ngIf="isText()"
                                     [attr.disabled]="disabled || null"
                                     [(ngModel)]="answerMatrix[rowi][coli]"
                                     [ngModelOptions]="{standalone: true}"
                                     (ngModelChange)="signalUpdate()"></textarea>
-                            <input *ngIf="isInputText()"
-                                   [ngClass]="getInputClass(rowi, coli)"
+                            &ngsp;<span [innerHtml]="getLabelText(row) | purify"></span>
+                            <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p></label>
+                        </div>    
+                        <div *ngIf="isInputText()"
+                                   [ngClass]="'qst-input-text ' + getInputClass(rowi, coli, -1)"
+                            >
+                            <label>
+                            <input
+                                   [ngClass]="getInputClass(rowi, coli, -1)"
                                    [attr.disabled]="disabled || null"
                                    [(ngModel)]="answerMatrix[rowi][coli]"
                                    [ngModelOptions]="{standalone: true}"
                                    (ngModelChange)="signalUpdate()"
                                    type="text"
                                    [size]="json.size || 3">
-                            &ngsp;<span [innerHtml]="getLabelText(row) | purify"></span></label>
-                        <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p>
+                            &ngsp;<span [innerHtml]="getLabelText(row) | purify"></span>
+                             <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p></label>
+                        </div>    
                     </td>
                     <td *ngIf="getExpl(rowi) as p" [innerHtml]="p | purify" class="explanation"></td>
                 </tr>
@@ -354,11 +374,15 @@ export class AnswerSheetComponent implements OnChanges {
         return row.text;
     }
 
-    getInputClass(rowIndex: number, colIndex: number) {
+    getInputClass(rowIndex: number, colIndex: number, userCheck: number) {
         const pts = this.getPoints(rowIndex, colIndex);
+        let userChk = "";
+        if (userCheck >= 0 && this.questiondata?.showCorrectChoices) {
+            userChk = "qst-userCheck" + userCheck;
+        }
         return pts != null && parseFloat(pts) > 0
-            ? "qst-correct"
-            : "qst-normal";
+            ? "qst-correct " + userChk
+            : "qst-normal " + userChk;
     }
 
     canShowExpl(): boolean {
