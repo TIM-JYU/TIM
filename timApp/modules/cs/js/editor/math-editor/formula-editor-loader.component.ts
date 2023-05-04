@@ -8,7 +8,7 @@
  * @date 21.4.2023
  */
 
-import type {OnDestroy, OnInit} from "@angular/core";
+import type {AfterViewInit, OnDestroy, OnInit} from "@angular/core";
 import {
     Component,
     EventEmitter,
@@ -17,6 +17,7 @@ import {
     ViewChild,
     ViewContainerRef,
 } from "@angular/core";
+import {timeout} from "tim/util/utils";
 import type {ITemplateButton} from "../../csPlugin";
 import {IEditor} from "../editor";
 import {FormulaEvent} from "./symbol-button-menu.component";
@@ -28,7 +29,9 @@ import type {FormulaEditorComponent} from "./formula-editor.component";
     <ng-container #formulaEditor></ng-container>
   `,
 })
-export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
+export class FormulaEditorLoaderComponent
+    implements OnInit, OnDestroy, AfterViewInit
+{
     private parEditor!: IEditor;
     private buttons!: ITemplateButton[];
     private isVisible!: boolean;
@@ -42,7 +45,7 @@ export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
     @Output() okClose = new EventEmitter<number>();
     @Output() cancelClose = new EventEmitter<number>();
     @Output() toggle = new EventEmitter<void>();
-
+    @Output() componentLoaded = new EventEmitter<() => Promise<boolean>>();
     @Input()
     get editor(): IEditor {
         return this.parEditor;
@@ -107,9 +110,13 @@ export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
         );
         comp.instance.okClose.subscribe((val) => this.okClose.emit(val));
         comp.instance.toggle.subscribe((val) => this.toggle.emit(val));
+
+        this.componentLoaded.emit(() => comp.instance.handleFormulaCancel());
     }
 
-    ngOnInit(): void {
+    ngOnInit(): void {}
+
+    ngAfterViewInit() {
         void this.loadComponent();
     }
 
