@@ -1058,7 +1058,7 @@ export function createTemplateButtons(
                 data: defaultData,
                 expl: defaultData,
             };
-            const mathAttributes = ["", "math", "s", "q", "t"];
+            const mathAttributes = ["", "math", "s", "q", "t", "e"];
             if (parsed.length > 1) {
                 for (const part of parsed) {
                     if (mathAttributes.includes(part)) {
@@ -1069,6 +1069,7 @@ export function createTemplateButtons(
                             case mathAttributes[2]:
                             case mathAttributes[3]:
                             case mathAttributes[4]:
+                            case mathAttributes[5]:
                                 item.type = part;
                                 break;
                         }

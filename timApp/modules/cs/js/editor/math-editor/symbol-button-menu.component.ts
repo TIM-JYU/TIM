@@ -60,7 +60,7 @@ export class SymbolsPipe implements PipeTransform {
      * @param type ItemplateButton.type defines which buttons are returned
      *             if undefined or math, math and ones with no type are returned
      */
-    transform(buttons: ITemplateButton[], type?: "q" | "s" | "t") {
+    transform(buttons: ITemplateButton[], type?: "q" | "s" | "t" | "e") {
         if (!type) {
             return buttons.filter(
                 (button) => !button.type || button.type === "math"
@@ -139,6 +139,15 @@ export class SymbolsPipe implements PipeTransform {
                     <button class="symbol-button" 
                             title="{{item.expl}}" 
                             *ngFor="let item of templateButtons | symbols:'s'" 
+                            (mouseup)="addFormula($event, item.data)"
+                            (touchend)="addFormula($event, item.data)"
+                            (mousedown)="handleMouseDown($event)"
+                            (touchstart)="handleMouseDown($event)"
+                     >{{item.text}}</button>
+                    <button class="symbol-button" 
+                            [hidden]="formulaEditorOpen"
+                            title="{{item.expl}}" 
+                            *ngFor="let item of templateButtons | symbols:'e'" 
                             (mouseup)="addFormula($event, item.data)"
                             (touchend)="addFormula($event, item.data)"
                             (mousedown)="handleMouseDown($event)"
