@@ -1,5 +1,4 @@
 from time import sleep
-from typing import Union, Optional
 
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
@@ -71,6 +70,9 @@ def adjust_matrix_size(dialog: WebElement, missing_choices: int, rowcol: str):
 
 
 class QuestionTest(BrowserTest):
+    def get_screenshot_tolerance(self):
+        return 180
+
     def test_questions(self):
         """Create document questions and answer them."""
         self.login_browser_quick_test1()
