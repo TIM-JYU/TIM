@@ -28,7 +28,7 @@ import type {Edit, LineAdd} from "./formula-field.component";
 import {ActiveEditorType} from "./formula-field.component";
 import {FormulaFieldComponent} from "./formula-field.component";
 import {FormulaEvent} from "./symbol-button-menu.component";
-import type {StringPair, FormulaTuple} from "./formula-parsing-utils";
+import type {NumPair, StringPair, FormulaTuple} from "./formula-parsing-utils";
 import {
     parseOldContent,
     getCurrentLine,
@@ -45,6 +45,7 @@ export enum FormulaType {
     Multi = "multi",
     Inline = "inline",
     Align = "align",
+    Equation = "equation",
     NotDefined = "undefined",
 }
 
@@ -113,9 +114,10 @@ export type FieldType = {
                                 [(ngModel)]="formulaType"
                                 (ngModelChange)="onFormulaTypeChange()"
                         >
-                            <option [ngValue]="'inline'" i18n [disabled]="inlineDisabled">Inline</option>
+                            <option [ngValue]="'inline'" i18n [disabled]="isDisabled">Inline</option>
                             <option [ngValue]="'multi'" i18n>Multiline</option>
                             <option [ngValue]="'align'" i18n>Align</option>
+                            <option [ngValue]="'equation'" [disabled]="isDisabled">Equation</option>
                         </select>
                     </label>
                 </div>
@@ -145,7 +147,7 @@ export class FormulaEditorComponent {
     };
     private isVisible = false;
 
-    inlineDisabled = false;
+    isDisabled = false;
 
     @ViewChild("formulaEditorDialog")
     formulaEditorDialog!: ElementRef<HTMLDivElement>;
@@ -255,12 +257,15 @@ export class FormulaEditorComponent {
                 ...this.fields.slice(this.activeFieldsIndex),
             ];
         }
-        if (this.formulaType != FormulaType.Align) {
-            this.formulaType =
-                this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
+        if (
+            [FormulaType.Inline, FormulaType.Equation].includes(
+                this.formulaType
+            )
+        ) {
+            this.formulaType = FormulaType.Multi;
         }
         this.useExistingParenthesis = false;
-        this.inlineDisabled = true;
+        this.isDisabled = true;
     }
 
     /**
@@ -279,11 +284,11 @@ export class FormulaEditorComponent {
             this.activeFieldsIndex--;
         }
 
-        if (this.formulaType != FormulaType.Align) {
+        if (this.formulaType === FormulaType.Multi) {
             this.formulaType =
                 this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
         }
-        this.inlineDisabled = this.fields.length > 1;
+        this.isDisabled = this.fields.length > 1;
         this.useExistingParenthesis = false;
         this.updateFormulaToEditor();
     }
@@ -414,6 +419,25 @@ export class FormulaEditorComponent {
         let allFields: FieldType[] = [];
         // set edited formula based on its type
         switch (currentFormula[0]) {
+            case FormulaType.Equation:
+                // separate formula and parenthesis
+                formula = this.oldContent.editing.slice(17, -15);
+                trimmed = formula.trimStart();
+                lenDiff = formula.length - trimmed.length;
+                this.existingParenthesis[0] =
+                    "\\begin{equation*}" + formula.slice(0, lenDiff);
+                formula = trimmed;
+
+                trimmed = formula.trimEnd();
+                lenDiff = formula.length - trimmed.length;
+                this.existingParenthesis[1] =
+                    "" +
+                    formula.slice(formula.length - lenDiff) +
+                    "\\end{equation*}";
+                // update formula editor content and values
+                this.fields = [{latex: trimmed}];
+                this.formulaType = FormulaType.Equation;
+                break;
             case FormulaType.Multi:
                 // separate formula and parenthesis
                 formula = this.oldContent.editing.slice(2, -2);
@@ -428,7 +452,9 @@ export class FormulaEditorComponent {
                     "" + formula.slice(formula.length - lenDiff) + "$$";
                 formula = trimmed;
                 // update formula editor content and values
-                const allMatrices = findMatrixFromString(formula);
+                const allMatrices: NumPair[] = findMatrixFromString(
+                    formula
+                ).map((formulaTuple) => [formulaTuple[1], formulaTuple[2]]);
                 allFields = getMultilineFormulaLines(formula, allMatrices);
                 this.fields = allFields;
                 this.formulaType = FormulaType.Multi;
@@ -464,7 +490,7 @@ export class FormulaEditorComponent {
             default:
                 throw Error("undefined case " + this.formulaType);
         }
-        this.inlineDisabled = this.fields.length > 1;
+        this.isDisabled = this.fields.length > 1;
     }
 
     /**
@@ -548,7 +574,7 @@ export class FormulaEditorComponent {
         this.fields = [];
         this.useExistingParenthesis = false;
         this.cursorLocation = -1;
-        this.inlineDisabled = false;
+        this.isDisabled = false;
     }
 
     /**
