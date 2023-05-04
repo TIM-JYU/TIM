@@ -128,33 +128,35 @@ buttons: |!!
 [ "\\\\[ \\\\sin \\\\]", "\\\\sin", "\\\\sin", "q"]
 [ "\\\\[ \\\\cos \\\\]", "\\\\cos", "\\\\cos", "t"]
 [ "\\\\[ \\\\tan \\\\]", "\\\\tan", "\\\\tan", "s"]
+[ "\\\\[ \\\\frac{\\\\square}{\\\\square} \\\\]", "e"]
 !!
 ```
 """
         )
         self.goto_document(d)
-        ace_input = self.find_element(xpath="//textarea[@class='ace_text-input']")
-        ace_input.send_keys("$")
         quick_button = self.find_element(xpath="//button[@title='\\sin']")
         tim_button = self.find_element(xpath="//button[@title='\\cos']")
         quick_button.click()
         tim_button.click()
-        ace_input.send_keys("$")
-        open_formula_button = self.find_element(xpath="//button[@title='Ctrl+e']")
-        open_formula_button.click()
-        self.assertFalse(tim_button.is_displayed())
-        quick_button.click()
-        expand_symbol_menu_button = self.find_element(
-            xpath="//button[@title='Show more symbols']"
-        )
         get_out_of_the_way_please = self.find_element(
             xpath="//div[@class='readline hover click']"
         )
         get_out_of_the_way_please.click()
+        expand_symbol_menu_button = self.find_element(
+            xpath="//button[@title='Show more symbols']"
+        )
         expand_symbol_menu_button.click()
         symbol_button = self.find_element(xpath="//button[@title='\\tan']")
         symbol_button.click()
+        expanded_button = self.find_element(xpath="//button[@title='\\frac{}{}']")
+        expanded_button.click()
+        open_formula_button = self.find_element(xpath="//button[@title='Ctrl+e']")
+        open_formula_button.click()
+        self.assertFalse(tim_button.is_displayed())
+        self.assertFalse(expanded_button.is_displayed())
+        quick_button.click()
+        symbol_button.click()
         save_formula_button = self.find_element(xpath="//button[@title='Ctrl+s']")
         save_formula_button.click()
-        ace_input = self.find_element(xpath="//div[@class='ace_line'][3]")
-        self.assertEqual("$\\sin\\cos$$\\sin\\tan$", ace_input.text)
+        ace_input = self.find_element(xpath="//div[@class='ace_line'][1]")
+        self.assertEqual("\\sin\\cos\\tan\\frac{$\\sin\\tan$}{}", ace_input.text)
