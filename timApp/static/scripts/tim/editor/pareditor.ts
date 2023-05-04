@@ -1771,6 +1771,7 @@ ${backTicks}
      * Changes formula editor visibility and put focus to editor
      * if formula editor was open.
      * @param doDigest whether to run digest
+     * @param cursorIndex index to move cursor to
      */
     toggleFormulaEditor(doDigest: boolean = true, cursorIndex: number = -1) {
         this.formulaEditorOpen = !this.formulaEditorOpen;
