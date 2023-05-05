@@ -8,10 +8,10 @@
 
 import type {IEditor} from "../editor";
 import type {FieldType} from "./formula-editor.component";
-import {FormulaType} from "./formula-editor.component";
+import {FormulaType, FormulaProperties} from "./formula-types";
 
 /**
- * Tuple which will contain the type of formula, and it's start and end index.
+ * Tuple which contains the type of formula, and its start and end index.
  */
 export type FormulaTuple = [FormulaType, number, number];
 
@@ -20,6 +20,7 @@ export type FormulaTuple = [FormulaType, number, number];
  */
 export type NumPair = [number, number];
 export type StringPair = [string, string];
+type TypePair = [string, FormulaType];
 
 /**
  * Splits string into two parts at cursor location if possible.
@@ -134,7 +135,6 @@ function findParenthesisFromString(text: string): FormulaTuple[] {
             currentIndex++;
         }
     }
-
     return allParenthesis;
 }
 
@@ -151,11 +151,11 @@ function parseCurrentFormula(
     let beginning = 0;
     // check if cursor is inside any parenthesis
     for (const [formulaType, startI, endI] of allParenthesis) {
-        // parenthesis is completely after cursor
+        // parenthesis are after cursor
         if (startI > cursorIndex) {
             return [FormulaType.NotDefined, beginning, startI - 1];
         }
-        // parenthesis is completely before cursor
+        // parenthesis are before cursor
         if (endI < cursorIndex) {
             beginning = endI + 1;
             continue;
@@ -166,30 +166,28 @@ function parseCurrentFormula(
 }
 
 /**
- * Finds the type of begin-end-style formula.
- * @param formula String including the formulas.
- * @param eIndex Zero based index of the last begin end keyword.
+ * Find the type of begin-end-style formula.
+ * @param formula String where the formula is looked for.
+ * @param searchIndex Zero based index of the last begin end keyword.
  * @return Type of formula.
  */
-function beginEndKeyword(formula: string, index: number): FormulaType {
-    let type = FormulaType.NotDefined;
-    const align = formula.indexOf("align", index);
-    const equation = formula.indexOf("equation", index);
-    if (align < equation) {
-        if (align >= 0) {
-            type = FormulaType.Align;
-        } else {
-            type = FormulaType.Equation;
+function beginEndKeyword(formula: string, searchIndex: number): FormulaType {
+    let finalType = FormulaType.NotDefined;
+    let finalIndex = Number.MAX_SAFE_INTEGER;
+    // list begin-end-style formula types
+    const types: TypePair[] = FormulaProperties.filter(
+        (type) => type.beginEndKeyword.length > 0
+    ).map((type) => [type.beginEndKeyword, type.type]);
+    // check which type is first after search index
+    for (const type of types) {
+        const foundIndex = formula.indexOf(type[0], searchIndex);
+        if (foundIndex < 0 || foundIndex > finalIndex) {
+            continue;
         }
+        finalIndex = foundIndex;
+        finalType = type[1];
     }
-    if (equation < align) {
-        if (equation >= 0) {
-            type = FormulaType.Equation;
-        } else {
-            type = FormulaType.Align;
-        }
-    }
-    return type;
+    return finalType;
 }
 
 /**
@@ -326,7 +324,7 @@ export function parseEditedFormula(
             currentFormula[2] = text.length - 1;
         }
         // cursor wasn't inside a $ syntax formula
-        // check if cursor is inside align formula
+        // check if cursor is inside an align formula
         const matrices: FormulaTuple[] = findMatrixFromString(
             text.slice(currentFormula[1], currentFormula[2] + 1)
         ).map((formulaTuple) => [
@@ -340,7 +338,7 @@ export function parseEditedFormula(
 }
 
 /**
- * Trims a specific character from start and end of a string.
+ * Trim a specific character from start and end of a string.
  * https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
  * @param str String to be trimmed.
  * @param startChar Character to trim from start.
@@ -403,7 +401,7 @@ export function getMultilineFormulaLines(
                 )
                 .split("\n")
         );
-        // remove empty lines and then return trimmed lines
+        // remove empty lines and return trimmed lines
         allFields = allFields.filter((line) => line.length > 0);
         return allFields.map((line) => {
             return {latex: trimChar(line, "&", "\\")};
@@ -426,52 +424,41 @@ export function formatLatex(
     existingParenthesis: StringPair,
     useExistingParenthesis: boolean
 ): string | undefined {
-    let wrapBegin = "";
-    let wrapEnd = "";
-    let join = "";
-    switch (formulaType) {
-        case FormulaType.Align:
-            wrapBegin = "\\begin{align*}\n";
-            wrapEnd = "\n\\end{align*}";
-            join = "\\\\\n&";
-            break;
-        case FormulaType.Equation:
-            wrapBegin = "\\begin{equation*}\n";
-            wrapEnd = "\n\\end{equation*}";
-            break;
-        case FormulaType.Multi:
-            wrapBegin = "$$\n";
-            wrapEnd = "\n$$";
-            join = "\\\\\n";
-            break;
-        case FormulaType.Inline:
-            wrapBegin = "$";
-            wrapEnd = "$";
-            break;
-        default:
-            throw Error("undefined case " + formulaType);
+    // get properties for current formula type or return undefined if not found
+    const formulaProperties = FormulaProperties.find(
+        (propertyType) => propertyType.type === formulaType
+    );
+    if (!formulaProperties) {
+        return undefined;
     }
-    if ([FormulaType.Multi, FormulaType.Align].includes(formulaType)) {
-        const latexList = fields
+    // parse formula with multiple lines
+    if (formulaProperties.join.length > 0) {
+        // Array with latex code of formula lines. Filter out empty lines.
+        const formulaLatexList = fields
             .map((field) => field.latex)
             .filter((text) => text.length > 0);
-        if (formulaType === FormulaType.Align && latexList.length >= 2) {
-            const latexBegin = latexList.shift() + "\n&" + latexList.shift();
-            latexList.unshift(latexBegin);
+        // align type requires special join for first line
+        if (
+            formulaProperties.type === FormulaType.Align &&
+            formulaLatexList.length >= 2
+        ) {
+            const latexBegin =
+                formulaLatexList[0] + "\n&" + formulaLatexList[1];
+            formulaLatexList.splice(0, 2, latexBegin);
         }
-        const latex = latexList.join(join);
+        // join lines with defined string, and return undefined if joined string is empty
+        const latex = formulaLatexList.join(formulaProperties.join);
         if (latex.length === 0) {
             return undefined;
         }
-        if (useExistingParenthesis) {
-            return `${existingParenthesis[0]}${latex}${existingParenthesis[1]}`;
-        }
-        return `${wrapBegin}${latex}${wrapEnd}`;
+        // return with existing or default start and end
+        return useExistingParenthesis
+            ? `${existingParenthesis[0]}${latex}${existingParenthesis[1]}`
+            : `${formulaProperties.start}${latex}${formulaProperties.end}`;
     }
-    // fields.length should be 1
+    // single line formulas should only have 1 line
     const latex = fields[0].latex;
-    if (latex.length === 0) {
-        return undefined;
-    }
-    return `${wrapBegin}${latex}${wrapEnd}`;
+    return latex.length > 0
+        ? `${formulaProperties.start}${latex}${formulaProperties.end}`
+        : undefined;
 }
