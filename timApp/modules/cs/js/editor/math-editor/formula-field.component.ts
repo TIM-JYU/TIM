@@ -78,7 +78,7 @@ export type LineAdd = {
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
                 </textarea>
-                <span class="render-error" *ngIf="error" i18n>Error in LaTeX code</span>
+                <span class="render-error" *ngIf="error" i18n>{{latestCorrectInput}}</span>
             </div>
 
             <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
@@ -119,6 +119,8 @@ export class FormulaFieldComponent implements AfterViewInit {
     activeEditor: ActiveEditorType = ActiveEditorType.Visual;
     private active = false;
     error = false;
+    latestCorrectInput = "";
+    errorTimeoutID = -1;
 
     @ViewChild("latexInputElement")
     latexInputElement!: ElementRef<HTMLTextAreaElement>;
@@ -245,6 +247,9 @@ export class FormulaFieldComponent implements AfterViewInit {
      */
     handleVisualFocus() {
         this.activeEditor = ActiveEditorType.Visual;
+        if (this.error) {
+            this.mathField.latex(this.latestCorrectInput);
+        }
     }
 
     /**
@@ -300,6 +305,9 @@ export class FormulaFieldComponent implements AfterViewInit {
      */
     handleFocus() {
         this.activeEditor = ActiveEditorType.Visual;
+        if (this.error) {
+            this.mathField.latex(this.latestCorrectInput);
+        }
         this.focus.emit({
             latex: this.latexInput,
             id: this.id,
@@ -371,7 +379,22 @@ export class FormulaFieldComponent implements AfterViewInit {
      * Check if MathQuill produces an error from LaTeX input.
      */
     checkErrors() {
-        this.error =
+        const hasErrors =
             this.mathField.latex().length === 0 && this.latexInput.length > 0;
+        if (!hasErrors) {
+            this.error = false;
+            this.latestCorrectInput = this.mathField.latex();
+        }
+        if (this.errorTimeoutID !== -1) {
+            window.clearTimeout(this.errorTimeoutID);
+        }
+        this.errorTimeoutID = window.setTimeout(() => {
+            this.error =
+                this.mathField.latex().length === 0 &&
+                this.latexInput.length > 0;
+            if (!this.error) {
+                this.latestCorrectInput = this.mathField.latex();
+            }
+        }, 1000);
     }
 }
