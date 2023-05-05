@@ -1788,14 +1788,17 @@ ${backTicks}
         }
     }
 
+    /**
+     * Creates and sets templateButtons from buttons attribute in document settings.
+     */
     createTemplateButtons() {
         const b = this.docSettings?.buttons;
         this.templateButtons = createTemplateButtons(b, undefined);
     }
 
     /**
-     * Set handleFormulaCancel function
-     * @param handler value for handleFormulaCancel to set
+     * Set handleFormulaCancel function.
+     * @param handler new handleFormulaCancel function
      */
     registerFormulaCancelFunction(handler: () => Promise<boolean>) {
         this.handleFormulaCancel = handler;
@@ -1815,8 +1818,9 @@ ${backTicks}
         if (!previewRoot) {
             return;
         }
-        // Open formula editor
+        // Open different formula
         if (this.formulaEditorOpen) {
+            // wait for next render cycle
             await $timeout();
             if (!this.handleFormulaCancel) {
                 return;
@@ -1826,6 +1830,7 @@ ${backTicks}
             if (!cancelSuccess) {
                 return;
             }
+            // wait for UI to update
             await $timeout();
 
             // move to chosen formula
