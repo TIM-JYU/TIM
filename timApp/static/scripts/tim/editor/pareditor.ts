@@ -278,6 +278,7 @@ export class PareditorController extends DialogController<
     private templateButtons: ITemplateButton[] = [];
 
     private formulaEditorOpen: boolean = false;
+    private handleFormulaCancel?: () => Promise<boolean>;
     private currentSymbol: FormulaEvent = {
         text: "",
     };
@@ -1788,22 +1789,29 @@ ${backTicks}
         }
     }
 
+    /**
+     * Creates and sets templateButtons from buttons attribute in document settings.
+     */
     createTemplateButtons() {
         const b = this.docSettings?.buttons;
         this.templateButtons = createTemplateButtons(b, undefined);
     }
 
     /**
+     * Set handleFormulaCancel function.
+     * @param handler new handleFormulaCancel function
+     */
+    registerFormulaCancelFunction(handler: () => Promise<boolean>) {
+        this.handleFormulaCancel = handler;
+    }
+
+    /**
      * Moves cursor inside clicked formula in preview in editor
-     * and opens formula editor.
+     * and opens formula editor. Closes editor if it was open.
      * @param event mouse click event
      */
-    handleSelectFormulaFromPreview(event: MouseEvent) {
-        if (
-            this.activeTab !== "tex" ||
-            this.formulaEditorOpen ||
-            !this.editor
-        ) {
+    async handleSelectFormulaFromPreview(event: MouseEvent) {
+        if (this.activeTab !== "tex" || !this.editor) {
             return;
         }
         // this should be unique
@@ -1811,13 +1819,41 @@ ${backTicks}
         if (!previewRoot) {
             return;
         }
-        const success = selectFormulaFromPreview(
-            event,
-            this.editor,
-            previewRoot
-        );
-        if (success) {
-            this.toggleFormulaEditor(false);
+        // Open different formula
+        if (this.formulaEditorOpen) {
+            // wait for next render cycle
+            await $timeout();
+            if (!this.handleFormulaCancel) {
+                return;
+            }
+            const cancelSuccess = await this.handleFormulaCancel();
+            // editing wasn't cancelled so do nothing
+            if (!cancelSuccess) {
+                return;
+            }
+            // wait for UI to update
+            await $timeout();
+
+            // move to chosen formula
+            const success = selectFormulaFromPreview(
+                event,
+                this.editor,
+                previewRoot
+            );
+            // open formula editor again
+            if (success) {
+                this.toggleFormulaEditor(false);
+            }
+        } else {
+            // Open chosen formula
+            const success = selectFormulaFromPreview(
+                event,
+                this.editor,
+                previewRoot
+            );
+            if (success) {
+                this.toggleFormulaEditor(false);
+            }
         }
     }
 

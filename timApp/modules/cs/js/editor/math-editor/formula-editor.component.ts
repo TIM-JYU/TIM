@@ -553,6 +553,7 @@ export class FormulaEditorComponent {
 
     /**
      * Handles cancellation of formula editing. Asks for confirmation as it clears editor data.
+     * @return true if cancelled or false otherwise
      */
     async handleFormulaCancel() {
         const oldContent =
@@ -583,7 +584,10 @@ export class FormulaEditorComponent {
             this.clearFields();
 
             this.editor.content = oldContent;
+
+            return true;
         }
+        return false;
     }
 
     /**
