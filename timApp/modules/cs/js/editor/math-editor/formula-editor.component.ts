@@ -30,7 +30,12 @@ import {
     FormulaFieldComponent,
 } from "./formula-field.component";
 import {FormulaEvent} from "./symbol-button-menu.component";
-import type {FormulaTuple, NumPair, StringPair} from "./formula-parsing-utils";
+import type {
+    FormulaTuple,
+    NumPair,
+    StringPair,
+    TypeTrio,
+} from "./formula-parsing-utils";
 import {
     findMatrixFromString,
     formatLatex,
@@ -101,15 +106,15 @@ export type FieldType = {
                     </div>
 
                     <label class="font-weight-normal">
-                        <select
-                                class="form-control"
+                        <select class="form-control"
                                 [(ngModel)]="formulaType"
-                                (ngModelChange)="onFormulaTypeChange()"
-                        >
-                            <option [ngValue]="'inline'" i18n [disabled]="isDisabled">Inline</option>
-                            <option [ngValue]="'multi'" i18n>Multiline</option>
-                            <option [ngValue]="'align'" i18n>Align</option>
-                            <option [ngValue]="'equation'" [disabled]="isDisabled">Equation</option>
+                                (ngModelChange)="onFormulaTypeChange()">
+                            <ng-container *ngFor="let type of typeList" >
+                                <option *ngIf="type[2]; else elseBlock" [ngValue]="type[0].toString()" [disabled]="isDisabled">{{type[1]}}</option>
+                                <ng-template #elseBlock>
+                                    <option [ngValue]="type[0].toString()">{{type[1]}}</option>
+                                </ng-template>
+                            </ng-container>
                         </select>
                     </label>
                 </div>
@@ -123,6 +128,8 @@ export class FormulaEditorComponent {
     oldContent: OldContent = {before: "", editing: "", after: ""};
 
     fields!: FieldType[];
+
+    typeList!: TypeTrio[];
 
     formulaType = FormulaType.Multi;
 
@@ -180,6 +187,9 @@ export class FormulaEditorComponent {
         this.isVisible = isVis;
         // became visible so save what was in editor
         if (isVis) {
+            this.typeList = FormulaProperties.filter(
+                (type) => type.type != FormulaType.NotDefined
+            ).map((type) => [type.type, type.name, type.join.length < 1]);
             this.oldContent = parseOldContent(this.editor);
             this.cursorLocation = this.oldContent.before.length;
             const currentFormula = parseEditedFormula(

@@ -16,11 +16,12 @@ import {FormulaType, FormulaProperties} from "./formula-types";
 export type FormulaTuple = [FormulaType, number, number];
 
 /**
- * Objects to handle pairs of information.
+ * Objects to handle groups of information.
  */
 export type NumPair = [number, number];
 export type StringPair = [string, string];
 type TypePair = [string, FormulaType];
+export type TypeTrio = [string, string, boolean];
 
 /**
  * Splits string into two parts at cursor location if possible.
