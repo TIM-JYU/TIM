@@ -186,11 +186,10 @@ function beginEndKeyword(formula: string, searchIndex: number): FormulaType {
     // check which type is first after search index
     for (const type of types) {
         const foundIndex = formula.indexOf(type[0], searchIndex);
-        if (foundIndex < 0 || foundIndex > finalIndex) {
-            continue;
+        if (foundIndex > 0 && foundIndex < finalIndex) {
+            finalIndex = foundIndex;
+            finalType = type[1];
         }
-        finalIndex = foundIndex;
-        finalType = type[1];
     }
     return finalType;
 }
@@ -329,7 +328,7 @@ export function parseEditedFormula(
             currentFormula[2] = text.length - 1;
         }
         // cursor wasn't inside a $ syntax formula
-        // check if cursor is inside an align formula
+        // check if cursor is inside a begin-end formula
         const matrices: FormulaTuple[] = findMatrixFromString(
             text.slice(currentFormula[1], currentFormula[2] + 1)
         ).map((formulaTuple) => [
@@ -479,7 +478,7 @@ export function formatLatex(
 ): string | undefined {
     // Get properties for current formula type. Return undefined if not found.
     const formulaProperties = FormulaPropertyList.find(
-        (propertyType) => propertyType.type === formulaType
+        (type) => type.type === formulaType
     );
     if (!formulaProperties) {
         return undefined;

@@ -6,6 +6,8 @@
  * @date 5.5.2023
  */
 
+type ReplacePair = [RegExp, string] | undefined;
+
 /**
  * Describes the type of formula, and the name to show to user.
  * Type is the same for the whole formula.
@@ -14,6 +16,7 @@ export enum FormulaType {
     Inline = "Inline",
     Multiline = "Multiline",
     Align = "Align",
+    AlignAt = "AlignAt",
     Equation = "Equation",
     NotDefined = "undefined",
 }
@@ -26,6 +29,12 @@ type FormulaProperties = {
     type: FormulaType;
     // if it is a begin-end-style formula, define which
     beginEndKeyword: string;
+    // First value is search RegExp and second is replace string.
+    // No replacing when undefined.
+    // editReplace is used when starting to edit a formula. writeReplace
+    // is used when writing formula latex to TIM editor.
+    editReplace: ReplacePair;
+    writeReplace: ReplacePair;
     // starting mark of the formula
     start: string;
     // ending mark of the formula
@@ -40,11 +49,9 @@ type FormulaProperties = {
     // Type of the formula that can be inside this formula.
     // NotDefined means that inner formula is not possible.
     inner: FormulaType;
-    // Multiple line formulas require two constants
-    // to set active field correctly when starting to edit.
-    // One is for the first row and second is for other rows.
-    activeFieldFirstConstant: number;
-    activeFieldLineConstant: number;
+    // Multiple line formulas require a constant to set
+    // active field correctly when starting to edit.
+    activeFieldConstant: number;
 };
 
 /**
@@ -54,56 +61,73 @@ export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.Inline,
         beginEndKeyword: "",
+        editReplace: undefined,
+        writeReplace: undefined,
         start: "$",
         end: "$",
         join: "",
         firstJoin: "",
         inner: FormulaType.NotDefined,
-        activeFieldFirstConstant: 0,
-        activeFieldLineConstant: 0,
+        activeFieldConstant: 0,
     },
     {
         type: FormulaType.Multiline,
         beginEndKeyword: "",
+        editReplace: undefined,
+        writeReplace: undefined,
         start: "$$\n",
         end: "\n$$",
         join: "\\\\\n",
         firstJoin: "",
         inner: FormulaType.Align,
-        activeFieldFirstConstant: 2,
-        activeFieldLineConstant: 3,
+        activeFieldConstant: 2,
     },
     {
         type: FormulaType.Align,
-        beginEndKeyword: "align",
+        beginEndKeyword: "align*",
+        editReplace: undefined,
+        writeReplace: undefined,
         start: "\\begin{align*}\n",
         end: "\n\\end{align*}",
         join: "\\\\\n&",
         firstJoin: "\n&",
         inner: FormulaType.NotDefined,
-        activeFieldFirstConstant: 0,
-        activeFieldLineConstant: 4,
+        activeFieldConstant: 0,
+    },
+    {
+        type: FormulaType.AlignAt,
+        beginEndKeyword: "alignat",
+        editReplace: [/(?<!\\|\n)&/g, "¤"],
+        writeReplace: [/¤/g, "&"],
+        start: "\\begin{alignat*}{}\n",
+        end: "\n\\end{alignat*}",
+        join: "\\\\\n",
+        firstJoin: "",
+        inner: FormulaType.NotDefined,
+        activeFieldConstant: 2,
     },
     {
         type: FormulaType.Equation,
         beginEndKeyword: "equation",
+        editReplace: undefined,
+        writeReplace: undefined,
         start: "\\begin{equation*}\n",
         end: "\n\\end{equation*}",
         join: "",
         firstJoin: "",
         inner: FormulaType.NotDefined,
-        activeFieldFirstConstant: 0,
-        activeFieldLineConstant: 0,
+        activeFieldConstant: 0,
     },
     {
         type: FormulaType.NotDefined,
         beginEndKeyword: "",
+        editReplace: undefined,
+        writeReplace: undefined,
         start: "",
         end: "",
         join: "",
         firstJoin: "",
         inner: FormulaType.NotDefined,
-        activeFieldFirstConstant: 0,
-        activeFieldLineConstant: 0,
+        activeFieldConstant: 0,
     },
 ];

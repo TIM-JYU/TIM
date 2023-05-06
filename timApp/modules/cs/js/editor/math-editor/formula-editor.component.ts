@@ -370,13 +370,13 @@ export class FormulaEditorComponent {
         // Constants depend on number characters between formulas.
         // Number of characters depend on type of the formula.
         const formulaProperties = FormulaPropertyList.find(
-            (propertyType) => propertyType.type === this.formulaType
+            (formulaType) => formulaType.type === this.formulaType
         );
         if (!formulaProperties) {
             return;
         }
-        const firstConstant = formulaProperties.activeFieldFirstConstant;
-        const lineConstant = formulaProperties.activeFieldLineConstant;
+        const firstConstant = formulaProperties.activeFieldConstant;
+        const lineConstant = formulaProperties.join.length;
 
         const cursorI = this.cursorLocation;
         const before = this.oldContent.before;
@@ -414,7 +414,7 @@ export class FormulaEditorComponent {
      */
     addEditedFormulaToEditor(currentFormula: FormulaTuple) {
         const properties = FormulaPropertyList.find(
-            (propertyType) => propertyType.type === currentFormula[0]
+            (formulaType) => formulaType.type === currentFormula[0]
         );
         if (!properties) {
             // this should never happen
@@ -444,7 +444,7 @@ export class FormulaEditorComponent {
         // check if there is a formula inside current formula
         if (properties.inner != FormulaType.NotDefined) {
             const innerProperties = FormulaPropertyList.find(
-                (propertyType) => propertyType.type === properties.inner
+                (formulaType) => formulaType.type === properties.inner
             );
             if (innerProperties) {
                 const parts: StringTrio = checkInnerFormula(
@@ -463,7 +463,17 @@ export class FormulaEditorComponent {
                 }
             }
         }
-        // update formula editor content and values
+        // escape characters if needed
+        if (properties.editReplace) {
+            try {
+                const regex = new RegExp(properties.editReplace[0]);
+                formula = formula.replace(regex, properties.editReplace[1]);
+            } catch (err) {
+                console.log("invalid RegExp: " + properties.editReplace[0]);
+                console.log(err);
+            }
+        }
+        // update formula editor content
         const allMatrices: NumPair[] = findMatrixFromString(formula).map(
             (formulaTuple) => [formulaTuple[1], formulaTuple[2]]
         );
@@ -502,7 +512,7 @@ export class FormulaEditorComponent {
      * Updates editor text with current formula text.
      */
     updateFormulaToEditor() {
-        const formulaLatex = formatLatex(
+        let formulaLatex = formatLatex(
             this.formulaType,
             this.fields,
             this.existingParenthesis,
@@ -513,6 +523,27 @@ export class FormulaEditorComponent {
             this.editor.content =
                 this.oldContent.before + this.oldContent.after;
         } else {
+            // replace escaped characters if needed
+            const properties = FormulaPropertyList.find(
+                (formulaType) => formulaType.type === this.formulaType
+            );
+            if (properties) {
+                if (properties.writeReplace) {
+                    try {
+                        const regex = new RegExp(properties.writeReplace[0]);
+                        formulaLatex = formulaLatex.replace(
+                            regex,
+                            properties.writeReplace[1]
+                        );
+                    } catch (err) {
+                        console.log(
+                            "invalid RegExp: " + properties.writeReplace[0]
+                        );
+                        console.log(err);
+                    }
+                }
+            }
+            // write formula to TIM editor
             this.editor.content =
                 this.oldContent.before + formulaLatex + this.oldContent.after;
         }
