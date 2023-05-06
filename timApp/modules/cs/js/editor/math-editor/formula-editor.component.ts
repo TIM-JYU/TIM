@@ -47,6 +47,7 @@ import {
     checkInnerFormula,
     parseExistingParenthesis,
 } from "./formula-parsing-utils";
+import type {ReplacePair} from "./formula-types";
 import {FormulaPropertyList, FormulaType} from "./formula-types";
 
 /**
@@ -420,6 +421,7 @@ export class FormulaEditorComponent {
             // this should never happen
             throw Error("undefined formula type: " + this.formulaType);
         }
+        let usedReplace: ReplacePair = properties.editReplace;
         const text = this.editor.content;
         const start = properties.start.replace(/\n/g, "");
         const end = properties.end.replace(/\n/g, "");
@@ -442,34 +444,34 @@ export class FormulaEditorComponent {
         this.existingParenthesis[0] = formulaParts[0];
         this.existingParenthesis[1] = formulaParts[2];
         // check if there is a formula inside current formula
-        if (properties.inner != FormulaType.NotDefined) {
-            const innerProperties = FormulaPropertyList.find(
-                (formulaType) => formulaType.type === properties.inner
+        const innerTypes = FormulaPropertyList.filter((formulaType) =>
+            properties.inner.includes(formulaType.type)
+        );
+        for (let innerType of innerTypes) {
+            const parts: StringTrio = checkInnerFormula(
+                formula,
+                innerType.start.replace(/\n/g, ""),
+                innerType.end.replace(/\n/g, "")
             );
-            if (innerProperties) {
-                const parts: StringTrio = checkInnerFormula(
-                    formula,
-                    innerProperties.start.replace(/\n/g, ""),
-                    innerProperties.end.replace(/\n/g, "")
-                );
-                // update parenthesis, formula type and formula if inner formula was found
-                if (parts[0].length > 0 && parts[2].length > 0) {
-                    formula = parts[1];
-                    this.existingParenthesis[0] =
-                        this.existingParenthesis[0] + parts[0];
-                    this.existingParenthesis[1] =
-                        parts[2] + this.existingParenthesis[1];
-                    this.formulaType = properties.inner;
-                }
+            // update parenthesis, formula type and formula if inner formula was found
+            if (parts[0].length > 0 && parts[2].length > 0) {
+                formula = parts[1];
+                this.existingParenthesis[0] =
+                    this.existingParenthesis[0] + parts[0];
+                this.existingParenthesis[1] =
+                    parts[2] + this.existingParenthesis[1];
+                this.formulaType = innerType.type;
+                usedReplace = innerType.editReplace;
+                break;
             }
         }
         // escape characters if needed
-        if (properties.editReplace) {
+        if (usedReplace) {
             try {
-                const regex = new RegExp(properties.editReplace[0]);
-                formula = formula.replace(regex, properties.editReplace[1]);
+                const regex = new RegExp(usedReplace[0]);
+                formula = formula.replace(regex, usedReplace[1]);
             } catch (err) {
-                console.log("invalid RegExp: " + properties.editReplace[0]);
+                console.log("invalid RegExp: " + usedReplace[0]);
                 console.log(err);
             }
         }
