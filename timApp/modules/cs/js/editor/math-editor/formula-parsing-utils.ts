@@ -7,7 +7,7 @@
  */
 
 import type {IEditor} from "../editor";
-import type {FieldType} from "./formula-editor.component";
+import type {FieldType, OldContent} from "./formula-editor.component";
 import {FormulaType, FormulaProperties} from "./formula-types";
 
 /**
@@ -16,19 +16,19 @@ import {FormulaType, FormulaProperties} from "./formula-types";
 export type FormulaTuple = [FormulaType, number, number];
 
 /**
- * Objects to handle groups of information.
+ * Objects to handle pairs of information.
  */
 export type NumPair = [number, number];
 export type StringPair = [string, string];
-type TypePair = [string, FormulaType];
-export type TypeTrio = [string, string, boolean];
+type StringType = [string, FormulaType];
+export type StringBool = [string, boolean];
 
 /**
  * Splits string into two parts at cursor location if possible.
  * @param editor Editor containing the string to split.
  * @return String in parts.
  */
-export function parseOldContent(editor: IEditor) {
+export function parseOldContent(editor: IEditor): OldContent {
     if (!editor.cursorPosition) {
         return {
             before: editor.content,
@@ -50,7 +50,10 @@ export function parseOldContent(editor: IEditor) {
  * @param cursorLocation Cursor position as zero based index.
  * @return String of line with cursor.
  */
-export function getCurrentLine(editorContent: string, cursorLocation: number) {
+export function getCurrentLine(
+    editorContent: string,
+    cursorLocation: number
+): string {
     let startI = cursorLocation;
     let endI = cursorLocation;
     if (editorContent[startI] === "\n") {
@@ -99,7 +102,7 @@ function findParenthesisFromString(text: string): FormulaTuple[] {
             } else {
                 // set closing to current
                 allParenthesis.push([
-                    FormulaType.Multi,
+                    FormulaType.Multiline,
                     stack[1],
                     currentIndex + 1,
                 ]);
@@ -176,7 +179,7 @@ function beginEndKeyword(formula: string, searchIndex: number): FormulaType {
     let finalType = FormulaType.NotDefined;
     let finalIndex = Number.MAX_SAFE_INTEGER;
     // list begin-end-style formula types
-    const types: TypePair[] = FormulaProperties.filter(
+    const types: StringType[] = FormulaProperties.filter(
         (type) => type.beginEndKeyword.length > 0
     ).map((type) => [type.beginEndKeyword, type.type]);
     // check which type is first after search index
@@ -336,6 +339,54 @@ export function parseEditedFormula(
         currentFormula = parseCurrentFormula(matrices, cursorLocation);
     }
     return currentFormula;
+}
+
+/**
+ * Parses parenthesis and formula contents from string.
+ * @param editing Formula to parse.
+ * @param start Parenthesis at start.
+ * @param end Parenthesis at end.
+ * @return String array containing start, end and formula between them.
+ */
+export function parseExistingParenthesis(
+    editing: string,
+    start: string,
+    end: string
+): string[] {
+    let finalParenthesis = ["", ""];
+    let formula = editing.slice(start.length, -end.length);
+    let trimmed = formula.trimStart();
+    let lenDiff = formula.length - trimmed.length;
+    finalParenthesis[0] = editing.slice(0, start.length + lenDiff);
+    formula = trimmed;
+
+    trimmed = formula.trimEnd();
+    lenDiff = formula.length - trimmed.length;
+    finalParenthesis[1] = editing.slice(editing.length - end.length - lenDiff);
+    return [finalParenthesis[0], trimmed, finalParenthesis[1]];
+}
+
+/**
+ * Check if parsed formula has inner formula that should be handled.
+ * @param formula Formula to be checked.
+ * @param searchStart Keyword string to search from start of formula.
+ * @param searchEnd Keyword string to search from end of formula.
+ * @return Array containing inner start, end and formula.
+ * If no inner formula was found, return array with
+ * empty start and end, and original formula.
+ */
+export function checkInnerFormula(
+    formula: string,
+    searchStart: string,
+    searchEnd: string
+): string[] {
+    let parts = ["", formula, ""];
+    const start = formula.indexOf(searchStart);
+    const end = formula.lastIndexOf(searchEnd);
+    if (0 <= start && start < end) {
+        parts = parseExistingParenthesis(formula, searchStart, searchEnd);
+    }
+    return parts;
 }
 
 /**
