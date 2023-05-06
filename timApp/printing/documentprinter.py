@@ -797,15 +797,16 @@ class DocumentPrinter:
 
     @staticmethod
     def parse_template_content(template_doc: DocInfo, doc_to_print: DocInfo) -> str:
+        # attach macros from target document to template
+        # Note: we fetch settings before full dereference so that blinded settings are included
+        template_settings = template_doc.document.get_settings()
+        doc_settings = doc_to_print.document.get_settings()
+
         pars = template_doc.document.get_paragraphs()
 
         pars = dereference_pars(
             pars, context_doc=template_doc.document, view_ctx=default_view_ctx
         )
-
-        # attach macros from target document to template
-        template_settings = template_doc.document.get_settings()
-        doc_settings = doc_to_print.document.get_settings()
 
         macros = template_settings.get_macroinfo(default_view_ctx).get_macros()
         macros.update(template_settings.get_texmacroinfo(default_view_ctx).get_macros())

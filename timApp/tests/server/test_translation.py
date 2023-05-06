@@ -6,19 +6,18 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
-from timApp.document.translation.translation import Translation
-from timApp.document.translation.language import Language
 from timApp.document.translation.deepl import DeeplTranslationService
+from timApp.document.translation.language import Language
 from timApp.document.translation.reversingtranslator import (
     ReversingTranslationService,
     REVERSE_LANG,
 )
+from timApp.document.translation.translation import Translation
 from timApp.document.translation.translator import Usage, TranslateBlock
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import static_tim_doc
-
 
 MAX_TEST_CHAR_QUOTA = 50
 """Amount of characters to initialize the quota-limited test translator
@@ -35,7 +34,7 @@ class TimTranslationTest(TimRouteTest):
     def setUpClass(cls):
         super().setUpClass()
         db.session.add(ReversingTranslationService())
-        db.session.add(QuotaLimitedTestTranslator(character_limit=MAX_TEST_CHAR_QUOTA))
+        db.session.add(QuotaLimitedTestTranslator())
         cls.reverselang = Language(**REVERSE_LANG)
         db.session.add(cls.reverselang)
         db.session.commit()
@@ -48,7 +47,7 @@ class QuotaLimitedTestTranslator(ReversingTranslationService):
     Free).
     """
 
-    character_limit = db.Column(db.Integer, default=MAX_TEST_CHAR_QUOTA)
+    _character_limit = MAX_TEST_CHAR_QUOTA
     """Amount of characters allowed to translate."""
 
     _character_count = 0
@@ -70,14 +69,14 @@ class QuotaLimitedTestTranslator(ReversingTranslationService):
         # not matter with ReversingTranslationService).
         for text in result:
             self._character_count += len(text)
-            if self._character_count > self.character_limit:
-                raise Exception(f"Translation quota ({self.character_limit}) exceeded")
+            if self._character_count > self._character_limit:
+                raise Exception(f"Translation quota ({self._character_limit}) exceeded")
 
         return result
 
     def usage(self) -> Usage:
         return Usage(
-            character_limit=self.character_limit, character_count=self._character_count
+            character_limit=self._character_limit, character_count=self._character_count
         )
 
     __mapper_args__ = {"polymorphic_identity": "QuotaLimited"}

@@ -4,6 +4,7 @@
                 <cs-formula-editor-loader
                                (ok-close)="$ctrl.toggleFormulaEditor(true, $event)"
                                (cancel-close)="$ctrl.toggleFormulaEditor(true, $event)"
+                               (component-loaded)="$ctrl.registerFormulaCancelFunction($event)"
                                (toggle)="$ctrl.toggleFormulaEditor()"
                                [visible]="$ctrl.formulaEditorOpen"
                                [editor]="$ctrl.editor"

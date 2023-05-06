@@ -291,28 +291,28 @@ def verify_group_view_access(ug: UserGroup, user=None, require=True):
     return verify_group_access(ug, view_access_set, user, require=require)
 
 
-def get_member_infos(group_name: str, usernames_or_emails: list[str]):
+@dataclass(slots=True, frozen=True)
+class MemberInfos:
+    existing_ids: set[int]
+    group: UserGroup
+    not_exist: list[str]
+    users: list[User]
+
+
+def get_member_infos(group_name: str, usernames_or_emails: list[str]) -> MemberInfos:
     usernames_or_emails = get_usernames(usernames_or_emails)
-    usernames_or_emails_set = set(usernames_or_emails)
     group, users = get_uid_gid(group_name, usernames_or_emails)
     verify_group_edit_access(group)
     existing_usernames = {u.name for u in users}
     existing_emails = {u.email for u in users}
-    email_username_map = {u.email: u.name for u in users}
     existing_ids = {u.id for u in group.users}
     not_exist = [
         name
         for name in usernames_or_emails
         if name not in existing_usernames and name not in existing_emails
     ]
-    usernames_or_emails_cleaned = []
-    for name in usernames_or_emails:
-        # If the name is an email and the username is already in the list, skip it
-        if (usr := email_username_map.get(name)) and usr in usernames_or_emails_set:
-            continue
-        usernames_or_emails_cleaned.append(name)
 
-    return existing_ids, group, not_exist, usernames_or_emails_cleaned, users
+    return MemberInfos(existing_ids, group, not_exist, users)
 
 
 @dataclass
@@ -326,26 +326,24 @@ NamesModelSchema = class_schema(NamesModel)
 @groups.post("/addmember/<group_name>")
 def add_member(group_name: str) -> Response:
     nm: NamesModel = load_data_from_req(NamesModelSchema)
-    existing_ids, group, not_exist, usernames_or_emails, users = get_member_infos(
-        group_name, nm.names
-    )
-    if set(usernames_or_emails) & SPECIAL_USERNAMES:
+    mi = get_member_infos(group_name, nm.names)
+    found_user_names = {u.name for u in mi.users}
+    if found_user_names & SPECIAL_USERNAMES:
         raise RouteException("Cannot add special users.")
-    user_names = {u.name for u in group.users}
-    user_emails = {u.email for u in group.users}
-    already_exists = (user_names | user_emails) & set(usernames_or_emails)
+    user_names = {u.name for u in mi.group.users}
+    already_exists = user_names & found_user_names
     added = []
     curr = get_current_user_object()
-    for u in users:
-        if u.id not in existing_ids:
-            u.add_to_group(group, added_by=curr)
+    for u in mi.users:
+        if u.id not in mi.existing_ids:
+            u.add_to_group(mi.group, added_by=curr)
             added.append(u.name)
     db.session.commit()
     return json_response(
         {
             "already_belongs": sorted(list(already_exists)),
             "added": sorted(added),
-            "not_exist": sorted(not_exist),
+            "not_exist": sorted(mi.not_exist),
         }
     )
 
@@ -353,32 +351,32 @@ def add_member(group_name: str) -> Response:
 @groups.post("/removemember/<group_name>")
 def remove_member(group_name: str) -> Response:
     nm: NamesModel = load_data_from_req(NamesModelSchema)
-    existing_ids, group, not_exist, _, users = get_member_infos(group_name, nm.names)
+    mi = get_member_infos(group_name, nm.names)
     removed = []
     does_not_belong = []
-    ensure_manually_added = group.is_sisu
+    ensure_manually_added = mi.group.is_sisu
     su = User.get_scimuser()
-    for u in users:
-        if u.id not in existing_ids:
+    for u in mi.users:
+        if u.id not in mi.existing_ids:
             does_not_belong.append(u.name)
             continue
-        if ensure_manually_added and group.current_memberships[u.id].adder == su:
+        if ensure_manually_added and mi.group.current_memberships[u.id].adder == su:
             raise RouteException(
                 "Cannot remove not-manually-added users from Sisu groups."
             )
-        group.current_memberships[u.id].set_expired()
+        mi.group.current_memberships[u.id].set_expired()
         removed.append(u.name)
     db.session.commit()
     return json_response(
         {
             "removed": sorted(removed),
             "does_not_belong": sorted(does_not_belong),
-            "not_exist": sorted(not_exist),
+            "not_exist": sorted(mi.not_exist),
         }
     )
 
 
 def get_usernames(usernames: list[str]):
-    usernames = list({name.strip() for name in usernames})
+    usernames = list({n for name in usernames if (n := name.strip())})
     usernames.sort()
     return usernames

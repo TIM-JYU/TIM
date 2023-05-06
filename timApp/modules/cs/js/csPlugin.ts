@@ -78,6 +78,7 @@ import {OrderedSet, Set} from "./util/set";
 import type {FormulaEvent} from "./editor/math-editor/symbol-button-menu.component";
 import {selectFormulaFromPreview} from "./editor/math-editor/formula-utils";
 import {LATEX_BUTTONS} from "./editor/math-editor/default-symbol-buttons";
+import {FormulaEditorComponent} from "./editor/math-editor/formula-editor.component";
 
 // TODO better name?
 interface Vid {
@@ -1058,7 +1059,7 @@ export function createTemplateButtons(
                 data: defaultData,
                 expl: defaultData,
             };
-            const mathAttributes = ["", "math", "s", "q", "t"];
+            const mathAttributes = ["", "math", "s", "q", "t", "e"];
             if (parsed.length > 1) {
                 for (const part of parsed) {
                     if (mathAttributes.includes(part)) {
@@ -1069,6 +1070,7 @@ export function createTemplateButtons(
                             case mathAttributes[2]:
                             case mathAttributes[3]:
                             case mathAttributes[4]:
+                            case mathAttributes[5]:
                                 item.type = part;
                                 break;
                         }
@@ -1161,6 +1163,8 @@ export class CsController extends CsBase implements ITimComponent {
     muokattu: boolean;
     noeditor!: boolean;
     formulaEditorOpen = false;
+    @ViewChild("formulaEditorComponent")
+    formulaEditorComponent?: FormulaEditorComponent;
     currentSymbol: FormulaEvent = {text: ""};
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
@@ -1927,17 +1931,42 @@ export class CsController extends CsBase implements ITimComponent {
 
     /**
      * Moves cursor inside clicked formula in preview in editor
-     * and opens formula editor.
+     * and opens formula editor. Closes editor if it was open.
      * @param event mouse click event
      * @param preview root element
      */
-    handleSelectFormulaFromPreview(event: MouseEvent, div: HTMLDivElement) {
-        if (!this.formulaEditor || this.formulaEditorOpen || !this.editor) {
+    async handleSelectFormulaFromPreview(
+        event: MouseEvent,
+        div: HTMLDivElement
+    ) {
+        if (!this.formulaEditor || !this.editor) {
             return;
         }
-        const success = selectFormulaFromPreview(event, this.editor, div);
-        if (success) {
-            this.toggleFormulaEditor();
+        // Open different formula
+        if (this.formulaEditorOpen) {
+            // close formula editor
+            if (!this.formulaEditorComponent) {
+                return;
+            }
+            const cancelSuccess =
+                await this.formulaEditorComponent.handleFormulaCancel();
+            // editing wasn't cancelled so do nothing
+            if (!cancelSuccess) {
+                return;
+            }
+            await timeout();
+            // move to chosen formula
+            const success = selectFormulaFromPreview(event, this.editor, div);
+            // open formula editor again
+            if (success) {
+                this.toggleFormulaEditor();
+            }
+        } else {
+            // open chosen formula
+            const success = selectFormulaFromPreview(event, this.editor, div);
+            if (success) {
+                this.toggleFormulaEditor();
+            }
         }
     }
 
@@ -3962,6 +3991,7 @@ ${fhtml}
             <div class="csRunCode">
                 <div *ngIf="formulaEditor && editor">
                     <cs-formula-editor
+                            #formulaEditorComponent
                             (okClose)="toggleFormulaEditor($event)"
                             (cancelClose)="toggleFormulaEditor($event)"
                             (toggle)="toggleFormulaEditor()"
@@ -4146,7 +4176,7 @@ ${fhtml}
                      tabindex="0">{{result}}</pre>
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
-            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor && !formulaEditorOpen" (keydown)="elementSelectAll($event)" tabindex="0" 
+            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor" (keydown)="elementSelectAll($event)" tabindex="0" 
                  (click)="handleSelectFormulaFromPreview($event, preview)" #preview>
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed

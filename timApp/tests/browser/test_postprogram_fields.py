@@ -56,7 +56,7 @@ postprogram: |!!
 
         self.login_browser_quick_test1()
         self.goto_document(d)
-        self.drv.find_element(By.XPATH, "//td/label/input").click()
+        self.drv.find_element(By.XPATH, "//td/div/label/input").click()
         self.drv.find_element(By.XPATH, "//tim-qst/div/div/div/button").click()
         self.drv.find_element(
             By.CSS_SELECTOR, ".qst-tr:nth-child(2) .ng-untouched"

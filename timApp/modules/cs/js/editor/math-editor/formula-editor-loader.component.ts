@@ -8,7 +8,7 @@
  * @date 21.4.2023
  */
 
-import type {OnDestroy, OnInit} from "@angular/core";
+import type {AfterViewInit, OnDestroy} from "@angular/core";
 import {
     Component,
     EventEmitter,
@@ -25,10 +25,10 @@ import type {FormulaEditorComponent} from "./formula-editor.component";
 @Component({
     selector: "cs-formula-editor-loader",
     template: `
-    <ng-container #formulaEditor></ng-container>
-  `,
+        <ng-container #formulaEditor></ng-container>
+    `,
 })
-export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
+export class FormulaEditorLoaderComponent implements OnDestroy, AfterViewInit {
     private parEditor!: IEditor;
     private buttons!: ITemplateButton[];
     private isVisible!: boolean;
@@ -42,11 +42,20 @@ export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
     @Output() okClose = new EventEmitter<number>();
     @Output() cancelClose = new EventEmitter<number>();
     @Output() toggle = new EventEmitter<void>();
+    @Output() componentLoaded = new EventEmitter<() => Promise<boolean>>();
 
+    /**
+     * Gets editor value.
+     */
     @Input()
     get editor(): IEditor {
         return this.parEditor;
     }
+
+    /**
+     * Sets editor value.
+     * @param value editor to set
+     */
     set editor(value: IEditor) {
         this.parEditor = value;
         if (this.formulaEditorComponent) {
@@ -54,10 +63,18 @@ export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * Gets template buttons.
+     */
     @Input()
     get templateButtons(): ITemplateButton[] {
         return this.buttons;
     }
+
+    /**
+     * Sets template buttons.
+     * @param value buttons to set
+     */
     set templateButtons(value: ITemplateButton[]) {
         this.buttons = value;
         if (this.formulaEditorComponent) {
@@ -65,10 +82,18 @@ export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * Gets visible value
+     */
     @Input()
     get visible(): boolean {
         return this.isVisible;
     }
+
+    /**
+     * Sets visible value
+     * @param isVis value to set
+     */
     set visible(isVis: boolean) {
         this.isVisible = isVis;
         if (this.formulaEditorComponent) {
@@ -76,11 +101,18 @@ export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * Gets currentSymbol.
+     */
     @Input()
     get currentSymbol(): FormulaEvent {
         return this.buttonSymbol;
     }
 
+    /**
+     * Sets currentSymbol.
+     * @param value value to set
+     */
     set currentSymbol(value: FormulaEvent) {
         this.buttonSymbol = value;
         if (this.formulaEditorComponent) {
@@ -107,9 +139,14 @@ export class FormulaEditorLoaderComponent implements OnInit, OnDestroy {
         );
         comp.instance.okClose.subscribe((val) => this.okClose.emit(val));
         comp.instance.toggle.subscribe((val) => this.toggle.emit(val));
+
+        this.componentLoaded.emit(() => comp.instance.handleFormulaCancel());
     }
 
-    ngOnInit(): void {
+    /**
+     * Loads component.
+     */
+    ngAfterViewInit() {
         void this.loadComponent();
     }
 
