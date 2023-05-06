@@ -135,6 +135,12 @@ CELERYD_TASK_LOG_FORMAT = (
 )
 BEAT_DBURI = DB_URI
 
+USERSELECT_QUEUED_ACTIONS_CELERY = True
+"""
+If enabled, UserSelect will automatically schedule running the queued actions with celery.
+When disabled, the actions must be run manually with /userSelect/applyPendingActions
+"""
+
 MAIL_HOST = "smtpauth2.jyu.fi"
 MAIL_SIGNATURE = "\n\n-- \nThis message was automatically sent by TIM"
 WTF_CSRF_METHODS = ["POST", "PUT", "PATCH", "DELETE"]

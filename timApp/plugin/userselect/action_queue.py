@@ -393,7 +393,8 @@ def _register_action(action: Action) -> None:
 
     action_file_path.write_text(action.to_str())
 
-    if not _check_lock_acquired("queue"):
+    send_to_celery = app.config["USERSELECT_QUEUED_ACTIONS_CELERY"]
+    if send_to_celery and not _check_lock_acquired("queue"):
         apply_pending_userselect_actions.delay()
 
 
