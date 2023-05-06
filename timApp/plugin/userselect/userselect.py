@@ -717,7 +717,7 @@ def apply_permission_actions(
     for to_remove in remove:
         doc_entry = doc_entries[to_remove.doc_path]
         a = remove_perm(user_group, doc_entry.block, to_remove.type)
-        # A document's translations will have their permissions removed by default as well,
+        # A document's translations and velp groups will have their permissions removed by default as well,
         # so we need to iterate the list returned from remove_perm
         for p in a:
             update_messages.append(
