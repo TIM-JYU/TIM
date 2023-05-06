@@ -8,7 +8,7 @@
 
 import type {IEditor} from "../editor";
 import type {FieldType, OldContent} from "./formula-editor.component";
-import {FormulaType, FormulaProperties} from "./formula-types";
+import {FormulaType, FormulaPropertyList} from "./formula-types";
 
 /**
  * Tuple which contains the type of formula, and its start and end index.
@@ -16,10 +16,11 @@ import {FormulaType, FormulaProperties} from "./formula-types";
 export type FormulaTuple = [FormulaType, number, number];
 
 /**
- * Objects to handle pairs of information.
+ * Objects to handle groups of information.
  */
 export type NumPair = [number, number];
 export type StringPair = [string, string];
+export type StringTrio = [string, string, string];
 type StringType = [string, FormulaType];
 export type StringBool = [string, boolean];
 
@@ -179,7 +180,7 @@ function beginEndKeyword(formula: string, searchIndex: number): FormulaType {
     let finalType = FormulaType.NotDefined;
     let finalIndex = Number.MAX_SAFE_INTEGER;
     // list begin-end-style formula types
-    const types: StringType[] = FormulaProperties.filter(
+    const types: StringType[] = FormulaPropertyList.filter(
         (type) => type.beginEndKeyword.length > 0
     ).map((type) => [type.beginEndKeyword, type.type]);
     // check which type is first after search index
@@ -352,8 +353,8 @@ export function parseExistingParenthesis(
     editing: string,
     start: string,
     end: string
-): string[] {
-    let finalParenthesis = ["", ""];
+): StringTrio {
+    const finalParenthesis = ["", ""];
     let formula = editing.slice(start.length, -end.length);
     let trimmed = formula.trimStart();
     let lenDiff = formula.length - trimmed.length;
@@ -379,8 +380,8 @@ export function checkInnerFormula(
     formula: string,
     searchStart: string,
     searchEnd: string
-): string[] {
-    let parts = ["", formula, ""];
+): StringTrio {
+    let parts: StringTrio = ["", formula, ""];
     const start = formula.indexOf(searchStart);
     const end = formula.lastIndexOf(searchEnd);
     if (0 <= start && start < end) {
@@ -476,41 +477,48 @@ export function formatLatex(
     existingParenthesis: StringPair,
     useExistingParenthesis: boolean
 ): string | undefined {
-    // get properties for current formula type or return undefined if not found
-    const formulaProperties = FormulaProperties.find(
+    // Get properties for current formula type. Return undefined if not found.
+    const formulaProperties = FormulaPropertyList.find(
         (propertyType) => propertyType.type === formulaType
     );
     if (!formulaProperties) {
         return undefined;
     }
-    // parse formula with multiple lines
-    if (formulaProperties.join.length > 0) {
-        // Array with latex code of formula lines. Filter out empty lines.
-        const formulaLatexList = fields
-            .map((field) => field.latex)
-            .filter((text) => text.length > 0);
-        // align type requires special join for first line
-        if (
-            formulaProperties.type === FormulaType.Align &&
-            formulaLatexList.length >= 2
-        ) {
-            const latexBegin =
-                formulaLatexList[0] + "\n&" + formulaLatexList[1];
-            formulaLatexList.splice(0, 2, latexBegin);
-        }
-        // join lines with defined string, and return undefined if joined string is empty
-        const latex = formulaLatexList.join(formulaProperties.join);
+    // single line formulas
+    if (formulaProperties.join.length < 1) {
+        // Single line formulas should only have 1 field.
+        // Return undefined if that is empty.
+        const latex = fields[0].latex;
         if (latex.length === 0) {
             return undefined;
         }
-        // return with existing or default start and end
+        // return with existing or default start and end marks
         return useExistingParenthesis
             ? `${existingParenthesis[0]}${latex}${existingParenthesis[1]}`
             : `${formulaProperties.start}${latex}${formulaProperties.end}`;
     }
-    // single line formulas should only have 1 line
-    const latex = fields[0].latex;
-    return latex.length > 0
-        ? `${formulaProperties.start}${latex}${formulaProperties.end}`
-        : undefined;
+    // Array with latex of formula lines. Filter out empty lines.
+    const formulaLatexList = fields
+        .map((field) => field.latex)
+        .filter((text) => text.length > 0);
+    // some formula types require special join for first two lines
+    if (
+        formulaProperties.firstJoin.length > 0 &&
+        formulaLatexList.length >= 2
+    ) {
+        const latexBegin =
+            formulaLatexList[0] +
+            formulaProperties.firstJoin +
+            formulaLatexList[1];
+        formulaLatexList.splice(0, 2, latexBegin);
+    }
+    // Join lines with defined string. Return undefined if joined string is empty.
+    const latex = formulaLatexList.join(formulaProperties.join);
+    if (latex.length === 0) {
+        return undefined;
+    }
+    // return with existing or default start and end marks
+    return useExistingParenthesis
+        ? `${existingParenthesis[0]}${latex}${existingParenthesis[1]}`
+        : `${formulaProperties.start}${latex}${formulaProperties.end}`;
 }

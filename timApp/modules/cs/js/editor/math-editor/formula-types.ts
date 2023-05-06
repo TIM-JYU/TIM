@@ -19,9 +19,9 @@ export enum FormulaType {
 }
 
 /**
- * Defines which properties the formulas should have.
+ * Defines which properties formula types should have.
  */
-type FormulaProperty = {
+type FormulaProperties = {
     // type of the formula
     type: FormulaType;
     // if it is a begin-end-style formula, define which
@@ -34,8 +34,11 @@ type FormulaProperty = {
     // Single line formulas MUST HAVE empty string and multiple line
     // formulas MUST NOT HAVE empty string.
     join: string;
+    // String between the first two formula lines. With empty string
+    // every line is linked with the regular join.
+    firstJoin: string;
     // Type of the formula that can be inside this formula.
-    // Use NotDefined if inner formula is not possible.
+    // NotDefined means that inner formula is not possible.
     inner: FormulaType;
     // Multiple line formulas require two constants
     // to set active field correctly when starting to edit.
@@ -47,13 +50,14 @@ type FormulaProperty = {
 /**
  * Properties determine how the different types of formulas behave.
  */
-export const FormulaProperties: FormulaProperty[] = [
+export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.Inline,
         beginEndKeyword: "",
         start: "$",
         end: "$",
         join: "",
+        firstJoin: "",
         inner: FormulaType.NotDefined,
         activeFieldFirstConstant: 0,
         activeFieldLineConstant: 0,
@@ -64,6 +68,7 @@ export const FormulaProperties: FormulaProperty[] = [
         start: "$$\n",
         end: "\n$$",
         join: "\\\\\n",
+        firstJoin: "",
         inner: FormulaType.Align,
         activeFieldFirstConstant: 2,
         activeFieldLineConstant: 3,
@@ -74,6 +79,7 @@ export const FormulaProperties: FormulaProperty[] = [
         start: "\\begin{align*}\n",
         end: "\n\\end{align*}",
         join: "\\\\\n&",
+        firstJoin: "\n&",
         inner: FormulaType.NotDefined,
         activeFieldFirstConstant: 0,
         activeFieldLineConstant: 4,
@@ -84,6 +90,7 @@ export const FormulaProperties: FormulaProperty[] = [
         start: "\\begin{equation*}\n",
         end: "\n\\end{equation*}",
         join: "",
+        firstJoin: "",
         inner: FormulaType.NotDefined,
         activeFieldFirstConstant: 0,
         activeFieldLineConstant: 0,
@@ -94,6 +101,7 @@ export const FormulaProperties: FormulaProperty[] = [
         start: "",
         end: "",
         join: "",
+        firstJoin: "",
         inner: FormulaType.NotDefined,
         activeFieldFirstConstant: 0,
         activeFieldLineConstant: 0,

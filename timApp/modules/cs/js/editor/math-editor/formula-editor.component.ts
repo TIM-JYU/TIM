@@ -35,6 +35,7 @@ import type {
     NumPair,
     StringBool,
     StringPair,
+    StringTrio,
 } from "./formula-parsing-utils";
 import {
     findMatrixFromString,
@@ -46,7 +47,7 @@ import {
     checkInnerFormula,
     parseExistingParenthesis,
 } from "./formula-parsing-utils";
-import {FormulaProperties, FormulaType} from "./formula-types";
+import {FormulaPropertyList, FormulaType} from "./formula-types";
 
 /**
  * Information about text that was in editor when formula editor was opened.
@@ -189,7 +190,7 @@ export class FormulaEditorComponent {
         this.isVisible = isVis;
         // became visible so save what was in editor
         if (isVis) {
-            this.typeList = FormulaProperties.filter(
+            this.typeList = FormulaPropertyList.filter(
                 (type) => type.type != FormulaType.NotDefined
             ).map((type) => [type.type, type.join.length < 1]);
             this.oldContent = parseOldContent(this.editor);
@@ -263,7 +264,7 @@ export class FormulaEditorComponent {
         }
         // if formula is single line type, switch it to $$ type
         // to support multiple lines
-        const singleLineFormulas = FormulaProperties.filter(
+        const singleLineFormulas = FormulaPropertyList.filter(
             (type) => type.join.length < 1
         ).map((type) => type.type);
         if (singleLineFormulas.includes(this.formulaType)) {
@@ -368,7 +369,7 @@ export class FormulaEditorComponent {
     setMultilineActiveField(fields: FieldType[]) {
         // Constants depend on number characters between formulas.
         // Number of characters depend on type of the formula.
-        const formulaProperties = FormulaProperties.find(
+        const formulaProperties = FormulaPropertyList.find(
             (propertyType) => propertyType.type === this.formulaType
         );
         if (!formulaProperties) {
@@ -412,10 +413,11 @@ export class FormulaEditorComponent {
      * @param currentFormula Formula to be edited.
      */
     addEditedFormulaToEditor(currentFormula: FormulaTuple) {
-        const properties = FormulaProperties.find(
+        const properties = FormulaPropertyList.find(
             (propertyType) => propertyType.type === currentFormula[0]
         );
         if (!properties) {
+            // this should never happen
             throw Error("undefined formula type: " + this.formulaType);
         }
         const text = this.editor.content;
@@ -431,7 +433,7 @@ export class FormulaEditorComponent {
         );
         this.oldContent.after = text.slice(currentFormula[2] + 1);
         // separate formula and parenthesis
-        const formulaParts = parseExistingParenthesis(
+        const formulaParts: StringTrio = parseExistingParenthesis(
             this.oldContent.editing,
             start,
             end
@@ -441,11 +443,11 @@ export class FormulaEditorComponent {
         this.existingParenthesis[1] = formulaParts[2];
         // check if there is a formula inside current formula
         if (properties.inner != FormulaType.NotDefined) {
-            const innerProperties = FormulaProperties.find(
+            const innerProperties = FormulaPropertyList.find(
                 (propertyType) => propertyType.type === properties.inner
             );
             if (innerProperties) {
-                const parts = checkInnerFormula(
+                const parts: StringTrio = checkInnerFormula(
                     formula,
                     innerProperties.start.replace(/\n/g, ""),
                     innerProperties.end.replace(/\n/g, "")
