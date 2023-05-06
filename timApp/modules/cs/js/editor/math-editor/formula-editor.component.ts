@@ -447,7 +447,7 @@ export class FormulaEditorComponent {
         const innerTypes = FormulaPropertyList.filter((formulaType) =>
             properties.inner.includes(formulaType.type)
         );
-        for (let innerType of innerTypes) {
+        for (const innerType of innerTypes) {
             const parts: StringTrio = checkInnerFormula(
                 formula,
                 innerType.start.replace(/\n/g, ""),
