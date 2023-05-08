@@ -47,6 +47,8 @@ export type LineAdd = {
     addBelow: boolean;
 };
 
+const DEFAULT_ERROR_MESSAGE = "Error in LaTeX code";
+
 @Component({
     selector: "cs-formula-field",
     template: `
@@ -78,7 +80,7 @@ export type LineAdd = {
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
                 </textarea>
-                <span class="render-error" *ngIf="error">{{latestCorrectInput}}</span>
+                <span class="render-error" *ngIf="error">{{getErrorMessage()}}</span>
             </div>
 
             <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
@@ -396,5 +398,15 @@ export class FormulaFieldComponent implements AfterViewInit {
                 this.latestCorrectInput = this.mathField.latex();
             }
         }, 1000);
+    }
+
+    /**
+     * Text to show in visual field if there's an error.
+     */
+    getErrorMessage() {
+        if (this.latestCorrectInput.length === 0) {
+            return DEFAULT_ERROR_MESSAGE;
+        }
+        return this.latestCorrectInput;
     }
 }
