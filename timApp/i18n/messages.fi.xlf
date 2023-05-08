@@ -8082,14 +8082,6 @@
           <context context-type="linenumber">73</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8152502332911299242" datatype="html">
-        <source>Error in LaTeX code</source>
-        <target state="translated">Virhe LaTeX-koodissa</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
-          <context context-type="linenumber">73,74</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3450687361324906012" datatype="html">
         <source>Paste image</source>
         <target state="translated">Liitä kuva</target>
@@ -8168,6 +8160,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
           <context context-type="linenumber">744</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8152502332911299242" datatype="html">
+        <source>Error in LaTeX code</source>
+        <target state="translated">Virhe LaTeX-koodissa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
+          <context context-type="linenumber">50</context>
         </context-group>
       </trans-unit>
     </body>
