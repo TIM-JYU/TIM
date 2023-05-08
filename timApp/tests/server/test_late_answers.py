@@ -27,7 +27,13 @@ answerLimit: 1
         a = self.post_answer("textfield", f"{d.id}.t", user_input={"c": "x"})
         err = "Your view access to this document has expired, so this answer was saved but marked as invalid."
         self.assertEqual(
-            {"error": err, "savedNew": 1, "valid": False, "web": {"result": "saved"}}, a
+            {
+                "errors": [err],
+                "savedNew": 1,
+                "valid": False,
+                "web": {"result": "saved"},
+            },
+            a,
         )
         self.test_user_2.grant_access(
             d, AccessType.view, accessible_to=get_current_time() - timedelta(minutes=5)
@@ -41,7 +47,13 @@ answerLimit: 1
         )
         a = self.post_answer("textfield", f"{d.id}.t", user_input={"c": "z"})
         self.assertEqual(
-            {"error": err, "savedNew": 2, "valid": False, "web": {"result": "saved"}}, a
+            {
+                "errors": [err],
+                "savedNew": 2,
+                "valid": False,
+                "web": {"result": "saved"},
+            },
+            a,
         )
         d.document.set_settings({"answer_grace_period": "x"})
         self.post_answer(
@@ -64,7 +76,7 @@ answerLimit: 1
                 "web": {"result": "saved"},
                 "savedNew": 5,
                 "valid": False,
-                "error": "You have exceeded the answering limit.",
+                "errors": ["You have exceeded the answering limit."],
             },
             a,
         )

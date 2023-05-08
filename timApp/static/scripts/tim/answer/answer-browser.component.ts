@@ -324,6 +324,9 @@ export class AnswerBrowserComponent
                 : undefined;
 
             for (const e of args.errors) {
+                if (e == undefined) {
+                    continue;
+                }
                 let displayAlert = true;
                 if (pattern) {
                     displayAlert = !pattern.test(e);
