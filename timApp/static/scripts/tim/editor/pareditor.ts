@@ -1790,11 +1790,14 @@ ${backTicks}
     }
 
     /**
-     * Creates and sets templateButtons from buttons attribute in document settings.
+     * Creates and sets templateButtons from buttons and mdButtons attributes in document settings.
      */
     createTemplateButtons() {
         const b = this.docSettings?.buttons;
-        this.templateButtons = createTemplateButtons(b, undefined);
+        this.templateButtons = createTemplateButtons(
+            b,
+            this.docSettings?.mdButtons
+        );
     }
 
     /**
