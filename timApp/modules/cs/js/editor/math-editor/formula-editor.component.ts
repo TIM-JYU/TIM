@@ -48,7 +48,7 @@ import {
     parseExistingParenthesis,
 } from "./formula-parsing-utils";
 import type {ReplacePair} from "./formula-types";
-import {FormulaPropertyList, FormulaType} from "./formula-types";
+import {FormulaPropertyList, FORMULA_TYPES, FormulaType} from "./formula-types";
 
 /**
  * Information about text that was in editor when formula editor was opened.
@@ -114,9 +114,9 @@ export type FieldType = {
                                 [(ngModel)]="formulaType"
                                 (ngModelChange)="onFormulaTypeChange()">
                             <ng-container *ngFor="let type of typeList" >
-                                <option *ngIf="type[1]; else elseBlock" [ngValue]="type[0].toString()" [disabled]="isDisabled">{{type[0].toString()}}</option>
+                                <option *ngIf="type[1]; else elseBlock" [ngValue]="type[0]" [disabled]="isDisabled">{{formulaTypes[type[0]]}}</option>
                                 <ng-template #elseBlock>
-                                    <option [ngValue]="type[0].toString()">{{type[0].toString()}}</option>
+                                    <option [ngValue]="type[0]">{{formulaTypes[type[0]]}}</option>
                                 </ng-template>
                             </ng-container>
                         </select>
@@ -170,8 +170,9 @@ export class FormulaEditorComponent {
     @Output() toggle = new EventEmitter<void>();
 
     @Input() templateButtons: ITemplateButton[] = [];
-
     @Input() editor!: IEditor;
+
+    formulaTypes = FORMULA_TYPES;
 
     /**
      * Gets whether formula editor is visible or not.

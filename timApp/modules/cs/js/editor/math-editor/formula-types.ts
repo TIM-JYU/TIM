@@ -22,6 +22,16 @@ export enum FormulaType {
     NotDefined = "undefined",
 }
 
+export const FORMULA_TYPES: Partial<Record<string, string>> = {
+    [FormulaType.Inline.toString()]: $localize`Inline`,
+    [FormulaType.Multiline.toString()]: $localize`Multiline`,
+    [FormulaType.Align.toString()]: $localize`Align`,
+    [FormulaType.AlignAt.toString()]: $localize`AlignAt`,
+    [FormulaType.Gather.toString()]: $localize`Gather`,
+    [FormulaType.Equation.toString()]: $localize`Equation`,
+    [FormulaType.NotDefined.toString()]: $localize`undefined`,
+};
+
 /**
  * Defines which properties formula types should have.
  */
