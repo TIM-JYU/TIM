@@ -103,7 +103,7 @@ export type FieldType = {
 
                 <div class="formula-button-container">
                     <div class="formula-buttons">
-                        <button class="timButton" (click)="handleFormulaOk()" title="Ctrl+s">Ok</button>
+                        <button class="timButton" (click)="handleFormulaOk()" title="Ctrl+s">OK</button>
                         <button class="timButton" (click)="handleFormulaCancel()" i18n title="Esc">Cancel</button>
                     </div>
 
