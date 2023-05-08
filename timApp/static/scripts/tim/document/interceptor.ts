@@ -121,7 +121,7 @@ timApp.config([
                         const resp =
                             response as IHttpResponse<IAnswerSaveEvent>;
                         handleAnswerResponse(taskIdFull, {
-                            error: resp.data.error,
+                            errors: resp.data.errors,
                             feedback: resp.data.feedback,
                             topfeedback: resp.data.topfeedback,
                             savedNew: resp.data.savedNew,
@@ -141,7 +141,7 @@ timApp.config([
                         const resp =
                             response as IHttpResponse<IAnswerSaveEvent>;
                         handleAnswerResponse(taskIdFull, {
-                            error: resp.data.error,
+                            errors: resp.data.errors,
                             savedNew: false,
                             valid: false,
                         });
