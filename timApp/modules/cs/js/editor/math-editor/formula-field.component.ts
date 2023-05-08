@@ -78,7 +78,7 @@ export type LineAdd = {
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
                 </textarea>
-                <span class="render-error" *ngIf="error" i18n>{{latestCorrectInput}}</span>
+                <span class="render-error" *ngIf="error">{{latestCorrectInput}}</span>
             </div>
 
             <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
