@@ -7930,7 +7930,7 @@
       </trans-unit>
       <trans-unit id="604592115785316180" datatype="html">
         <source>Multiline</source>
-        <target state="translated">Flerlinje</target>
+        <target state="translated">Flerlinje (Multiline)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
           <context context-type="linenumber">72</context>
@@ -8010,7 +8010,7 @@
       </trans-unit>
       <trans-unit id="450937500922433442" datatype="html">
         <source>Inline</source>
-        <target state="translated">I kö</target>
+        <target state="translated">I kö (Inline)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
           <context context-type="linenumber">100,101</context>
@@ -8018,7 +8018,7 @@
       </trans-unit>
       <trans-unit id="6998464152354639086" datatype="html">
         <source>Align</source>
-        <target state="translated">Justera</target>
+        <target state="translated">Justera (Align)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
           <context context-type="linenumber">102,103</context>
@@ -8030,6 +8030,38 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/relevance-edit.component.ts</context>
           <context context-type="linenumber">47,48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2485498187201003577" datatype="html">
+        <source>AlignAt</source>
+        <target state="translated">Rikta in vid (AlignAt)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">741,737</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4636157602775117620" datatype="html">
+        <source>Gather</source>
+        <target state="translated">Samla (Gather)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">742,737</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2108809390685598838" datatype="html">
+        <source>Equation</source>
+        <target state="translated">Ekvation (Equation)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">743,737</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4191249048851292136" datatype="html">
+        <source>undefined</source>
+        <target state="translated">odefinierad</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">744</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8152502332911299242" datatype="html">

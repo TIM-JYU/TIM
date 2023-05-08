@@ -11,6 +11,7 @@
 
 import {
     Component,
+    ContentChild,
     ElementRef,
     EventEmitter,
     Input,
@@ -18,35 +19,36 @@ import {
     QueryList,
     ViewChild,
     ViewChildren,
-    ContentChild,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {CURSOR, IEditor} from "../editor";
 import type {ITemplateButton} from "../../csPlugin";
 import {FileSelectManagerComponent} from "../../util/file-select";
 import type {Edit, LineAdd} from "./formula-field.component";
-import {ActiveEditorType} from "./formula-field.component";
-import {FormulaFieldComponent} from "./formula-field.component";
-import {FormulaEvent} from "./symbol-button-menu.component";
-import type {StringPair, FormulaTuple} from "./formula-parsing-utils";
 import {
-    parseOldContent,
-    getCurrentLine,
-    findMatrixFromString,
-    parseEditedFormula,
-    getMultilineFormulaLines,
-    formatLatex,
+    ActiveEditorType,
+    FormulaFieldComponent,
+} from "./formula-field.component";
+import {FormulaEvent} from "./symbol-button-menu.component";
+import type {
+    FormulaTuple,
+    NumPair,
+    StringBool,
+    StringPair,
+    StringTrio,
 } from "./formula-parsing-utils";
-
-/**
- * Describes the type of formula. Type is same for the whole formula.
- */
-export enum FormulaType {
-    Multi = "multi",
-    Inline = "inline",
-    Align = "align",
-    NotDefined = "undefined",
-}
+import {
+    findMatrixFromString,
+    formatLatex,
+    getCurrentLine,
+    getMultilineFormulaLines,
+    parseEditedFormula,
+    parseOldContent,
+    checkInnerFormula,
+    parseExistingParenthesis,
+} from "./formula-parsing-utils";
+import type {ReplacePair} from "./formula-types";
+import {FormulaPropertyList, FORMULA_TYPES, FormulaType} from "./formula-types";
 
 /**
  * Information about text that was in editor when formula editor was opened.
@@ -103,19 +105,20 @@ export type FieldType = {
 
                 <div class="formula-button-container">
                     <div class="formula-buttons">
-                        <button class="timButton" (click)="handleFormulaOk()" title="Ctrl+s">Ok</button>
+                        <button class="timButton" (click)="handleFormulaOk()" title="Ctrl+s">OK</button>
                         <button class="timButton" (click)="handleFormulaCancel()" i18n title="Esc">Cancel</button>
                     </div>
 
                     <label class="font-weight-normal">
-                        <select
-                                class="form-control"
+                        <select class="form-control"
                                 [(ngModel)]="formulaType"
-                                (ngModelChange)="onFormulaTypeChange()"
-                        >
-                            <option [ngValue]="'inline'" i18n [disabled]="inlineDisabled">Inline</option>
-                            <option [ngValue]="'multi'" i18n>Multiline</option>
-                            <option [ngValue]="'align'" i18n>Align</option>
+                                (ngModelChange)="onFormulaTypeChange()">
+                            <ng-container *ngFor="let type of typeList" >
+                                <option *ngIf="type[1]; else elseBlock" [ngValue]="type[0]" [disabled]="isDisabled">{{formulaTypes[type[0]]}}</option>
+                                <ng-template #elseBlock>
+                                    <option [ngValue]="type[0]">{{formulaTypes[type[0]]}}</option>
+                                </ng-template>
+                            </ng-container>
                         </select>
                     </label>
                 </div>
@@ -130,7 +133,9 @@ export class FormulaEditorComponent {
 
     fields!: FieldType[];
 
-    formulaType = FormulaType.Multi;
+    typeList!: StringBool[];
+
+    formulaType = FormulaType.Multiline;
 
     activeFieldsIndex: number = 0;
 
@@ -145,7 +150,7 @@ export class FormulaEditorComponent {
     };
     private isVisible = false;
 
-    inlineDisabled = false;
+    isDisabled = false;
 
     @ViewChild("formulaEditorDialog")
     formulaEditorDialog!: ElementRef<HTMLDivElement>;
@@ -165,8 +170,9 @@ export class FormulaEditorComponent {
     @Output() toggle = new EventEmitter<void>();
 
     @Input() templateButtons: ITemplateButton[] = [];
-
     @Input() editor!: IEditor;
+
+    formulaTypes = FORMULA_TYPES;
 
     /**
      * Gets whether formula editor is visible or not.
@@ -186,6 +192,9 @@ export class FormulaEditorComponent {
         this.isVisible = isVis;
         // became visible so save what was in editor
         if (isVis) {
+            this.typeList = FormulaPropertyList.filter(
+                (type) => type.type != FormulaType.NotDefined
+            ).map((type) => [type.type, type.join.length < 1]);
             this.oldContent = parseOldContent(this.editor);
             this.cursorLocation = this.oldContent.before.length;
             const currentFormula = parseEditedFormula(
@@ -255,12 +264,16 @@ export class FormulaEditorComponent {
                 ...this.fields.slice(this.activeFieldsIndex),
             ];
         }
-        if (this.formulaType != FormulaType.Align) {
-            this.formulaType =
-                this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
+        // if formula is single line type, switch it to $$ type
+        // to support multiple lines
+        const singleLineFormulas = FormulaPropertyList.filter(
+            (type) => type.join.length < 1
+        ).map((type) => type.type);
+        if (singleLineFormulas.includes(this.formulaType)) {
+            this.formulaType = FormulaType.Multiline;
         }
         this.useExistingParenthesis = false;
-        this.inlineDisabled = true;
+        this.isDisabled = true;
     }
 
     /**
@@ -279,11 +292,7 @@ export class FormulaEditorComponent {
             this.activeFieldsIndex--;
         }
 
-        if (this.formulaType != FormulaType.Align) {
-            this.formulaType =
-                this.fields.length > 1 ? FormulaType.Multi : FormulaType.Inline;
-        }
-        this.inlineDisabled = this.fields.length > 1;
+        this.isDisabled = this.fields.length > 1;
         this.useExistingParenthesis = false;
         this.updateFormulaToEditor();
     }
@@ -332,7 +341,7 @@ export class FormulaEditorComponent {
     /**
      * Determine formula type based on current cursor location.
      */
-    getInitialFormulaType() {
+    getInitialFormulaType(): FormulaType {
         const currentLine = getCurrentLine(
             this.editor.content,
             this.cursorLocation
@@ -340,7 +349,7 @@ export class FormulaEditorComponent {
         const isEmptyLine = currentLine.trim().length === 0;
         // should be multiline if adding formula to empty line,
         // and inline if adding formula to line with text.
-        return isEmptyLine ? FormulaType.Multi : FormulaType.Inline;
+        return isEmptyLine ? FormulaType.Multiline : FormulaType.Inline;
     }
 
     /**
@@ -362,8 +371,15 @@ export class FormulaEditorComponent {
     setMultilineActiveField(fields: FieldType[]) {
         // Constants depend on number characters between formulas.
         // Number of characters depend on type of the formula.
-        const firstConstant = this.formulaType === FormulaType.Align ? 0 : 2;
-        const lineConstant = this.formulaType === FormulaType.Align ? 4 : 3;
+        const formulaProperties = FormulaPropertyList.find(
+            (formulaType) => formulaType.type === this.formulaType
+        );
+        if (!formulaProperties) {
+            return;
+        }
+        const firstConstant = formulaProperties.activeFieldConstant;
+        const lineConstant = formulaProperties.join.length;
+
         const cursorI = this.cursorLocation;
         const before = this.oldContent.before;
         const beforeAndEditing =
@@ -399,72 +415,75 @@ export class FormulaEditorComponent {
      * @param currentFormula Formula to be edited.
      */
     addEditedFormulaToEditor(currentFormula: FormulaTuple) {
-        const text = this.editor.content;
-        const leftIndex = currentFormula[1];
-        const rightIndex = currentFormula[2];
-        this.useExistingParenthesis = true;
-        // update old content
-        this.oldContent.before = text.slice(0, leftIndex);
-        this.oldContent.editing = text.slice(leftIndex, rightIndex + 1);
-        this.oldContent.after = text.slice(rightIndex + 1);
-
-        let formula = "";
-        let trimmed = "";
-        let lenDiff = 0;
-        let allFields: FieldType[] = [];
-        // set edited formula based on its type
-        switch (currentFormula[0]) {
-            case FormulaType.Multi:
-                // separate formula and parenthesis
-                formula = this.oldContent.editing.slice(2, -2);
-                trimmed = formula.trimStart();
-                lenDiff = formula.length - trimmed.length;
-                this.existingParenthesis[0] = "$$" + formula.slice(0, lenDiff);
-                formula = trimmed;
-
-                trimmed = formula.trimEnd();
-                lenDiff = formula.length - trimmed.length;
-                this.existingParenthesis[1] =
-                    "" + formula.slice(formula.length - lenDiff) + "$$";
-                formula = trimmed;
-                // update formula editor content and values
-                const allMatrices = findMatrixFromString(formula);
-                allFields = getMultilineFormulaLines(formula, allMatrices);
-                this.fields = allFields;
-                this.formulaType = FormulaType.Multi;
-                this.setMultilineActiveField(allFields);
-                break;
-            case FormulaType.Align:
-                // separate formula and parenthesis
-                formula = this.oldContent.editing.slice(14, -12);
-                trimmed = formula.trimStart();
-                lenDiff = formula.length - trimmed.length;
-                this.existingParenthesis[0] =
-                    "\\begin{align*}" + formula.slice(0, lenDiff);
-                formula = trimmed;
-
-                trimmed = formula.trimEnd();
-                lenDiff = formula.length - trimmed.length;
-                this.existingParenthesis[1] =
-                    "" +
-                    formula.slice(formula.length - lenDiff) +
-                    "\\end{align*}";
-                formula = trimmed;
-                // update formula editor content and values
-                allFields = getMultilineFormulaLines(formula, []);
-                this.fields = allFields;
-                this.formulaType = FormulaType.Align;
-                this.setMultilineActiveField(allFields);
-                break;
-            case FormulaType.Inline:
-                this.existingParenthesis = ["$", "$"];
-                this.fields = [{latex: text.slice(leftIndex + 1, rightIndex)}];
-                this.formulaType = FormulaType.Inline;
-                break;
-            default:
-                throw Error("undefined case " + this.formulaType);
+        const properties = FormulaPropertyList.find(
+            (formulaType) => formulaType.type === currentFormula[0]
+        );
+        if (!properties) {
+            // this should never happen
+            throw Error("undefined formula type: " + this.formulaType);
         }
-        this.inlineDisabled = this.fields.length > 1;
+        let usedReplace: ReplacePair = properties.editReplace;
+        const text = this.editor.content;
+        const start = properties.start.replace(/\n/g, "");
+        const end = properties.end.replace(/\n/g, "");
+        this.useExistingParenthesis = true;
+        this.formulaType = properties.type;
+        // update old content
+        this.oldContent.before = text.slice(0, currentFormula[1]);
+        this.oldContent.editing = text.slice(
+            currentFormula[1],
+            currentFormula[2] + 1
+        );
+        this.oldContent.after = text.slice(currentFormula[2] + 1);
+        // separate formula and parenthesis
+        const formulaParts: StringTrio = parseExistingParenthesis(
+            this.oldContent.editing,
+            start,
+            end
+        );
+        let formula = formulaParts[1];
+        this.existingParenthesis[0] = formulaParts[0];
+        this.existingParenthesis[1] = formulaParts[2];
+        // check if there is a formula inside current formula
+        const innerTypes = FormulaPropertyList.filter((formulaType) =>
+            properties.inner.includes(formulaType.type)
+        );
+        for (const innerType of innerTypes) {
+            const parts: StringTrio = checkInnerFormula(
+                formula,
+                innerType.start.replace(/\n/g, ""),
+                innerType.end.replace(/\n/g, "")
+            );
+            // update parenthesis, formula type and formula if inner formula was found
+            if (parts[0].length > 0 && parts[2].length > 0) {
+                formula = parts[1];
+                this.existingParenthesis[0] =
+                    this.existingParenthesis[0] + parts[0];
+                this.existingParenthesis[1] =
+                    parts[2] + this.existingParenthesis[1];
+                this.formulaType = innerType.type;
+                usedReplace = innerType.editReplace;
+                break;
+            }
+        }
+        // escape characters if needed
+        if (usedReplace) {
+            try {
+                const regex = new RegExp(usedReplace[0]);
+                formula = formula.replace(regex, usedReplace[1]);
+            } catch (err) {
+                console.log("invalid RegExp: " + usedReplace[0]);
+                console.log(err);
+            }
+        }
+        // update formula editor content
+        const allMatrices: NumPair[] = findMatrixFromString(formula).map(
+            (formulaTuple) => [formulaTuple[1], formulaTuple[2]]
+        );
+        const allFields = getMultilineFormulaLines(formula, allMatrices);
+        this.fields = allFields;
+        this.isDisabled = this.fields.length > 1;
+        this.setMultilineActiveField(allFields);
     }
 
     /**
@@ -496,7 +515,7 @@ export class FormulaEditorComponent {
      * Updates editor text with current formula text.
      */
     updateFormulaToEditor() {
-        const formulaLatex = formatLatex(
+        let formulaLatex = formatLatex(
             this.formulaType,
             this.fields,
             this.existingParenthesis,
@@ -507,6 +526,27 @@ export class FormulaEditorComponent {
             this.editor.content =
                 this.oldContent.before + this.oldContent.after;
         } else {
+            // replace escaped characters if needed
+            const properties = FormulaPropertyList.find(
+                (formulaType) => formulaType.type === this.formulaType
+            );
+            if (properties) {
+                if (properties.writeReplace) {
+                    try {
+                        const regex = new RegExp(properties.writeReplace[0]);
+                        formulaLatex = formulaLatex.replace(
+                            regex,
+                            properties.writeReplace[1]
+                        );
+                    } catch (err) {
+                        console.log(
+                            "invalid RegExp: " + properties.writeReplace[0]
+                        );
+                        console.log(err);
+                    }
+                }
+            }
+            // write formula to TIM editor
             this.editor.content =
                 this.oldContent.before + formulaLatex + this.oldContent.after;
         }
@@ -548,7 +588,7 @@ export class FormulaEditorComponent {
         this.fields = [];
         this.useExistingParenthesis = false;
         this.cursorLocation = -1;
-        this.inlineDisabled = false;
+        this.isDisabled = false;
     }
 
     /**

@@ -7,26 +7,29 @@
  */
 
 import type {IEditor} from "../editor";
-import type {FieldType} from "./formula-editor.component";
-import {FormulaType} from "./formula-editor.component";
+import type {FieldType, OldContent} from "./formula-editor.component";
+import {FormulaType, FormulaPropertyList} from "./formula-types";
 
 /**
- * Tuple which will contain the type of formula, and it's start and end index.
+ * Tuple which contains the type of formula, and its start and end index.
  */
 export type FormulaTuple = [FormulaType, number, number];
 
 /**
- * Objects to handle pairs of information.
+ * Objects to handle groups of information.
  */
-type NumPair = [number, number];
+export type NumPair = [number, number];
 export type StringPair = [string, string];
+export type StringTrio = [string, string, string];
+type StringType = [string, FormulaType];
+export type StringBool = [string, boolean];
 
 /**
  * Splits string into two parts at cursor location if possible.
  * @param editor Editor containing the string to split.
  * @return String in parts.
  */
-export function parseOldContent(editor: IEditor) {
+export function parseOldContent(editor: IEditor): OldContent {
     if (!editor.cursorPosition) {
         return {
             before: editor.content,
@@ -48,7 +51,10 @@ export function parseOldContent(editor: IEditor) {
  * @param cursorLocation Cursor position as zero based index.
  * @return String of line with cursor.
  */
-export function getCurrentLine(editorContent: string, cursorLocation: number) {
+export function getCurrentLine(
+    editorContent: string,
+    cursorLocation: number
+): string {
     let startI = cursorLocation;
     let endI = cursorLocation;
     if (editorContent[startI] === "\n") {
@@ -90,27 +96,19 @@ function findParenthesisFromString(text: string): FormulaTuple[] {
         if (text.charAt(currentIndex + 1) === "$") {
             // opening does not exist
             if (stack[1] < 0) {
-                // if possible set opening to current
-                if (text.charAt(currentIndex + 2) !== " ") {
-                    stack[1] = currentIndex;
-                }
+                // set opening to current
+                stack[1] = currentIndex;
+
                 // opening exists
             } else {
-                // if possible set closing to current
-                if (text.charAt(currentIndex - 1) !== " ") {
-                    allParenthesis.push([
-                        FormulaType.Multi,
-                        stack[1],
-                        currentIndex + 1,
-                    ]);
-                    // reset stack
-                    stack = [-1, -1];
-                } else {
-                    // if possible set opening to current
-                    if (text.charAt(currentIndex + 2) !== " ") {
-                        stack[1] = currentIndex;
-                    }
-                }
+                // set closing to current
+                allParenthesis.push([
+                    FormulaType.Multiline,
+                    stack[1],
+                    currentIndex + 1,
+                ]);
+                // reset stack
+                stack = [-1, -1];
             }
             currentIndex += 2;
             // inline
@@ -142,7 +140,6 @@ function findParenthesisFromString(text: string): FormulaTuple[] {
             currentIndex++;
         }
     }
-
     return allParenthesis;
 }
 
@@ -159,11 +156,11 @@ function parseCurrentFormula(
     let beginning = 0;
     // check if cursor is inside any parenthesis
     for (const [formulaType, startI, endI] of allParenthesis) {
-        // parenthesis is completely after cursor
+        // parenthesis are after cursor
         if (startI > cursorIndex) {
             return [FormulaType.NotDefined, beginning, startI - 1];
         }
-        // parenthesis is completely before cursor
+        // parenthesis are before cursor
         if (endI < cursorIndex) {
             beginning = endI + 1;
             continue;
@@ -174,29 +171,55 @@ function parseCurrentFormula(
 }
 
 /**
+ * Find the type of begin-end-style formula.
+ * @param formula String where the formula is looked for.
+ * @param searchIndex Zero based index of the last begin end keyword.
+ * @return Type of formula.
+ */
+function beginEndKeyword(formula: string, searchIndex: number): FormulaType {
+    let finalType = FormulaType.NotDefined;
+    let finalIndex = Number.MAX_SAFE_INTEGER;
+    // list begin-end-style formula types
+    const types: StringType[] = FormulaPropertyList.filter(
+        (type) => type.beginEndKeyword.length > 0
+    ).map((type) => [type.beginEndKeyword, type.type]);
+    // check which type is first after search index
+    for (const type of types) {
+        const foundIndex = formula.indexOf(type[0], searchIndex);
+        if (foundIndex > 0 && foundIndex < finalIndex) {
+            finalIndex = foundIndex;
+            finalType = type[1];
+        }
+    }
+    return finalType;
+}
+
+/**
  * Finds all begin and end syntax matrices from a string.
  * @param formula String where the matrices are looked for.
  * @return Array containing indexes of matrices.
  */
-export function findMatrixFromString(formula: string): NumPair[] {
+export function findMatrixFromString(formula: string): FormulaTuple[] {
     // temporary index variables
     let bIndex = 0;
     let eIndex = 0;
     // temporary stacks for found indexes
     const bStack: number[] = [];
     const eStack: number[] = [];
+    const typeStack: FormulaType[] = [];
     // list of found matrices
-    const allMatrices: NumPair[] = [];
+    const allMatrices: FormulaTuple[] = [];
 
     while (true) {
         // find next begin and end keywords
-        bIndex = formula.indexOf("\\begin", bIndex);
-        eIndex = formula.indexOf("\\end", eIndex);
+        bIndex = formula.indexOf("\\begin{", bIndex);
+        eIndex = formula.indexOf("\\end{", eIndex);
         // stop if no end is found
         if (eIndex < 0) {
             // add possible keywords from stacks to actual list
             if (eStack.length > 0) {
                 allMatrices.push([
+                    typeStack[typeStack.length - 1],
                     bStack[bStack.length - 1],
                     eStack[eStack.length - 1],
                 ]);
@@ -208,16 +231,21 @@ export function findMatrixFromString(formula: string): NumPair[] {
             let i = bStack.length - 1;
             // run loop until all begins have end pairs, or no more ends are found
             while (i >= 0) {
-                eIndex = formula.indexOf("\\end", eIndex);
+                eIndex = formula.indexOf("\\end{", eIndex);
                 if (eIndex < 0) {
                     break;
                 }
                 eStack.push(eIndex);
-                eIndex += 3;
+                typeStack.push(beginEndKeyword(formula, eIndex));
+                eIndex += 5;
                 i--;
             }
             // add only the outermost beginning and end to list
-            allMatrices.push([bStack[i + 1], eStack[eStack.length - 1]]);
+            allMatrices.push([
+                typeStack[typeStack.length - 1],
+                bStack[i + 1],
+                eStack[eStack.length - 1],
+            ]);
             break;
         }
         // begin and end are found, but begin is first
@@ -230,10 +258,12 @@ export function findMatrixFromString(formula: string): NumPair[] {
                         .includes("\n")
                 ) {
                     allMatrices.push([
+                        typeStack[typeStack.length - 1],
                         bStack[bStack.length - 1],
                         eStack[eStack.length - 1],
                     ]);
                     // reset stacks
+                    typeStack.length = 0;
                     bStack.length = 0;
                     eStack.length = 0;
                     bStack.push(bIndex);
@@ -245,7 +275,7 @@ export function findMatrixFromString(formula: string): NumPair[] {
                 // add begin to its stack if end stack is empty
                 bStack.push(bIndex);
             }
-            bIndex += 5;
+            bIndex += 7;
         } else {
             // add end to stack only if it has a beginning pair
             if (bStack.length > eStack.length) {
@@ -255,23 +285,24 @@ export function findMatrixFromString(formula: string): NumPair[] {
                     eStack.shift();
                 }
                 eStack.push(eIndex);
+                typeStack.push(beginEndKeyword(formula, eIndex));
             }
-            eIndex += 3;
+            eIndex += 5;
         }
     }
     // shift indexes from the start of keyword to actual start and end of matrix
     for (const i of allMatrices.keys()) {
-        const beginNewLine = formula.lastIndexOf("\n", allMatrices[i][0]);
+        const beginNewLine = formula.lastIndexOf("\n", allMatrices[i][1]);
         if (beginNewLine < 0) {
-            allMatrices[i][0] = 0;
+            allMatrices[i][1] = 0;
         } else {
-            allMatrices[i][0] = beginNewLine + 1;
+            allMatrices[i][1] = beginNewLine + 1;
         }
-        const endNewLine = formula.indexOf("\n", allMatrices[i][1]);
+        const endNewLine = formula.indexOf("\n", allMatrices[i][2]);
         if (endNewLine < 0) {
-            allMatrices[i][1] = formula.length - 1;
+            allMatrices[i][2] = formula.length - 1;
         } else {
-            allMatrices[i][1] = endNewLine - 1;
+            allMatrices[i][2] = endNewLine - 1;
         }
     }
     return allMatrices;
@@ -297,13 +328,13 @@ export function parseEditedFormula(
             currentFormula[2] = text.length - 1;
         }
         // cursor wasn't inside a $ syntax formula
-        // check if cursor is inside align formula
+        // check if cursor is inside a begin-end formula
         const matrices: FormulaTuple[] = findMatrixFromString(
             text.slice(currentFormula[1], currentFormula[2] + 1)
-        ).map((numPair) => [
-            FormulaType.Align,
-            numPair[0] + currentFormula[1],
-            numPair[1] + currentFormula[1],
+        ).map((formulaTuple) => [
+            formulaTuple[0],
+            formulaTuple[1] + currentFormula[1],
+            formulaTuple[2] + currentFormula[1],
         ]);
         currentFormula = parseCurrentFormula(matrices, cursorLocation);
     }
@@ -311,7 +342,55 @@ export function parseEditedFormula(
 }
 
 /**
- * Trims a specific character from start and end of a string.
+ * Parses parenthesis and formula contents from string.
+ * @param editing Formula to parse.
+ * @param start Parenthesis at start.
+ * @param end Parenthesis at end.
+ * @return String array containing start, end and formula between them.
+ */
+export function parseExistingParenthesis(
+    editing: string,
+    start: string,
+    end: string
+): StringTrio {
+    const finalParenthesis = ["", ""];
+    let formula = editing.slice(start.length, -end.length);
+    let trimmed = formula.trimStart();
+    let lenDiff = formula.length - trimmed.length;
+    finalParenthesis[0] = editing.slice(0, start.length + lenDiff);
+    formula = trimmed;
+
+    trimmed = formula.trimEnd();
+    lenDiff = formula.length - trimmed.length;
+    finalParenthesis[1] = editing.slice(editing.length - end.length - lenDiff);
+    return [finalParenthesis[0], trimmed, finalParenthesis[1]];
+}
+
+/**
+ * Check if parsed formula has inner formula that should be handled.
+ * @param formula Formula to be checked.
+ * @param searchStart Keyword string to search from start of formula.
+ * @param searchEnd Keyword string to search from end of formula.
+ * @return Array containing inner start, end and formula.
+ * If no inner formula was found, return array with
+ * empty start and end, and original formula.
+ */
+export function checkInnerFormula(
+    formula: string,
+    searchStart: string,
+    searchEnd: string
+): StringTrio {
+    let parts: StringTrio = ["", formula, ""];
+    const start = formula.indexOf(searchStart);
+    const end = formula.lastIndexOf(searchEnd);
+    if (0 <= start && start < end) {
+        parts = parseExistingParenthesis(formula, searchStart, searchEnd);
+    }
+    return parts;
+}
+
+/**
+ * Trim a specific character from start and end of a string.
  * https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
  * @param str String to be trimmed.
  * @param startChar Character to trim from start.
@@ -374,7 +453,7 @@ export function getMultilineFormulaLines(
                 )
                 .split("\n")
         );
-        // remove empty lines and then return trimmed lines
+        // remove empty lines and return trimmed lines
         allFields = allFields.filter((line) => line.length > 0);
         return allFields.map((line) => {
             return {latex: trimChar(line, "&", "\\")};
@@ -397,48 +476,48 @@ export function formatLatex(
     existingParenthesis: StringPair,
     useExistingParenthesis: boolean
 ): string | undefined {
-    let wrapBegin = "";
-    let wrapEnd = "";
-    let join = "";
-    switch (formulaType) {
-        case FormulaType.Align:
-            wrapBegin = "\\begin{align*}\n";
-            wrapEnd = "\n\\end{align*}";
-            join = "\\\\\n&";
-            break;
-        case FormulaType.Multi:
-            wrapBegin = "$$\n";
-            wrapEnd = "\n$$";
-            join = "\\\\\n";
-            break;
-        case FormulaType.Inline:
-            wrapBegin = "$";
-            wrapEnd = "$";
-            break;
-        default:
-            throw Error("undefined case " + formulaType);
+    // Get properties for current formula type. Return undefined if not found.
+    const formulaProperties = FormulaPropertyList.find(
+        (type) => type.type === formulaType
+    );
+    if (!formulaProperties) {
+        return undefined;
     }
-    if (formulaType != FormulaType.Inline) {
-        const latexList = fields
-            .map((field) => field.latex)
-            .filter((text) => text.length > 0);
-        if (formulaType === FormulaType.Align && latexList.length >= 2) {
-            const latexBegin = latexList.shift() + "\n&" + latexList.shift();
-            latexList.unshift(latexBegin);
-        }
-        const latex = latexList.join(join);
+    // single line formulas
+    if (formulaProperties.join.length < 1) {
+        // Single line formulas should only have 1 field.
+        // Return undefined if that is empty.
+        const latex = fields[0].latex;
         if (latex.length === 0) {
             return undefined;
         }
-        if (useExistingParenthesis) {
-            return `${existingParenthesis[0]}${latex}${existingParenthesis[1]}`;
-        }
-        return `${wrapBegin}${latex}${wrapEnd}`;
+        // return with existing or default start and end marks
+        return useExistingParenthesis
+            ? `${existingParenthesis[0]}${latex}${existingParenthesis[1]}`
+            : `${formulaProperties.start}${latex}${formulaProperties.end}`;
     }
-    // fields.length should be 1
-    const latex = fields[0].latex;
+    // Array with latex of formula lines. Filter out empty lines.
+    const formulaLatexList = fields
+        .map((field) => field.latex)
+        .filter((text) => text.length > 0);
+    // some formula types require special join for first two lines
+    if (
+        formulaProperties.firstJoin.length > 0 &&
+        formulaLatexList.length >= 2
+    ) {
+        const latexBegin =
+            formulaLatexList[0] +
+            formulaProperties.firstJoin +
+            formulaLatexList[1];
+        formulaLatexList.splice(0, 2, latexBegin);
+    }
+    // Join lines with defined string. Return undefined if joined string is empty.
+    const latex = formulaLatexList.join(formulaProperties.join);
     if (latex.length === 0) {
         return undefined;
     }
-    return `${wrapBegin}${latex}${wrapEnd}`;
+    // return with existing or default start and end marks
+    return useExistingParenthesis
+        ? `${existingParenthesis[0]}${latex}${existingParenthesis[1]}`
+        : `${formulaProperties.start}${latex}${formulaProperties.end}`;
 }

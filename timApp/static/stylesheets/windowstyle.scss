@@ -83,12 +83,12 @@ tim-qst button.timButton:not(:first-child) {
   margin-bottom: 1pt;
 }
 
-.qst-correct {
+.qst-correct input {
   outline: 2pt solid $basic-color;
   outline-offset: 1pt;
 }
 
-.qst-normal {
+.qst-normal input {
   padding-left: 2pt;
   padding-right: 2pt;
 }
