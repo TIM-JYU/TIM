@@ -1,9 +1,5 @@
 import type {IAnswerBrowserSettings} from "tim/plugin/attributes";
-
-import {nullable} from "tim/plugin/attributes";
-import * as t from "io-ts";
-import {FieldType} from "../../../../modules/cs/js/editor/math-editor/formula-editor.component";
-import {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
+import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
 
 export type MeetingDateEntry = [string, string, string];
 
