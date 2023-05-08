@@ -47,7 +47,7 @@ export type LineAdd = {
     addBelow: boolean;
 };
 
-const DEFAULT_ERROR_MESSAGE = "Error in LaTeX code";
+const DEFAULT_ERROR_MESSAGE = $localize`Error in LaTeX code`;
 
 @Component({
     selector: "cs-formula-field",

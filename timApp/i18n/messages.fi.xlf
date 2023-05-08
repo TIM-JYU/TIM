@@ -8130,6 +8130,14 @@
           <context context-type="linenumber">47,48</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8152502332911299242" datatype="html">
+        <source>Error in LaTeX code</source>
+        <target state="translated">Virhe LaTeX-koodissa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
