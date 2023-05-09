@@ -41,6 +41,10 @@ a .glyphicon {
     p {
         display: inline-block;
     }
+
+    &.ip-block-message {
+        @extend .alert-warning;
+    }
 }
 
 .siteheader {

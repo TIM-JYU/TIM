@@ -1,4 +1,5 @@
 import type {IAnswerBrowserSettings} from "tim/plugin/attributes";
+import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
 
 export type MeetingDateEntry = [string, string, string];
 
@@ -48,6 +49,7 @@ export interface IDocSettings {
     answerBrowser?: IAnswerBrowserSettings;
     loginMessage?: string;
     buttons?: string;
+    mdButtons?: ITemplateButton[];
 }
 
 export interface ISlideDocSettings extends IDocSettings {
