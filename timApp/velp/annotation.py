@@ -302,11 +302,14 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
     if should_anonymize_annotations(d, current_user):
         curruser_id = current_user.id
         anonymize_annotations(results, curruser_id)
-        for p in peer_reviews:
-            if p.reviewer_id != current_user.id:
-                p.reviewer.anonymize = True
-            if p.reviewable_id != current_user.id:
-                p.reviewable.anonymize = True
+        # TODO: We can't anonymize pr rows yet:
+        #   - user id is needed to find correct target when saving the review,
+        #   and anonymized users get id -1.
+        # for p in peer_reviews:
+        #     if p.reviewer_id != current_user.id:
+        #         p.reviewer.anonymize = True
+        #     if p.reviewable_id != current_user.id:
+        #         p.reviewable.anonymize = True
     elif not has_seeanswers_access(d):
         # TODO: these checks should be changed to something else
         #  - in future peerreview pairing may be changeable, but anonymization info should persist
