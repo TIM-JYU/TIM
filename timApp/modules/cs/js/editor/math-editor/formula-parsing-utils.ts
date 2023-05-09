@@ -500,17 +500,6 @@ export function formatLatex(
     const formulaLatexList = fields
         .map((field) => field.latex)
         .filter((text) => text.length > 0);
-    // some formula types require special join for first two lines
-    if (
-        formulaProperties.firstJoin.length > 0 &&
-        formulaLatexList.length >= 2
-    ) {
-        const latexBegin =
-            formulaLatexList[0] +
-            formulaProperties.firstJoin +
-            formulaLatexList[1];
-        formulaLatexList.splice(0, 2, latexBegin);
-    }
     // Join lines with defined string. Return undefined if joined string is empty.
     const latex = formulaLatexList.join(formulaProperties.join);
     if (latex.length === 0) {

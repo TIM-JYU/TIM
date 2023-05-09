@@ -424,8 +424,8 @@ export class FormulaEditorComponent {
         }
         let usedReplace: ReplacePair = properties.editReplace;
         const text = this.editor.content;
-        const start = properties.start.replace(/\n/g, "");
-        const end = properties.end.replace(/\n/g, "");
+        const start = properties.start.replace(/\n/gm, "");
+        const end = properties.end.replace(/\n/gm, "");
         this.useExistingParenthesis = true;
         this.formulaType = properties.type;
         // update old content
@@ -451,8 +451,8 @@ export class FormulaEditorComponent {
         for (const innerType of innerTypes) {
             const parts: StringTrio = checkInnerFormula(
                 formula,
-                innerType.start.replace(/\n/g, ""),
-                innerType.end.replace(/\n/g, "")
+                innerType.start.replace(/\n/gm, ""),
+                innerType.end.replace(/\n/gm, "")
             );
             // update parenthesis, formula type and formula if inner formula was found
             if (parts[0].length > 0 && parts[2].length > 0) {

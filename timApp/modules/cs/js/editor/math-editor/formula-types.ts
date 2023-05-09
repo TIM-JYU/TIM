@@ -51,12 +51,9 @@ type FormulaProperties = {
     // ending mark of the formula
     end: string;
     // String between formula lines, when it is a multiple line formula.
-    // Single line formulas MUST HAVE empty string and multiple line
-    // formulas MUST NOT HAVE empty string.
+    // Single line formula types MUST HAVE empty string and multiple line
+    // formula types MUST NOT HAVE empty string.
     join: string;
-    // String between the first two formula lines. With empty string
-    // every line is linked with the regular join.
-    firstJoin: string;
     // List of the types of formulas that can be inside this formula.
     inner: FormulaType[];
     // Multiple line formulas require a constant to set
@@ -76,7 +73,6 @@ export const FormulaPropertyList: FormulaProperties[] = [
         start: "$",
         end: "$",
         join: "",
-        firstJoin: "",
         inner: [],
         activeFieldConstant: 0,
     },
@@ -88,7 +84,6 @@ export const FormulaPropertyList: FormulaProperties[] = [
         start: "$$\n",
         end: "\n$$",
         join: "\\\\\n",
-        firstJoin: "",
         inner: [
             FormulaType.Align,
             FormulaType.AlignAt,
@@ -100,36 +95,33 @@ export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.Align,
         beginEndKeyword: "align*",
-        editReplace: [/(?<!\\|\n)&/g, "¤"],
+        editReplace: [/(?<!\\)&/gm, "¤"],
         writeReplace: [/¤/g, "&"],
         start: "\\begin{align*}\n",
         end: "\n\\end{align*}",
-        join: "\\\\\n&",
-        firstJoin: "\n&",
+        join: "\\\\\n",
         inner: [],
-        activeFieldConstant: 0,
+        activeFieldConstant: 2,
     },
     {
         type: FormulaType.AlignAt,
         beginEndKeyword: "alignat",
-        editReplace: [/(?<!\\|\n)&/g, "¤"],
+        editReplace: [/(?<!\\)&/gm, "¤"],
         writeReplace: [/¤/g, "&"],
         start: "\\begin{alignat*}{}\n",
         end: "\n\\end{alignat*}",
         join: "\\\\\n",
-        firstJoin: "",
         inner: [],
         activeFieldConstant: 2,
     },
     {
         type: FormulaType.Gather,
         beginEndKeyword: "gather",
-        editReplace: [/(?<!\\|\n)&/g, "¤"],
+        editReplace: [/(?<!\\)&/gm, "¤"],
         writeReplace: [/¤/g, "&"],
         start: "\\begin{gather*}\n",
         end: "\n\\end{gather*}",
         join: "\\\\\n",
-        firstJoin: "",
         inner: [],
         activeFieldConstant: 2,
     },
@@ -141,7 +133,6 @@ export const FormulaPropertyList: FormulaProperties[] = [
         start: "\\begin{equation*}\n",
         end: "\n\\end{equation*}",
         join: "",
-        firstJoin: "",
         inner: [],
         activeFieldConstant: 0,
     },
@@ -153,7 +144,6 @@ export const FormulaPropertyList: FormulaProperties[] = [
         start: "",
         end: "",
         join: "",
-        firstJoin: "",
         inner: [],
         activeFieldConstant: 0,
     },
