@@ -91,7 +91,7 @@ from timApp.util.utils import (
     seq_to_str,
 )
 from timApp.velp.velp import delete_velp_group, DEFAULT_PERSONAL_VELP_GROUP_NAME
-from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
+from timApp.velp.velp_models import VelpGroup
 from timApp.velp.velpgroups import (
     get_groups_from_document_table,
 )
@@ -760,7 +760,7 @@ def remove_perm(
         else [item]
     )
 
-    if process_velp_groups:
+    if process_velp_groups and b.docentries:
         vgs = get_groups_from_document_table(b.docentries[0].id, None)
         for vg in vgs:
             # Remove perms only from velp groups attached to the document
