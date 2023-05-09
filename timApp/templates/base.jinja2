@@ -106,7 +106,7 @@
         {{ prefs.custom_css | safe }}
     </style>
 </head>
-<body>
+<body data-view-route="{{ route }}">
 {% block body %}
 {% if request.user_agent.browser == 'msie' %}
 <div style="text-align: center; border: 2px solid red; padding: 1em;">
