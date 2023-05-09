@@ -106,7 +106,7 @@
         {{ prefs.custom_css | safe }}
     </style>
 </head>
-<body>
+<body data-view-route="{{ route }}">
 {% block body %}
 {% if request.user_agent.browser == 'msie' %}
 <div style="text-align: center; border: 2px solid red; padding: 1em;">
@@ -145,8 +145,8 @@
                         col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
                         col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
                         col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
-                {% for n in global_notifications %}
-                    <div class="global-notification alert alert-info">
+                {% for c, n in global_notifications %}
+                    <div class="global-notification alert alert-info {{ c }}">
                         <i class="glyphicon glyphicon-info-sign"></i> {{ n|safe }}
                     </div>
                 {% endfor %}
