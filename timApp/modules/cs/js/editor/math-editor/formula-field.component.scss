@@ -44,6 +44,8 @@
             padding: 10px 10px;
             color: red;
             pointer-events: none;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
         }
 
         .formula-area {
@@ -75,6 +77,10 @@
 
             .formula-area {
                 width: 50%;
+            }
+
+            .render-error {
+                max-width: 50%;
             }
         }
     }

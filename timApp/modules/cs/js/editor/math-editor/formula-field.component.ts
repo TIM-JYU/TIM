@@ -7,7 +7,7 @@
  * @date 24.3.2023
  */
 
-import type {AfterViewInit} from "@angular/core";
+import type {AfterViewInit, OnDestroy} from "@angular/core";
 import {
     Component,
     ElementRef,
@@ -49,12 +49,13 @@ export type LineAdd = {
 };
 
 const DEFAULT_ERROR_MESSAGE = $localize`Error in LaTeX code`;
+const ERROR_MESSAGE_DELAY = 1000;
 
 @Component({
     selector: "cs-formula-field",
     template: `
         <div class="formula-field" [class.active-field]="isActive">
-            <div class="input-container">
+            <div class="input-container" #inputContainer>
                 <span
                         class="visual-input"
                         [class.active-visual-input]="isActive"
@@ -81,7 +82,7 @@ const DEFAULT_ERROR_MESSAGE = $localize`Error in LaTeX code`;
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
                 </textarea>
-                <span class="render-error" *ngIf="error">{{getErrorMessage()}}</span>
+                <span class="render-error" [hidden]="!error || !isActive">{{getErrorMessage()}}</span>
             </div>
 
             <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
@@ -104,7 +105,7 @@ const DEFAULT_ERROR_MESSAGE = $localize`Error in LaTeX code`;
     `,
     styleUrls: ["./formula-field.component.scss"],
 })
-export class FormulaFieldComponent implements AfterViewInit {
+export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
     latexInput = "";
     rows: number = 2;
     MQ!: IMathQuill;
@@ -124,6 +125,8 @@ export class FormulaFieldComponent implements AfterViewInit {
     error = false;
     latestCorrectInput = "";
     errorTimeoutID = -1;
+
+    @ViewChild("inputContainer") inputContainer!: ElementRef<HTMLElement>;
 
     @ViewChild("latexInputElement")
     latexInputElement!: ElementRef<HTMLTextAreaElement>;
@@ -243,6 +246,16 @@ export class FormulaFieldComponent implements AfterViewInit {
         this.mathField = this.MQ.MathField(elem, config);
         this.mathField.latex(this.initialValue);
         this.mathField.focus();
+    }
+
+    /**
+     * Cancel error check.
+     */
+    ngOnDestroy(): void {
+        if (this.errorTimeoutID !== -1) {
+            window.clearTimeout(this.errorTimeoutID);
+            this.errorTimeoutID = -1;
+        }
     }
 
     /**
@@ -422,6 +435,25 @@ export class FormulaFieldComponent implements AfterViewInit {
     }
 
     /**
+     * Makes visual input height match latexInputElement on small screens
+     * so error message fits inside element.
+     */
+    updateVisualInputHeight() {
+        if (!this.latexInputElement) {
+            return;
+        }
+        const dir = window
+            .getComputedStyle(this.inputContainer.nativeElement)
+            .getPropertyValue("flex-direction");
+        const textareaHeight = window
+            .getComputedStyle(this.latexInputElement.nativeElement)
+            .getPropertyValue("height");
+        if (dir === "column") {
+            this.visualInput.nativeElement.style.minHeight = textareaHeight;
+        }
+    }
+
+    /**
      * Check if MathQuill produces an error from LaTeX input.
      */
     checkErrors() {
@@ -435,17 +467,24 @@ export class FormulaFieldComponent implements AfterViewInit {
             window.clearTimeout(this.errorTimeoutID);
         }
         this.errorTimeoutID = window.setTimeout(() => {
+            // if this field isn't active anymore latexInput wouldn't exist so
+            // no point doing anything.
+            if (!this.isActive) {
+                return;
+            }
             this.error =
                 this.mathField.latex().length === 0 &&
                 this.latexInput.length > 0;
             if (!this.error) {
                 this.latestCorrectInput = this.mathField.latex();
             }
-        }, 1000);
+        }, ERROR_MESSAGE_DELAY);
+
+        this.updateVisualInputHeight();
     }
 
     /**
-     * Text to show in visual field if there's an error.
+     * Error message to show when LaTeX is incorrect.
      */
     getErrorMessage() {
         if (this.latestCorrectInput.length === 0) {
