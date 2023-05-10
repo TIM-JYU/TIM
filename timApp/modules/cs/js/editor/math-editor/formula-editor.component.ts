@@ -516,7 +516,7 @@ export class FormulaEditorComponent {
      * Updates editor text with current formula text.
      */
     updateFormulaToEditor() {
-        let formulaLatex = formatLatex(
+        const formulaLatex = formatLatex(
             this.formulaType,
             this.fields,
             this.existingParenthesis,
