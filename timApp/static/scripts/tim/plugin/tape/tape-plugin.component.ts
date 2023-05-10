@@ -9,6 +9,7 @@ import {copyToClipboard, isIOS} from "tim/util/utils";
 import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 
 export enum ParameterType {
     NUMBER,
@@ -345,6 +346,7 @@ export interface TapeAttrs {
     hideTextMode: boolean;
     hideCopyAll: boolean;
     useJumpIfEmpty: boolean;
+    copyToCsPlugin?: string;
 }
 
 function scrollElementVisibleInParent(
@@ -450,8 +452,10 @@ function scrollElementVisibleInParent(
                                 Remove selected
                             </span>
                         </button>
-                        <button class="timButton" (click)="copyAll()" *ngIf="!data.hideCopyAll"><span>Copy all</span>
+                        <button class="timButton" (click)="copyAll()" *ngIf="!data.hideCopyAll">
+                            <span>Copy all</span>
                         </button>
+                        <button class="timButton" (click)="copyToPlugin()" *ngIf="data.copyToCsPlugin">Copy to task</button>
                         <!-- <button class="timButton" (click)="paste()"><span>Paste</span></button> -->
                     </div>
                 </div>
@@ -464,7 +468,8 @@ function scrollElementVisibleInParent(
                     [class.activeCommand]="i == selectedCommandIndex"
                     (click)="selectedCommandIndex = i"
                     [ngStyle]="{'color': getCommandColor(i), 'background-color': getCommandBackgroundColor(i)}">{{c.getName()}}</li>
-                <li class="command lastCommand" [ngStyle]="{'color': getCommandColor(commandList.length + 1), 'background-color': getCommandBackgroundColor(commandList.length + 1)}"
+                <li class="command lastCommand"
+                    [ngStyle]="{'color': getCommandColor(commandList.length + 1), 'background-color': getCommandBackgroundColor(commandList.length + 1)}"
                     [class.activeCommand]="(commandList.length + 1) == selectedCommandIndex"
                     (click)="selectedCommandIndex = (commandList.length + 1)">// end</li>
                 </ul>
@@ -1093,6 +1098,19 @@ export class TapePluginContent implements PluginJson {
      */
     getMemoryText(index: number) {
         return /* "#" + */ index.toString();
+    }
+
+    copyToPlugin() {
+        if (!this.data.copyToCsPlugin) {
+            return;
+        }
+        const component = vctrlInstance?.getTimComponentByName(
+            this.data.copyToCsPlugin
+        );
+        if (!component) {
+            return;
+        }
+        component.setAnswer({usercode: this.toText()});
     }
 }
 
