@@ -438,9 +438,18 @@ function scrollElementVisibleInParent(
                      </span>
                     </div>
                     <div class="commandButtons">
-                        <button class="timButton" (click)="insertCommandButtonClick()"><span>Insert -&gt;</span>
+                        <button class="timButton" (click)="insertCommandButtonClick()">
+                            <span>
+                                Insert above 
+                                <i class="glyphicon glyphicon-triangle-right"></i>
+                            </span>
                         </button>
-                        <button class="timButton" (click)="removeCommand()"><span>&lt;- Remove</span></button>
+                        <button class="timButton" (click)="removeCommand()"
+                                [disabled]="selectedCommandIndex == (commandList.length + 1)">
+                            <span>
+                                Remove selected
+                            </span>
+                        </button>
                         <button class="timButton" (click)="copyAll()" *ngIf="!data.hideCopyAll"><span>Copy all</span>
                         </button>
                         <!-- <button class="timButton" (click)="paste()"><span>Paste</span></button> -->
@@ -451,10 +460,13 @@ function scrollElementVisibleInParent(
                 <textarea #textAreaRobotProgram class="robotEditArea textAreaRobotProgram" [(ngModel)]="programAsText"
                           *ngIf="textmode"></textarea>
                 <ul class="cmditems list-unstyled listBox programCommandList" *ngIf="!textmode">
-                <li *ngFor="let c of commandList; let i = index" class="command" [attr.data-command]="c.command.name" (click)="selectedCommandIndex = i"
+                <li *ngFor="let c of commandList; let i = index" class="command" [attr.data-command]="c.command.name"
+                    [class.activeCommand]="i == selectedCommandIndex"
+                    (click)="selectedCommandIndex = i"
                     [ngStyle]="{'color': getCommandColor(i), 'background-color': getCommandBackgroundColor(i)}">{{c.getName()}}</li>
-                <li class="command" [ngStyle]="{'color': getCommandColor(commandList.length + 1)}"
-                    (click)="selectedCommandIndex = (commandList.length + 1)">-</li>
+                <li class="command lastCommand" [ngStyle]="{'color': getCommandColor(commandList.length + 1), 'background-color': getCommandBackgroundColor(commandList.length + 1)}"
+                    [class.activeCommand]="(commandList.length + 1) == selectedCommandIndex"
+                    (click)="selectedCommandIndex = (commandList.length + 1)">// end</li>
                 </ul>
                 <p class="red" *ngIf="hasInvalidCommands">Some commands are invalid, they will be ignored</p>
                     <!--- <select [(ngModel)]="selected" size="10">
@@ -479,9 +491,12 @@ function scrollElementVisibleInParent(
                         </div>
                     </div>
                     <span *ngIf="!data.hideTextMode">
-                    <input type="checkbox" [(ngModel)]="textmodeCB" class="belttextbox" name="textmode" value="textmode"
-                           (click)="changeMode()"/>
-                    <label for="belttextbox">&nbsp;Text&nbsp;mode</label>
+                    <label>
+                        <input type="checkbox" [(ngModel)]="textmodeCB" class="belttextbox" name="textmode"
+                               value="textmode"
+                               (click)="changeMode()"/>
+                    Text mode
+                    </label>
                 </span>
                 </div>
             </div>
@@ -533,7 +548,7 @@ export class TapePluginContent implements PluginJson {
             this.memString = this.data.presetMemoryState.toString();
         }
         this.reset();
-        this.selectedCommandIndex = this.commandList.length;
+        this.selectedCommandIndex = this.commandList.length + 1;
     }
 
     // List of commands supported by the tape machine
@@ -584,11 +599,14 @@ export class TapePluginContent implements PluginJson {
         }
 
         const commandToAdd = this.possibleCommandList[this.newCommandIndex];
-        this.addCommand(
+        const commandAdded = this.addCommand(
             commandToAdd,
             this.newCommandParameter,
             this.selectedCommandIndex
         );
+        if (!commandAdded) {
+            return;
+        }
         if (this.selectedCommandIndex !== -1) {
             this.selectedCommandIndex++;
         }
@@ -788,7 +806,7 @@ export class TapePluginContent implements PluginJson {
             // assign pre-defined code only if we have no code right now,
             // so we don't clear the user's code on reset
             this.fromText(this.data.presetCode);
-            this.selectedCommandIndex = this.commandList.length;
+            this.selectedCommandIndex = this.commandList.length + 1;
         }
 
         this.checkCurrentCommandInView();
@@ -813,6 +831,15 @@ export class TapePluginContent implements PluginJson {
             this.selectedCommandIndex < this.commandList.length
         ) {
             this.commandList.splice(this.selectedCommandIndex, 1);
+
+            // If removed command was at the last line, move one up if possible
+            if (this.selectedCommandIndex == this.commandList.length) {
+                this.selectedCommandIndex = this.commandList.length - 1;
+            }
+            // If no commands are available, select the stop mark
+            if (this.commandList.length == 0) {
+                this.selectedCommandIndex = 1;
+            }
         }
 
         this.hasInvalidCommands = this.commandList.some(
@@ -840,6 +867,7 @@ export class TapePluginContent implements PluginJson {
         this.commandList = [];
         this.hasInvalidCommands = false;
         this.fromText(this.programAsText);
+        this.selectedCommandIndex = this.commandList.length + 1;
     }
 
     private changeList() {
@@ -1028,7 +1056,11 @@ export class TapePluginContent implements PluginJson {
     }
 
     getCommandBackgroundColor(index: number) {
-        if (index == this.state.instructionPointer) {
+        if (
+            index == this.state.instructionPointer ||
+            (index > this.commandList.length &&
+                this.state.instructionPointer >= this.commandList.length)
+        ) {
             return "yellow";
         }
 
