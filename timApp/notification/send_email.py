@@ -1,7 +1,8 @@
 import smtplib
 from email.mime.text import MIMEText
+from email.utils import formatdate
 from threading import Thread
-from typing import Optional, Union, Any
+from typing import Any
 
 from flask import Flask
 
@@ -48,6 +49,7 @@ def send_email_impl(
         mime_msg["Subject"] = subject
         mime_msg["From"] = mail_from
         mime_msg["To"] = rcpt
+        mime_msg["Date"] = formatdate(localtime=True)
 
         if reply_to:
             mime_msg.add_header("Reply-To", reply_to)
@@ -127,6 +129,7 @@ def multi_send_email_impl(
                     mime_msg["From"] = mail_from
                     mime_msg["Bcc"] = bccmail
                     mime_msg["To"] = ",".join(send_to)
+                    mime_msg["Date"] = formatdate(localtime=True)
                     if reply_to:
                         mime_msg.add_header("Reply-To", reply_to)
 
