@@ -97,6 +97,7 @@ export type FieldType = {
                             (add)="addField($event)"
                             (delete)="removeField()"
                             [isActive]="i === activeFieldsIndex"
+                            [formulaType]="formulaType"
                             [id]="i">
                         </cs-formula-field>
                     </div>
@@ -526,26 +527,6 @@ export class FormulaEditorComponent {
             this.editor.content =
                 this.oldContent.before + this.oldContent.after;
         } else {
-            // replace escaped characters if needed
-            const properties = FormulaPropertyList.find(
-                (formulaType) => formulaType.type === this.formulaType
-            );
-            if (properties) {
-                if (properties.writeReplace) {
-                    try {
-                        const regex = new RegExp(properties.writeReplace[0]);
-                        formulaLatex = formulaLatex.replace(
-                            regex,
-                            properties.writeReplace[1]
-                        );
-                    } catch (err) {
-                        console.log(
-                            "invalid RegExp: " + properties.writeReplace[0]
-                        );
-                        console.log(err);
-                    }
-                }
-            }
             // write formula to TIM editor
             this.editor.content =
                 this.oldContent.before + formulaLatex + this.oldContent.after;

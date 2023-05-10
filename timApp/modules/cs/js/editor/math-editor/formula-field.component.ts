@@ -21,6 +21,7 @@ import type {
     MathFieldMethods,
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
+import {FormulaType, FormulaPropertyList} from "./formula-types";
 
 /**
  * Specifies which field the typed text should go in.
@@ -142,6 +143,8 @@ export class FormulaFieldComponent implements AfterViewInit {
 
     @Input() initialValue!: string;
 
+    @Input() formulaType!: FormulaType;
+
     /**
      * Tell whether the field is active.
      */
@@ -183,6 +186,26 @@ export class FormulaFieldComponent implements AfterViewInit {
                 return;
             }
             this.latexInput = this.mathField.latex();
+            // replace escaped characters if needed
+            const properties = FormulaPropertyList.find(
+                (formulaType) => formulaType.type === this.formulaType
+            );
+            if (properties) {
+                if (properties.writeReplace) {
+                    try {
+                        const regex = new RegExp(properties.writeReplace[0]);
+                        this.latexInput = this.latexInput.replace(
+                            regex,
+                            properties.writeReplace[1]
+                        );
+                    } catch (err) {
+                        console.log(
+                            "invalid RegExp: " + properties.writeReplace[0]
+                        );
+                        console.log(err);
+                    }
+                }
+            }
             this.edited.emit({
                 latex: this.latexInput,
                 id: this.id,
@@ -260,7 +283,28 @@ export class FormulaFieldComponent implements AfterViewInit {
      */
     handleLatexInput() {
         if (this.activeEditor === ActiveEditorType.Latex) {
-            this.mathField.latex(this.latexInput);
+            // replace escaped characters if needed
+            let visualInput = this.latexInput;
+            const properties = FormulaPropertyList.find(
+                (formulaType) => formulaType.type === this.formulaType
+            );
+            if (properties) {
+                if (properties.editReplace) {
+                    try {
+                        const regex = new RegExp(properties.editReplace[0]);
+                        visualInput = visualInput.replace(
+                            regex,
+                            properties.editReplace[1]
+                        );
+                    } catch (err) {
+                        console.log(
+                            "invalid RegExp: " + properties.editReplace[0]
+                        );
+                        console.log(err);
+                    }
+                }
+            }
+            this.mathField.latex(visualInput);
             this.edited.emit({
                 latex: this.latexInput,
                 id: this.id,

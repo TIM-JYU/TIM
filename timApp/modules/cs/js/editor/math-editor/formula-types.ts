@@ -42,8 +42,8 @@ type FormulaProperties = {
     beginEndKeyword: string;
     // First value is search RegExp and second is replace string.
     // No replacing when undefined.
-    // editReplace is used when starting to edit a formula. writeReplace
-    // is used when writing formula latex to TIM editor.
+    // editReplace is used before latex code is given to visual field.
+    // writeReplace is used after receiving latex code from visual field.
     editReplace: ReplacePair;
     writeReplace: ReplacePair;
     // starting mark of the formula
@@ -96,7 +96,7 @@ export const FormulaPropertyList: FormulaProperties[] = [
         type: FormulaType.Align,
         beginEndKeyword: "align*",
         editReplace: [/(?<!\\)&/gm, "¤"],
-        writeReplace: [/¤/g, "&"],
+        writeReplace: [/¤/gm, "&"],
         start: "\\begin{align*}\n",
         end: "\n\\end{align*}",
         join: "\\\\\n",
@@ -107,7 +107,7 @@ export const FormulaPropertyList: FormulaProperties[] = [
         type: FormulaType.AlignAt,
         beginEndKeyword: "alignat",
         editReplace: [/(?<!\\)&/gm, "¤"],
-        writeReplace: [/¤/g, "&"],
+        writeReplace: [/¤/gm, "&"],
         start: "\\begin{alignat*}{}\n",
         end: "\n\\end{alignat*}",
         join: "\\\\\n",
@@ -118,7 +118,7 @@ export const FormulaPropertyList: FormulaProperties[] = [
         type: FormulaType.Gather,
         beginEndKeyword: "gather",
         editReplace: [/(?<!\\)&/gm, "¤"],
-        writeReplace: [/¤/g, "&"],
+        writeReplace: [/¤/gm, "&"],
         start: "\\begin{gather*}\n",
         end: "\n\\end{gather*}",
         join: "\\\\\n",
