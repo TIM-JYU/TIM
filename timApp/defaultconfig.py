@@ -328,6 +328,9 @@ IP_BLOCK_ALLOWLIST = None
 # The informational message to display in TIM header if the IP is outside the allowlist.
 IP_BLOCK_MESSAGE = None
 
+# The message sent as reply whenever a blocked route is called by an IP outside the allowlist.
+IP_BLOCK_ROUTE_MESSAGE = None
+
 # If true, IPs that are:
 # * outside allowed networks and
 # * not in blocklist

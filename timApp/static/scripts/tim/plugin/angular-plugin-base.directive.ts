@@ -254,7 +254,7 @@ export abstract class AngularPluginBase<
         if (result.ok) {
             handleAnswerResponse(dt, {
                 savedNew: result.result.savedNew,
-                error: result.result.error,
+                errors: result.result.errors,
                 feedback: result.result.feedback,
                 topfeedback: result.result.topfeedback,
                 valid: result.result.valid,
@@ -265,7 +265,7 @@ export abstract class AngularPluginBase<
             handleAnswerResponse(dt, {
                 savedNew: false,
                 valid: false,
-                error: result.result.error.error,
+                errors: [result.result.error.error],
             });
         }
         return result;

@@ -608,7 +608,11 @@ def post_answer(
     :param abData: Data applied from answer browser
     """
     curr_user = get_current_user_object()
-    verify_ip_ok(user=curr_user, msg="Answering is not allowed from this IP address.")
+    blocked_msg = (
+        current_app.config["IP_BLOCK_ROUTE_MESSAGE"]
+        or "Answering is not allowed from this IP address."
+    )
+    allowed = verify_ip_ok(user=curr_user, msg=blocked_msg)
     return json_response(
         post_answer_impl(
             task_id_ext,
@@ -619,6 +623,7 @@ def post_answer(
             get_urlmacros_from_request(),
             get_other_session_users_objs(),
             get_origin_from_request(),
+            error=blocked_msg if not allowed else None,
         ).result
     )
 
@@ -703,6 +708,7 @@ def post_answer_impl(
     urlmacros: UrlMacros,
     other_session_users: list[User],
     origin: OriginInfo | None,
+    error: str | None = None,
 ) -> AnswerRouteResult:
     receive_time = get_current_time()
     tid = TaskId.parse(task_id_ext)
@@ -867,6 +873,7 @@ def post_answer_impl(
     }
 
     result = {}
+    result_errors: list[str] = [error] if error else []
     web = ""
 
     def set_postoutput(result: dict, output: Any | None, outputname: str) -> None:
@@ -891,7 +898,11 @@ def post_answer_impl(
 
     def postprogram_result(data: dict, output: Any | None, outputname: str) -> None:
         result["web"] = data.get("web", web)
-        add_value(result, "error", data)
+        err = data.get("error", None)
+        if err:
+            if err.startswith("md:"):
+                err = call_dumbo([err[3:]])[0]
+            result_errors.append(err)
         add_value(result, "feedback", data)
         add_value(result, "topfeedback", data)
         if output.startswith("md:"):
@@ -1069,7 +1080,7 @@ def post_answer_impl(
                 try:
                     points = plugin.validate_points(answer_browser_data.get("points"))
                 except PluginException as e:
-                    result["error"] = str(e)
+                    result_errors.append(str(e))
                 else:
                     points_given_by = get_current_user_group()
 
@@ -1169,7 +1180,7 @@ def post_answer_impl(
             # Validity info can be different from error (e.g. answer can be valid but error is given by postprogram)
             result["valid"] = is_valid
             if not is_valid:
-                result["error"] = explanation
+                result_errors.append(explanation)
         elif save_teacher:
             # Getting points from teacher ignores points automatically computed by the task
             # For now we accept task points since most of the time that's what a teacher might want
@@ -1249,6 +1260,8 @@ def post_answer_impl(
             )  # TODO: stdy why someone puts markup here
     except:
         pass
+    if result_errors:
+        result["errors"] = result_errors
 
     return AnswerRouteResult(result=result, plugin=plugin)
 
