@@ -608,7 +608,10 @@ def post_answer(
     :param abData: Data applied from answer browser
     """
     curr_user = get_current_user_object()
-    blocked_msg = "Answering is not allowed from this IP address."
+    blocked_msg = (
+        current_app.config["IP_BLOCK_ROUTE_MESSAGE"]
+        or "Answering is not allowed from this IP address."
+    )
     allowed = verify_ip_ok(user=curr_user, msg=blocked_msg)
     return json_response(
         post_answer_impl(
