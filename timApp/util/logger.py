@@ -14,10 +14,18 @@ wz = logging.getLogger("werkzeug")
 wz.setLevel(logging.ERROR)
 
 
+IN_CELERY_WORKER_PROCESS = (
+    sys.argv and sys.argv[0].endswith("celery") and "worker" in sys.argv
+)
+
+
 def setup_logging(app: Flask) -> None:
     if not app.config["TESTING"]:
         logging.getLogger("alembic").level = logging.INFO
-    formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s ")
+    log_format = "%(asctime)s %(levelname)s: %(message)s "
+    if IN_CELERY_WORKER_PROCESS:
+        log_format = "%(asctime)s [CELERY] %(levelname)s: %(message)s "
+    formatter = logging.Formatter(log_format)
     os.makedirs(app.config["LOG_DIR"], exist_ok=True)
     file_handler = TIMRotatingLogFileHandler(
         app.config["LOG_PATH"],

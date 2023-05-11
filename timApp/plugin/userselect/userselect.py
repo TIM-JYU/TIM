@@ -1,13 +1,12 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import timedelta
 from enum import Enum
-from typing import Literal, Callable
 
 import filelock
 from flask import render_template_string, Response, current_app
 
 from timApp.answer.backup import sync_user_group_memberships_if_enabled
-from timApp.auth.accesshelper import verify_logged_in, verify_view_access
+from timApp.auth.accesshelper import verify_logged_in, verify_view_access, verify_admin
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.session.util import distribute_session_verification
@@ -17,16 +16,6 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext
-from timApp.item.distribute_rights import (
-    RightOp,
-    ConfirmOp,
-    QuitOp,
-    UnlockOp,
-    ChangeTimeOp,
-    register_right_impl,
-    UndoConfirmOp,
-    UndoQuitOp,
-)
 from timApp.item.manage import (
     TimeOpt,
     verify_permission_edit_access,
@@ -41,6 +30,17 @@ from timApp.plugin.jsrunner.util import (
     save_fields,
 )
 from timApp.plugin.plugin import Plugin
+from timApp.plugin.userselect.action_queue import (
+    register_group_add_action,
+    register_group_remove_action,
+    register_dist_right_action,
+    apply_pending_actions_impl,
+)
+from timApp.plugin.userselect.dist_right_util import (
+    DistributeRightAction,
+    apply_dist_right_actions,
+)
+from timApp.plugin.userselect.utils import group_expired_offset
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
@@ -56,7 +56,6 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups
 from timApp.util.logger import log_warning, log_info
-from timApp.util.utils import get_current_time
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
@@ -109,48 +108,6 @@ class ChangePermissionTime(PermissionActionBase):
 class SetTaskValueAction:
     taskId: str
     value: str
-
-
-@dataclass
-class DistributeRightAction:
-    operation: Literal["confirm", "quit", "unlock", "changetime", "undoquit"]
-    target: str | list[str]
-    timestamp: datetime | None = None
-    minutes: float = 0.0
-
-    @property
-    def timestamp_or_now(self) -> datetime:
-        return self.timestamp or get_current_time()
-
-
-RIGHT_TO_OP: dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
-    "confirm": lambda r, usr: ConfirmOp(
-        type="confirm",
-        email=usr,
-        timestamp=r.timestamp_or_now,
-    ),
-    "quit": lambda r, usr: QuitOp(
-        type="quit",
-        email=usr,
-        timestamp=r.timestamp_or_now,
-    ),
-    "undoquit": lambda r, usr: UndoQuitOp(
-        type="undoquit",
-        email=usr,
-        timestamp=r.timestamp_or_now,
-    ),
-    "unlock": lambda r, usr: UnlockOp(
-        type="unlock",
-        email=usr,
-        timestamp=r.timestamp_or_now,
-    ),
-    "changetime": lambda r, usr: ChangeTimeOp(
-        type="changetime",
-        email=usr,
-        secs=int(r.minutes * 60),
-        timestamp=r.timestamp_or_now,
-    ),
-}
 
 
 @dataclass
@@ -210,6 +167,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     autoSearchDelay: float = 0.0
     selectOnce: bool = False
     maxMatches: int = 10
+    useActionQueues: bool = False
     scanner: ScannerOptions = field(default_factory=ScannerOptions)
     groups: list[str] = field(default_factory=list)
     fields: list[str] = field(default_factory=list)
@@ -500,40 +458,42 @@ def get_plugin_info(
     return model, cur_user, user_group, user_acc, doc
 
 
-def undo_dist_right_actions(
-    user_acc: User, dist_rights: list[DistributeRightAction]
-) -> list[str]:
+def undo_dist_right_actions(user_acc: User, model: UserSelectMarkupModel) -> list[str]:
+    if not model.actions:
+        return []
     # TODO: Implement undoing for local permissions
     undoable_dists = [
-        dist for dist in dist_rights if dist.operation in ("confirm", "quit")
+        dist
+        for dist in model.actions.distributeRight
+        if dist.operation in ("confirm", "quit")
     ]
-    errors = []
+    undo_actions = []
     for distribute in undoable_dists:
         if distribute.operation == "confirm":
-            undo_op: UndoConfirmOp | UndoQuitOp | ChangeTimeOp = UndoConfirmOp(
-                type="undoconfirm",
-                email=user_acc.email,
+            undo_action = DistributeRightAction(
+                operation="undoconfirm",
+                target=distribute.target,
                 timestamp=distribute.timestamp_or_now,
             )
         elif distribute.operation == "quit":
-            undo_op = UndoQuitOp(
-                type="undoquit",
-                email=user_acc.email,
+            undo_action = DistributeRightAction(
+                operation="undoquit",
+                target=distribute.target,
                 timestamp=distribute.timestamp_or_now,
             )
         elif distribute.operation == "changetime":
-            undo_op = ChangeTimeOp(
-                type="changetime",
-                email=user_acc.email,
+            undo_action = DistributeRightAction(
+                operation="changetime",
+                target=distribute.target,
                 timestamp=distribute.timestamp_or_now,
-                secs=-int(distribute.minutes * 60),
+                minutes=-distribute.minutes,
             )
         else:
             continue
 
-        errors.extend(register_right_impl(undo_op, distribute.target))
+        undo_actions.append(undo_action)
 
-    return errors
+    return apply_dist_actions(user_acc, model, undo_actions)
 
 
 def undo_field_actions(
@@ -575,11 +535,7 @@ def get_groups(
     return add_groups, remove_groups, change_all_groups_ugs
 
 
-# It can be useful to offset the time a little to ensure any checks for expired memberships can pass
-group_expired_offset = timedelta(seconds=1)
-
-
-def undo_group_actions(
+def undo_group_actions_locked(
     user_acc: User,
     cur_user: User,
     add: list[str],
@@ -601,6 +557,51 @@ def undo_group_actions(
     return changed
 
 
+def undo_group_actions_queued(
+    user_acc: User,
+    cur_user: User,
+    add: list[str],
+    remove: list[str],
+    change: ChangeGroupAction | None,
+) -> None:
+    add_groups, remove_groups, change_all_groups = get_groups(
+        cur_user, add, remove, change.all_groups if change else []
+    )
+
+    for ug in add_groups + change_all_groups:
+        register_group_remove_action(user_acc, ug.name)
+
+
+def undo_group_actions(
+    user_acc: User,
+    cur_user: User,
+    model: UserSelectMarkupModel,
+) -> None:
+    if not model.actions:
+        return
+    if model.useActionQueues:
+        undo_group_actions_queued(
+            user_acc,
+            cur_user,
+            model.actions.addToGroups,
+            model.actions.removeFromGroups,
+            model.actions.changeGroup,
+        )
+    else:
+        changed = undo_group_actions_locked(
+            user_acc,
+            cur_user,
+            model.actions.addToGroups,
+            model.actions.removeFromGroups,
+            model.actions.changeGroup,
+        )
+        # Flush so that right distribution is handled correctly
+        db.session.flush()
+
+        if changed:
+            sync_user_group_memberships_if_enabled(user_acc)
+
+
 @user_select_plugin.post("/undo")
 def undo(
     username: str,
@@ -617,34 +618,16 @@ def undo(
         f"[{cur_user.name}] undo on {user_acc.name} in {doc.path} (param = {param})"
     )
 
-    groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
-    if model.actions.changeGroup:
-        groups |= set(model.actions.changeGroup.all_groups)
-    locks = [
-        filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock")
-        for group in groups
-    ]
-
+    locks = get_group_action_locks(model)
     for lock in locks:
         lock.acquire()
 
     try:
-        # Undo the group actions before dist rights because dist rights can might depend on the group
+        # Undo the group actions before dist rights because dist rights might depend on the group
         # Moreover, undoing is generally a soft action, so we can always manually restore the group safely
-        changed = undo_group_actions(
-            user_acc,
-            cur_user,
-            model.actions.addToGroups,
-            model.actions.removeFromGroups,
-            model.actions.changeGroup,
-        )
-        # Flush so that right distribution is handled correctly
-        db.session.flush()
+        undo_group_actions(user_acc, cur_user, model)
 
-        if changed:
-            sync_user_group_memberships_if_enabled(user_acc)
-
-        errors = undo_dist_right_actions(user_acc, model.actions.distributeRight)
+        errors = undo_dist_right_actions(user_acc, model)
 
         # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
         if errors:
@@ -667,6 +650,13 @@ def undo(
             lock.release()
 
     return json_response({"distributionErrors": errors})
+
+
+@user_select_plugin.get("/applyPendingActions")
+def apply_pending_actions_route() -> Response:
+    verify_admin()
+    apply_pending_actions_impl()
+    return ok_response()
 
 
 def apply_permission_actions(
@@ -768,35 +758,13 @@ def apply_field_actions(
         )
 
 
-def apply_dist_right_actions(
-    user_acc: User, dist_right: list[DistributeRightAction]
-) -> list[str]:
-    errors = []
-    for distribute in dist_right:
-        convert = RIGHT_TO_OP[distribute.operation]
-        right_op = convert(distribute, user_acc.email)
-        apply_errors = register_right_impl(right_op, distribute.target)
-
-        if isinstance(right_op, QuitOp):
-            # Ignore failing to undo twice. It is an error but it's not strictly an issue for UserSelect
-            # However, do this only for QuitOp to prevent other issues like trying to confirm users who has already quit
-            # TODO: Don't depend on string matching to filter out the error
-            apply_errors = [
-                e for e in apply_errors if "Cannot register a non-UndoQuitOp" not in e
-            ]
-
-        errors.extend(apply_errors)
-
-    return errors
-
-
 def apply_verify_session(
     action: str, user_acc: User, session_id: str | None, targets: list[str]
 ) -> list[str]:
     return distribute_session_verification(action, user_acc.name, session_id, targets)
 
 
-def apply_group_actions(
+def apply_group_actions_locked(
     user_acc: User,
     cur_user: User,
     add: list[str],
@@ -835,6 +803,30 @@ def apply_group_actions(
     return changed
 
 
+def apply_group_actions_queued(
+    user_acc: User,
+    cur_user: User,
+    add: list[str],
+    remove: list[str],
+    change_to: ChangeGroupAction | None,
+) -> None:
+    add_groups, remove_groups, change_to_group = get_groups(
+        cur_user, add, remove, change_to.allGroups if change_to else []
+    )
+
+    for a in add_groups:
+        register_group_add_action(user_acc, a.name)
+
+    for r in remove_groups:
+        register_group_remove_action(user_acc, r.name)
+
+    if change_to:
+        register_group_add_action(user_acc, change_to.changeTo)
+        for g in change_to_group:
+            if g.name != change_to.changeTo:
+                register_group_remove_action(user_acc, g.name)
+
+
 class NeedsVerifyReasons(Enum):
     CHANGE_GROUP_BELONGS = "changeGroupBelongs"
     CHANGE_GROUP_ALREADY_MEMBER = "changeGroupAlreadyMember"
@@ -864,6 +856,64 @@ def needs_verify(username: str, par: GlobalParId) -> Response:
     )
 
 
+def get_group_action_locks(
+    model: UserSelectMarkupModel,
+) -> list[filelock.BaseFileLock]:
+    if model.useActionQueues:
+        return []
+    if not model.actions:
+        return []
+    all_groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
+    if model.actions.changeGroup:
+        all_groups |= set(model.actions.changeGroup.all_groups)
+    locks: list[filelock.BaseFileLock] = [
+        filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock")
+        for group in all_groups
+    ]
+
+    return locks
+
+
+def apply_group_actions(
+    model: UserSelectMarkupModel,
+    user_acc: User,
+    cur_user: User,
+) -> None:
+    if not model.actions:
+        return
+    if model.useActionQueues:
+        apply_group_actions_queued(
+            user_acc,
+            cur_user,
+            model.actions.addToGroups,
+            model.actions.removeFromGroups,
+            model.actions.changeGroup,
+        )
+    else:
+        changed = apply_group_actions_locked(
+            user_acc,
+            cur_user,
+            model.actions.addToGroups,
+            model.actions.removeFromGroups,
+            model.actions.changeGroup,
+        )
+        db.session.flush()
+
+        if changed:
+            sync_user_group_memberships_if_enabled(user_acc)
+
+
+def apply_dist_actions(
+    user_acc: User, model: UserSelectMarkupModel, actions: list[DistributeRightAction]
+) -> list[str]:
+    if model.useActionQueues:
+        for dr in actions:
+            register_dist_right_action(user_acc, dr)
+        return []
+    else:
+        return apply_dist_right_actions(user_acc, actions)
+
+
 @user_select_plugin.post("/apply")
 def apply(
     username: str,
@@ -880,35 +930,18 @@ def apply(
         f"[{cur_user.name}] apply on {user_acc.name} in {doc.path} (param = {param})"
     )
 
-    all_groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
-    if model.actions.changeGroup:
-        all_groups |= set(model.actions.changeGroup.all_groups)
-    locks = [
-        filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock")
-        for group in all_groups
-    ]
-
+    locks = get_group_action_locks(model)
     for lock in locks:
         lock.acquire()
 
     try:
-        changed = apply_group_actions(
-            user_acc,
-            cur_user,
-            model.actions.addToGroups,
-            model.actions.removeFromGroups,
-            model.actions.changeGroup,
-        )
-        db.session.flush()
+        apply_group_actions(model, user_acc, cur_user)
 
-        if changed:
-            sync_user_group_memberships_if_enabled(user_acc)
+        right_dist_errors = apply_dist_actions(
+            user_acc, model, model.actions.distributeRight
+        )
 
         apply_field_actions(cur_user, user_acc, model.actions.setValue)
-
-        right_dist_errors = apply_dist_right_actions(
-            user_acc, model.actions.distributeRight
-        )
 
         session_verification_errors = apply_verify_session(
             "verify", user_acc, param, model.actions.verifyRemoteSessions

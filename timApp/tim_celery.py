@@ -276,3 +276,10 @@ def cleanup_oauth2_tokens():
     from timApp.auth.oauth2.oauth2 import delete_expired_oauth2_tokens
 
     delete_expired_oauth2_tokens()
+
+
+@celery.task(ignore_result=True)
+def apply_pending_userselect_actions() -> None:
+    from timApp.plugin.userselect.action_queue import apply_pending_actions_impl
+
+    apply_pending_actions_impl()
