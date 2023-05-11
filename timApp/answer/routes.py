@@ -1261,7 +1261,7 @@ def post_answer_impl(
     except:
         pass
     if result_errors:
-        result["errors"] = result.get("errors", []) + result_errors
+        result["errors"] = result_errors
 
     return AnswerRouteResult(result=result, plugin=plugin)
 
