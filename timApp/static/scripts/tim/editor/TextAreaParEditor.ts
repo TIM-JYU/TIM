@@ -752,12 +752,21 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     doWrap(wrap: number): void {}
 
     insert(str: string): void {
+        const ci = str.indexOf(CURSOR); // check if there is a cursor marker
+        let back = -1;
+        if (ci >= 0) {
+            str = str.replace(CURSOR, "");
+            back = str.length - ci;
+        }
         const [start, end] = this.getPosition();
         const value = this.getEditorText();
         const before = value.slice(0, start);
         const after = value.slice(end);
         const newValue = before + str + after;
         this.setEditorText(newValue);
+        if (back > 0) {
+            this.moveCursorToContentIndex(start + str.length - back);
+        }
     }
 
     setReadOnly(b: boolean): void {}
