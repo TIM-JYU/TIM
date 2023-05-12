@@ -1,0 +1,44 @@
+Matematiikkapainikkeet
+Matematiikkakysymys jonka painikkeita voi muokata
+``` {plugin="csPlugin" #PLUGINNAMEHERE}
+type: md
+placeholder: "Kirjoita kaavaa"
+header: Tehtävä 1
+stem: |!!
+md:
+Ratkaise tehtävä
+!!
+button: Tallenna
+rows: 5
+editorModes: "01"
+editorMode: 1
+autorun: true
+autoupdate: 1000
+formulaEditor: true
+upload: true
+buttons: |!!
+[ "$", "$⁞$", "$ $", "t" ]
+[ "$$", "$$⁞$$", "$$ $$", "t"]
+[ "\\[ \\pi \\]", "\\pi", "\\pi", "q"]
+[ "\\[ \\sin \\]", "\\sin", "\\sin", "q"]
+[ "\\[ \\cos \\]", "\\cos", "\\cos", "q"]
+[ "\\[ \\tan \\]", "\\tan", "\\tan", "q"]
+[ "\\[ \\frac{\\square}{\\square} \\]", "\\frac{⁞}{}", "\\frac{}{}", "q"]
+[ "\\[ f(\\square) \\]", "f(⁞)", "f()", "q"]
+[ "\\[ \\sqrt{\\square} \\]", "\\sqrt{⁞}", "\\sqrt{}", "q"]
+[ "\\[ \\square^n \\]", "⁞^n", "^n", "q"]
+[ "\\[ \\overline{\\text{i}} \\]", "\\overline{\\text{i}}", "\\overline{\\text{i}}", "s"]
+[ "\\[ \\overline{\\text{j}} \\]", "\\overline{\\text{j}}", "\\overline{\\text{j}}", "s"]
+[ "\\[ \\overline{\\text{k}} \\]", "\\overline{\\text{k}}", "\\overline{\\text{k}}", "s"]
+[ "\\[ \\lim_{\\square} \\]", "\\lim_{⁞}", "\\lim_{}", "s"]
+[ "\\[ \\sum_{\\square}^{\\square} \\]", "\\sum_{⁞}^{}", "\\sum_{}^{}", "s"]
+[ "\\[ \\int_\\square^\\square \\]", "\\int_{⁞}^{}", "\\int_{}^{}", "s"]
+[ "\\[ \\bigg/_{\\!\\!\\!\\!\\!{ \\square }}^{ \\square } \\]", "\\bigg/_{\\!\\!\\!\\!\\!{}}^{}", "\\bigg/_{\\!\\!\\!\\!\\!{}}^{}", "s"]
+[ "\\[ \\overrightarrow{\\square} \\]", "\\overrightarrow{⁞}", "\\overrightarrow{ }", "s"]
+[ "\\[ \\overleftarrow{\\square} \\]", "\\overleftarrow{⁞}", "\\overleftarrow{ }", "s"]
+[ "\\[ \\binom{\\square}{\\square} \\]", "\\binom{⁞}{}", "\\binom{ }{}", "s"]
+[ "\\[ \\begin{cases}\\square&\\square\\\\\\square&\\square\\end{cases} \\]", "\\begin{cases}⁞&\\\\&\\end{cases}", "\\begin{cases} &\\\\&\\end{cases}", "s"]
+[ "\\[ \\begin{matrix}\\square&\\square\\\\\\square&\\square\\end{matrix} \\]", "\\begin{matrix}⁞&\\\\&\\end{matrix}", "\\begin{matrix} &\\\\&\\end{matrix}", "s"]
+[ "\\[ \\begin{array}{l|l}\\square&\\square\\\\\\hline\\square&\\square\\end{array} \\]", "\\begin{array}{l|l}⁞&\\\\\\hline&\\end{array}", "\\begin{array}{l|l} &\\\\\\hline&\\end{array}", "s"]
+!!
+```

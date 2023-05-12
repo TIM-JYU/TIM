@@ -158,17 +158,6 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
     }
 
     /**
-     * Tell whether mathfield has content.
-     */
-    @Input()
-    get isMathFieldEmpty(): boolean {
-        if (this.mathField) {
-            return this.mathField.latex().length === 0;
-        }
-        return false;
-    }
-
-    /**
      * Sets active status of this field
      * also sets focus to visual field.
      * @param value true if should be active false otherwise
@@ -180,6 +169,17 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
                 this.mathField.focus();
             }
         }
+    }
+
+    /**
+     * Tell whether mathfield has content.
+     */
+    @Input()
+    get isMathFieldEmpty(): boolean {
+        if (this.mathField) {
+            return this.mathField.latex().length === 0;
+        }
+        return false;
     }
 
     /**
