@@ -315,8 +315,8 @@ export class ImportDataComponent extends AngularPluginBase<
             this.error = r.result.error.error;
             return;
         }
-        if (r.result.error) {
-            this.error = r.result.error;
+        if (r.result.errors) {
+            this.error = r.result.errors.join("\n");
             return;
         }
         this.importResult = r.result.web.fieldresult;

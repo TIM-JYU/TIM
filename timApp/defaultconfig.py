@@ -135,6 +135,12 @@ CELERYD_TASK_LOG_FORMAT = (
 )
 BEAT_DBURI = DB_URI
 
+USERSELECT_QUEUED_ACTIONS_CELERY = True
+"""
+If enabled, UserSelect will automatically schedule running the queued actions with celery.
+When disabled, the actions must be run manually with /userSelect/applyPendingActions
+"""
+
 MAIL_HOST = "smtpauth2.jyu.fi"
 MAIL_SIGNATURE = "\n\n-- \nThis message was automatically sent by TIM"
 WTF_CSRF_METHODS = ["POST", "PUT", "PATCH", "DELETE"]
@@ -328,6 +334,9 @@ IP_BLOCK_ALLOWLIST = None
 # The informational message to display in TIM header if the IP is outside the allowlist.
 IP_BLOCK_MESSAGE = None
 
+# The message sent as reply whenever a blocked route is called by an IP outside the allowlist.
+IP_BLOCK_ROUTE_MESSAGE = None
+
 # If true, IPs that are:
 # * outside allowed networks and
 # * not in blocklist
@@ -490,4 +499,9 @@ acknowledgements_url: URL to the acknowledgements page.
 preferred_languages: List of languages in order of preference for contacting.
 extra_canonical_hosts: List of extra canonical hosts for the instance. Used to specify canonical URLs for security.txt
 security_policy_url: URL to the security policy page.
+"""
+
+GLOBAL_DOCUMENT_CACHING = False
+"""
+Global default value for document caching. The value allows globally enabling or disabling document cache.
 """

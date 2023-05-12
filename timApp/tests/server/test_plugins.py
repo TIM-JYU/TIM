@@ -602,12 +602,12 @@ type: upload
 
     def check_failed_answer(self, resp, is_new=False):
         self.assertIn("web", resp)
-        self.assertIn("You have exceeded the answering limit.", resp["error"])
+        self.assertIn("You have exceeded the answering limit.", resp["errors"])
         self.assertEqual(is_new, resp["savedNew"] is not None)
 
     def check_ok_answer(self, resp, is_new=True):
         self.assertIn("web", resp)
-        self.assertNotIn("error", resp)
+        self.assertNotIn("errors", resp)
         self.assertEqual(is_new, resp["savedNew"] is not None)
 
     def test_group_answering(self):
@@ -1223,19 +1223,19 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
         p.set_value("deadline", "2100-01-01 00:00:00")
         p.save()
         resp = self.post_answer(p.type, p.task_id.doc_task, [])
-        self.assertNotIn("error", resp)
+        self.assertNotIn("errors", resp)
 
         p.set_value("starttime", "2099-01-01 00:00:00")
         p.save()
         resp = self.post_answer(p.type, p.task_id.doc_task, [])
-        self.assertEqual(resp["error"], "You cannot submit answers yet.")
+        self.assertEqual(resp["errors"], ["You cannot submit answers yet."])
 
         p.set_value("starttime", "2000-01-01 00:00:00")
         p.set_value("deadline", "2000-01-02 00:00:00")
         p.save()
         resp = self.post_answer(p.type, p.task_id.doc_task, [])
         self.assertEqual(
-            resp["error"], "The deadline for submitting answers has passed."
+            resp["errors"], ["The deadline for submitting answers has passed."]
         )
 
         p.set_value("starttime", "asdasd")
@@ -1277,7 +1277,7 @@ choices:
         p = Plugin.from_paragraph(d.document.get_paragraphs()[0], default_view_ctx)
         resp = self.post_answer(p.type, p.task_id.doc_task, [])
         self.assertEqual(
-            resp["error"], "The deadline for submitting answers has passed."
+            resp["errors"], ["The deadline for submitting answers has passed."]
         )
         self.get(d.url_relative)
 
@@ -2390,17 +2390,17 @@ accessField:
         resp = self.post_answer(
             "textfield", f"{d.id}.question", user_input={"c": "testuser2@d part 1"}
         )
-        self.assertNotIn("error", resp)
+        self.assertNotIn("errors", resp)
         self.post_answer("textfield", f"{d.id}.access", user_input={"c": "1"})
         resp = self.post_answer(
             "textfield", f"{d.id}.question", user_input={"c": "testuser2@d part 2"}
         )
-        self.assertNotIn("error", resp)
+        self.assertNotIn("errors", resp)
         self.post_answer("textfield", f"{d.id}.access", user_input={"c": "2"})
         resp = self.post_answer(
             "textfield", f"{d.id}.question", user_input={"c": "testuser2@d.2"}
         )
-        self.assertEqual(access_error_default, resp["error"])
+        self.assertEqual([access_error_default], resp["errors"])
         self.assertFalse(resp["valid"])
         self.assertEqual(3, len(self.get_task_answers(f"{d.id}.question")))
         # int 1 is not valid answer via cbfield answer route, but might be set by jsrunner
@@ -2417,8 +2417,10 @@ accessField:
             user_input={"c": "testuser2@d_ext"},
         )
         self.assertEqual(
-            "You already locked your access to this task. Your answer was saved but marked as invalid.",
-            resp["error"],
+            [
+                "You already locked your access to this task. Your answer was saved but marked as invalid."
+            ],
+            resp["errors"],
         )
         self.assertFalse(resp["valid"])
         self.assertEqual(
@@ -2444,7 +2446,7 @@ accessField:
         self.post_answer("textfield", f"{d.id}.access", user_input={"c": "1"})
         resp = self.post_answer("textfield", f"{d.id}.question", user_input={"c": "ok"})
         # only invalid answers on access source, answer is successful
-        self.assertNotIn("error", resp)
+        self.assertNotIn("errors", resp)
         save_answer(
             [self.test_user_1],
             TaskId.parse(f"{d.id}.access"),
@@ -2455,13 +2457,13 @@ accessField:
         resp = self.post_answer(
             "textfield", f"{d.id}.question", user_input={"c": "fail"}
         )
-        self.assertEqual(access_error_default, resp["error"])
+        self.assertEqual([access_error_default], resp["errors"])
         self.assertFalse(resp["valid"])
         self.post_answer("textfield", f"{d.id}.access", user_input={"c": "0"})
         # latest invalid answer 0 on access source does not override valid answer 1
         resp = self.post_answer(
             "textfield", f"{d.id}.question", user_input={"c": "fail again"}
         )
-        self.assertEqual(access_error_default, resp["error"])
+        self.assertEqual([access_error_default], resp["errors"])
         self.assertFalse(resp["valid"])
         self.assertEqual(3, len(self.get_task_answers(f"{d.id}.question")))

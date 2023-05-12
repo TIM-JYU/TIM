@@ -229,6 +229,7 @@ class GenericMarkupModel(KnownMarkupFields):
     undo: UndoInfo | Missing | None = missing
     answerBrowser: AnswerBrowserInfo | Missing | None = missing
     spellcheck: bool | None | Missing = missing
+    warningFilter: str | Missing | None = missing
 
     def get_visible_data(self) -> dict:
         assert isinstance(self.hidden_keys, list)

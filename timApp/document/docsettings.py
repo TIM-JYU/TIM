@@ -582,7 +582,11 @@ class DocSettings:
         return self.get_setting_or_default("rndmacros", {})
 
     def is_cached(self):
-        return self.get_setting_or_default("cache", False)
+        from timApp.tim_app import app
+
+        return self.get_setting_or_default(
+            "cache", app.config["GLOBAL_DOCUMENT_CACHING"]
+        )
 
     def hide_readmarks(self) -> bool:
         return self.get_setting_or_default("hide_readmarks", False)

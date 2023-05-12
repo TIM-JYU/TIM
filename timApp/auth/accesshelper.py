@@ -886,7 +886,7 @@ def get_ipblocklist_path() -> Path:
     return Path(current_app.config["FILES_PATH"]) / "ipblocklist"
 
 
-def verify_ip_ok(user: User | None, msg: str = "IPNotAllowed"):
+def verify_ip_ok(user: User | None, msg: str | None = None) -> bool:
     if (not user or not user.is_admin) and not is_allowed_ip():
         username = user.name if user else "Anonymous"
         cfg = current_app.config
@@ -920,7 +920,10 @@ User: {username}
                 """.strip(),
             )
         if should_block:
-            raise AccessDenied(msg)
+            raise AccessDenied(msg or cfg["IP_BLOCK_ROUTE_MESSAGE"] or "IPNotAllowed")
+        return False
+    else:
+        return True
 
 
 def verify_user_create_right(curr_user: User) -> None:

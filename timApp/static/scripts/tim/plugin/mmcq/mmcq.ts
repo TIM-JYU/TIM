@@ -183,7 +183,7 @@ export class MMCQ extends MCQBase<null | boolean[]> {
             this.checked = true;
             handleAnswerResponse(ident, {
                 savedNew: r.result.savedNew,
-                error: r.result.error,
+                errors: r.result.errors,
                 feedback: r.result.feedback,
                 topfeedback: r.result.topfeedback,
                 valid: r.result.valid,
@@ -194,7 +194,7 @@ export class MMCQ extends MCQBase<null | boolean[]> {
             handleAnswerResponse(ident, {
                 savedNew: false,
                 valid: false,
-                error: r.result.error.error,
+                errors: [r.result.error.error],
             });
             await showMessageDialog(r.result.error.error);
         }
@@ -262,7 +262,7 @@ export class MCQ extends MCQBase<number | null> {
             this.content = r.result.web;
             handleAnswerResponse(ident, {
                 savedNew: r.result.savedNew,
-                error: r.result.error,
+                errors: r.result.errors,
                 feedback: r.result.feedback,
                 topfeedback: r.result.topfeedback,
                 valid: r.result.valid,
@@ -273,7 +273,7 @@ export class MCQ extends MCQBase<number | null> {
             handleAnswerResponse(ident, {
                 savedNew: false,
                 valid: false,
-                error: r.result.error.error,
+                errors: [r.result.error.error],
             });
             await showMessageDialog(r.result.error.error);
         }

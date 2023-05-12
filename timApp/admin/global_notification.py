@@ -28,7 +28,7 @@ def inject_global_notifications() -> dict:
             notifications.append(("global-message", f.read()))
     except FileNotFoundError:
         pass
-    if not logged_in() and not is_allowed_ip():
+    if not is_allowed_ip():
         ip_block_msg = current_app.config["IP_BLOCK_MESSAGE"]
         if ip_block_msg:
             notifications.append(("ip-block-message", ip_block_msg))

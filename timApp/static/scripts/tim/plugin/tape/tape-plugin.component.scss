@@ -58,17 +58,18 @@
 
 .programArea {
   display: flex;
+  column-gap: 1em;
   width: 700px;
 }
 
 .commandAddArea .timButton, .commandAddArea input {
   display: grid;
-  width: 100px;
+  width: 150px;
 }
 
 .commandAddArea {
   margin-top: 30px;
-  width: 120px;
+  //width: 150px;
 }
 
 .commandParamArea {
@@ -92,7 +93,6 @@
   margin-top: 30px;
   display: inline-block;
   vertical-align: top;
-  margin-left: 2em;
 }
 
 .commandListContainer {
@@ -101,4 +101,68 @@
 
 .tapeItem {
   direction: ltr;
+}
+
+.tapeItem {
+  border: 1px solid black;
+  display: inline-block;
+  margin: 0.2em;
+  padding: 0.2em;
+}
+
+.memoryArea {
+  display: block;
+  height: 5em;
+  overflow: hidden;
+}
+
+.memoryContainer {
+  display: inline-block;
+  text-align: center;
+  padding: 0.2em;
+  margin: 0.1em 0.1em 1em 0.1em;
+}
+
+.memoryValue {
+  border: 1px solid black;
+}
+
+.memoryIndex {
+  font-size: 0.8em;
+}
+
+.commandListContainer {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.listBox {
+  border: 1px solid black;
+}
+
+.programCommandList {
+  height: 14.4em;
+  overflow: hidden;
+  overflow-y: scroll;
+  resize: vertical;
+
+  & .command::before {
+    content: "";
+    display: inline-block;
+    min-width: 20px;
+    font-family: "Glyphicons Halflings";
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    font-size: 0.75em;
+  }
+
+  & .command.activeCommand::before {
+    content: "\e250";
+  }
+}
+
+.command {
+  cursor: pointer;
+  font-family: var(--font-family-monospace);
 }

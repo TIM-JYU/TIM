@@ -538,7 +538,7 @@ export class ReviewCanvasComponent
 
         if (r.ok) {
             const data = r.result;
-            this.error = data.error;
+            this.error = data.errors?.join("\n");
             this.changes = false;
             if (r.result.savedNew) {
                 this.updatePDFDownloadUrl(r.result.savedNew);

@@ -118,7 +118,7 @@ export interface ITaskInfo {
 
 export interface IAnswerSaveEvent {
     savedNew: number | false;
-    error?: string;
+    errors?: [string];
     topfeedback?: string;
     feedback?: string;
     valid?: boolean;
@@ -317,15 +317,23 @@ export class AnswerBrowserComponent
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
         }
-        if (args.error) {
+        if (args.errors) {
             const markup = this.pluginMarkup();
-            let displayAlert = true;
-            if (markup?.warningFilter) {
-                const pattern = new RegExp(markup.warningFilter, "i");
-                displayAlert = !pattern.test(args.error);
-            }
-            if (displayAlert) {
-                this.alerts.push({msg: args.error, type: "warning"});
+            const pattern = markup?.warningFilter
+                ? new RegExp(markup.warningFilter, "i")
+                : undefined;
+
+            for (const e of args.errors) {
+                if (e == undefined) {
+                    continue;
+                }
+                let displayAlert = true;
+                if (pattern) {
+                    displayAlert = !pattern.test(e);
+                }
+                if (displayAlert) {
+                    this.alerts.push({msg: e, type: "warning"});
+                }
             }
         }
         this.showFeedback(args.topfeedback);
