@@ -500,3 +500,8 @@ preferred_languages: List of languages in order of preference for contacting.
 extra_canonical_hosts: List of extra canonical hosts for the instance. Used to specify canonical URLs for security.txt
 security_policy_url: URL to the security policy page.
 """
+
+GLOBAL_DOCUMENT_CACHING = False
+"""
+Global default value for document caching. The value allows globally enabling or disabling document cache.
+"""
