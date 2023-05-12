@@ -20,7 +20,7 @@ import {
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {ITemplateButton} from "../../csPlugin";
 import {FileSelectManagerComponent} from "../../util/file-select";
-import {DEFAULT_SYMBOL_BUTTONS, LATEX_BUTTONS} from "./default-symbol-buttons";
+import {LATEX_BUTTONS} from "./default-symbol-buttons";
 
 /**
  * Text is command in text format \frac{}{}.
