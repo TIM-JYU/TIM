@@ -82,6 +82,7 @@ const ERROR_MESSAGE_DELAY = 1000;
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
                 </textarea>
+                <span class="placeholder-text" [hidden]="error || !isMathFieldEmpty || !isActive" i18n >Write math</span>
                 <span class="render-error" [hidden]="!error || !isActive">{{getErrorMessage()}}</span>
             </div>
 
@@ -154,6 +155,17 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
     @Input()
     get isActive(): boolean {
         return this.active;
+    }
+
+    /**
+     * Tell whether mathfield has content.
+     */
+    @Input()
+    get isMathFieldEmpty(): boolean {
+        if (this.mathField) {
+            return this.mathField.latex().length === 0;
+        }
+        return false;
     }
 
     /**

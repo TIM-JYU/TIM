@@ -20,7 +20,7 @@ import {
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {ITemplateButton} from "../../csPlugin";
 import {FileSelectManagerComponent} from "../../util/file-select";
-import {DEFAULT_SYMBOL_BUTTONS} from "./default-symbol-buttons";
+import {DEFAULT_SYMBOL_BUTTONS, LATEX_BUTTONS} from "./default-symbol-buttons";
 
 /**
  * Text is command in text format \frac{}{}.
@@ -57,7 +57,7 @@ export class SymbolsPipe implements PipeTransform {
     /**
      * Filters buttons by type.
      * @param buttons array of buttons to filter
-     * @param type ItemplateButton.type defines which buttons are returned
+     * @param type ITemplateButton.type defines which buttons are returned
      *             if undefined or math, math and ones with no type are returned
      */
     transform(buttons: ITemplateButton[], type?: "q" | "s" | "t" | "e") {
@@ -67,9 +67,7 @@ export class SymbolsPipe implements PipeTransform {
             );
         }
         if (buttons.length === 0) {
-            return DEFAULT_SYMBOL_BUTTONS.filter(
-                (button) => button.type === type
-            );
+            return LATEX_BUTTONS.filter((button) => button.type === type);
         }
         return buttons.filter((button) => button.type === type);
     }
@@ -83,7 +81,7 @@ export class SymbolsPipe implements PipeTransform {
                 <div class="button-menu-left">
                     <div [hidden]="formulaEditorOpen" class="formula-controls">
                         <button class="timButton formula-button" (click)="toggleFormulaEditor()" i18n
-                                title="Ctrl+e">Formula
+                                title="Ctrl+e">Open formula editor
                         </button>
     
                         <div class="file-select-button">

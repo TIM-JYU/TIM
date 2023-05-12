@@ -48,6 +48,19 @@
             white-space: pre-wrap;
         }
 
+        .placeholder-text {
+            position: absolute;
+            z-index: 2;
+            top: 0;
+            left: 0;
+            padding: 8px 8px;
+            color: grey;
+            pointer-events: none;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+            font-family: "Courier New", Courier, serif;
+        }
+
         .formula-area {
             padding: 0.25em;
             font-family: "Courier New", Courier, serif;

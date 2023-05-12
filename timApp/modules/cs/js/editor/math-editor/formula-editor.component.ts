@@ -106,11 +106,12 @@ export type FieldType = {
 
                 <div class="formula-button-container">
                     <div class="formula-buttons">
-                        <button class="timButton" (click)="handleFormulaOk()" title="Ctrl+s">OK</button>
+                        <button class="timButton" (click)="handleFormulaOk()" i18n title="Ctrl+s">Save</button>
                         <button class="timButton" (click)="handleFormulaCancel()" i18n title="Esc">Cancel</button>
                     </div>
 
                     <label class="font-weight-normal">
+                        <ng-container i18n>LaTeX environment:</ng-container>
                         <select class="form-control"
                                 [(ngModel)]="formulaType"
                                 (ngModelChange)="onFormulaTypeChange()">
@@ -587,7 +588,7 @@ export class FormulaEditorComponent {
             oldContent === this.editor.content ||
             (await showConfirm(
                 $localize`Are you sure?`,
-                $localize`This will clear the editor.`
+                $localize`This will clear the formula editor.`
             ))
         ) {
             // cancelling creation of a new formula
