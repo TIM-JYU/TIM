@@ -1033,6 +1033,13 @@ export function createTemplateButtons(
         }
         // just string
         if (!line.startsWith("[")) {
+            // add all latex buttons
+            if (line === "$latexbuttons$") {
+                for (const button of LATEX_BUTTONS) {
+                    templateButtons.push(button);
+                }
+                continue;
+            }
             templateButtons.push({
                 text: getButtonTextHtml(line),
                 data: line,
