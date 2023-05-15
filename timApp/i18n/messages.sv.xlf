@@ -8056,14 +8056,6 @@
           <context context-type="linenumber">50</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3464811194641424686" datatype="html">
-        <source>This will clear the formula editor.</source>
-        <target state="translated">Detta kommer att rensa formelredigeraren.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
-          <context context-type="linenumber">590,588</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5178621706283088681" datatype="html">
         <source>Write math</source>
         <target state="translated">Skriv matematik</target>
@@ -8086,6 +8078,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
           <context context-type="linenumber">114</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8561537712097859290" datatype="html">
+        <source>This will close the formula editor without saving.</source>
+        <target state="translated">Detta kommer att stänga formelredigeraren utan att spara.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">591,589</context>
         </context-group>
       </trans-unit>
     </body>
