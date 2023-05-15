@@ -85,6 +85,7 @@ export function getTopLevelFields<M extends IGenericPluginMarkup>(
                 readwrite: null,
             }),
             state: t.unknown,
+            temporary_save: t.boolean,
         }),
         t.type({
             info: Info,

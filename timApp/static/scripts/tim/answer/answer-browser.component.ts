@@ -668,6 +668,11 @@ export class AnswerBrowserComponent
         this.answerLoader = ac;
     }
 
+    // async loadPreviousAnswer() {
+    //     this.selectedAnswer = undefined;
+    //     this.changeAnswer(false, false, true);
+    // }
+
     /**
      * Handles loading up selected answer:
      * Loads plugin html with selected answer (or user default state if no answer)
@@ -705,6 +710,7 @@ export class AnswerBrowserComponent
             user_id: this.user.id,
         };
         let taskOrAnswer: Record<string, string | number | boolean>;
+        console.log(this.selectedAnswer, "SELANSWER");
         if (this.selectedAnswer) {
             const idx = this.findSelectedAnswerIndexRevFromUnFiltered();
             taskOrAnswer = {answer_id: this.selectedAnswer.id};

@@ -188,6 +188,14 @@ export abstract class PluginBaseCommon {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
+    save() {
+        throw Error(
+            `Called unimplemented save on ${
+                this.getTaskId()?.docTask().toString() ?? ""
+            }`
+        );
+    }
+
     resetField(): undefined {
         return undefined;
     }

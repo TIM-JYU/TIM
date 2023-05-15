@@ -391,6 +391,7 @@ class Plugin:
         userctx = options.user_ctx
         user = userctx.user
         if self.answer is not None:
+            # print("TAGS")
             if self.task_id.is_points_ref:
                 p = f"{self.answer.points:g}" if self.answer.points is not None else ""
                 state = {self.ptype.get_content_field_name(): p}
@@ -429,6 +430,12 @@ class Plugin:
             "markup": self.values,
             **access,
             "state": state,
+            # FIXME
+            "temporary_save": True
+            if self.answer
+            and self.answer.tags
+            and self.answer.tags[0].tag == "autosave"
+            else False,
             "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
             "taskIDExt": self.task_id.extended_or_doc_task
             if self.task_id

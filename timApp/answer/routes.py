@@ -15,7 +15,7 @@ from sqlalchemy.orm import lazyload, joinedload
 from werkzeug.exceptions import NotFound
 
 from timApp.answer.answer import Answer, AnswerData
-from timApp.answer.answer_models import AnswerUpload
+from timApp.answer.answer_models import AnswerUpload, AnswerTag
 from timApp.answer.answers import (
     get_existing_answers_info,
     save_answer,
@@ -2027,6 +2027,23 @@ def get_model_answer(task_id: str) -> Response:
         model_answer_info.answer, dumbo_options=dumbo_opts, ignore_errors=True
     )
     return json_response({"answer": answer_html})
+
+
+@answers.get("/getPreviousAnswer")
+def get_previous_answer(task_id: str, user_id: int) -> Response:
+    user = User.get_by_id(user_id)
+    if user is None:
+        raise RouteException("Non-existent user")
+    tid = TaskId.parse(task_id)
+    d = get_doc_or_abort(tid.doc_id)
+    if get_current_user_id() != user_id:
+        verify_teacher_access(d)
+    ans = (
+        user.answers.filter(Answer.task_id == tid.doc_task)
+        .filter(~Answer.tags.any(AnswerTag.tag == "autosave"))
+        .first()
+    )
+    return json_response({"answer": ans})
 
 
 @answers.get("/getState")

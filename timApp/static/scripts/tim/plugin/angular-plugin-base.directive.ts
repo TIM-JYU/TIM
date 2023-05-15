@@ -7,7 +7,7 @@ import type {
 import type {Type} from "io-ts";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {AngularError, Failure} from "tim/util/utils";
-import {toPromise} from "tim/util/utils";
+import {to, toPromise} from "tim/util/utils";
 import type {PluginMarkupErrors} from "tim/plugin/util";
 import {getDefaults, PluginBaseCommon, PluginMeta} from "tim/plugin/util";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -22,6 +22,8 @@ import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {ChangeType, ViewCtrl} from "tim/document/viewctrl";
+import {$http} from "tim/util/ngimport";
+import type {IAnswer} from "tim/answer/IAnswer";
 
 /**
  * Plugin with initialization data passed from the server via JSON.
@@ -135,7 +137,8 @@ export abstract class AngularPluginBase<
         } else {
             this.attrsall = validated.right;
         }
-
+        console.log("ATTRSALL");
+        console.log(this.attrsall.state);
         if (this.attrsall) {
             this.pluginMeta = new PluginMeta(
                 this.element,
@@ -176,7 +179,47 @@ export abstract class AngularPluginBase<
                 return;
             }
         }
-        this.resetChanges();
+        const taskId = this.pluginMeta.getTaskId()?.docTask().toString();
+        if (!taskId) {
+            return;
+        }
+        const ab = this.vctrl.getAnswerBrowser(taskId);
+        console.log("ab", ab);
+        if (!ab || !ab.user) {
+            return;
+        }
+        // TODO: undo should be done by loading state
+        // ab?.loadPreviousAnswer();
+
+        const r = await to(
+            $http.get<{
+                answer: IAnswer | undefined;
+            }>("/getPreviousAnswer", {
+                params: {
+                    task_id: taskId,
+                    user_id: ab.user.id,
+                },
+            })
+        );
+        if (!r.ok) {
+            // show errors
+            return;
+        }
+        const ans = r.result.data.answer;
+        console.log("ans");
+        let ok = true;
+        if (!ans) {
+            console.log("reset");
+            this.resetField();
+        } else {
+            const prs = JSON.parse(ans.content);
+            console.log(prs);
+            const sa = this.setAnswer(prs);
+            ok = sa.ok;
+        }
+        if (ok) {
+            this.save();
+        }
     }
 
     updateListeners(state: ChangeType) {

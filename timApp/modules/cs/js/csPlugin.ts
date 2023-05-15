@@ -819,6 +819,7 @@ const CsAllPart = t.partial({
     own_error: t.string,
     gitRegistered: t.boolean,
     isTauno: t.boolean,
+    temporary_save: t.boolean,
 });
 
 const SetData = CsAllPart; // TODO maybe make an own type for this instead of using CsAllPart
@@ -1409,6 +1410,8 @@ export class CsController extends CsBase implements ITimComponent {
             )}`;
             this.error = message;
         }
+        console.log(ok, message);
+        console.log(this.usercode);
         return {ok: ok, message: message};
     }
 
@@ -1428,7 +1431,7 @@ export class CsController extends CsBase implements ITimComponent {
 
     hasUnSavedInput(): boolean {
         if (this.savedvals == null) {
-            return false;
+            return true;
         }
         if (this.editor) {
             const allFiles = this.editor.allFiles;
@@ -2195,11 +2198,17 @@ ${fhtml}
         if (!this.usercode) {
             this.usercode = this.attrsall.usercode ?? this.byCode ?? "";
         }
-        this.initSaved();
         this.isViz = this.type.startsWith("viz");
         this.isVars = this.type.startsWith("vars");
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this);
+        }
+        console.log(this.attrsall.temporary_save);
+        if (this.attrsall.temporary_save) {
+            console.log("ok");
+            this.edited = true;
+        } else {
+            this.initSaved();
         }
         this.height = this.markup.height;
         if (this.markup.width) {
@@ -2714,14 +2723,16 @@ ${fhtml}
         );
         if (r.ok) {
             this.isRunning = false;
-
-            this.initSaved();
+            if (!autosave) {
+                this.initSaved();
+            }
             const data = r.result;
             const tsruntime = ((performance.now() - t0run) / 1000).toFixed(3);
             const runtime = (data.web.runtime ?? "").trim();
             this.oneruntime = "" + tsruntime + " " + runtime.split(" ", 1)[0];
             this.runtime = "\nWhole: " + tsruntime + "\ncsPlugin: " + runtime;
             if (
+                !autosave &&
                 (this.isText || this.attrsall.markup.savedText) &&
                 data.savedNew
             ) {
