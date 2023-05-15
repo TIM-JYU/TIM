@@ -4177,7 +4177,7 @@ ${fhtml}
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
             <div class="csrunPreview" [class.csrun-clicking]="formulaEditor" (keydown)="elementSelectAll($event)" tabindex="0" 
-                 (click)="handleSelectFormulaFromPreview($event, preview)" #preview>
+                 (dblclick)="handleSelectFormulaFromPreview($event, preview)" #preview>
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
                      caption="Preview"
