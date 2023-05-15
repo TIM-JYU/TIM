@@ -3828,7 +3828,7 @@ ${fhtml}
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
             <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
-                        (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify" ></button>
+                        (click)="addText(item)" [attr.title]="item.expl" [attr.aria-label]="item.expl" [innerHTML]="item.text | purify" ></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
                        [maxRows]="maxrows"
@@ -3939,21 +3939,23 @@ ${fhtml}
                 <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
                    (click)="copyString(fetchError, $event)"
                    title="Copy text to clipboard"
+                   aria-label="Copy text to clipboard"
                 >{{markup.copyErrorLink}}</a>
                 <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{fetchError}}</pre>
                 <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <div class="consoleDiv" *ngIf="result" >
+            <div class="consoleDiv" *ngIf="result">
                 <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
                    (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
+                   aria-label="Copy console text to clipboard"
                 >{{markup.copyConsoleLink}}</a>
-                <pre id="resultConsole"  class="console" (keydown)="elementSelectAll($event)" tabindex="0">{{result}}</pre>
+                <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)" tabindex="0" aria-live="polite">{{result}}</pre>
             </div>
-            <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
-            <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0">
+            <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify" aria-live="polite"></span></div>
+            <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0" aria-live="polite">
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
                      caption="Preview"
@@ -3975,7 +3977,7 @@ ${fhtml}
                             style="border:0">
                     </iframe>
                 </div>
-                <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify">
+                <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">
                 </div>
             </div>
             <tim-graph-viz class="csGraphViz" *ngIf="isViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>
