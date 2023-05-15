@@ -588,7 +588,7 @@ export class FormulaEditorComponent {
             oldContent === this.editor.content ||
             (await showConfirm(
                 $localize`Are you sure?`,
-                $localize`This will clear the formula editor.`
+                $localize`This will close the formula editor without saving.`
             ))
         ) {
             // cancelling creation of a new formula
