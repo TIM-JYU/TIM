@@ -831,7 +831,20 @@ export class AceParEditor extends BaseParEditor implements IEditor {
     }
 
     insert(str: string): void {
-        this.editor.insert(str);
+        if (!this.editor) {
+            return;
+        }
+        const sess = this.editor.getSession();
+        let back = -1;
+        const ci = str.indexOf(CURSOR); // check if there is a cursor marker
+        if (ci >= 0) {
+            str = str.replace(CURSOR, "");
+            back = str.length - ci;
+        }
+        sess.replace(sess.selection.getRange(), str);
+        if (back > 0) {
+            this.editor.navigateLeft(back);
+        }
     }
 
     setReadOnly(b: boolean): void {

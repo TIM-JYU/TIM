@@ -8018,14 +8018,6 @@
           <context context-type="linenumber">265,264</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5520655308456220172" datatype="html">
-        <source>This will clear the editor.</source>
-        <target state="translated">Tämä tyhjentää editorin.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
-          <context context-type="linenumber">266,264</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="604592115785316180" datatype="html">
         <source>Multiline</source>
         <target state="translated">Monirivinen (Multiline)</target>
@@ -8056,14 +8048,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
           <context context-type="linenumber">74,75</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7486361580112552685" datatype="html">
-        <source>Formula </source>
-        <target state="translated">Kaava </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
-          <context context-type="linenumber">48,49</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6963601602339779130" datatype="html">
@@ -8168,6 +8152,38 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
           <context context-type="linenumber">50</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5178621706283088681" datatype="html">
+        <source>Write math</source>
+        <target state="translated">Kirjoita matematiikkaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-field.component.ts</context>
+          <context context-type="linenumber">85,86</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8012298978358910252" datatype="html">
+        <source>Open formula editor </source>
+        <target state="translated">Avaa kaavaeditori </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
+          <context context-type="linenumber">84,85</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6326494355347683471" datatype="html">
+        <source>LaTeX environment:</source>
+        <target state="translated">LaTeX-ympäristö:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">114</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8561537712097859290" datatype="html">
+        <source>This will close the formula editor without saving.</source>
+        <target state="translated">Tämä sulkee kaavaeditorin tallentamatta.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/math-editor/formula-editor.component.ts</context>
+          <context context-type="linenumber">591,589</context>
         </context-group>
       </trans-unit>
     </body>
