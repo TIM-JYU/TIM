@@ -738,6 +738,7 @@ const CsMarkupOptional = t.partial({
     deleteFiles: t.array(t.string),
     jsBrowserConsole: t.boolean,
     editorOrder: t.array(t.string),
+    editorOrderForceAccessible: t.boolean,
     resetUserInput: t.boolean,
     uploadAcceptPattern: t.string,
     uploadAcceptMaxSize: t.number,
@@ -2221,9 +2222,28 @@ ${fhtml}
     async ngAfterViewInit() {
         if (this.markup.editorOrder) {
             const style = this.element[0].style;
+            const classOrder: Record<string, number> = {
+                csHeader: -9999,
+            };
             for (let i = 0; i < this.markup.editorOrder.length; i++) {
                 const key = this.markup.editorOrder[i];
                 style.setProperty(`--csplugin-${key}`, i.toString());
+                classOrder[key] = i;
+            }
+
+            // TODO: Instead of forcing reorder, maybe it would be better to create something that uses
+            //  Angular templates to conditionally render elements in desired order. This solution is temporary.
+            if (this.markup.editorOrderForceAccessible) {
+                const runDiv = this.element.find(".csRunDiv");
+                const els = runDiv.children().toArray();
+                els.sort((a, b) => {
+                    const ca = classOrder[a.className] ?? 9999;
+                    const cb = classOrder[b.className] ?? 9999;
+                    return ca - cb;
+                });
+                for (const e of els) {
+                    runDiv[0].appendChild(e);
+                }
             }
         }
 
@@ -3946,7 +3966,7 @@ ${fhtml}
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <div class="consoleDiv" *ngIf="result">
+            <div class="consoleDiv" [hidden]="!result">
                 <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
                    (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
