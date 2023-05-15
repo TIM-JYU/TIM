@@ -1,7 +1,5 @@
 latexButtons
 List of LaTeX buttons used in matriculation examinations
 buttons: |!!
-[ "$", "$⁞$", "$ $", "t" ]
-[ "$$", "$$⁞$$", "$$ $$", "t"]
 $latexbuttons$
 !!
