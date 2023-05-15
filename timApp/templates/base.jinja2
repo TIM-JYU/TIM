@@ -122,13 +122,16 @@
             <div class="col-lg-{{ col_1_lg }}
                         col-md-{{ col_1_md }}
                         col-xs-{{ col_1_xs }}
-                        col-sm-{{ col_1_sm }}">
+                        col-sm-{{ col_1_sm }}"
+                        role="navigation"
+                        aria-label="index">
                 <tim-sidebar-menu></tim-sidebar-menu>
             </div>
             <div class="col-lg-{{ col_2_lg }}
                         col-md-{{ col_2_md }}
                         col-xs-{{ col_2_xs }}
-                        col-sm-{{ col_2_sm }}">
+                        col-sm-{{ col_2_sm }}"
+                        role="banner">
                 <tim-site-header></tim-site-header>
             </div>
             <div class="col-lg-{{ col_3_lg }}
@@ -173,7 +176,7 @@
                         col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
                         col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
                         col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
-                <div id="header" class="hidden-print">
+                <div id="header" class="hidden-print" role="navigation" aria-label="view navigation">
                     <tim-header></tim-header>
                 </div>
             </div>
