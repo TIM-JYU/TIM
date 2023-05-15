@@ -174,7 +174,6 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
     /**
      * Tell whether mathfield has content.
      */
-    @Input()
     get isMathFieldEmpty(): boolean {
         if (this.mathField) {
             return this.mathField.latex().length === 0;
