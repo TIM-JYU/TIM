@@ -752,6 +752,7 @@ const CsMarkupOptional = t.partial({
     hide: t.partial({wrap: t.boolean, changed: t.boolean}),
     savedText: t.string,
     testText: t.string,
+    runningText: t.string,
     rootPath: t.string,
     masterPath: t.string,
     files: oneOrArray(FileMarkup),
@@ -761,6 +762,7 @@ const CsMarkupOptional = t.partial({
     deleteFiles: t.array(t.string),
     jsBrowserConsole: t.boolean,
     editorOrder: t.array(t.string),
+    editorOrderForceAccessible: t.boolean,
     resetUserInput: t.boolean,
     uploadAcceptPattern: t.string,
     uploadAcceptMaxSize: t.number,
@@ -2045,6 +2047,10 @@ ${fhtml}
         return this.markup.testText ?? "Test";
     }
 
+    get runningText() {
+        return this.markup.runningText;
+    }
+
     buttonText() {
         const txt = super.buttonText();
         if (txt) {
@@ -2392,9 +2398,28 @@ ${fhtml}
     async ngAfterViewInit() {
         if (this.markup.editorOrder) {
             const style = this.element[0].style;
+            const classOrder: Record<string, number> = {
+                csHeader: -9999,
+            };
             for (let i = 0; i < this.markup.editorOrder.length; i++) {
                 const key = this.markup.editorOrder[i];
                 style.setProperty(`--csplugin-${key}`, i.toString());
+                classOrder[key] = i;
+            }
+
+            // TODO: Instead of forcing reorder, maybe it would be better to create something that uses
+            //  Angular templates to conditionally render elements in desired order. This solution is temporary.
+            if (this.markup.editorOrderForceAccessible) {
+                const runDiv = this.element.find(".csRunDiv");
+                const els = runDiv.children().toArray();
+                els.sort((a, b) => {
+                    const ca = classOrder[a.className] ?? 9999;
+                    const cb = classOrder[b.className] ?? 9999;
+                    return ca - cb;
+                });
+                for (const e of els) {
+                    runDiv[0].appendChild(e);
+                }
             }
         }
 
@@ -4049,7 +4074,7 @@ ${fhtml}
             <div #runSnippets class="csRunSnippets" [hidden]="this.formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" 
                         *ngFor="let item of templateButtons | symbols"
-                        (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify"></button>
+                        (click)="addText(item)" [attr.title]="item.expl" [attr.aria-label]="item.expl" [innerHTML]="item.text | purify"></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
                        [maxRows]="maxrows"
@@ -4088,6 +4113,7 @@ ${fhtml}
                             (click)="runUnitTest()">UTest
                     </button>
                     <tim-loading *ngIf="isRunning"></tim-loading>
+                    <span class="runningText" *ngIf="isRunning && runningText">{{runningText}}</span>
                     &nbsp;&nbsp;
                     <span *ngIf="isDocument">
                 <a href="#" [ngClass]="{'link-disable': isRunning}"
@@ -4161,22 +4187,24 @@ ${fhtml}
                 <a class="copyErrorLink" *ngIf="markup.copyErrorLink"
                    (click)="copyString(fetchError, $event)"
                    title="Copy text to clipboard"
+                   aria-label="Copy text to clipboard"
                 >{{markup.copyErrorLink}}</a>
                 <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{fetchError}}</pre>
                 <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <div class="consoleDiv" *ngIf="result">
+            <div class="consoleDiv" [hidden]="!result">
                 <a class="copyConsoleLink" *ngIf="markup.copyConsoleLink"
                    (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
+                   aria-label="Copy console text to clipboard"
                 >{{markup.copyConsoleLink}}</a>
                 <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)"
-                     tabindex="0">{{result}}</pre>
+                     tabindex="0" aria-live="assertive">{{result}}</pre>
             </div>
-            <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
-            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor" (keydown)="elementSelectAll($event)" tabindex="0" 
+            <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify" aria-live="polite"></span></div>
+            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor" (keydown)="elementSelectAll($event)" tabindex="0" aria-live="polite"
                  (dblclick)="handleSelectFormulaFromPreview($event, preview)" #preview>
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
@@ -4199,7 +4227,7 @@ ${fhtml}
                             style="border:0">
                     </iframe>
                 </div>
-                <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify">
+                <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">
                 </div>
             </div>
             <tim-graph-viz class="csGraphViz" *ngIf="isViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>

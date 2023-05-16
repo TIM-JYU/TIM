@@ -36,7 +36,7 @@
     </div>
     <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
     {% endif %}
-    <div id="pars">
+    <div id="pars" role="main">
         {% include 'partials/paragraphs.jinja2' %}
         <div ng-cloak class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
              ng-class="{'height-35': $ctrl.editing}">

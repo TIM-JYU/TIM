@@ -922,7 +922,7 @@ export class TapePluginContent implements PluginJson {
         const lines = text.split("\n");
         for (let line of lines) {
             line = line.replace(";", "").trim();
-            if (line.length == 0) {
+            if (line.length == 0 || line.startsWith("//")) {
                 continue;
             }
 
