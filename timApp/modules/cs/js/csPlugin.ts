@@ -729,6 +729,7 @@ const CsMarkupOptional = t.partial({
     hide: t.partial({wrap: t.boolean, changed: t.boolean}),
     savedText: t.string,
     testText: t.string,
+    runningText: t.string,
     rootPath: t.string,
     masterPath: t.string,
     files: oneOrArray(FileMarkup),
@@ -1788,6 +1789,10 @@ ${fhtml}
 
     get testText() {
         return this.markup.testText ?? "Test";
+    }
+
+    get runningText() {
+        return this.markup.runningText;
     }
 
     buttonText() {
@@ -3887,6 +3892,7 @@ ${fhtml}
                             (click)="runUnitTest()">UTest
                     </button>
                     <tim-loading *ngIf="isRunning"></tim-loading>
+                    <span class="runningText" *ngIf="isRunning && runningText">{{runningText}}</span>
                     &nbsp;&nbsp;
                     <span *ngIf="isDocument">
                 <a href="#" [ngClass]="{'link-disable': isRunning}"
