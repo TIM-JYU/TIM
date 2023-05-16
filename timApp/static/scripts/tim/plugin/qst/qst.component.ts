@@ -211,7 +211,17 @@ export class QstComponent
 
     private checkChanges() {
         const oldVal = this.changes;
-        this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
+        const savedAnswerFalsy =
+            this.savedAnswer == undefined ||
+            this.savedAnswer.reduce((acc, curr) => curr.length + acc, 0) == 0;
+        const newAnswerFalsy =
+            this.newAnswer == undefined ||
+            this.newAnswer.reduce((acc, curr) => curr.length + acc, 0) == 0;
+        if (savedAnswerFalsy && newAnswerFalsy) {
+            this.changes = false;
+        } else {
+            this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
+        }
         if (oldVal != this.changes) {
             this.updateListeners(
                 this.changes ? ChangeType.Modified : ChangeType.Saved
