@@ -142,7 +142,7 @@
 
 .programCommandList {
   height: 14.4em;
-  overflow: hidden;
+  overflow: auto;
   overflow-y: scroll;
   resize: vertical;
 
@@ -165,4 +165,6 @@
 .command {
   cursor: pointer;
   font-family: var(--font-family-monospace);
+  display: flex;
+  align-items: baseline;
 }
