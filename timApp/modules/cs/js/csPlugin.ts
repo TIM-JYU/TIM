@@ -3978,7 +3978,7 @@ ${fhtml}
                    title="Copy console text to clipboard"
                    aria-label="Copy console text to clipboard"
                 >{{markup.copyConsoleLink}}</a>
-                <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)" tabindex="0" aria-live="polite">{{result}}</pre>
+                <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)" tabindex="0" aria-live="assertive">{{result}}</pre>
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify" aria-live="polite"></span></div>
             <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0" aria-live="polite">
