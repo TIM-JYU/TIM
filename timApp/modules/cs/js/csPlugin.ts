@@ -3972,7 +3972,7 @@ ${fhtml}
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <div class="consoleDiv" [hidden]="!result">
+            <div class="consoleDiv" [class.soft-hidden]="!result">
                 <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
                    (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
