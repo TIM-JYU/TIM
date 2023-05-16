@@ -153,6 +153,8 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     viewmode: bool
     access: str | Missing = missing
     hide_names: bool | Missing = missing
+    temporary_save: bool | Missing = missing
+    previous_save: PluginState | Missing = missing
 
     def requires_login(self) -> bool:
         """

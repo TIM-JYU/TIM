@@ -1,15 +1,18 @@
 import html
+import json
 import re
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
+from json import JSONDecodeError
 from typing import Iterable, Generator, Match, Any
 
 import yaml
 from marshmallow import missing, ValidationError, EXCLUDE
 
 from timApp.answer.answer import Answer
+from timApp.answer.answer_models import AnswerTag
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry
@@ -423,19 +426,33 @@ class Plugin:
         ):
             access = {"access": self.task_id.access_specifier.value}
 
+        autosave_info = {}
+        if self.known.serverAutoSave:
+            if (
+                self.answer
+                and self.answer.tags
+                and self.answer.tags[0].tag == "autosave"  # FIXME
+            ):
+                autosave_info = {"temporary_save": True}
+                ans = (
+                    user.answers.filter(Answer.task_id == self.task_id.doc_task)
+                    .filter(~Answer.tags.any(AnswerTag.tag == "autosave"))
+                    .first()
+                )
+                if ans:
+                    try:
+                        autosave_info["previous_save"] = json.loads(ans.content)
+                    except JSONDecodeError:
+                        autosave_info["previous_save"] = {}
+
         hide_names_info = {}
         if is_hide_names():
             hide_names_info = {"hide_names": True}
         return {
             "markup": self.values,
             **access,
+            **autosave_info,
             "state": state,
-            # FIXME
-            "temporary_save": True
-            if self.answer
-            and self.answer.tags
-            and self.answer.tags[0].tag == "autosave"
-            else False,
             "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
             "taskIDExt": self.task_id.extended_or_doc_task
             if self.task_id

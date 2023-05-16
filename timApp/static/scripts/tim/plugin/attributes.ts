@@ -60,6 +60,7 @@ export const GenericPluginMarkup = t.partial({
     warningFilter: nullable(t.string),
     previousTask: nullable(previousTaskType),
     saveTeacher: t.boolean,
+    serverAutoSave: t.boolean,
     spellcheck: t.boolean,
 });
 
@@ -85,6 +86,7 @@ export function getTopLevelFields<M extends IGenericPluginMarkup>(
                 readwrite: null,
             }),
             state: t.unknown,
+            previous_save: t.unknown,
             temporary_save: t.boolean,
         }),
         t.type({

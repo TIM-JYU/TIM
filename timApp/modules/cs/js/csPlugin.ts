@@ -801,26 +801,34 @@ const CsMarkup = t.intersection([
     GenericPluginMarkup,
 ]);
 
-const CsAllPart = t.partial({
-    uploadedFile: t.string,
-    uploadedType: t.string,
-    uploadedFiles: t.array(UploadedFile),
+// TODO not comprehensive
+const CsInputs = t.partial({
     userargs: t.string,
     usercode: t.string,
     userinput: t.string,
-    submittedFiles: t.array(FileSubmission),
-    selectedLanguage: t.string,
-    by: t.string,
-    docurl: t.string,
-    program: t.string,
-    replace: t.string,
-    timeout: t.number,
-    error: t.string,
-    own_error: t.string,
-    gitRegistered: t.boolean,
-    isTauno: t.boolean,
-    temporary_save: t.boolean,
 });
+
+const CsAllPart = t.intersection([
+    t.partial({
+        uploadedFile: t.string,
+        uploadedType: t.string,
+        uploadedFiles: t.array(UploadedFile),
+        submittedFiles: t.array(FileSubmission),
+        selectedLanguage: t.string,
+        by: t.string,
+        docurl: t.string,
+        program: t.string,
+        replace: t.string,
+        timeout: t.number,
+        error: t.string,
+        own_error: t.string,
+        gitRegistered: t.boolean,
+        isTauno: t.boolean,
+        previous_save: CsInputs,
+        temporary_save: t.boolean,
+    }),
+    CsInputs,
+]);
 
 const SetData = CsAllPart; // TODO maybe make an own type for this instead of using CsAllPart
 
@@ -1196,9 +1204,9 @@ export class CsController extends CsBase implements ITimComponent {
             this.editor.content = usercode;
             this.editor.languageMode = this.mode;
 
-            if (this.savedvals) {
-                this.savedvals.usercode = this.usercode;
-            }
+            // if (this.savedvals) {
+            //     this.savedvals.usercode = this.usercode;
+            // }
         }
         this.editor.placeholder = this.placeholder;
         this.editor.mayAddFiles = this.markup.mayAddFiles;
@@ -1434,16 +1442,28 @@ export class CsController extends CsBase implements ITimComponent {
             return true;
         }
         if (this.editor) {
+            console.log("editor");
             const allFiles = this.editor.allFiles;
             if (allFiles.length != this.savedvals.files.length) {
+                console.log(
+                    "allfileslen",
+                    allFiles.length,
+                    this.savedvals.files.length
+                );
                 return true;
             }
             for (let i = 0; i < allFiles.length; ++i) {
                 if (allFiles[i].content != this.savedvals.files[i]) {
+                    console.log(
+                        "allfilescontent",
+                        allFiles[i].content,
+                        this.savedvals.files[i]
+                    );
                     return true;
                 }
             }
         }
+        console.log("comparison");
         return (
             (this.savedvals.args !== this.userargs ||
                 this.savedvals.input !== this.userinput ||
@@ -1462,6 +1482,7 @@ export class CsController extends CsBase implements ITimComponent {
             this.runError = undefined;
         }
         const nowUnsaved = this.hasUnSavedInput();
+        console.log("nowUnsaved?", nowUnsaved);
         if (!this.edited && nowUnsaved) {
             this.edited = true;
             if (this.clearSaved) {
@@ -1485,6 +1506,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     resetChanges(): void {
+        console.log("SAVEDVALS", this.savedvals);
         this.usercode = this.savedvals?.usercode ?? "";
         this.userargs = this.savedvals?.args ?? "";
         this.userinput = this.savedvals?.input ?? "";
@@ -2203,10 +2225,10 @@ ${fhtml}
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this);
         }
-        console.log(this.attrsall.temporary_save);
+        console.log("tempsave?", this.attrsall.temporary_save);
+        console.log("prevsave:", this.attrsall.previous_save);
         if (this.attrsall.temporary_save) {
-            console.log("ok");
-            this.edited = true;
+            this.initUnSaved();
         } else {
             this.initSaved();
         }
@@ -2303,7 +2325,24 @@ ${fhtml}
         return url.split("/").slice(6).join("/");
     }
 
+    initUnSaved() {
+        const prev = this.attrsall.previous_save;
+        this.savedvals = {
+            usercode: prev?.usercode ?? "",
+            args: prev?.userargs ?? "",
+            input: prev?.userinput ?? "",
+            // // TODO: We don't have files yet at temporary save
+            files: this.editor?.files.map((f) => f.content) ?? [
+                prev?.usercode ?? "",
+            ],
+        };
+        this.edited = true;
+        console.log("savedvals@initunsaved", this.savedvals);
+        this.updateListeners(ChangeType.Modified);
+    }
+
     initSaved(clear = false) {
+        console.log("initsaved?");
         if (!this.savedvals || (this.savedvals && !clear)) {
             this.savedvals = {
                 files: this.editor?.files.map((f) => f.content) ?? [

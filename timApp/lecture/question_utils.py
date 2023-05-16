@@ -178,6 +178,9 @@ def qst_handle_randomization(jso: dict) -> None:
     if prev_state and isinstance(prev_state, dict):
         rand_arr = prev_state.get("order")
         jso["state"] = prev_state.get("c")
+        previous_real_save = jso.get("previous_save", None)
+        if previous_real_save:
+            jso["previous_save"] = previous_real_save.get("c")
     rows = markup.get("rows", [])
     if (
         not prev_state and rand_arr is None

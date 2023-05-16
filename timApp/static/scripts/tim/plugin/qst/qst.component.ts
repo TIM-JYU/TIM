@@ -51,6 +51,7 @@ const PluginFields = t.intersection([
         state: nullable(t.array(t.array(t.string))),
     }),
     t.partial({
+        previous_save: nullable(t.array(t.array(t.string))),
         show_result: t.boolean,
     }),
 ]);
@@ -159,9 +160,11 @@ export class QstComponent
         return this.changes;
     }
 
-    async save(): Promise<{saved: boolean; message: string | undefined}> {
+    async save(
+        autosave?: boolean
+    ): Promise<{saved: boolean; message: string | undefined}> {
         if (this.isUnSaved()) {
-            return this.doSaveText(false);
+            return this.doSaveText(false, autosave);
         } else {
             return {saved: false, message: undefined};
         }
@@ -173,6 +176,12 @@ export class QstComponent
         if (!this.pluginMeta.isPreview()) {
             this.vctrl.addTimComponent(this);
         }
+        console.log("prevsave", this.attrsall.previous_save);
+        if (this.attrsall.previous_save) {
+            this.savedAnswer = this.attrsall.previous_save;
+        }
+        console.log("savedAnswer", this.savedAnswer);
+
         this.preview = makePreview(this.attrsall.markup, {
             answerTable: this.attrsall.state ?? [],
             showCorrectChoices: this.attrsall.show_result,
@@ -214,7 +223,7 @@ export class QstComponent
     async updateAnswer(at: AnswerTable) {
         // updateAnswer is called always at least once from dynamicAnswerSheet (see the ngOnChanges in that file).
         // Upon first call, we record the currently saved answer.
-        if (this.newAnswer === undefined) {
+        if (this.newAnswer === undefined && !this.attrsall.temporary_save) {
             this.savedAnswer = at;
         }
         this.newAnswer = at;
@@ -281,7 +290,7 @@ export class QstComponent
         return this.attrsall.markup.invalid;
     }
 
-    private async doSaveText(nosave: boolean) {
+    private async doSaveText(nosave: boolean, autosave?: boolean) {
         this.log = undefined;
         this.error = undefined;
         this.isRunning = true;
@@ -308,7 +317,7 @@ export class QstComponent
                 markup?: IQuestionMarkup;
                 error?: string;
             };
-        }>(params);
+        }>({...params, autosave: autosave});
         this.isRunning = false;
         if (!r.ok) {
             this.error =
@@ -325,14 +334,19 @@ export class QstComponent
         }
         const data = r.result;
         let result = data.web.result;
-        if (result == "Saved") {
-            if (this.attrsall.markup.savedText != undefined) {
-                result = this.attrsall.markup.savedText;
-            } else {
-                result = $localize`Saved`;
+        if (!autosave) {
+            if (result == "Saved") {
+                if (this.attrsall.markup.savedText != undefined) {
+                    result = this.attrsall.markup.savedText;
+                } else {
+                    result = $localize`Saved`;
+                }
             }
+            this.savedAnswer = this.newAnswer;
+            this.saveFailed = false;
         }
         this.result = result;
+        this.checkChanges();
         this.log = data.web.error;
         if (data.web.markup && data.web.show_result) {
             this.preview = makePreview(data.web.markup, {
@@ -342,9 +356,7 @@ export class QstComponent
             this.preview.showExplanations = true;
             this.preview.showCorrectChoices = true;
         }
-        this.savedAnswer = this.newAnswer;
-        this.saveFailed = false;
-        this.checkChanges();
+
         return {saved: true, message: undefined};
     }
 
