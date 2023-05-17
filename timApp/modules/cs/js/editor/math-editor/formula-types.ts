@@ -7,6 +7,7 @@
  */
 
 export type ReplacePair = [RegExp, string] | undefined;
+type MaybeStringPair = [string, string] | undefined;
 
 /**
  * Describes the type of formula, and the name to show to user.
@@ -40,11 +41,16 @@ type FormulaProperties = {
     type: FormulaType;
     // if it is a begin-end-style formula, define which
     beginEndKeyword: string;
+    // If first string is typed into visual field,
+    // it will be replaced by second string.
+    // No replacing if undefined.
+    typeReplace: MaybeStringPair;
+    // writeReplace is used when copying text from visual field to latex field.
+    // editReplace is used when copying text from latex field to visual field.
     // First value is search RegExp and second is replace string.
-    // editReplace is used when receiving latex code from latex field.
-    // writeReplace is used when receiving latex code from visual field.
-    editReplace: ReplacePair;
+    // No replacing if undefined.
     writeReplace: ReplacePair;
+    editReplace: ReplacePair;
     // starting mark of the formula
     start: string;
     // ending mark of the formula
@@ -67,8 +73,9 @@ export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.Inline,
         beginEndKeyword: "",
-        editReplace: undefined,
+        typeReplace: undefined,
         writeReplace: undefined,
+        editReplace: undefined,
         start: "$",
         end: "$",
         join: "",
@@ -78,8 +85,9 @@ export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.Multiline,
         beginEndKeyword: "",
-        editReplace: undefined,
+        typeReplace: undefined,
         writeReplace: undefined,
+        editReplace: undefined,
         start: "$$\n",
         end: "\n$$",
         join: "\\\\\n",
@@ -94,8 +102,9 @@ export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.Align,
         beginEndKeyword: "align*",
-        editReplace: [/(?<!\\)&/gm, "¤"],
-        writeReplace: [/¤/gm, "&"],
+        typeReplace: ["\\&", "＆"],
+        writeReplace: [/＆/gm, "&"],
+        editReplace: [/(?<!\\)&/gm, "＆"],
         start: "\\begin{align*}\n",
         end: "\n\\end{align*}",
         join: "\\\\\n",
@@ -105,8 +114,9 @@ export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.AlignAt,
         beginEndKeyword: "alignat",
-        editReplace: [/(?<!\\)&/gm, "¤"],
-        writeReplace: [/¤/gm, "&"],
+        typeReplace: ["\\&", "＆"],
+        writeReplace: [/＆/gm, "&"],
+        editReplace: [/(?<!\\)&/gm, "＆"],
         start: "\\begin{alignat*}{}\n",
         end: "\n\\end{alignat*}",
         join: "\\\\\n",
@@ -116,8 +126,9 @@ export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.Gather,
         beginEndKeyword: "gather",
-        editReplace: [/(?<!\\)&/gm, "¤"],
-        writeReplace: [/¤/gm, "&"],
+        typeReplace: ["\\&", "＆"],
+        writeReplace: [/＆/gm, "&"],
+        editReplace: [/(?<!\\)&/gm, "＆"],
         start: "\\begin{gather*}\n",
         end: "\n\\end{gather*}",
         join: "\\\\\n",
@@ -127,8 +138,9 @@ export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.Equation,
         beginEndKeyword: "equation",
-        editReplace: undefined,
+        typeReplace: undefined,
         writeReplace: undefined,
+        editReplace: undefined,
         start: "\\begin{equation*}\n",
         end: "\n\\end{equation*}",
         join: "",
@@ -138,8 +150,9 @@ export const FormulaPropertyList: FormulaProperties[] = [
     {
         type: FormulaType.NotDefined,
         beginEndKeyword: "",
-        editReplace: undefined,
+        typeReplace: undefined,
         writeReplace: undefined,
+        editReplace: undefined,
         start: "",
         end: "",
         join: "",

@@ -199,16 +199,27 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
             if (this.undoRedo != this.undoRedoCodes.NOCHANGE) {
                 return;
             }
-            this.latexInput = this.mathField.latex();
-            // replace escaped characters if needed
+            // get visual latex code and properties for formula type
+            let latexCode = this.mathField.latex();
             const properties = FormulaPropertyList.find(
                 (formulaType) => formulaType.type === this.formulaType
             );
+            // replace characters if needed
             if (properties) {
+                if (properties.typeReplace) {
+                    if (latexCode.includes(properties.typeReplace[0])) {
+                        // remove typed character
+                        this.mathField.keystroke("Backspace");
+                        // insert replacement character and update latex code
+                        this.mathField.write(properties.typeReplace[1]);
+                        latexCode = this.mathField.latex();
+                    }
+                }
                 if (properties.writeReplace) {
+                    // update latex code for latex field
                     try {
                         const regex = new RegExp(properties.writeReplace[0]);
-                        this.latexInput = this.latexInput.replace(
+                        latexCode = latexCode.replace(
                             regex,
                             properties.writeReplace[1]
                         );
@@ -220,6 +231,8 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
                     }
                 }
             }
+            // update latex field and formula editor
+            this.latexInput = latexCode;
             this.edited.emit({
                 latex: this.latexInput,
                 id: this.id,
@@ -307,8 +320,8 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
      */
     handleLatexInput() {
         if (this.activeEditor === ActiveEditorType.Latex) {
-            // replace escaped characters if needed
             let visualInput = this.latexInput;
+            // escape characters if needed
             const properties = FormulaPropertyList.find(
                 (formulaType) => formulaType.type === this.formulaType
             );
@@ -328,6 +341,7 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
                     }
                 }
             }
+            // update visual field and formula editor
             this.mathField.latex(visualInput);
             this.edited.emit({
                 latex: this.latexInput,
