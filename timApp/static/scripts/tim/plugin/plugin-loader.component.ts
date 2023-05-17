@@ -172,23 +172,6 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
 
     @HostListener("focusout", ["$event"])
     onBlur(event: FocusEvent) {
-        console.log(event);
-        // if (!event.relatedTarget || !(event.relatedTarget instanceof Node)) {
-        //     return;
-        // }
-        //
-        console.log("targ", !!event.relatedTarget, event.relatedTarget);
-        console.log(
-            "targ is node?",
-            event.relatedTarget instanceof Node
-                ? event.relatedTarget.nodeName
-                : "F"
-        );
-        console.log(
-            "targ node, inside el",
-            event.relatedTarget instanceof Node &&
-                this.el.nativeElement.contains(event.relatedTarget)
-        );
         if (
             !event.relatedTarget ||
             !(event.relatedTarget instanceof Node) ||

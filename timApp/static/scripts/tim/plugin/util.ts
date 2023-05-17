@@ -200,7 +200,7 @@ export abstract class PluginBaseCommon {
         return undefined;
     }
 
-    resetChanges(): void {}
+    resetChanges(nosave?: boolean): void {}
 }
 
 /**

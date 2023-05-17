@@ -567,7 +567,7 @@ export class AnswerSheetComponent implements OnChanges {
         return arr;
     }
 
-    private tableFromAnswerMatrix(matrix: MatrixElement[][]): AnswerTable {
+    public tableFromAnswerMatrix(matrix: MatrixElement[][]): AnswerTable {
         let table: AnswerTable = [];
         if (this.isMatrix()) {
             if (this.isText() || this.isInputText()) {
@@ -623,6 +623,7 @@ export class AnswerSheetComponent implements OnChanges {
     }
 
     signalUpdate() {
+        console.log("signalupdate");
         this.onAnswerChange.emit(this.tableFromAnswerMatrix(this.answerMatrix));
     }
 

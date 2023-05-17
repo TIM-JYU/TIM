@@ -2029,23 +2029,6 @@ def get_model_answer(task_id: str) -> Response:
     return json_response({"answer": answer_html})
 
 
-@answers.get("/getPreviousAnswer")
-def get_previous_answer(task_id: str, user_id: int) -> Response:
-    user = User.get_by_id(user_id)
-    if user is None:
-        raise RouteException("Non-existent user")
-    tid = TaskId.parse(task_id)
-    d = get_doc_or_abort(tid.doc_id)
-    if get_current_user_id() != user_id:
-        verify_teacher_access(d)
-    ans = (
-        user.answers.filter(Answer.task_id == tid.doc_task)
-        .filter(~Answer.tags.any(AnswerTag.tag == "autosave"))
-        .first()
-    )
-    return json_response({"answer": ans})
-
-
 @answers.get("/getState")
 def get_state(
     user_id: int,

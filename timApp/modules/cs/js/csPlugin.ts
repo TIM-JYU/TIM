@@ -1203,10 +1203,6 @@ export class CsController extends CsBase implements ITimComponent {
             }
             this.editor.content = usercode;
             this.editor.languageMode = this.mode;
-
-            // if (this.savedvals) {
-            //     this.savedvals.usercode = this.usercode;
-            // }
         }
         this.editor.placeholder = this.placeholder;
         this.editor.mayAddFiles = this.markup.mayAddFiles;
@@ -1418,8 +1414,6 @@ export class CsController extends CsBase implements ITimComponent {
             )}`;
             this.error = message;
         }
-        console.log(ok, message);
-        console.log(this.usercode);
         return {ok: ok, message: message};
     }
 
@@ -1439,31 +1433,19 @@ export class CsController extends CsBase implements ITimComponent {
 
     hasUnSavedInput(): boolean {
         if (this.savedvals == null) {
-            return true;
+            return false;
         }
         if (this.editor) {
-            console.log("editor");
             const allFiles = this.editor.allFiles;
             if (allFiles.length != this.savedvals.files.length) {
-                console.log(
-                    "allfileslen",
-                    allFiles.length,
-                    this.savedvals.files.length
-                );
                 return true;
             }
             for (let i = 0; i < allFiles.length; ++i) {
                 if (allFiles[i].content != this.savedvals.files[i]) {
-                    console.log(
-                        "allfilescontent",
-                        allFiles[i].content,
-                        this.savedvals.files[i]
-                    );
                     return true;
                 }
             }
         }
-        console.log("comparison");
         return (
             (this.savedvals.args !== this.userargs ||
                 this.savedvals.input !== this.userinput ||
@@ -1482,7 +1464,6 @@ export class CsController extends CsBase implements ITimComponent {
             this.runError = undefined;
         }
         const nowUnsaved = this.hasUnSavedInput();
-        console.log("nowUnsaved?", nowUnsaved);
         if (!this.edited && nowUnsaved) {
             this.edited = true;
             if (this.clearSaved) {
@@ -1505,19 +1486,20 @@ export class CsController extends CsBase implements ITimComponent {
         this.isUnitTest = this.getIsUnitTest();
     }
 
-    resetChanges(): void {
-        console.log("SAVEDVALS", this.savedvals);
+    resetChanges(nosave?: boolean): void {
         this.usercode = this.savedvals?.usercode ?? "";
         this.userargs = this.savedvals?.args ?? "";
         this.userinput = this.savedvals?.input ?? "";
-        this.edited = false;
         if (this.isSimcir) {
             (async () => {
                 await this.setCircuitData();
                 await this.initSimcirCircuitListener();
             })();
         }
-        this.updateListeners(ChangeType.Saved);
+        if (!nosave) {
+            this.updateListeners(ChangeType.Saved);
+            this.edited = false;
+        }
         this.cdr.detectChanges();
     }
 
@@ -2225,8 +2207,6 @@ ${fhtml}
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this);
         }
-        console.log("tempsave?", this.attrsall.temporary_save);
-        console.log("prevsave:", this.attrsall.previous_save);
         if (this.attrsall.temporary_save) {
             this.initUnSaved();
         } else {
@@ -2337,12 +2317,10 @@ ${fhtml}
             ],
         };
         this.edited = true;
-        console.log("savedvals@initunsaved", this.savedvals);
         this.updateListeners(ChangeType.Modified);
     }
 
     initSaved(clear = false) {
-        console.log("initsaved?");
         if (!this.savedvals || (this.savedvals && !clear)) {
             this.savedvals = {
                 files: this.editor?.files.map((f) => f.content) ?? [

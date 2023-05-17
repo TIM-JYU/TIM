@@ -3,7 +3,12 @@ import {wrapText} from "tim/document/editing/utils";
 import type {IAce} from "tim/editor/ace";
 import {$log} from "tim/util/ngimport";
 import type {IEditorCallbacks, SelectionRange} from "tim/editor/BaseParEditor";
-import {BaseParEditor, EditorType, focusAfter} from "tim/editor/BaseParEditor";
+import {
+    BaseParEditor,
+    CURSOR,
+    EditorType,
+    focusAfter,
+} from "tim/editor/BaseParEditor";
 import AceAjax = Ace;
 import IAceEditor = Ace.Editor;
 
@@ -569,20 +574,13 @@ export class AceParEditor extends BaseParEditor {
 
     @focusAfter
     insertTemplate(text: string) {
-        // const ci = text.indexOf(CURSOR);
-        // if (ci >= 0) {
-        //     text = text.slice(0, ci) + text.slice(ci + 1);
-        // }
-        console.log(text);
+        const ci = text.indexOf(CURSOR);
+        if (ci >= 0) {
+            text = text.slice(0, ci) + text.slice(ci + 1);
+        }
         const range = this.editor.getSelectionRange();
         const start = range.start;
-        this.snippetManager.insertSnippet(
-            this.editor,
-            this.escapeDollarSign(text)
-        );
-
-        // Print content of the editor
-        console.log(this.editor.getValue());
+        this.snippetManager.insertSnippet(this.editor, text);
 
         const line = this.editor.session.getLine(start.row);
         const pluginnamehere = "PLUGINNAMEHERE";
@@ -593,17 +591,17 @@ export class AceParEditor extends BaseParEditor {
             range.end.column = index + pluginnamehere.length;
             this.editor.selection.setRange(range, false);
         }
-        // if (ci >= 0) {
-        //     const pos = this.editor.session
-        //         .getDocument()
-        //         .positionToIndex(start, 0);
-        //     const r = this.editor.session
-        //         .getDocument()
-        //         .indexToPosition(pos + ci, 0);
-        //     range.start = r;
-        //     range.end = r;
-        //     this.editor.selection.setRange(range, false);
-        // }
+        if (ci >= 0) {
+            const pos = this.editor.session
+                .getDocument()
+                .positionToIndex(start, 0);
+            const r = this.editor.session
+                .getDocument()
+                .indexToPosition(pos + ci, 0);
+            range.start = r;
+            range.end = r;
+            this.editor.selection.setRange(range, false);
+        }
     }
 
     editorStartsWith(text: string) {

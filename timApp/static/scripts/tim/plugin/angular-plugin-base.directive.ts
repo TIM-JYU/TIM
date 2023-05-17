@@ -131,14 +131,11 @@ export abstract class AngularPluginBase<
     ngOnInit() {
         const parsed = JSON.parse(atob(this.json)) as unknown;
         const validated = this.getAttributeType().decode(parsed);
-        console.log("PARSED", parsed);
         if (isLeft(validated)) {
             this.markupError = getErrors(validated);
         } else {
             this.attrsall = validated.right;
         }
-        console.log("ATTRSALL");
-        console.log(this.attrsall.state);
         if (this.attrsall) {
             this.pluginMeta = new PluginMeta(
                 this.element,
@@ -179,51 +176,8 @@ export abstract class AngularPluginBase<
                 return;
             }
         }
-        this.resetChanges();
-
-        // if serverautosave -> force save here?
-
-        // const taskId = this.pluginMeta.getTaskId()?.docTask().toString();
-        // if (!taskId) {
-        //     return;
-        // }
-        // const ab = this.vctrl.getAnswerBrowser(taskId);
-        // console.log("ab", ab);
-        // if (!ab || !ab.user) {
-        //     return;
-        // }
-        // // TODO: undo should be done by loading state
-        // // ab?.loadPreviousAnswer();
-        //
-        // const r = await to(
-        //     $http.get<{
-        //         answer: IAnswer | undefined;
-        //     }>("/getPreviousAnswer", {
-        //         params: {
-        //             task_id: taskId,
-        //             user_id: ab.user.id,
-        //         },
-        //     })
-        // );
-        // if (!r.ok) {
-        //     // show errors
-        //     return;
-        // }
-        // const ans = r.result.data.answer;
-        // console.log("ans");
-        // let ok = true;
-        // if (!ans) {
-        //     console.log("reset");
-        //     this.resetField();
-        // } else {
-        //     const prs = JSON.parse(ans.content);
-        //     console.log(prs);
-        //     const sa = this.setAnswer(prs);
-        //     ok = sa.ok;
-        // }
-        // if (ok) {
-        //     this.save();
-        // }
+        await this.resetChanges(this.markup.serverAutoSave);
+        this.save();
     }
 
     updateListeners(state: ChangeType) {

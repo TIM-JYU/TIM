@@ -121,7 +121,7 @@ export interface ITimComponent extends IUnsavedComponent, ISaveableComponent {
     setPluginWords?: (words: string[]) => void;
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
-    resetChanges: () => void;
+    resetChanges: (nosave?: boolean) => void;
     setAnswer: (content: Record<string, unknown>) => ISetAnswerResult;
     setData?(data: unknown, save: boolean): void;
 }

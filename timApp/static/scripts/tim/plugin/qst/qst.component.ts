@@ -1,5 +1,6 @@
 import deepEqual from "deep-equal";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {ViewChild} from "@angular/core";
 import {
     ChangeDetectorRef,
     Component,
@@ -12,9 +13,10 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {defaultErrorMessage, to2} from "tim/util/utils";
+import {angularWait, defaultErrorMessage, to2} from "tim/util/utils";
 import type {IPreviewParams} from "tim/document/question/answer-sheet.component";
 import {
+    AnswerSheetComponent,
     AnswerSheetModule,
     makePreview,
 } from "tim/document/question/answer-sheet.component";
@@ -63,7 +65,7 @@ const PluginFields = t.intersection([
         <div class="csRunDiv qst no-popup-menu" [class.cs-has-header]="getHeader()" *ngIf="isTask()">
             <h4 *ngIf="getHeader()" [innerHtml]="getHeader() | purify"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
-            <tim-answer-sheet
+            <tim-answer-sheet #answerSheet
                     [questiondata]="preview"
                     [customHeader]="markup['customHeader']"
                     (onAnswerChange)="updateAnswer($event)">
@@ -117,6 +119,8 @@ export class QstComponent
     private newAnswer?: AnswerTable;
     private changes = false;
     saveFailed = false;
+    private firstUpdateAnswerCalled = false;
+    @ViewChild("answerSheet") private answerSheet?: AnswerSheetComponent;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -209,8 +213,7 @@ export class QstComponent
         return this.attrsall.markup.isTask;
     }
 
-    private checkChanges() {
-        const oldVal = this.changes;
+    private hasChanges() {
         const savedAnswerFalsy =
             this.savedAnswer == undefined ||
             this.savedAnswer.reduce((acc, curr) => curr.length + acc, 0) == 0;
@@ -218,10 +221,15 @@ export class QstComponent
             this.newAnswer == undefined ||
             this.newAnswer.reduce((acc, curr) => curr.length + acc, 0) == 0;
         if (savedAnswerFalsy && newAnswerFalsy) {
-            this.changes = false;
+            return false;
         } else {
-            this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
+            return !deepEqual(this.savedAnswer, this.newAnswer);
         }
+    }
+
+    private checkChanges() {
+        const oldVal = this.changes;
+        this.changes = this.hasChanges();
         if (oldVal != this.changes) {
             this.updateListeners(
                 this.changes ? ChangeType.Modified : ChangeType.Saved
@@ -231,13 +239,30 @@ export class QstComponent
     }
 
     async updateAnswer(at: AnswerTable) {
+        console.log("updateanswer", at);
         // updateAnswer is called always at least once from dynamicAnswerSheet (see the ngOnChanges in that file).
         // Upon first call, we record the currently saved answer.
         if (this.newAnswer === undefined && !this.attrsall.temporary_save) {
             this.savedAnswer = at;
         }
         this.newAnswer = at;
-        this.checkChanges();
+        console.log("updateanswer set newans to", this.newAnswer);
+        if (!this.firstUpdateAnswerCalled) {
+            console.log("firstupdate");
+            this.firstUpdateAnswerCalled = true;
+            if (this.attrsall.temporary_save) {
+                console.log("changes@first");
+                this.changes = true;
+            }
+            this.cdr.detectChanges();
+            return;
+        }
+        if (!this.markup.serverAutoSave) {
+            this.checkChanges();
+        } else {
+            this.changes = true;
+            this.updateListeners(ChangeType.Modified);
+        }
         if (this.changes) {
             this.result = undefined;
             if (this.isAutosave) {
@@ -308,6 +333,7 @@ export class QstComponent
         this.result = undefined;
 
         const answers = this.newAnswer;
+        console.log("newans@dosave", this.newAnswer);
 
         const params = {
             input: {
@@ -356,7 +382,14 @@ export class QstComponent
             this.saveFailed = false;
         }
         this.result = result;
-        this.checkChanges();
+        if (this.markup.serverAutoSave) {
+            if (!autosave) {
+                this.changes = false;
+                this.updateListeners(ChangeType.Saved);
+            }
+        } else {
+            this.checkChanges();
+        }
         this.log = data.web.error;
         if (data.web.markup && data.web.show_result) {
             this.preview = makePreview(data.web.markup, {
@@ -370,15 +403,27 @@ export class QstComponent
         return {saved: true, message: undefined};
     }
 
-    resetChanges(): void {
-        this.newAnswer = this.savedAnswer;
+    async resetChanges(nosave?: boolean): Promise<void> {
+        if (this.savedAnswer != undefined) {
+            this.newAnswer = this.savedAnswer;
+        }
         this.preview = makePreview(this.attrsall.markup, {
             answerTable: this.savedAnswer,
             showCorrectChoices: this.attrsall.show_result,
             showExplanations: this.attrsall.show_result,
             enabled: !this.attrsall.markup.invalid,
         });
-        this.checkChanges();
+        // Corner case that needs await:
+        // - user chooses input on fresh task
+        // - only a tagged autosave (serverAutoSave) gets made
+        // - user reloads page, hits undo
+        // - this.savedAnswer is undefined, correctly formatted this.newAnswer should be
+        //      received via emit from answerSheet
+        // -> maybe serverAutoSave undos should be done by simply reloading the entire plugin state/html
+        await angularWait();
+        if (!nosave) {
+            this.checkChanges();
+        }
         this.saveFailed = false;
     }
 

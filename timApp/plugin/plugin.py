@@ -394,7 +394,6 @@ class Plugin:
         userctx = options.user_ctx
         user = userctx.user
         if self.answer is not None:
-            # print("TAGS")
             if self.task_id.is_points_ref:
                 p = f"{self.answer.points:g}" if self.answer.points is not None else ""
                 state = {self.ptype.get_content_field_name(): p}

@@ -90,9 +90,12 @@ def is_redundant_answer(
     existing_answers: ExistingAnswersInfo,
     ptype: PluginTypeBase | None,
     valid: bool,
+    tags: list[str] | None,
 ) -> bool:
     la = existing_answers.latest_answer
-    is_redundant = la and (la.content == content and la.valid == valid)
+    is_redundant = la and (
+        la.content == content and la.valid == valid and [t.tag for t in la.tags] == tags
+    )
     if is_redundant:
         return True
     if (
@@ -161,7 +164,7 @@ def save_answer(
         tags = []
     answerinfo = get_existing_answers_info(users, task_id, False)
     if (
-        is_redundant_answer(content_str, answerinfo, plugintype, valid)
+        is_redundant_answer(content_str, answerinfo, plugintype, valid, tags)
         and not force_save
     ):
         if answerinfo.latest_answer:
