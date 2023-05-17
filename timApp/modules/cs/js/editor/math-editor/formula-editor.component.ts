@@ -502,34 +502,38 @@ export class FormulaEditorComponent {
         this.formulaType = newType;
         // If needed, replace escaped characters for new formula type.
         // Replace only if previous type had a RegExp to search.
-        if (prevProperties && prevProperties.editReplace) {
-            // check if new type has a replacement string
-            const newProperties = FormulaPropertyList.find(
-                (formulaType) => formulaType.type === newType
-            );
-            // use new replacement string or empty string as default
-            let replaceString = "";
-            if (newProperties && newProperties.editReplace) {
-                replaceString = newProperties.editReplace[1];
-            }
-            // replace only if new replacement string is not equal to the old one
-            if (prevProperties.editReplace[1] != replaceString) {
-                try {
-                    const regex = new RegExp(prevProperties.editReplace[0]);
-                    const newFields: FieldType[] = [];
-                    for (const field of this.fields) {
-                        const latexContent = field.latex.replace(
-                            regex,
-                            replaceString
-                        );
-                        newFields.push({latex: latexContent});
+        if (prevProperties) {
+            if (prevProperties.editReplace) {
+                // check if new type has a replacement string
+                const newProperties = FormulaPropertyList.find(
+                    (formulaType) => formulaType.type === newType
+                );
+                // use new replacement string or empty string as default
+                let replaceString = "";
+                if (newProperties) {
+                    if (newProperties.editReplace) {
+                        replaceString = newProperties.editReplace[1];
                     }
-                    this.fields = newFields;
-                } catch (err) {
-                    console.log(
-                        "invalid RegExp: " + prevProperties.editReplace[0]
-                    );
-                    console.log(err);
+                }
+                // replace only if new replacement string is not equal to the old one
+                if (prevProperties.editReplace[1] != replaceString) {
+                    try {
+                        const regex = new RegExp(prevProperties.editReplace[0]);
+                        const newFields: FieldType[] = [];
+                        for (const field of this.fields) {
+                            const latexContent = field.latex.replace(
+                                regex,
+                                replaceString
+                            );
+                            newFields.push({latex: latexContent});
+                        }
+                        this.fields = newFields;
+                    } catch (err) {
+                        console.log(
+                            "invalid RegExp: " + prevProperties.editReplace[0]
+                        );
+                        console.log(err);
+                    }
                 }
             }
         }
