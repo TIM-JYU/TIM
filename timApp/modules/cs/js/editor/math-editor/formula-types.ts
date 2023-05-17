@@ -41,9 +41,8 @@ type FormulaProperties = {
     // if it is a begin-end-style formula, define which
     beginEndKeyword: string;
     // First value is search RegExp and second is replace string.
-    // No replacing when undefined.
-    // editReplace is used before latex code is given to visual field.
-    // writeReplace is used after receiving latex code from visual field.
+    // editReplace is used when receiving latex code from latex field.
+    // writeReplace is used when receiving latex code from visual field.
     editReplace: ReplacePair;
     writeReplace: ReplacePair;
     // starting mark of the formula

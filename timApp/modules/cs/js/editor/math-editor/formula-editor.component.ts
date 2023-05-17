@@ -113,8 +113,8 @@ export type FieldType = {
                     <label class="font-weight-normal">
                         <ng-container i18n>LaTeX environment:</ng-container>
                         <select class="form-control"
-                                [(ngModel)]="formulaType"
-                                (ngModelChange)="onFormulaTypeChange()">
+                                [ngModel]="formulaType"
+                                (ngModelChange)="onFormulaTypeChange($event)">
                             <ng-container *ngFor="let type of typeList" >
                                 <option *ngIf="type[1]; else elseBlock" [ngValue]="type[0]" [disabled]="isDisabled">{{formulaTypes[type[0]]}}</option>
                                 <ng-template #elseBlock>
@@ -489,10 +489,51 @@ export class FormulaEditorComponent {
     }
 
     /**
-     * Updates editor text when multiline value changes.
+     * Updates editor text when formula type value in drop-down menu changes.
+     * @param newType New selected value in the drop-down menu.
      */
-    onFormulaTypeChange() {
+    onFormulaTypeChange(newType: FormulaType) {
+        // get properties for old formula type
+        const prevProperties = FormulaPropertyList.find(
+            (formulaType) => formulaType.type === this.formulaType
+        );
+        // update formula editor values
         this.useExistingParenthesis = false;
+        this.formulaType = newType;
+        // If needed, replace escaped characters for new formula type.
+        // Replace only if previous type had a RegExp to search.
+        if (prevProperties && prevProperties.editReplace) {
+            // check if new type has a replacement string
+            const newProperties = FormulaPropertyList.find(
+                (formulaType) => formulaType.type === newType
+            );
+            // use new replacement string or empty string as default
+            let replaceString = "";
+            if (newProperties && newProperties.editReplace) {
+                replaceString = newProperties.editReplace[1];
+            }
+            // replace only if new replacement string is not equal to the old one
+            if (prevProperties.editReplace[1] != replaceString) {
+                try {
+                    const regex = new RegExp(prevProperties.editReplace[0]);
+                    const newFields: FieldType[] = [];
+                    for (const field of this.fields) {
+                        const latexContent = field.latex.replace(
+                            regex,
+                            replaceString
+                        );
+                        newFields.push({latex: latexContent});
+                    }
+                    this.fields = newFields;
+                } catch (err) {
+                    console.log(
+                        "invalid RegExp: " + prevProperties.editReplace[0]
+                    );
+                    console.log(err);
+                }
+            }
+        }
+        // update preview
         this.updateFormulaToEditor();
     }
 
