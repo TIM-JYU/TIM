@@ -743,6 +743,7 @@ const CsMarkupOptional = t.partial({
     resetUserInput: t.boolean,
     uploadAcceptPattern: t.string,
     uploadAcceptMaxSize: t.number,
+    showAlwaysSavedText: t.boolean,
 });
 
 const CsMarkupDefaults = t.type({
@@ -2718,7 +2719,7 @@ ${fhtml}
             this.runtime = "\nWhole: " + tsruntime + "\ncsPlugin: " + runtime;
             if (
                 (this.isText || this.attrsall.markup.savedText) &&
-                data.savedNew
+                (data.savedNew || this.attrsall.markup.showAlwaysSavedText)
             ) {
                 // let savedText = "saved";
                 // this.savedText = data.web.error ?? "saved";
