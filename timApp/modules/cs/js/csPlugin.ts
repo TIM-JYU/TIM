@@ -4,6 +4,7 @@ import {
     Component,
     Directive,
     ElementRef,
+    HostListener,
     ViewChild,
 } from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
@@ -676,6 +677,7 @@ const CsMarkupOptional = t.partial({
     allowedPaths: t.union([t.literal("*"), t.array(t.string)]),
     argsplaceholder: t.string,
     argsstem: t.string,
+    autosave: t.boolean,
     autoupdate: t.number,
     buttons: t.string,
     mdButtons: nullable(t.array(TemplateButton)),
@@ -2331,6 +2333,9 @@ ${fhtml}
         this.anyChanged();
         this.cdr.detectChanges();
         this.updateRunChanged();
+        if (this.editor?.parsonsEditor) {
+            this.autosave();
+        }
     }
 
     anyChanged() {
@@ -3753,6 +3758,13 @@ ${fhtml}
         }
         this.updateCanReset();
         return this.runChanged;
+    }
+
+    @HostListener("focusout")
+    autosave() {
+        if (this.markup.autosave && this.edited) {
+            this.save();
+        }
     }
 }
 
