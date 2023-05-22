@@ -47,6 +47,7 @@ export class AceParEditor extends BaseParEditor implements IEditor {
     private ace: IAce;
     type: EditorType.Ace = EditorType.Ace;
     formulaFunction?: () => void;
+
     constructor(
         ace: IAce,
         editor: AceAjax.Editor,
@@ -826,6 +827,7 @@ export class AceParEditor extends BaseParEditor implements IEditor {
     get content(): string {
         return this.getEditorText();
     }
+
     set content(value: string) {
         this.setEditorText(value);
     }

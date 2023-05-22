@@ -14,9 +14,11 @@ export interface LatexMathParser extends Parser {
     commandToBlock: (cmd: any) => any;
     joinBlocks: (blocks: any[]) => any;
 }
+
 export interface Parser {
     parse: (stream: string) => any;
 }
+
 export interface MathQuillConfig {
     spaceBehavesLikeTab?: boolean;
     leftRightIntoCmdGoes?: "up" | "down";
@@ -38,13 +40,17 @@ export interface MathQuillConfig {
         selectOutOf?: (dir: number, mathField: MathFieldMethods) => any;
     };
 }
+
 export interface BaseMethods {
     revert: () => HTMLElement;
     reflow: () => void;
     el: () => HTMLElement;
+
     latex(latex: string): MathFieldMethods;
+
     latex(): string;
 }
+
 export interface MathFieldMethods extends BaseMethods {
     focus: () => this;
     blur: () => this;

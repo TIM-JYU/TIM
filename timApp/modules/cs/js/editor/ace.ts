@@ -94,6 +94,7 @@ export class AceEditorComponent implements IEditor {
         this.minRows_ = rows;
         this.aceEditor?.setOption("minLines", rows);
     }
+
     @Input()
     set maxRows(rows: number) {
         this.maxRows_ = rows;

@@ -43,6 +43,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     private editorElement: HTMLTextAreaElement;
     type: EditorType.Textarea = EditorType.Textarea;
     formulaFunction?: () => void;
+
     constructor(editor: JQuery, callbacks: IEditorCallbacks) {
         super(editor, callbacks);
         this.editor = editor;
@@ -745,6 +746,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     get content(): string {
         return this.getEditorText();
     }
+
     set content(value: string) {
         this.setEditorText(value);
     }

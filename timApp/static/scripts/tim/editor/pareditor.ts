@@ -2393,10 +2393,12 @@ ${backTicks}
 
             interface ILanguageTools {
                 setCompleters(completers: unknown[]): void;
+
                 snippetCompleter: unknown;
                 textCompleter: unknown;
                 keyWordCompleter: unknown;
             }
+
             const langTools = ace.require(
                 "ace/ext/language_tools"
             ) as ILanguageTools;

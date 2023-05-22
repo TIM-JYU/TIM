@@ -1,19 +1,19 @@
 <uib-tabset ng-show="$ctrl.proeditor" active="$ctrl.activeTab">
     <uib-tab ng-repeat="t in $ctrl.getVisibleTabs()" heading="{{ t.name }}" index="$ctrl.getTabIndex(t)">
-            <div ng-if="t.name === 'TeX' && $ctrl.editor" class="formula-editor-tab">
-                <cs-formula-editor-loader
-                               (ok-close)="$ctrl.toggleFormulaEditor(true, $event)"
-                               (cancel-close)="$ctrl.toggleFormulaEditor(true, $event)"
-                               (component-loaded)="$ctrl.registerFormulaCancelFunction($event)"
-                               (toggle)="$ctrl.toggleFormulaEditor()"
-                               [visible]="$ctrl.formulaEditorOpen"
-                               [editor]="$ctrl.editor"
-                               [current-symbol]="$ctrl.currentSymbol"
-                               [template-buttons]="$ctrl.templateButtons"
-                >
+        <div ng-if="t.name === 'TeX' && $ctrl.editor" class="formula-editor-tab">
+            <cs-formula-editor-loader
+                    (ok-close)="$ctrl.toggleFormulaEditor(true, $event)"
+                    (cancel-close)="$ctrl.toggleFormulaEditor(true, $event)"
+                    (component-loaded)="$ctrl.registerFormulaCancelFunction($event)"
+                    (toggle)="$ctrl.toggleFormulaEditor()"
+                    [visible]="$ctrl.formulaEditorOpen"
+                    [editor]="$ctrl.editor"
+                    [current-symbol]="$ctrl.currentSymbol"
+                    [template-buttons]="$ctrl.templateButtons"
+            >
 
-                </cs-formula-editor-loader>
-            </div>
+            </cs-formula-editor-loader>
+        </div>
         <tim-editor-entry ng-repeat="e in t.entries" data="e"></tim-editor-entry>
 
         <div ng-if="t.extra" ng-bind-html="t.extra"></div>

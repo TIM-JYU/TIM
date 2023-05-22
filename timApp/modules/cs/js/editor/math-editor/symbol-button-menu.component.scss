@@ -58,11 +58,11 @@ symbol-menu-container-open {
 }
 
 .symbol-button {
-    border: none;
-    background: none;
-    text-align: center;
-    vertical-align: middle;
-    margin: 1px;
+  border: none;
+  background: none;
+  text-align: center;
+  vertical-align: middle;
+  margin: 1px;
 }
 
 .symbol-button:active {
@@ -72,7 +72,7 @@ symbol-menu-container-open {
 
 @media (hover: hover) {
   .symbol-button:hover {
-      background-color: #C0C0C0;
+    background-color: #C0C0C0;
   }
 }
 

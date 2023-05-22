@@ -31,11 +31,11 @@ import {CURSOR} from "./editor";
     selector: "cs-normal-editor",
     template: `
         <textarea #area class="csRunArea csEditArea no-popup-menu"
-                [rows]="rows"
-                [(ngModel)]="content"
-                [placeholder]="placeholder"
-                [disabled]="disabled"
-                [attr.spellcheck]="spellcheck">
+                  [rows]="rows"
+                  [(ngModel)]="content"
+                  [placeholder]="placeholder"
+                  [disabled]="disabled"
+                  [attr.spellcheck]="spellcheck">
         </textarea>`,
 })
 export class NormalEditorComponent implements IEditor {
@@ -131,6 +131,7 @@ export class NormalEditorComponent implements IEditor {
                 txtarea.selectionStart = newPos;
                 txtarea.selectionEnd = newPos;
             }
+
             setTimeout(() => setpos());
         }
         // txtarea.scrollTop = scrollPos;

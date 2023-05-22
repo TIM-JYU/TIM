@@ -79,26 +79,26 @@ export type FieldType = {
                     [formulaEditorOpen]="visible"
             >
                 <ng-content></ng-content>
-            </symbol-button-menu>            
+            </symbol-button-menu>
         </div>
         <div *ngIf="visible" class="formula-editor">
             <div tabindex="0" class="formula-editor-dialog" #formulaEditorDialog (keydown)="handleDialogEvents($event)">
 
                 <div class="fields">
                     <div *ngFor="let field of fields; let i=index;" class="field">
-                        <cs-formula-field 
-                            [initialValue]="field.latex" 
-                            (edited)="handleEdited($event)"
-                            (enter)="addField($event)"
-                            (backspace)="removeField()" 
-                            (focus)="handleFocus($event)"
-                            (upArrow)="handleArrowUp()"
-                            (downArrow)="handleArrowDown()"
-                            (add)="addField($event)"
-                            (delete)="removeField()"
-                            [isActive]="i === activeFieldsIndex"
-                            [formulaType]="formulaType"
-                            [id]="i">
+                        <cs-formula-field
+                                [initialValue]="field.latex"
+                                (edited)="handleEdited($event)"
+                                (enter)="addField($event)"
+                                (backspace)="removeField()"
+                                (focus)="handleFocus($event)"
+                                (upArrow)="handleArrowUp()"
+                                (downArrow)="handleArrowDown()"
+                                (add)="addField($event)"
+                                (delete)="removeField()"
+                                [isActive]="i === activeFieldsIndex"
+                                [formulaType]="formulaType"
+                                [id]="i">
                         </cs-formula-field>
                     </div>
                 </div>
@@ -115,8 +115,9 @@ export type FieldType = {
                         <select class="form-control"
                                 [ngModel]="formulaType"
                                 (ngModelChange)="onFormulaTypeChange($event)">
-                            <ng-container *ngFor="let type of typeList" >
-                                <option *ngIf="type[1]; else elseBlock" [ngValue]="type[0]" [disabled]="isDisabled">{{formulaTypes[type[0]]}}</option>
+                            <ng-container *ngFor="let type of typeList">
+                                <option *ngIf="type[1]; else elseBlock" [ngValue]="type[0]"
+                                        [disabled]="isDisabled">{{formulaTypes[type[0]]}}</option>
                                 <ng-template #elseBlock>
                                     <option [ngValue]="type[0]">{{formulaTypes[type[0]]}}</option>
                                 </ng-template>

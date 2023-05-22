@@ -4084,10 +4084,12 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div #runSnippets class="csRunSnippets" [hidden]="this.formulaEditorOpen" *ngIf="templateButtonsCount && !noeditor">
-                <button [class.math]="item.hasMath" class="btn btn-default" 
+            <div #runSnippets class="csRunSnippets" [hidden]="this.formulaEditorOpen"
+                 *ngIf="templateButtonsCount && !noeditor">
+                <button [class.math]="item.hasMath" class="btn btn-default"
                         *ngFor="let item of templateButtons | symbols"
-                        (click)="addText(item)" [attr.title]="item.expl" [attr.aria-label]="item.expl" [innerHTML]="item.text | purify"></button>
+                        (click)="addText(item)" [attr.title]="item.expl" [attr.aria-label]="item.expl"
+                        [innerHTML]="item.text | purify"></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
                        [maxRows]="maxrows"
@@ -4208,7 +4210,7 @@ ${fhtml}
                 </p>
             </div>
             <div class="consoleDiv" [class.soft-hidden]="!result">
-                <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
+                <a class="copyConsoleLink" *ngIf="markup.copyConsoleLink"
                    (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
                    aria-label="Copy console text to clipboard"
@@ -4216,8 +4218,10 @@ ${fhtml}
                 <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)"
                      tabindex="0" aria-live="assertive">{{result}}</pre>
             </div>
-            <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify" aria-live="polite"></span></div>
-            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor" (keydown)="elementSelectAll($event)" tabindex="0" aria-live="polite"
+            <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"
+                                                             aria-live="polite"></span></div>
+            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor" (keydown)="elementSelectAll($event)"
+                 tabindex="0" aria-live="polite"
                  (dblclick)="handleSelectFormulaFromPreview($event, preview)" #preview>
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed

@@ -83,77 +83,79 @@ export class SymbolsPipe implements PipeTransform {
                         <button class="timButton formula-button" (click)="toggleFormulaEditor()" i18n
                                 title="Ctrl+e">Open formula editor
                         </button>
-    
+
                         <div class="file-select-button">
-                            <ng-content></ng-content>                        
-                        </div>                        
+                            <ng-content></ng-content>
+                        </div>
                     </div>
-                    
-                    <div class="common-symbol-buttons math display" [class.common-symbol-buttons-small]="!formulaEditorOpen">
-                        <button 
+
+                    <div class="common-symbol-buttons math display"
+                         [class.common-symbol-buttons-small]="!formulaEditorOpen">
+                        <button
                                 [hidden]="formulaEditorOpen"
-                                class="symbol-button" 
+                                class="symbol-button"
                                 *ngFor="let item of templateButtons | symbols:'t'"
-                                title="{{item.expl}}" 
+                                title="{{item.expl}}"
                                 (mouseup)="addFormula($event, item.data)"
                                 (touchend)="addFormula($event, item.data)"
                                 (mousedown)="handleMouseDown($event)"
                                 (touchstart)="handleMouseDown($event)"
-                         >{{item.text}}</button>
-                        <button 
-                                class="symbol-button" 
+                        >{{item.text}}</button>
+                        <button
+                                class="symbol-button"
                                 *ngFor="let item of templateButtons | symbols:'q'"
-                                title="{{item.expl}}" 
-                                (mouseup)="addFormula($event, item.data)" 
+                                title="{{item.expl}}"
+                                (mouseup)="addFormula($event, item.data)"
                                 (touchend)="addFormula($event, item.data)"
                                 (mousedown)="handleMouseDown($event)"
                                 (touchstart)="handleMouseDown($event)"
-                         >{{item.text}}</button>
+                        >{{item.text}}</button>
                     </div>
                 </div>
-                
+
                 <div class="button-menu-right">
 
                     <button *ngIf="!isOpen(); else elseBlock" type="button" class="btn btn-default" (click)="openMenu()"
-                    title="Show more symbols" i18n-title>
-                      <span class="glyphicon glyphicon-menu-down"></span>
+                            title="Show more symbols" i18n-title>
+                        <span class="glyphicon glyphicon-menu-down"></span>
                     </button>
-                   <ng-template #elseBlock>
-                    <button type="button" class="btn btn-default" (click)="closeMenu()" title="Show less symbols" i18n-title>
-                      <span class="glyphicon glyphicon-menu-up"></span>
-                    </button>                       
-                   </ng-template>
-                    
+                    <ng-template #elseBlock>
+                        <button type="button" class="btn btn-default" (click)="closeMenu()" title="Show less symbols"
+                                i18n-title>
+                            <span class="glyphicon glyphicon-menu-up"></span>
+                        </button>
+                    </ng-template>
+
                     <a href="https://tim.jyu.fi/view/kurssit/tie/proj/2023/timath/dokumentit/ohjeet/kayttoohjeet"
                        target="_blank">
                         <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions"
                               i18n-title></span>
-                    </a>                        
+                    </a>
                 </div>
             </div>
-           
+
             <div class="symbol-button-menu" [class.symbol-button-menu-open]="isOpen()">
                 <div class="buttons-container math display" [hidden]="!isOpen()">
-                    <button class="symbol-button" 
-                            title="{{item.expl}}" 
-                            *ngFor="let item of templateButtons | symbols:'s'" 
+                    <button class="symbol-button"
+                            title="{{item.expl}}"
+                            *ngFor="let item of templateButtons | symbols:'s'"
                             (mouseup)="addFormula($event, item.data)"
                             (touchend)="addFormula($event, item.data)"
                             (mousedown)="handleMouseDown($event)"
                             (touchstart)="handleMouseDown($event)"
-                     >{{item.text}}</button>
-                    <button class="symbol-button" 
+                    >{{item.text}}</button>
+                    <button class="symbol-button"
                             [hidden]="formulaEditorOpen"
-                            title="{{item.expl}}" 
-                            *ngFor="let item of templateButtons | symbols:'e'" 
+                            title="{{item.expl}}"
+                            *ngFor="let item of templateButtons | symbols:'e'"
                             (mouseup)="addFormula($event, item.data)"
                             (touchend)="addFormula($event, item.data)"
                             (mousedown)="handleMouseDown($event)"
                             (touchstart)="handleMouseDown($event)"
-                     >{{item.text}}</button>
+                    >{{item.text}}</button>
                 </div>
             </div>
-           
+
         </div>
 
     `,

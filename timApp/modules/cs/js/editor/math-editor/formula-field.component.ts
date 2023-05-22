@@ -82,7 +82,7 @@ const ERROR_MESSAGE_DELAY = 1000;
                           (keydown.control.z)="handleUndo()"
                           (keydown.control.y)="handleRedo()">
                 </textarea>
-                <span class="placeholder-text" [hidden]="error || !isMathFieldEmpty || !isActive" i18n >Write math</span>
+                <span class="placeholder-text" [hidden]="error || !isMathFieldEmpty || !isActive" i18n>Write math</span>
                 <span class="render-error" [hidden]="!error || !isActive">{{getErrorMessage()}}</span>
             </div>
 
@@ -96,7 +96,7 @@ const ERROR_MESSAGE_DELAY = 1000;
                         i18n-title>
                     <span class="glyphicon glyphicon-remove"></span>
                 </button>
-                
+
                 <button type="button" class="btn btn-default" (click)="handleAddLine(true)" title="Add line below"
                         i18n-title>
                     <span class="glyphicon glyphicon-plus"></span>

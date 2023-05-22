@@ -47,36 +47,36 @@ export type InputDialogParams<T> = {
         <div class="modal-bg">
         </div>
         <tim-dialog-frame [minimizable]="false" [mightBeAsync]=asyncContent>
-                <ng-container header>
-                    {{getTitle()}}
-                </ng-container>
-                <ng-container body>
-                    <p tabindex="-1" #textEl [innerHtml]="text()"></p>
-                    <input (keydown.enter)="ok()"
-                           class="form-control"
-                           focusMe
-                           type="text"
-                           *ngIf="isInput && (data.inputType === 'textarea' || data.inputType === undefined)"
-                           [(ngModel)]="value"
-                           (ngModelChange)="clearError()">
-                    <select (keydown.enter)="ok()"
-                            class="form-control"
-                            focusMe
-                            *ngIf="isInput && data.inputType === 'select'"
-                            [(ngModel)]="value"
-                            (ngModelChange)="clearError()">
-                        <option *ngFor="let option of selectOptions" [value]="option">{{option}}</option>
-                    </select>
-                    <tim-alert *ngIf="error" severity="danger">
-                        {{ error }}
-                    </tim-alert>
-                </ng-container>
-                <ng-container footer>
-                    <button [disabled]="!value"
-                            class="timButton" type="button" (click)="ok()">{{ okText() }}
-                    </button>
-                    <button class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
-                </ng-container>
+            <ng-container header>
+                {{getTitle()}}
+            </ng-container>
+            <ng-container body>
+                <p tabindex="-1" #textEl [innerHtml]="text()"></p>
+                <input (keydown.enter)="ok()"
+                       class="form-control"
+                       focusMe
+                       type="text"
+                       *ngIf="isInput && (data.inputType === 'textarea' || data.inputType === undefined)"
+                       [(ngModel)]="value"
+                       (ngModelChange)="clearError()">
+                <select (keydown.enter)="ok()"
+                        class="form-control"
+                        focusMe
+                        *ngIf="isInput && data.inputType === 'select'"
+                        [(ngModel)]="value"
+                        (ngModelChange)="clearError()">
+                    <option *ngFor="let option of selectOptions" [value]="option">{{option}}</option>
+                </select>
+                <tim-alert *ngIf="error" severity="danger">
+                    {{ error }}
+                </tim-alert>
+            </ng-container>
+            <ng-container footer>
+                <button [disabled]="!value"
+                        class="timButton" type="button" (click)="ok()">{{ okText() }}
+                </button>
+                <button class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
+            </ng-container>
         </tim-dialog-frame>
     `,
     styleUrls: ["./input-dialog.component.scss"],
