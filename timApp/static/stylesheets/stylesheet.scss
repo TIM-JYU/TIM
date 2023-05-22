@@ -1547,3 +1547,14 @@ tim-rights-editor {
         margin: 2px;
     }
 }
+
+// Acts like .sr-only but uses a more sensible name for elements that need to be hidden
+// conditionally.
+.soft-hidden {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}

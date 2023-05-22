@@ -18,6 +18,7 @@ import {
     Component,
     Directive,
     ElementRef,
+    HostListener,
     ViewChild,
 } from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
@@ -698,6 +699,7 @@ const CsMarkupOptional = t.partial({
     allowedPaths: t.union([t.literal("*"), t.array(t.string)]),
     argsplaceholder: t.string,
     argsstem: t.string,
+    autosave: t.boolean,
     autoupdate: t.number,
     buttons: t.string,
     mdButtons: nullable(t.array(TemplateButton)),
@@ -766,6 +768,7 @@ const CsMarkupOptional = t.partial({
     resetUserInput: t.boolean,
     uploadAcceptPattern: t.string,
     uploadAcceptMaxSize: t.number,
+    showAlwaysSavedText: t.boolean,
 });
 
 const CsMarkupDefaults = t.type({
@@ -2501,6 +2504,9 @@ ${fhtml}
         this.anyChanged();
         this.cdr.detectChanges();
         this.updateRunChanged();
+        if (this.editor?.parsonsEditor) {
+            this.autosave();
+        }
     }
 
     anyChanged() {
@@ -2916,7 +2922,7 @@ ${fhtml}
             this.runtime = "\nWhole: " + tsruntime + "\ncsPlugin: " + runtime;
             if (
                 (this.isText || this.attrsall.markup.savedText) &&
-                data.savedNew
+                (data.savedNew || this.attrsall.markup.showAlwaysSavedText)
             ) {
                 // let savedText = "saved";
                 // this.savedText = data.web.error ?? "saved";
@@ -3950,6 +3956,13 @@ ${fhtml}
         this.updateCanReset();
         return this.runChanged;
     }
+
+    @HostListener("focusout")
+    autosave() {
+        if (this.markup.autosave && this.edited) {
+            this.save();
+        }
+    }
 }
 
 @Component({
@@ -4194,8 +4207,8 @@ ${fhtml}
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
-            <div class="consoleDiv" [hidden]="!result">
-                <a class="copyConsoleLink" *ngIf="markup.copyConsoleLink"
+            <div class="consoleDiv" [class.soft-hidden]="!result">
+                <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
                    (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
                    aria-label="Copy console text to clipboard"
