@@ -19,6 +19,7 @@ import {
     QueryList,
     ViewChild,
     ViewChildren,
+    ChangeDetectorRef,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {CURSOR, IEditor} from "../editor";
@@ -176,6 +177,8 @@ export class FormulaEditorComponent {
     @Input() editor!: IEditor;
 
     formulaTypes = FORMULA_TYPES;
+
+    constructor(private cdr: ChangeDetectorRef) {}
 
     /**
      * Gets whether formula editor is visible or not.
@@ -624,6 +627,8 @@ export class FormulaEditorComponent {
      * @return true if cancelled or false otherwise
      */
     async handleFormulaCancel() {
+        // move focus elsewhere to avoid ExpressionChangedAfterItHasBeenChecked error, which happens if focus is in LaTeX field and Escape key is pressed
+        this.formulaEditorDialog.nativeElement.focus();
         const oldContent =
             this.oldContent.before +
             this.oldContent.editing +
