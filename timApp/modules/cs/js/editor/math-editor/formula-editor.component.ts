@@ -19,7 +19,6 @@ import {
     QueryList,
     ViewChild,
     ViewChildren,
-    ChangeDetectorRef,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {CURSOR, IEditor} from "../editor";
@@ -177,8 +176,6 @@ export class FormulaEditorComponent {
     @Input() editor!: IEditor;
 
     formulaTypes = FORMULA_TYPES;
-
-    constructor(private cdr: ChangeDetectorRef) {}
 
     /**
      * Gets whether formula editor is visible or not.
