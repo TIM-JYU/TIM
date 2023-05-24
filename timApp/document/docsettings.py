@@ -97,6 +97,7 @@ class DocSettingTypes:
     showValidAnswersOnly: bool
     manageKey: str
     anonymous_login: bool
+    basicChangeNotifications: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -655,6 +656,9 @@ class DocSettings:
 
     def anonymous_login(self) -> bool:
         return self.get_setting_or_default("anonymous_login", False)
+
+    def send_basic_change_notifications(self) -> bool:
+        return self.get_setting_or_default("basicChangeNotifications", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
