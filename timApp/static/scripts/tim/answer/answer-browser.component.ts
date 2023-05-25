@@ -1291,9 +1291,22 @@ export class AnswerBrowserComponent
                 }
             }
         }
+        const par = this.getPar();
+        let parParams;
+        if (par) {
+            const orig = par.originalPar;
+            parParams = {
+                doc_id: par.par.docId,
+                par_id: par.par.id,
+                ref_from_doc_id: orig.docId,
+                ref_from_par_id: orig.id,
+            };
+        }
         this.loading++;
         const r = await to(
-            $http.get<{answer: string}>(this.getModelAnswerLink())
+            $http.get<{answer: string}>(this.getModelAnswerLink(), {
+                params: {...parParams},
+            })
         );
         this.loading--;
         if (!r.ok) {

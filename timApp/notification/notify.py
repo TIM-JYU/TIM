@@ -169,11 +169,19 @@ NOTIFICATION_TITLE = {
 
 
 def get_message_for(
-    ps: list[PendingNotification], d: DocInfo, show_text: bool, show_names: bool
+    ps: list[PendingNotification],
+    d: DocInfo,
+    show_text: bool,
+    show_names: bool,
+    show_diff_link: bool = True,
 ):
     msg = ""
     num_chgs = len(ps)
-    if ps[0].notify_type.is_document_modification and num_chgs > 1 and show_text:
+    if (
+        ps[0].notify_type.is_document_modification
+        and num_chgs > 1
+        and (show_text or show_diff_link)
+    ):
         first = ps[0]
         last = ps[-1]
         assert isinstance(
@@ -182,10 +190,9 @@ def get_message_for(
         assert isinstance(last, DocumentNotification), "Expected a DocumentNotification"
         first_ver = first.version_before
         last_ver = last.version_after
-        msg += (
-            f"Link to all changes: {get_diff_link(d, first_ver, last_ver)}\n\n"
-            f"The individual changes ({num_chgs}) are listed below.\n\n"
-        )
+        msg += f"Link to all changes: {get_diff_link(d, first_ver, last_ver)}\n\n"
+        if show_text:
+            msg += f"The individual changes ({num_chgs}) are listed below.\n\n"
 
     for p in ps:
         name_str = get_name_string([p.user], show_names=show_names)
@@ -230,7 +237,7 @@ def get_message_for(
 
         msg += f"{s}: {url}"
 
-        if show_text and p.notify_type.is_document_modification:
+        if (show_text or show_diff_link) and p.notify_type.is_document_modification:
             assert isinstance(p, DocumentNotification)
             v1 = p.version_before
             v2 = p.version_after
@@ -373,6 +380,8 @@ def process_pending_notifications():
         grouped_pns[p.grouping_key].append(p)
     for (doc_id, t), ps in grouped_pns.items():
         doc = DocEntry.find_by_id(doc_id)
+        settings = doc.document.get_settings()
+        show_only_diff = settings.send_basic_change_notifications()
         # Combine ps to a single mail (tailored for each subscriber) and send it
         if t == "d":
             assert all(
@@ -433,12 +442,17 @@ def process_pending_notifications():
 
             # Poster identity should be hidden unless the user has teacher access to the document
             subject = get_subject_for(ps_to_consider, doc, show_names=is_teacher)
+            can_edit = (
+                user.has_edit_access(doc)
+                or not ps_to_consider[0].notify_type.is_document_modification
+            )
+            show_text = not show_only_diff and can_edit
             # If a document was modified and the user doesn't have edit access to it, we must not send the source md
             msg = get_message_for(
                 ps_to_consider,
                 doc,
-                show_text=user.has_edit_access(doc)
-                or not ps_to_consider[0].notify_type.is_document_modification,
+                show_text=show_text,
+                show_diff_link=can_edit,
                 show_names=is_teacher,
             )
 
