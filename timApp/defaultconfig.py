@@ -208,6 +208,9 @@ SIMPLE_EMAIL_LOGIN = False
 # This only makes sense with EMAIL_REGISTRATION_ENABLED = False.
 SIMPLE_LOGIN_USE_STUDY_INFO_MESSAGE = False
 
+# Custom login message to show globally when simple login is enabled
+SIMPLE_LOGIN_CUSTOM_LOGIN_MESSAGE = None
+
 LOG_HOST = False
 
 MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes

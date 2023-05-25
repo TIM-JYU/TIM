@@ -381,6 +381,10 @@ export class LoginDialogComponent extends AngularDialogComponent<
             this.loginMessage = globals.docSettings.loginMessage;
         }
 
+        if (this.config.simpleLoginCustomLoginMessage != null) {
+            this.loginMessage = this.config.simpleLoginCustomLoginMessage;
+        }
+
         const params = this.data;
         if (params) {
             if (params.addingToSession !== undefined) {
