@@ -61,6 +61,7 @@ const PluginMarkup = t.intersection([
         displayFields: t.array(t.string),
         allowUndo: t.boolean,
         sortBy: t.array(t.string),
+        verifyActionsField: nullable(t.string),
         scanner: t.type({
             enabled: t.boolean,
             scanInterval: t.number,
@@ -89,6 +90,12 @@ const DEFAULT_VERIFY_REASONS: INeedsVerifyReasons = {
     changeGroupBelongs: $localize`The user already belongs to a group. Are you sure you want to change the group?`,
     changeGroupAlreadyMember: $localize`The user is already a member of this group. Are you sure you want to assign them to this group again?`,
 };
+
+function isDefaultVerifyReason(
+    reason: string
+): reason is keyof typeof DEFAULT_VERIFY_REASONS {
+    return reason in DEFAULT_VERIFY_REASONS;
+}
 
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkup),
@@ -548,7 +555,7 @@ export class UserSelectComponent extends AngularPluginBase<
         const res = await toPromise(
             this.http.post<{
                 needsVerify: boolean;
-                reasons: (keyof INeedsVerifyReasons)[];
+                reasons: (keyof INeedsVerifyReasons | string)[];
             }>(
                 "/userSelect/needsVerify",
                 {
@@ -573,11 +580,11 @@ export class UserSelectComponent extends AngularPluginBase<
 
         this.verifyMessages = [];
         for (const reason of res.result.reasons) {
+            const reasonTemplate = isDefaultVerifyReason(reason)
+                ? this.verifyReasonTemplates[reason]
+                : reason;
             this.verifyMessages.push(
-                templateString(
-                    this.verifyReasonTemplates[reason],
-                    this.selectedUser.fields
-                )
+                templateString(reasonTemplate, this.selectedUser.fields)
             );
         }
 
@@ -707,6 +714,7 @@ export class UserSelectComponent extends AngularPluginBase<
             allowUndo: false,
             sortBy: [],
             displayFields: ["username", "realname"],
+            verifyActionsField: null,
         };
     }
 
