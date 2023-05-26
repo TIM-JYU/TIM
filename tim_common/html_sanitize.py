@@ -240,6 +240,7 @@ TIM_SAFE_ATTRS = frozenset(
         "past-due-text",
         "reset-time",
         "stop-after-countdown",
+        "no-countdown",
         "time-lang",
         "unauthorized-text",
         "unsaved-changes-text",

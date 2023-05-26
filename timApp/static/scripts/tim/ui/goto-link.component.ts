@@ -75,6 +75,7 @@ export class GotoLinkComponent implements OnInit {
     @Input() unsavedChangesText?: string;
     @Input() autoOpen: boolean = false;
     @Input() stopAfterCountdown: boolean = false;
+    @Input() noCountdown: boolean = false;
     openTime?: Moment;
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
@@ -156,7 +157,7 @@ export class GotoLinkComponent implements OnInit {
         this.linkDisabled = true;
 
         const {unauthorized, access} = await this.resolveAccess();
-        if (unauthorized && !access) {
+        if (unauthorized && (!access || this.noCountdown)) {
             this.showError({
                 userMessage: this.unauthorizedText,
                 defaultMessage: $localize`You don't have permission to view that document.`,
