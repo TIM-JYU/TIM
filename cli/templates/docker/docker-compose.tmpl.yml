@@ -38,6 +38,8 @@ services:
    TIM_HOST: ${tim.host}
    RUN_MAILMAN_DEV: ${ "1" if mailman.is_dev else "0" }
    AUTHLIB_INSECURE_TRANSPORT: ${ "1" if tim.is_dev else "0" }
+   GUNICORN_MAX_REQUESTS: ${ tim.worker_max_requests }
+   GUNICORN_MAX_REQUESTS_JITTER: ${ tim.worker_max_requests_jitter }
   restart: unless-stopped
   networks:
    - db
