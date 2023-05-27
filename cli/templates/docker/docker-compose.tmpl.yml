@@ -275,6 +275,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
    TIM_SETTINGS: ${compose.profile}config.py
    TIM_HOST: ${tim.host}
+   PG_MAX_CONNECTIONS: ${postgresql.max_connections}
   restart: unless-stopped
   networks:
    - db
