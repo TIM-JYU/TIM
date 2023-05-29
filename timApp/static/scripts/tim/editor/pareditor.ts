@@ -1762,9 +1762,11 @@ ${backTicks}
      * @param value
      */
     onFormulaEditorAddFormula(value: boolean = false) {
-        this.formulaEditorOpen = !this.formulaEditorOpen;
-        if (!value) {
-            this.scope.$digest();
+        if (this.activeTab == "tex") {
+            this.formulaEditorOpen = !this.formulaEditorOpen;
+            if (!value) {
+                this.scope.$digest();
+            }
         }
     }
 
@@ -1775,17 +1777,19 @@ ${backTicks}
      * @param cursorIndex index to move cursor to
      */
     toggleFormulaEditor(doDigest: boolean = true, cursorIndex: number = -1) {
-        this.formulaEditorOpen = !this.formulaEditorOpen;
-        if (!this.formulaEditorOpen) {
-            setTimeout(() => {
-                if (cursorIndex !== -1) {
-                    this.editor?.moveCursorToContentIndex(cursorIndex);
-                }
-                this.editor?.focus();
-            }, 0);
-        }
-        if (doDigest) {
-            this.scope.$digest();
+        if (this.activeTab == "tex") {
+            this.formulaEditorOpen = !this.formulaEditorOpen;
+            if (!this.formulaEditorOpen) {
+                setTimeout(() => {
+                    if (cursorIndex !== -1) {
+                        this.editor?.moveCursorToContentIndex(cursorIndex);
+                    }
+                    this.editor?.focus();
+                }, 0);
+            }
+            if (doDigest) {
+                this.scope.$digest();
+            }
         }
     }
 

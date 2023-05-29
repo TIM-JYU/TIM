@@ -1922,15 +1922,17 @@ export class CsController extends CsBase implements ITimComponent {
      * move cursor to
      */
     toggleFormulaEditor(cursorIndex: number = -1) {
-        this.formulaEditorOpen = !this.formulaEditorOpen;
-        if (!this.formulaEditorOpen) {
-            // without setTimeout editor focus doesn't work
-            setTimeout(() => {
-                if (cursorIndex !== -1) {
-                    this.editor?.moveCursorToContentIndex(cursorIndex);
-                }
-                this.editor?.focus();
-            }, 0);
+        if (this.formulaEditor) {
+            this.formulaEditorOpen = !this.formulaEditorOpen;
+            if (!this.formulaEditorOpen) {
+                // without setTimeout editor focus doesn't work
+                setTimeout(() => {
+                    if (cursorIndex !== -1) {
+                        this.editor?.moveCursorToContentIndex(cursorIndex);
+                    }
+                    this.editor?.focus();
+                }, 0);
+            }
         }
     }
 
@@ -4084,7 +4086,7 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div #runSnippets class="csRunSnippets" [hidden]="this.formulaEditorOpen"
+            <div #runSnippets class="csRunSnippets" [hidden]="formulaEditor && formulaEditorOpen"
                  *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default"
                         *ngFor="let item of templateButtons | symbols"
@@ -4095,7 +4097,7 @@ ${fhtml}
                        [maxRows]="maxrows"
                        [disabled]="true">
             </cs-editor>
-            <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']" [hidden]="formulaEditorOpen">
+            <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']" [hidden]="formulaEditor && formulaEditorOpen">
                 <p class="csRunMenu">
                     <button *ngIf="isRun && buttonText()"
                             [disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved() && isText)"
