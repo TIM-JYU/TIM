@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 import bs4
 from bs4 import BeautifulSoup
-from flask import Response, send_file
+from flask import Response, send_from_directory
 from flask import g
 from flask import redirect
 from flask import render_template
@@ -13,6 +13,7 @@ from flask import session
 from flask_assets import Environment
 from flask_wtf.csrf import generate_csrf
 from sqlalchemy import event
+from werkzeug.exceptions import NotFound
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
 from timApp.admin.cli import register_clis
@@ -238,14 +239,12 @@ def inject_user() -> dict:
 
 @app.get("/js/<path:path>")
 def get_js_file(path: str):
+    # Resolve any relative paths
     locale = get_locale()
-    for f in [
-        f"static/scripts/build/{locale}/{path}",
-        f"static/scripts/build/{path}",
-    ]:
+    for d in (f"static/scripts/build/{locale}", f"static/scripts/build"):
         try:
-            return send_file(f)
-        except FileNotFoundError:
+            return send_from_directory(d, path)
+        except NotFound:
             pass
     raise NotExist("File not found")
 

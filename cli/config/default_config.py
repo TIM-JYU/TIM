@@ -70,6 +70,20 @@ Root directory for non-db storage (document content, uploaded files, etc.).
 Location of log directory; will be mapped for TIM container at /service/tim_logs.
 """,
         ),
+        "worker_max_requests": (
+            "2000",
+            """
+Direct value of Gunicorn's max_requests option.
+Sets the maximum number of requests a worker will process before restarting.
+""",
+        ),
+        "worker_max_requests_jitter": (
+            "200",
+            """
+Direct value of Gunicorn's max_requests_jitter option.
+The maximum jitter to add to the gunicorn_max_requests setting.
+""",
+        ),
     },
     "caddy": {
         "domains": (

@@ -175,6 +175,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     text: TextOptions = field(default_factory=TextOptions)
     displayFields: list[str] = field(default_factory=lambda: ["username", "realname"])
     sortBy: list[str] = field(default_factory=list)
+    verifyActionsField: str | None = None
 
 
 UserSelectMarkupModelSchema = class_schema(
@@ -219,6 +220,7 @@ inputMinLength: 3        # How many characters must be given before searching.
 selectOnce: false        # If true, hide other users when selecting one.
 allowUndo: false         # Can the action be undone. Undoing is not supported by all actions.
 preFetch: false          # If true, all users are prefetched. This makes initial load longer but searches are faster.
+verifyActionsField: null # Name of the verify field. If specified, userSelect will show a verification message with the value of this field before applying an action.
 scanner:                 # Camera scanner options
   enabled: false           # Show the scanner button
   parameterSeparator: "#"  # String to separate the user query from the search parameter when scanning. If null, no separation is done.
@@ -834,12 +836,12 @@ class NeedsVerifyReasons(Enum):
 
 @user_select_plugin.post("/needsVerify")
 def needs_verify(username: str, par: GlobalParId) -> Response:
-    model, cur_user, user_group, user_acc, _ = get_plugin_info(username, None, par)
+    model, cur_user, user_group, user_acc, doc = get_plugin_info(username, None, par)
 
-    if not model.actions:
+    if not model.actions or not model.verifyActionsField:
         return json_response({"needsVerify": False, "reasons": []})
 
-    verify_reasons = []
+    verify_reasons: list[NeedsVerifyReasons | str] = []
 
     if model.actions.changeGroup and model.actions.changeGroup.verify:
         membership_groups: set[str] = {g.name for g in user_acc.groups}
@@ -850,6 +852,21 @@ def needs_verify(username: str, par: GlobalParId) -> Response:
             True for g in model.actions.changeGroup.allGroups if g in membership_groups
         ):
             verify_reasons.append(NeedsVerifyReasons.CHANGE_GROUP_BELONGS)
+
+    if model.verifyActionsField:
+        view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
+        field_data, _, _, _ = get_fields_and_users(
+            [model.verifyActionsField],
+            RequestedGroups([user_group]),
+            doc,
+            cur_user,
+            view_ctx,
+        )
+
+        for r in field_data:
+            fields = r["fields"]
+            for val in fields.values():
+                verify_reasons.append(str(val))
 
     return json_response(
         {"needsVerify": len(verify_reasons) > 0, "reasons": verify_reasons}

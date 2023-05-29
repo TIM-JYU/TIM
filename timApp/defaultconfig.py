@@ -329,6 +329,9 @@ DIST_RIGHTS_START_TIME_GROUP = None
 # Whether this host is the rights distributor.
 DIST_RIGHTS_IS_DISTRIBUTOR = False
 
+# Number of threads to use when distributing rights via HTTP
+DIST_RIGHTS_WORKER_THREADS = multiprocessing.cpu_count()
+
 # The set of allowed IP networks. The following actions are restricted:
 # * Login and email registration are denied for non-admins.
 # * Answer route is blocked.

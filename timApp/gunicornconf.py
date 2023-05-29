@@ -1,4 +1,5 @@
 import multiprocessing
+import os
 from typing import Any
 
 from psycogreen.gevent import patch_psycopg
@@ -12,8 +13,8 @@ worker_class = (
 )
 limit_request_line = 0
 timeout = 600
-max_requests = 2000
-max_requests_jitter = 200
+max_requests = int(os.environ.get("GUNICORN_MAX_REQUESTS", 2000))
+max_requests_jitter = int(os.environ.get("GUNICORN_MAX_REQUESTS_JITTER", 200))
 
 
 def post_fork(server: Any, worker: Any) -> None:

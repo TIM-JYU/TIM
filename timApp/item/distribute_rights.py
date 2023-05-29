@@ -1,5 +1,4 @@
 import itertools
-import multiprocessing
 from collections import defaultdict
 from concurrent.futures import Future
 from dataclasses import dataclass, replace, field, fields, Field
@@ -356,7 +355,7 @@ def do_register_right(op: RightOp, target: str) -> tuple[RightLog | None, str | 
 
 def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> list[str]:
     emails = rights.group_cache[op.group] if isinstance(op, GroupOps) else [op.email]
-    session = FuturesSession(max_workers=multiprocessing.cpu_count())
+    session = FuturesSession(max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"])
     futures = []
     host_config = app.config["DIST_RIGHTS_HOSTS"][target]
     dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
@@ -513,7 +512,7 @@ def register_op_to_hosts(
     register_hosts = [
         h for h in app.config["DIST_RIGHTS_REGISTER_HOSTS"] if h != curr_host
     ]
-    session = FuturesSession(max_workers=multiprocessing.cpu_count())
+    session = FuturesSession(max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"])
     futures: list[Future] = []
     for h in register_hosts:
         f = session.post(
