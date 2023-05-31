@@ -81,6 +81,10 @@ export interface IEditor {
 
     focus(): void;
 
+    /**
+     * Save function that opens the formula editor.
+     * @param cb: () => void callback function
+     */
     addFormulaEditorOpenHandler?(cb: () => void): void;
 
     /**
@@ -89,6 +93,9 @@ export interface IEditor {
      */
     moveCursorToContentIndex?(index: number): void;
 
+    /**
+     * Return position of cursor in editor
+     */
     cursorPosition?(): number;
 }
 
@@ -850,6 +857,7 @@ export class EditorComponent implements IMultiEditor {
 
     /**
      * Save function that opens the formula editor.
+     * @param cb: () => void callback function
      */
     addFormulaEditorOpenHandler(cb: () => void): void {
         this.formulaFunction = cb;
@@ -858,6 +866,10 @@ export class EditorComponent implements IMultiEditor {
         }
     }
 
+    /**
+     * Move cursor to index in content string.
+     * @param index index in content
+     */
     moveCursorToContentIndex(index: number) {
         this.editor?.moveCursorToContentIndex?.(index);
     }
