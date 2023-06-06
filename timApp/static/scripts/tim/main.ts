@@ -77,6 +77,7 @@ import {
 import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
+import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
 
 BackspaceDisabler.disable();
 
@@ -146,6 +147,8 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timSelfExpire", SelfExpireComponent);
     doDowngrade(dg, "timSearchButton", SearchButtonComponent);
     doDowngrade(dg, "timRoleInfo", RoleInfoComponent);
+    doDowngrade(dg, "csFormulaEditorLoader", FormulaEditorLoaderComponent);
+
     return dg;
 }
 

@@ -1,5 +1,11 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    HostListener,
+    NgModule,
+    ViewChild,
+} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
@@ -41,36 +47,36 @@ export type InputDialogParams<T> = {
         <div class="modal-bg">
         </div>
         <tim-dialog-frame [minimizable]="false" [mightBeAsync]=asyncContent>
-                <ng-container header>
-                    {{getTitle()}}
-                </ng-container>
-                <ng-container body>
-                    <p tabindex="-1" #textEl [innerHtml]="text()"></p>
-                    <input (keydown.enter)="ok()"
-                           class="form-control"
-                           focusMe
-                           type="text"
-                           *ngIf="isInput && (data.inputType === 'textarea' || data.inputType === undefined)"
-                           [(ngModel)]="value"
-                           (ngModelChange)="clearError()">
-                    <select (keydown.enter)="ok()"
-                            class="form-control"
-                            focusMe
-                            *ngIf="isInput && data.inputType === 'select'"
-                            [(ngModel)]="value"
-                            (ngModelChange)="clearError()">
-                        <option *ngFor="let option of selectOptions" [value]="option">{{option}}</option>
-                    </select>
-                    <tim-alert *ngIf="error" severity="danger">
-                        {{ error }}
-                    </tim-alert>
-                </ng-container>
-                <ng-container footer>
-                    <button [disabled]="!value"
-                            class="timButton" type="button" (click)="ok()">{{ okText() }}
-                    </button>
-                    <button class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
-                </ng-container>
+            <ng-container header>
+                {{getTitle()}}
+            </ng-container>
+            <ng-container body>
+                <p tabindex="-1" #textEl [innerHtml]="text()"></p>
+                <input (keydown.enter)="ok()"
+                       class="form-control"
+                       focusMe
+                       type="text"
+                       *ngIf="isInput && (data.inputType === 'textarea' || data.inputType === undefined)"
+                       [(ngModel)]="value"
+                       (ngModelChange)="clearError()">
+                <select (keydown.enter)="ok()"
+                        class="form-control"
+                        focusMe
+                        *ngIf="isInput && data.inputType === 'select'"
+                        [(ngModel)]="value"
+                        (ngModelChange)="clearError()">
+                    <option *ngFor="let option of selectOptions" [value]="option">{{option}}</option>
+                </select>
+                <tim-alert *ngIf="error" severity="danger">
+                    {{ error }}
+                </tim-alert>
+            </ng-container>
+            <ng-container footer>
+                <button [disabled]="!value"
+                        class="timButton" type="button" (click)="ok()">{{ okText() }}
+                </button>
+                <button class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
+            </ng-container>
         </tim-dialog-frame>
     `,
     styleUrls: ["./input-dialog.component.scss"],
@@ -85,6 +91,12 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     isInput = false;
     asyncContent = true;
     @ViewChild("textEl") textEl!: ElementRef<HTMLElement>;
+
+    @HostListener("keydown.enter", ["$event"])
+    enterPressed(e: KeyboardEvent) {
+        void this.ok();
+        e.stopPropagation();
+    }
 
     getTitle() {
         return this.data.title;

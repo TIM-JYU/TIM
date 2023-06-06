@@ -1,4 +1,18 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_", "disabled_"] }] */
+/**
+ * Ace editor
+ *
+ * @author Daniel Juola
+ * @author Denis Zhidkikh
+ * @author Juha Reinikainen
+ * @author Mika Lehtinen
+ * @author Simo Lehtinen
+ * @author Tuomas Laine
+ * @author Vesa Lappalainen
+ * @license MIT
+ * @date 29.6.2020
+ */
+
 import $ from "jquery";
 import type {Ace} from "ace-builds/src-noconflict/ace";
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
@@ -22,7 +36,7 @@ export class AceEditorComponent implements IEditor {
     private content_?: string;
     private editorreadonly: boolean = false;
     private disabled_: boolean = false;
-
+    formulaFunction?: () => void;
     @ViewChild("area") area!: ElementRef;
     @Input() placeholder: string = ""; // TODO: make this work
 
@@ -80,6 +94,7 @@ export class AceEditorComponent implements IEditor {
         this.minRows_ = rows;
         this.aceEditor?.setOption("minLines", rows);
     }
+
     @Input()
     set maxRows(rows: number) {
         this.maxRows_ = rows;
@@ -127,6 +142,18 @@ export class AceEditorComponent implements IEditor {
             },
             exec: () => {
                 this.aceEditor?.toggleCommentLines();
+            },
+        });
+        this.aceEditor?.commands.addCommand({
+            name: "addFormula",
+            bindKey: {
+                win: "Ctrl-E",
+                mac: "Command-E",
+            },
+            exec: () => {
+                if (this.formulaFunction) {
+                    this.formulaFunction();
+                }
             },
         });
     }
@@ -184,5 +211,36 @@ export class AceEditorComponent implements IEditor {
         cursor = sess.getDocument().indexToPosition(index, 0);
         editor.selection.moveCursorToPosition(cursor);
         editor.selection.clearSelection();
+    }
+
+    /**
+     * Save function that opens the formula editor.
+     */
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+    }
+
+    moveCursorToContentIndex(index: number) {
+        const pos = this.aceEditor
+            ?.getSession()
+            .getDocument()
+            .indexToPosition(index, 0);
+        if (!pos) {
+            return;
+        }
+        this.aceEditor?.moveCursorToPosition(pos);
+        this.aceEditor?.clearSelection();
+    }
+
+    /**
+     * Return position of cursor in editor
+     */
+    cursorPosition(): number {
+        if (!this.aceEditor) {
+            return -1;
+        }
+        const sess = this.aceEditor.getSession();
+        const cursor = this.aceEditor.getCursorPosition();
+        return sess.getDocument().positionToIndex(cursor, 0);
     }
 }

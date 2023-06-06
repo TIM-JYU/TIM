@@ -1,0 +1,117 @@
+.button-menu-container {
+  display: flex;
+  flex-direction: row;
+  padding: 0.5em 0em 0.25em 0em;
+  gap: 1em;
+}
+
+.formula-button {
+  height: fit-content;
+}
+
+.button-menu-left {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+  width: 100%;
+}
+
+.button-menu-right {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 1em;
+  justify-content: flex-end;
+}
+
+.common-symbol-buttons {
+  width: 100%;
+}
+
+.common-symbol-buttons-small {
+  display: none;
+}
+
+.help-icon {
+  font-size: 150%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.formula-controls {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+}
+
+.symbol-button-menu-open {
+  border: 1px solid #004494;
+}
+
+.symbol-menu-container {
+  padding: 0.5em;
+  border: 1px solid black;
+  border-radius: 0.5em;
+  margin-bottom: 1em;
+}
+
+symbol-menu-container-open {
+  padding: 0.5em 0.5em 0.5em 0.5em;
+
+}
+
+.symbol-button {
+  border: none;
+  background: none;
+  text-align: center;
+  vertical-align: middle;
+  margin: 1px;
+}
+
+.symbol-button:active {
+  background-color: #C0C0C0;
+}
+
+
+@media (hover: hover) {
+  .symbol-button:hover {
+    background-color: #C0C0C0;
+  }
+}
+
+@media (min-width: 400px) {
+  .common-symbol-buttons-small {
+    display: block;
+  }
+}
+
+@media (min-width: 600px) {
+  .button-menu-container {
+    display: flex;
+    flex-direction: row;
+    padding: 0.5em 0em 0.25em 0em;
+    gap: 1em;
+  }
+
+  .common-symbol-buttons-small {
+    display: block;
+  }
+
+  .button-menu-right {
+    display: flex;
+    flex-direction: row;
+    gap: 1em;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .help-icon {
+    padding-top: 5px;
+  }
+
+  .formula-controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+}

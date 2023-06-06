@@ -1,0 +1,5 @@
+latexButtons
+List of LaTeX buttons used in matriculation examinations
+buttons: |!!
+$latexbuttons$
+!!

@@ -1,4 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,no-underscore-dangle */
+/**
+ * csPlugin component
+ *
+ * @author Daniel Juola
+ * @author Denis Zhidkikh
+ * @author Jaakko Palm
+ * @author Juha Reinikainen
+ * @author Mika Lehtinen
+ * @author Simo Lehtinen
+ * @author Tuomas Laine
+ * @author Vesa Lappalainen
+ * @license MIT
+ * @date 3.8.2014
+ */
 import {
     ChangeDetectorRef,
     Component,
@@ -46,6 +60,8 @@ import {
     showTemplateReplaceDialog,
     TemplateParam,
 } from "tim/ui/showTemplateReplaceDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {showInputDialog} from "tim/ui/showInputDialog";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -60,6 +76,10 @@ import {getInt} from "./util/util";
 import type {IFile, IFileSpecification} from "./util/file-select";
 import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
+import type {FormulaEvent} from "./editor/math-editor/symbol-button-menu.component";
+import {selectFormulaFromPreview} from "./editor/math-editor/formula-utils";
+import {LATEX_BUTTONS} from "./editor/math-editor/default-symbol-buttons";
+import {FormulaEditorComponent} from "./editor/math-editor/formula-editor.component";
 
 // TODO better name?
 interface Vid {
@@ -469,10 +489,11 @@ const TemplateButton = t.intersection([
         expl: t.string,
         hasMath: t.boolean,
         placeholders: t.array(TemplateParam),
+        type: t.string,
     }),
 ]);
 
-interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
+export interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
  * This defines the required format for the csPlugin YAML markup.
@@ -617,6 +638,7 @@ const UploadedFile = t.type({
     path: t.string,
     type: t.string,
 });
+
 interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 
 const GitDefaultsMarkup = t.partial({
@@ -703,6 +725,7 @@ const CsMarkupOptional = t.partial({
     noeditor: t.boolean,
     normal: nullable(t.string),
     parsons: withDefault(CsParsonsOptions, {}),
+    formulaEditor: t.boolean,
     path: t.string,
     placeholder: nullable(t.string),
     replace: t.string,
@@ -762,6 +785,7 @@ const CsMarkupDefaults = t.type({
     dragAndDrop: withDefault(t.boolean, true),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
+    formulaEditor: withDefault(t.boolean, false),
     iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
     indent: withDefault(t.Integer, -1),
     initSimcir: withDefault(t.string, ""),
@@ -864,6 +888,7 @@ export class CsBase extends AngularPluginBase<
     get usercode(): string {
         return this.usercode_;
     }
+
     set usercode(str: string) {
         this.usercode_ = str;
     }
@@ -946,6 +971,161 @@ export interface IRunRequest {
     input: IRunRequestInput;
 }
 
+function getButtonTextHtml(s: string) {
+    let ret = s.trim();
+    ret = ret.replace("\\n", "");
+    ret = ret.replace(CURSOR, "");
+    if (ret.length === 0) {
+        ret = "\u00A0";
+    }
+    return ret;
+}
+
+/**
+ * Creates a list of template buttons based on syntax specified at
+ * https://tim.jyu.fi/view/tim/ohjeita/csPlugin#buttons.
+ * Also merges existing markdown template buttons into the parsed list.
+ * @param b string containing an array of buttons
+ * @param mdButtons array of markdown buttons to add
+ * @return list of template buttons
+ */
+export function createTemplateButtons(
+    b: string | undefined,
+    mdButtons: ITemplateButton[] | undefined | null
+) {
+    if (!b && !mdButtons) {
+        return [];
+    }
+    if (!b) {
+        b = "";
+    }
+    if (!mdButtons) {
+        mdButtons = [];
+    }
+    const helloButtons =
+        "public \nclass \nHello \n\\n\n{\n}\n" +
+        "static \nvoid \n Main\n(\n)\n" +
+        '        Console.WriteLine(\n"\nworld!\n;\n ';
+    const typeButtons =
+        "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
+    const charButtons =
+        "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
+
+    b = b.replace("$hellobuttons$", helloButtons);
+    b = b.replace("$typebuttons$", typeButtons);
+    b = b.replace("$charbuttons$", charButtons);
+    b = b.trim();
+    b = b.replace("$space$", " ");
+    const lines = b.split("\n");
+
+    // removes all " or ' respectively if line starts with them
+    for (let i = 0; i < lines.length; i++) {
+        let s = lines[i];
+        if (s.length < 1) {
+            continue;
+        }
+
+        if (s.startsWith('"') || s.startsWith("'")) {
+            s = s.replace(new RegExp(s[0], "g"), "");
+            lines[i] = s;
+        }
+    }
+    const templateButtons: ITemplateButton[] = [];
+
+    for (const line of lines) {
+        if (line === "") {
+            continue;
+        }
+        // just string
+        if (!line.startsWith("[")) {
+            // add all latex buttons
+            if (line === "$latexbuttons$") {
+                for (const button of LATEX_BUTTONS) {
+                    templateButtons.push(button);
+                }
+                continue;
+            }
+            templateButtons.push({
+                text: getButtonTextHtml(line),
+                data: line,
+            });
+            continue;
+        }
+        // maybe array
+        try {
+            const parsed = JSON.parse(line);
+            let defaultData = parsed[0].replace("\\square", "⁞");
+            defaultData = defaultData.replace(
+                /\\\[|\\\]|\\square|\s|\\\(|\\\)/g,
+                ""
+            );
+            const item: ITemplateButton = {
+                text: parsed[0],
+                data: defaultData,
+                expl: defaultData,
+            };
+            const mathAttributes = ["", "math", "s", "q", "t", "e"];
+            if (parsed.length > 1) {
+                for (const part of parsed) {
+                    if (mathAttributes.includes(part)) {
+                        switch (part) {
+                            case mathAttributes[1]:
+                                item.hasMath = true;
+                                break;
+                            case mathAttributes[2]:
+                            case mathAttributes[3]:
+                            case mathAttributes[4]:
+                            case mathAttributes[5]:
+                                item.type = part;
+                                break;
+                        }
+                    }
+                }
+                if (!mathAttributes.includes(parsed[1])) {
+                    item.data = parsed[1];
+                }
+                item.expl = item.data.replace("⁞", "");
+                if (parsed.length > 2) {
+                    if (!mathAttributes.includes(parsed[2])) {
+                        item.expl = parsed[2];
+                    }
+                    if (parsed.length > 3) {
+                        if (!mathAttributes.includes(parsed[3])) {
+                            item.placeholders = [];
+                            for (let i = 3; i < parsed.length; i++) {
+                                const p = parsed[i];
+                                if (!(p instanceof Array)) {
+                                    continue;
+                                }
+                                const param: ITemplateParam = {
+                                    default: p[0] ?? "",
+                                    text: p[1] ?? "",
+                                    pattern: p[2] ?? "",
+                                    error: p[3] ?? "",
+                                };
+                                if (p.length > 0) {
+                                    item.placeholders?.push(param);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            templateButtons.push(item);
+        } catch (e) {
+            templateButtons.push({
+                text: "error",
+                data: "",
+                expl: "" + e,
+            });
+        }
+    }
+    for (const btn of mdButtons) {
+        templateButtons.push(btn);
+    }
+    return templateButtons;
+}
+
 @Directive() // needs this or compiler complains
 export class CsController extends CsBase implements ITimComponent {
     vctrl!: ViewCtrl;
@@ -987,6 +1167,10 @@ export class CsController extends CsBase implements ITimComponent {
     keepErrors: boolean = false;
     muokattu: boolean;
     noeditor!: boolean;
+    formulaEditorOpen = false;
+    @ViewChild("formulaEditorComponent")
+    formulaEditorComponent?: FormulaEditorComponent;
+    currentSymbol: FormulaEvent = {text: ""};
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
     postcode?: string;
@@ -1212,6 +1396,11 @@ export class CsController extends CsBase implements ITimComponent {
         if (this.markup.parsons) {
             this.markup.parsons.shuffle = this.initUserCode;
         }
+        if (this.editor.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(() => {
+                this.toggleFormulaEditor();
+            });
+        }
     }
 
     @ViewChild(FileSelectManagerComponent)
@@ -1299,6 +1488,7 @@ export class CsController extends CsBase implements ITimComponent {
     get userinput() {
         return this.userinput_;
     }
+
     set userinput(str: string) {
         const tmp = this.userinput_;
         this.userinput_ = str;
@@ -1311,6 +1501,7 @@ export class CsController extends CsBase implements ITimComponent {
     get userargs() {
         return this.userargs_;
     }
+
     set userargs(str: string) {
         const tmp = this.userargs_;
         this.userargs_ = str;
@@ -1719,6 +1910,73 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.editorMode;
     }
 
+    get formulaEditor() {
+        return this.markup.formulaEditor;
+    }
+
+    /**
+     * Changes formula editor visibility and puts
+     * focus to main editor if closed and
+     * sets cursor position if given.
+     * @param cursorIndex position in editor.content to
+     * move cursor to
+     */
+    toggleFormulaEditor(cursorIndex: number = -1) {
+        if (this.formulaEditor) {
+            this.formulaEditorOpen = !this.formulaEditorOpen;
+            if (!this.formulaEditorOpen) {
+                // without setTimeout editor focus doesn't work
+                setTimeout(() => {
+                    if (cursorIndex !== -1) {
+                        this.editor?.moveCursorToContentIndex(cursorIndex);
+                    }
+                    this.editor?.focus();
+                }, 0);
+            }
+        }
+    }
+
+    /**
+     * Moves cursor inside clicked formula in preview in editor
+     * and opens formula editor. Closes editor if it was open.
+     * @param event mouse click event
+     * @param preview root element
+     */
+    async handleSelectFormulaFromPreview(
+        event: MouseEvent,
+        div: HTMLDivElement
+    ) {
+        if (!this.formulaEditor || !this.editor) {
+            return;
+        }
+        // Open different formula
+        if (this.formulaEditorOpen) {
+            // close formula editor
+            if (!this.formulaEditorComponent) {
+                return;
+            }
+            const cancelSuccess =
+                await this.formulaEditorComponent.handleFormulaCancel();
+            // editing wasn't cancelled so do nothing
+            if (!cancelSuccess) {
+                return;
+            }
+            await timeout();
+            // move to chosen formula
+            const success = selectFormulaFromPreview(event, this.editor, div);
+            // open formula editor again
+            if (success) {
+                this.toggleFormulaEditor();
+            }
+        } else {
+            // open chosen formula
+            const success = selectFormulaFromPreview(event, this.editor, div);
+            if (success) {
+                this.toggleFormulaEditor();
+            }
+        }
+    }
+
     get count() {
         return this.markup.count;
     }
@@ -1926,98 +2184,13 @@ ${fhtml}
         );
     }
 
+    /**
+     * Initialize template buttons.
+     */
     createTemplateButtons() {
-        let b = this.markup.buttons;
-        let mdButtons = this.markup.mdButtons;
-        if (!b && !mdButtons) {
-            return;
-        }
-        if (!b) {
-            b = "";
-        }
-        if (!mdButtons) {
-            mdButtons = [];
-        }
-        const helloButtons =
-            "public \nclass \nHello \n\\n\n{\n}\n" +
-            "static \nvoid \n Main\n(\n)\n" +
-            '        Console.WriteLine(\n"\nworld!\n;\n ';
-        const typeButtons =
-            "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
-        const charButtons =
-            "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
-        b = b.replace("$hellobuttons$", helloButtons);
-        b = b.replace("$typebuttons$", typeButtons);
-        b = b.replace("$charbuttons$", charButtons);
-        b = b.trim();
-        b = b.replace("$space$", " ");
-        const btns = b.split("\n");
-        for (let i = 0; i < btns.length; i++) {
-            let s = btns[i];
-            if (s.length < 1) {
-                continue;
-            }
-            if (s.startsWith('"') || s.startsWith("'")) {
-                s = s.replace(new RegExp(s[0], "g"), "");
-                btns[i] = s;
-            }
-        }
-        for (const s of btns) {
-            if (s === "") {
-                continue;
-            }
-            if (!s.startsWith("[")) {
-                this.templateButtons.push({
-                    text: this.getButtonTextHtml(s),
-                    data: s,
-                });
-                continue;
-            }
-            try {
-                const parsed = JSON.parse(s);
-                const item: ITemplateButton = {
-                    text: parsed[0],
-                    data: parsed[0],
-                };
-                if (parsed.length > 1 && parsed[1] !== "") {
-                    item.data = parsed[1];
-                }
-                if (parsed.length > 2 && parsed[2] !== "") {
-                    item.expl = parsed[2];
-                }
-                if (parsed.length > 3) {
-                    item.placeholders = [];
-                }
-                item.hasMath = (parsed as string[]).some(
-                    (x, i) => i >= 2 && x == "math"
-                );
-                for (let i = 3; i < parsed.length; i++) {
-                    const p = parsed[i];
-                    if (!(p instanceof Array)) {
-                        continue;
-                    }
-                    const param: ITemplateParam = {
-                        default: p[0] ?? "",
-                        text: p[1] ?? "",
-                        pattern: p[2] ?? "",
-                        error: p[3] ?? "",
-                    };
-                    if (p.length > 0) {
-                        item.placeholders?.push(param);
-                    }
-                }
-                this.templateButtons.push(item);
-            } catch (e) {
-                this.templateButtons.push({
-                    text: "error",
-                    data: "",
-                    expl: "" + e,
-                });
-            }
-        }
-        for (const btn of mdButtons) {
-            this.templateButtons.push(btn);
-        }
+        const b = this.markup.buttons;
+        const mdButtons = this.markup.mdButtons;
+        this.templateButtons = createTemplateButtons(b, mdButtons);
         this.templateButtonsCount = this.templateButtons.length;
     }
 
@@ -2433,6 +2606,33 @@ ${fhtml}
         }
         for (const response of resps) {
             this.uploadedFiles.push({path: response.file, type: response.type});
+        }
+
+        // Add reference to image to markdown
+        if (this.formulaEditor) {
+            for (const response of resps) {
+                // ask user to type in caption text for image
+                showInputDialog<string>({
+                    isInput: InputDialogKind.InputAndValidator,
+                    defaultValue: "Image 1",
+                    validator: (s) => {
+                        return new Promise((resolve) => {
+                            resolve({ok: true, result: s});
+                        });
+                    },
+                    text: "Enter image caption",
+                    title: "Caption",
+                    okValue: "",
+                })
+                    .then((caption) => {
+                        // write image tag to editor
+                        const url = response.file;
+                        const markdownImageTag = `![${caption}](${url})`;
+                        this.editor?.insert(markdownImageTag);
+                        this.editor?.focus();
+                    })
+                    .catch((e) => {}); // nothing to catch
+            }
         }
     }
 
@@ -2885,19 +3085,18 @@ ${fhtml}
             }
             ip++;
         }
-        const text = s.replace(/\\n/g, "\n");
-        this.editor?.insert?.(text);
-        this.editor?.focus();
-    }
-
-    getButtonTextHtml(s: string) {
-        let ret = s.trim();
-        ret = ret.replace("\\n", "");
-        ret = ret.replace(CURSOR, "");
-        if (ret.length === 0) {
-            ret = "\u00A0";
+        let text = s.replace(/\\n/g, "\n");
+        // Don't replace in latex as commands like \ne wouldn't work
+        if (this.formulaEditor) {
+            text = s;
         }
-        return ret;
+        // write the text to formulaeditor if its enabled and open
+        if (this.formulaEditor && this.formulaEditorOpen) {
+            this.currentSymbol = {text: text};
+        } else {
+            this.editor?.insert?.(text);
+            this.editor?.focus();
+        }
     }
 
     // Returns the visible index for next item and the desired size
@@ -3772,7 +3971,8 @@ ${fhtml}
     selector: "cs-runner",
     template: `
         <!--suppress TypeScriptUnresolvedVariable -->
-        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex" [ngStyle]="csRunDivStyle">
+        <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex"
+             [ngStyle]="csRunDivStyle">
             <tim-markup-error class="csMarkupError" *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 class="csHeader" *ngIf="header" [innerHTML]="header | purify"></h4>
             <div class="csAllSelector" *ngIf="isAll">
@@ -3783,7 +3983,8 @@ ${fhtml}
                     </select>
                 </div>
             </div>
-            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify" (keydown)="elementSelectAll($event)" tabindex="0"></p>
+            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"
+               (keydown)="elementSelectAll($event)" tabindex="0"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
@@ -3810,7 +4011,7 @@ ${fhtml}
                     | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
                 </p>
             </div>
-            <div class="csUploadContent" *ngIf="upload">
+            <div class="csUploadContent" *ngIf="upload && !this.formulaEditor">
                 <file-select-manager class="small"
                                      [dragAndDrop]="dragAndDrop"
                                      [uploadUrl]="uploadUrl"
@@ -3819,16 +4020,37 @@ ${fhtml}
                                      (upload)="onUploadResponse($event)"
                                      (uploadDone)="onUploadDone($event)">
                 </file-select-manager>
-                <div class="form-inline small">
+                <div [hidden]="formulaEditor" class="form-inline small">
                     <span *ngFor="let item of uploadedFiles">
                         <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
                     </span>
                 </div>
             </div>
             <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
+
             <div class="csRunCode">
+                <div *ngIf="formulaEditor && editor">
+                    <cs-formula-editor
+                            #formulaEditorComponent
+                            (okClose)="toggleFormulaEditor($event)"
+                            (cancelClose)="toggleFormulaEditor($event)"
+                            (toggle)="toggleFormulaEditor()"
+                            [visible]="formulaEditorOpen"
+                            [editor]="editor"
+                            [currentSymbol]="currentSymbol"
+                            [templateButtons]="templateButtons">
+                        <file-select-manager class="small"
+                                             [dragAndDrop]="dragAndDrop"
+                                             [uploadUrl]="uploadUrl"
+                                             [stem]="uploadstem"
+                                             (file)="onFileLoad($event)"
+                                             (upload)="onUploadResponse($event)"
+                                             (uploadDone)="onUploadDone($event)">
+                        </file-select-manager>
+                    </cs-formula-editor>
+                </div>
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
-                <div class="csEditorAreaDiv">
+                <div class="csEditorAreaDiv" [hidden]="formulaEditor && formulaEditorOpen">
                     <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
                                [base]="byCode"
                                [minRows]="rows"
@@ -3864,15 +4086,18 @@ ${fhtml}
                              [placeholder]="argsplaceholder"></span>
             </div>
             <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
-            <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
-                <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
-                        (click)="addText(item)" [attr.title]="item.expl" [attr.aria-label]="item.expl" [innerHTML]="item.text | purify" ></button>
+            <div #runSnippets class="csRunSnippets" [hidden]="formulaEditor && formulaEditorOpen"
+                 *ngIf="templateButtonsCount && !noeditor">
+                <button [class.math]="item.hasMath" class="btn btn-default"
+                        *ngFor="let item of templateButtons | symbols"
+                        (click)="addText(item)" [attr.title]="item.expl" [attr.aria-label]="item.expl"
+                        [innerHTML]="item.text | purify"></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
                        [maxRows]="maxrows"
                        [disabled]="true">
             </cs-editor>
-            <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']">
+            <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']" [hidden]="formulaEditor && formulaEditorOpen">
                 <p class="csRunMenu">
                     <button *ngIf="isRun && buttonText()"
                             [disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved() && isText)"
@@ -3927,7 +4152,8 @@ ${fhtml}
                           class="inputSmall"
                           style="float: right;"
                           title="Run time in sec {{runtime}}">{{oneruntime}}</span>
-                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2" class="inputSmall" style="float: right;"
+                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2" class="inputSmall"
+                          style="float: right;"
                           title="Put 0 to no wrap">
                 <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()"
                         style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
@@ -3962,7 +4188,7 @@ ${fhtml}
                     <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"></label>
                     <tim-close-button (click)="closeError()"></tim-close-button>
                 </p>
-                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                <a class="copyErrorLink" *ngIf="markup.copyErrorLink"
                    (click)="copyString(error, $event)"
                    title="Copy text to clipboard"
                 >{{markup.copyErrorLink}}</a>
@@ -3975,7 +4201,7 @@ ${fhtml}
                 <p class="pull-right" *ngIf="!markup['noclose']">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
-                <a class="copyErrorLink"  *ngIf="markup.copyErrorLink"
+                <a class="copyErrorLink" *ngIf="markup.copyErrorLink"
                    (click)="copyString(fetchError, $event)"
                    title="Copy text to clipboard"
                    aria-label="Copy text to clipboard"
@@ -3986,15 +4212,19 @@ ${fhtml}
                 </p>
             </div>
             <div class="consoleDiv" [class.soft-hidden]="!result">
-                <a class="copyConsoleLink"  *ngIf="markup.copyConsoleLink"
+                <a class="copyConsoleLink" *ngIf="markup.copyConsoleLink"
                    (click)="copyString(result, $event)"
                    title="Copy console text to clipboard"
                    aria-label="Copy console text to clipboard"
                 >{{markup.copyConsoleLink}}</a>
-                <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)" tabindex="0" aria-live="assertive">{{result}}</pre>
+                <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)"
+                     tabindex="0" aria-live="assertive">{{result}}</pre>
             </div>
-            <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify" aria-live="polite"></span></div>
-            <div class="csrunPreview" (keydown)="elementSelectAll($event)" tabindex="0" aria-live="polite">
+            <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"
+                                                             aria-live="polite"></span></div>
+            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor" (keydown)="elementSelectAll($event)"
+                 tabindex="0" aria-live="polite"
+                 (dblclick)="handleSelectFormulaFromPreview($event, preview)" #preview>
                 <div *ngIf="iframesettings && !isTauno"
                      tim-draggable-fixed
                      caption="Preview"
@@ -4025,8 +4255,10 @@ ${fhtml}
                            [height]="height"
             ></tim-variables> <!-- TODO: why direct markup.jsparam does not work -->
             <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
-            <video class="csVideo" *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls="" autoplay></video>
-            <video class="csAudio" *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
+            <video class="csVideo" *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls=""
+                   autoplay></video>
+            <video class="csAudio" *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true"
+                   width="300"
                    height="40"></video>
             <div *ngIf="docURL" class="docurl">
                 <p class="pull-right">

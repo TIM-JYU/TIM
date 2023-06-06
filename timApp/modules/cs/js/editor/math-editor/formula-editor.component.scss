@@ -1,0 +1,32 @@
+.formula-editor {
+  display: flex;
+  justify-content: center;
+  box-shadow: rgba(0, 0, 0, 0.25) 10px 10px 10px, rgba(0, 0, 0, 0.22) 0px 0px 5px;
+  padding: 0.5em;
+  margin: 0.5em;
+}
+
+.formula-editor-dialog {
+  width: 100%;
+}
+
+
+.formula-button-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0.5em 0em;
+}
+
+.formula-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5em;
+  align-items: flex-start;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}

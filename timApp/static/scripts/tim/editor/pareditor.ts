@@ -1,3 +1,26 @@
+/**
+ * Paragraph editor component
+ *
+ * @author Daniel Juola
+ * @author Denis Zhidkikh
+ * @author Harri Linna
+ * @author Juha Reinikainen
+ * @author Juho Tarkkanen
+ * @author Juuso Valkeejärvi
+ * @author Mika Lehtinen
+ * @author Noora Jokela
+ * @author Rami Pasanen
+ * @author Sami Viitanen
+ * @author Simo Lehtinen
+ * @author Tuomas Porvali
+ * @author Veli-Pekka Oksanen
+ * @author Vesa Lappalainen
+ * @author Vili Moisala
+ * @author Visa Naukkarinen
+ * @license MIT
+ * @date 9.2.2015
+ */
+
 import type {IScope} from "angular";
 import angular from "angular";
 import * as t from "io-ts";
@@ -34,6 +57,10 @@ import type {IPluginInfoResponse} from "tim/editor/parCompiler";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {RestampDialogClose} from "tim/editor/restamp-dialog.component";
 import {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
+import type {FormulaEvent} from "../../../../modules/cs/js/editor/math-editor/symbol-button-menu.component";
+import {selectFormulaFromPreview} from "../../../../modules/cs/js/editor/math-editor/formula-utils";
+import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
+import {createTemplateButtons} from "../../../../modules/cs/js/csPlugin";
 
 markAsUsed(rangyinputs);
 
@@ -247,6 +274,14 @@ export class PareditorController extends DialogController<
     private errorMessage = "";
     private availableTranslators: string[] = [];
     private originalDocument: boolean = true;
+
+    private templateButtons: ITemplateButton[] = [];
+
+    private formulaEditorOpen: boolean = false;
+    private handleFormulaCancel?: () => Promise<boolean>;
+    private currentSymbol: FormulaEvent = {
+        text: "",
+    };
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -883,33 +918,7 @@ ${backTicks}
                 name: "Characters",
             },
             {
-                entries: [
-                    {
-                        title: "",
-                        func: () => this.editor!.surroundClicked("$", "$"),
-                        name: "TeX equation",
-                    },
-                    {
-                        title: "Insert aligned TeX block (Alt-Ctrl-B)",
-                        func: () => this.editor!.texBlockInsertClicked(),
-                        name: "TeX block",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.indexClicked(),
-                        name: "X&#x2093;",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.powerClicked(),
-                        name: "X&#x207f;",
-                    },
-                    {
-                        title: "",
-                        func: () => this.editor!.squareClicked(),
-                        name: "&radic;",
-                    },
-                ],
+                entries: [],
                 name: "TeX",
             },
             {
@@ -1071,6 +1080,7 @@ ${backTicks}
     getVisibleTabs() {
         // Upload tab is shown separately in the template because
         // it has special content that cannot be placed under "extra".
+
         return this.tabs.filter(
             (tab) => (!tab.show || tab.show()) && tab.name !== "Upload"
         );
@@ -1132,6 +1142,9 @@ ${backTicks}
     $onInit() {
         super.$onInit();
         this.docSettings = documentglobals().docSettings;
+
+        this.createTemplateButtons();
+
         const saveTag = this.getSaveTag();
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
@@ -1745,6 +1758,113 @@ ${backTicks}
     }
 
     /**
+     * Toggle formula editor visibility
+     * @param value
+     */
+    onFormulaEditorAddFormula(value: boolean = false) {
+        if (this.activeTab == "tex") {
+            this.formulaEditorOpen = !this.formulaEditorOpen;
+            if (!value) {
+                this.scope.$digest();
+            }
+        }
+    }
+
+    /**
+     * Changes formula editor visibility and put focus to editor
+     * if formula editor was open.
+     * @param doDigest whether to run digest
+     * @param cursorIndex index to move cursor to
+     */
+    toggleFormulaEditor(doDigest: boolean = true, cursorIndex: number = -1) {
+        if (this.activeTab == "tex") {
+            this.formulaEditorOpen = !this.formulaEditorOpen;
+            if (!this.formulaEditorOpen) {
+                setTimeout(() => {
+                    if (cursorIndex !== -1) {
+                        this.editor?.moveCursorToContentIndex(cursorIndex);
+                    }
+                    this.editor?.focus();
+                }, 0);
+            }
+            if (doDigest) {
+                this.scope.$digest();
+            }
+        }
+    }
+
+    /**
+     * Creates and sets templateButtons from buttons and mdButtons attributes in document settings.
+     */
+    createTemplateButtons() {
+        const b = this.docSettings?.buttons;
+        this.templateButtons = createTemplateButtons(
+            b,
+            this.docSettings?.mdButtons
+        );
+    }
+
+    /**
+     * Set handleFormulaCancel function.
+     * @param handler new handleFormulaCancel function
+     */
+    registerFormulaCancelFunction(handler: () => Promise<boolean>) {
+        this.handleFormulaCancel = handler;
+    }
+
+    /**
+     * Moves cursor inside clicked formula in preview in editor
+     * and opens formula editor. Closes editor if it was open.
+     * @param event mouse click event
+     */
+    async handleSelectFormulaFromPreview(event: MouseEvent) {
+        if (this.activeTab !== "tex" || !this.editor) {
+            return;
+        }
+        // this should be unique
+        const previewRoot = document.querySelector(".previewcontent");
+        if (!previewRoot) {
+            return;
+        }
+        // Open different formula
+        if (this.formulaEditorOpen) {
+            // wait for next render cycle
+            await $timeout();
+            if (!this.handleFormulaCancel) {
+                return;
+            }
+            const cancelSuccess = await this.handleFormulaCancel();
+            // editing wasn't cancelled so do nothing
+            if (!cancelSuccess) {
+                return;
+            }
+            // wait for UI to update
+            await $timeout();
+
+            // move to chosen formula
+            const success = selectFormulaFromPreview(
+                event,
+                this.editor,
+                previewRoot
+            );
+            // open formula editor again
+            if (success) {
+                this.toggleFormulaEditor(false);
+            }
+        } else {
+            // Open chosen formula
+            const success = selectFormulaFromPreview(
+                event,
+                this.editor,
+                previewRoot
+            );
+            if (success) {
+                this.toggleFormulaEditor(false);
+            }
+        }
+    }
+
+    /**
      * Checks whether translation may be done.
      * @param editText The editor's text, used for comparison to original block's text in trdiff
      * @returns True if translation may be done, false if not
@@ -2277,10 +2397,12 @@ ${backTicks}
 
             interface ILanguageTools {
                 setCompleters(completers: unknown[]): void;
+
                 snippetCompleter: unknown;
                 textCompleter: unknown;
                 keyWordCompleter: unknown;
             }
+
             const langTools = ace.require(
                 "ace/ext/language_tools"
             ) as ILanguageTools;
@@ -2324,6 +2446,11 @@ ${backTicks}
                 createCompleter(documentglobals().wordList, "document"),
                 createCompleter(userWordList, "user"),
             ]);
+        }
+        if (this.editor?.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(() =>
+                this.onFormulaEditorAddFormula()
+            );
         }
         if (initialMode != null) {
             await this.setInitialText();

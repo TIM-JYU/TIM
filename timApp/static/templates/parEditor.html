@@ -1,91 +1,133 @@
-  <uib-tabset ng-show="$ctrl.proeditor" active="$ctrl.activeTab">
+<uib-tabset ng-show="$ctrl.proeditor" active="$ctrl.activeTab">
     <uib-tab ng-repeat="t in $ctrl.getVisibleTabs()" heading="{{ t.name }}" index="$ctrl.getTabIndex(t)">
+        <div ng-if="t.name === 'TeX' && $ctrl.editor" class="formula-editor-tab">
+            <cs-formula-editor-loader
+                    (ok-close)="$ctrl.toggleFormulaEditor(true, $event)"
+                    (cancel-close)="$ctrl.toggleFormulaEditor(true, $event)"
+                    (component-loaded)="$ctrl.registerFormulaCancelFunction($event)"
+                    (toggle)="$ctrl.toggleFormulaEditor()"
+                    [visible]="$ctrl.formulaEditorOpen"
+                    [editor]="$ctrl.editor"
+                    [current-symbol]="$ctrl.currentSymbol"
+                    [template-buttons]="$ctrl.templateButtons"
+            >
+
+            </cs-formula-editor-loader>
+        </div>
         <tim-editor-entry ng-repeat="e in t.entries" data="e"></tim-editor-entry>
+
         <div ng-if="t.extra" ng-bind-html="t.extra"></div>
     </uib-tab>
+
     <uib-tab heading="Upload" index="'upload'" ng-show="$ctrl.getOptions().showImageUpload">
         <span>
             <input type="file" ngf-select="$ctrl.onFilesSelect($files, $invalidFiles)" ngf-multiple="true">
             <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
                   ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'"></span>
-            <a ng-href="{{$ctrl.uploadedFile}}" >{{$ctrl.uploadedFile}}</a>
+            <a ng-href="{{$ctrl.uploadedFile}}">{{$ctrl.uploadedFile}}</a>
         </span>
         <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
         <span>
         </span>
         <tim-editor-entry ng-repeat="e in $ctrl.getUploadTab().entries" data="e"></tim-editor-entry>
     </uib-tab>
+
     <uib-tab heading="Help" index="'help'">
         <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank"
-                title="General TIM Help">TIM
+           title="General TIM Help">TIM
             Help</a>
-            <span class="margin-4">To cite this paragraph:</span>
-            <input readonly
-                   class="form-control"
-                   type="text"
-                   ng-model="$ctrl.citeText"
-                   title="Copy this line to cite this paragraph"
-                   ng-focus="$ctrl.selectAllText($event)"/>
-            <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
-               title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
+        <span class="margin-4">To cite this paragraph:</span>
+        <input readonly
+               class="form-control"
+               type="text"
+               ng-model="$ctrl.citeText"
+               title="Copy this line to cite this paragraph"
+               ng-focus="$ctrl.selectAllText($event)"/>
+        <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
+           title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
     </uib-tab>
     <uib-tab ng-show="!$ctrl.originalDocument" heading="Translation" index="'translator'">
         <div id="translationTab">
             <label for="translator">Translator:</label>
             <select id="translator" name="translator-select" class="form-control"
                     ng-model="$ctrl.docTranslator" ng-change="$ctrl.updatePareditorTranslatorLanguages()">
-                <option ng-repeat="option in $ctrl.translators" ng-disabled="!option.available" value="{{option.name}}">{{option.name}}</option>
+                <option ng-repeat="option in $ctrl.translators" ng-disabled="!option.available"
+                        value="{{option.name}}">{{option.name}}</option>
             </select>
-                <p ng-show="$ctrl.translationInProgress"><tim-loading></tim-loading> Translating... This may take a while.</p>
-                <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress
-                || $ctrl.docTranslator == '' || !$ctrl.translatorAvailable" ng-show="$ctrl.isTranslationSupported()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
-                <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB" target="_blank">
-                    <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.3em; font-size: x-large; vertical-align: -22%;" title="Help with machine translation" i18n-title></span>
-                </a>
+            <p ng-show="$ctrl.translationInProgress">
+                <tim-loading></tim-loading>
+                Translating... This may take a while.
+            </p>
+            <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress
+                || $ctrl.docTranslator == '' || !$ctrl.translatorAvailable" ng-show="$ctrl.isTranslationSupported()"
+                    ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate
+            </button>
+            <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB" target="_blank">
+                <span class="glyphicon glyphicon-question-sign"
+                      style="margin-left: 0.3em; font-size: x-large; vertical-align: -22%;"
+                      title="Help with machine translation" i18n-title></span>
+            </a>
             <b ng-show="!$ctrl.translatorAvailable">{{$ctrl.errorMessage}}</b>
         </div>
     </uib-tab>
-  </uib-tabset>
-  <div id="editorflex" class="stacked"><div id="editorbox">
-    <div class="editorContainer">
-    </div>
-    <div class="editButtonArea">
-        <button class="timButton save" ng-disabled="$ctrl.saving" title="Save (Ctrl-S)" ng-click="$ctrl.saveClicked()">Save</button>
-        <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.cancelClicked()">Cancel</button>
-        <span ng-show="$ctrl.proeditor">
-        <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
+
+</uib-tabset>
+<div id="editorflex" class="stacked" ng-hide="$ctrl.activeTab == 'tex' && $ctrl.formulaEditorOpen">
+    <div id="editorbox">
+        <div class="editorContainer">
+        </div>
+        <div class="editButtonArea">
+            <button class="timButton save" ng-disabled="$ctrl.saving" title="Save (Ctrl-S)"
+                    ng-click="$ctrl.saveClicked()">Save
+            </button>
+            <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.cancelClicked()">Cancel</button>
+            <span ng-show="$ctrl.proeditor">
+        <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete"
+                ng-click="$ctrl.deleteClicked()">Delete</button>
         </span>
-        <div class="hidingButtonArea">
-            <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px;">Mark as unread</button>
+            <div class="hidingButtonArea">
+                <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()"
+                        ng-click="$ctrl.unreadClicked()" style="right: 2px;">Mark as unread
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="choices" ng-show="$ctrl.getOptions().choices">
-        <div ng-repeat="choice in $ctrl.getOptions().choices" title="{{ choice.title }}">
-            <span >{{ choice.desc }}</span>
-            <label ng-repeat="opt in choice.opts" title="{{ opt.title }}">
-                    <input type="radio"  ng-model="$ctrl.getExtraData()[choice.name]" ng-value="opt.value"/>{{ opt.desc }}&nbsp;
-            </label>
+        <div class="choices" ng-show="$ctrl.getOptions().choices">
+            <div ng-repeat="choice in $ctrl.getOptions().choices" title="{{ choice.title }}">
+                <span>{{ choice.desc }}</span>
+                <label ng-repeat="opt in choice.opts" title="{{ opt.title }}">
+                    <input type="radio" ng-model="$ctrl.getExtraData()[choice.name]"
+                           ng-value="opt.value"/>{{ opt.desc }}&nbsp;
+                </label>
+            </div>
         </div>
-    </div>
-    <div class="editorOptions"><!--="inline-flex"-->
-        <label class="font-weight-normal margin-5-right" title="Show more options to editor"><input type="checkbox" ng-model="$ctrl.proeditor"/> Advanced view </label>
-        <span ng-show="$ctrl.proeditor">
+        <div class="editorOptions"><!--="inline-flex"-->
+            <label class="font-weight-normal margin-5-right" title="Show more options to editor"><input type="checkbox"
+                                                                                                        ng-model="$ctrl.proeditor"/>
+                Advanced view </label>
+            <span ng-show="$ctrl.proeditor">
             <label class="font-weight-normal margin-5-right" title="Change editor between Ace and normal textarea">
                 <input type="checkbox" ng-checked="$ctrl.isAce()" ng-click="$ctrl.changeEditor()"> Ace editor</label>
-            <label class="font-weight-normal margin-5-right" ng-show="$ctrl.fullscreenSupported()" ><input type="checkbox" ng-click="$ctrl.goFullScreen()"> Fullscreen </label>
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.spellcheck" ng-change="$ctrl.editorChanged()"/> Check spelling (in Finnish)</label>
+            <label class="font-weight-normal margin-5-right" ng-show="$ctrl.fullscreenSupported()"><input
+                    type="checkbox" ng-click="$ctrl.goFullScreen()"> Fullscreen </label>
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.spellcheck"
+                                                                    ng-change="$ctrl.editorChanged()"/> Check spelling (in Finnish)</label>
         </span>
-        <label class="font-weight-normal margin-5-right" ng-show="$ctrl.isAce()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete </label>
-        <label class="font-weight-normal margin-5-right" ng-repeat="tag in $ctrl.getOptions().tags">
-            <input type="checkbox" ng-model="$ctrl.getExtraData().tags[tag.name]"/> {{ tag.desc }}
-        </label>
-        <span class="pull-right font-weight-normal" title="Put 0 to no wrap">
-            <button class="timButton btn-xs" title="Click to reformat text for given line length" ng-click="$ctrl.editor.forceWrap(true)">Wrap
+            <label class="font-weight-normal margin-5-right" ng-show="$ctrl.isAce()"><input type="checkbox"
+                                                                                            ng-model="$ctrl.autocomplete"/>
+                Autocomplete </label>
+            <label class="font-weight-normal margin-5-right" ng-repeat="tag in $ctrl.getOptions().tags">
+                <input type="checkbox" ng-model="$ctrl.getExtraData().tags[tag.name]"/> {{ tag.desc }}
+            </label>
+            <span class="pull-right font-weight-normal" title="Put 0 to no wrap">
+            <button class="timButton btn-xs" title="Click to reformat text for given line length"
+                    ng-click="$ctrl.editor.forceWrap(true)">Wrap
             </button>
             <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto"/>
-            <input type="text" title="Choose line length for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
+            <input type="text" title="Choose line length for text.  0=no wrap" ng-pattern="/[-0-9]*/"
+                   ng-model="$ctrl.wrap.n" size="2"/>
         </span>
-    </div></div>
+        </div>
+    </div>
     <!--
     <label class="pull-right font-weight-normal" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
         <input type="text" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
@@ -93,24 +135,27 @@
     -->
     <div ng-if="$ctrl.trdiff"
          ng-show="$ctrl.proeditor"
-          class="halfsize"
+         class="halfsize"
          tim-draggable-fixed
          detachable="true"
          can-minimize="true"
          caption="Difference in original document"
          save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
-    id="diff">
+         id="diff">
         <div class="draggable-content">
-        <div class="border background">
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View beside the editor </label>
+            <div class="border background">
+                <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide"
+                                                                        ng-click="$ctrl.changePositioning()"/> View
+                    beside the editor </label>
+            </div>
+            <div class="diff border">
+                <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
+                <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
+            </div>
         </div>
-        <div class="diff border">
-            <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
-            <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
-        </div></div>
     </div>
-  </div>
-  <div id="previews" class="sidebyside">
+</div>
+<div id="previews" class="sidebyside">
     <div tim-draggable-fixed
          detachable="true"
          can-minimize="true"
@@ -118,9 +163,14 @@
          save="{{$ctrl.getOptions().localSaveTag}}Preview"
          class="previewDiv"
          ng-show="$ctrl.proeditor"
-    id="currpreview">
+         id="currpreview">
         <div class="draggable-content">
-        <div class="previewcontent paragraphs fullsize"></div></div>
+            <div
+                    class="previewcontent paragraphs fullsize"
+                    ng-class="{'csrun-clicking': $ctrl.activeTab == 'tex'}"
+                    ng-dblclick="$ctrl.handleSelectFormulaFromPreview($event)">
+            </div>
+        </div>
     </div>
     <div tim-draggable-fixed
          detachable="true"
@@ -130,14 +180,15 @@
          class="previewDiv"
          ng-if="$ctrl.trdiff.new"
          ng-show="$ctrl.proeditor"
-    id="origpreview">
+         id="origpreview">
         <div class="draggable-content">
-        <div class="previeworiginalcontent paragraphs fullsize">
-            <div class="par">
-            <div class="parContent">
-            <p>{{$ctrl.trdiff.new}}</p>
+            <div class="previeworiginalcontent paragraphs fullsize">
+                <div class="par">
+                    <div class="parContent">
+                        <p>{{$ctrl.trdiff.new}}</p>
+                    </div>
+                </div>
             </div>
-            </div>
-        </div></div>
+        </div>
     </div>
-    </div>
+</div>

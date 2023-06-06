@@ -1,4 +1,18 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_"] }] */
+/**
+ * Normal text editor
+ *
+ * @author Daniel Juola
+ * @author Denis Zhidkikh
+ * @author Juha Reinikainen
+ * @author Mika Lehtinen
+ * @author Simo Lehtinen
+ * @author Tuomas Laine
+ * @author Vesa Lappalainen
+ * @license MIT
+ * @date 29.6.2020
+ */
+
 import $ from "jquery";
 import type {SimpleChanges} from "@angular/core";
 import {
@@ -17,11 +31,11 @@ import {CURSOR} from "./editor";
     selector: "cs-normal-editor",
     template: `
         <textarea #area class="csRunArea csEditArea no-popup-menu"
-                [rows]="rows"
-                [(ngModel)]="content"
-                [placeholder]="placeholder"
-                [disabled]="disabled"
-                [attr.spellcheck]="spellcheck">
+                  [rows]="rows"
+                  [(ngModel)]="content"
+                  [placeholder]="placeholder"
+                  [disabled]="disabled"
+                  [attr.spellcheck]="spellcheck">
         </textarea>`,
 })
 export class NormalEditorComponent implements IEditor {
@@ -32,19 +46,19 @@ export class NormalEditorComponent implements IEditor {
     @Input() placeholder: string = "";
     @Input() disabled: boolean = false;
     @Input() spellcheck?: boolean;
-    @ViewChild("area") private area!: ElementRef;
+    @ViewChild("area") private area!: ElementRef<HTMLTextAreaElement>;
     private editorreadonly: boolean = false;
+    formulaFunction?: () => void;
 
     constructor(private cdr: ChangeDetectorRef) {}
 
     focus() {
-        const element = this.area.nativeElement as HTMLTextAreaElement;
+        const element = this.area.nativeElement;
         element.focus();
     }
 
     setReadOnly(b: boolean) {
         this.editorreadonly = b;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         this.area.nativeElement.readOnly = b;
     }
 
@@ -82,12 +96,20 @@ export class NormalEditorComponent implements IEditor {
                 }
                 this.insert("    ");
                 return;
+            } else if (event.which === 69) {
+                // e key
+                if (event.ctrlKey) {
+                    if (this.formulaFunction) {
+                        this.formulaFunction();
+                    }
+                }
+                return;
             }
         });
     }
 
     insert(str: string, strPos?: number): void {
-        const txtarea = this.area.nativeElement as HTMLTextAreaElement;
+        const txtarea = this.area.nativeElement;
         // const scrollPos = txtarea.scrollTop;
         txtarea.focus();
         const endPos = strPos ?? txtarea.selectionEnd ?? 0;
@@ -109,6 +131,7 @@ export class NormalEditorComponent implements IEditor {
                 txtarea.selectionStart = newPos;
                 txtarea.selectionEnd = newPos;
             }
+
             setTimeout(() => setpos());
         }
         // txtarea.scrollTop = scrollPos;
@@ -120,12 +143,34 @@ export class NormalEditorComponent implements IEditor {
             return;
         }
 
-        const element = this.area.nativeElement as HTMLTextAreaElement;
+        const element = this.area.nativeElement;
         const start = element.selectionStart;
 
         this.content = r.s;
         element.value = r.s;
         element.selectionStart = start;
         element.selectionEnd = start;
+    }
+
+    /**
+     * Save function that opens the formula editor.
+     */
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+    }
+
+    moveCursorToContentIndex(index: number) {
+        if (index < 0 || index >= this.content.length) {
+            return;
+        }
+        this.area.nativeElement.selectionStart = index;
+        this.area.nativeElement.selectionEnd = index;
+    }
+
+    /**
+     * Return position of cursor in editor
+     */
+    cursorPosition(): number {
+        return this.area.nativeElement.selectionStart;
     }
 }

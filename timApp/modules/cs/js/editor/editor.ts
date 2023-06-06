@@ -1,4 +1,18 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "wrap_", "modes_", "fileIndex_", "files_", "modeIndex_", "mayAddFiles_"] }] */
+/**
+ * Editor component
+ *
+ * @author Daniel Juola
+ * @author Denis Zhidkikh
+ * @author Juha Reinikainen
+ * @author Mika Lehtinen
+ * @author Simo Lehtinen
+ * @author Tuomas Laine
+ * @author Vesa Lappalainen
+ * @license MIT
+ * @date 29.6.2020
+ */
+
 import {
     ChangeDetectorRef,
     Component,
@@ -57,11 +71,32 @@ export const CURSOR = "⁞";
 export interface IEditor {
     content: string;
 
-    setSelection?(): void;
+    setSelection?(start: number): void;
+
     doWrap?(wrap: number): void;
+
     insert?(str: string): void;
+
     setReadOnly(b: boolean): void;
+
     focus(): void;
+
+    /**
+     * Save function that opens the formula editor.
+     * @param cb: () => void callback function
+     */
+    addFormulaEditorOpenHandler?(cb: () => void): void;
+
+    /**
+     * Move cursor to index in content string.
+     * @param index index in content
+     */
+    moveCursorToContentIndex?(index: number): void;
+
+    /**
+     * Return position of cursor in editor
+     */
+    cursorPosition?(): number;
 }
 
 export interface IEditorFile {
@@ -75,15 +110,20 @@ export interface IMultiEditor extends IEditor {
     allFiles: IEditorFile[];
 
     setFiles(files: EditorFile[]): void;
+
     addFile(file: EditorFile): void;
+
     addFile(
         path: string,
         base?: string,
         languageMode?: string,
         content?: string
     ): void;
+
     removeFile(filename: string): void;
+
     renameFile(path: string, oldPath?: string): void;
+
     setFileContent(path: string, content: string): void;
 }
 
@@ -118,6 +158,7 @@ export class EditorFile {
     get content() {
         return this.content_ ?? this.oldContent ?? this.base;
     }
+
     set content(str: string) {
         this.content_ = str;
     }
@@ -129,7 +170,9 @@ export class EditorFile {
 })
 export class JSParsonsEditorComponent implements IEditor {
     content: string = "";
+
     setReadOnly(b: boolean) {}
+
     focus() {}
 }
 
@@ -138,51 +181,54 @@ export class JSParsonsEditorComponent implements IEditor {
     template: `
         <ng-container *ngIf="files.length">
             <div *ngIf="showTabs" class="tab-list">
-                <div *ngFor="let file of files; index as i; trackBy: trackByPath" class="tab-label file-tab" [ngClass]="{'tab-label-active': tabIndex == i}" (click)="tabIndex = i">
+                <div *ngFor="let file of files; index as i; trackBy: trackByPath" class="tab-label file-tab"
+                     [ngClass]="{'tab-label-active': tabIndex == i}" (click)="tabIndex = i">
                     {{file.path}} {{file.canModify ? "" : "(read-only)"}}
                     <div class="close-wrapper">
                         <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
                     </div>
                 </div>
-                <div *ngIf="canAddFile" class="tab-label" [ngClass]="{'tab-label-active': tabIndex == files.length}" (click)="tabIndex = files.length">
+                <div *ngIf="canAddFile" class="tab-label" [ngClass]="{'tab-label-active': tabIndex == files.length}"
+                     (click)="tabIndex = files.length">
                     <span class="file-add-tab glyphicon glyphicon-plus"></span>
                 </div>
             </div>
             <ng-container *ngIf="!addTabActive">
-            <cs-normal-editor *ngIf="mode == Mode.Normal"
-                    [minRows]="minRows_"
-                    [maxRows]="maxRows_"
-                    [placeholder]="file && file.placeholder ? file.placeholder : ''"
-                    [disabled]="isDisabled"
-                    [spellcheck]="spellcheck">
-            </cs-normal-editor>
-            <cs-parsons-editor *ngIf="mode == Mode.Parsons"
-                    [base]="base" 
-                    [parsonsOptions]="parsonsOptions"            
-                    (change)="onEditorContentChanged($event)">
-            </cs-parsons-editor>
-            <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
-            <cs-ace-editor *ngIf="mode == Mode.ACE"
-                    [languageMode]="languageMode"
-                    [minRows]="minRows_"
-                    [maxRows]="maxRows_"
-                    [placeholder]="file && file.placeholder ? file.placeholder : ''"
-                    [disabled]="isDisabled">
-            </cs-ace-editor>
+                <cs-normal-editor *ngIf="mode == Mode.Normal"
+                                  [minRows]="minRows_"
+                                  [maxRows]="maxRows_"
+                                  [placeholder]="file && file.placeholder ? file.placeholder : ''"
+                                  [disabled]="isDisabled"
+                                  [spellcheck]="spellcheck">
+                </cs-normal-editor>
+                <cs-parsons-editor *ngIf="mode == Mode.Parsons"
+                                   [base]="base"
+                                   [parsonsOptions]="parsonsOptions"
+                                   (change)="onEditorContentChanged($event)">
+                </cs-parsons-editor>
+                <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
+                <cs-ace-editor *ngIf="mode == Mode.ACE"
+                               [languageMode]="languageMode"
+                               [minRows]="minRows_"
+                               [maxRows]="maxRows_"
+                               [placeholder]="file && file.placeholder ? file.placeholder : ''"
+                               [disabled]="isDisabled">
+                </cs-ace-editor>
             </ng-container>
             <div *ngIf="addTabActive" class="add-view">
                 <file-select class="small" style="height: 4em;"
-                        [multiple]="false"
-                        [stem]="'Load a file (optional)'"
-                        [dragAndDrop]="true"
-                        (file)="onFileLoad($event)">
+                             [multiple]="false"
+                             [stem]="'Load a file (optional)'"
+                             [dragAndDrop]="true"
+                             (file)="onFileLoad($event)">
                 </file-select>
                 Filename:<input type="text" placeholder="Give a name here" [(ngModel)]="filenameInput">
                 <br>
                 <button class="timButton btn-sm"
                         (click)="clickAddFile()"
                         [attr.title]="addButtonTitle"
-                        [disabled]="disableAddButton">Add</button>
+                        [disabled]="disableAddButton">Add
+                </button>
             </div>
         </ng-container>`,
 })
@@ -191,6 +237,7 @@ export class EditorComponent implements IMultiEditor {
     Mode = Mode;
 
     private normalEditor?: NormalEditorComponent;
+
     private aceEditor?: AceEditorComponent;
     parsonsEditor?: ParsonsEditorComponent;
     editorreadonly: boolean = false;
@@ -225,6 +272,7 @@ export class EditorComponent implements IMultiEditor {
     private loadedFile?: IFile;
     filenameInput: string = "";
     private editorIndexStorage = new TimStorage("editorIndex", t.number);
+    formulaFunction?: () => void;
 
     constructor(private cdr: ChangeDetectorRef) {
         this.showOtherEditor(
@@ -277,11 +325,15 @@ export class EditorComponent implements IMultiEditor {
             this.editor.setReadOnly(this.editorreadonly);
             this.content = oldContent;
             this.content_ = undefined;
+            if (this.formulaFunction) {
+                this.addFormulaEditorOpenHandler(this.formulaFunction);
+            }
         }
     }
 
     // For after ngIf sets the value
-    @ViewChild(NormalEditorComponent) private set normalEditorViewSetter(
+    @ViewChild(NormalEditorComponent)
+    private set normalEditorViewSetter(
         component: NormalEditorComponent | undefined
     ) {
         if (component == this.normalEditor) {
@@ -291,9 +343,9 @@ export class EditorComponent implements IMultiEditor {
         this.normalEditor = component;
         this.initEditor(oldContent);
     }
-    @ViewChild(AceEditorComponent) private set aceEditorViewSetter(
-        component: AceEditorComponent | undefined
-    ) {
+
+    @ViewChild(AceEditorComponent)
+    private set aceEditorViewSetter(component: AceEditorComponent | undefined) {
         if (component == this.aceEditor) {
             return;
         }
@@ -301,7 +353,9 @@ export class EditorComponent implements IMultiEditor {
         this.aceEditor = component;
         this.initEditor(oldContent);
     }
-    @ViewChild(ParsonsEditorComponent) private set parsonsEditorViewSetter(
+
+    @ViewChild(ParsonsEditorComponent)
+    private set parsonsEditorViewSetter(
         component: ParsonsEditorComponent | undefined
     ) {
         if (component == this.aceEditor) {
@@ -316,17 +370,21 @@ export class EditorComponent implements IMultiEditor {
     set minRows(rows: number | string) {
         this.minRows_ = getInt(rows) ?? 1;
     }
+
     @Input()
     set maxRows(rows: number | string) {
         this.maxRows_ = getInt(rows) ?? 100;
     }
+
     @Input()
     set editorIndex(index: number) {
         this.showOtherEditor(index);
     }
+
     get modes() {
         return this.modes_;
     }
+
     @Input()
     set modes(modes: Mode[]) {
         const mode = this.mode;
@@ -354,6 +412,7 @@ export class EditorComponent implements IMultiEditor {
     get tabIndex(): number {
         return this.addTabActive ? this.files.length : this.fileIndex;
     }
+
     set tabIndex(index: number) {
         this.addTabActive = this.canAddFile && index == this.files.length;
         if (!this.addTabActive) {
@@ -364,9 +423,11 @@ export class EditorComponent implements IMultiEditor {
     get fileIndex(): number {
         return this.fileIndex_;
     }
+
     set fileIndex(index: number) {
         this.setFileIndex(index);
     }
+
     private setFileIndex(index: number) {
         if (this.file) {
             this.file.content = this.content;
@@ -374,6 +435,7 @@ export class EditorComponent implements IMultiEditor {
         this.fileIndex_ = this.clampIndex(index);
         this.content = this.file?.content ?? "";
     }
+
     private clampIndex(index: number) {
         if (index < 0) {
             return 0;
@@ -388,6 +450,7 @@ export class EditorComponent implements IMultiEditor {
     get files(): EditorFile[] {
         return this.files_;
     }
+
     set files(files: EditorFile[]) {
         this.files_ = files;
         if (files.length == 0) {
@@ -412,6 +475,7 @@ export class EditorComponent implements IMultiEditor {
     get mayAddFiles() {
         return this.mayAddFiles_;
     }
+
     set mayAddFiles(b: boolean) {
         if (b != this.mayAddFiles_) {
             this.maxFiles = b ? -1 : this.files.length;
@@ -438,6 +502,7 @@ export class EditorComponent implements IMultiEditor {
     get activeFile(): string | undefined {
         return this.file?.path;
     }
+
     set activeFile(path: string | undefined) {
         if (path) {
             const index = this.findFile(path);
@@ -469,6 +534,7 @@ export class EditorComponent implements IMultiEditor {
     get content() {
         return this.editor?.content ?? this.file?.content ?? this.base;
     }
+
     set content(str: string) {
         if (this.editor) {
             this.editor.content = str;
@@ -480,6 +546,7 @@ export class EditorComponent implements IMultiEditor {
     get content_(): string | undefined {
         return this.file?.content_;
     }
+
     set content_(str: string | undefined) {
         if (this.file) {
             this.file.content_ = str;
@@ -489,6 +556,7 @@ export class EditorComponent implements IMultiEditor {
     get oldContent(): string {
         return this.file?.oldContent ?? "";
     }
+
     set oldContent(str: string) {
         if (this.file) {
             this.file.oldContent = str;
@@ -498,6 +566,7 @@ export class EditorComponent implements IMultiEditor {
     get base() {
         return this.file?.base ?? "";
     }
+
     @Input()
     set base(str: string) {
         if (this.file) {
@@ -508,6 +577,7 @@ export class EditorComponent implements IMultiEditor {
     get languageMode(): string {
         return this.file?.languageMode ?? "text";
     }
+
     set languageMode(str: string) {
         if (this.file) {
             this.file.languageMode = str;
@@ -524,6 +594,7 @@ export class EditorComponent implements IMultiEditor {
     get modeIndex(): number {
         return this.modeIndex_;
     }
+
     set modeIndex(index: number) {
         this.modeIndex_ = index;
         this.mode = this.mode; // save and make sure it is in range
@@ -546,6 +617,7 @@ export class EditorComponent implements IMultiEditor {
         }
         return mode;
     }
+
     set mode(mode: ModeID) {
         if (mode == -1) {
             this.mode = this.savedEditorMode ?? EditorComponent.defaultMode; // TODO: make sure default is in modes
@@ -572,6 +644,7 @@ export class EditorComponent implements IMultiEditor {
         }
         return emode;
     }
+
     set savedEditorMode(mode: ModeID | null) {
         if (mode === null) {
             return;
@@ -780,5 +853,34 @@ export class EditorComponent implements IMultiEditor {
 
     focus() {
         this.editor?.focus();
+    }
+
+    /**
+     * Save function that opens the formula editor.
+     * @param cb: () => void callback function
+     */
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+        if (this.editor?.addFormulaEditorOpenHandler) {
+            this.editor.addFormulaEditorOpenHandler(cb);
+        }
+    }
+
+    /**
+     * Move cursor to index in content string.
+     * @param index index in content
+     */
+    moveCursorToContentIndex(index: number) {
+        this.editor?.moveCursorToContentIndex?.(index);
+    }
+
+    /**
+     * Return position of cursor in editor
+     */
+    cursorPosition(): number {
+        if (this.editor?.cursorPosition) {
+            return this.editor?.cursorPosition();
+        }
+        return -1;
     }
 }

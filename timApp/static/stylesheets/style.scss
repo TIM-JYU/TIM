@@ -6,6 +6,15 @@
     font-family: "KaTeX_Main", Verdana, serif;
 }
 
+.csrun-clicking .katex:hover {
+    cursor: grab;
+}
+
+.symbol-button .katex-display {
+    margin: 0;
+}
+
+
 $buttons-width: 75%;
 
 tim-dialog {

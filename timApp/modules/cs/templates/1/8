@@ -1,0 +1,19 @@
+Matematiikkakysymys
+Kysymys, johon käyttäjä voi kirjoittaa matemaattisia kaavoja
+``` {plugin="csPlugin" #PLUGINNAMEHERE}
+type: md
+placeholder: "Kirjoita kaavaa"
+header: Tehtävä 1
+stem: |!!
+md:
+Ratkaise tehtävä
+!!
+button: Tallenna
+rows: 5
+editorModes: "01"
+editorMode: 1
+autorun: true
+autoupdate: 1000
+formulaEditor: true
+upload: true
+```

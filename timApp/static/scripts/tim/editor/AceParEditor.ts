@@ -1,3 +1,19 @@
+/**
+ * Ace editor for paragraph editing
+ *
+ * @author Daniel Juola
+ * @author Denis Zhidkikh
+ * @author Juha Reinikainen
+ * @author Mika Lehtinen
+ * @author Noora Jokela
+ * @author Simo Lehtinen
+ * @author Vesa Lappalainen
+ * @author Vili Moisala
+ * @author Visa Naukkarinen
+ * @license MIT
+ * @date 4.7.2017
+ */
+
 import {Ace} from "ace-builds/src-noconflict/ace";
 import {wrapText} from "tim/document/editing/utils";
 import type {IAce} from "tim/editor/ace";
@@ -9,6 +25,7 @@ import {
     EditorType,
     focusAfter,
 } from "tim/editor/BaseParEditor";
+import type {IEditor} from "../../../../modules/cs/js/editor/editor";
 import AceAjax = Ace;
 import IAceEditor = Ace.Editor;
 
@@ -24,11 +41,12 @@ type EditorElementEventHandler<TType extends string> = JQuery.TypeEventHandler<
     TType
 >;
 
-export class AceParEditor extends BaseParEditor {
+export class AceParEditor extends BaseParEditor implements IEditor {
     public editor: IAceEditor;
     private snippetManager: ISnippetManager;
     private ace: IAce;
     type: EditorType.Ace = EditorType.Ace;
+    formulaFunction?: () => void;
 
     constructor(
         ace: IAce,
@@ -225,6 +243,18 @@ export class AceParEditor extends BaseParEditor {
             },
             exec: () => {
                 this.editor.toggleCommentLines();
+            },
+        });
+        this.editor.commands.addCommand({
+            name: "addFormula",
+            bindKey: {
+                win: "Ctrl-E",
+                mac: "Command-E",
+            },
+            exec: () => {
+                if (this.formulaFunction) {
+                    this.formulaFunction();
+                }
             },
         });
         this.editor.keyBinding.setKeyboardHandler({
@@ -574,15 +604,21 @@ export class AceParEditor extends BaseParEditor {
 
     @focusAfter
     insertTemplate(text: string) {
+        const pluginnamehere = "PLUGINNAMEHERE";
+        const firstLine = text.split("\n")[0];
+        const hasPluginName = firstLine.includes(pluginnamehere);
         const ci = text.indexOf(CURSOR);
-        if (ci >= 0) {
+        const setCursor = ci >= 0 && !hasPluginName;
+        if (setCursor) {
             text = text.slice(0, ci) + text.slice(ci + 1);
         }
         const range = this.editor.getSelectionRange();
         const start = range.start;
-        this.snippetManager.insertSnippet(this.editor, text);
+        this.snippetManager.insertSnippet(
+            this.editor,
+            this.escapeDollarSign(text)
+        );
         const line = this.editor.session.getLine(start.row);
-        const pluginnamehere = "PLUGINNAMEHERE";
         const index = line.lastIndexOf(pluginnamehere);
         if (index > -1) {
             range.start.column = index;
@@ -590,7 +626,7 @@ export class AceParEditor extends BaseParEditor {
             range.end.column = index + pluginnamehere.length;
             this.editor.selection.setRange(range, false);
         }
-        if (ci >= 0) {
+        if (setCursor) {
             const pos = this.editor.session
                 .getDocument()
                 .positionToIndex(start, 0);
@@ -786,5 +822,65 @@ export class AceParEditor extends BaseParEditor {
 
     setAutoCompletion(enable: boolean) {
         this.editor.setOptions({enableLiveAutocompletion: enable});
+    }
+
+    get content(): string {
+        return this.getEditorText();
+    }
+
+    set content(value: string) {
+        this.setEditorText(value);
+    }
+
+    insert(str: string): void {
+        if (!this.editor) {
+            return;
+        }
+        const sess = this.editor.getSession();
+        let back = -1;
+        const ci = str.indexOf(CURSOR); // check if there is a cursor marker
+        if (ci >= 0) {
+            str = str.replace(CURSOR, "");
+            back = str.length - ci;
+        }
+        sess.replace(sess.selection.getRange(), str);
+        if (back > 0) {
+            this.editor.navigateLeft(back);
+        }
+    }
+
+    setReadOnly(b: boolean): void {
+        this.editor.setReadOnly(b);
+    }
+
+    /**
+     * Save function that opens the formula editor.
+     */
+    addFormulaEditorOpenHandler(cb: () => void): void {
+        this.formulaFunction = cb;
+    }
+
+    moveCursorToContentIndex(index: number) {
+        const pos = this.editor
+            .getSession()
+            .getDocument()
+            .indexToPosition(index, 0);
+        if (!pos) {
+            return;
+        }
+        this.editor.moveCursorToPosition(pos);
+        this.editor.clearSelection();
+    }
+
+    /**
+     * Return position of cursor in editor
+     */
+    cursorPosition(): number {
+        if (!this.editor) {
+            return -1;
+        }
+        const sess = this.editor.getSession();
+        const cursor = this.editor.getCursorPosition();
+        return sess.getDocument().positionToIndex(cursor, 0);
     }
 }
