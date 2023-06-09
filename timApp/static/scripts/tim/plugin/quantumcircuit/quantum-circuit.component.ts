@@ -1,16 +1,11 @@
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    NgModule,
-    OnInit,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
-import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {GenericPluginMarkup, getTopLevelFields} from "../attributes";
 import {CommonModule} from "@angular/common";
-import {registerPlugin} from "../pluginRegistry";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {GenericPluginMarkup, getTopLevelFields} from "tim/plugin/attributes";
 
 // All settings that are defined in the plugin markup YAML
 const QuantumCircuitMarkup = t.intersection([
