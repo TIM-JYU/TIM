@@ -92,6 +92,10 @@ export function staticDynamicImport(s: string) {
             return import("tim/plugin/calendar/calendar.component");
         case "groupJoin":
             return import("tim/plugin/groupJoin/group-join.component");
+        case "quantumCircuit":
+            return import(
+                "tim/plugin/quantumcircuit/quantum-circuit.component"
+            );
     }
     throw Error(`Module was not statically known: ${s}`);
 }

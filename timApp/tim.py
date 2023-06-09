@@ -62,6 +62,7 @@ from timApp.plugin.calendar.calendar import calendar_plugin
 from timApp.plugin.group_join.group_join import group_join_plugin
 from timApp.plugin.importdata.importData import importData_plugin
 from timApp.plugin.qst.qst import qst_plugin
+from timApp.plugin.quantum_circuit.quantumCircuit import quantum_circuit_plugin
 from timApp.plugin.reviewcanvas.reviewcanvas import reviewcanvas_plugin
 from timApp.plugin.routes import plugin_bp
 from timApp.plugin.tableform.tableForm import tableForm_plugin
@@ -158,6 +159,7 @@ blueprints = [
     messagelist,
     tim_message,
     verify,
+    quantum_circuit_plugin,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:
