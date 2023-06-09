@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import attr
 
@@ -20,6 +19,7 @@ translations = [
     ("teacher", "teachers"),
     ("responsible-teacher", "responsible-teachers"),
     ("administrative-person", "administrative-persons"),
+    ("contact-info", "contact-infos"),
 ]
 
 

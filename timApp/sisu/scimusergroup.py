@@ -4,7 +4,7 @@ from timApp.timdb.sqa import db
 
 uuid_re = "[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}"
 external_id_re = re.compile(
-    rf"(?P<norole>(?P<courseid>(jy-(CUR-\d+|{uuid_re})|otm-{uuid_re}))-(?P<subgroup>(jy-(studysubgroup-\d+|{uuid_re})|otm-{uuid_re})-)?)(?P<role>teachers|responsible-teachers|students|administrative-persons|studysubgroup-teachers|studysubgroup-students)"
+    rf"(?P<norole>(?P<courseid>(jy-(CUR-\d+|{uuid_re})|otm-{uuid_re}))-(?P<subgroup>(jy-(studysubgroup-\d+|{uuid_re})|otm-{uuid_re})-)?)(?P<role>teachers|responsible-teachers|students|administrative-persons|studysubgroup-teachers|studysubgroup-students|contact-infos)"
 )
 
 
