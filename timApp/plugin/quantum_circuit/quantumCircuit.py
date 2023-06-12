@@ -19,7 +19,8 @@ quantum_circuit_plugin = TypedBlueprint(
 class QuantumCircuitMarkup(GenericMarkupModel):
     """Class that defines plugin markup (the YAML settings and their types)"""
 
-    pass
+    nQubits: int | None = None
+    nMoments: int | None = None
 
 
 @dataclass
