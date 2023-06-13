@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Runs a NUnit test on a DLL file
+# Args
+#  dllfile: the DLL file to test
+
+# First, resolve the full path of the dllfile
+
+dll_file_path=$(readlink -f $1)
+dll_file_dir=$(dirname "$dll_file_path")
+dll_file_name=$(basename "$dll_file_path")
+dll_file_name_no_ext="${dll_file_name%.*}"
+dll_deps_path="$dll_file_dir/$dll_file_name_no_ext.deps.json"
+
+# Symlink deps file so that .NET will automatically pick the dependendencies
+# Seems like additional-deps no longer is enough on .NET 7
+ln -sf /cs_data/dotnet/configs/nunit_test.deps.json "$dll_deps_path"
+
+# Don't stop on error so that we can remove the symlink
+set +e
+
+dotnet exec \
+  --runtimeconfig /cs/dotnet/runtimeconfig.json \
+  --additional-deps /cs_data/dotnet/configs/jypeli.deps.json \
+  --roll-forward LatestMajor \
+  /dotnet_tools/nunit.console.dll \
+  --noheader --nocolor \
+  "${@:2}" \
+  "$dll_file_path"
+
+rm "$dll_deps_path"
