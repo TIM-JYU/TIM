@@ -141,7 +141,7 @@ export class QuantumCircuitComponent
         this.board[target][time] = gate;
     }
 
-    ngAfterViewInit() {
+    initializeBoard() {
         this.board = [];
 
         // input    moments       | output
@@ -149,6 +149,7 @@ export class QuantumCircuitComponent
         const size =
             this.qcContainer.nativeElement.offsetWidth / (this.nMoments + 2);
 
+        // one extra line for moments
         this.svgHeight = size * (this.nQubits + 1);
 
         // const totalWidth = this.qcContainer.nativeElement.offsetWidth;
@@ -186,6 +187,7 @@ export class QuantumCircuitComponent
             }
             this.board.push(row);
         }
+
         this.board[0][0].name = "H";
 
         this.qubitOutputs = [];
@@ -201,6 +203,10 @@ export class QuantumCircuitComponent
                 textY: i * size + size / 2 + size,
             });
         }
+    }
+
+    ngAfterViewInit() {
+        this.initializeBoard();
     }
 
     ngOnInit(): void {
