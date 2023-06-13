@@ -23,6 +23,44 @@ export const COLORS = {
     selector: "tim-quantum-circuit-board",
     template: `
         <svg [attr.width]="svgW" [attr.height]="svgH">
+            <!-- gates-->
+            <g>
+                <g *ngFor="let gates of board">
+                    <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)"
+                       (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
+                        <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="!gate.name" [attr.x]="gate.x"
+                              [attr.y]="gate.y" [attr.width]="gate.w"
+                              [attr.height]="gate.h"
+                              [attr.fill]="COLORS.light" [attr.stroke]="COLORS.light"/>
+                    </g>
+                </g>
+
+            </g>
+            <!-- lines -->
+            <g>
+                <line *ngFor="let qubit of qubits" [attr.stroke]="COLORS.medium" [attr.x1]="0"
+                      [attr.y1]="qubit.textY" [attr.x2]="svgW" [attr.y2]="qubit.textY"></line>
+            </g>
+
+            <!-- gates-->
+            <g>
+                <g *ngFor="let gates of board">
+                    <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)"
+                       (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
+                        <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="gate.name" [attr.x]="gate.x+5"
+                              [attr.y]="gate.y+5" [attr.width]="gate.w-10"
+                              [attr.height]="gate.h-10"
+                              [attr.fill]="COLORS.light" [attr.stroke]="COLORS.medium"/>
+                        <text *ngIf="gate.name" [attr.x]="gate.textX" [attr.y]="gate.textY"
+                              [attr.fill]="COLORS.dark">{{gate.name}}</text>
+
+                    </g>
+                </g>
+
+            </g>
+
+
+            <!-- moments -->
             <g>
                 <g *ngFor="let gate of board[0] let i=index">
                     <rect [attr.x]="gate.x" [attr.y]="0" [attr.width]="gate.w" [attr.height]="gate.h"
@@ -31,6 +69,7 @@ export const COLORS = {
                 </g>
             </g>
 
+            <!-- qubits -->
             <g>
                 <g *ngFor="let qubit of qubits" (click)="toggleQubit($event, qubit.id)">
                     <rect [attr.x]="qubit.x" [attr.y]="qubit.y" [attr.width]="qubit.w" [attr.height]="qubit.h"
@@ -43,16 +82,7 @@ export const COLORS = {
 
             </g>
 
-            <g *ngFor="let gates of board">
-                <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)" (dragover)="handleDragOver($event, gate)">
-                    <rect [attr.x]="gate.x" [attr.y]="gate.y" [attr.width]="gate.w" [attr.height]="gate.h"
-                          [attr.fill]="COLORS.light" [attr.stroke]="COLORS.dark"/>
-                    <text [attr.x]="gate.textX" [attr.y]="gate.textY" [attr.fill]="COLORS.dark">{{gate.name}}</text>
-                    <line *ngIf="gate.name === undefined" [attr.stroke]="COLORS.medium" [attr.x1]="gate.x"
-                          [attr.y1]="gate.textY" [attr.x2]="gate.textX+gate.w" [attr.y2]="gate.textY"></line>
-                </g>
-            </g>
-
+            <!-- outputs -->
             <g>
                 <g *ngFor="let qubit of qubitOutputs">
                     <rect [attr.x]="qubit.x" [attr.y]="qubit.y" [attr.width]="qubit.w" [attr.height]="qubit.h"
@@ -65,6 +95,8 @@ export const COLORS = {
     styleUrls: ["./quantum-circuit-board.component.scss"],
 })
 export class QuantumCircuitBoardComponent implements OnInit {
+    protected readonly COLORS = COLORS;
+
     @Input()
     board: Gate[][] = [];
 
@@ -89,6 +121,8 @@ export class QuantumCircuitBoardComponent implements OnInit {
     @Output()
     gateDrop = new EventEmitter<Gate>();
 
+    dragOverElement?: Gate;
+
     constructor() {}
 
     ngOnInit(): void {}
@@ -104,14 +138,28 @@ export class QuantumCircuitBoardComponent implements OnInit {
         if (gateName === undefined) {
             return;
         }
+        this.dragOverElement = undefined;
         console.log(gateName);
         gate.name = gateName;
         this.gateDrop.emit(gate);
     }
 
     handleDragOver(event: DragEvent, gate: Gate) {
+        this.dragOverElement = gate;
         event.preventDefault();
     }
 
-    protected readonly COLORS = COLORS;
+    handleDragLeave() {
+        this.dragOverElement = undefined;
+    }
+
+    isBeingDraggedOver(gate: Gate) {
+        if (!this.dragOverElement) {
+            return false;
+        }
+        return (
+            this.dragOverElement.time === gate.time &&
+            this.dragOverElement.target === gate.target
+        );
+    }
 }

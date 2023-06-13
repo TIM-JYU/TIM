@@ -10,7 +10,8 @@ interface Gate {
     selector: "tim-quantum-gate-menu",
     template: `
         <div class="gate-container">
-            <div class="svg-container" *ngFor="let gate of gates" draggable="true" (dragstart)="handleDragStart($event, gate)">
+            <div class="svg-container" *ngFor="let gate of gates" draggable="true"
+                 (dragstart)="handleDragStart($event, gate)">
                 <svg [attr.width]="50" [attr.height]="50">
                     <rect [attr.x]="0" [attr.y]="0" [attr.width]="50" [attr.height]="50" [attr.fill]="COLORS.light"
                           [attr.stroke]="COLORS.dark"/>
@@ -38,7 +39,10 @@ export class QuantumGateMenuComponent implements OnInit {
                 name: "H",
             },
             {
-                name: "CNOT",
+                name: "X",
+            },
+            {
+                name: "Y",
             },
         ];
     }
