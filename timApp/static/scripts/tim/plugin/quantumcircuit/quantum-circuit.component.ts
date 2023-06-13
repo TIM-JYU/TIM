@@ -137,7 +137,7 @@ export class QuantumCircuitComponent
     }
 
     handleGateDrop(gate: Gate) {
-        const {time, target, name} = gate;
+        const {time, target} = gate;
         this.board[target][time] = gate;
     }
 
