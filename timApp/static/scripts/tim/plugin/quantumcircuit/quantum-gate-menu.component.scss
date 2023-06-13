@@ -1,0 +1,17 @@
+svg text {
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+}
+svg text::selection {
+    background: none;
+}
+
+.gate-container {
+  border: 1px solid black;
+  display: flex;
+  flex-direction: row;
+  padding: 1em;
+  gap: 0.25em;
+}

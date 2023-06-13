@@ -17,10 +17,7 @@ import {
 } from "tim/plugin/attributes";
 import {QuantumGateMenuComponent} from "tim/plugin/quantumcircuit/quantum-gate-menu.component";
 import {QuantumToolboxComponent} from "tim/plugin/quantumcircuit/quantum-toolbox.component";
-import {
-    FlatteningPipe,
-    QuantumCircuitBoardComponent,
-} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
+import {QuantumCircuitBoardComponent} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
 
 export interface Gate {
@@ -44,6 +41,7 @@ export interface Qubit {
     h: number;
     textX: number;
     textY: number;
+    id: number;
 }
 
 export interface QubitOutput {
@@ -81,12 +79,18 @@ const QuantumCircuitFields = t.intersection([
                 <tim-quantum-gate-menu></tim-quantum-gate-menu>
                 <tim-quantum-toolbox></tim-quantum-toolbox>
             </div>
-            
-            <tim-quantum-circuit-board [board]="board" [svgW]="qcContainer.offsetWidth" [qubits]="qubits" [svgH]="qcContainer.offsetWidth" [qubitOutputs]="qubitOutputs"></tim-quantum-circuit-board>
+
+            <tim-quantum-circuit-board
+                 [board]="board" [svgW]="qcContainer.offsetWidth" [qubits]="qubits"
+                 [svgH]="svgHeight"
+                 [qubitOutputs]="qubitOutputs"
+                 (qubitChange)="handleQubitChange($event)"
+                 [nMoments]="nMoments"
+                 (gateDrop)="handleGateDrop($event)"
+            ></tim-quantum-circuit-board>                
             
             <tim-quantum-stats></tim-quantum-stats>
-            
-            {{qcContainer.offsetHeight}} {{qcContainer.offsetWidth}}
+
         </div>
     `,
     styleUrls: ["./quantum-circuit.component.scss"],
@@ -105,6 +109,8 @@ export class QuantumCircuitComponent
     qubits: Qubit[] = [];
     qubitOutputs: QubitOutput[] = [];
 
+    svgHeight = 0;
+
     get nQubits() {
         return this.markup.nQubits;
     }
@@ -115,6 +121,26 @@ export class QuantumCircuitComponent
 
     board: Gate[][] = [];
 
+    /**
+     * Toggle qubits initial state between 0 and 1
+     */
+    handleQubitChange(qubitId: number) {
+        if (qubitId < 0 || qubitId >= this.qubits.length) {
+            console.log("non-existing qubitId", qubitId);
+            return;
+        }
+        if (this.qubits[qubitId].value === 0) {
+            this.qubits[qubitId].value = 1;
+        } else {
+            this.qubits[qubitId].value = 0;
+        }
+    }
+
+    handleGateDrop(gate: Gate) {
+        const {time, target, name} = gate;
+        this.board[target][time] = gate;
+    }
+
     ngAfterViewInit() {
         this.board = [];
 
@@ -122,6 +148,11 @@ export class QuantumCircuitComponent
         // size | nMoments * size | size
         const size =
             this.qcContainer.nativeElement.offsetWidth / (this.nMoments + 2);
+
+        this.svgHeight = size * (this.nQubits + 1);
+
+        // const totalWidth = this.qcContainer.nativeElement.offsetWidth;
+        // const totalHeight = size * this.nQubits;
 
         this.qubits = [];
         for (let i = 0; i < this.nQubits; i++) {
@@ -131,9 +162,10 @@ export class QuantumCircuitComponent
                 w: size,
                 h: size,
                 x: 0,
-                y: i * size,
+                y: i * size + size,
                 textX: size / 2,
-                textY: i * size + size / 2,
+                textY: i * size + size / 2 + size,
+                id: i,
             });
         }
 
@@ -142,18 +174,19 @@ export class QuantumCircuitComponent
             for (let j = 0; j < this.nMoments; j++) {
                 row.push({
                     x: j * size + size,
-                    y: i * size,
+                    y: i * size + size,
                     time: j,
                     target: i,
                     name: undefined,
                     w: size,
                     h: size,
                     textX: j * size + size / 2 + size,
-                    textY: i * size + size / 2,
+                    textY: i * size + size / 2 + size,
                 });
             }
             this.board.push(row);
         }
+        this.board[0][0].name = "H";
 
         this.qubitOutputs = [];
         for (let i = 0; i < this.nQubits; i++) {
@@ -163,9 +196,9 @@ export class QuantumCircuitComponent
                 w: size,
                 h: size,
                 x: (this.nMoments + 1) * size,
-                y: i * size,
+                y: i * size + size,
                 textX: (this.nMoments + 1) * size + size / 2,
-                textY: i * size + size / 2,
+                textY: i * size + size / 2 + size,
             });
         }
     }
@@ -190,7 +223,6 @@ export class QuantumCircuitComponent
         QuantumToolboxComponent,
         QuantumCircuitBoardComponent,
         QuantumStatsComponent,
-        FlatteningPipe,
     ],
     exports: [QuantumCircuitComponent],
     imports: [CommonModule, HttpClientModule],
