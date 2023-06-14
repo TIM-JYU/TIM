@@ -1,0 +1,15 @@
+.stats-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: flex-start;
+
+  .chart {
+    width: 50%;
+  }
+
+  .measurements {
+    width: 30%;
+  }
+}
+

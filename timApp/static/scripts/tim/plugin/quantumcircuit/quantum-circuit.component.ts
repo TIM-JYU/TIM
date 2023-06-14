@@ -19,6 +19,7 @@ import {QuantumGateMenuComponent} from "tim/plugin/quantumcircuit/quantum-gate-m
 import {QuantumToolboxComponent} from "tim/plugin/quantumcircuit/quantum-toolbox.component";
 import {QuantumCircuitBoardComponent} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
+import {NgChartsModule} from "ng2-charts";
 
 export interface Gate {
     time: number;
@@ -55,6 +56,14 @@ export interface QubitOutput {
     textY: number;
 }
 
+/**
+ * One input output pair measured from circuit
+ */
+export interface Measurement {
+    input: string;
+    output: string;
+}
+
 // All settings that are defined in the plugin markup YAML
 const QuantumCircuitMarkup = t.intersection([
     t.partial({}),
@@ -89,7 +98,7 @@ const QuantumCircuitFields = t.intersection([
                  (gateDrop)="handleGateDrop($event)"
             ></tim-quantum-circuit-board>                
             
-            <tim-quantum-stats></tim-quantum-stats>
+            <tim-quantum-stats [measurements]="measurements" (clear)="handleClearMeasurements()"></tim-quantum-stats>
 
         </div>
     `,
@@ -121,6 +130,8 @@ export class QuantumCircuitComponent
 
     board: Gate[][] = [];
 
+    measurements: Measurement[] = [];
+
     /**
      * Toggle qubits initial state between 0 and 1
      */
@@ -139,6 +150,13 @@ export class QuantumCircuitComponent
     handleGateDrop(gate: Gate) {
         const {time, target} = gate;
         this.board[target][time] = gate;
+    }
+
+    /**
+     * Deletes done measurements.
+     */
+    handleClearMeasurements() {
+        this.measurements = [];
     }
 
     initializeBoard() {
@@ -207,6 +225,16 @@ export class QuantumCircuitComponent
 
     ngAfterViewInit() {
         this.initializeBoard();
+        this.measurements = [
+            {
+                input: "000",
+                output: "000",
+            },
+            {
+                input: "000",
+                output: "011",
+            },
+        ];
     }
 
     ngOnInit(): void {
@@ -231,7 +259,7 @@ export class QuantumCircuitComponent
         QuantumStatsComponent,
     ],
     exports: [QuantumCircuitComponent],
-    imports: [CommonModule, HttpClientModule],
+    imports: [CommonModule, HttpClientModule, NgChartsModule],
 })
 export class QuantumCircuitModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
