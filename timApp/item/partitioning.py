@@ -9,9 +9,10 @@ from flask import json, Request
 from lxml import html
 
 from timApp.document.docinfo import DocInfo
+from timApp.document.document import dereference_pars
 from timApp.document.prepared_par import PreparedPar
 from timApp.document.randutils import hashfunc
-from timApp.document.viewcontext import default_view_ctx
+from timApp.document.viewcontext import default_view_ctx, ViewContext
 from timApp.util.utils import Range
 
 INCLUDE_IN_PARTS_CLASS_NAME = (
@@ -229,7 +230,7 @@ def get_document_areas(doc: DocInfo) -> list[Range]:
     return areas
 
 
-def get_area_range(doc: DocInfo, name: str) -> Range | None:
+def get_area_range(doc: DocInfo, name: str, view_ctx: ViewContext) -> Range | None:
     """
     Gets the range of the area in the document
     :param doc: Document
@@ -237,11 +238,19 @@ def get_area_range(doc: DocInfo, name: str) -> Range | None:
     :return: Area range if area was found and not broken, else None
     """
     pars = doc.document.get_paragraphs()
+    is_translation = not doc.is_original_translation
+    if is_translation:
+        dereference_pars(pars, doc.document, view_ctx)
     begin = None
     end = None
     for i, par in enumerate(pars):
-        area_begin = par.get_attr("area")
-        area_end = par.get_attr("area_end")
+        if not is_translation:
+            area_begin = par.get_attr("area")
+            area_end = par.get_attr("area_end")
+        else:
+            # FIXME - find better way to get original par attrs
+            area_begin = par.ref_pars[view_ctx][0].get_attr("area")
+            area_end = par.ref_pars[view_ctx][0].get_attr("area_end")
         if area_begin == name:
             begin = i
         if area_end == name:

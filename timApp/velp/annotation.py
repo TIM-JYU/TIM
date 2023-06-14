@@ -287,16 +287,17 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
 
     current_user = get_current_user_object()
     results = get_annotations_with_comments_in_document(current_user, d, only_own)
+    orig_doc_info = d if d.is_original_translation else d.src_doc
     if not only_own:
         # TODO: check use cases (only_own == not in view tab)
         #  teachermode should be able to browse all prs when changing user in ab
         #  review tab needs probably only reviews where reviewer is current user
         if has_teacher_access(d):
-            peer_reviews = get_all_reviews(d)
+            peer_reviews = get_all_reviews(orig_doc_info)
         else:
-            peer_reviews = get_reviews_related_to_user(d, current_user)
+            peer_reviews = get_reviews_related_to_user(orig_doc_info, current_user)
     else:
-        peer_reviews = get_reviews_targeting_user(d, current_user)
+        peer_reviews = get_reviews_targeting_user(orig_doc_info, current_user)
 
     # TODO: Fully anonymize peer_reviews if doc setting requires it
     if should_anonymize_annotations(d, current_user):
