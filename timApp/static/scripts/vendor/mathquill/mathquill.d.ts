@@ -6,17 +6,7 @@ export interface IMathQuill {
     ) => MathFieldMethods;
     getInterface: (version: 1 | 2) => IMathQuill;
     noConflict: () => IMathQuill;
-    config: (MathQuillConfig: any) => void;
-    getLatexMathParser: () => LatexMathParser;
-}
-
-export interface LatexMathParser extends Parser {
-    commandToBlock: (cmd: any) => any;
-    joinBlocks: (blocks: any[]) => any;
-}
-
-export interface Parser {
-    parse: (stream: string) => any;
+    config: (MathQuillConfig: MathQuillConfig) => void;
 }
 
 export interface MathQuillConfig {
@@ -31,13 +21,13 @@ export interface MathQuillConfig {
     autoOperatorNames?: string;
     substituteTextArea?: () => HTMLElement;
     handlers?: {
-        edit?: (mathField: MathFieldMethods) => any;
-        enter?: (mathField: MathFieldMethods) => any;
-        upOutOf?: (mathField: MathFieldMethods) => any;
-        downOutOf?: (mathField: MathFieldMethods) => any;
-        moveOutOf?: (dir: number, mathField: MathFieldMethods) => any;
-        deleteOutOf?: (dir: number, mathField: MathFieldMethods) => any;
-        selectOutOf?: (dir: number, mathField: MathFieldMethods) => any;
+        edit?: (mathField: MathFieldMethods) => void;
+        enter?: (mathField: MathFieldMethods) => void;
+        upOutOf?: (mathField: MathFieldMethods) => void;
+        downOutOf?: (mathField: MathFieldMethods) => void;
+        moveOutOf?: (dir: number, mathField: MathFieldMethods) => void;
+        deleteOutOf?: (dir: number, mathField: MathFieldMethods) => void;
+        selectOutOf?: (dir: number, mathField: MathFieldMethods) => void;
     };
 }
 
@@ -64,8 +54,16 @@ export interface MathFieldMethods extends BaseMethods {
     keystroke: (keys: string) => this;
     typedText: (text: string) => this;
     config: (config: MathQuillConfig) => this;
-    dropEmbedded: (pageX: any, pageY: any, options: any) => this;
-    html: () => any;
+    dropEmbedded: (
+        pageX: number,
+        pageY: number,
+        options: {
+            htmlString: string;
+            text: () => string;
+            latex: () => string;
+        }
+    ) => this;
+    html: () => string;
 }
 
 export const MathQuill: IMathQuill;
