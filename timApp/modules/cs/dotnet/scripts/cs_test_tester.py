@@ -4,7 +4,7 @@ import json
 import os
 import re
 import sys
-from subprocess import Popen, PIPE, call, DEVNULL
+from subprocess import call, DEVNULL
 
 
 def replace_all(lines, s1, s2):
@@ -186,20 +186,7 @@ def main():
         print("Testikoodi ei käänny")
         return
 
-    args = [
-        "dotnet",
-        "exec",
-        "--runtimeconfig",
-        "/cs/dotnet/runtimeconfig.json",
-        "--additional-deps",
-        "/cs_data/dotnet/configs/jypeli.deps.json:/cs_data/dotnet/configs/nunit_test.deps.json",
-        "--roll-forward",
-        "LatestMajor",  # Force to use latest available .NET
-        "/dotnet_tools/nunit.console.dll",
-        "--noheader",
-        "--nocolor",
-        f"{filename3}.dll",
-    ]
+    args = ["/cs/dotnet/nunit-test-dll", f"{filename3}.dll"]
     ret = call(args, stdout=DEVNULL, stderr=DEVNULL, timeout=20)
 
     # https://docs.nunit.org/articles/nunit/running-tests/Console-Runner.html

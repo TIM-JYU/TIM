@@ -725,6 +725,8 @@ def get_column_color_list(
     except:
         # Add empty entries as a quick fix for index out of bounds error.
         return [None] * default_max_col_count
+    if not columns_data:
+        return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
         span = get_column_span(columns_data[i])
         for j in range(0, span):
@@ -748,6 +750,8 @@ def get_column_width_list(table_data: dict[str, Any]) -> list[float | None]:
         except:
             columns_data = table_data["columns"]
     except:
+        return [None] * default_max_col_count
+    if not columns_data:
         return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
         span = get_column_span(columns_data[i])
@@ -773,6 +777,8 @@ def get_column_style_list(table_data: dict[str, Any], key: str) -> list[Any | No
     try:
         columns_data = table_data["columns"]
     except:
+        return [None] * default_max_col_count
+    if not columns_data:
         return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
         column_data = columns_data[i]
@@ -801,6 +807,8 @@ def get_column_format_list(
     try:
         columns_data = table_data["columns"]
     except:
+        return [None] * default_max_col_count
+    if not columns_data:
         return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
         column_data = columns_data[i]

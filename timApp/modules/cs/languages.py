@@ -60,7 +60,7 @@ Adding new language to csPlugin:
 cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 
-JAVAFX_VERSION = "19"
+JAVAFX_VERSION = os.environ.get("OPENJFX_VERSION", "19")
 
 
 def sanitize_filename(s):
@@ -575,7 +575,14 @@ class CS(Language):
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(
-            ["dotnet", "exec", *CS.runtime_config(), self.pure_exename]
+            [
+                "dotnet",
+                "exec",
+                "--roll-forward",
+                "LatestMajor",
+                *CS.runtime_config(),
+                self.pure_exename,
+            ]
         )
         if err.find("Unhandled Exception:") >= 0:
             if err.find("StackOverflowException") >= 0:
@@ -737,6 +744,8 @@ class Jypeli(CS, Modifier):
                 [
                     "dotnet",
                     "exec",
+                    "--roll-forward",
+                    "LatestMajor",  # Force to use latest available .NET
                     *CS.runtime_config(),
                     *Jypeli.get_run_args(),
                     self.pure_exename,
@@ -836,18 +845,9 @@ class CSComtest(
         eri = -1
         code, out, err, pwddir = self.runself(
             [
-                "dotnet",
-                "exec",
-                *CS.runtime_config(),
-                "--additional-deps",
-                "/cs_data/dotnet/configs/jypeli.deps.json:/cs_data/dotnet/configs/nunit_test.deps.json",
-                "--roll-forward",
-                "LatestMajor",  # Force to use latest available .NET
-                "/dotnet_tools/nunit.console.dll",
-                "--noheader",
-                "--nocolor",
-                "--noresult",  # TODO: Maybe parse resulting XML file to provide better error messages
+                "/cs/dotnet/nunit-test-dll",
                 self.testdll,
+                "--noresult",
             ]
         )
         # print(code, out, err)
