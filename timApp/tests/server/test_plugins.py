@@ -892,6 +892,8 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "first_answer_on": None,
                             "last_answer_on": None,
                             "answer_duration": None,
+                            "task_count": 3,
+                            "velped_task_count": 3,
                         },
                     ),
                     (
@@ -906,6 +908,8 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "first_answer_on": None,
                             "last_answer_on": None,
                             "answer_duration": None,
+                            "task_count": 3,
+                            "velped_task_count": 3,
                         },
                     ),
                     (
@@ -920,6 +924,8 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "first_answer_on": None,
                             "last_answer_on": None,
                             "answer_duration": None,
+                            "task_count": 3,
+                            "velped_task_count": 2,
                         },
                     ),
                 ]
@@ -938,6 +944,8 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "first_answer_on": None,
                             "last_answer_on": None,
                             "answer_duration": None,
+                            "task_count": 3,
+                            "velped_task_count": 3,
                         },
                     ),
                     (
@@ -952,6 +960,8 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "first_answer_on": None,
                             "last_answer_on": None,
                             "answer_duration": None,
+                            "task_count": 3,
+                            "velped_task_count": 3,
                         },
                     ),
                     (
@@ -966,6 +976,8 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "first_answer_on": None,
                             "last_answer_on": None,
                             "answer_duration": None,
+                            "task_count": 3,
+                            "velped_task_count": 2,
                         },
                     ),
                 ]

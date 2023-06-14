@@ -726,22 +726,26 @@ class SumFields(TypedDict):
     total_sum: float | None
 
 
+class CountFields(TypedDict):
+    task_count: int
+    velped_task_count: int
+
+
 class DateFields(TypedDict):
     first_answer_on: datetime | None
     last_answer_on: datetime | None
     answer_duration: timedelta | None
 
 
-class UserPointGroup(SumFields, DateFields):
+class UserPointGroup(SumFields, DateFields, CountFields):
     tasks: list[UserTaskEntry]
-    velped_task_count: int
 
 
 class UserPointInfo(SumFields):
     groups: DefaultDict[str, UserPointGroup]
 
 
-class ResultGroup(SumFields, DateFields):
+class ResultGroup(SumFields, DateFields, CountFields):
     text: str
     link: bool
     linktext: str
@@ -807,6 +811,7 @@ def get_points_by_rule(
                     "task_sum": None,
                     "velp_sum": None,
                     "total_sum": None,
+                    "task_count": 0,
                     "velped_task_count": 0,
                     "first_answer_on": None,
                     "last_answer_on": None,
@@ -876,6 +881,7 @@ def get_points_by_rule(
             group["velped_task_count"] = sum(
                 1 for t in group["tasks"] if t["velped_task_count"] > 0
             )
+            group["task_count"] = len(group["tasks"])
             if task_sum is not None and velp_sum is not None:
                 total_sum: float | None = task_sum + velp_sum
             elif task_sum is not None:
@@ -1004,6 +1010,8 @@ def flatten_points_result(
                 first_answer_on = gr["first_answer_on"]
                 last_answer_on = gr["last_answer_on"]
                 answer_duration = gr["answer_duration"]
+                task_count = gr["task_count"]
+                velped_task_count = gr["velped_task_count"]
             else:
                 task_sum = None
                 velp_sum = None
@@ -1011,6 +1019,8 @@ def flatten_points_result(
                 first_answer_on = None
                 last_answer_on = None
                 answer_duration = None
+                task_count = 0
+                velped_task_count = 0
             try:
                 linktext = rg.linktext or rule.linktext
                 link = rg.link
@@ -1036,6 +1046,8 @@ def flatten_points_result(
                 "first_answer_on": first_answer_on,
                 "last_answer_on": last_answer_on,
                 "answer_duration": answer_duration,
+                "task_count": task_count,
+                "velped_task_count": velped_task_count,
             }
         result_list.append(row)
     return result_list
