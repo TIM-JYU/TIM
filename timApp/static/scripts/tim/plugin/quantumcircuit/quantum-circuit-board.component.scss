@@ -1,3 +1,71 @@
 .drag-over-element {
   fill: grey;
 }
+
+.circuit-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.circuit-right-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.qubits {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid black;
+}
+
+.left-block {
+  border-bottom: 1px solid black;
+}
+
+
+.qubit {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5em 0 0.5em;
+  gap: 0.5em;
+}
+
+.qubit-toggle-button {
+  background-color: white;
+}
+
+
+.moments {
+  display: flex;
+  flex-direction: row;
+}
+
+
+.moment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid black;
+
+}
+
+.right-block {
+  border-left: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+.output-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.output {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-left: 1px solid black;
+}
+
+.output button {
+  background-color: white;
+}

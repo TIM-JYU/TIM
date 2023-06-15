@@ -4,109 +4,104 @@
 
 import type {OnInit} from "@angular/core";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {
     Gate,
     Qubit,
     QubitOutput,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
-/**
- * Colors used in drawing circuits.
- */
-export const COLORS = {
-    dark: "black",
-    medium: "grey",
-    light: "white",
-};
-
 @Component({
     selector: "tim-quantum-circuit-board",
     template: `
-        <svg [attr.width]="svgW" [attr.height]="svgH">
+        <!--suppress HtmlUnknownAttribute -->
 
-            <!-- lines -->
-            <g>
-                <line *ngFor="let qubit of qubits" [attr.stroke]="COLORS.medium" [attr.x1]="0"
-                      [attr.y1]="qubit.textY" [attr.x2]="svgW" [attr.y2]="qubit.textY"></line>
-            </g>
+        <div class="circuit-container">
+            <div class="qubits">
+                <div class="left-block" [style.height.px]="circuitStyleOptions.timeAxisHeight" [style.width.%]="100"></div>
+                <div *ngFor="let qubit of qubits" [style.height.px]="getH()" class="qubit">
+                    <div>{{qubit.name}}</div>
+                    <button class="qubit-toggle-button" (click)="toggleQubit($event, qubit.id)">{{getQubitText(qubit)}}</button>
+                </div>
+            </div>
 
-            <!-- gates-->
-            <g>
-                <g *ngFor="let gates of board">
-                    <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)"
-                       (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
-                        <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="!gate.name" [attr.x]="gate.x"
-                              [attr.y]="gate.y" [attr.width]="gate.w"
-                              [attr.height]="gate.h"
-                              [attr.fill]="COLORS.light" [attr.stroke]="COLORS.light" fill-opacity="0.5"/>
+
+            <div class="circuit-right-container">
+                <div class="moments">
+                    <div class="moment" *ngFor="let gate of board[0]; let i = index" [style.width.px]="getW()"
+                         [style.height.px]="circuitStyleOptions.timeAxisHeight">
+                        <div>{{i}}</div>
+                    </div>
+                </div>
+
+                <svg [attr.width]="getNeededWidth()" [attr.height]="getNeededHeight()">
+
+                    <!-- lines -->
+                    <g>
+                        <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="" [attr.x1]="0"
+                              [attr.y1]="getH() * i + getH() / 2" [attr.x2]="getNeededWidth()"
+                              [attr.y2]="getH() * i + getH() / 2"></line>
                     </g>
-                </g>
 
-            </g>
+                    <!-- empty gate placeholders-->
+                    <g>
+                        <g *ngFor="let gates of board">
+                            <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)"
+                               (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
+                                <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="!gate.name"
+                                      [attr.x]="gate.x"
+                                      [attr.y]="gate.y" [attr.width]="gate.w"
+                                      [attr.height]="gate.h"
+                                      [attr.fill]="colors.light" [attr.stroke]="colors.light" fill-opacity="0.5"/>
+                            </g>
+                        </g>
+                    </g>
 
-            <!-- gates-->
-            <g>
-                <g *ngFor="let gates of board">
-                    <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)"
-                       (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
-                        <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="gate.name" [attr.x]="gate.x+5"
-                              [attr.y]="gate.y+5" [attr.width]="gate.w-10"
-                              [attr.height]="gate.h-10"
-                              [attr.fill]="COLORS.light" [attr.stroke]="COLORS.medium"/>
-                        <text *ngIf="gate.name" [attr.x]="gate.textX" [attr.y]="gate.textY"
-                              [attr.fill]="COLORS.dark">{{gate.name}}</text>
+                    <!-- gates -->
+                    <g>
+                        <g *ngFor="let gates of board">
+                            <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)"
+                               (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
+                                <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="gate.name"
+                                      [attr.x]="gate.x+5"
+                                      [attr.y]="gate.y+5" [attr.width]="gate.w-10"
+                                      [attr.height]="gate.h-10"
+                                      [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
+                                <text *ngIf="gate.name"
+                                      [attr.x]="gate.textX"
+                                      [attr.y]="gate.textY"
+                                      dominant-baseline="middle"
+                                      text-anchor="middle"
+                                      [attr.fill]="colors.dark">{{gate.name}}</text>
+                            </g>
+                        </g>
 
                     </g>
-                </g>
 
-            </g>
+                </svg>
 
 
-            <!-- moments -->
-            <g>
-                <g *ngFor="let gate of board[0] let i=index">
-                    <rect [attr.x]="gate.x" [attr.y]="0" [attr.width]="gate.w" [attr.height]="gate.h"
-                          [attr.fill]="COLORS.light" [attr.stroke]="COLORS.dark"/>
-                    <text [attr.x]="gate.textX" [attr.y]="gate.h / 2" fill="black">{{i}}</text>
-                </g>
-            </g>
+            </div>
 
-            <!-- qubits -->
-            <g>
-                <g *ngFor="let qubit of qubits" (click)="toggleQubit($event, qubit.id)">
-                    <rect [attr.x]="qubit.x" [attr.y]="qubit.y" [attr.width]="qubit.w" [attr.height]="qubit.h"
-                          [attr.fill]="COLORS.light" [attr.stroke]="COLORS.dark"/>
+            <div class="output-container">
+                <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"></div>
+                <div class="output" *ngFor="let output of qubitOutputs" [style.height.px]="getH()"
+                     [style.width.px]="getW()">
+                    <button class="output-value">{{output.value}}</button>
+                </div>
+            </div>
 
-                    <text [attr.x]="qubit.x" [attr.y]="qubit.textY" [attr.fill]="COLORS.dark">{{qubit.text}}</text>
-                    <text [attr.x]="qubit.textX" [attr.y]="qubit.textY" [attr.fill]="COLORS.dark"
-                          [attr.stroke]="COLORS.dark">{{qubit.value}}</text>
-                </g>
+        </div>
 
-            </g>
-
-            <!-- outputs -->
-            <g>
-                <g *ngFor="let qubit of qubitOutputs">
-                    <rect [attr.x]="qubit.x" [attr.y]="qubit.y" [attr.width]="qubit.w" [attr.height]="qubit.h"
-                          [attr.fill]="COLORS.light" [attr.stroke]="COLORS.dark"/>
-                    <text [attr.x]="qubit.textX" [attr.y]="qubit.textY" fill="black">{{qubit.value}}</text>
-                </g>
-            </g>
-        </svg>
     `,
     styleUrls: ["./quantum-circuit-board.component.scss"],
 })
 export class QuantumCircuitBoardComponent implements OnInit {
-    protected readonly COLORS = COLORS;
+    @Input()
+    circuitStyleOptions!: CircuitStyleOptions;
 
     @Input()
     board: Gate[][] = [];
-
-    @Input()
-    svgH!: number;
-
-    @Input()
-    svgW!: number;
 
     @Input()
     qubits!: Qubit[];
@@ -127,6 +122,17 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
     constructor() {}
 
+    get colors() {
+        return this.circuitStyleOptions.colors;
+    }
+
+    getQubitText(qubit: Qubit) {
+        if (this.circuitStyleOptions.useBraket) {
+            return `|${qubit.value}>`;
+        }
+        return qubit.value.toString();
+    }
+
     ngOnInit(): void {}
 
     toggleQubit(event: MouseEvent, id: number) {
@@ -143,6 +149,50 @@ export class QuantumCircuitBoardComponent implements OnInit {
         this.dragOverElement = undefined;
         gate.name = gateName;
         this.gateDrop.emit(gate);
+    }
+
+    getW() {
+        if (this.board.length > 0 && this.board[0].length > 0) {
+            return this.board[0][0].w;
+        }
+        return 0;
+    }
+
+    getH() {
+        if (this.board.length > 0 && this.board[0].length > 0) {
+            return this.board[0][0].h;
+        }
+        return 0;
+    }
+
+    getNeededWidth() {
+        let totalWidth = 0;
+
+        // sum up column widths
+        for (let col = 0; col < this.nMoments; col++) {
+            let widestRowInColumn = 0;
+            for (const item of this.board) {
+                widestRowInColumn = Math.max(widestRowInColumn, item[col].w);
+            }
+            totalWidth += widestRowInColumn;
+        }
+
+        return totalWidth;
+    }
+
+    getNeededHeight() {
+        let totalHeight = 0;
+
+        // add row heights
+        for (const row of this.board) {
+            let tallestColInRow = 0;
+            for (const col of row) {
+                tallestColInRow = Math.max(tallestColInRow, col.h);
+            }
+            totalHeight += tallestColInRow;
+        }
+
+        return totalHeight;
     }
 
     handleDragOver(event: DragEvent, gate: Gate) {

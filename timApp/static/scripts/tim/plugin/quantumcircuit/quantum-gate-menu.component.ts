@@ -1,6 +1,6 @@
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
-import {COLORS} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
+import {Component, Input} from "@angular/core";
+import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 interface Gate {
     name: string;
@@ -9,29 +9,34 @@ interface Gate {
 @Component({
     selector: "tim-quantum-gate-menu",
     template: `
+        <!--suppress HtmlUnknownAttribute -->
         <div class="gate-container">
             <div class="svg-container" *ngFor="let gate of gates" draggable="true"
                  (dragstart)="handleDragStart($event, gate)">
-                <svg [attr.width]="50" [attr.height]="50">
-                    <rect [attr.x]="0" [attr.y]="0" [attr.width]="50" [attr.height]="50" [attr.fill]="COLORS.light"
-                          [attr.stroke]="COLORS.dark"/>
-                    <text x="50%" y="50%" [attr.fill]="COLORS.dark" [attr.stroke]="COLORS.dark"
+                <svg [attr.width]="circuitStyleOptions.baseSize" [attr.height]="circuitStyleOptions.baseSize">
+                    <rect [attr.x]="0" [attr.y]="0" [attr.width]="circuitStyleOptions.baseSize" [attr.height]="circuitStyleOptions.baseSize" [attr.fill]="colors.light"
+                          [attr.stroke]="colors.dark"/>
+                    <text x="50%" y="50%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark"
                           dominant-baseline="middle"
                           text-anchor="middle">{{gate.name}}</text>
                 </svg>
             </div>
-
         </div>
 
     `,
     styleUrls: ["./quantum-gate-menu.component.scss"],
 })
 export class QuantumGateMenuComponent implements OnInit {
-    protected readonly COLORS = COLORS;
+    gates: Gate[] = [];
+
+    @Input()
+    circuitStyleOptions!: CircuitStyleOptions;
 
     constructor() {}
 
-    gates: Gate[] = [];
+    get colors() {
+        return this.circuitStyleOptions.colors;
+    }
 
     ngOnInit(): void {
         this.gates = [
