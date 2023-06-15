@@ -17,7 +17,10 @@ import {
 } from "tim/plugin/attributes";
 import {QuantumGateMenuComponent} from "tim/plugin/quantumcircuit/quantum-gate-menu.component";
 import {QuantumToolboxComponent} from "tim/plugin/quantumcircuit/quantum-toolbox.component";
-import {QuantumCircuitBoardComponent} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
+import {
+    FlatteningPipe,
+    QuantumCircuitBoardComponent,
+} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {NgChartsModule} from "ng2-charts";
 
@@ -270,6 +273,7 @@ export class QuantumCircuitComponent
         QuantumToolboxComponent,
         QuantumCircuitBoardComponent,
         QuantumStatsComponent,
+        FlatteningPipe,
     ],
     exports: [QuantumCircuitComponent],
     imports: [CommonModule, HttpClientModule, NgChartsModule],

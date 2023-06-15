@@ -2,14 +2,33 @@
  * Quantum circuit board.
  */
 
-import type {OnInit} from "@angular/core";
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import type {OnInit, PipeTransform} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    Pipe,
+    ViewChild,
+    ElementRef,
+} from "@angular/core";
 import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {
     Gate,
     Qubit,
     QubitOutput,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
+
+@Pipe({name: "flatten"})
+export class FlatteningPipe implements PipeTransform {
+    transform(board: Gate[][]): Gate[] {
+        return board.flat();
+    }
+}
+
+interface SVGWithCreationMethod {
+    createSVGTransform: () => SVGTransform;
+}
 
 @Component({
     selector: "tim-quantum-circuit-board",
@@ -36,49 +55,44 @@ import type {
                     </div>
                 </div>
 
-                <svg [attr.width]="getNeededWidth()" [attr.height]="getNeededHeight()">
+                <svg #svgElement [attr.width]="getNeededWidth()" [attr.height]="getNeededHeight()">
 
                     <!-- lines -->
-                    <g>
-                        <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="colors.dark" 
-                              [attr.x1]="0"  [attr.y1]="getH() * i + getH() / 2" 
-                              [attr.x2]="getNeededWidth()" [attr.y2]="getH() * i + getH() / 2"></line>
-                    </g>
+                    <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="colors.dark"
+                          [attr.x1]="0" [attr.y1]="getH() * i + getH() / 2"
+                          [attr.x2]="getNeededWidth()" [attr.y2]="getH() * i + getH() / 2"></line>
 
                     <!-- empty gate placeholders-->
-                    <g>
-                        <g *ngFor="let gates of board">
-                            <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)"
-                               (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
-                                <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="!gate.name"
-                                      [attr.x]="gate.x"
-                                      [attr.y]="gate.y" [attr.width]="gate.w"
-                                      [attr.height]="gate.h"
-                                      [attr.fill]="colors.light" fill-opacity="0.5"/>
-                            </g>
-                        </g>
+                    <g *ngFor="let gate of board |flatten" (drop)="handleDrop($event, gate)"
+                       (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
+                        <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="!gate.name"
+                              [attr.x]="gate.x"
+                              [attr.y]="gate.y" [attr.width]="gate.w"
+                              [attr.height]="gate.h"
+                              [attr.fill]="colors.light" fill-opacity="0.5"/>
                     </g>
 
                     <!-- gates -->
-                    <g>
-                        <g *ngFor="let gates of board">
-                            <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)"
-                               (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
-                                <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="gate.name"
-                                      [attr.x]="gate.x + (gate.w - circuitStyleOptions.gateSize) / 2"
-                                      [attr.y]="gate.y + (gate.h - circuitStyleOptions.gateSize) / 2" 
-                                      [attr.width]="circuitStyleOptions.gateSize"
-                                      [attr.height]="circuitStyleOptions.gateSize"
-                                      [attr.rx]="circuitStyleOptions.gateBorderRadius"
-                                      [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                                <text *ngIf="gate.name"
-                                      [attr.x]="gate.textX"
-                                      [attr.y]="gate.textY"
-                                      dominant-baseline="middle"
-                                      text-anchor="middle"
-                                      [attr.fill]="colors.dark">{{gate.name}}</text>
-                            </g>
-                        </g>
+                    <g *ngFor="let gate of board |flatten" (drop)="handleDrop($event, gate)"
+                       (mousedown)="handleDragStart($event, gate)"
+                       (mousemove)="handleDrag($event)"
+                       (mouseup)="handleDragEnd()"
+                       (mouseleave)="handleDragEnd()"
+                       (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
+                        <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="gate.name"
+                              [attr.x]="gate.x + (gate.w - circuitStyleOptions.gateSize) / 2"
+                              [attr.y]="gate.y + (gate.h - circuitStyleOptions.gateSize) / 2"
+                              [attr.width]="circuitStyleOptions.gateSize"
+                              [attr.height]="circuitStyleOptions.gateSize"
+                              [attr.rx]="circuitStyleOptions.gateBorderRadius"
+                              [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
+                        <text *ngIf="gate.name"
+                              class="gate-text"
+                              [attr.x]="gate.textX"
+                              [attr.y]="gate.textY"
+                              dominant-baseline="middle"
+                              text-anchor="middle"
+                              [attr.fill]="colors.dark">{{gate.name}}</text>
                     </g>
 
                 </svg>
@@ -100,6 +114,19 @@ import type {
     styleUrls: ["./quantum-circuit-board.component.scss"],
 })
 export class QuantumCircuitBoardComponent implements OnInit {
+    dragOverElement?: Gate;
+
+    gateBeingDragged: {
+        group: SVGGElement;
+        gate: Gate;
+        offset: [number, number];
+    } | null = null;
+
+    @ViewChild("svgElement")
+    svgElement!: ElementRef<
+        SVGElement & SVGGraphicsElement & SVGWithCreationMethod
+    >;
+
     @Input()
     circuitStyleOptions!: CircuitStyleOptions;
 
@@ -120,8 +147,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
     @Output()
     gateDrop = new EventEmitter<Gate>();
-
-    dragOverElement?: Gate;
 
     constructor() {}
 
@@ -215,5 +240,76 @@ export class QuantumCircuitBoardComponent implements OnInit {
             this.dragOverElement.time === gate.time &&
             this.dragOverElement.target === gate.target
         );
+    }
+
+    /**
+     * https://www.petercollingridge.co.uk/tutorials/svg/interactive/dragging/
+     */
+    getMousePosition(x: number, y: number): [number, number] | null {
+        const CTM = this.svgElement.nativeElement.getScreenCTM();
+        if (!CTM) {
+            return null;
+        }
+        return [(x - CTM.e) / CTM.a, (y - CTM.f) / CTM.d];
+    }
+
+    handleDragStart(event: MouseEvent, gate: Gate) {
+        if (!event.currentTarget) {
+            return;
+        }
+        const offset = this.getMousePosition(event.clientX, event.clientY);
+        if (!offset) {
+            return;
+        }
+
+        const group = event.currentTarget as SVGGElement;
+
+        // Get all the transforms currently on this element
+        const transforms = group.transform.baseVal;
+
+        this.gateBeingDragged = {
+            gate: gate,
+            group: group,
+            offset: offset,
+        };
+
+        // Ensure the first transform is a translate transform
+        if (
+            transforms.length === 0 ||
+            transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE
+        ) {
+            // Create an transform that translates by (0, 0)
+            const translate =
+                this.svgElement.nativeElement.createSVGTransform();
+            translate.setTranslate(0, 0);
+
+            group.transform.baseVal // Add the translation to the front of the transforms list
+                .insertItemBefore(translate, 0);
+        }
+
+        // Get initial translation amount
+        const transform = transforms.getItem(0);
+        this.gateBeingDragged.offset[0] -= transform.matrix.e;
+        this.gateBeingDragged.offset[1] -= transform.matrix.f;
+    }
+
+    handleDrag(event: MouseEvent) {
+        if (this.gateBeingDragged) {
+            event.preventDefault();
+            const xy = this.getMousePosition(event.clientX, event.clientY);
+            if (!xy) {
+                return;
+            }
+            const [x, y] = xy;
+            const [offsetX, offsetY] = this.gateBeingDragged.offset;
+
+            const transform =
+                this.gateBeingDragged.group.transform.baseVal.getItem(0);
+            transform.setTranslate(x - offsetX, y - offsetY);
+        }
+    }
+
+    handleDragEnd() {
+        this.gateBeingDragged = null;
     }
 }
