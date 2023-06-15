@@ -16,12 +16,12 @@ import {
     Output,
     ViewChild,
 } from "@angular/core";
-import type {IMathQuill} from "vendor/mathquill/mathquill";
 import type {
+    IMathQuill,
     MathFieldMethods,
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
-import {FormulaType, FormulaPropertyList} from "./formula-types";
+import {FormulaPropertyList, FormulaType} from "./formula-types";
 
 /**
  * Specifies which field the typed text should go in.
@@ -191,7 +191,7 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
     }
 
     /**
-     * write changes in visual field to LaTeX field if visual field
+     * Writes changes in visual field to LaTeX field if visual field
      * is the one being typed.
      */
     editHandler() {
@@ -244,9 +244,31 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
     }
 
     /**
+     * Adds MathQuill CSS to the page if it's not loaded in yet.
+     * @private
+     */
+    private registerMathQuillCss() {
+        const mathQuillLink = document.head.querySelector(
+            'link[data-type="mathquill"]'
+        );
+        if (mathQuillLink) {
+            return;
+        }
+
+        // If not found, create it
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "/static/scripts/vendor/mathquill/mathquill.css";
+        link.dataset.type = "mathquill";
+
+        document.head.appendChild(link);
+    }
+
+    /**
      * Loads Mathquill and initializes field.
      */
     async ngAfterViewInit() {
+        this.registerMathQuillCss();
         const mq = (await import("vendor/mathquill/mathquill")).default;
         this.MQ = mq.getInterface(2);
         const elem = this.visualInput.nativeElement;

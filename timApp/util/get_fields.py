@@ -387,7 +387,7 @@ def get_fields_and_users(
             .with_entities(User.id, Answer.task_id, cnt)
             .all()
         )
-        for (uid, taskid, count) in answer_counts:
+        for uid, taskid, count in answer_counts:
             counts[uid][taskid] = count
     last_user = None
     user_tasks = None
@@ -538,8 +538,8 @@ def get_tally_field_values(
                         field.field
                     ]  # The group should exist because the field was validated above.
                     value = (
-                        value[field.subfield]
-                        if field.subfield in value
+                        value.get(field.subfield, None)
+                        if field.subfield
                         else value["total_sum"]
                     )
                 tally_field_values[u.id].append((value, alias or field.doc_and_field))

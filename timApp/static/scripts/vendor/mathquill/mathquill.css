@@ -7,6 +7,13 @@
  * was not distributed with this file, You can obtain
  * one at http://mozilla.org/MPL/2.0/.
  */
+
+@font-face {
+    font-family: Symbola;
+    src: url(fonts/Symbola.eot);
+    src: local("Symbola Regular"), local("Symbola"), url(fonts/Symbola.woff2) format("woff2"), url(fonts/Symbola.woff) format("woff"), url(fonts/Symbola.ttf) format("truetype"), url(fonts/Symbola.svg#Symbola) format("svg");
+}
+
 .mq-editable-field {
     display: -moz-inline-box;
     display: inline-block;
