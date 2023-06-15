@@ -769,6 +769,7 @@ const CsMarkupOptional = t.partial({
     uploadAcceptPattern: t.string,
     uploadAcceptMaxSize: t.number,
     showAlwaysSavedText: t.boolean,
+    startLineNumber: t.number,
 });
 
 const CsMarkupDefaults = t.type({
@@ -1401,6 +1402,8 @@ export class CsController extends CsBase implements ITimComponent {
                 this.toggleFormulaEditor();
             });
         }
+
+        this.editor.startLineNumber = this.markup.startLineNumber;
     }
 
     @ViewChild(FileSelectManagerComponent)
