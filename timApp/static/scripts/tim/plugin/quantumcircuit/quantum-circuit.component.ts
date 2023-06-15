@@ -83,17 +83,18 @@ export interface Colors {
 
 /**
  * Styling related options for circuit.
- * baseSize: relative size of gates and other elements
- * gateSize: size of gates
- * useBraket: whether to use bra-ket notation for input qubits or just (0,1)
- * timeAxisHeight: height of first row showing time steps 0,1,2...
  */
 export interface CircuitStyleOptions {
     colors: Colors;
+    // relative size of circuit cells (side length) and other elements
     baseSize: number;
+    // size of gates (side length)
     gateSize: number;
+    // whether to use bra-ket notation for input qubits or just (0,1)
     useBraket: boolean;
+    // timeAxisHeight: height of first row showing time steps 0,1,2...
     timeAxisHeight: number;
+    // border radius value for gates (rounded corners)
     gateBorderRadius: number;
 }
 
