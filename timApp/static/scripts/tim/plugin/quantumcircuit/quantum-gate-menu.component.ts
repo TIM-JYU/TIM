@@ -14,8 +14,10 @@ interface Gate {
             <div class="svg-container" *ngFor="let gate of gates" draggable="true"
                  (dragstart)="handleDragStart($event, gate)">
                 <svg [attr.width]="circuitStyleOptions.baseSize" [attr.height]="circuitStyleOptions.baseSize">
-                    <rect [attr.x]="0" [attr.y]="0" [attr.width]="circuitStyleOptions.baseSize" [attr.height]="circuitStyleOptions.baseSize" [attr.fill]="colors.light"
-                          [attr.stroke]="colors.dark"/>
+                    <rect [attr.x]="0" [attr.y]="0" [attr.width]="circuitStyleOptions.baseSize"
+                          [attr.height]="circuitStyleOptions.baseSize" [attr.fill]="colors.light"
+                          [attr.stroke]="colors.dark"
+                          [attr.rx]="circuitStyleOptions.gateBorderRadius"/>
                     <text x="50%" y="50%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark"
                           dominant-baseline="middle"
                           text-anchor="middle">{{gate.name}}</text>

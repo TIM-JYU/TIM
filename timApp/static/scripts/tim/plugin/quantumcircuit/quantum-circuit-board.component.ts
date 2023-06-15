@@ -18,10 +18,12 @@ import type {
 
         <div class="circuit-container">
             <div class="qubits">
-                <div class="left-block" [style.height.px]="circuitStyleOptions.timeAxisHeight" [style.width.%]="100"></div>
+                <div class="left-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"
+                     [style.width.%]="100"></div>
                 <div *ngFor="let qubit of qubits" [style.height.px]="getH()" class="qubit">
                     <div>{{qubit.name}}</div>
-                    <button class="qubit-toggle-button" (click)="toggleQubit($event, qubit.id)">{{getQubitText(qubit)}}</button>
+                    <button class="qubit-toggle-button"
+                            (click)="toggleQubit($event, qubit.id)">{{getQubitText(qubit)}}</button>
                 </div>
             </div>
 
@@ -38,9 +40,9 @@ import type {
 
                     <!-- lines -->
                     <g>
-                        <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="" [attr.x1]="0"
-                              [attr.y1]="getH() * i + getH() / 2" [attr.x2]="getNeededWidth()"
-                              [attr.y2]="getH() * i + getH() / 2"></line>
+                        <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="colors.dark" 
+                              [attr.x1]="0"  [attr.y1]="getH() * i + getH() / 2" 
+                              [attr.x2]="getNeededWidth()" [attr.y2]="getH() * i + getH() / 2"></line>
                     </g>
 
                     <!-- empty gate placeholders-->
@@ -52,7 +54,7 @@ import type {
                                       [attr.x]="gate.x"
                                       [attr.y]="gate.y" [attr.width]="gate.w"
                                       [attr.height]="gate.h"
-                                      [attr.fill]="colors.light" [attr.stroke]="colors.light" fill-opacity="0.5"/>
+                                      [attr.fill]="colors.light" fill-opacity="0.5"/>
                             </g>
                         </g>
                     </g>
@@ -63,9 +65,11 @@ import type {
                             <g *ngFor="let gate of gates" (drop)="handleDrop($event, gate)"
                                (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
                                 <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="gate.name"
-                                      [attr.x]="gate.x+5"
-                                      [attr.y]="gate.y+5" [attr.width]="gate.w-10"
-                                      [attr.height]="gate.h-10"
+                                      [attr.x]="gate.x + (gate.w - circuitStyleOptions.gateSize) / 2"
+                                      [attr.y]="gate.y + (gate.h - circuitStyleOptions.gateSize) / 2" 
+                                      [attr.width]="circuitStyleOptions.gateSize"
+                                      [attr.height]="circuitStyleOptions.gateSize"
+                                      [attr.rx]="circuitStyleOptions.gateBorderRadius"
                                       [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
                                 <text *ngIf="gate.name"
                                       [attr.x]="gate.textX"
@@ -75,7 +79,6 @@ import type {
                                       [attr.fill]="colors.dark">{{gate.name}}</text>
                             </g>
                         </g>
-
                     </g>
 
                 </svg>

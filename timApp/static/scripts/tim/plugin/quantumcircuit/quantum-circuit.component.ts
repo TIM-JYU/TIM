@@ -81,14 +81,17 @@ export interface Colors {
 /**
  * Styling related options for circuit.
  * baseSize: relative size of gates and other elements
+ * gateSize: size of gates
  * useBraket: whether to use bra-ket notation for input qubits or just (0,1)
  * timeAxisHeight: height of first row showing time steps 0,1,2...
  */
 export interface CircuitStyleOptions {
     colors: Colors;
     baseSize: number;
+    gateSize: number;
     useBraket: boolean;
     timeAxisHeight: number;
+    gateBorderRadius: number;
 }
 
 @Component({
@@ -239,6 +242,7 @@ export class QuantumCircuitComponent
         super.ngOnInit();
         this.circuitStyleOptions = {
             baseSize: 60,
+            gateSize: 40,
             colors: {
                 dark: "black",
                 medium: "grey",
@@ -246,6 +250,7 @@ export class QuantumCircuitComponent
             },
             useBraket: false,
             timeAxisHeight: 30,
+            gateBorderRadius: 2,
         };
     }
 
