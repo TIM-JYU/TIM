@@ -209,6 +209,7 @@ export class JSParsonsEditorComponent implements IEditor {
                 <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
                 <cs-ace-editor *ngIf="mode == Mode.ACE"
                                [languageMode]="languageMode"
+                               [startLineNumber]="startLineNumber"
                                [minRows]="minRows_"
                                [maxRows]="maxRows_"
                                [placeholder]="file && file.placeholder ? file.placeholder : ''"
@@ -260,6 +261,8 @@ export class EditorComponent implements IMultiEditor {
     private wrap_?: {n: number; auto: boolean};
 
     @Input() parsonsOptions?: ICsParsonsOptions;
+
+    startLineNumber?: number;
 
     private modeIndex_: number = -1;
     private modes_: Mode[] = [];
