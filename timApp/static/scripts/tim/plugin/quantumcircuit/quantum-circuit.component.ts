@@ -17,6 +17,10 @@ import {
 } from "tim/plugin/attributes";
 import {QuantumGateMenuComponent} from "tim/plugin/quantumcircuit/quantum-gate-menu.component";
 import {QuantumToolboxComponent} from "tim/plugin/quantumcircuit/quantum-toolbox.component";
+import type {
+    GateDrop,
+    GateMove,
+} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {
     FlatteningPipe,
     QuantumCircuitBoardComponent,
@@ -25,30 +29,17 @@ import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.com
 import {NgChartsModule} from "ng2-charts";
 
 export interface Gate {
-    time: number;
-    target: number;
-    name?: string;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    textX: number;
-    textY: number;
+    name: string;
 }
 
 export interface Qubit {
     value: number;
     name: string;
-    w: number;
-    h: number;
-    id: number;
 }
 
 export interface QubitOutput {
     text: string;
     value: number;
-    w: number;
-    h: number;
 }
 
 /**
@@ -111,10 +102,10 @@ export interface CircuitStyleOptions {
                 <tim-quantum-circuit-board
                         [board]="board" [qubits]="qubits"
                         [qubitOutputs]="qubitOutputs"
-                        (qubitChange)="handleQubitChange($event)"
-                        [nMoments]="nMoments"
-                        (gateDrop)="handleGateDrop($event)"
                         [circuitStyleOptions]="circuitStyleOptions"
+                        (qubitChange)="handleQubitChange($event)"
+                        (gateDrop)="handleGateDrop($event)"
+                        (gateMove)="handleGateMove($event)"
                 ></tim-quantum-circuit-board>
             </div>
 
@@ -143,6 +134,10 @@ export class QuantumCircuitComponent
 
     circuitStyleOptions!: CircuitStyleOptions;
 
+    board: (Gate | undefined)[][] = [];
+
+    measurements: Measurement[] = [];
+
     get nQubits() {
         return this.markup.nQubits;
     }
@@ -150,10 +145,6 @@ export class QuantumCircuitComponent
     get nMoments() {
         return this.markup.nMoments;
     }
-
-    board: Gate[][] = [];
-
-    measurements: Measurement[] = [];
 
     /**
      * Toggle qubits initial state between 0 and 1
@@ -170,9 +161,24 @@ export class QuantumCircuitComponent
         }
     }
 
-    handleGateDrop(gate: Gate) {
+    handleGateDrop(gate: GateDrop) {
         const {time, target} = gate;
-        this.board[target][time] = gate;
+        this.board[target][time] = {name: gate.name};
+    }
+
+    handleGateMove(gateMove: GateMove) {
+        const {
+            from: {target: target1, time: time1},
+            to: {target: target2, time: time2},
+        } = gateMove;
+        const name = this.board[target1][time1]?.name;
+        if (name !== undefined) {
+            this.board[target2][time2] = {
+                name: name,
+            };
+
+            this.board[target1][time1] = undefined;
+        }
     }
 
     /**
@@ -185,45 +191,30 @@ export class QuantumCircuitComponent
     initializeBoard() {
         this.board = [];
 
-        const size = this.circuitStyleOptions.baseSize;
         this.qubits = [];
         for (let i = 0; i < this.nQubits; i++) {
             this.qubits.push({
                 name: `q[${i}]`,
                 value: 0,
-                w: size,
-                h: size,
-                id: i,
             });
         }
 
         for (let i = 0; i < this.nQubits; i++) {
-            const row: Gate[] = [];
+            const row: (Gate | undefined)[] = [];
             for (let j = 0; j < this.nMoments; j++) {
-                row.push({
-                    x: j * size,
-                    y: i * size,
-                    time: j,
-                    target: i,
-                    name: undefined,
-                    w: size,
-                    h: size,
-                    textX: j * size + size / 2,
-                    textY: i * size + size / 2,
-                });
+                row.push(undefined);
             }
             this.board.push(row);
         }
 
-        this.board[0][0].name = "H";
+        this.board[0][0] = {name: "H"};
+        this.board[2][3] = {name: "X"};
 
         this.qubitOutputs = [];
         for (let i = 0; i < this.nQubits; i++) {
             this.qubitOutputs.push({
                 text: `out ${i}`,
                 value: 0,
-                w: size,
-                h: size,
             });
         }
     }

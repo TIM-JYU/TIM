@@ -26,6 +26,22 @@ export class FlatteningPipe implements PipeTransform {
     }
 }
 
+export interface GatePos {
+    target: number;
+    time: number;
+}
+
+export interface GateMove {
+    from: GatePos;
+    to: GatePos;
+}
+
+export interface GateDrop {
+    time: number;
+    target: number;
+    name: string;
+}
+
 @Component({
     selector: "tim-quantum-circuit-board",
     template: `
@@ -35,71 +51,87 @@ export class FlatteningPipe implements PipeTransform {
             <div class="qubits">
                 <div class="left-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"
                      [style.width.%]="100"></div>
-                <div *ngFor="let qubit of qubits" [style.height.px]="getH()" class="qubit">
+                <div *ngFor="let qubit of qubits; let i=index" [style.height.px]="circuitStyleOptions.baseSize"
+                     class="qubit">
                     <div>{{qubit.name}}</div>
                     <button class="qubit-toggle-button"
-                            (click)="toggleQubit($event, qubit.id)">{{getQubitText(qubit)}}</button>
+                            (click)="toggleQubit($event, i)">{{getQubitText(qubit)}}</button>
                 </div>
             </div>
 
 
             <div class="circuit-right-container">
                 <div class="moments">
-                    <div class="moment" *ngFor="let gate of board[0]; let i = index" [style.width.px]="getW()"
+                    <div class="moment" *ngFor="let gate of board[0]; let i = index"
+                         [style.width.px]="circuitStyleOptions.baseSize"
                          [style.height.px]="circuitStyleOptions.timeAxisHeight">
                         <div>{{i}}</div>
                     </div>
                 </div>
 
-                <svg #svgElement [attr.width]="getNeededWidth()" [attr.height]="getNeededHeight()">
-
+                <svg #svgElement [attr.width]="getWidth()"
+                     [attr.height]="getHeight()">
                     <!-- lines -->
                     <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="colors.dark"
-                          [attr.x1]="0" [attr.y1]="getH() * i + getH() / 2"
-                          [attr.x2]="getNeededWidth()" [attr.y2]="getH() * i + getH() / 2"></line>
+                          [attr.x1]="0" [attr.y1]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"
+                          [attr.x2]="getWidth()"
+                          [attr.y2]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"></line>
 
                     <!-- empty gate placeholders-->
-                    <g *ngFor="let gate of board |flatten" (drop)="handleDrop($event, gate)"
-                       (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
-                        <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="!gate.name"
-                              [attr.x]="gate.x"
-                              [attr.y]="gate.y" [attr.width]="gate.w"
-                              [attr.height]="gate.h"
-                              [attr.fill]="colors.light" fill-opacity="0.5"/>
+                    <g *ngFor="let gates of board; let i=index">
+                        <g *ngFor="let gate of gates; let j=index"
+                           (drop)="handleDrop($event, i, j)"
+                           (dragover)="handleDragOver($event, i, j)"
+                           (dragleave)="handleDragLeave()"
+                           [attr.data-time]="j"
+                           [attr.data-target]="i"
+                           class="gate-drop">
+                            <rect [class.drag-over-element]="isBeingDraggedOver(i,j)" *ngIf="!gate"
+                                  [attr.x]="j * circuitStyleOptions.baseSize"
+                                  [attr.y]="i * circuitStyleOptions.baseSize"
+                                  [attr.width]="circuitStyleOptions.baseSize"
+                                  [attr.height]="circuitStyleOptions.baseSize"
+                                  [attr.fill]="colors.light" fill-opacity="0.5"
+                            />
+                        </g>
                     </g>
+
 
                     <!-- gates -->
-                    <g *ngFor="let gate of board |flatten" (drop)="handleDrop($event, gate)"
-                       (mousedown)="handleDragStart($event, gate)"
-                       (mousemove)="handleDrag($event)"
-                       (mouseup)="handleDragEnd()"
-                       (mouseleave)="handleDragEnd()"
-                       (dragover)="handleDragOver($event, gate)" (dragleave)="handleDragLeave()">
-                        <rect [class.drag-over-element]="isBeingDraggedOver(gate)" *ngIf="gate.name"
-                              [attr.x]="gate.x + (gate.w - circuitStyleOptions.gateSize) / 2"
-                              [attr.y]="gate.y + (gate.h - circuitStyleOptions.gateSize) / 2"
-                              [attr.width]="circuitStyleOptions.gateSize"
-                              [attr.height]="circuitStyleOptions.gateSize"
-                              [attr.rx]="circuitStyleOptions.gateBorderRadius"
-                              [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                        <text *ngIf="gate.name"
-                              class="gate-text"
-                              [attr.x]="gate.textX"
-                              [attr.y]="gate.textY"
-                              dominant-baseline="middle"
-                              text-anchor="middle"
-                              [attr.fill]="colors.dark">{{gate.name}}</text>
+                    <g *ngFor="let gates of board; let i=index">
+                        <g *ngFor="let gate of gates; let j=index" (drop)="handleDrop($event, i, j)"
+                           (mousedown)="handleDragStart($event, i, j)"
+                           (mousemove)="handleDrag($event)"
+                           (mouseup)="handleDragEnd($event)"
+                           (mouseleave)="handleDragEnd($event)"
+                           (dragover)="handleDragOver($event, i, j)"
+                           (dragleave)="handleDragLeave()"
+                           [attr.data-time]="j"
+                           [attr.data-target]="i"
+                           class="gate-drop">
+                            <rect [class.drag-over-element]="isBeingDraggedOver(i,j)" *ngIf="gate"
+                                  [attr.x]="j * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
+                                  [attr.y]="i * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
+                                  [attr.width]="circuitStyleOptions.gateSize"
+                                  [attr.height]="circuitStyleOptions.gateSize"
+                                  [attr.rx]="circuitStyleOptions.gateBorderRadius"
+                                  [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
+                            <text *ngIf="gate"
+                                  class="gate-text"
+                                  [attr.x]="(j * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
+                                  [attr.y]="(i * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
+                                  dominant-baseline="middle"
+                                  text-anchor="middle"
+                                  [attr.fill]="colors.dark">{{gate.name}}</text>
+                        </g>
                     </g>
-
                 </svg>
-
-
             </div>
 
             <div class="output-container">
                 <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"></div>
-                <div class="output" *ngFor="let output of qubitOutputs" [style.height.px]="getH()"
-                     [style.width.px]="getW()">
+                <div class="output" *ngFor="let output of qubitOutputs" [style.height.px]="circuitStyleOptions.baseSize"
+                     [style.width.px]="circuitStyleOptions.baseSize">
                     <button class="output-value">{{output.value}}</button>
                 </div>
             </div>
@@ -110,11 +142,11 @@ export class FlatteningPipe implements PipeTransform {
     styleUrls: ["./quantum-circuit-board.component.scss"],
 })
 export class QuantumCircuitBoardComponent implements OnInit {
-    dragOverElement?: Gate;
+    dragOverElement?: GatePos;
 
     gateBeingDragged: {
         group: SVGGElement;
-        gate: Gate;
+        gate: GatePos;
         offset: [number, number];
     } | null = null;
 
@@ -125,13 +157,10 @@ export class QuantumCircuitBoardComponent implements OnInit {
     circuitStyleOptions!: CircuitStyleOptions;
 
     @Input()
-    board: Gate[][] = [];
+    board: (Gate | undefined)[][] = [];
 
     @Input()
     qubits!: Qubit[];
-
-    @Input()
-    nMoments!: number;
 
     @Input()
     qubitOutputs!: QubitOutput[];
@@ -140,12 +169,30 @@ export class QuantumCircuitBoardComponent implements OnInit {
     qubitChange = new EventEmitter<number>();
 
     @Output()
-    gateDrop = new EventEmitter<Gate>();
+    gateDrop = new EventEmitter<GateDrop>();
+
+    @Output()
+    gateMove = new EventEmitter<GateMove>();
 
     constructor() {}
 
     get colors() {
         return this.circuitStyleOptions.colors;
+    }
+
+    getWidth() {
+        if (this.board.length > 0) {
+            return this.board[0].length * this.circuitStyleOptions.baseSize;
+        }
+
+        return 0;
+    }
+
+    getHeight() {
+        if (this.board.length > 0) {
+            return this.board.length * this.circuitStyleOptions.baseSize;
+        }
+        return 0;
     }
 
     getQubitText(qubit: Qubit) {
@@ -161,7 +208,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
         this.qubitChange.emit(id);
     }
 
-    handleDrop(event: DragEvent, gate: Gate) {
+    handleDrop(event: DragEvent, i: number, j: number) {
         event.preventDefault();
         const gateName = event.dataTransfer?.getData("text/plain");
         if (gateName === undefined) {
@@ -169,56 +216,18 @@ export class QuantumCircuitBoardComponent implements OnInit {
         }
 
         this.dragOverElement = undefined;
-        gate.name = gateName;
-        this.gateDrop.emit(gate);
+        this.gateDrop.emit({
+            target: i,
+            time: j,
+            name: gateName,
+        });
     }
 
-    getW() {
-        if (this.board.length > 0 && this.board[0].length > 0) {
-            return this.board[0][0].w;
-        }
-        return 0;
-    }
-
-    getH() {
-        if (this.board.length > 0 && this.board[0].length > 0) {
-            return this.board[0][0].h;
-        }
-        return 0;
-    }
-
-    getNeededWidth() {
-        let totalWidth = 0;
-
-        // sum up column widths
-        for (let col = 0; col < this.nMoments; col++) {
-            let widestRowInColumn = 0;
-            for (const item of this.board) {
-                widestRowInColumn = Math.max(widestRowInColumn, item[col].w);
-            }
-            totalWidth += widestRowInColumn;
-        }
-
-        return totalWidth;
-    }
-
-    getNeededHeight() {
-        let totalHeight = 0;
-
-        // add row heights
-        for (const row of this.board) {
-            let tallestColInRow = 0;
-            for (const col of row) {
-                tallestColInRow = Math.max(tallestColInRow, col.h);
-            }
-            totalHeight += tallestColInRow;
-        }
-
-        return totalHeight;
-    }
-
-    handleDragOver(event: DragEvent, gate: Gate) {
-        this.dragOverElement = gate;
+    handleDragOver(event: DragEvent | MouseEvent, i: number, j: number) {
+        this.dragOverElement = {
+            target: i,
+            time: j,
+        };
         event.preventDefault();
     }
 
@@ -226,13 +235,12 @@ export class QuantumCircuitBoardComponent implements OnInit {
         this.dragOverElement = undefined;
     }
 
-    isBeingDraggedOver(gate: Gate) {
+    isBeingDraggedOver(i: number, j: number) {
         if (!this.dragOverElement) {
             return false;
         }
         return (
-            this.dragOverElement.time === gate.time &&
-            this.dragOverElement.target === gate.target
+            this.dragOverElement.time === j && this.dragOverElement.target === i
         );
     }
 
@@ -247,7 +255,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
         return [(x - CTM.e) / CTM.a, (y - CTM.f) / CTM.d];
     }
 
-    handleDragStart(event: MouseEvent, gate: Gate) {
+    handleDragStart(event: MouseEvent, i: number, j: number) {
         if (!event.currentTarget) {
             return;
         }
@@ -262,7 +270,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
         const transforms = group.transform.baseVal;
 
         this.gateBeingDragged = {
-            gate: gate,
+            gate: {target: i, time: j},
             group: group,
             offset: offset,
         };
@@ -303,7 +311,58 @@ export class QuantumCircuitBoardComponent implements OnInit {
         }
     }
 
-    handleDragEnd() {
+    handleDragEnd(event: MouseEvent) {
+        if (this.gateBeingDragged) {
+            const rect = this.gateBeingDragged.group.children.item(0);
+            if (!rect || !(rect instanceof SVGRectElement)) {
+                console.log("missing rect");
+                this.gateBeingDragged = null;
+                return;
+            }
+
+            const mouseX = event.clientX;
+            const mouseY = event.clientY;
+
+            const gates =
+                this.svgElement.nativeElement.getElementsByClassName(
+                    "gate-drop"
+                );
+            for (const gate of gates) {
+                if (
+                    gate instanceof SVGGElement &&
+                    gate !== this.gateBeingDragged.group
+                ) {
+                    const r = gate.getBoundingClientRect();
+                    // cursor is inside cell
+                    if (
+                        r.x <= mouseX &&
+                        mouseX <= r.x + r.width &&
+                        r.y <= mouseY &&
+                        mouseY <= r.y + r.height
+                    ) {
+                        const target = gate.getAttribute("data-target");
+                        const time = gate.getAttribute("data-time");
+                        if (target === null || time === null) {
+                            return;
+                        }
+                        const targetNum = parseInt(target, 10);
+                        const timeNum = parseInt(time, 10);
+
+                        this.gateMove.emit({
+                            from: this.gateBeingDragged.gate,
+                            to: {
+                                target: targetNum,
+                                time: timeNum,
+                            },
+                        });
+                    }
+                }
+            }
+
+            // find if some cell collides with that rect
+
+            // put this gate to that cell
+        }
         this.gateBeingDragged = null;
     }
 }
