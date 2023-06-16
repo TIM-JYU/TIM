@@ -26,10 +26,6 @@ export class FlatteningPipe implements PipeTransform {
     }
 }
 
-interface SVGWithCreationMethod {
-    createSVGTransform: () => SVGTransform;
-}
-
 @Component({
     selector: "tim-quantum-circuit-board",
     template: `
@@ -123,9 +119,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
     } | null = null;
 
     @ViewChild("svgElement")
-    svgElement!: ElementRef<
-        SVGElement & SVGGraphicsElement & SVGWithCreationMethod
-    >;
+    svgElement!: ElementRef<SVGSVGElement>;
 
     @Input()
     circuitStyleOptions!: CircuitStyleOptions;
@@ -278,7 +272,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
             transforms.length === 0 ||
             transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE
         ) {
-            // Create an transform that translates by (0, 0)
+            // Create a transform that translates by (0, 0)
             const translate =
                 this.svgElement.nativeElement.createSVGTransform();
             translate.setTranslate(0, 0);
