@@ -2,13 +2,12 @@
  * Quantum circuit board.
  */
 
-import type {OnInit, PipeTransform} from "@angular/core";
+import type {OnInit} from "@angular/core";
 import {
     Component,
     EventEmitter,
     Input,
     Output,
-    Pipe,
     ViewChild,
     ElementRef,
 } from "@angular/core";
@@ -18,13 +17,6 @@ import type {
     Qubit,
     QubitOutput,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
-
-@Pipe({name: "flatten"})
-export class FlatteningPipe implements PipeTransform {
-    transform(board: Gate[][]): Gate[] {
-        return board.flat();
-    }
-}
 
 export interface GatePos {
     target: number;
@@ -96,10 +88,10 @@ export interface GateDrop {
                         </g>
                     </g>
 
-
                     <!-- gates -->
                     <g *ngFor="let gates of board; let i=index">
-                        <g *ngFor="let gate of gates; let j=index" (drop)="handleDrop($event, i, j)"
+                        <g *ngFor="let gate of gates; let j=index"
+                           (drop)="handleDrop($event, i, j)"
                            (mousedown)="handleDragStart($event, i, j)"
                            (mousemove)="handleDrag($event)"
                            (mouseup)="handleDragEnd($event)"
@@ -109,14 +101,16 @@ export interface GateDrop {
                            [attr.data-time]="j"
                            [attr.data-target]="i"
                            class="gate-drop">
-                            <rect [class.drag-over-element]="isBeingDraggedOver(i,j)" *ngIf="gate"
+                            <rect *ngIf="gate && !isBeingDragged(i, j)"
+                                  class="gate"
+                                  [class.drag-over-element]="isBeingDraggedOver(i,j)"
                                   [attr.x]="j * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
                                   [attr.y]="i * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
                                   [attr.width]="circuitStyleOptions.gateSize"
                                   [attr.height]="circuitStyleOptions.gateSize"
                                   [attr.rx]="circuitStyleOptions.gateBorderRadius"
                                   [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                            <text *ngIf="gate"
+                            <text *ngIf="gate && !isBeingDragged(i, j)"
                                   class="gate-text"
                                   [attr.x]="(j * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
                                   [attr.y]="(i * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
@@ -124,7 +118,40 @@ export interface GateDrop {
                                   text-anchor="middle"
                                   [attr.fill]="colors.dark">{{gate.name}}</text>
                         </g>
+
+
                     </g>
+
+                    <!-- Gate being dragged placed after others so it's on top -->
+                    <g *ngIf="gateBeingDragged"
+                       (drop)="handleDrop($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
+                       (mousedown)="handleDragStart($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
+                       (mousemove)="handleDrag($event)"
+                       (mouseup)="handleDragEnd($event)"
+                       (mouseleave)="handleDragEnd($event)"
+                       (dragover)="handleDragOver($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
+                       (dragleave)="handleDragLeave()"
+                       [attr.data-time]="gateBeingDragged.gate.time"
+                       [attr.data-target]="gateBeingDragged.gate.target"
+                       class="gate-drop chosen">
+                        <rect
+                                class="gate"
+                                [class.drag-over-element]="isBeingDraggedOver(gateBeingDragged.gate.target,gateBeingDragged.gate.time)"
+                                [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
+                                [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
+                                [attr.width]="circuitStyleOptions.gateSize"
+                                [attr.height]="circuitStyleOptions.gateSize"
+                                [attr.rx]="circuitStyleOptions.gateBorderRadius"
+                                [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
+                        <text
+                                class="gate-text"
+                                [attr.x]="(gateBeingDragged.gate.time * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
+                                [attr.y]="(gateBeingDragged.gate.target * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
+                                dominant-baseline="middle"
+                                text-anchor="middle"
+                                [attr.fill]="colors.dark">{{board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]?.name}}</text>
+                    </g>
+
                 </svg>
             </div>
 
@@ -145,7 +172,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
     dragOverElement?: GatePos;
 
     gateBeingDragged: {
-        group: SVGGElement;
         gate: GatePos;
         offset: [number, number];
     } | null = null;
@@ -178,6 +204,13 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
     get colors() {
         return this.circuitStyleOptions.colors;
+    }
+
+    isBeingDragged(i: number, j: number) {
+        return (
+            this.gateBeingDragged?.gate.target === i &&
+            this.gateBeingDragged.gate.time === j
+        );
     }
 
     getWidth() {
@@ -244,6 +277,15 @@ export class QuantumCircuitBoardComponent implements OnInit {
         );
     }
 
+    getActiveGroup(): SVGGElement | null {
+        const res =
+            this.svgElement.nativeElement.getElementsByClassName("chosen")[0];
+        if (res instanceof SVGGElement) {
+            return res;
+        }
+        return null;
+    }
+
     /**
      * https://www.petercollingridge.co.uk/tutorials/svg/interactive/dragging/
      */
@@ -253,6 +295,24 @@ export class QuantumCircuitBoardComponent implements OnInit {
             return null;
         }
         return [(x - CTM.e) / CTM.a, (y - CTM.f) / CTM.d];
+    }
+
+    addStartTransform(group: SVGGElement) {
+        // Get all the transforms currently on this element
+        const transforms = group.transform.baseVal;
+
+        // Ensure the first transform is a translate transform
+        if (
+            transforms.length === 0 ||
+            transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE
+        ) {
+            // Create a transform that translates by (0, 0)
+            const translate =
+                this.svgElement.nativeElement.createSVGTransform();
+            translate.setTranslate(0, 0);
+            group.transform.baseVal // Add the translation to the front of the transforms list
+                .insertItemBefore(translate, 0);
+        }
     }
 
     handleDragStart(event: MouseEvent, i: number, j: number) {
@@ -271,23 +331,10 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
         this.gateBeingDragged = {
             gate: {target: i, time: j},
-            group: group,
             offset: offset,
         };
 
-        // Ensure the first transform is a translate transform
-        if (
-            transforms.length === 0 ||
-            transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE
-        ) {
-            // Create a transform that translates by (0, 0)
-            const translate =
-                this.svgElement.nativeElement.createSVGTransform();
-            translate.setTranslate(0, 0);
-
-            group.transform.baseVal // Add the translation to the front of the transforms list
-                .insertItemBefore(translate, 0);
-        }
+        this.addStartTransform(group);
 
         // Get initial translation amount
         const transform = transforms.getItem(0);
@@ -296,8 +343,14 @@ export class QuantumCircuitBoardComponent implements OnInit {
     }
 
     handleDrag(event: MouseEvent) {
-        if (this.gateBeingDragged) {
+        const group = this.getActiveGroup();
+        if (this.gateBeingDragged && group) {
             event.preventDefault();
+
+            // dragged group is added to top of list so reinitialize transform
+            this.addStartTransform(group);
+
+            // move the element to where cursor is
             const xy = this.getMousePosition(event.clientX, event.clientY);
             if (!xy) {
                 return;
@@ -305,64 +358,85 @@ export class QuantumCircuitBoardComponent implements OnInit {
             const [x, y] = xy;
             const [offsetX, offsetY] = this.gateBeingDragged.offset;
 
-            const transform =
-                this.gateBeingDragged.group.transform.baseVal.getItem(0);
+            const transform = group.transform.baseVal.getItem(0);
             transform.setTranslate(x - offsetX, y - offsetY);
+
+            // highlight gate or empty cell that moved gate is on top of
+            const colliding = this.getColliding(event.clientX, event.clientY);
+            if (colliding) {
+                this.dragOverElement = colliding;
+            }
         }
     }
 
-    handleDragEnd(event: MouseEvent) {
-        if (this.gateBeingDragged) {
-            const rect = this.gateBeingDragged.group.children.item(0);
-            if (!rect || !(rect instanceof SVGRectElement)) {
-                console.log("missing rect");
-                this.gateBeingDragged = null;
-                return;
-            }
+    getColliding(mouseX: number, mouseY: number): GatePos | undefined {
+        if (!this.gateBeingDragged) {
+            return undefined;
+        }
+        const group = this.getActiveGroup();
+        if (!group) {
+            return undefined;
+        }
+        const rect = group.children.item(0);
+        if (!rect || !(rect instanceof SVGRectElement)) {
+            return undefined;
+        }
 
-            const mouseX = event.clientX;
-            const mouseY = event.clientY;
-
-            const gates =
-                this.svgElement.nativeElement.getElementsByClassName(
-                    "gate-drop"
-                );
-            for (const gate of gates) {
+        const gates =
+            this.svgElement.nativeElement.getElementsByClassName("gate-drop");
+        for (const gate of gates) {
+            if (gate instanceof SVGGElement && gate !== group) {
+                const r = gate.getBoundingClientRect();
+                // cursor is inside cell
                 if (
-                    gate instanceof SVGGElement &&
-                    gate !== this.gateBeingDragged.group
+                    r.x <= mouseX &&
+                    mouseX <= r.x + r.width &&
+                    r.y <= mouseY &&
+                    mouseY <= r.y + r.height
                 ) {
-                    const r = gate.getBoundingClientRect();
-                    // cursor is inside cell
-                    if (
-                        r.x <= mouseX &&
-                        mouseX <= r.x + r.width &&
-                        r.y <= mouseY &&
-                        mouseY <= r.y + r.height
-                    ) {
-                        const target = gate.getAttribute("data-target");
-                        const time = gate.getAttribute("data-time");
-                        if (target === null || time === null) {
-                            return;
-                        }
-                        const targetNum = parseInt(target, 10);
-                        const timeNum = parseInt(time, 10);
-
-                        this.gateMove.emit({
-                            from: this.gateBeingDragged.gate,
-                            to: {
-                                target: targetNum,
-                                time: timeNum,
-                            },
-                        });
+                    const target = gate.getAttribute("data-target");
+                    const time = gate.getAttribute("data-time");
+                    if (target === null || time === null) {
+                        return undefined;
                     }
+                    const targetNum = parseInt(target, 10);
+                    const timeNum = parseInt(time, 10);
+
+                    return {
+                        target: targetNum,
+                        time: timeNum,
+                    };
                 }
             }
-
-            // find if some cell collides with that rect
-
-            // put this gate to that cell
         }
+        return undefined;
+    }
+
+    handleDragEnd(event: MouseEvent) {
+        if (!this.gateBeingDragged) {
+            this.gateBeingDragged = null;
+            return;
+        }
+        const group = this.getActiveGroup();
+        if (!group) {
+            this.gateBeingDragged = null;
+            return;
+        }
+        const rect = group.children.item(0);
+        if (!rect || !(rect instanceof SVGRectElement)) {
+            this.gateBeingDragged = null;
+            return;
+        }
+
+        const colliding = this.getColliding(event.clientX, event.clientY);
+        if (colliding) {
+            this.gateMove.emit({
+                from: this.gateBeingDragged.gate,
+                to: colliding,
+            });
+        }
+
         this.gateBeingDragged = null;
+        this.dragOverElement = undefined;
     }
 }
