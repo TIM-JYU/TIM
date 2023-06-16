@@ -90,7 +90,7 @@ export interface CircuitStyleOptions {
     baseSize: number;
     // size of gates (side length)
     gateSize: number;
-    // whether to use bra-ket notation for input qubits or just (0,1)
+    // whether to use braket notation for input qubits or just (0,1)
     useBraket: boolean;
     // timeAxisHeight: height of first row showing time steps 0,1,2...
     timeAxisHeight: number;
