@@ -29,7 +29,6 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.peerreview.util.peerreview_utils import (
     has_review_access,
     get_reviews_targeting_user,
-    get_reviews_where_user_is_reviewer,
     get_all_reviews,
     get_reviews_related_to_user,
 )
