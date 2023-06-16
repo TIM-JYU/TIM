@@ -900,7 +900,7 @@ def render_doc_view(
                     if t.target_data.attrs.get("area_end") == m.area:
                         break
                     else:
-                        pars_in_area.append(t.target.id)
+                        pars_in_area.append(t.target.id if t.target else t.id)
             for task in post_process_result.plugins:
                 if task.par.id in pars_in_area and task.task_id:
                     tids.append(task.task_id)
