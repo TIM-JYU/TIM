@@ -83,7 +83,7 @@ export interface GateDrop {
                                   [attr.y]="i * circuitStyleOptions.baseSize"
                                   [attr.width]="circuitStyleOptions.baseSize"
                                   [attr.height]="circuitStyleOptions.baseSize"
-                                  [attr.fill]="colors.light" fill-opacity="0.5"
+                                  [attr.fill]="colors.light" fill-opacity="0"
                             />
                         </g>
                     </g>
