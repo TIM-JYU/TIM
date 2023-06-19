@@ -69,6 +69,7 @@ svg text::selection {
 .output-container {
   display: flex;
   flex-direction: column;
+  border-right: 1px solid black;
 }
 
 .output {

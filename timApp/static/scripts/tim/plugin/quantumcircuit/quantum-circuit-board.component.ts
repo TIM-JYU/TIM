@@ -65,7 +65,11 @@ export interface GateDrop {
                      [attr.height]="getHeight()"
                      (mousemove)="handleDrag($event)"
                      (mouseup)="handleDragEnd($event)"
-                     (mouseleave)="handleDragEnd($event)">
+                     (mouseleave)="handleDragEnd($event)"
+                     (touchmove)="handleDrag($event)"
+                     (touchend)="handleDragEnd($event)"
+                     (touchcancel)="handleDragEnd($event)"
+                >
                     <!-- lines -->
                     <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="colors.dark"
                           [attr.x1]="0" [attr.y1]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"
@@ -96,6 +100,7 @@ export interface GateDrop {
                         <g *ngFor="let gate of gates; let j=index"
                            (drop)="handleDrop($event, i, j)"
                            (mousedown)="handleDragStart($event, i, j)"
+                           (touchstart)="handleDragStart($event, i, j)"
                            (dragover)="handleDragOver($event, i, j)"
                            (dragleave)="handleDragLeave()"
                            [attr.data-time]="j"
@@ -125,6 +130,7 @@ export interface GateDrop {
                     <!-- Gate being dragged placed after others so it's on top -->
                     <g *ngIf="gateBeingDragged"
                        (mousedown)="handleDragStart($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
+                       (touchstart)="handleDragStart($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
                        [attr.data-time]="gateBeingDragged.gate.time"
                        [attr.data-target]="gateBeingDragged.gate.target"
                        class="gate-drop chosen">
@@ -149,7 +155,8 @@ export interface GateDrop {
 
             <div class="output-container">
                 <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"></div>
-                <div class="output" *ngFor="let output of qubitOutputs" [style.height.px]="circuitStyleOptions.baseSize">
+                <div class="output" *ngFor="let output of qubitOutputs"
+                     [style.height.px]="circuitStyleOptions.baseSize">
                     <img alt="measurement icon" src="/static/images/quantum-measurement.svg"
                          [style.height.px]="circuitStyleOptions.gateSize"
                          [style.width.px]="circuitStyleOptions.gateSize"/>
@@ -312,11 +319,23 @@ export class QuantumCircuitBoardComponent implements OnInit {
         }
     }
 
-    handleDragStart(event: MouseEvent, i: number, j: number) {
+    getCursorPosition(event: MouseEvent | TouchEvent): [number, number] {
+        if (event instanceof MouseEvent) {
+            return [event.clientX, event.clientY];
+        }
+        return [
+            event.changedTouches[0].clientX,
+            event.changedTouches[0].clientY,
+        ];
+    }
+
+    handleDragStart(event: MouseEvent | TouchEvent, i: number, j: number) {
+        event.preventDefault();
         if (!event.currentTarget) {
             return;
         }
-        const offset = this.getMousePosition(event.clientX, event.clientY);
+        const [cursorX, cursorY] = this.getCursorPosition(event);
+        const offset = this.getMousePosition(cursorX, cursorY);
         if (!offset) {
             return;
         }
@@ -339,16 +358,17 @@ export class QuantumCircuitBoardComponent implements OnInit {
         this.gateBeingDragged.offset[1] -= transform.matrix.f;
     }
 
-    handleDrag(event: MouseEvent) {
+    handleDrag(event: MouseEvent | TouchEvent) {
+        event.preventDefault();
+
         const group = this.getActiveGroup();
         if (this.gateBeingDragged && group) {
-            event.preventDefault();
-
             // dragged group is added to top of list so reinitialize transform
             this.addStartTransform(group);
 
+            const [cursorX, cursorY] = this.getCursorPosition(event);
             // move the element to where cursor is
-            const xy = this.getMousePosition(event.clientX, event.clientY);
+            const xy = this.getMousePosition(cursorX, cursorY);
             if (!xy) {
                 return;
             }
@@ -359,7 +379,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
             transform.setTranslate(x - offsetX, y - offsetY);
 
             // highlight gate or empty cell that moved gate is on top of
-            const colliding = this.getColliding(event.clientX, event.clientY);
+            const colliding = this.getColliding(cursorX, cursorY);
             if (colliding) {
                 this.dragOverElement = colliding;
             }
@@ -409,7 +429,8 @@ export class QuantumCircuitBoardComponent implements OnInit {
         return undefined;
     }
 
-    handleDragEnd(event: MouseEvent) {
+    handleDragEnd(event: MouseEvent | TouchEvent) {
+        event.preventDefault();
         if (!this.gateBeingDragged) {
             this.gateBeingDragged = null;
             return;
@@ -427,12 +448,12 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
         // if cursor is outside the circuit (svg element) then remove the gate being dragged
         const svgBounds = this.svgElement.nativeElement.getBoundingClientRect();
-
+        const [cursorX, cursorY] = this.getCursorPosition(event);
         if (
-            event.clientX < svgBounds.x ||
-            event.clientX > svgBounds.right ||
-            event.clientY < svgBounds.y ||
-            event.clientY > svgBounds.bottom
+            cursorX < svgBounds.x ||
+            cursorX > svgBounds.right ||
+            cursorY < svgBounds.y ||
+            cursorY > svgBounds.bottom
         ) {
             this.gateRemove.emit(this.gateBeingDragged.gate);
             this.gateBeingDragged = null;
@@ -440,7 +461,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
             return;
         }
 
-        const colliding = this.getColliding(event.clientX, event.clientY);
+        const colliding = this.getColliding(cursorX, cursorY);
 
         if (colliding) {
             this.gateMove.emit({

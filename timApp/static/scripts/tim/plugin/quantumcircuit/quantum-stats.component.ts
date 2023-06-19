@@ -28,13 +28,12 @@ export class MeasurementsPipe implements PipeTransform {
                 <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions" [data]="chartData"></canvas>
             </div>
 
-            <button>Mittaa</button>
-
-            <div class="measurements">
-                <textarea readonly>{{measurements | measurementsFormat}}</textarea>
-                <button (click)="handleClear()">Tyhjennä</button>
-
+            <div class="buttons">
+                <button class="timButton">Mittaa</button>
+                <button class="timButton" (click)="handleClear()">Tyhjennä</button>
             </div>
+
+            <textarea readonly rows="5">{{measurements | measurementsFormat}}</textarea>
         </div>
     `,
     styleUrls: ["./quantum-stats.component.scss"],
@@ -47,7 +46,7 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit {
 
     chartOptions: ChartOptions = {
         indexAxis: "y",
-        scales: {x: {min: 0, max: 100}},
+        scales: {x: {min: 0, max: 100, ticks: {stepSize: 10}}},
         plugins: {legend: {display: false}},
     };
 

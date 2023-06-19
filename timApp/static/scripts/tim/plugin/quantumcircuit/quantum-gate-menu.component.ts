@@ -10,19 +10,25 @@ interface Gate {
     selector: "tim-quantum-gate-menu",
     template: `
         <!--suppress HtmlUnknownAttribute -->
+
         <div class="gate-container">
-            <div class="svg-container" *ngFor="let gate of gates" draggable="true"
-                 (dragstart)="handleDragStart($event, gate)">
-                <svg [attr.width]="circuitStyleOptions.gateSize" [attr.height]="circuitStyleOptions.gateSize">
-                    <rect [attr.x]="0" [attr.y]="0" [attr.width]="circuitStyleOptions.gateSize"
-                          [attr.height]="circuitStyleOptions.gateSize" [attr.fill]="colors.light"
-                          [attr.stroke]="colors.dark"
-                          [attr.rx]="circuitStyleOptions.gateBorderRadius"/>
-                    <text x="50%" y="50%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark"
-                          dominant-baseline="middle"
-                          text-anchor="middle">{{gate.name}}</text>
-                </svg>
+            <p class="gate-container-heading">Portit</p>
+
+            <div class="gate-list">
+                <div class="svg-container" *ngFor="let gate of gates" draggable="true"
+                     (dragstart)="handleDragStart($event, gate)">
+                    <svg [attr.width]="circuitStyleOptions.gateSize" [attr.height]="circuitStyleOptions.gateSize">
+                        <rect [attr.x]="0" [attr.y]="0" [attr.width]="circuitStyleOptions.gateSize"
+                              [attr.height]="circuitStyleOptions.gateSize" [attr.fill]="colors.light"
+                              [attr.stroke]="colors.dark"
+                              rx="2"/>
+                        <text x="50%" y="50%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark"
+                              dominant-baseline="middle"
+                              text-anchor="middle">{{gate.name}}</text>
+                    </svg>
+                </div>
             </div>
+
         </div>
 
     `,

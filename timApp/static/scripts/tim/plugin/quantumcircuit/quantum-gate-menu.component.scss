@@ -1,19 +1,31 @@
 svg text {
-    -webkit-user-select: none;
-       -moz-user-select: none;
-        -ms-user-select: none;
-            user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
+
 svg text::selection {
-    background: none;
+  background: none;
 }
 
 .gate-container {
+  display: flex;
+  flex-direction: column;
   border: 1px solid black;
+}
+
+.gate-container-heading {
+  background-color: #004494;
+  color: white;
+  padding-left: 0.5em;
+}
+
+.gate-list {
   display: flex;
   flex-direction: row;
-  padding: 0.5em;
   gap: 0.25em;
+  padding: 0.25em;
 }
 
 .gate-container svg {

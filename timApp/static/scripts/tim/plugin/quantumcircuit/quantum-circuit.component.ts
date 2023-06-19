@@ -93,7 +93,7 @@ export interface CircuitStyleOptions {
 @Component({
     selector: "tim-quantum-circuit",
     template: `
-        <div #qcContainer>
+        <div #qcContainer class="circuit-container">
             <div class="top-menu">
                 <tim-quantum-gate-menu [circuitStyleOptions]="circuitStyleOptions"></tim-quantum-gate-menu>
                 <tim-quantum-toolbox></tim-quantum-toolbox>
@@ -134,7 +134,18 @@ export class QuantumCircuitComponent
     qubits: Qubit[] = [];
     qubitOutputs: QubitOutput[] = [];
 
-    circuitStyleOptions!: CircuitStyleOptions;
+    circuitStyleOptions: CircuitStyleOptions = {
+        baseSize: 60,
+        gateSize: 40,
+        colors: {
+            dark: "black",
+            medium: "grey",
+            light: "white",
+        },
+        useBraket: false,
+        timeAxisHeight: 30,
+        gateBorderRadius: 2,
+    };
 
     board: (Gate | undefined)[][] = [];
 
@@ -237,13 +248,13 @@ export class QuantumCircuitComponent
                 output: "011",
             },
         ];
-    }
+        const baseSize =
+            this.qcContainer.nativeElement.offsetWidth / (this.nMoments + 4);
+        const gateSize = (2 / 3) * baseSize;
 
-    ngOnInit(): void {
-        super.ngOnInit();
         this.circuitStyleOptions = {
-            baseSize: 60,
-            gateSize: 40,
+            baseSize: baseSize,
+            gateSize: gateSize,
             colors: {
                 dark: "black",
                 medium: "grey",
@@ -253,6 +264,10 @@ export class QuantumCircuitComponent
             timeAxisHeight: 30,
             gateBorderRadius: 2,
         };
+    }
+
+    ngOnInit(): void {
+        super.ngOnInit();
     }
 
     getAttributeType() {
