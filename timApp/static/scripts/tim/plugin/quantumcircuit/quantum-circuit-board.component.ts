@@ -62,7 +62,10 @@ export interface GateDrop {
                 </div>
 
                 <svg #svgElement [attr.width]="getWidth()"
-                     [attr.height]="getHeight()">
+                     [attr.height]="getHeight()"
+                     (mousemove)="handleDrag($event)"
+                     (mouseup)="handleDragEnd($event)"
+                     (mouseleave)="handleDragEnd($event)">
                     <!-- lines -->
                     <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="colors.dark"
                           [attr.x1]="0" [attr.y1]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"
@@ -93,9 +96,6 @@ export interface GateDrop {
                         <g *ngFor="let gate of gates; let j=index"
                            (drop)="handleDrop($event, i, j)"
                            (mousedown)="handleDragStart($event, i, j)"
-                           (mousemove)="handleDrag($event)"
-                           (mouseup)="handleDragEnd($event)"
-                           (mouseleave)="handleDragEnd($event)"
                            (dragover)="handleDragOver($event, i, j)"
                            (dragleave)="handleDragLeave()"
                            [attr.data-time]="j"
@@ -124,19 +124,12 @@ export interface GateDrop {
 
                     <!-- Gate being dragged placed after others so it's on top -->
                     <g *ngIf="gateBeingDragged"
-                       (drop)="handleDrop($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
                        (mousedown)="handleDragStart($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
-                       (mousemove)="handleDrag($event)"
-                       (mouseup)="handleDragEnd($event)"
-                       (mouseleave)="handleDragEnd($event)"
-                       (dragover)="handleDragOver($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
-                       (dragleave)="handleDragLeave()"
                        [attr.data-time]="gateBeingDragged.gate.time"
                        [attr.data-target]="gateBeingDragged.gate.target"
                        class="gate-drop chosen">
                         <rect
                                 class="gate"
-                                [class.drag-over-element]="isBeingDraggedOver(gateBeingDragged.gate.target,gateBeingDragged.gate.time)"
                                 [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
                                 [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
                                 [attr.width]="circuitStyleOptions.gateSize"
@@ -199,6 +192,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
     @Output()
     gateMove = new EventEmitter<GateMove>();
+
+    @Output()
+    gateRemove = new EventEmitter<GatePos>();
 
     constructor() {}
 
@@ -428,7 +424,23 @@ export class QuantumCircuitBoardComponent implements OnInit {
             return;
         }
 
+        // if cursor is outside the circuit (svg element) then remove the gate being dragged
+        const svgBounds = this.svgElement.nativeElement.getBoundingClientRect();
+
+        if (
+            event.clientX < svgBounds.x ||
+            event.clientX > svgBounds.right ||
+            event.clientY < svgBounds.y ||
+            event.clientY > svgBounds.bottom
+        ) {
+            this.gateRemove.emit(this.gateBeingDragged.gate);
+            this.gateBeingDragged = null;
+            this.dragOverElement = undefined;
+            return;
+        }
+
         const colliding = this.getColliding(event.clientX, event.clientY);
+
         if (colliding) {
             this.gateMove.emit({
                 from: this.gateBeingDragged.gate,

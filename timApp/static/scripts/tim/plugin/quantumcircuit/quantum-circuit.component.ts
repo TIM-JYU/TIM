@@ -20,6 +20,7 @@ import {QuantumToolboxComponent} from "tim/plugin/quantumcircuit/quantum-toolbox
 import type {
     GateDrop,
     GateMove,
+    GatePos,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {QuantumCircuitBoardComponent} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
@@ -103,6 +104,7 @@ export interface CircuitStyleOptions {
                         (qubitChange)="handleQubitChange($event)"
                         (gateDrop)="handleGateDrop($event)"
                         (gateMove)="handleGateMove($event)"
+                        (gateRemove)="handleGateRemove($event)"
                 ></tim-quantum-circuit-board>
             </div>
 
@@ -176,6 +178,10 @@ export class QuantumCircuitComponent
 
             this.board[target1][time1] = undefined;
         }
+    }
+
+    handleGateRemove(gate: GatePos) {
+        this.board[gate.target][gate.time] = undefined;
     }
 
     /**
