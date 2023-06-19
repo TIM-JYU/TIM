@@ -8,8 +8,15 @@
     width: 50%;
   }
 
+
   .measurements {
+    padding: 0.5em;
     width: 30%;
+    border: 1px solid black;
+
+    textarea {
+      width: 100%;
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import type {AfterViewInit, OnInit} from "@angular/core";
+import type {AfterViewInit, OnInit, PipeTransform} from "@angular/core";
 import {
     Component,
     EventEmitter,
@@ -6,9 +6,19 @@ import {
     Output,
     ViewChild,
     ElementRef,
+    Pipe,
 } from "@angular/core";
 import type {Measurement} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {ChartData, ChartOptions} from "chart.js";
+
+@Pipe({name: "measurementsFormat"})
+export class MeasurementsPipe implements PipeTransform {
+    transform(measurements: Measurement[]) {
+        return measurements
+            .map((m) => `Input: ${m.input}; Output: ${m.output}`)
+            .join("\n");
+    }
+}
 
 @Component({
     selector: "tim-quantum-stats",
@@ -21,11 +31,9 @@ import type {ChartData, ChartOptions} from "chart.js";
             <button>Mittaa</button>
 
             <div class="measurements">
-                <p *ngFor="let measurement of measurements">
-                    Input: {{measurement.input}}; Output: {{measurement.output}}
-                </p>
-                
+                <textarea readonly>{{measurements | measurementsFormat}}</textarea>
                 <button (click)="handleClear()">Tyhjennä</button>
+
             </div>
         </div>
     `,

@@ -23,7 +23,10 @@ import type {
     GatePos,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {QuantumCircuitBoardComponent} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
-import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
+import {
+    MeasurementsPipe,
+    QuantumStatsComponent,
+} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {NgChartsModule} from "ng2-charts";
 
 export interface Gate {
@@ -268,6 +271,7 @@ export class QuantumCircuitComponent
         QuantumToolboxComponent,
         QuantumCircuitBoardComponent,
         QuantumStatsComponent,
+        MeasurementsPipe,
     ],
     exports: [QuantumCircuitComponent],
     imports: [CommonModule, HttpClientModule, NgChartsModule],
