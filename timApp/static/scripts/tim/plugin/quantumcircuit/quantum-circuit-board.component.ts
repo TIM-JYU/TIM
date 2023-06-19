@@ -144,14 +144,15 @@ export interface GateDrop {
                                 text-anchor="middle"
                                 [attr.fill]="colors.dark">{{board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]?.name}}</text>
                     </g>
-
                 </svg>
             </div>
 
             <div class="output-container">
                 <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"></div>
-                <div class="output" *ngFor="let output of qubitOutputs" [style.height.px]="circuitStyleOptions.baseSize"
-                     [style.width.px]="circuitStyleOptions.baseSize">
+                <div class="output" *ngFor="let output of qubitOutputs" [style.height.px]="circuitStyleOptions.baseSize">
+                    <img alt="measurement icon" src="/static/images/quantum-measurement.svg"
+                         [style.height.px]="circuitStyleOptions.gateSize"
+                         [style.width.px]="circuitStyleOptions.gateSize"/>
                     <button class="output-value">{{output.value}}</button>
                 </div>
             </div>

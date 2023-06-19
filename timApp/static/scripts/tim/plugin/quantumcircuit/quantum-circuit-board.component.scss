@@ -3,7 +3,7 @@
   fill-opacity: 0.5;
 }
 
-svg text {
+svg text, .moment, .qubit, .output {
     -webkit-user-select: none;
        -moz-user-select: none;
         -ms-user-select: none;
@@ -73,10 +73,14 @@ svg text::selection {
 
 .output {
   display: flex;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   border-left: 1px solid black;
+  padding: 0 0.5em 0 0.5em;
+  gap: 0.5em;
 }
+
 
 .output button {
   background-color: white;

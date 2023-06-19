@@ -12,8 +12,12 @@ svg text::selection {
   border: 1px solid black;
   display: flex;
   flex-direction: row;
-  padding: 1em;
+  padding: 0.5em;
   gap: 0.25em;
+}
+
+.gate-container svg {
+  display: block;
 }
 
 .svg-container {
