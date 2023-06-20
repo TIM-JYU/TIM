@@ -51,50 +51,35 @@ export class QuantumCircuitSimulator {
     }
 
     /**
-     * One sample from possible outputs
+     * Get one measurement chosen randomly from possible outcomes and their relative probabilities.
      */
-    sample(): Measurement {
+    sample(): Measurement | undefined {
         const input = this.qubits.map((q) => q.value).join("");
 
-        const output = "";
-
         if (!this.result) {
-            return {
-                input: "",
-                output: "",
-            };
+            return undefined;
         }
 
-        const probabilities: [number, number][] = [];
-        this.result.forEach((probability, index) => {
-            probabilities.push([this.getNumber(index), probability]);
+        const probabilities: number[] = [];
+        this.result.forEach((probability) => {
+            probabilities.push(probability);
         });
-
-        // sort by probability
-        probabilities.sort((a, b) => b[1] - a[1]);
 
         const randomNum = Math.random();
 
         // choose one possible outcome based on probabilities
-        let i = 0;
         let cumulativeProbability = 0;
-        while (i < probabilities.length) {
-            cumulativeProbability += probabilities[i][1];
-            if (randomNum <= cumulativeProbability) {
+        for (let i = 0; i < probabilities.length; i++) {
+            cumulativeProbability += probabilities[i];
+            if (randomNum < cumulativeProbability) {
                 return {
                     input: input,
-                    output: probabilities[i][0]
-                        .toString(2)
-                        .padStart(this.qubits.length, "0"),
+                    output: i.toString(2).padStart(this.qubits.length, "0"),
                 };
             }
-            i++;
         }
 
-        return {
-            input: input,
-            output: output,
-        };
+        return undefined;
     }
 
     /**

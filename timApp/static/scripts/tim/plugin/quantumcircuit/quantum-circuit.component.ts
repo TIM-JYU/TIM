@@ -231,7 +231,9 @@ export class QuantumCircuitComponent
 
     handleMeasure() {
         const measurement = this.simulator.sample();
-
+        if (!measurement) {
+            return;
+        }
         this.measurements = [measurement, ...this.measurements];
     }
 
