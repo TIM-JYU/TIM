@@ -11,7 +11,10 @@ import {
     ViewChild,
     ElementRef,
 } from "@angular/core";
-import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import {
+    Board,
+    CircuitStyleOptions,
+} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {
     Gate,
     Qubit,
@@ -195,7 +198,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
     circuitStyleOptions!: CircuitStyleOptions;
 
     @Input()
-    board: (Gate | undefined)[][] = [];
+    board: Board = [];
 
     @Input()
     qubits!: Qubit[];

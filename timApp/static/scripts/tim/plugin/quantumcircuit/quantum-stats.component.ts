@@ -1,4 +1,10 @@
-import type {AfterViewInit, OnInit, PipeTransform} from "@angular/core";
+import type {
+    AfterViewInit,
+    OnChanges,
+    OnInit,
+    PipeTransform,
+    SimpleChanges,
+} from "@angular/core";
 import {
     Component,
     EventEmitter,
@@ -23,6 +29,15 @@ export class MeasurementsPipe implements PipeTransform {
     }
 }
 
+/**
+ * Data for the chart.
+ * labals are on y-axis and probabilities are on x-axis.
+ */
+export interface QuantumChartData {
+    labels: string[];
+    probabilities: number[];
+}
+
 @Component({
     selector: "tim-quantum-stats",
     template: `
@@ -32,7 +47,7 @@ export class MeasurementsPipe implements PipeTransform {
             </div>
 
             <div class="buttons">
-                <button class="timButton">Mittaa</button>
+                <button class="timButton" (click)="handleMeasure()">Mittaa</button>
                 <button class="timButton" (click)="handleClear()">Tyhjennä</button>
             </div>
 
@@ -41,7 +56,7 @@ export class MeasurementsPipe implements PipeTransform {
     `,
     styleUrls: ["./quantum-stats.component.scss"],
 })
-export class QuantumStatsComponent implements OnInit, AfterViewInit {
+export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     @ViewChild("chartCanvas")
     chartCanvas!: ElementRef<HTMLCanvasElement>;
 
@@ -54,10 +69,16 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit {
     };
 
     @Input()
-    measurements: Measurement[] = [];
+    measurements!: Measurement[];
+
+    @Input()
+    quantumChartData!: QuantumChartData;
 
     @Output()
     clear = new EventEmitter<void>();
+
+    @Output()
+    measure = new EventEmitter<void>();
 
     constructor() {}
 
@@ -70,14 +91,22 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit {
         this.clear.emit();
     }
 
-    initChart() {
-        const probabilities = [50, 25, 25, 0];
-        const labels = ["00", "01", "10", "11"];
+    /**
+     * Measure a new sample.
+     */
+    handleMeasure() {
+        this.measure.emit();
+    }
+
+    /**
+     * Sets data of chart to current data.
+     */
+    updateChart() {
         this.chartData = {
-            labels: labels,
+            labels: this.quantumChartData.labels,
             datasets: [
                 {
-                    data: probabilities,
+                    data: this.quantumChartData.probabilities,
                     backgroundColor: "#004494",
                 },
             ],
@@ -85,6 +114,17 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit(): void {
-        this.initChart();
+        this.updateChart();
+    }
+
+    /**
+     * Update chart if data in it changed.
+     * @param changes possible change in chart data
+     */
+    ngOnChanges(changes: SimpleChanges): void {
+        const chartChange = changes.quantumChartData;
+        if (chartChange) {
+            this.updateChart();
+        }
     }
 }

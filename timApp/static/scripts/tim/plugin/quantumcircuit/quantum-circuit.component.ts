@@ -23,15 +23,19 @@ import type {
     GatePos,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {QuantumCircuitBoardComponent} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
+import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {
     MeasurementsPipe,
     QuantumStatsComponent,
 } from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {NgChartsModule} from "ng2-charts";
+import {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
 
 export interface Gate {
     name: string;
 }
+
+export type Board = (Gate | undefined)[][];
 
 export interface Qubit {
     value: number;
@@ -113,9 +117,11 @@ export interface CircuitStyleOptions {
 
             <div class="stats">
                 <tim-quantum-stats [measurements]="measurements"
-                                   (clear)="handleClearMeasurements()"></tim-quantum-stats>
+                                   [quantumChartData]="quantumChartData"
+                                   (clear)="handleClearMeasurements()"
+                                   (measure)="handleMeasure()">
+                </tim-quantum-stats>
             </div>
-
         </div>
     `,
     styleUrls: ["./quantum-circuit.component.scss"],
@@ -134,6 +140,10 @@ export class QuantumCircuitComponent
     qubits: Qubit[] = [];
     qubitOutputs: QubitOutput[] = [];
 
+    simulator!: QuantumCircuitSimulator;
+
+    quantumChartData!: QuantumChartData;
+
     circuitStyleOptions: CircuitStyleOptions = {
         baseSize: 60,
         gateSize: 40,
@@ -147,7 +157,7 @@ export class QuantumCircuitComponent
         gateBorderRadius: 2,
     };
 
-    board: (Gate | undefined)[][] = [];
+    board: Board = [];
 
     measurements: Measurement[] = [];
 
@@ -172,6 +182,9 @@ export class QuantumCircuitComponent
         } else {
             this.qubits[qubitId].value = 0;
         }
+
+        this.simulator.run();
+        this.quantumChartData = this.simulator.getProbabilities();
     }
 
     /**
@@ -181,6 +194,8 @@ export class QuantumCircuitComponent
     handleGateDrop(gate: GateDrop) {
         const {time, target} = gate;
         this.board[target][time] = {name: gate.name};
+
+        this.simulator.run();
     }
 
     /**
@@ -199,6 +214,8 @@ export class QuantumCircuitComponent
             };
 
             this.board[target1][time1] = undefined;
+
+            this.simulator.run();
         }
     }
 
@@ -208,6 +225,14 @@ export class QuantumCircuitComponent
      */
     handleGateRemove(gate: GatePos) {
         this.board[gate.target][gate.time] = undefined;
+
+        this.simulator.run();
+    }
+
+    handleMeasure() {
+        const measurement = this.simulator.sample();
+
+        this.measurements = [measurement, ...this.measurements];
     }
 
     /**
@@ -252,22 +277,18 @@ export class QuantumCircuitComponent
         }
     }
 
+    initializeSimulator() {
+        this.simulator = new QuantumCircuitSimulator(this.board, this.qubits);
+
+        this.simulator.run();
+
+        this.quantumChartData = this.simulator.getProbabilities();
+    }
+
     /**
      * Compute dimensions for elements.
      */
     ngAfterViewInit() {
-        this.initializeBoard();
-        this.measurements = [
-            {
-                input: "000",
-                output: "000",
-            },
-            {
-                input: "000",
-                output: "011",
-            },
-        ];
-
         // Compute sizes for board cells based on available space and number of cells
         const baseSize =
             this.qcContainer.nativeElement.offsetWidth / (this.nMoments + 4);
@@ -289,6 +310,10 @@ export class QuantumCircuitComponent
 
     ngOnInit(): void {
         super.ngOnInit();
+
+        this.initializeBoard();
+
+        this.initializeSimulator();
     }
 
     getAttributeType() {
