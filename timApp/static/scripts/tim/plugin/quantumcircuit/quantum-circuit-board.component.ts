@@ -18,16 +18,25 @@ import type {
     QubitOutput,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
+/**
+ * Position on circuit board.
+ */
 export interface GatePos {
-    target: number;
     time: number;
+    target: number;
 }
 
+/**
+ * Movement from gate position to another.
+ */
 export interface GateMove {
     from: GatePos;
     to: GatePos;
 }
 
+/**
+ * Gate is dropped on some position on board. Dropped gate is identified by name.
+ */
 export interface GateDrop {
     time: number;
     target: number;
@@ -170,8 +179,10 @@ export interface GateDrop {
     styleUrls: ["./quantum-circuit-board.component.scss"],
 })
 export class QuantumCircuitBoardComponent implements OnInit {
+    // Cell in board that is being dragged over
     dragOverElement?: GatePos;
 
+    // gate that is currently being dragged
     gateBeingDragged: {
         gate: GatePos;
         offset: [number, number];
@@ -210,13 +221,21 @@ export class QuantumCircuitBoardComponent implements OnInit {
         return this.circuitStyleOptions.colors;
     }
 
-    isBeingDragged(i: number, j: number) {
+    /**
+     * Check if given gate is currently being dragged.
+     * @param target gate's qubit
+     * @param time gate's time
+     */
+    isBeingDragged(target: number, time: number) {
         return (
-            this.gateBeingDragged?.gate.target === i &&
-            this.gateBeingDragged.gate.time === j
+            this.gateBeingDragged?.gate.target === target &&
+            this.gateBeingDragged.gate.time === time
         );
     }
 
+    /**
+     * Get needed width for svg element.
+     */
     getWidth() {
         if (this.board.length > 0) {
             return this.board[0].length * this.circuitStyleOptions.baseSize;
@@ -225,6 +244,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
         return 0;
     }
 
+    /**
+     * Get needed height for svg element.
+     */
     getHeight() {
         if (this.board.length > 0) {
             return this.board.length * this.circuitStyleOptions.baseSize;
@@ -232,6 +254,10 @@ export class QuantumCircuitBoardComponent implements OnInit {
         return 0;
     }
 
+    /**
+     * Gets the text for qubit in correct format.
+     * @param qubit qubit to format
+     */
     getQubitText(qubit: Qubit) {
         if (this.circuitStyleOptions.useBraket) {
             return `|${qubit.value}>`;
@@ -241,11 +267,22 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
     ngOnInit(): void {}
 
+    /**
+     * Qubit's value changed.
+     * @param event click on qubit's value
+     * @param id qubit's identifier (row)
+     */
     toggleQubit(event: MouseEvent, id: number) {
         this.qubitChange.emit(id);
     }
 
-    handleDrop(event: DragEvent, i: number, j: number) {
+    /**
+     * Handle drop event on gate on board.
+     * @param event drop on this element
+     * @param target qubit of the cell that drop happened on
+     * @param time time of the cell that drop happened on
+     */
+    handleDrop(event: DragEvent, target: number, time: number) {
         event.preventDefault();
         const gateName = event.dataTransfer?.getData("text/plain");
         if (gateName === undefined) {
@@ -254,33 +291,55 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
         this.dragOverElement = undefined;
         this.gateDrop.emit({
-            target: i,
-            time: j,
+            target: target,
+            time: time,
             name: gateName,
         });
     }
 
-    handleDragOver(event: DragEvent | MouseEvent, i: number, j: number) {
+    /**
+     * Sets the element being dragged over.
+     * @param event event fired when cell is being dragged on
+     * @param target
+     * @param time
+     */
+    handleDragOver(
+        event: DragEvent | MouseEvent,
+        target: number,
+        time: number
+    ) {
         this.dragOverElement = {
-            target: i,
-            time: j,
+            target: target,
+            time: time,
         };
         event.preventDefault();
     }
 
+    /**
+     * Remove drag over status from element after drag leaves it.
+     */
     handleDragLeave() {
         this.dragOverElement = undefined;
     }
 
-    isBeingDraggedOver(i: number, j: number) {
+    /**
+     * Checks if given cell is being dragged over.
+     * @param target cell's qubit
+     * @param time cell's time
+     */
+    isBeingDraggedOver(target: number, time: number) {
         if (!this.dragOverElement) {
             return false;
         }
         return (
-            this.dragOverElement.time === j && this.dragOverElement.target === i
+            this.dragOverElement.time === time &&
+            this.dragOverElement.target === target
         );
     }
 
+    /**
+     * Get the group svg element of the gate that is being dragged dynamically.
+     */
     getActiveGroup(): SVGGElement | null {
         const res =
             this.svgElement.nativeElement.getElementsByClassName("chosen")[0];
@@ -291,7 +350,10 @@ export class QuantumCircuitBoardComponent implements OnInit {
     }
 
     /**
+     * Gets the position of the mouse in svg coordinates.
      * https://www.petercollingridge.co.uk/tutorials/svg/interactive/dragging/
+     * @param x x-coordinate of mouse on page
+     * @param y y-coordinate of mouse on page
      */
     getMousePosition(x: number, y: number): [number, number] | null {
         const CTM = this.svgElement.nativeElement.getScreenCTM();
@@ -301,7 +363,11 @@ export class QuantumCircuitBoardComponent implements OnInit {
         return [(x - CTM.e) / CTM.a, (y - CTM.f) / CTM.d];
     }
 
-    addStartTransform(group: SVGGElement) {
+    /**
+     * Add's initial transform to transform list if needed, so it isn't empty when it's value is needed.
+     * @param group group being transformed
+     */
+    addInitialTransform(group: SVGGElement) {
         // Get all the transforms currently on this element
         const transforms = group.transform.baseVal;
 
@@ -319,6 +385,10 @@ export class QuantumCircuitBoardComponent implements OnInit {
         }
     }
 
+    /**
+     * Gets cursor position on page from either touch device or mouse.
+     * @param event touch or mouse event
+     */
     getCursorPosition(event: MouseEvent | TouchEvent): [number, number] {
         if (event instanceof MouseEvent) {
             return [event.clientX, event.clientY];
@@ -329,7 +399,17 @@ export class QuantumCircuitBoardComponent implements OnInit {
         ];
     }
 
-    handleDragStart(event: MouseEvent | TouchEvent, i: number, j: number) {
+    /**
+     * Initialize dragging of gate.
+     * @param event initial click or touch on a gate
+     * @param target cell's qubit that drag started on
+     * @param time cell's time that drag started on
+     */
+    handleDragStart(
+        event: MouseEvent | TouchEvent,
+        target: number,
+        time: number
+    ) {
         event.preventDefault();
         if (!event.currentTarget) {
             return;
@@ -346,11 +426,11 @@ export class QuantumCircuitBoardComponent implements OnInit {
         const transforms = group.transform.baseVal;
 
         this.gateBeingDragged = {
-            gate: {target: i, time: j},
+            gate: {target: target, time: time},
             offset: offset,
         };
 
-        this.addStartTransform(group);
+        this.addInitialTransform(group);
 
         // Get initial translation amount
         const transform = transforms.getItem(0);
@@ -358,13 +438,17 @@ export class QuantumCircuitBoardComponent implements OnInit {
         this.gateBeingDragged.offset[1] -= transform.matrix.f;
     }
 
+    /**
+     * Update the position of the dragged element to where mouse is.
+     * @param event movement on screen event
+     */
     handleDrag(event: MouseEvent | TouchEvent) {
         event.preventDefault();
 
         const group = this.getActiveGroup();
         if (this.gateBeingDragged && group) {
             // dragged group is added to top of list so reinitialize transform
-            this.addStartTransform(group);
+            this.addInitialTransform(group);
 
             const [cursorX, cursorY] = this.getCursorPosition(event);
             // move the element to where cursor is
@@ -386,6 +470,11 @@ export class QuantumCircuitBoardComponent implements OnInit {
         }
     }
 
+    /**
+     * Find the cell that mouse is on.
+     * @param mouseX the x-coordinate of mouse
+     * @param mouseY the y-coordinate of mouse
+     */
     getColliding(mouseX: number, mouseY: number): GatePos | undefined {
         if (!this.gateBeingDragged) {
             return undefined;
@@ -399,6 +488,8 @@ export class QuantumCircuitBoardComponent implements OnInit {
             return undefined;
         }
 
+        // Iterate over all cell's and check if mouse position is inside that cell
+        // Notice that this is quite slow but there aren't that many cells, so it should be fast enough.
         const gates =
             this.svgElement.nativeElement.getElementsByClassName("gate-drop");
         for (const gate of gates) {
@@ -429,6 +520,12 @@ export class QuantumCircuitBoardComponent implements OnInit {
         return undefined;
     }
 
+    /**
+     * Handle all drag ending actions.
+     * Remove gate that was dragged if it went outside the board
+     * Replace cell that was dropped on with the gate that was dragged
+     * @param event drag ending event
+     */
     handleDragEnd(event: MouseEvent | TouchEvent) {
         event.preventDefault();
         if (!this.gateBeingDragged) {
@@ -461,6 +558,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
             return;
         }
 
+        // Replace cell if cursor is in any
         const colliding = this.getColliding(cursorX, cursorY);
 
         if (colliding) {

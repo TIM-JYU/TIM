@@ -11,6 +11,9 @@ import {
 import type {Measurement} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {ChartData, ChartOptions} from "chart.js";
 
+/**
+ * Turns a list of measurement objects into multiline string format to be added into a textarea.
+ */
 @Pipe({name: "measurementsFormat"})
 export class MeasurementsPipe implements PipeTransform {
     transform(measurements: Measurement[]) {

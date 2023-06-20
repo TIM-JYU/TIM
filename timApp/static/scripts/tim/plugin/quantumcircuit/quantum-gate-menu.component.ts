@@ -60,6 +60,11 @@ export class QuantumGateMenuComponent implements OnInit {
         ];
     }
 
+    /**
+     * Add gate's name to datatransfer so it can be used when drop happens
+     * @param event dragging of a gate starts
+     * @param gate gate being dragged
+     */
     handleDragStart(event: DragEvent, gate: Gate) {
         event.dataTransfer?.setData("text/plain", gate.name);
     }

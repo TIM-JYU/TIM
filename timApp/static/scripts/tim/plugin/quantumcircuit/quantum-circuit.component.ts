@@ -174,11 +174,19 @@ export class QuantumCircuitComponent
         }
     }
 
+    /**
+     * Replaces cell of the board with gate
+     * @param gate gate to put in cell
+     */
     handleGateDrop(gate: GateDrop) {
         const {time, target} = gate;
         this.board[target][time] = {name: gate.name};
     }
 
+    /**
+     * Move gate from one cell to another.
+     * @param gateMove object describing gate movement
+     */
     handleGateMove(gateMove: GateMove) {
         const {
             from: {target: target1, time: time1},
@@ -194,17 +202,24 @@ export class QuantumCircuitComponent
         }
     }
 
+    /**
+     * Removes gate from board.
+     * @param gate gate to remove
+     */
     handleGateRemove(gate: GatePos) {
         this.board[gate.target][gate.time] = undefined;
     }
 
     /**
-     * Deletes done measurements.
+     * Deletes all measurements.
      */
     handleClearMeasurements() {
         this.measurements = [];
     }
 
+    /**
+     * Initializes board, qubits and outputs.
+     */
     initializeBoard() {
         this.board = [];
 
@@ -224,6 +239,7 @@ export class QuantumCircuitComponent
             this.board.push(row);
         }
 
+        // mock data
         this.board[0][0] = {name: "H"};
         this.board[2][3] = {name: "X"};
 
@@ -236,6 +252,9 @@ export class QuantumCircuitComponent
         }
     }
 
+    /**
+     * Compute dimensions for elements.
+     */
     ngAfterViewInit() {
         this.initializeBoard();
         this.measurements = [
@@ -248,6 +267,8 @@ export class QuantumCircuitComponent
                 output: "011",
             },
         ];
+
+        // Compute sizes for board cells based on available space and number of cells
         const baseSize =
             this.qcContainer.nativeElement.offsetWidth / (this.nMoments + 4);
         const gateSize = (2 / 3) * baseSize;
