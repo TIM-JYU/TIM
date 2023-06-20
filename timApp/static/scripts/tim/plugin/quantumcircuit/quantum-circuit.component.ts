@@ -196,6 +196,7 @@ export class QuantumCircuitComponent
         this.board[target][time] = {name: gate.name};
 
         this.simulator.run();
+        this.quantumChartData = this.simulator.getProbabilities();
     }
 
     /**
@@ -216,6 +217,7 @@ export class QuantumCircuitComponent
             this.board[target1][time1] = undefined;
 
             this.simulator.run();
+            this.quantumChartData = this.simulator.getProbabilities();
         }
     }
 
@@ -227,6 +229,7 @@ export class QuantumCircuitComponent
         this.board[gate.target][gate.time] = undefined;
 
         this.simulator.run();
+        this.quantumChartData = this.simulator.getProbabilities();
     }
 
     handleMeasure() {

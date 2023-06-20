@@ -31,7 +31,7 @@ export class MeasurementsPipe implements PipeTransform {
 
 /**
  * Data for the chart.
- * labals are on y-axis and probabilities are on x-axis.
+ * labels are on y-axis and probabilities are on x-axis.
  */
 export interface QuantumChartData {
     labels: string[];
@@ -64,7 +64,10 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
     chartOptions: ChartOptions = {
         indexAxis: "y",
-        scales: {x: {min: 0, max: 100, ticks: {stepSize: 10}}},
+        scales: {
+            x: {min: 0, max: 100, ticks: {stepSize: 10}},
+            y: {ticks: {autoSkip: false}},
+        },
         plugins: {legend: {display: false}},
     };
 

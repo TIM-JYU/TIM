@@ -57,6 +57,15 @@ export class QuantumGateMenuComponent implements OnInit {
             {
                 name: "Y",
             },
+            {
+                name: "Z",
+            },
+            {
+                name: "S",
+            },
+            {
+                name: "T",
+            },
         ];
     }
 
