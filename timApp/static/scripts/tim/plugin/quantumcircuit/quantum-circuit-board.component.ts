@@ -16,7 +16,6 @@ import {
     CircuitStyleOptions,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {
-    Gate,
     Qubit,
     QubitOutput,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
