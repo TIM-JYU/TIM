@@ -22,7 +22,10 @@ import type {
     GateMove,
     GatePos,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
-import {QuantumCircuitBoardComponent} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
+import {
+    InstanceofPipe,
+    QuantumCircuitBoardComponent,
+} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {
     MeasurementsPipe,
@@ -31,11 +34,33 @@ import {
 import {NgChartsModule} from "ng2-charts";
 import {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
 
-export interface Gate {
+export class Gate {
     name: string;
+
+    constructor(name: string) {
+        this.name = name;
+    }
+
+    toString() {
+        return this.name;
+    }
 }
 
-export type Board = (Gate | undefined)[][];
+export class Control {
+    target: number;
+
+    constructor(target: number) {
+        this.target = target;
+    }
+
+    toString() {
+        return "";
+    }
+}
+
+export type Cell = Gate | Control | undefined;
+
+export type Board = Cell[][];
 
 export interface Qubit {
     value: number;
@@ -193,7 +218,7 @@ export class QuantumCircuitComponent
      */
     handleGateDrop(gate: GateDrop) {
         const {time, target} = gate;
-        this.board[target][time] = {name: gate.name};
+        this.board[target][time] = new Gate(gate.name);
 
         this.simulator.run();
         this.quantumChartData = this.simulator.getProbabilities();
@@ -208,11 +233,10 @@ export class QuantumCircuitComponent
             from: {target: target1, time: time1},
             to: {target: target2, time: time2},
         } = gateMove;
-        const name = this.board[target1][time1]?.name;
-        if (name !== undefined) {
-            this.board[target2][time2] = {
-                name: name,
-            };
+        const fromCell = this.board[target1][time1];
+        if (fromCell instanceof Gate) {
+            const name = fromCell.name;
+            this.board[target2][time2] = new Gate(name);
 
             this.board[target1][time1] = undefined;
 
@@ -270,8 +294,9 @@ export class QuantumCircuitComponent
         }
 
         // mock data
-        this.board[0][0] = {name: "H"};
-        this.board[2][3] = {name: "X"};
+        this.board[0][0] = new Gate("H");
+        this.board[2][3] = new Gate("X");
+        this.board[0][3] = new Control(2);
 
         this.qubitOutputs = [];
         for (let i = 0; i < this.nQubits; i++) {
@@ -338,6 +363,7 @@ export class QuantumCircuitComponent
         QuantumCircuitBoardComponent,
         QuantumStatsComponent,
         MeasurementsPipe,
+        InstanceofPipe,
     ],
     exports: [QuantumCircuitComponent],
     imports: [CommonModule, HttpClientModule, NgChartsModule],

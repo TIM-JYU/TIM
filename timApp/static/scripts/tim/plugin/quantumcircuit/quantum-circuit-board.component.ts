@@ -2,7 +2,7 @@
  * Quantum circuit board.
  */
 
-import type {OnInit} from "@angular/core";
+import type {OnInit, PipeTransform} from "@angular/core";
 import {
     Component,
     EventEmitter,
@@ -10,10 +10,13 @@ import {
     Output,
     ViewChild,
     ElementRef,
+    Pipe,
 } from "@angular/core";
 import {
     Board,
     CircuitStyleOptions,
+    Gate,
+    Control,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {
     Qubit,
@@ -43,6 +46,19 @@ export interface GateDrop {
     time: number;
     target: number;
     name: string;
+}
+
+// https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242
+type AbstractType<T> = abstract new (...args: any[]) => T;
+
+@Pipe({
+    name: "instanceof",
+    pure: true,
+})
+export class InstanceofPipe implements PipeTransform {
+    public transform<V, R>(value: V, type: AbstractType<R>): R | undefined {
+        return value instanceof type ? value : undefined;
+    }
 }
 
 @Component({
@@ -117,7 +133,9 @@ export interface GateDrop {
                            [attr.data-time]="j"
                            [attr.data-target]="i"
                            class="gate-drop">
-                            <rect *ngIf="gate && !isBeingDragged(i, j)"
+
+                            <!-- normal gate-->
+                            <rect *ngIf="!isBeingDragged(i, j) && gate|instanceof: Gate"
                                   class="gate"
                                   [class.drag-over-element]="isBeingDraggedOver(i,j)"
                                   [attr.x]="j * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
@@ -126,16 +144,30 @@ export interface GateDrop {
                                   [attr.height]="circuitStyleOptions.gateSize"
                                   [attr.rx]="circuitStyleOptions.gateBorderRadius"
                                   [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                            <text *ngIf="gate && !isBeingDragged(i, j)"
+                            <text *ngIf="!isBeingDragged(i, j) && gate|instanceof: Gate as g"
                                   class="gate-text"
                                   [attr.x]="(j * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
                                   [attr.y]="(i * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
                                   dominant-baseline="middle"
                                   text-anchor="middle"
-                                  [attr.fill]="colors.dark">{{gate.name}}</text>
+                                  [attr.fill]="colors.dark">{{g.name}}</text>
+
+                            <!-- control gate -->
+                            <circle *ngIf="!isBeingDragged(i, j) && gate|instanceof: Control"
+                                    class="gate"
+                                    [class.drag-over-element]="isBeingDraggedOver(i,j)"
+                                    [attr.cx]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                    [attr.cy]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                    [attr.r]="circuitStyleOptions.gateSize/4"
+                                    [attr.fill]="colors.dark" [attr.stroke]="colors.dark"/>
+                            <line *ngIf="!isBeingDragged(i, j) && gate|instanceof: Control as c"
+                                  [attr.stroke]="colors.dark"
+                                  [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                  [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                  [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                  [attr.y2]="c.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                            ></line>
                         </g>
-
-
                     </g>
 
                     <!-- Gate being dragged placed after others so it's on top -->
@@ -159,8 +191,10 @@ export interface GateDrop {
                                 [attr.y]="(gateBeingDragged.gate.target * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
                                 dominant-baseline="middle"
                                 text-anchor="middle"
-                                [attr.fill]="colors.dark">{{board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]?.name}}</text>
+                                [attr.fill]="colors.dark">{{board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]}}</text>
                     </g>
+
+
                 </svg>
             </div>
 
@@ -573,4 +607,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
         this.gateBeingDragged = null;
         this.dragOverElement = undefined;
     }
+
+    protected readonly Gate = Gate;
+    protected readonly Control = Control;
 }

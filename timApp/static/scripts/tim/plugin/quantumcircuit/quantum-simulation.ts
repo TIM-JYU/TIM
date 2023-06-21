@@ -1,8 +1,10 @@
 import type {
     Board,
+    Cell,
     Measurement,
     Qubit,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import {Gate} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 import type {Complex, Matrix} from "mathjs";
 import {
@@ -25,6 +27,11 @@ export class QuantumCircuitSimulator {
     qubits: Qubit[];
     result?: Matrix;
     gateNameToMatrix: Map<string, Matrix> = new Map();
+
+    identityMatrix = matrix([
+        [1, 0],
+        [0, 1],
+    ]);
 
     constructor(board: Board, qubits: Qubit[]) {
         this.board = board;
@@ -61,17 +68,22 @@ export class QuantumCircuitSimulator {
             [0, tValue],
         ]);
 
-        const I = matrix([
-            [1, 0],
-            [0, 1],
-        ]);
         this.gateNameToMatrix.set("H", H);
         this.gateNameToMatrix.set("X", X);
         this.gateNameToMatrix.set("Y", Y);
         this.gateNameToMatrix.set("Z", Z);
         this.gateNameToMatrix.set("S", S);
         this.gateNameToMatrix.set("T", T);
-        this.gateNameToMatrix.set("", I);
+    }
+
+    private getCellMatrix(cell: Cell) {
+        if (cell instanceof Gate) {
+            const firstGateMatrix = this.gateNameToMatrix.get(cell.name);
+            if (firstGateMatrix) {
+                return firstGateMatrix;
+            }
+        }
+        return this.identityMatrix;
     }
 
     /**
@@ -87,34 +99,16 @@ export class QuantumCircuitSimulator {
 
         this.result = input;
 
-        const identityMatrix = matrix([
-            [1, 0],
-            [0, 1],
-        ]);
-
         const colMatrices = [];
 
         for (let colI = 0; colI < this.board[0].length; colI++) {
-            const firstGateName = this.board[0][colI]?.name;
-            let colMatrix = identityMatrix;
-            const firstGateMatrix = this.gateNameToMatrix.get(
-                firstGateName ?? ""
-            );
-            if (firstGateMatrix) {
-                colMatrix = firstGateMatrix;
-            }
+            let colMatrix = this.getCellMatrix(this.board[0][colI]);
+
             for (let rowI = 1; rowI < this.board.length; rowI++) {
-                const gateName = this.board[rowI][colI]?.name;
-                if (gateName === undefined) {
-                    colMatrix = kron(colMatrix, identityMatrix);
-                } else {
-                    const gateMatrix = this.gateNameToMatrix.get(gateName);
-                    if (!gateMatrix) {
-                        console.log("missing matrix for gate", gateName);
-                    } else {
-                        colMatrix = kron(colMatrix, gateMatrix);
-                    }
-                }
+                colMatrix = kron(
+                    colMatrix,
+                    this.getCellMatrix(this.board[rowI][colI])
+                );
             }
             colMatrices.push(colMatrix);
         }
