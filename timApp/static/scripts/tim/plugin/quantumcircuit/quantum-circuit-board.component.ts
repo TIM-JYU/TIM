@@ -49,8 +49,11 @@ export interface GateDrop {
 }
 
 // https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242
-type AbstractType<T> = abstract new (...args: any[]) => T;
+type AbstractType<T> = abstract new (...args: never[]) => T;
 
+/**
+ * Check that type is of correct type.
+ */
 @Pipe({
     name: "instanceof",
     pure: true,
@@ -177,21 +180,30 @@ export class InstanceofPipe implements PipeTransform {
                        [attr.data-time]="gateBeingDragged.gate.time"
                        [attr.data-target]="gateBeingDragged.gate.target"
                        class="gate-drop chosen">
-                        <rect
+                        <!-- normal gate-->
+                        <rect *ngIf="board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]|instanceof: Gate"
+                              class="gate"
+                              [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
+                              [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
+                              [attr.width]="circuitStyleOptions.gateSize"
+                              [attr.height]="circuitStyleOptions.gateSize"
+                              [attr.rx]="circuitStyleOptions.gateBorderRadius"
+                              [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
+                        <text *ngIf="board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]|instanceof: Gate"
+                              class="gate-text"
+                              [attr.x]="(gateBeingDragged.gate.time * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
+                              [attr.y]="(gateBeingDragged.gate.target * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
+                              dominant-baseline="middle"
+                              text-anchor="middle"
+                              [attr.fill]="colors.dark">{{board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]}}</text>
+
+                        <!-- control gate -->
+                        <circle *ngIf="board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]|instanceof: Control"
                                 class="gate"
-                                [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                                [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                                [attr.width]="circuitStyleOptions.gateSize"
-                                [attr.height]="circuitStyleOptions.gateSize"
-                                [attr.rx]="circuitStyleOptions.gateBorderRadius"
-                                [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                        <text
-                                class="gate-text"
-                                [attr.x]="(gateBeingDragged.gate.time * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                                [attr.y]="(gateBeingDragged.gate.target * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                                dominant-baseline="middle"
-                                text-anchor="middle"
-                                [attr.fill]="colors.dark">{{board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]}}</text>
+                                [attr.cx]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                [attr.cy]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                [attr.r]="circuitStyleOptions.gateSize/4"
+                                [attr.fill]="colors.dark" [attr.stroke]="colors.dark"/>
                     </g>
 
 
@@ -519,10 +531,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
         if (!group) {
             return undefined;
         }
-        const rect = group.children.item(0);
-        if (!rect || !(rect instanceof SVGRectElement)) {
-            return undefined;
-        }
 
         // Iterate over all cell's and check if mouse position is inside that cell
         // Notice that this is quite slow but there aren't that many cells, so it should be fast enough.
@@ -570,11 +578,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
         }
         const group = this.getActiveGroup();
         if (!group) {
-            this.gateBeingDragged = null;
-            return;
-        }
-        const rect = group.children.item(0);
-        if (!rect || !(rect instanceof SVGRectElement)) {
             this.gateBeingDragged = null;
             return;
         }
