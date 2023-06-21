@@ -77,6 +77,7 @@ import type {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
 } from "tim/document/viewutils";
+import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
 
 markAsUsed(interceptor);
 
@@ -245,6 +246,7 @@ export class ViewCtrl implements IController {
     private jsRunners = new Map<string, IJsRunner>();
     private velpCanvases = new Map<number, DrawCanvasComponent>();
     private parMenuEntries = new Map<string, ICtrlWithMenuFunctionEntry>();
+    private reviewCanvases = new Map<string, ReviewCanvasComponent>();
 
     // TODO: Possibly redundant since same thing can be achieved by just using the array version
     private timComponents: Map<string, ITimComponent> = new Map();
@@ -857,6 +859,20 @@ export class ViewCtrl implements IController {
 
     public removeVelpCanvas(id: number) {
         this.velpCanvases.delete(id);
+    }
+
+    public addReviewCanvas(rc: ReviewCanvasComponent) {
+        const taskId = rc.getTaskId();
+        if (taskId) {
+            const name = taskId.docTaskField();
+            this.reviewCanvases.set(name, rc);
+            console.log("added", rc);
+        }
+    }
+
+    public getReviewCanvas(taskId: string) {
+        taskId = this.normalizeTaskId(taskId);
+        return this.reviewCanvases.get(taskId);
     }
 
     /**

@@ -63,7 +63,6 @@ import {
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import html2canvas from "html2canvas";
-import {slugify} from "tim/util/slugify";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -772,7 +771,7 @@ const CsMarkupOptional = t.partial({
     uploadAcceptMaxSize: t.number,
     showAlwaysSavedText: t.boolean,
     startLineNumber: t.number,
-    mdSaveButton: t.string,
+    targetCanvas: t.string,
 });
 
 const CsMarkupDefaults = t.type({
@@ -824,7 +823,6 @@ const CsMarkupDefaults = t.type({
     norunmenu: withDefault(t.boolean, false),
     noargs: withDefault(t.boolean, false),
     noclose: withDefault(t.boolean, false),
-    mdSaveButton: withDefault(t.string, ""),
 });
 
 const CsMarkup = t.intersection([
@@ -2674,11 +2672,14 @@ ${fhtml}
     }
 
     get mdSaveButton() {
+        if (!this.markup.targetCanvas) {
+            return undefined;
+        }
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty !== "md") {
             return undefined;
         }
-        return this.markup.mdSaveButton;
+        return $localize`Copy image to task ${this.markup.targetCanvas}`;
     }
 
     async runCodeCommon(nosave: boolean, _extraMarkUp?: IExtraMarkup) {
@@ -3684,7 +3685,18 @@ ${fhtml}
 
     async exportMDAsImg() {
         if (!this.mdHtmlDiv) {
-            console.log("No MD!");
+            return;
+        }
+        this.runError = false;
+        if (!this.markup.targetCanvas) {
+            this.runError = true;
+            this.error = $localize`No target set`;
+            return;
+        }
+        const rc = this.vctrl.getReviewCanvas(this.markup.targetCanvas);
+        if (!rc) {
+            this.runError = true;
+            this.error = $localize`Couldn't find target ${this.markup.targetCanvas}`;
             return;
         }
 
@@ -3725,31 +3737,22 @@ ${fhtml}
         const blob = await new Promise<Blob | null>((r) =>
             canvas.toBlob(r, "image/png")
         );
-
         if (!blob) {
-            console.log("No blob!");
+            this.runError = true;
+            this.error = $localize`Unable to automatically create image`;
             this.exportingMD = false;
             return;
         }
-
-        const url = URL.createObjectURL(blob);
-        // Open save dialog
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = slugify(
-            `md_${
-                this.getTaskId()?.docTaskField() ?? "task"
-            }_${new Date().toISOString()}.png`
-        );
-        document.body.appendChild(a);
-        a.click();
-        // Remove after click
-        document.body.removeChild(a);
-
+        const taskId = this.pluginMeta.getTaskId();
+        const file = new File([blob], taskId ? taskId.name : "matheditor");
+        rc.uploadFiles([file]);
+        this.result = $localize`Image sent to task ${this.markup.targetCanvas}`;
         this.exportingMD = false;
     }
 
     async showMD() {
+        this.runError = false;
+        this.result = "";
         if (!this.usercode) {
             if (this.mdHtml) {
                 this.mdHtml = "";
@@ -3758,7 +3761,8 @@ ${fhtml}
         }
         const taskId = this.pluginMeta.getTaskId();
         if (!taskId?.docId) {
-            console.log("taskId missing");
+            this.runError = true;
+            this.error = $localize`Plugin is missing task id`;
             return;
         }
         if (this.precode == undefined) {
@@ -3790,7 +3794,8 @@ ${fhtml}
             await ParCompiler.processAllMathDelayed(this.preview, 0);
         } else {
             const data = r.result;
-            alert("Failed to show preview: " + data.error.error);
+            this.runError = true;
+            this.error = $localize`Failed to show preview: ${data.error.error}`;
         }
     }
 
