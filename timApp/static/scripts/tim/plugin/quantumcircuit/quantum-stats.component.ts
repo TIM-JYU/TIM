@@ -68,6 +68,9 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
     chartOptions: ChartOptions = {
         indexAxis: "y",
+        scales: {
+            y: {ticks: {autoSkip: false}},
+        },
         plugins: {legend: {display: false}},
     };
 
