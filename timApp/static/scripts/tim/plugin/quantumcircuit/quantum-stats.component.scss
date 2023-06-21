@@ -7,14 +7,16 @@
 
 }
 
-.chart {
-  width: 100%;
-}
-
 .buttons {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.25em
+}
+
+.output-print {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 
@@ -23,12 +25,5 @@
     flex-direction: row;
   }
 
-  .chart {
-    width: 50%;
-  }
-
-  .measurements {
-    width: 30%;
-  }
 }
 

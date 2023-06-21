@@ -5,16 +5,19 @@ import type {
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 import type {Complex, Matrix} from "mathjs";
-import {divide} from "mathjs";
-import {pi} from "mathjs";
-import {e} from "mathjs";
-import {pow} from "mathjs";
-import {dotPow} from "mathjs";
-import {abs} from "mathjs";
-import {transpose} from "mathjs";
-import {complex} from "mathjs";
-import {multiply} from "mathjs";
-import {kron, matrix} from "mathjs";
+import {
+    divide,
+    pi,
+    e,
+    pow,
+    dotPow,
+    abs,
+    transpose,
+    complex,
+    multiply,
+    kron,
+    matrix,
+} from "mathjs";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 
 export class QuantumCircuitSimulator {
@@ -71,6 +74,9 @@ export class QuantumCircuitSimulator {
         this.gateNameToMatrix.set("", I);
     }
 
+    /**
+     * Run simulation on current circuit and qubits.
+     */
     run() {
         const inputQubits = this.qubits.map((q) => this.bitToVector(q.value));
 
@@ -87,6 +93,7 @@ export class QuantumCircuitSimulator {
         ]);
 
         const colMatrices = [];
+
         for (let colI = 0; colI < this.board[0].length; colI++) {
             const firstGateName = this.board[0][colI]?.name;
             let colMatrix = identityMatrix;
@@ -122,21 +129,25 @@ export class QuantumCircuitSimulator {
         ) as Matrix;
     }
 
-    getNumber(index: number | number[]) {
+    private getNumber(index: number | number[]) {
         if (index instanceof Array) {
             return index[0];
         }
         return index;
     }
 
-    bitToVector(value: number) {
+    /**
+     * Transforms bit into corresponding qubit state.
+     * @param value bit value either 0 or 1
+     */
+    private bitToVector(value: number) {
         if (value === 0) {
             return matrix([1, 0]);
         }
         return matrix([0, 1]);
     }
 
-    indexToBitstring(index: number) {
+    private indexToBitstring(index: number) {
         return index.toString(2).padStart(this.qubits.length, "0");
     }
 

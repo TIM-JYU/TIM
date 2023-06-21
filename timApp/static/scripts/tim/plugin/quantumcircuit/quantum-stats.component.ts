@@ -46,12 +46,16 @@ export interface QuantumChartData {
                 <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions" [data]="chartData"></canvas>
             </div>
 
-            <div class="buttons">
-                <button class="timButton" (click)="handleMeasure()">Mittaa</button>
-                <button class="timButton" (click)="handleClear()">Tyhjennä</button>
+            <div class="output-print">
+                <textarea readonly rows="5">{{measurements | measurementsFormat}}</textarea>
+
+                <div class="buttons">
+                    <button class="timButton" (click)="handleMeasure()">Mittaa</button>
+                    <button class="timButton" (click)="handleClear()">Tyhjennä</button>
+                </div>
+
             </div>
 
-            <textarea readonly rows="5">{{measurements | measurementsFormat}}</textarea>
         </div>
     `,
     styleUrls: ["./quantum-stats.component.scss"],
@@ -64,10 +68,6 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
     chartOptions: ChartOptions = {
         indexAxis: "y",
-        scales: {
-            x: {min: 0, max: 100, ticks: {stepSize: 10}},
-            y: {ticks: {autoSkip: false}},
-        },
         plugins: {legend: {display: false}},
     };
 
