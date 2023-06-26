@@ -261,7 +261,7 @@ export class QuantumCircuitComponent
     }
 
     /**
-     * Move gate from one cell to another.
+     * Move gate or control from one cell to another.
      * @param gateMove object describing gate movement
      */
     handleGateMove(gateMove: GateMove) {
@@ -278,25 +278,36 @@ export class QuantumCircuitComponent
 
             const controlling = this.getControlling(gateMove.from);
             if (controlling) {
-                this.board[controlling.target][controlling.time] = undefined;
+                this.board[controlling.target][controlling.time] = new Control(
+                    target2
+                );
             }
-
-            this.simulator.run();
-            this.quantumChartData = this.simulator.getProbabilities();
         } else if (fromCell instanceof Control) {
             if (time1 === time2) {
                 this.board[target2][time2] = new Control(fromCell.target);
                 this.board[target1][time1] = undefined;
             }
         }
+        this.simulator.run();
+        this.quantumChartData = this.simulator.getProbabilities();
     }
 
     /**
-     * Removes gate from board.
+     * Removes gate from board and controls associated to it.
      * @param gate gate to remove
      */
     handleGateRemove(gate: GatePos) {
         this.board[gate.target][gate.time] = undefined;
+
+        for (let i = 0; i < this.board.length; i++) {
+            if (i === gate.target) {
+                continue;
+            }
+            const cell = this.board[i][gate.time];
+            if (cell instanceof Control && cell.target === gate.target) {
+                this.board[i][gate.time] = undefined;
+            }
+        }
 
         this.simulator.run();
         this.quantumChartData = this.simulator.getProbabilities();
