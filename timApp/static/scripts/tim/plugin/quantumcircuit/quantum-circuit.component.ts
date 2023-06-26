@@ -68,7 +68,6 @@ export interface Qubit {
 }
 
 export interface QubitOutput {
-    text: string;
     value: number;
 }
 
@@ -210,6 +209,7 @@ export class QuantumCircuitComponent
 
         this.simulator.run();
         this.quantumChartData = this.simulator.getProbabilities();
+        this.setQubitOutputs();
     }
 
     findPossibleTargetForControl(time: number, target: number) {
@@ -246,6 +246,7 @@ export class QuantumCircuitComponent
 
         this.simulator.run();
         this.quantumChartData = this.simulator.getProbabilities();
+        this.setQubitOutputs();
     }
 
     getControlling(gate: GatePos): GatePos | undefined {
@@ -290,6 +291,7 @@ export class QuantumCircuitComponent
         }
         this.simulator.run();
         this.quantumChartData = this.simulator.getProbabilities();
+        this.setQubitOutputs();
     }
 
     /**
@@ -311,6 +313,7 @@ export class QuantumCircuitComponent
 
         this.simulator.run();
         this.quantumChartData = this.simulator.getProbabilities();
+        this.setQubitOutputs();
     }
 
     handleMeasure() {
@@ -358,18 +361,31 @@ export class QuantumCircuitComponent
         this.qubitOutputs = [];
         for (let i = 0; i < this.nQubits; i++) {
             this.qubitOutputs.push({
-                text: `out ${i}`,
                 value: 0,
             });
         }
+    }
+
+    /**
+     * Set qubit output value based on random sample from output's distribution.
+     */
+    setQubitOutputs() {
+        this.qubitOutputs = [];
+        const vals = this.simulator.sample();
+        if (!vals) {
+            return;
+        }
+        this.qubitOutputs = Array.from(vals.output).map((bit) => ({
+            value: parseInt(bit, 10),
+        }));
     }
 
     initializeSimulator() {
         this.simulator = new QuantumCircuitSimulator(this.board, this.qubits);
 
         this.simulator.run();
-
         this.quantumChartData = this.simulator.getProbabilities();
+        this.setQubitOutputs();
     }
 
     /**
