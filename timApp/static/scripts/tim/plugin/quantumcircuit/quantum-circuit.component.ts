@@ -279,9 +279,13 @@ export class QuantumCircuitComponent
 
             const controlling = this.getControlling(gateMove.from);
             if (controlling) {
-                this.board[controlling.target][controlling.time] = new Control(
-                    target2
-                );
+                if (time1 === time2) {
+                    this.board[controlling.target][controlling.time] =
+                        new Control(target2);
+                } else {
+                    this.board[controlling.target][controlling.time] =
+                        undefined;
+                }
             }
         } else if (fromCell instanceof Control) {
             if (time1 === time2) {

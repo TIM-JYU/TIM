@@ -43,11 +43,28 @@ export interface QuantumChartData {
     template: `
         <div class="stats-container">
             <div class="chart">
-                <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions" [data]="chartData"></canvas>
+                <div class="chart-inner">
+                    <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions" [data]="chartData"></canvas>
+                </div>
             </div>
 
-            <div class="output-print">
-                <textarea readonly rows="5">{{measurements | measurementsFormat}}</textarea>
+            <div class="output-container">
+                <div class="output-print">
+                    <table class="output-table">
+                        <thead>
+                        <tr>
+                            <th>Input</th>
+                            <th>Ouput</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr *ngFor="let measurement of measurements">
+                            <td>{{measurement.input}}</td>
+                            <td>{{measurement.output}}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <div class="buttons">
                     <button class="timButton" (click)="handleMeasure()">Mittaa</button>
@@ -70,7 +87,9 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
         indexAxis: "y",
         scales: {
             y: {ticks: {autoSkip: false}},
+            x: {ticks: {stepSize: 10}, min: 0, max: 100},
         },
+        maintainAspectRatio: false,
         plugins: {legend: {display: false}},
     };
 
@@ -113,7 +132,6 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
             datasets: [
                 {
                     data: this.quantumChartData.probabilities,
-                    backgroundColor: "#004494",
                 },
             ],
         };
