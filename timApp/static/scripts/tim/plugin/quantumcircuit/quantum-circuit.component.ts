@@ -212,13 +212,37 @@ export class QuantumCircuitComponent
         this.quantumChartData = this.simulator.getProbabilities();
     }
 
+    findPossibleTargetForControl(time: number, target: number) {
+        for (let i = 0; i < this.board.length; i++) {
+            if (i === target) {
+                continue;
+            }
+            const cell = this.board[i][time];
+            if (cell instanceof Gate) {
+                return i;
+            }
+        }
+        return undefined;
+    }
+
     /**
      * Replaces cell of the board with gate
      * @param gate gate to put in cell
      */
     handleGateDrop(gate: GateDrop) {
         const {time, target} = gate;
-        this.board[target][time] = new Gate(gate.name);
+
+        if (gate.name === "control") {
+            const controlTarget = this.findPossibleTargetForControl(
+                time,
+                target
+            );
+            if (controlTarget !== undefined) {
+                this.board[target][time] = new Control(controlTarget);
+            }
+        } else {
+            this.board[target][time] = new Gate(gate.name);
+        }
 
         this.simulator.run();
         this.quantumChartData = this.simulator.getProbabilities();
@@ -316,9 +340,9 @@ export class QuantumCircuitComponent
         }
 
         // mock data
-        this.board[0][0] = new Gate("H");
-        this.board[2][3] = new Gate("X");
-        this.board[0][3] = new Control(2);
+        this.board[2][0] = new Gate("H");
+        this.board[2][1] = new Control(0);
+        this.board[0][1] = new Gate("X");
 
         this.qubitOutputs = [];
         for (let i = 0; i < this.nQubits; i++) {

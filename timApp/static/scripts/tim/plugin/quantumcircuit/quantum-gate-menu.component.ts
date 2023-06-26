@@ -16,7 +16,7 @@ interface Gate {
 
             <div class="gate-list">
                 <div class="svg-container" *ngFor="let gate of gates" draggable="true"
-                     (dragstart)="handleDragStart($event, gate)">
+                     (dragstart)="handleDragStart($event, gate.name)">
                     <svg [attr.width]="circuitStyleOptions.gateSize" [attr.height]="circuitStyleOptions.gateSize">
                         <rect [attr.x]="0" [attr.y]="0" [attr.width]="circuitStyleOptions.gateSize"
                               [attr.height]="circuitStyleOptions.gateSize" [attr.fill]="colors.light"
@@ -25,6 +25,15 @@ interface Gate {
                         <text x="50%" y="50%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark"
                               dominant-baseline="middle"
                               text-anchor="middle">{{gate.name}}</text>
+                    </svg>
+                </div>
+                
+                <div class="svg-container" draggable="true"
+                     (dragstart)="handleDragStart($event, 'control')">
+                    <svg [attr.width]="circuitStyleOptions.gateSize" [attr.height]="circuitStyleOptions.gateSize">
+                        <circle [attr.cx]="circuitStyleOptions.gateSize/2" 
+                                [attr.cy]="circuitStyleOptions.gateSize/2" 
+                                [attr.r]="circuitStyleOptions.gateSize/4"/>
                     </svg>
                 </div>
             </div>
@@ -74,7 +83,7 @@ export class QuantumGateMenuComponent implements OnInit {
      * @param event dragging of a gate starts
      * @param gate gate being dragged
      */
-    handleDragStart(event: DragEvent, gate: Gate) {
-        event.dataTransfer?.setData("text/plain", gate.name);
+    handleDragStart(event: DragEvent, gate: string) {
+        event.dataTransfer?.setData("text/plain", gate);
     }
 }

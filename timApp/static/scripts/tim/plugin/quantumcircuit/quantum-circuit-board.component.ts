@@ -168,7 +168,7 @@ export class InstanceofPipe implements PipeTransform {
                                   [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                   [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                   [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                  [attr.y2]="c.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                  [attr.y2]="c.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2 + circuitStyleOptions.gateSize / 2"
                             ></line>
                         </g>
                     </g>
@@ -307,8 +307,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
      * @param qubit qubit to format
      */
     getQubitText(qubit: Qubit) {
+        const rightAngleChar = "\u27E9";
         if (this.circuitStyleOptions.useBraket) {
-            return `|${qubit.value}>`;
+            return `|${qubit.value}${rightAngleChar}`;
         }
         return qubit.value.toString();
     }
