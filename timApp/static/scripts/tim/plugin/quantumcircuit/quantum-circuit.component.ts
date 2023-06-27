@@ -142,6 +142,7 @@ export interface CircuitStyleOptions {
             <div class="stats">
                 <tim-quantum-stats [measurements]="measurements"
                                    [quantumChartData]="quantumChartData"
+                                   [nQubits]="nQubits"
                                    (clear)="handleClearMeasurements()"
                                    (measure)="handleMeasure()">
                 </tim-quantum-stats>

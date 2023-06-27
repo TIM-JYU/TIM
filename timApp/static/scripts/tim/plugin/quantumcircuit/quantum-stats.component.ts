@@ -43,22 +43,22 @@ export interface QuantumChartData {
     template: `
         <div class="stats-container">
             <div class="chart">
-                <div class="chart-inner">
+                <div class="chart-inner" #chartInnerElement>
                     <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions" [data]="chartData"></canvas>
                 </div>
             </div>
 
             <div class="output-container">
                 <div class="output-print">
-                    <table class="output-table">
+                    <table #outputTable class="output-table">
                         <thead>
                         <tr>
                             <th>Input</th>
-                            <th>Ouput</th>
+                            <th>Output</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr *ngFor="let measurement of measurements">
+                        <tr *ngFor="let measurement of measurements; even as isEven; first as isFirst" [class.even-row]="isEven">
                             <td>{{measurement.input}}</td>
                             <td>{{measurement.output}}</td>
                         </tr>
@@ -72,7 +72,6 @@ export interface QuantumChartData {
                 </div>
 
             </div>
-
         </div>
     `,
     styleUrls: ["./quantum-stats.component.scss"],
@@ -80,6 +79,12 @@ export interface QuantumChartData {
 export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     @ViewChild("chartCanvas")
     chartCanvas!: ElementRef<HTMLCanvasElement>;
+
+    @ViewChild("chartInnerElement")
+    chartInner!: ElementRef<HTMLDivElement>;
+
+    @ViewChild("outputTable")
+    table!: ElementRef<HTMLTableElement>;
 
     chartData!: ChartData<"bar", number[]>;
 
@@ -90,7 +95,9 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
             x: {ticks: {stepSize: 10}, min: 0, max: 100},
         },
         maintainAspectRatio: false,
+        responsive: true,
         plugins: {legend: {display: false}},
+        backgroundColor: "#004494",
     };
 
     @Input()
@@ -98,6 +105,9 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
     @Input()
     quantumChartData!: QuantumChartData;
+
+    @Input()
+    nQubits!: number;
 
     @Output()
     clear = new EventEmitter<void>();
@@ -139,6 +149,15 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
     ngAfterViewInit(): void {
         this.updateChart();
+        // leave room for both columns. About 10px is needed for each character.
+        const w = this.nQubits * 10 * 2;
+        this.table.nativeElement.style.width = `${w}px`;
+
+        if (this.chartInner) {
+            // set height so there's 10px of space for each row in chart
+            const nRows = 2 ** this.nQubits;
+            this.chartInner.nativeElement.style.height = `${nRows * 10}px`;
+        }
     }
 
     /**

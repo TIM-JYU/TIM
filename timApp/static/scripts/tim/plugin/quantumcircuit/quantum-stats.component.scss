@@ -19,7 +19,9 @@
 .buttons {
   display: flex;
   flex-direction: row;
-  gap: 0.25em
+  justify-content: flex-end;
+  gap: 0.25em;
+  width: 100%;
 }
 
 .output-container {
@@ -33,13 +35,21 @@
   height: 200px;
   overflow-y: scroll;
   padding: 0.25em;
+  width: 100%;
+}
 
+tr {
+  background-color: #eeeeee;
+}
+
+.even-row {
+  background-color: white;
 }
 
 .output-table {
-  height: 100px;
   overflow: scroll;
   border: 1px solid black;
+  width: 100%;
 }
 
 
@@ -48,14 +58,8 @@
     flex-direction: row;
   }
 
-  .chart {
-    border: 1px solid black;
-    overflow-y: scroll;
-    max-height: 40vh;
-  }
-
-  .chart-inner {
-    height: 100vh;
+  .output-container {
+    margin: 0.5em;
   }
 
 }
