@@ -257,7 +257,7 @@ export class QuantumCircuitComponent
     }
 
     /**
-     * Replaces cell of the board with gate
+     * Replaces cell of the board with gate.
      * @param gate gate to put in cell
      */
     handleGateDrop(gate: GateDrop) {
@@ -278,16 +278,21 @@ export class QuantumCircuitComponent
         this.runSimulation();
     }
 
-    getControlling(gate: GatePos): GatePos | undefined {
+    /**
+     * Get controls for gate
+     * @param gate position of gate
+     */
+    getControlling(gate: GatePos): GatePos[] {
+        const controls = [];
         for (let i = 0; i < this.board.length; i++) {
             if (i !== gate.target) {
                 const c = this.board[i][gate.time];
                 if (c instanceof Control && c.target === gate.target) {
-                    return {target: i, time: gate.time};
+                    controls.push({target: i, time: gate.time});
                 }
             }
         }
-        return undefined;
+        return controls;
     }
 
     /**
@@ -307,13 +312,19 @@ export class QuantumCircuitComponent
             this.board[target1][time1] = undefined;
 
             const controlling = this.getControlling(gateMove.from);
-            if (controlling) {
+            if (controlling.length > 0) {
+                // time didn't change so wires can be reconnected to their target
                 if (time1 === time2) {
-                    this.board[controlling.target][controlling.time] =
-                        new Control(target2);
+                    for (const control of controlling) {
+                        this.board[control.target][control.time] = new Control(
+                            target2
+                        );
+                    }
                 } else {
-                    this.board[controlling.target][controlling.time] =
-                        undefined;
+                    // time changed so remove all connected wires
+                    for (const control of controlling) {
+                        this.board[control.target][control.time] = undefined;
+                    }
                 }
             }
         } else if (fromCell instanceof Control) {

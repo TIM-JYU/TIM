@@ -129,7 +129,10 @@ export class QuantumCircuitSimulator {
             const cell = this.board[i][colI];
             if (cell instanceof Control) {
                 const controlled = cell.target;
-                gateControls[controlled].push(i);
+                // one control only
+                if (gateControls[controlled].length < 1) {
+                    gateControls[controlled].push(i);
+                }
             }
         }
         return gateControls;
