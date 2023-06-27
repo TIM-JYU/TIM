@@ -25,6 +25,7 @@ import type {
 import {
     InstanceofPipe,
     QuantumCircuitBoardComponent,
+    RangePipe,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {
@@ -33,34 +34,12 @@ import {
 } from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {NgChartsModule} from "ng2-charts";
 import {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
-
-export class Gate {
-    name: string;
-
-    constructor(name: string) {
-        this.name = name;
-    }
-
-    toString() {
-        return this.name;
-    }
-}
-
-export class Control {
-    target: number;
-
-    constructor(target: number) {
-        this.target = target;
-    }
-
-    toString() {
-        return "";
-    }
-}
-
-export type Cell = Gate | Control | undefined;
-
-export type Board = Cell[][];
+import {
+    Control,
+    Gate,
+    QuantumBoard,
+} from "tim/plugin/quantumcircuit/quantum-board";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 export interface Qubit {
     value: number;
@@ -184,7 +163,7 @@ export class QuantumCircuitComponent
         gateBorderRadius: 2,
     };
 
-    board: Board = [];
+    board!: QuantumBoard;
 
     measurements: Measurement[] = [];
 
@@ -248,7 +227,7 @@ export class QuantumCircuitComponent
             if (i === target) {
                 continue;
             }
-            const cell = this.board[i][time];
+            const cell = this.board.get(i, time);
             if (cell instanceof Gate) {
                 return i;
             }
@@ -269,10 +248,10 @@ export class QuantumCircuitComponent
                 target
             );
             if (controlTarget !== undefined) {
-                this.board[target][time] = new Control(controlTarget);
+                this.board.set(target, time, new Control(controlTarget));
             }
         } else {
-            this.board[target][time] = new Gate(gate.name);
+            this.board.set(target, time, new Gate(gate.name));
         }
 
         this.runSimulation();
@@ -286,7 +265,7 @@ export class QuantumCircuitComponent
         const controls = [];
         for (let i = 0; i < this.board.length; i++) {
             if (i !== gate.target) {
-                const c = this.board[i][gate.time];
+                const c = this.board.get(i, gate.time);
                 if (c instanceof Control && c.target === gate.target) {
                     controls.push({target: i, time: gate.time});
                 }
@@ -304,33 +283,34 @@ export class QuantumCircuitComponent
             from: {target: target1, time: time1},
             to: {target: target2, time: time2},
         } = gateMove;
-        const fromCell = this.board[target1][time1];
+        const fromCell = this.board.get(target1, time1);
         if (fromCell instanceof Gate) {
             const name = fromCell.name;
-            this.board[target2][time2] = new Gate(name);
-
-            this.board[target1][time1] = undefined;
+            this.board.set(target2, time2, new Gate(name));
+            this.board.set(target1, time1, undefined);
 
             const controlling = this.getControlling(gateMove.from);
             if (controlling.length > 0) {
                 // time didn't change so wires can be reconnected to their target
                 if (time1 === time2) {
                     for (const control of controlling) {
-                        this.board[control.target][control.time] = new Control(
-                            target2
+                        this.board.set(
+                            control.target,
+                            control.time,
+                            new Control(target2)
                         );
                     }
                 } else {
                     // time changed so remove all connected wires
                     for (const control of controlling) {
-                        this.board[control.target][control.time] = undefined;
+                        this.board.set(control.target, control.time, undefined);
                     }
                 }
             }
         } else if (fromCell instanceof Control) {
             if (time1 === time2) {
-                this.board[target2][time2] = new Control(fromCell.target);
-                this.board[target1][time1] = undefined;
+                this.board.set(target2, time2, new Control(fromCell.target));
+                this.board.set(target1, time1, undefined);
             }
         }
         this.runSimulation();
@@ -341,15 +321,15 @@ export class QuantumCircuitComponent
      * @param gate gate to remove
      */
     handleGateRemove(gate: GatePos) {
-        this.board[gate.target][gate.time] = undefined;
+        this.board.set(gate.target, gate.time, undefined);
 
         for (let i = 0; i < this.board.length; i++) {
             if (i === gate.target) {
                 continue;
             }
-            const cell = this.board[i][gate.time];
+            const cell = this.board.get(i, gate.time);
             if (cell instanceof Control && cell.target === gate.target) {
-                this.board[i][gate.time] = undefined;
+                this.board.set(i, gate.time, undefined);
             }
         }
 
@@ -375,8 +355,6 @@ export class QuantumCircuitComponent
      * Initializes board, qubits and outputs.
      */
     initializeBoard() {
-        this.board = [];
-
         this.qubits = [];
         for (let i = 0; i < this.nQubits; i++) {
             this.qubits.push({
@@ -384,19 +362,10 @@ export class QuantumCircuitComponent
                 value: 0,
             });
         }
-
-        for (let i = 0; i < this.nQubits; i++) {
-            const row: (Gate | undefined)[] = [];
-            for (let j = 0; j < this.nMoments; j++) {
-                row.push(undefined);
-            }
-            this.board.push(row);
-        }
-
-        // mock data
-        this.board[2][0] = new Gate("H");
-        this.board[2][1] = new Control(0);
-        this.board[0][1] = new Gate("X");
+        this.board = new QuantumBoard(this.nQubits, this.nMoments);
+        this.board.set(2, 0, new Gate("H"));
+        this.board.set(2, 1, new Control(0));
+        this.board.set(0, 1, new Gate("X"));
 
         this.qubitOutputs = [];
         for (let i = 0; i < this.nQubits; i++) {
@@ -475,9 +444,10 @@ export class QuantumCircuitComponent
         QuantumStatsComponent,
         MeasurementsPipe,
         InstanceofPipe,
+        RangePipe,
     ],
     exports: [QuantumCircuitComponent],
-    imports: [CommonModule, HttpClientModule, NgChartsModule],
+    imports: [CommonModule, HttpClientModule, NgChartsModule, TimUtilityModule],
 })
 export class QuantumCircuitModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

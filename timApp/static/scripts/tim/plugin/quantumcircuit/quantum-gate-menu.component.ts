@@ -27,15 +27,16 @@ interface Gate {
                               text-anchor="middle">{{gate.name}}</text>
                     </svg>
                 </div>
-                
+
                 <div class="svg-container" draggable="true"
                      (dragstart)="handleDragStart($event, 'control')">
                     <svg [attr.width]="circuitStyleOptions.gateSize" [attr.height]="circuitStyleOptions.gateSize">
-                        <circle [attr.cx]="circuitStyleOptions.gateSize/2" 
-                                [attr.cy]="circuitStyleOptions.gateSize/2" 
+                        <circle [attr.cx]="circuitStyleOptions.gateSize/2"
+                                [attr.cy]="circuitStyleOptions.gateSize/2"
                                 [attr.r]="circuitStyleOptions.gateSize/4"/>
                     </svg>
                 </div>
+
             </div>
 
         </div>

@@ -1,12 +1,6 @@
 import type {
-    Board,
-    Cell,
     Measurement,
     Qubit,
-} from "tim/plugin/quantumcircuit/quantum-circuit.component";
-import {
-    Control,
-    Gate,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 import type {Complex, Matrix} from "mathjs";
@@ -26,9 +20,11 @@ import {
     index,
 } from "mathjs";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
+import type {Cell, QuantumBoard} from "tim/plugin/quantumcircuit/quantum-board";
+import {Control, Gate} from "tim/plugin/quantumcircuit/quantum-board";
 
 export class QuantumCircuitSimulator {
-    board: Board;
+    board: QuantumBoard;
     qubits: Qubit[];
     result?: Matrix;
     gateNameToMatrix: Map<string, Matrix> = new Map();
@@ -45,7 +41,7 @@ export class QuantumCircuitSimulator {
         [0, 0, 0, 1],
     ]);
 
-    constructor(board: Board, qubits: Qubit[]) {
+    constructor(board: QuantumBoard, qubits: Qubit[]) {
         this.board = board;
         this.qubits = qubits;
         const H = multiply(
@@ -103,7 +99,7 @@ export class QuantumCircuitSimulator {
         time: number,
         controls: number[]
     ) {
-        const cell = this.board[target][time];
+        const cell = this.board.get(target, time);
         const cellMatrix = this.getCellMatrix(cell);
         const size = 2 ** (controls.length + 1);
         const res = identity(size) as Matrix;
@@ -121,12 +117,12 @@ export class QuantumCircuitSimulator {
     private getGateControls(colI: number) {
         // initialize so that each gate has no controls
         const gateControls: number[][] = [];
-        this.board.forEach(() => {
+        for (const _ of this.board) {
             gateControls.push([]);
-        });
+        }
         // add controls to gates
         for (let i = 0; i < this.board.length; i++) {
-            const cell = this.board[i][colI];
+            const cell = this.board.get(i, colI);
             if (cell instanceof Control) {
                 const controlled = cell.target;
                 // one control only
@@ -149,7 +145,7 @@ export class QuantumCircuitSimulator {
             // replace controls and gates with identity matrix
             if (
                 gateControls[i].length > 0 ||
-                this.board[i][colI] instanceof Control
+                this.board.get(i, colI) instanceof Control
             ) {
                 const gateMatrix = this.identityMatrix;
                 if (columnMatrix) {
@@ -159,7 +155,7 @@ export class QuantumCircuitSimulator {
                 }
             } else {
                 // use 2x2 gate if one exists
-                const gateMatrix = this.getCellMatrix(this.board[i][colI]);
+                const gateMatrix = this.getCellMatrix(this.board.get(i, colI));
                 if (columnMatrix) {
                     columnMatrix = kron(columnMatrix, gateMatrix);
                 } else {
@@ -295,7 +291,7 @@ export class QuantumCircuitSimulator {
         }
         result = multiply(result, output);
         for (let i = 0; i < gateControls.length; i++) {
-            const cell = this.board[i][colI];
+            const cell = this.board.get(i, colI);
             // controlled gate
             if (cell instanceof Gate && gateControls[i].length > 0) {
                 const gateMatrix = this.buildColumnMatrixFromControlledGate(
@@ -322,7 +318,7 @@ export class QuantumCircuitSimulator {
 
         let output = transpose(input);
 
-        for (let colI = 0; colI < this.board[0].length; colI++) {
+        for (let colI = 0; colI < this.board.nMoments; colI++) {
             const res = this.applyColumnMatrix(colI, output);
             if (!res) {
                 console.log("undefined column matrix");

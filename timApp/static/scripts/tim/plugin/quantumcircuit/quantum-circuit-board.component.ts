@@ -12,16 +12,16 @@ import {
     ElementRef,
     Pipe,
 } from "@angular/core";
-import {
-    Board,
-    CircuitStyleOptions,
-    Gate,
-    Control,
-} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {
     Qubit,
     QubitOutput,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import {
+    Control,
+    Gate,
+    QuantumBoard,
+} from "tim/plugin/quantumcircuit/quantum-board";
 
 /**
  * Position on circuit board.
@@ -64,6 +64,19 @@ export class InstanceofPipe implements PipeTransform {
     }
 }
 
+/**
+ * Array of concurrent indices from 0,..,n-1
+ */
+@Pipe({
+    name: "range",
+    pure: true,
+})
+export class RangePipe implements PipeTransform {
+    public transform(n: number): number[] {
+        return Array(n).map((_, i) => i);
+    }
+}
+
 @Component({
     selector: "tim-quantum-circuit-board",
     template: `
@@ -84,15 +97,15 @@ export class InstanceofPipe implements PipeTransform {
 
             <div class="circuit-right-container">
                 <div class="moments">
-                    <div class="moment" *ngFor="let gate of board[0]; let i = index"
+                    <div class="moment" *ngFor="let i of board.nMoments | range"
                          [style.width.px]="circuitStyleOptions.baseSize"
                          [style.height.px]="circuitStyleOptions.timeAxisHeight">
                         <div>{{i}}</div>
                     </div>
                 </div>
 
-                <svg #svgElement [attr.width]="getWidth()"
-                     [attr.height]="getHeight()"
+                <svg #svgElement [attr.width]="board.nMoments * circuitStyleOptions.baseSize"
+                     [attr.height]="board.nQubits * circuitStyleOptions.baseSize"
                      (mousemove)="handleDrag($event)"
                      (mouseup)="handleDragEnd($event)"
                      (mouseleave)="handleDragEnd($event)"
@@ -103,7 +116,7 @@ export class InstanceofPipe implements PipeTransform {
                     <!-- lines -->
                     <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="colors.dark"
                           [attr.x1]="0" [attr.y1]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"
-                          [attr.x2]="getWidth()"
+                          [attr.x2]="board.nMoments * circuitStyleOptions.baseSize"
                           [attr.y2]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"></line>
 
                     <!-- empty gate placeholders-->
@@ -181,7 +194,7 @@ export class InstanceofPipe implements PipeTransform {
                        [attr.data-target]="gateBeingDragged.gate.target"
                        class="gate-drop chosen">
                         <!-- normal gate-->
-                        <rect *ngIf="board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]|instanceof: Gate"
+                        <rect *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: Gate"
                               class="gate"
                               [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
                               [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
@@ -189,16 +202,16 @@ export class InstanceofPipe implements PipeTransform {
                               [attr.height]="circuitStyleOptions.gateSize"
                               [attr.rx]="circuitStyleOptions.gateBorderRadius"
                               [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                        <text *ngIf="board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]|instanceof: Gate"
+                        <text *ngIf="board.get(gateBeingDragged.gate.target,gateBeingDragged.gate.time)|instanceof: Gate"
                               class="gate-text"
                               [attr.x]="(gateBeingDragged.gate.time * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
                               [attr.y]="(gateBeingDragged.gate.target * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
                               dominant-baseline="middle"
                               text-anchor="middle"
-                              [attr.fill]="colors.dark">{{board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]}}</text>
+                              [attr.fill]="colors.dark">{{board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)}}</text>
 
                         <!-- control gate -->
-                        <circle *ngIf="board[gateBeingDragged.gate.target][gateBeingDragged.gate.time]|instanceof: Control"
+                        <circle *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: Control"
                                 class="gate"
                                 [attr.cx]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                 [attr.cy]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
@@ -243,7 +256,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
     circuitStyleOptions!: CircuitStyleOptions;
 
     @Input()
-    board: Board = [];
+    board!: QuantumBoard;
 
     @Input()
     qubits!: Qubit[];
@@ -279,27 +292,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
             this.gateBeingDragged?.gate.target === target &&
             this.gateBeingDragged.gate.time === time
         );
-    }
-
-    /**
-     * Get needed width for svg element.
-     */
-    getWidth() {
-        if (this.board.length > 0) {
-            return this.board[0].length * this.circuitStyleOptions.baseSize;
-        }
-
-        return 0;
-    }
-
-    /**
-     * Get needed height for svg element.
-     */
-    getHeight() {
-        if (this.board.length > 0) {
-            return this.board.length * this.circuitStyleOptions.baseSize;
-        }
-        return 0;
     }
 
     /**
