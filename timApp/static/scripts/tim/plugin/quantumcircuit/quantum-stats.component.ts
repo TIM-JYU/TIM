@@ -155,8 +155,8 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
         if (this.chartInner) {
             // set height so there's 10px of space for each row in chart
-            const nRows = 2 ** this.nQubits;
-            this.chartInner.nativeElement.style.height = `${nRows * 10}px`;
+            const h = 2 ** this.nQubits * 10 + 40;
+            this.chartInner.nativeElement.style.height = `${h}px`;
         }
     }
 
