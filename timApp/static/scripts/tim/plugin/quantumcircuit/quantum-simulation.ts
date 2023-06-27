@@ -167,72 +167,24 @@ export class QuantumCircuitSimulator {
     }
 
     /**
-     * Build controlled gate matrix without expanding it to cover all qubits.
-     * @param controls qubit indices that control this qubit
-     * @param target qubit index to build matrix for
-     * @param time time
+     * Expand matrix to be 2^nQubits dimensional.
+     * @param mat matrix to expand
+     * @param startI the relative position of matrix on board
+     * @param matSize number of qubits this matrix takes
      */
-    private buildColumnWithoutPadding(
-        controls: number[],
-        target: number,
-        time: number
-    ) {
-        const firstControlI = controls[0];
-        let distance = target - firstControlI - 1;
-        let gate = this.buildControlledGate(target, time, controls);
-
-        if (firstControlI > target) {
-            distance = firstControlI - target - 1;
-            gate = multiply(multiply(this.swapMatrix, gate), this.swapMatrix);
+    private padMatrix(mat: Matrix, startI: number, matSize: number) {
+        let res = mat;
+        if (startI > 0) {
+            const before = identity(2 ** startI) as Matrix;
+            res = kron(before, mat);
         }
 
-        // move gate and control next to each other if they aren't next to each other
-        if (distance > 0) {
-            // move qubits using swap gates
-            let swapsBeforeGate = kron(
-                identity(2 ** distance) as Matrix,
-                this.swapMatrix
-            );
-            for (let i = 1; i < distance; i++) {
-                const paddingBefore = identity(2 ** (distance - i)) as Matrix;
-                const paddingAfter = identity(
-                    2 ** (distance - (distance - i))
-                ) as Matrix;
-                const swapLayer = kron(
-                    kron(paddingBefore, this.swapMatrix),
-                    paddingAfter
-                );
-                swapsBeforeGate = multiply(swapsBeforeGate, swapLayer);
-            }
-
-            // pad gate with identity matrix to span the same distance as controls and target do
-            // tensor product of identity matrix should also be identity matrix so just create it directly with right size
-            const gateWithPadding = kron(
-                gate,
-                identity(2 ** distance) as Matrix
-            );
-
-            let result = multiply(swapsBeforeGate, gateWithPadding);
-
-            // reverse the effect of moving qubits by moving them back
-            for (let i = 1; i < distance; i++) {
-                const paddingBefore = identity(
-                    2 ** (distance - (distance - i))
-                ) as Matrix;
-                const paddingAfter = identity(2 ** (distance - i)) as Matrix;
-                const swapLayer = kron(
-                    kron(paddingBefore, this.swapMatrix),
-                    paddingAfter
-                );
-                result = multiply(result, swapLayer);
-            }
-            result = multiply(
-                result,
-                kron(identity(2 ** distance) as Matrix, this.swapMatrix)
-            );
-            return result;
+        const afterSize = this.board.nQubits - (startI + matSize);
+        if (afterSize > 0) {
+            const after = identity(2 ** afterSize) as Matrix;
+            res = kron(res, after);
         }
-        return gate;
+        return res;
     }
 
     /**
@@ -240,42 +192,43 @@ export class QuantumCircuitSimulator {
      * @param controls qubit indices that control this qubit
      * @param target qubit index to build matrix for
      * @param time time
+     * @param input current state of circuit at this time
      */
-    private buildColumnMatrixFromControlledGate(
+    private applyColumnMatrixFromControlledGate(
         controls: number[],
         target: number,
-        time: number
+        time: number,
+        input: Matrix
     ) {
-        let mat = this.buildColumnWithoutPadding(controls, target, time);
-        // pad the size to match the total qubit amount with identity matrices
-        if (controls[0] < target) {
-            if (controls[0] !== 0) {
-                mat = kron(identity(2 ** controls[0]) as Matrix, mat);
-            }
-            if (target !== this.board.length - 1) {
-                mat = kron(
-                    mat,
-                    identity(2 ** (this.board.length - target - 1)) as Matrix
-                );
-            }
-        } else {
-            if (target !== 0) {
-                mat = kron(identity(2 ** target) as Matrix, mat);
-            }
-            if (controls[controls.length - 1] !== this.board.length - 1) {
-                mat = kron(
-                    mat,
-                    identity(
-                        2 **
-                            (this.board.length -
-                                controls[controls.length - 1] -
-                                1)
-                    ) as Matrix
-                );
-            }
+        const firstControlI = controls[0];
+        let distance = target - firstControlI - 1;
+        let gate = this.buildControlledGate(target, time, controls);
+
+        let startI = firstControlI;
+        // target needs to be other way around so flip everything around
+        if (firstControlI > target) {
+            distance = firstControlI - target - 1;
+            gate = multiply(multiply(this.swapMatrix, gate), this.swapMatrix);
+            startI = target;
         }
 
-        return mat;
+        gate = this.padMatrix(gate, startI, controls.length + 1);
+
+        let result = input;
+        // move gate and control next to each other if they aren't next to each other
+        for (let offset = startI + distance; offset > startI; offset--) {
+            const swap = this.padMatrix(this.swapMatrix, offset, 2);
+            result = multiply(swap, result);
+        }
+
+        result = multiply(gate, result);
+
+        // reverse the effect of moving qubits by moving them back
+        for (let offset = startI + 1; offset <= startI + distance; offset++) {
+            const swap = this.padMatrix(this.swapMatrix, offset, 2);
+            result = multiply(swap, result);
+        }
+        return result;
     }
 
     /**
@@ -294,12 +247,12 @@ export class QuantumCircuitSimulator {
             const cell = this.board.get(i, colI);
             // controlled gate
             if (cell instanceof Gate && gateControls[i].length > 0) {
-                const gateMatrix = this.buildColumnMatrixFromControlledGate(
+                result = this.applyColumnMatrixFromControlledGate(
                     gateControls[i],
                     i,
-                    colI
+                    colI,
+                    result
                 );
-                result = multiply(gateMatrix, result);
             }
         }
         return result;

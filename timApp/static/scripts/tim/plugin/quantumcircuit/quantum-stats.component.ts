@@ -104,7 +104,10 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     measurements!: Measurement[];
 
     @Input()
-    quantumChartData!: QuantumChartData;
+    quantumChartData: QuantumChartData = {
+        labels: [],
+        probabilities: [],
+    };
 
     @Input()
     nQubits!: number;

@@ -363,6 +363,7 @@ export class QuantumCircuitComponent
             });
         }
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
+        // mock data
         this.board.set(2, 0, new Gate("H"));
         this.board.set(2, 1, new Control(0));
         this.board.set(0, 1, new Gate("X"));
