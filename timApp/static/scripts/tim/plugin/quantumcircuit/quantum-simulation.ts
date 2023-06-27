@@ -114,6 +114,10 @@ export class QuantumCircuitSimulator {
         );
     }
 
+    /**
+     * Get list of controls for each qubit at given time.
+     * @param colI time
+     */
     private getGateControls(colI: number) {
         // initialize so that each gate has no controls
         const gateControls: number[][] = [];
@@ -131,9 +135,15 @@ export class QuantumCircuitSimulator {
         return gateControls;
     }
 
+    /**
+     * Takes all 2x2 gates in row and makes a matrix out of them.
+     * @param gateControls controls for each qubit at given time
+     * @param colI time
+     */
     private buildColumnFromSingleGates(gateControls: number[][], colI: number) {
         let columnMatrix;
         for (let i = 0; i < gateControls.length; i++) {
+            // replace controls and gates with identity matrix
             if (
                 gateControls[i].length > 0 ||
                 this.board[i][colI] instanceof Control
@@ -145,6 +155,7 @@ export class QuantumCircuitSimulator {
                     columnMatrix = gateMatrix;
                 }
             } else {
+                // use 2x2 gate if one exists
                 const gateMatrix = this.getCellMatrix(this.board[i][colI]);
                 if (columnMatrix) {
                     columnMatrix = kron(columnMatrix, gateMatrix);
@@ -156,6 +167,12 @@ export class QuantumCircuitSimulator {
         return columnMatrix;
     }
 
+    /**
+     * Build controlled gate matrix without expanding it to cover all qubits.
+     * @param controls qubit indices that control this qubit
+     * @param target qubit index to build matrix for
+     * @param time time
+     */
     private buildColumnWithoutPadding(
         controls: number[],
         target: number,
@@ -219,6 +236,12 @@ export class QuantumCircuitSimulator {
         return gate;
     }
 
+    /**
+     * Build controlled gate matrix.
+     * @param controls qubit indices that control this qubit
+     * @param target qubit index to build matrix for
+     * @param time time
+     */
     private buildColumnMatrixFromControlledGate(
         controls: number[],
         target: number,

@@ -159,6 +159,8 @@ export class QuantumCircuitComponent
     >
     implements OnInit, AfterViewInit
 {
+    timeoutId: number = -1;
+
     @ViewChild("qcContainer")
     qcContainer!: ElementRef<HTMLElement>;
 
@@ -195,6 +197,36 @@ export class QuantumCircuitComponent
     }
 
     /**
+     * Runs simulator and updates statistics.
+     * @param delay whether to run simulator instantly
+     */
+    runSimulation(delay: boolean = true) {
+        if (this.timeoutId !== -1) {
+            window.clearTimeout(this.timeoutId);
+            this.timeoutId = -1;
+        }
+        if (delay) {
+            this.timeoutId = window.setTimeout(() => {
+                const startTime = new Date();
+                console.log("started simulating", startTime);
+                this.simulator.run();
+                const endTime = new Date();
+
+                const timeDiff = endTime.getTime() - startTime.getTime();
+                console.log(`simulation ended in: ${timeDiff}ms`);
+
+                this.quantumChartData = this.simulator.getProbabilities();
+                this.setQubitOutputs();
+                this.timeoutId = -1;
+            }, 0);
+        } else {
+            this.simulator.run();
+            this.quantumChartData = this.simulator.getProbabilities();
+            this.setQubitOutputs();
+        }
+    }
+
+    /**
      * Toggle qubits initial state between 0 and 1
      */
     handleQubitChange(qubitId: number) {
@@ -208,9 +240,7 @@ export class QuantumCircuitComponent
             this.qubits[qubitId].value = 0;
         }
 
-        this.simulator.run();
-        this.quantumChartData = this.simulator.getProbabilities();
-        this.setQubitOutputs();
+        this.runSimulation();
     }
 
     findPossibleTargetForControl(time: number, target: number) {
@@ -245,9 +275,7 @@ export class QuantumCircuitComponent
             this.board[target][time] = new Gate(gate.name);
         }
 
-        this.simulator.run();
-        this.quantumChartData = this.simulator.getProbabilities();
-        this.setQubitOutputs();
+        this.runSimulation();
     }
 
     getControlling(gate: GatePos): GatePos | undefined {
@@ -294,9 +322,7 @@ export class QuantumCircuitComponent
                 this.board[target1][time1] = undefined;
             }
         }
-        this.simulator.run();
-        this.quantumChartData = this.simulator.getProbabilities();
-        this.setQubitOutputs();
+        this.runSimulation();
     }
 
     /**
@@ -316,9 +342,7 @@ export class QuantumCircuitComponent
             }
         }
 
-        this.simulator.run();
-        this.quantumChartData = this.simulator.getProbabilities();
-        this.setQubitOutputs();
+        this.runSimulation();
     }
 
     handleMeasure() {
@@ -388,9 +412,7 @@ export class QuantumCircuitComponent
     initializeSimulator() {
         this.simulator = new QuantumCircuitSimulator(this.board, this.qubits);
 
-        this.simulator.run();
-        this.quantumChartData = this.simulator.getProbabilities();
-        this.setQubitOutputs();
+        this.runSimulation(false);
     }
 
     /**
