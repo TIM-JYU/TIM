@@ -342,6 +342,7 @@ export class QuantumCircuitComponent
                 this.board.set(target1, time1, undefined);
             }
         }
+        this.selectedGate = undefined;
         this.runSimulation();
     }
 
@@ -361,6 +362,8 @@ export class QuantumCircuitComponent
                 this.board.set(i, gate.time, undefined);
             }
         }
+
+        this.selectedGate = undefined;
 
         this.runSimulation();
     }
