@@ -278,7 +278,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
     qubits!: Qubit[];
 
     @Input()
-    selectedGate?: GatePos;
+    selectedGate: GatePos | null = null;
 
     @Input()
     qubitOutputs!: QubitOutput[];

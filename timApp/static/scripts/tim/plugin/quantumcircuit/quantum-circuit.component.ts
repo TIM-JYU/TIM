@@ -181,7 +181,7 @@ export class QuantumCircuitComponent
 
     board!: QuantumBoard;
 
-    selectedGate?: GatePos;
+    selectedGate: GatePos | null = null;
 
     measurements: Measurement[] = [];
 
@@ -271,18 +271,23 @@ export class QuantumCircuitComponent
                     this.board.set(target, time, new Control(controlTarget));
                 }
             } else {
-                // use selected gate as target
-                this.board.set(
-                    target,
-                    time,
-                    new Control(this.selectedGate.target)
-                );
+                if (
+                    gate.time === this.selectedGate.time &&
+                    gate.target !== this.selectedGate.target
+                ) {
+                    // use selected gate as target
+                    this.board.set(
+                        target,
+                        time,
+                        new Control(this.selectedGate.target)
+                    );
+                }
             }
         } else {
             this.board.set(target, time, new Gate(gate.name));
         }
 
-        this.selectedGate = undefined;
+        this.selectedGate = null;
 
         this.runSimulation();
     }
@@ -342,7 +347,7 @@ export class QuantumCircuitComponent
                 this.board.set(target1, time1, undefined);
             }
         }
-        this.selectedGate = undefined;
+        this.selectedGate = null;
         this.runSimulation();
     }
 
@@ -363,7 +368,7 @@ export class QuantumCircuitComponent
             }
         }
 
-        this.selectedGate = undefined;
+        this.selectedGate = null;
 
         this.runSimulation();
     }
@@ -381,7 +386,7 @@ export class QuantumCircuitComponent
                 this.selectedGate.time === gate.time &&
                 this.selectedGate.target === gate.target
             ) {
-                this.selectedGate = undefined;
+                this.selectedGate = null;
             } else {
                 this.selectedGate = gate;
             }
