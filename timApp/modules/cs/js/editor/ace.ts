@@ -1,4 +1,4 @@
-/* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_", "disabled_"] }] */
+/* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_", "disabled_", "startLineNumber_"] }] */
 /**
  * Ace editor
  *
@@ -31,6 +31,7 @@ type IAceEditor = Ace.Editor;
 export class AceEditorComponent implements IEditor {
     private aceEditor?: IAceEditor;
     private languageMode_: string = "text";
+    private startLineNumber_?: number;
     private minRows_: number = 1;
     private maxRows_: number = 100;
     private content_?: string;
@@ -44,6 +45,16 @@ export class AceEditorComponent implements IEditor {
     set languageMode(lang: string) {
         this.languageMode_ = lang;
         this.aceEditor?.getSession().setMode("ace/mode/" + lang);
+    }
+
+    @Input()
+    set startLineNumber(lineno: number | undefined) {
+        this.startLineNumber_ = lineno;
+        if (lineno === undefined) {
+            this.aceEditor?.setOption("firstLineNumber", 1);
+        } else {
+            this.aceEditor?.setOption("firstLineNumber", lineno);
+        }
     }
 
     updateDisabled() {
@@ -156,6 +167,10 @@ export class AceEditorComponent implements IEditor {
                 }
             },
         });
+        if (this.startLineNumber_ !== undefined) {
+            // Toggle start line update
+            this.startLineNumber = this.startLineNumber_;
+        }
     }
 
     get content(): string {
