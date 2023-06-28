@@ -13,6 +13,7 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
+    nullable,
     withDefault,
 } from "tim/plugin/attributes";
 import {QuantumGateMenuComponent} from "tim/plugin/quantumcircuit/quantum-gate-menu.component";
@@ -58,9 +59,21 @@ export interface Measurement {
     output: string;
 }
 
+/**
+ * Name, target, time and optionally a list of controls.
+ */
+const GateInfo = t.type({
+    name: t.string,
+    target: t.number,
+    time: t.number,
+    controls: nullable(t.array(t.number)),
+});
+
 // All settings that are defined in the plugin markup YAML
 const QuantumCircuitMarkup = t.intersection([
-    t.partial({}),
+    t.partial({
+        initialCircuit: nullable(t.array(GateInfo)),
+    }),
     GenericPluginMarkup,
     t.type({
         nQubits: withDefault(t.number, 1),
@@ -288,7 +301,6 @@ export class QuantumCircuitComponent
             const name = fromCell.name;
             this.board.set(target2, time2, new Gate(name));
             this.board.set(target1, time1, undefined);
-
             const controlling = this.getControlling(gateMove.from);
             if (controlling.length > 0) {
                 // time didn't change so wires can be reconnected to their target
@@ -352,6 +364,26 @@ export class QuantumCircuitComponent
     }
 
     /**
+     * Add gates from initialCircuit to board.
+     */
+    addInitialGates() {
+        if (!this.markup.initialCircuit) {
+            return;
+        }
+        for (const gateData of this.markup.initialCircuit) {
+            const gate = new Gate(gateData.name);
+            this.board.set(gateData.target, gateData.time, gate);
+            if (!gateData.controls) {
+                continue;
+            }
+            for (const controlData of gateData.controls) {
+                const control = new Control(gateData.target);
+                this.board.set(controlData, gateData.time, control);
+            }
+        }
+    }
+
+    /**
      * Initializes board, qubits and outputs.
      */
     initializeBoard() {
@@ -363,10 +395,8 @@ export class QuantumCircuitComponent
             });
         }
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
-        // mock data
-        this.board.set(2, 0, new Gate("H"));
-        this.board.set(2, 1, new Control(0));
-        this.board.set(0, 1, new Gate("X"));
+
+        this.addInitialGates();
 
         this.qubitOutputs = [];
         for (let i = 0; i < this.nQubits; i++) {

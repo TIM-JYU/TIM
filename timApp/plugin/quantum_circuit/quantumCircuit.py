@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
@@ -16,9 +16,21 @@ quantum_circuit_plugin = TypedBlueprint(
 
 
 @dataclass
+class GateType:
+    name: str
+    target: int
+    time: int
+    controls: list[int] | None = None
+
+    def to_json(self):
+        return asdict(self)
+
+
+@dataclass
 class QuantumCircuitMarkup(GenericMarkupModel):
     """Class that defines plugin markup (the YAML settings and their types)"""
 
+    initialCircuit: list[GateType] | None = None
     nQubits: int | None = None
     nMoments: int | None = None
 

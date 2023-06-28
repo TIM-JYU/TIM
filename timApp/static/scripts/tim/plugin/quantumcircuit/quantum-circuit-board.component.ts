@@ -73,7 +73,11 @@ export class InstanceofPipe implements PipeTransform {
 })
 export class RangePipe implements PipeTransform {
     public transform(n: number): number[] {
-        return Array(n).map((_, i) => i);
+        const arr = Array(n);
+        for (let i = 0; i < n; i++) {
+            arr[i] = i;
+        }
+        return arr;
     }
 }
 
@@ -137,6 +141,19 @@ export class RangePipe implements PipeTransform {
                             />
                         </g>
                     </g>
+                    
+                    <!-- wires -->
+                    <g *ngFor="let gates of board; let i=index">
+                        <g *ngFor="let gate of gates; let j=index">
+                             <line *ngIf="gate|instanceof: Control as c"
+                                  [attr.stroke]="colors.dark"
+                                  [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                  [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                  [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                  [attr.y2]="c.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2 + circuitStyleOptions.gateSize / 2"
+                            ></line>
+                        </g>
+                    </g>
 
                     <!-- gates -->
                     <g *ngFor="let gates of board; let i=index">
@@ -176,13 +193,6 @@ export class RangePipe implements PipeTransform {
                                     [attr.cy]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                     [attr.r]="circuitStyleOptions.gateSize/4"
                                     [attr.fill]="colors.dark" [attr.stroke]="colors.dark"/>
-                            <line *ngIf="!isBeingDragged(i, j) && gate|instanceof: Control as c"
-                                  [attr.stroke]="colors.dark"
-                                  [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                  [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                  [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                  [attr.y2]="c.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2 + circuitStyleOptions.gateSize / 2"
-                            ></line>
                         </g>
                     </g>
 
@@ -240,6 +250,9 @@ export class RangePipe implements PipeTransform {
     styleUrls: ["./quantum-circuit-board.component.scss"],
 })
 export class QuantumCircuitBoardComponent implements OnInit {
+    protected readonly Gate = Gate;
+    protected readonly Control = Control;
+
     // Cell in board that is being dragged over
     dragOverElement?: GatePos;
 
@@ -603,7 +616,4 @@ export class QuantumCircuitBoardComponent implements OnInit {
         this.gateBeingDragged = null;
         this.dragOverElement = undefined;
     }
-
-    protected readonly Gate = Gate;
-    protected readonly Control = Control;
 }
