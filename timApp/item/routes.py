@@ -865,7 +865,6 @@ def render_doc_view(
                 raise RouteException(f"Area {m.area} not found")
         elif m.b and m.size == 1:
             if not areas:
-                # FIXME: get_document_areas returns empty in translations
                 areas = get_document_areas(doc_info)
                 for a in areas:
                     if a[0] <= view_range.b and a[1] >= view_range.e:
