@@ -22,7 +22,7 @@ class GateType:
     time: int
     controls: list[int] | None = None
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return asdict(self)
 
 
