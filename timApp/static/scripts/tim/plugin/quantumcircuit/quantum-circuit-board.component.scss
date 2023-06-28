@@ -90,3 +90,7 @@ svg text::selection {
 .gate-text {
   pointer-events: none;
 }
+
+.selected-gate {
+  stroke: #00F800;
+}

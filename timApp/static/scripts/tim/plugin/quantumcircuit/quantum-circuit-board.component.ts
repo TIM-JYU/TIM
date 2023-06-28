@@ -168,7 +168,8 @@ export class RangePipe implements PipeTransform {
                            class="gate-drop">
 
                             <!-- normal gate-->
-                            <rect *ngIf="!isBeingDragged(i, j) && gate|instanceof: Gate"
+                            <rect *ngIf="!isBeingDragged(i, j) && gate|instanceof: Gate as g"
+                                  [class.selected-gate]="selectedGate && i === selectedGate.target && j === selectedGate.time"
                                   class="gate"
                                   [class.drag-over-element]="isBeingDraggedOver(i,j)"
                                   [attr.x]="j * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
@@ -186,7 +187,8 @@ export class RangePipe implements PipeTransform {
                                   [attr.fill]="colors.dark">{{g.name}}</text>
 
                             <!-- control gate -->
-                            <circle *ngIf="!isBeingDragged(i, j) && gate|instanceof: Control"
+                            <circle *ngIf="!isBeingDragged(i, j) && gate|instanceof: Control as c"
+                                    [class.selected-gate]="selectedGate && i === selectedGate.target && j === selectedGate.time"
                                     class="gate"
                                     [class.drag-over-element]="isBeingDraggedOver(i,j)"
                                     [attr.cx]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
@@ -260,6 +262,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
     gateBeingDragged: {
         gate: GatePos;
         offset: [number, number];
+        originalBounds: DOMRect;
     } | null = null;
 
     @ViewChild("svgElement")
@@ -275,6 +278,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
     qubits!: Qubit[];
 
     @Input()
+    selectedGate?: GatePos;
+
+    @Input()
     qubitOutputs!: QubitOutput[];
 
     @Output()
@@ -288,6 +294,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
     @Output()
     gateRemove = new EventEmitter<GatePos>();
+
+    @Output()
+    gateSelect = new EventEmitter<GatePos>();
 
     constructor() {}
 
@@ -482,6 +491,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
         this.gateBeingDragged = {
             gate: {target: target, time: time},
             offset: offset,
+            originalBounds: group.getBoundingClientRect(),
         };
 
         this.addInitialTransform(group);
@@ -587,7 +597,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
             this.gateBeingDragged = null;
             return;
         }
-
         // if cursor is outside the circuit (svg element) then remove the gate being dragged
         const svgBounds = this.svgElement.nativeElement.getBoundingClientRect();
         const [cursorX, cursorY] = this.getCursorPosition(event);
@@ -598,6 +607,20 @@ export class QuantumCircuitBoardComponent implements OnInit {
             cursorY > svgBounds.bottom
         ) {
             this.gateRemove.emit(this.gateBeingDragged.gate);
+            this.gateBeingDragged = null;
+            this.dragOverElement = undefined;
+            return;
+        }
+
+        // cursor is inside same element as when started dragging
+        const groupBounds = this.gateBeingDragged.originalBounds;
+        if (
+            groupBounds.x <= cursorX &&
+            cursorX <= groupBounds.right &&
+            groupBounds.y <= cursorY &&
+            cursorY <= groupBounds.bottom
+        ) {
+            this.gateSelect.emit(this.gateBeingDragged.gate);
             this.gateBeingDragged = null;
             this.dragOverElement = undefined;
             return;

@@ -121,13 +121,16 @@ export interface CircuitStyleOptions {
 
             <div class="circuit">
                 <tim-quantum-circuit-board
-                        [board]="board" [qubits]="qubits"
+                        [board]="board" 
+                        [selectedGate]="selectedGate"
+                        [qubits]="qubits"
                         [qubitOutputs]="qubitOutputs"
                         [circuitStyleOptions]="circuitStyleOptions"
                         (qubitChange)="handleQubitChange($event)"
                         (gateDrop)="handleGateDrop($event)"
                         (gateMove)="handleGateMove($event)"
                         (gateRemove)="handleGateRemove($event)"
+                        (gateSelect)="handleGateSelect($event)"
                 ></tim-quantum-circuit-board>
             </div>
 
@@ -177,6 +180,8 @@ export class QuantumCircuitComponent
     };
 
     board!: QuantumBoard;
+
+    selectedGate?: GatePos;
 
     measurements: Measurement[] = [];
 
@@ -256,16 +261,28 @@ export class QuantumCircuitComponent
         const {time, target} = gate;
 
         if (gate.name === "control") {
-            const controlTarget = this.findPossibleTargetForControl(
-                time,
-                target
-            );
-            if (controlTarget !== undefined) {
-                this.board.set(target, time, new Control(controlTarget));
+            // Gate hasn't being selected as target so select one automatically
+            if (!this.selectedGate) {
+                const controlTarget = this.findPossibleTargetForControl(
+                    time,
+                    target
+                );
+                if (controlTarget !== undefined) {
+                    this.board.set(target, time, new Control(controlTarget));
+                }
+            } else {
+                // use selected gate as target
+                this.board.set(
+                    target,
+                    time,
+                    new Control(this.selectedGate.target)
+                );
             }
         } else {
             this.board.set(target, time, new Gate(gate.name));
         }
+
+        this.selectedGate = undefined;
 
         this.runSimulation();
     }
@@ -346,6 +363,26 @@ export class QuantumCircuitComponent
         }
 
         this.runSimulation();
+    }
+
+    /**
+     * Marks gate as selected.
+     * @param gate position of gate on board
+     */
+    handleGateSelect(gate: GatePos) {
+        const cell = this.board.get(gate.target, gate.time);
+        if (cell instanceof Gate) {
+            // same was selected so unselect it
+            if (
+                this.selectedGate &&
+                this.selectedGate.time === gate.time &&
+                this.selectedGate.target === gate.target
+            ) {
+                this.selectedGate = undefined;
+            } else {
+                this.selectedGate = gate;
+            }
+        }
     }
 
     handleMeasure() {
