@@ -49,6 +49,7 @@ export interface QuantumChartData {
             </div>
 
             <div class="output-container">
+
                 <div class="output-print">
                     <table #outputTable class="output-table">
                         <thead>
@@ -59,7 +60,8 @@ export interface QuantumChartData {
                         </tr>
                         </thead>
                         <tbody>
-                        <tr *ngFor="let measurement of measurements; even as isEven; first as isFirst; index as i" [class.even-row]="isEven">
+                        <tr *ngFor="let measurement of measurements; even as isEven; first as isFirst; index as i"
+                            [class.even-row]="isEven">
                             <td>{{measurements.length - i}}</td>
                             <td>{{measurement.input}}</td>
                             <td>{{measurement.output}}</td>
@@ -73,12 +75,19 @@ export interface QuantumChartData {
                     <button class="timButton" (click)="handleClear()">Tyhjennä</button>
                 </div>
 
+                <label class="font-weight-normal">
+                    <input type="checkbox" [(ngModel)]="hideZeroRows" (ngModelChange)="updateChart()"/>
+                    Piilota 0% rivit
+                </label>
+
             </div>
         </div>
     `,
     styleUrls: ["./quantum-stats.component.scss"],
 })
 export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
+    hideZeroRows: boolean = false;
+
     @ViewChild("chartCanvas")
     chartCanvas!: ElementRef<HTMLCanvasElement>;
 
@@ -142,14 +151,37 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
      * Sets data of chart to current data.
      */
     updateChart() {
+        let labels = this.quantumChartData.labels;
+        let probabilities = this.quantumChartData.probabilities;
+        if (this.hideZeroRows) {
+            labels = [];
+            probabilities = [];
+            for (
+                let i = 0;
+                i < this.quantumChartData.probabilities.length;
+                i++
+            ) {
+                const p = this.quantumChartData.probabilities[i];
+                if (p > 0) {
+                    probabilities.push(p);
+                    labels.push(this.quantumChartData.labels[i]);
+                }
+            }
+        }
         this.chartData = {
-            labels: this.quantumChartData.labels,
+            labels: labels,
             datasets: [
                 {
-                    data: this.quantumChartData.probabilities,
+                    data: probabilities,
                 },
             ],
         };
+
+        if (this.chartInner) {
+            // set height so there's 10px of space for each row in chart
+            const h = labels.length * 10 + 40;
+            this.chartInner.nativeElement.style.height = `${h}px`;
+        }
     }
 
     ngAfterViewInit(): void {
@@ -157,12 +189,6 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
         // leave room for both columns. About 10px is needed for each character.
         const w = this.nQubits * 10 * 2;
         this.table.nativeElement.style.width = `${w}px`;
-
-        if (this.chartInner) {
-            // set height so there's 10px of space for each row in chart
-            const h = 2 ** this.nQubits * 10 + 40;
-            this.chartInner.nativeElement.style.height = `${h}px`;
-        }
     }
 
     /**

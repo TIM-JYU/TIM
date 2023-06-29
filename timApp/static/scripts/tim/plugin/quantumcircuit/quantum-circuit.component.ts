@@ -42,6 +42,7 @@ import {
 } from "tim/plugin/quantumcircuit/quantum-board";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {timeout} from "tim/util/utils";
+import {FormsModule} from "@angular/forms";
 
 export interface Qubit {
     value: number;
@@ -526,7 +527,13 @@ export class QuantumCircuitComponent
         RangePipe,
     ],
     exports: [QuantumCircuitComponent],
-    imports: [CommonModule, HttpClientModule, NgChartsModule, TimUtilityModule],
+    imports: [
+        CommonModule,
+        HttpClientModule,
+        NgChartsModule,
+        TimUtilityModule,
+        FormsModule,
+    ],
 })
 export class QuantumCircuitModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
