@@ -196,22 +196,34 @@ export class QuantumCircuitSimulator {
      * @param currI current index of qubit
      * @param destI destination index of qubit
      * @param input matrix to apply to
+     * @param basis relative positions of qubits
      */
-    applyPositionChange(currI: number, destI: number, input: Matrix) {
+    applyPositionChange(
+        currI: number,
+        destI: number,
+        input: Matrix,
+        basis: number[]
+    ) {
         let result = input;
+        function applySwap(i: number, swap: Matrix) {
+            result = multiply(swap, result);
+            // swap basis indices
+            const temp = basis[i];
+            basis[i] = basis[i + 1];
+            basis[i + 1] = temp;
+        }
         if (currI < destI) {
             for (let i = currI; i < destI; i++) {
                 const swap = this.padMatrix(this.swapMatrix, i, 2);
-                result = multiply(swap, result);
+                applySwap(i, swap);
             }
-            return result;
         } else {
             for (let i = currI - 1; i >= destI; i--) {
                 const swap = this.padMatrix(this.swapMatrix, i, 2);
-                result = multiply(swap, result);
+                applySwap(i, swap);
             }
-            return result;
         }
+        return result;
     }
 
     /**
@@ -231,25 +243,43 @@ export class QuantumCircuitSimulator {
         let gate = this.buildControlledGate(target, time, controls);
         gate = this.padMatrix(gate, 0, controls.length + 1);
 
+        const basis = [];
+        for (let i = 0; i < this.board.nQubits; i++) {
+            basis.push(i);
+        }
+
+        // keep track of moves to do them backwards afterward
+        const moves = [];
         // apply swap gates to move controls to their correct positions
         let result = input;
         for (let i = 0; i < controls.length; i++) {
             const currI = controls[i];
-            result = this.applyPositionChange(currI, i, result);
+            moves.push([basis[currI], i]);
+            result = this.applyPositionChange(basis[currI], i, result, basis);
         }
         // apply swaps also for gate target qubit to move it to correct position (after control qubits)
-        result = this.applyPositionChange(target, controls.length, result);
+        moves.push([basis[target], controls.length]);
+        result = this.applyPositionChange(
+            basis[target],
+            controls.length,
+            result,
+            basis
+        );
+
         // apply gate
         result = multiply(gate, result);
 
-        // apply swaps to move target qubit back to where it was
-        result = this.applyPositionChange(controls.length, target, result);
-
         // apply swaps to move control qubits back to where they were
-        for (let i = controls.length - 1; i >= 0; i--) {
-            const currI = controls[i];
-            result = this.applyPositionChange(i, currI, result);
+        for (let i = moves.length - 1; i >= 0; i--) {
+            result = this.applyPositionChange(
+                moves[i][1],
+                moves[i][0],
+                result,
+                basis
+            );
         }
+
+        console.log(basis);
         return result;
     }
 
