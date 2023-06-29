@@ -41,6 +41,7 @@ import {
     QuantumBoard,
 } from "tim/plugin/quantumcircuit/quantum-board";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {timeout} from "tim/util/utils";
 
 export interface Qubit {
     value: number;
@@ -474,7 +475,9 @@ export class QuantumCircuitComponent
     /**
      * Compute dimensions for elements.
      */
-    ngAfterViewInit() {
+    async ngAfterViewInit() {
+        // when entering paragraph editor, qcContainer width is zero for some reason and timeout fixes that
+        await timeout();
         // Compute sizes for board cells based on available space and number of cells
         const baseSize =
             this.qcContainer.nativeElement.offsetWidth / (this.nMoments + 4);

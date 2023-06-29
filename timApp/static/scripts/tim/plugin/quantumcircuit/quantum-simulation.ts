@@ -279,7 +279,6 @@ export class QuantumCircuitSimulator {
             );
         }
 
-        console.log(basis);
         return result;
     }
 

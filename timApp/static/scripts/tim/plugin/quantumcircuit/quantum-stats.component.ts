@@ -53,12 +53,14 @@ export interface QuantumChartData {
                     <table #outputTable class="output-table">
                         <thead>
                         <tr>
+                            <th>#&nbsp;</th>
                             <th>Input</th>
                             <th>Output</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr *ngFor="let measurement of measurements; even as isEven; first as isFirst" [class.even-row]="isEven">
+                        <tr *ngFor="let measurement of measurements; even as isEven; first as isFirst; index as i" [class.even-row]="isEven">
+                            <td>{{measurements.length - i}}</td>
                             <td>{{measurement.input}}</td>
                             <td>{{measurement.output}}</td>
                         </tr>

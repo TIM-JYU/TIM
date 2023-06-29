@@ -4,13 +4,15 @@
 }
 
 svg text, .moment, .qubit, .output {
-    -webkit-user-select: none;
-       -moz-user-select: none;
-        -ms-user-select: none;
-            user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  font-family: "courier new", courier, monospace;
 }
+
 svg text::selection {
-    background: none;
+  background: none;
 }
 
 .gate {
