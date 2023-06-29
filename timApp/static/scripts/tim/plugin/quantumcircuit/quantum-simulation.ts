@@ -94,6 +94,13 @@ export class QuantumCircuitSimulator {
         return this.identityMatrix;
     }
 
+    /**
+     * Builds a controlled matrix using gate at specified cell with as many controls as
+     * that gate has.
+     * @param target qubit index to build gate for
+     * @param time time
+     * @param controls controllers of this gate
+     */
     private buildControlledGate(
         target: number,
         time: number,
@@ -125,10 +132,7 @@ export class QuantumCircuitSimulator {
             const cell = this.board.get(i, colI);
             if (cell instanceof Control) {
                 const controlled = cell.target;
-                // one control only
-                if (gateControls[controlled].length < 1) {
-                    gateControls[controlled].push(i);
-                }
+                gateControls[controlled].push(i);
             }
         }
         return gateControls;
@@ -188,6 +192,29 @@ export class QuantumCircuitSimulator {
     }
 
     /**
+     * Apply swaps to move qubit from position to another.
+     * @param currI current index of qubit
+     * @param destI destination index of qubit
+     * @param input matrix to apply to
+     */
+    applyPositionChange(currI: number, destI: number, input: Matrix) {
+        let result = input;
+        if (currI < destI) {
+            for (let i = currI; i < destI; i++) {
+                const swap = this.padMatrix(this.swapMatrix, i, 2);
+                result = multiply(swap, result);
+            }
+            return result;
+        } else {
+            for (let i = currI - 1; i >= destI; i--) {
+                const swap = this.padMatrix(this.swapMatrix, i, 2);
+                result = multiply(swap, result);
+            }
+            return result;
+        }
+    }
+
+    /**
      * Build controlled gate matrix.
      * @param controls qubit indices that control this qubit
      * @param target qubit index to build matrix for
@@ -200,33 +227,28 @@ export class QuantumCircuitSimulator {
         time: number,
         input: Matrix
     ) {
-        const firstControlI = controls[0];
-        let distance = target - firstControlI - 1;
+        // create the controlled gate
         let gate = this.buildControlledGate(target, time, controls);
+        gate = this.padMatrix(gate, 0, controls.length + 1);
 
-        let startI = firstControlI;
-        // target needs to be other way around so flip everything around
-        if (firstControlI > target) {
-            distance = firstControlI - target - 1;
-            gate = multiply(multiply(this.swapMatrix, gate), this.swapMatrix);
-            startI = target;
-        }
-
-        gate = this.padMatrix(gate, startI, controls.length + 1);
-
+        // apply swap gates to move controls to their correct positions
         let result = input;
-        // move gate and control next to each other if they aren't next to each other
-        for (let offset = startI + distance; offset > startI; offset--) {
-            const swap = this.padMatrix(this.swapMatrix, offset, 2);
-            result = multiply(swap, result);
+        for (let i = 0; i < controls.length; i++) {
+            const currI = controls[i];
+            result = this.applyPositionChange(currI, i, result);
         }
-
+        // apply swaps also for gate target qubit to move it to correct position (after control qubits)
+        result = this.applyPositionChange(target, controls.length, result);
+        // apply gate
         result = multiply(gate, result);
 
-        // reverse the effect of moving qubits by moving them back
-        for (let offset = startI + 1; offset <= startI + distance; offset++) {
-            const swap = this.padMatrix(this.swapMatrix, offset, 2);
-            result = multiply(swap, result);
+        // apply swaps to move target qubit back to where it was
+        result = this.applyPositionChange(controls.length, target, result);
+
+        // apply swaps to move control qubits back to where they were
+        for (let i = controls.length - 1; i >= 0; i--) {
+            const currI = controls[i];
+            result = this.applyPositionChange(i, currI, result);
         }
         return result;
     }
