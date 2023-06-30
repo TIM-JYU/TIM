@@ -21,7 +21,7 @@ import {
 } from "mathjs";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import type {Cell, QuantumBoard} from "tim/plugin/quantumcircuit/quantum-board";
-import {Control, Gate} from "tim/plugin/quantumcircuit/quantum-board";
+import {Control, Gate, Swap} from "tim/plugin/quantumcircuit/quantum-board";
 
 export class QuantumCircuitSimulator {
     board: QuantumBoard;
@@ -227,46 +227,31 @@ export class QuantumCircuitSimulator {
     }
 
     /**
-     * Build controlled gate matrix.
-     * @param controls qubit indices that control this qubit
-     * @param target qubit index to build matrix for
-     * @param time time
+     * Applies multi-qubit gate to input with specific qubits
+     * @param qubits qubit indices that this gate is applied to
+     * @param gate gate to apply
      * @param input current state of circuit at this time
      */
-    private applyColumnMatrixFromControlledGate(
-        controls: number[],
-        target: number,
-        time: number,
-        input: Matrix
-    ) {
-        // create the controlled gate
-        let gate = this.buildControlledGate(target, time, controls);
-        gate = this.padMatrix(gate, 0, controls.length + 1);
-
+    private applyMultiQubitGate(qubits: number[], gate: Matrix, input: Matrix) {
         const basis = [];
+
         for (let i = 0; i < this.board.nQubits; i++) {
             basis.push(i);
         }
-
         // keep track of moves to do them backwards afterward
+
         const moves = [];
         // apply swap gates to move controls to their correct positions
         let result = input;
-        for (let i = 0; i < controls.length; i++) {
-            const currI = controls[i];
-            moves.push([basis[currI], i]);
-            result = this.applyPositionChange(basis[currI], i, result, basis);
+        for (let i = 0; i < qubits.length; i++) {
+            // the positions of qubits changed so find where it is now
+            const currentI = basis.indexOf(qubits[i]);
+            moves.push([currentI, i]);
+            result = this.applyPositionChange(currentI, i, result, basis);
         }
-        // apply swaps also for gate target qubit to move it to correct position (after control qubits)
-        moves.push([basis[target], controls.length]);
-        result = this.applyPositionChange(
-            basis[target],
-            controls.length,
-            result,
-            basis
-        );
 
         // apply gate
+        gate = this.padMatrix(gate, 0, qubits.length);
         result = multiply(gate, result);
 
         // apply swaps to move control qubits back to where they were
@@ -298,10 +283,16 @@ export class QuantumCircuitSimulator {
             const cell = this.board.get(i, colI);
             // controlled gate
             if (cell instanceof Gate && gateControls[i].length > 0) {
-                result = this.applyColumnMatrixFromControlledGate(
-                    gateControls[i],
-                    i,
-                    colI,
+                const qubits = [...gateControls[i], i];
+                const gate = this.buildControlledGate(i, colI, gateControls[i]);
+                result = this.applyMultiQubitGate(qubits, gate, result);
+            }
+            // cell.target > i is added so that swap is not applied twice
+            if (cell instanceof Swap && cell.target > i) {
+                const qubits = [i, cell.target];
+                result = this.applyMultiQubitGate(
+                    qubits,
+                    this.swapMatrix,
                     result
                 );
             }
