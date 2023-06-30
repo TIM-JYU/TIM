@@ -21,6 +21,7 @@ import {
     Control,
     Gate,
     QuantumBoard,
+    Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
 
 /**
@@ -141,17 +142,28 @@ export class RangePipe implements PipeTransform {
                             />
                         </g>
                     </g>
-                    
+
                     <!-- wires -->
                     <g *ngFor="let gates of board; let i=index">
                         <g *ngFor="let gate of gates; let j=index">
-                             <line *ngIf="gate|instanceof: Control as c"
+                            <line *ngIf="gate|instanceof: Control as c"
                                   [attr.stroke]="colors.dark"
                                   [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                   [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                   [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                   [attr.y2]="c.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2 + circuitStyleOptions.gateSize / 2"
                             ></line>
+
+                            <g *ngIf="gate|instanceof: Swap as s">
+                                <line *ngIf="s.target > i"
+                                      [attr.stroke]="colors.dark"
+                                      [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                      [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                      [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                      [attr.y2]="s.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                ></line>
+                            </g>
+
                         </g>
                     </g>
 
@@ -184,7 +196,7 @@ export class RangePipe implements PipeTransform {
                                   [attr.y]="(i * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
                                   dominant-baseline="middle"
                                   text-anchor="middle"
-                                  [attr.fill]="colors.dark">{{g.name}}</text>
+                                  [attr.stroke]="colors.dark">{{g.name}}</text>
 
                             <!-- control gate -->
                             <circle *ngIf="!isBeingDragged(i, j) && gate|instanceof: Control as c"
@@ -195,6 +207,18 @@ export class RangePipe implements PipeTransform {
                                     [attr.cy]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                     [attr.r]="circuitStyleOptions.gateSize/4"
                                     [attr.fill]="colors.dark" [attr.stroke]="colors.dark"/>
+
+                            <!-- Swap gate -->
+                            <text *ngIf="!isBeingDragged(i, j) && gate|instanceof: Swap as s"
+                                  [class.selected-gate]="selectedGate && i === selectedGate.target && j === selectedGate.time"
+                                  class="gate"
+                                  [class.drag-over-element]="isBeingDraggedOver(i, j)"
+                                  [attr.x]="j * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize / 2)"
+                                  [attr.y]="i * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize / 2)"
+                                  [attr.stroke]="colors.dark"
+                                  [attr.font-size]="circuitStyleOptions.gateSize / 2"
+                                  dominant-baseline="central" text-anchor="middle">X
+                            </text>
                         </g>
                     </g>
 
@@ -229,6 +253,16 @@ export class RangePipe implements PipeTransform {
                                 [attr.cy]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                 [attr.r]="circuitStyleOptions.gateSize/4"
                                 [attr.fill]="colors.dark" [attr.stroke]="colors.dark"/>
+
+                        <!-- Swap gate -->
+                        <text *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: Swap"
+                              class="gate"
+                              [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize / 2)"
+                              [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize / 2)"
+                              [attr.stroke]="colors.dark"
+                              [attr.font-size]="circuitStyleOptions.gateSize / 2"
+                              dominant-baseline="central" text-anchor="middle">X
+                        </text>
                     </g>
 
 
@@ -254,6 +288,7 @@ export class RangePipe implements PipeTransform {
 export class QuantumCircuitBoardComponent implements OnInit {
     protected readonly Gate = Gate;
     protected readonly Control = Control;
+    protected readonly Swap = Swap;
 
     // Cell in board that is being dragged over
     dragOverElement?: GatePos;

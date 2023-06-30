@@ -9,6 +9,10 @@ svg text::selection {
   background: none;
 }
 
+.swap-gate text {
+  font-stretch: ultra-expanded;
+}
+
 .gate-container {
   display: flex;
   flex-direction: column;

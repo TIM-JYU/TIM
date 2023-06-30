@@ -39,6 +39,7 @@ import {
     Control,
     Gate,
     QuantumBoard,
+    Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {timeout} from "tim/util/utils";
@@ -255,6 +256,19 @@ export class QuantumCircuitComponent
         return undefined;
     }
 
+    findPossibleTargetForSwap(time: number, target: number) {
+        for (let i = 0; i < this.board.length; i++) {
+            if (i === target) {
+                continue;
+            }
+            const cell = this.board.get(i, time);
+            if (!cell) {
+                return i;
+            }
+        }
+        return undefined;
+    }
+
     /**
      * Replaces cell of the board with gate.
      * @param gate gate to put in cell
@@ -284,6 +298,12 @@ export class QuantumCircuitComponent
                         new Control(this.selectedGate.target)
                     );
                 }
+            }
+        } else if (gate.name === "swap") {
+            const emptyCell = this.findPossibleTargetForSwap(time, target);
+            if (emptyCell !== undefined) {
+                this.board.set(target, time, new Swap(emptyCell));
+                this.board.set(emptyCell, time, new Swap(target));
             }
         } else {
             this.board.set(target, time, new Gate(gate.name));
@@ -323,6 +343,7 @@ export class QuantumCircuitComponent
         const fromCell = this.board.get(target1, time1);
         if (fromCell instanceof Gate) {
             const name = fromCell.name;
+            this.board.remove({target: target2, time: time2});
             this.board.set(target2, time2, new Gate(name));
             this.board.set(target1, time1, undefined);
             const controlling = this.getControlling(gateMove.from);
@@ -344,9 +365,38 @@ export class QuantumCircuitComponent
                 }
             }
         } else if (fromCell instanceof Control) {
-            if (time1 === time2) {
+            if (time1 === time2 && target2 !== fromCell.target) {
+                this.board.remove({target: target2, time: time2});
                 this.board.set(target2, time2, new Control(fromCell.target));
                 this.board.set(target1, time1, undefined);
+            }
+        } else if (fromCell instanceof Swap) {
+            if (time1 === time2) {
+                // rejoin swaps
+                if (target2 !== fromCell.target) {
+                    this.board.set(target2, time2, new Swap(fromCell.target));
+                    this.board.set(fromCell.target, time2, new Swap(target2));
+                    this.board.set(target1, time1, undefined);
+                } else {
+                    this.board.set(fromCell.target, time2, undefined);
+                    this.board.set(target1, time1, undefined);
+                    // find new pair
+                    const pair = this.findPossibleTargetForSwap(time2, target2);
+                    if (pair !== undefined) {
+                        this.board.set(pair, time2, new Swap(target2));
+                        this.board.set(target2, time2, new Swap(pair));
+                    }
+                }
+            } else {
+                // remove old pair
+                this.board.set(fromCell.target, time1, undefined);
+                this.board.set(target1, time1, undefined);
+                // find new pair
+                const pair = this.findPossibleTargetForSwap(time2, target2);
+                if (pair !== undefined) {
+                    this.board.set(pair, time2, new Swap(target2));
+                    this.board.set(target2, time2, new Swap(pair));
+                }
             }
         }
         this.selectedGate = null;
@@ -354,21 +404,11 @@ export class QuantumCircuitComponent
     }
 
     /**
-     * Removes gate from board and controls associated to it.
+     * Removes gate from board and controls or swap pair associated with it.
      * @param gate gate to remove
      */
     handleGateRemove(gate: GatePos) {
-        this.board.set(gate.target, gate.time, undefined);
-
-        for (let i = 0; i < this.board.length; i++) {
-            if (i === gate.target) {
-                continue;
-            }
-            const cell = this.board.get(i, gate.time);
-            if (cell instanceof Control && cell.target === gate.target) {
-                this.board.set(i, gate.time, undefined);
-            }
-        }
+        this.board.remove(gate);
 
         this.selectedGate = null;
 
@@ -418,14 +458,29 @@ export class QuantumCircuitComponent
             return;
         }
         for (const gateData of this.markup.initialCircuit) {
-            const gate = new Gate(gateData.name);
-            this.board.set(gateData.target, gateData.time, gate);
-            if (!gateData.controls) {
-                continue;
-            }
-            for (const controlData of gateData.controls) {
-                const control = new Control(gateData.target);
-                this.board.set(controlData, gateData.time, control);
+            if (gateData.name.toLowerCase() === "swap") {
+                if (gateData.controls && gateData.controls.length === 1) {
+                    this.board.set(
+                        gateData.target,
+                        gateData.time,
+                        new Swap(gateData.controls[0])
+                    );
+                    this.board.set(
+                        gateData.controls[0],
+                        gateData.time,
+                        new Swap(gateData.target)
+                    );
+                }
+            } else {
+                const gate = new Gate(gateData.name);
+                this.board.set(gateData.target, gateData.time, gate);
+                if (!gateData.controls) {
+                    continue;
+                }
+                for (const controlData of gateData.controls) {
+                    const control = new Control(gateData.target);
+                    this.board.set(controlData, gateData.time, control);
+                }
             }
         }
     }

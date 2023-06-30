@@ -1,3 +1,5 @@
+import type {GatePos} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
+
 export class Gate {
     name: string;
     constructor(name: string) {
@@ -21,7 +23,15 @@ export class Control {
     }
 }
 
-export type Cell = Gate | Control | undefined;
+export class Swap {
+    target: number;
+
+    constructor(target: number) {
+        this.target = target;
+    }
+}
+
+export type Cell = Gate | Control | Swap | undefined;
 
 /**
  * Quatum circuit board containing information about gates in circuit.
@@ -80,6 +90,27 @@ export class QuantumBoard {
 
     get length() {
         return this.board.length;
+    }
+
+    /**
+     * Removes gate from board and controls or swap pair associated with it.
+     * @param gate gate to remove
+     */
+    remove(gate: GatePos) {
+        this.set(gate.target, gate.time, undefined);
+
+        for (let i = 0; i < this.board.length; i++) {
+            if (i === gate.target) {
+                continue;
+            }
+            const cell = this.get(i, gate.time);
+            if (cell instanceof Control && cell.target === gate.target) {
+                this.set(i, gate.time, undefined);
+            }
+            if (cell instanceof Swap && cell.target === gate.target) {
+                this.set(i, gate.time, undefined);
+            }
+        }
     }
 
     /**
