@@ -40,9 +40,9 @@ interface Gate {
                 <div class="svg-container" draggable="true"
                      (dragstart)="handleDragStart($event, 'swap')">
                     <svg [attr.width]="circuitStyleOptions.gateSize" [attr.height]="circuitStyleOptions.gateSize" class="swap-gate">
-                        <text x="50%" y="25%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark" dominant-baseline="middle" text-anchor="middle">X</text>
+                        <text x="50%" y="25%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark" dominant-baseline="middle" text-anchor="middle" [attr.font-size]="circuitStyleOptions.gateSize / 3">X</text>
                         <line [attr.stroke]="colors.dark" stroke-width="2" x1="50%" x2="50%" y1="25%" y2="75%"></line>
-                        <text x="50%" y="75%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark" dominant-baseline="middle" text-anchor="middle">X</text>
+                        <text x="50%" y="75%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark" dominant-baseline="middle" text-anchor="middle" [attr.font-size]="circuitStyleOptions.gateSize / 3">X</text>
                     </svg>
                 </div>
                 
