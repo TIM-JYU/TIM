@@ -3731,6 +3731,12 @@ ${fhtml}
                 // Skip all other elements to speed up DOM copying
                 return true;
             },
+            onclone: (doc) => {
+                // Add padding to the cloned element so that the image does not look cropped in reviewcanvas
+                const style = document.createElement("style");
+                style.innerHTML = `.csMDHTML { padding: 50px !important; }`;
+                doc.head.appendChild(style);
+            },
         });
 
         // Convert to blob
