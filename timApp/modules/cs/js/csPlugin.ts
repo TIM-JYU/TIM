@@ -62,6 +62,7 @@ import {
 } from "tim/ui/showTemplateReplaceDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showInputDialog} from "tim/ui/showInputDialog";
+import html2canvas from "html2canvas";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -770,6 +771,7 @@ const CsMarkupOptional = t.partial({
     uploadAcceptMaxSize: t.number,
     showAlwaysSavedText: t.boolean,
     startLineNumber: t.number,
+    targetCanvas: t.string,
 });
 
 const CsMarkupDefaults = t.type({
@@ -1206,6 +1208,7 @@ export class CsController extends CsBase implements ITimComponent {
     templateButtons: ITemplateButton[] = [];
     templateButtonsCount: number = 0;
     mdHtml?: string;
+    @ViewChild("mdHtmlDiv") mdHtmlDiv?: ElementRef<HTMLDivElement>;
 
     iframesettings?: {
         src?: SafeResourceUrl;
@@ -1240,6 +1243,7 @@ export class CsController extends CsBase implements ITimComponent {
     private isSimcirUnsaved?: boolean;
     private clearSaved: boolean = false;
     private originalUserInput?: string;
+    exportingMD = false;
 
     @ViewChild("externalEditor")
     set externalEditorViewSetter(newValue: EditorComponent | undefined) {
@@ -2667,6 +2671,17 @@ ${fhtml}
         }
     }
 
+    get mdSaveButton() {
+        if (!this.markup.targetCanvas) {
+            return undefined;
+        }
+        const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
+        if (ty !== "md") {
+            return undefined;
+        }
+        return $localize`Copy image to task ${this.markup.targetCanvas}`;
+    }
+
     async runCodeCommon(nosave: boolean, _extraMarkUp?: IExtraMarkup) {
         this.hasBeenRun = true;
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
@@ -3668,7 +3683,82 @@ ${fhtml}
         }
     }
 
+    async exportMDAsImg() {
+        if (!this.mdHtmlDiv) {
+            return;
+        }
+        this.runError = false;
+        if (!this.markup.targetCanvas) {
+            this.runError = true;
+            this.error = $localize`No target set`;
+            return;
+        }
+        const rc = this.vctrl.getReviewCanvas(this.markup.targetCanvas);
+        if (!rc) {
+            this.runError = true;
+            this.error = $localize`Couldn't find target ${this.markup.targetCanvas}`;
+            return;
+        }
+
+        this.exportingMD = true;
+        await timeout(); // Let loading icon appear
+
+        const el = this.mdHtmlDiv.nativeElement;
+        const canvas = await html2canvas(el, {
+            ignoreElements: (e) => {
+                const $e = $(e);
+
+                // Allow head element
+                if ($e.closest("head").length > 0) {
+                    return false;
+                }
+
+                // Allow elements that contain the .csMDHTML class
+                if ($e.hasClass("csMDHTML")) {
+                    return false;
+                }
+
+                // Allow if element contains a .csMDHTML element
+                if ($e.find(".csMDHTML").length > 0) {
+                    return false;
+                }
+
+                // Allow if element is the mdContent
+                if ($e.closest(".csMDHTML").length > 0) {
+                    return false;
+                }
+
+                // Skip all other elements to speed up DOM copying
+                return true;
+            },
+            onclone: (doc) => {
+                // Add padding to the cloned element so that the image does not look cropped in reviewcanvas
+                const style = document.createElement("style");
+                style.innerHTML = `.csMDHTML { padding: 50px !important; }`;
+                doc.head.appendChild(style);
+            },
+        });
+
+        // Convert to blob
+        const blob = await new Promise<Blob | null>((r) =>
+            canvas.toBlob(r, "image/png")
+        );
+        if (!blob) {
+            this.runError = true;
+            this.error = $localize`Unable to automatically create image`;
+            this.exportingMD = false;
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        const file = new File([blob], taskId ? taskId.name : "matheditor");
+        rc.uploadFiles([file]);
+        this.result = $localize`Image sent to task ${this.markup.targetCanvas}`;
+        this.exportingMD = false;
+    }
+
     async showMD() {
+        this.runError = false;
+        this.result = "";
         if (!this.usercode) {
             if (this.mdHtml) {
                 this.mdHtml = "";
@@ -3677,7 +3767,8 @@ ${fhtml}
         }
         const taskId = this.pluginMeta.getTaskId();
         if (!taskId?.docId) {
-            console.log("taskId missing");
+            this.runError = true;
+            this.error = $localize`Plugin is missing task id`;
             return;
         }
         if (this.precode == undefined) {
@@ -3709,7 +3800,8 @@ ${fhtml}
             await ParCompiler.processAllMathDelayed(this.preview, 0);
         } else {
             const data = r.result;
-            alert("Failed to show preview: " + data.error.error);
+            this.runError = true;
+            this.error = $localize`Failed to show preview: ${data.error.error}`;
         }
     }
 
@@ -4109,6 +4201,11 @@ ${fhtml}
                             (click)="runCode()"
                             [innerHTML]="buttonText()"></button>
                     &nbsp;
+                    <button *ngIf="mdSaveButton" [disabled]="!mdHtml" class="timButton btn-sm"
+                            (click)="exportMDAsImg()">{{mdSaveButton}}
+                    </button>
+                    <tim-loading *ngIf="mdSaveButton && exportingMD"></tim-loading>
+                    &nbsp;
                     <button *ngIf="isExternalFetch"
                             [disabled]="isRunning"
                             class="timButton btn-sm"
@@ -4249,7 +4346,7 @@ ${fhtml}
                             style="border:0">
                     </iframe>
                 </div>
-                <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">
+                <div class="csMDHTML" #mdHtmlDiv *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">
                 </div>
             </div>
             <tim-graph-viz class="csGraphViz" *ngIf="isViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>
