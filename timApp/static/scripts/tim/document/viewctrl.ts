@@ -866,7 +866,6 @@ export class ViewCtrl implements IController {
         if (taskId) {
             const name = taskId.docTaskField();
             this.reviewCanvases.set(name, rc);
-            console.log("added", rc);
         }
     }
 
