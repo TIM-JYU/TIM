@@ -195,9 +195,10 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
     ngAfterViewInit(): void {
         this.updateChart();
-        // leave room for both columns. About 10px is needed for each character.
-        const w = this.nQubits * 10 * 2;
-        this.table.nativeElement.style.width = `${w}px`;
+        const charWidth = 12;
+        // | "# " | nQubits chars | nQubits chars |
+        const tableWidth = 2 * charWidth + 2 * charWidth * this.nQubits;
+        this.table.nativeElement.style.width = `${tableWidth}px`;
     }
 
     /**
