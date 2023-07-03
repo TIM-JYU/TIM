@@ -97,6 +97,13 @@ class PeerReviewTest(TimRouteTest):
         check_peerreview_rows_t()
         PeerReview.query.filter_by(block_id=d.id).delete()
         db.session.commit()
+        dt = self.create_translation(d, lang="en-GB")
+        tr_url = dt.get_url_for_view("review")
+        self.get(f"{tr_url}?b={dt.document.get_paragraphs()[1].id}&size=1")
+        # Peer-review generation works for one task in translated document
+        check_peerreview_rows_t()
+        PeerReview.query.filter_by(block_id=d.id).delete()
+        db.session.commit()
         self.get(
             f"{url}?b={pars[3].id}&size=1",
             expect_status=400,
@@ -128,13 +135,22 @@ class PeerReviewTest(TimRouteTest):
             self.assertEqual(prs[index].task_name, task_name)
             self.assertEqual(prs[index].answer_id, answer_id)
 
+        def check_area_prs():
+            self.assertEqual(4, len(prs))
+            check_pr_row(0, 2, 4, "ta1", None)
+            check_pr_row(1, 2, 4, "ta2", tu3_ans.id)
+            check_pr_row(2, 4, 2, "ta1", tu1_ans.id)
+            check_pr_row(3, 4, 2, "ta2", None)
+
         # Testuser2 didn't answer to any tasks in area => not in reviewer pairs
         # Testuser1 and Testuser3 answered only to some tasks in the area => PR rows are still generated for every task
-        self.assertEqual(4, len(prs))
-        check_pr_row(0, 2, 4, "ta1", None)
-        check_pr_row(1, 2, 4, "ta2", tu3_ans.id)
-        check_pr_row(2, 4, 2, "ta1", tu1_ans.id)
-        check_pr_row(3, 4, 2, "ta2", None)
+        check_area_prs()
+
+        PeerReview.query.filter_by(block_id=d.id).delete()
+        db.session.commit()
+        self.get(f"{tr_url}?area=rev")
+        # Peer generation works for an area in translated document
+        check_area_prs()
 
         PeerReview.query.filter_by(block_id=d.id).delete()
         all_answers = Answer.query.all()

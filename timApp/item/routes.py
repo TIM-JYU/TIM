@@ -640,7 +640,7 @@ def render_doc_view(
     if piece_size:
         areas = get_document_areas(doc_info)
     if m.area:
-        area = get_area_range(doc_info, m.area)
+        area = get_area_range(doc_info, m.area, view_ctx)
         if area is not None:
             # RequestedViewRange e returns paragraph e-1 as last paragraph, add +1 to render full area
             r_view_range = RequestedViewRange(b=area[0], e=area[1] + 1, size=None)
@@ -881,33 +881,40 @@ def render_doc_view(
         # plugins that match the requested b or are inside the requested area
         if m.b and m.size == 1:
             for task in post_process_result.plugins:
-                if task.par.id == m.b and task.task_id:
+                if (
+                    task.par.id == m.b
+                    or task.par.ref_chain
+                    and task.par.ref_chain.prev_deref.id == m.b
+                ) and task.task_id:
                     tids.append(task.task_id)
                     break
         else:
             area_started = False
             pars_in_area = []
             for t in post_process_result.texts:
-                if not area_started and t.attrs.get("area") == m.area:
+                if not area_started and t.target_data.attrs.get("area") == m.area:
                     area_started = True
                     continue
                 if area_started:
-                    if t.attrs.get("area_end") == m.area:
+                    if t.target_data.attrs.get("area_end") == m.area:
                         break
                     else:
-                        pars_in_area.append(t.id)
+                        pars_in_area.append(t.target.id if t.target else t.id)
             for task in post_process_result.plugins:
                 if task.par.id in pars_in_area and task.task_id:
                     tids.append(task.task_id)
         if len(tids) < 1:
             raise RouteException("No tasks to review in requested area or block")
-        if not check_review_grouping(doc_info, tids):
+        orig_doc_info = (
+            doc_info if doc_info.is_original_translation else doc_info.src_doc
+        )
+        if not check_review_grouping(orig_doc_info, tids):
             try:
-                generate_review_groups(doc_info, tids)
-                set_default_velp_group_selected_and_visible(doc_info)
+                generate_review_groups(orig_doc_info, tids)
+                set_default_velp_group_selected_and_visible(orig_doc_info)
             except PeerReviewException as e:
                 flash(str(e))
-        reviews = get_reviews_where_user_is_reviewer(doc_info, current_user)
+        reviews = get_reviews_where_user_is_reviewer(orig_doc_info, current_user)
         tidset = {tid.doc_task for tid in tids}
         for review in reviews:
             if f"{review.block_id}.{review.task_name}" in tidset:

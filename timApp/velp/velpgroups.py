@@ -9,9 +9,9 @@ selections from the database.
 :version: 1.0.0
 
 """
-import copy
 from dataclasses import dataclass, field
 from typing import Union
+
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -29,7 +29,6 @@ from timApp.velp.velp_models import (
     VelpGroupsInDocument,
     VelpGroupSelection,
     VelpGroupDefaults,
-    VelpInGroup,
 )
 
 
@@ -127,7 +126,7 @@ def get_document_default_velp_group_info(doc_info: DocInfo) -> tuple[str, str]:
     """
     Returns path and name for a document's default group
     """
-    full_path = doc_info.path
+    full_path = doc_info.path_without_lang
     doc_path, doc_name = split_location(full_path)
     user_group = doc_info.block.owners[0]
     velps_folder_path = check_velp_group_folder_path(doc_path, user_group, doc_name)
