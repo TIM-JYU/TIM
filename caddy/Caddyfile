@@ -26,6 +26,22 @@
 			root /csgenerated
 		}
 	}
+
+	handle_path /js/* {
+		@has_lang {
+			file {
+				root /tim/timApp/static/scripts/build/{cookie.script_lang}
+				try_files {path}
+			}
+		}
+		file_server @has_lang {
+			root /tim/timApp/static/scripts/build/{cookie.script_lang}
+		}
+	    file_server {
+			root /tim/timApp/static/scripts/build
+		}
+	}
+
 	handle_path /csstatic/* {
         @is_global {
             file {

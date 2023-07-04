@@ -1,5 +1,4 @@
 """Unit tests for TIM routes."""
-from unittest.mock import patch
 
 from flask import current_app
 from lxml.cssselect import CSSSelector
@@ -465,13 +464,3 @@ class TimTest(TimRouteTest):
 
         self.json_post(f"/settings/updateConsent", {"consent": 9999}, expect_status=422)
         self.json_post(f"/settings/updateConsent", {"consent": "x"}, expect_status=422)
-
-    def test_no_db_for_js(self):
-        """Database is not accessed during a JS file request."""
-        self.login_test1()
-        self.get("/")
-        with patch.object(
-            User, User.get_by_id.__name__, wraps=User.get_by_id
-        ) as m:  # type: Mock
-            self.get(f"/js/x.js", expect_status=404)
-        m.assert_not_called()
