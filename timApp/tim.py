@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 import bs4
 from bs4 import BeautifulSoup
-from flask import Response, send_from_directory
+from flask import Response
 from flask import g
 from flask import redirect
 from flask import render_template
@@ -13,7 +13,6 @@ from flask import session
 from flask_assets import Environment
 from flask_wtf.csrf import generate_csrf
 from sqlalchemy import event
-from werkzeug.exceptions import NotFound
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
 from timApp.admin.cli import register_clis
@@ -89,7 +88,6 @@ from timApp.util.error_handlers import register_errorhandlers
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
     get_request_message,
-    NotExist,
     is_testing,
 )
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -241,14 +239,7 @@ def inject_user() -> dict:
 
 @app.get("/js/<path:path>")
 def get_js_file(path: str):
-    # Resolve any relative paths
-    locale = get_locale()
-    for d in (f"static/scripts/build/{locale}", f"static/scripts/build"):
-        try:
-            return send_from_directory(d, path)
-        except NotFound:
-            pass
-    raise NotExist("File not found")
+    raise Exception("Angular scripts should be served by Caddy, not Flask")
 
 
 @app.get("/empty")
@@ -403,8 +394,15 @@ def after_request(resp: Response):
         samesite=app.config["SESSION_COOKIE_SAMESITE"],
         secure=app.config["SESSION_COOKIE_SECURE"],
     )
+
+    locale = get_locale()
+    # lang is used to preserve the active language preference which may be either
+    # a specific language or "UseWebBrowser" which defaults to browser preference
     if not request.cookies.get("lang"):
-        resp.set_cookie("lang", get_locale())
+        resp.set_cookie("lang", locale)
+    # script_lang is used by Caddy to serve correct Angular scripts
+    # It always contains a specific valid language, never "UseWebBrowser"
+    resp.set_cookie("script_lang", locale)
     return resp
 
 

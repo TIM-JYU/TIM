@@ -121,7 +121,7 @@ def get_default_velp_group(doc_id: int) -> Response:
     user = get_current_user_object()
 
     doc = get_doc_or_abort(doc_id)
-    full_path = doc.path
+    full_path = doc.path_without_lang
     doc_path, doc_name = split_location(full_path)
     edit_access = False
     if has_edit_access(doc):
@@ -711,7 +711,7 @@ def create_velp_group_route(doc_id: int) -> Response:
         raise RouteException("Missing data: " + e.args[0])
 
     doc = get_doc_or_abort(doc_id)
-    full_path = doc.path
+    full_path = doc.path_without_lang
     doc_path, doc_name = split_location(full_path)
 
     # valid_until = json_data.get('valid_until')
@@ -912,7 +912,7 @@ def get_velp_groups_from_tree(doc: DocInfo) -> list[DocInfo]:
 
     """
 
-    full_path = doc.path
+    full_path = doc.path_without_lang
     doc_path, doc_name = split_location(full_path)
     velp_group_folder = "velp-groups"
 

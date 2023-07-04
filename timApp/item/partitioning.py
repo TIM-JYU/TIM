@@ -9,9 +9,10 @@ from flask import json, Request
 from lxml import html
 
 from timApp.document.docinfo import DocInfo
+from timApp.document.document import dereference_pars
 from timApp.document.prepared_par import PreparedPar
 from timApp.document.randutils import hashfunc
-from timApp.document.viewcontext import default_view_ctx
+from timApp.document.viewcontext import default_view_ctx, ViewContext
 from timApp.util.utils import Range
 
 INCLUDE_IN_PARTS_CLASS_NAME = (
@@ -216,11 +217,18 @@ def get_document_areas(doc: DocInfo) -> list[Range]:
     :return: List of area ranges.
     """
     pars = doc.document.get_paragraphs()
+    is_translation = not doc.is_original_translation
+    if is_translation:
+        dereference_pars(pars, doc.document, None)
     areas = []
     area = {"index": None, "name": None}
     for i, par in enumerate(pars):
-        area_begin = par.get_attr("area")
-        area_end = par.get_attr("area_end")
+        if is_translation and par.is_translation():
+            targ_par = par.get_referenced_pars()[0]
+        else:
+            targ_par = par
+        area_begin = targ_par.get_attr("area")
+        area_end = targ_par.get_attr("area_end")
         if area["name"] is None and area_begin is not None:
             area = {"index": i, "name": area_begin}
         if area_end is not None and area_end == area["name"]:
@@ -229,7 +237,7 @@ def get_document_areas(doc: DocInfo) -> list[Range]:
     return areas
 
 
-def get_area_range(doc: DocInfo, name: str) -> Range | None:
+def get_area_range(doc: DocInfo, name: str, view_ctx: ViewContext) -> Range | None:
     """
     Gets the range of the area in the document
     :param doc: Document
@@ -237,11 +245,18 @@ def get_area_range(doc: DocInfo, name: str) -> Range | None:
     :return: Area range if area was found and not broken, else None
     """
     pars = doc.document.get_paragraphs()
+    is_translation = not doc.is_original_translation
+    if is_translation:
+        dereference_pars(pars, doc.document, view_ctx)
     begin = None
     end = None
     for i, par in enumerate(pars):
-        area_begin = par.get_attr("area")
-        area_end = par.get_attr("area_end")
+        if is_translation and par.is_translation():
+            targ_par = par.get_referenced_pars()[0]
+        else:
+            targ_par = par
+        area_begin = targ_par.get_attr("area")
+        area_end = targ_par.get_attr("area_end")
         if area_begin == name:
             begin = i
         if area_end == name:

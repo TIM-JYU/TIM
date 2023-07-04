@@ -8186,6 +8186,54 @@
           <context context-type="linenumber">591,589</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6119751961559015295" datatype="html">
+        <source>Copy image to task <x id="PH" equiv-text="this.markup.targetCanvas"/></source>
+        <target state="translated">Kopioi kuva tehtävään <x id="PH" equiv-text="this.markup.targetCanvas"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">2683</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3522059191534661061" datatype="html">
+        <source>No target set</source>
+        <target state="translated">Kohdetta ei ole asetettu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">3694</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6461040828941961464" datatype="html">
+        <source>Couldn't find target <x id="PH" equiv-text="this.markup.targetCanvas"/></source>
+        <target state="translated">Kohdetta <x id="PH" equiv-text="this.markup.targetCanvas"/> ei löytynyt</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">3700</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7780170781302226681" datatype="html">
+        <source>Unable to automatically create image</source>
+        <target state="translated">Kuvaa ei voitu luoda</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">3743</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8306748342560222622" datatype="html">
+        <source>Image sent to task <x id="PH" equiv-text="this.markup.targetCanvas"/></source>
+        <target state="translated">Kuva lähetetty tehtävään <x id="PH" equiv-text="this.markup.targetCanvas"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">3750</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8450572512044824408" datatype="html">
+        <source>Failed to show preview: <x id="PH" equiv-text="data.error.error"/></source>
+        <target state="translated">Esikatselun näyttäminen epäonnistui: <x id="PH" equiv-text="data.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">3799</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

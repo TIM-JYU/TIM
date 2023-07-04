@@ -224,26 +224,33 @@ export class ReviewCanvasComponent
         if (!items || !this.fileSelect) {
             return;
         }
-        const blobs: File[] = [];
+        const files: File[] = [];
         for (const i of items) {
             if (i.type.startsWith("image") || i.type == "application/pdf") {
-                const blob = i.getAsFile();
-                if (blob !== null) {
-                    blobs.push(blob);
+                const file = i.getAsFile();
+                if (file !== null) {
+                    files.push(file);
                 }
             }
         }
-        if (blobs.length != 0) {
-            const fs = this.fileSelect.fileSelectors;
-            const fss = Object.values(fs);
-            if (fss.length > 0) {
-                fss[0].onFilesGot(blobs);
-            }
+        if (files.length != 0) {
+            this.uploadFiles(files);
         } else {
             this.tooltipText = $localize`No images found in the clipboard`;
             if (this.pasteTooltip) {
                 this.pasteTooltip.isOpen = true;
             }
+        }
+    }
+
+    uploadFiles(files: File[]) {
+        if (!this.fileSelect) {
+            return;
+        }
+        const fs = this.fileSelect.fileSelectors;
+        const fss = Object.values(fs);
+        if (fss.length > 0) {
+            fss[0].onFilesGot(files);
         }
     }
 
@@ -271,6 +278,7 @@ export class ReviewCanvasComponent
 
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this);
+            this.vctrl.addReviewCanvas(this);
         }
         const taskId = this.pluginMeta.getTaskId();
         if (taskId?.docId) {
