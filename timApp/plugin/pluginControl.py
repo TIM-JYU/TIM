@@ -377,6 +377,7 @@ KeyType = tuple[int, Range]
 
 
 def get_answers(user, task_ids, answer_map):
+    # FIXME: SQLAlchemy dynamic
     col = func.max(Answer.id).label("col")
     cnt = func.count(Answer.id).label("cnt")
     if user is None:
@@ -701,7 +702,7 @@ def pluginify(
                     )
                 continue
             if not isinstance(plugin_htmls, list):
-                for ((idx, r), plugin) in plugin_block_map.items():
+                for (idx, r), plugin in plugin_block_map.items():
                     plugin.plugin_lazy = plugin_lazy
                     placements[idx].set_error(
                         r,

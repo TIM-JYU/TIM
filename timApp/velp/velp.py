@@ -9,13 +9,9 @@ the document.
 :version: 1.0.0
 
 """
-from timApp.item.deleting import (
-    soft_delete_document,
-)
 from flask import Blueprint, Response
-
 from flask import request
-from timApp.user.usergroup import UserGroup
+from sqlalchemy import select, delete
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -26,7 +22,6 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     verify_manage_access,
 )
-
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import (
     get_current_user_object,
@@ -38,11 +33,14 @@ from timApp.document.docentry import (
     get_documents_in_folder,
     get_documents,
 )
-
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
+from timApp.item.deleting import (
+    soft_delete_document,
+)
 from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.user.users import get_rights_holders, remove_access
 from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import RouteException
@@ -171,9 +169,15 @@ def get_default_velp_group(doc_id: int) -> Response:
     for v in found_velp_groups:
         # if has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
         velp_groups.append(v.id)
-    def_velp_groups: list[VelpGroup] = VelpGroup.query.filter(
-        VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True
-    ).all()
+    def_velp_groups: list[VelpGroup] = (
+        db.session.execute(
+            select(VelpGroup).filter(
+                VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True
+            )
+        )
+        .scalars()
+        .all()
+    )
     if def_velp_groups:
         default_group = def_velp_groups[0]
         return no_cache_json_response(
@@ -207,16 +211,22 @@ def get_default_personal_velp_group() -> Response:
     velp_groups = []
     for v in found_velp_groups:
         velp_groups.append(v.id)
-    default_group = VelpGroup.query.filter(
-        VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True
-    ).first()
+    default_group = (
+        db.session.execute(
+            select(VelpGroup)
+            .filter(VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True)
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if default_group is not None:
         return no_cache_json_response(default_group)
     group_name = DEFAULT_PERSONAL_VELP_GROUP_NAME
     new_group_path = personal_velp_group_path + "/" + group_name
     group = DocEntry.find_by_path(new_group_path)
     if group:
-        vg: VelpGroup = VelpGroup.query.get(group.id)
+        vg: VelpGroup = db.session.get(VelpGroup, group.id)
         vg.default_group = True
         vg.valid_until = None
         created_new = False
@@ -366,7 +376,11 @@ def add_velp() -> Response:
     # Check where user has edit rights and only add new velp to those
     velp_groups: list[VelpGroup] = [
         vg
-        for vg in VelpGroup.query.filter(VelpGroup.id.in_(velp_group_ids)).all()
+        for vg in db.session.execute(
+            select(VelpGroup).filter(VelpGroup.id.in_(velp_group_ids))
+        )
+        .scalars()
+        .all()
         if has_edit_access(vg.block)
     ]
 
@@ -434,7 +448,7 @@ def update_velp_route(doc_id: int) -> Response:
     verify_logged_in()
     user_id = get_current_user_id()
     edit_access = False
-    velp: Velp = Velp.query.get(velp_id)
+    velp: Velp = db.session.get(Velp, velp_id)
     if not velp:
         raise RouteException("Velp not found")
     all_velp_groups = velp.groups
@@ -457,7 +471,11 @@ def update_velp_route(doc_id: int) -> Response:
     # Check that user has edit access to velp groups in given velp group list and add them to an add list
     groups_to_add: list[VelpGroup] = [
         vg
-        for vg in VelpGroup.query.filter(VelpGroup.id.in_(velp_group_ids)).all()
+        for vg in db.session.execute(
+            select(VelpGroup).filter(VelpGroup.id.in_(velp_group_ids))
+        )
+        .scalars()
+        .all()
         if has_edit_access(vg.block)
     ]
 
@@ -541,10 +559,18 @@ def update_velp_label_route() -> Response:
     language_id = json_data.get("language_id")
     language_id = "FI" if language_id is None else language_id
 
-    vlc: VelpLabelContent | None = VelpLabelContent.query.filter_by(
-        language_id=language_id,
-        velplabel_id=velp_label_id,
-    ).first()
+    vlc: VelpLabelContent | None = (
+        db.session.execute(
+            select(VelpLabelContent)
+            .filter_by(
+                language_id=language_id,
+                velplabel_id=velp_label_id,
+            )
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if not vlc:
         raise RouteException("Velp label not found")
     u = get_current_user_object()
@@ -665,9 +691,13 @@ def reset_target_area_selections_to_defaults(doc_id: int) -> Response:
 
     user_id = get_current_user_id()
 
-    VelpGroupSelection.query.filter_by(
-        doc_id=doc_id, user_id=user_id, target_id=target_id
-    ).delete()
+    db.session.execute(
+        delete(VelpGroupSelection).where(
+            (VelpGroupSelection.doc_id == doc_id)
+            & (VelpGroupSelection.user_id == user_id)
+            & (VelpGroupSelection.target_id == target_id)
+        )
+    )
     db.session.commit()
     return ok_response()
 
@@ -680,7 +710,13 @@ def reset_all_selections_to_defaults(doc_id: int) -> Response:
     """
 
     user_id = get_current_user_id()
-    VelpGroupSelection.query.filter_by(doc_id=doc_id, user_id=user_id).delete()
+
+    db.session.execute(
+        delete(VelpGroupSelection).filter_by(
+            (VelpGroupSelection.doc_id == doc_id)
+            & (VelpGroupSelection.user_id == user_id)
+        )
+    )
     db.session.commit()
 
     return ok_response()
@@ -881,19 +917,31 @@ def delete_velp_group(group_id: int) -> Response:
     remove_velp_group_perms(group_id)
 
     # Delete associated entries/rows from database
-    VelpInGroup.query.filter_by(velp_group_id=group_id).delete(
-        synchronize_session=False
+    db.session.execute(
+        delete(VelpInGroup)
+        .where(VelpInGroup.velp_group_id == group_id)
+        .execution_options(synchronize_session=False)
     )
-    VelpGroupSelection.query.filter_by(velp_group_id=group_id).delete(
-        synchronize_session=False
+    db.session.execute(
+        delete(VelpGroupSelection)
+        .where(VelpGroupSelection.velp_group_id == group_id)
+        .execution_options(synchronize_session=False)
     )
-    VelpGroupDefaults.query.filter_by(velp_group_id=group_id).delete(
-        synchronize_session=False
+    db.session.execute(
+        delete(VelpGroupDefaults)
+        .where(VelpGroupDefaults.velp_group_id == group_id)
+        .execution_options(synchronize_session=False)
     )
-    VelpGroupsInDocument.query.filter_by(velp_group_id=group_id).delete(
-        synchronize_session=False
+    db.session.execute(
+        delete(VelpGroupsInDocument)
+        .where(VelpGroupsInDocument.velp_group_id == group_id)
+        .execution_options(synchronize_session=False)
     )
-    VelpGroup.query.filter_by(id=group_id).delete(synchronize_session=False)
+    db.session.execute(
+        delete(VelpGroup)
+        .where(VelpGroup.id == group_id)
+        .execution_options(synchronize_session=False)
+    )
 
     db.session.commit()
     return ok_response()
@@ -957,7 +1005,7 @@ def get_velp_groups_from_tree(doc: DocInfo) -> list[DocInfo]:
 
     # Add found documents to VelpGroup table if they weren't there yet
     for result in results:
-        is_velp_group = VelpGroup.query.get(result.id)
+        is_velp_group = db.session.get(VelpGroup, result.id)
         if not is_velp_group:
             _, group_name = split_location(result.path)
             make_document_a_velp_group(group_name, result.id)

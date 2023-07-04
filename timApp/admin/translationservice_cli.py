@@ -14,6 +14,7 @@ __date__ = "5.5.2022"
 
 import click
 from flask.cli import AppGroup
+from sqlalchemy import select
 
 from timApp.document.translation.translator import TranslationService
 from timApp.tim_app import app
@@ -51,10 +52,7 @@ def add_all_tr_services_to_session(log: bool = False) -> None:
     :return: None.
     """
     existing_services = {
-        x[0]
-        for x in TranslationService.query.with_entities(
-            TranslationService.service_name
-        ).all()
+        x[0] for x in db.session.scalars(select(TranslationService.service_name))
     }
     for translator, init_data in app.config["MACHINE_TRANSLATORS"]:
         service_name = translator.__mapper_args__["polymorphic_identity"]

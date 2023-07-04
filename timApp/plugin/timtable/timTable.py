@@ -990,8 +990,8 @@ def tim_table_add_multi_cell_value(cells_to_save, d, plug, multi, must_call_dumb
     # verify_edit_access(d)
     if is_in_global_append_mode(plug):
         raise NotImplementedError
-        user = get_current_user_object()
-        q = RowOwnerInfo.query
+        # user = get_current_user_object()
+        # q = RowOwnerInfo.query
         # TODO figure out filter
         # q.filter()
     else:
@@ -1038,8 +1038,8 @@ def tim_table_save_cell_value(cell_content, docid, parid, row, col):
     # verify_edit_access(d)
     if is_in_global_append_mode(plug):
         raise NotImplementedError
-        user = get_current_user_object()
-        q = RowOwnerInfo.query
+        # user = get_current_user_object()
+        # q = RowOwnerInfo.query
         # TODO figure out filter
         # q.filter()
     else:

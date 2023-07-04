@@ -5,6 +5,7 @@ from dataclasses import field
 from flask import Blueprint, render_template
 from flask import current_app
 from flask import request
+from sqlalchemy import select
 
 from timApp.admin.associate_old_uploads import upload_regexes
 from timApp.answer.answer import Answer
@@ -55,7 +56,6 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.qst.qst import question_convert_js_to_yaml
 from timApp.plugin.save_plugin import save_plugin
 from timApp.readmark.readings import mark_read
-
 # from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
@@ -763,7 +763,7 @@ def check_duplicates(pars, doc):
                         duplicate.append(task_id)
                         duplicate.append(par.get_id())
                         task_id_to_check = str(doc.doc_id) + "." + task_id
-                        if Answer.query.filter_by(task_id=task_id_to_check).first():
+                        if db.session.execute(select(Answer).filter_by(task_id=task_id_to_check)).scalars().first():
                             duplicate.append("hasAnswers")
                         duplicates.append(duplicate)
                         break

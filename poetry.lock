@@ -3123,6 +3123,20 @@ timezone = ["python-dateutil"]
 url = ["furl (>=0.4.1)"]
 
 [[package]]
+name = "sqlalchemy2-stubs"
+version = "0.0.2a34"
+description = "Typing Stubs for SQLAlchemy 1.4"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "sqlalchemy2-stubs-0.0.2a34.tar.gz", hash = "sha256:2432137ab2fde1a608df4544f6712427b0b7ff25990cfbbc5a9d1db6c8c6f489"},
+    {file = "sqlalchemy2_stubs-0.0.2a34-py3-none-any.whl", hash = "sha256:a313220ac793404349899faf1272e821a62dbe1d3a029bd444faa8d3e966cd07"},
+]
+
+[package.dependencies]
+typing-extensions = ">=3.7.4"
+
+[[package]]
 name = "trio"
 version = "0.22.1"
 description = "A friendly Python library for async concurrency and I/O"
@@ -3690,4 +3704,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "5ec23a1cb9e72e5d9ae6092f9fb2345fe38decb845c38979bd15612fe90883cb"
+content-hash = "48dc1f000dc504a52e0c0f5a2e26a372ed0ab67b4192f78c035f3f8c96d0a623"

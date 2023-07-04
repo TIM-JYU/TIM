@@ -2,6 +2,8 @@ import json
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import select, func
+
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
@@ -38,11 +40,17 @@ class Lecture(db.Model):
 
     @staticmethod
     def find_by_id(lecture_id: int) -> Optional["Lecture"]:
-        return Lecture.query.get(lecture_id)
+        return db.session.get(Lecture, lecture_id)
 
     @staticmethod
     def find_by_code(lecture_code: str, doc_id: int) -> Optional["Lecture"]:
-        return Lecture.query.filter_by(lecture_code=lecture_code, doc_id=doc_id).first()
+        return (
+            db.session.execute(
+                select(Lecture).filter_by(lecture_code=lecture_code, doc_id=doc_id)
+            )
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def get_all_in_document(
@@ -51,9 +59,13 @@ class Lecture(db.Model):
         if not time:
             time = datetime.min.replace(tzinfo=timezone.utc)
         return (
-            Lecture.query.filter_by(doc_id=doc_id)
-            .filter(Lecture.end_time > time)
-            .order_by(Lecture.lecture_code.asc())
+            db.session.execute(
+                select(Lecture)
+                .filter_by(doc_id=doc_id)
+                .filter(Lecture.end_time > time)
+                .order_by(Lecture.lecture_code.asc())
+            )
+            .scalars()
             .all()
         )
 
@@ -78,7 +90,11 @@ class Lecture(db.Model):
         max_students = self.max_students
         if max_students is None:
             return False
-        cnt = LectureUsers.query.filter_by(lecture_id=self.lecture_id).count()
+        cnt = db.session.scalar(
+            select(func.count())
+            .select_from(LectureUsers)
+            .filter_by(lecture_id=self.lecture_id)
+        )
         return cnt >= max_students
 
     @property

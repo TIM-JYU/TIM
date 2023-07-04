@@ -1,3 +1,5 @@
+from sqlalchemy import select, delete, update
+
 from timApp.auth.accesstype import AccessType
 from timApp.auth.session.model import UserSession
 from timApp.auth.session.util import verify_session_for
@@ -14,8 +16,13 @@ class UserSessionsTest(TimRouteTest):
     def latest_session(self) -> UserSession:
         """Get latest session of Test User 1."""
         return (
-            UserSession.query.filter_by(user_id=self.test_user_1.id)
-            .order_by(UserSession.logged_in_at.desc())
+            db.session.execute(
+                select(UserSession)
+                .filter_by(user_id=self.test_user_1.id)
+                .order_by(UserSession.logged_in_at.desc())
+                .limit(1)
+            )
+            .scalars()
             .first()
         )
 
@@ -25,10 +32,13 @@ class UserSessionsTest(TimRouteTest):
         """Assert the state of Test User 1's sessions."""
         self.assertEqual(
             [
-                UserSession.query.filter_by(
-                    user_id=self.test_user_1.id,
-                    session_id=sess,
+                db.session.execute(
+                    select(UserSession).filter_by(
+                        user_id=self.test_user_1.id,
+                        session_id=sess,
+                    )
                 )
+                .scalars()
                 .one()
                 .expired
                 for sess in session_ids
@@ -46,10 +56,12 @@ class UserSessionsTest(TimRouteTest):
                 "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": None,
             }
         ):
-            UserSession.query.delete()
+            db.session.execute(delete(UserSession))
             db.session.commit()
             self.login_test1(manual=True)
-            sessions: list[UserSession] = UserSession.query.all()
+            sessions: list[UserSession] = (
+                db.session.execute(select(UserSession)).scalars().all()
+            )
             self.assertEqual(len(sessions), 1)
             self.assertEqual(sessions[0].user.name, self.test_user_1.name)
             self.assertEqual(sessions[0].expired, False)
@@ -63,7 +75,9 @@ class UserSessionsTest(TimRouteTest):
             )
 
             self.logout()
-            sessions: list[UserSession] = UserSession.query.all()
+            sessions: list[UserSession] = (
+                db.session.execute(select(UserSession)).scalars().all()
+            )
             self.assertEqual(len(sessions), 1)
             self.assertEqual(sessions[0].user.name, self.test_user_1.name)
             self.assertEqual(sessions[0].expired, True)
@@ -82,7 +96,7 @@ class UserSessionsTest(TimRouteTest):
                 "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
             }
         ):
-            UserSession.query.delete()
+            db.session.execute(delete(UserSession))
             db.session.commit()
 
             self.login_test1(manual=True)
@@ -100,7 +114,7 @@ class UserSessionsTest(TimRouteTest):
                 "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
             }
         ):
-            UserSession.query.delete()
+            db.session.execute(delete(UserSession))
             db.session.commit()
 
             self.login_test1(manual=True)
@@ -166,9 +180,15 @@ class UserSessionsTest(TimRouteTest):
                     "valid": True,
                 },
             )
-            prev_session = UserSession.query.filter_by(
-                user_id=self.test_user_1.id, session_id=prev_id
-            ).first()
+            prev_session = (
+                db.session.execute(
+                    select(UserSession)
+                    .filter_by(user_id=self.test_user_1.id, session_id=prev_id)
+                    .limit(1)
+                )
+                .scalars()
+                .first()
+            )
             self.assertEqual(
                 prev_session.expired,
                 True,
@@ -186,7 +206,7 @@ class UserSessionsTest(TimRouteTest):
                 "DIST_RIGHTS_RECEIVE_SECRET": "yyy",
             }
         ):
-            UserSession.query.delete()
+            db.session.execute(delete(UserSession))
             db.session.commit()
 
             session_ids = []
@@ -246,8 +266,10 @@ class UserSessionsTest(TimRouteTest):
             )
 
             # Mark all sessions as not expired to test verification of the latest session
-            UserSession.query.filter_by(user_id=self.test_user_1.id).update(
-                {"expired_at": None}
+            db.session.execute(
+                update(UserSession)
+                .where(UserSession.user_id == self.test_user_1.id)
+                .values({"expired_at": None})
             )
             db.session.commit()
 
@@ -275,7 +297,7 @@ class UserSessionsTest(TimRouteTest):
                 "DIST_RIGHTS_RECEIVE_SECRET": "yyy",
             }
         ):
-            UserSession.query.delete()
+            db.session.execute(delete(UserSession))
             db.session.commit()
 
             session_ids = []
@@ -347,7 +369,13 @@ class UserSessionsTest(TimRouteTest):
             )
 
             for session_id in session_ids:
-                sess = UserSession.query.filter_by(session_id=session_id).first()
+                sess = (
+                    db.session.execute(
+                        select(UserSession).filter_by(session_id=session_id).limit(1)
+                    )
+                    .scalars()
+                    .first()
+                )
                 sess.expired_at = None
 
             db.session.commit()

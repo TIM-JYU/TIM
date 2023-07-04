@@ -1,6 +1,7 @@
 from lxml import html
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement
+from sqlalchemy import select
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
@@ -301,7 +302,11 @@ c
         area_a_middle = d.document.get_paragraphs()[2]
         orig_par = d2.document.get_paragraphs()[0]
         r = self.post_comment(area_a_middle, public=True, text="test", orig=orig_par)
-        note: UserNote = UserNote.query.order_by(UserNote.id.desc()).first()
+        note: UserNote = (
+            db.session.execute(select(UserNote).order_by(UserNote.id.desc()).limit(1))
+            .scalars()
+            .first()
+        )
         self.assert_same_html(
             html.fromstring(r["texts"]),
             f"""
@@ -340,7 +345,11 @@ c
         # Posting a comment to an area boundary paragraph should return just the paragraph element and no stray area
         # start/end tags.
         r = self.post_comment(area_a_start, public=True, text="test", orig=orig_par)
-        note: UserNote = UserNote.query.order_by(UserNote.id.desc()).first()
+        note: UserNote = (
+            db.session.execute(select(UserNote).order_by(UserNote.id.desc()).limit(1))
+            .scalars()
+            .first()
+        )
         self.assert_same_html(
             html.fromstring(r["texts"]),
             f"""

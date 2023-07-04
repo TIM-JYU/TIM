@@ -18,6 +18,7 @@ __date__ = "25.4.2022"
 import langcodes
 from requests import post, Response
 from requests.exceptions import JSONDecodeError
+from sqlalchemy import select
 
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import TranslateApproval, NoTranslate
@@ -32,10 +33,9 @@ from timApp.document.translation.translator import (
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.util import logger
-from timApp.util.flask.requesthelper import NotExist, RouteException
 from timApp.util.flask.cache import cache
+from timApp.util.flask.requesthelper import NotExist, RouteException
 from tim_common.vendor.requests_futures import FuturesSession, Future
-
 
 LANGUAGES_CACHE_TIMEOUT = 3600 * 24  # seconds
 
@@ -82,10 +82,10 @@ class DeeplTranslationService(RegisteredTranslationService):
         :raises RouteException: If more than one key is found from user.
         """
         # One user group should match one service per one key.
-        api_key = TranslationServiceKey.query.filter(
+        api_key = db.session.execute(select(TranslationServiceKey).filter(
             TranslationServiceKey.service_id == self.id,
             TranslationServiceKey.group_id == user_group.id,
-        ).all()
+        )).scalars().all()
         if len(api_key) == 0:
             raise NotExist(
                 "Please add a DeepL API key that corresponds the chosen plan into your account"

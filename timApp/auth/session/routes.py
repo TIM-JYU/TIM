@@ -8,6 +8,7 @@ from enum import Enum
 from typing import Any
 
 from flask import Response
+from sqlalchemy import update, select
 
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
 from timApp.auth.session.model import UserSession
@@ -95,27 +96,27 @@ def get_all_sessions(
     :return: User sessions information in the specified format.
     """
     verify_admin()
-    q = UserSession.query
+    stmt = select(UserSession)
 
     match state:
         case SessionStateFilterOptions.ACTIVE:
-            q = q.filter(UserSession.expired == False)
+            stmt = stmt.filter(UserSession.expired == False)
         case SessionStateFilterOptions.EXPIRED:
-            q = q.filter(UserSession.expired == True)
+            stmt = stmt.filter(UserSession.expired == True)
         case _:
             pass
 
     if user:
-        q = q.join(User).filter(User.name == user)
+        stmt = stmt.join(User).filter(User.name == user)
 
     match export_format:
         case ExportFormatOptions.JSON:
-            return json_response(q.all())
+            return json_response(db.session.execute(stmt).scalars().all())
         case ExportFormatOptions.CSV:
             data: list[list[Any]] = [
                 ["user", "session_id", "origin", "logged_in_at", "expired_at"]
             ]
-            for s in q.all():  # type: UserSession
+            for s in db.session.execute(stmt).scalars().all():  # type: UserSession
                 data.append(
                     [
                         s.user.name,
@@ -203,9 +204,10 @@ def validate_all() -> Response:
     verify_admin()
 
     all_usersnames: list[tuple[str]] = (
-        db.session.query(User.name)
-        .join(UserSession)
-        .distinct(UserSession.user_id)
+        db.session.execute(
+            select(User.name).join(UserSession).distinct(UserSession.user_id)
+        )
+        .scalars()
         .all()
     )
     for (user,) in all_usersnames:
@@ -222,8 +224,10 @@ def invalidate_all() -> Response:
     """
     verify_admin()
 
-    UserSession.query.filter(~UserSession.expired).update(
-        {"expired_at": get_current_time()}
+    db.session.execute(
+        update(UserSession)
+        .where(~UserSession.expired)
+        .values({"expired_at": get_current_time()})
     )
     db.session.commit()
     return ok_response()

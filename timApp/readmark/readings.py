@@ -2,7 +2,8 @@ from collections import defaultdict
 from datetime import timedelta
 from typing import DefaultDict
 
-from sqlalchemy.orm import Query
+from sqlalchemy import select, func, delete
+from sqlalchemy.sql import Select
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
@@ -28,32 +29,32 @@ def has_anything_read(usergroup_ids: list[int], doc: Document) -> bool:
     # Custom query for speed
     ids = doc.get_referenced_document_ids()
     ids.add(doc.doc_id)
-    query = db.session.query(ReadParagraph.id).filter(
+    query = select(ReadParagraph.id).filter(
         ReadParagraph.doc_id.in_(ids)
         & (ReadParagraph.usergroup_id.in_(usergroup_ids))
         & (ReadParagraph.type == ReadParagraphType.click_red)
     )
     # Normal query is generally faster than an "exists" subquery even if it causes extra data to be loaded
-    return query.first() is not None
+    return db.session.execute(query).scalars().first() is not None
 
 
 def get_readings_filtered_query(
     usergroup_id: int, doc: Document, filter_condition=None
-) -> Query:
-    q = get_readings_query(usergroup_id, doc)
+) -> Select:
+    stmt = get_readings_query(usergroup_id, doc)
     if filter_condition is not None:
-        q = q.filter(filter_condition)
-    return q
+        stmt = stmt.filter(filter_condition)
+    return stmt
 
 
-def get_clicked_readings_query(doc: Document) -> Query:
-    return ReadParagraph.query.filter(
+def get_clicked_readings_query(doc: Document) -> Select:
+    return select(ReadParagraph).filter(
         (ReadParagraph.doc_id == doc.doc_id)
         & (ReadParagraph.type == ReadParagraphType.click_red)
     )
 
 
-def get_readings_query(usergroup_id: int, doc: Document) -> Query:
+def get_readings_query(usergroup_id: int, doc: Document) -> Select:
     """Gets the reading info for a document for a user.
 
     :param doc: The document for which to get the readings.
@@ -62,9 +63,13 @@ def get_readings_query(usergroup_id: int, doc: Document) -> Query:
     """
     ids = doc.get_referenced_document_ids()
     ids.add(doc.doc_id)
-    return ReadParagraph.query.filter(
-        ReadParagraph.doc_id.in_(ids) & (ReadParagraph.usergroup_id == usergroup_id)
-    ).order_by(ReadParagraph.timestamp)
+    return (
+        select(ReadParagraph)
+        .filter(
+            ReadParagraph.doc_id.in_(ids) & (ReadParagraph.usergroup_id == usergroup_id)
+        )
+        .order_by(ReadParagraph.timestamp)
+    )
 
 
 def mark_read(
@@ -86,9 +91,11 @@ def mark_read(
 def mark_all_read(usergroup_id: int, doc: Document):
     existing = {
         (r.par_id, r.doc_id): r
-        for r in get_readings_query(usergroup_id, doc).filter(
-            ReadParagraph.type == ReadParagraphType.click_red
-        )
+        for r in db.session.execute(
+            get_readings_query(usergroup_id, doc).filter(
+                ReadParagraph.type == ReadParagraphType.click_red
+            )
+        ).scalars()
     }
     for par in doc:
         e = existing.get((par.get_id(), doc.doc_id))
@@ -102,11 +109,23 @@ def remove_all_read_marks(doc: Document):
     # usually you'd use get_referenced_document_ids to get all document IDs
     # Since we're deleting read marks here, it's better to be safe and only remove marks only
     # for paragraphs defined directly in the document
-    get_clicked_readings_query(doc).delete(synchronize_session=False)
+    db.session.execute(
+        delete(ReadParagraph)
+        .where(
+            ReadParagraph.id.in_(
+                get_clicked_readings_query(doc).with_only_columns(ReadParagraph.id)
+            )
+        )
+        .execution_options(synchronize_session=False)
+    )
 
 
 def get_read_usergroups_count(doc: Document):
-    return get_clicked_readings_query(doc).distinct(ReadParagraph.usergroup_id).count()
+    return db.session.scalar(
+        get_clicked_readings_query(doc)
+        .distinct(ReadParagraph.usergroup_id)
+        .with_only_columns(func.count())
+    )
 
 
 def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
@@ -116,18 +135,22 @@ def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
     ):
         return
 
-    src_par_query = ReadParagraph.query.filter_by(
+    src_par_stmt = select(ReadParagraph).filter_by(
         doc_id=src_par.doc.doc_id, par_id=src_par.get_id()
     )
-    ReadParagraph.query.filter(
-        (ReadParagraph.doc_id == dest_par.doc.doc_id)
-        & (ReadParagraph.par_id == dest_par.get_id())
-        & ReadParagraph.usergroup_id.in_(
-            src_par_query.with_entities(ReadParagraph.usergroup_id)
+    db.session.execute(
+        delete(ReadParagraph)
+        .where(
+            (ReadParagraph.doc_id == dest_par.doc.doc_id)
+            & (ReadParagraph.par_id == dest_par.get_id())
+            & ReadParagraph.usergroup_id.in_(
+                src_par_stmt.with_only_columns(ReadParagraph.usergroup_id)
+            )
         )
-    ).delete(synchronize_session="fetch")
+        .execution_options(synchronize_session="fetch")
+    )
 
-    for p in src_par_query.all():  # type: ReadParagraph
+    for p in db.session.execute(src_par_stmt).scalars():  # type: ReadParagraph
         db.session.add(
             ReadParagraph(
                 usergroup_id=p.usergroup_id,

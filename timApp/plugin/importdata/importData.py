@@ -10,9 +10,11 @@ from typing import DefaultDict, Generator, Any
 import requests
 from flask import render_template_string
 from marshmallow.utils import missing
+from sqlalchemy import select
 
 from timApp.plugin.jsrunner.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
+from timApp.timdb.sqa import db
 from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
@@ -365,26 +367,27 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
     org = None
     if m:
         org = m.group("org")
-        q = (
-            User.query.join(PersonalUniqueCode)
+        stmt = (
+            select(User)
+            .join(PersonalUniqueCode)
             .filter(PersonalUniqueCode.code.in_(idents))
             .join(HakaOrganization)
             .filter_by(name=org)
-            .with_entities(PersonalUniqueCode.code, User)
+            .with_only_columns(PersonalUniqueCode.code, User)
         )
-        users = {c: u for c, u in q.all()}
+        users = {c: u for c, u in db.session.execute(stmt)}
     elif id_prop == "username":
-        q = User.query.filter(User.name.in_(idents))
-        users = {u.name: u for u in q.all()}
+        stmt = select(User).filter(User.name.in_(idents))
+        users = {u.name: u for u in db.session.execute(stmt).scalars()}
     elif id_prop == "id":
         try:
-            q = User.query.filter(User.id.in_([int(i) for i in idents]))
+            stmt = select(User).filter(User.id.in_([int(i) for i in idents]))
         except ValueError as e:
             return args.make_answer_error(f"User ids must be ints ({e})")
-        users = {str(u.id): u for u in q.all()}
+        users = {str(u.id): u for u in db.sesion.execute(stmt).scalars()}
     elif id_prop == "email":
-        q = User.query.filter(User.email.in_(idents))
-        users = {u.email: u for u in q.all()}
+        stmt = select(User).filter(User.email.in_(idents))
+        users = {u.email: u for u in db.session.execute(stmt).scalars()}
     else:
         return args.make_answer_error(
             f"Invalid joinProperty: {args.markup.joinProperty}"

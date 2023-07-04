@@ -3,6 +3,7 @@ from __future__ import annotations
 from itertools import accumulate
 from typing import Iterable, Generator, TYPE_CHECKING
 
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from timApp.document.docparagraph import DocParagraph
@@ -174,16 +175,16 @@ class DocInfo(Item):
         from timApp.document.translation.translation import Translation
 
         def get_docs(doc_paths: list[str]) -> list[tuple[DocEntry, Translation | None]]:
-            return (
-                db.session.query(DocEntry, Translation)
+            return db.session.execute(
+                select(DocEntry, Translation)
+                .select_from(DocEntry)
                 .filter(DocEntry.name.in_(doc_paths))
                 .outerjoin(
                     Translation,
                     (Translation.src_docid == DocEntry.id)
                     & (Translation.lang_id == self.lang_id),
                 )
-                .all()
-            )
+            ).scalars().all()
 
         result = get_docs(paths)
         result.sort(key=lambda x: path_index_map[x[0].path])
@@ -243,11 +244,13 @@ class DocInfo(Item):
         items.add(self)
         from timApp.user.user import User
 
-        q = Notification.query.options(
-            joinedload(Notification.user).joinedload(User.groups)
-        ).filter(Notification.block_id.in_([f.id for f in items]))
-        q = q.filter(condition)
-        return q.all()
+        stmt = (
+            select(Notification)
+            .options(joinedload(Notification.user).joinedload(User.groups))
+            .filter(Notification.block_id.in_([f.id for f in items]))
+        )
+        stmt = stmt.filter(condition)
+        return db.session.execute(stmt).scalars().all()
 
     def has_translation(self, lang_id):
         for t in self.translations:

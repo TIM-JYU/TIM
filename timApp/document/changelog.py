@@ -1,6 +1,8 @@
 from collections import defaultdict
 from typing import List, Tuple, Optional
 
+from sqlalchemy import select
+
 import timApp
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
@@ -58,9 +60,13 @@ class Changelog:
         User = timApp.user.user.User
         UserGroup = timApp.user.usergroup.UserGroup
         result = (
-            db.session.query(UserGroup, User)
-            .filter(UserGroup.id.in_(usergroup_ids))
-            .outerjoin(User, User.name == UserGroup.name)
+            db.session.execute(
+                select(UserGroup, User)
+                .select_from(UserGroup)
+                .filter(UserGroup.id.in_(usergroup_ids))
+                .outerjoin(User, User.name == UserGroup.name)
+            )
+            .scalars()
             .all()
         )  # type: List[Tuple[UserGroup, Optional[User]]]
         for ug, u in result:

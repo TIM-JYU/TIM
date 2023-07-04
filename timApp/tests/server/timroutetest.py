@@ -19,6 +19,7 @@ from flask.testing import FlaskClient
 from lxml import html
 from lxml.html import HtmlElement
 from requests import PreparedRequest
+from sqlalchemy import select
 
 import timApp.tim
 from timApp.answer.answer import Answer
@@ -32,9 +33,8 @@ from timApp.document.specialnames import (
     PREAMBLE_FOLDER_NAME,
     DEFAULT_PREAMBLE_DOC,
 )
-from tim_common.timjsonencoder import TimJsonEncoder
-from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
+from timApp.document.translation.translation import Translation
 from timApp.item.item import Item
 from timApp.item.routes import create_item_direct
 from timApp.messaging.messagelist.listinfo import ArchiveType
@@ -54,6 +54,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import remove_prefix
+from tim_common.timjsonencoder import TimJsonEncoder
 
 
 def load_json(resp: Response):
@@ -957,7 +958,7 @@ class TimRouteTest(TimDbTest):
             expect_status=expect_status,
             **kwargs,
         )
-        return Translation.query.get(j["id"]) if expect_status == 200 else None
+        return db.session.get(Translation, j["id"]) if expect_status == 200 else None
 
     def assert_content(self, element: HtmlElement, expected: list[str]):
         pars = get_content(element)
@@ -1389,9 +1390,11 @@ class TimMessageListTest(TimRouteTest):
                 }
             },
         )
-        message_list: MessageListModel = MessageListModel.query.filter_by(
-            name=name
-        ).one()
+        message_list: MessageListModel = (
+            db.session.execute(select(MessageListModel).filter_by(name=name))
+            .scalars()
+            .one()
+        )
         return manage_doc, message_list
 
     def trigger_mailman_event(self, event: MessageEventType) -> None:

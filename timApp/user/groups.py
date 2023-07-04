@@ -3,6 +3,7 @@ from operator import attrgetter
 from typing import Any
 
 from flask import Response
+from sqlalchemy import select
 
 from timApp.auth.accesshelper import (
     verify_admin,
@@ -62,10 +63,20 @@ def verify_groupadmin(
 def get_uid_gid(
     group_name: str, usernames_or_emails: list[str]
 ) -> tuple[UserGroup, list[User]]:
-    users = User.query.filter(
-        User.name.in_(usernames_or_emails) | User.email.in_(usernames_or_emails)
-    ).all()
-    group = UserGroup.query.filter_by(name=group_name).first()
+    users = (
+        db.session.execute(
+            select(User).filter(
+                User.name.in_(usernames_or_emails) | User.email.in_(usernames_or_emails)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    group = (
+        db.sesion.execute(select(UserGroup).filter_by(name=group_name).limit(1))
+        .scalars()
+        .first()
+    )
     raise_group_not_found_if_none(group_name, group)
     return group, users
 
@@ -128,7 +139,9 @@ def show_usergroups(username: str) -> Response:
     if not u:
         raise NotExist(USER_NOT_FOUND)
     return json_response(
-        u.get_groups(include_special=False).order_by(UserGroup.name).all()
+        db.session.execute(u.get_groups(include_special=False).order_by(UserGroup.name))
+        .scalars()
+        .all()
     )
 
 

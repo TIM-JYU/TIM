@@ -1,4 +1,6 @@
-from typing import Optional, Callable
+from typing import Callable
+
+from sqlalchemy import select
 
 from timApp.admin.search_in_documents import (
     SearchArgumentsBasic,
@@ -42,10 +44,13 @@ def associate_old_uploads() -> None:
                 SearchArgumentsBasic(format="", onlyfirst=False, regex=True, term=r),
                 del_anon,
             )
-    orphans = Block.query.filter(
-        Block.type_id.in_([BlockType.File.value, BlockType.Image.value])
-        & Block.id.notin_(BlockAssociation.query.with_entities(BlockAssociation.child))
-    ).all()
+    orphans = db.session.execute(
+        select(Block)
+        .filter(
+            Block.type_id.in_([BlockType.File.value, BlockType.Image.value])
+            & Block.id.notin_(select(BlockAssociation.child))
+        )
+    ).scalars().all()
     print(f"Deleting anon accesses from {len(orphans)} orphan uploads")
     for o in orphans:
         del_anon(UploadedFile(o))

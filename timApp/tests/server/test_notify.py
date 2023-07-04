@@ -1,3 +1,5 @@
+from sqlalchemy import select
+
 from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import DocInfo
 from timApp.document.randutils import random_id
@@ -217,7 +219,7 @@ stem: test
             },
             sent_mails_in_testing[-1],
         )
-        pns = PendingNotification.query.filter_by(doc_id=d.id).all()
+        pns = db.session.execute(select(PendingNotification).filter_by(doc_id=d.id)).scalars().all()
         for p in pns:
             if isinstance(p, DocumentNotification):
                 self.assertIsNone(p.text)

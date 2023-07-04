@@ -11,6 +11,7 @@ import filelock
 from flask import Response, flash, request
 from isodate import Duration
 from marshmallow import Schema
+from sqlalchemy import select
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import AccessDenied, verify_admin
@@ -258,11 +259,10 @@ class RightLog:
         if not emails:
             emails = [
                 e
-                for e, in (
-                    UserGroup.query.join(User, UserGroup.users)
+                for e, in db.session.execute(
+                    select(User.email).join(User, UserGroup.users)
                     .filter(UserGroup.name == r.group)
-                    .with_entities(User.email)
-                )
+                ).scalars()
             ]
         if not emails:
             if not UserGroup.get_by_name(r.group):
@@ -437,12 +437,10 @@ def receive_right(
     secret: str,
 ) -> Response:
     check_secret(secret, "DIST_RIGHTS_RECEIVE_SECRET")
-    uges = (
-        UserGroup.query.join(User, UserGroup.name == User.name)
+    uges = db.session.execute(
+        select(UserGroup, User.email).join(User, UserGroup.name == User.name)
         .filter(User.email.in_(re.email for re in rights))
-        .with_entities(UserGroup, User.email)
-        .all()
-    )
+    ).scalars().all()
     group_map = {}
     for ug, email in uges:
         group_map[email] = ug
@@ -543,11 +541,9 @@ def get_current_rights_route(
     except FileNotFoundError:
         raise RouteException(f"Unknown target: {target}")
     groups_list = groups.split(",")
-    emails = (
-        User.query.join(UserGroup, User.groups)
+    emails = db.session.execute(
+        select(User.email).join(UserGroup, User.groups)
         .filter(UserGroup.name.in_(groups_list))
-        .with_entities(User.email)
         .order_by(User.email)
-        .all()
-    )
+    ).scalars().all()
     return json_response([{"email": e, "right": rights.get_right(e)} for e, in emails])

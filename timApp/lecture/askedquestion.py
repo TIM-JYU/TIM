@@ -2,7 +2,7 @@ import json
 from contextlib import contextmanager
 from datetime import timedelta, datetime
 
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from timApp.lecture.askedjson import AskedJson
 from timApp.lecture.lecture import Lecture
@@ -136,12 +136,12 @@ class AskedQuestion(db.Model):
 
 
 def get_asked_question(asked_id: int) -> AskedQuestion | None:
-    return AskedQuestion.query.get(asked_id)
+    return db.session.get(AskedQuestion, asked_id)
 
 
 @contextmanager
 def user_activity_lock(user: UserType):
-    db.session.query(func.pg_advisory_xact_lock(user.id)).all()
+    db.session.execute(select(func.pg_advisory_xact_lock(user.id)))
     yield
     return
     # db.session.query(func.pg_advisory_lock(user.id)).all()

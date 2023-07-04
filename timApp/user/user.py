@@ -7,13 +7,14 @@ from typing import Optional, Union, MutableMapping
 
 import filelock
 from flask import current_app, has_request_context
-from sqlalchemy import func
+from sqlalchemy import func, select, delete
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Query, joinedload, defaultload
+from sqlalchemy.orm import joinedload, defaultload
 from sqlalchemy.orm.collections import (
     attribute_mapped_collection,
 )
 from sqlalchemy.orm.strategy_options import loader_option
+from sqlalchemy.sql import Select
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
@@ -234,8 +235,8 @@ deleted_user_suffix = "_deleted"
 deleted_user_pattern = re.compile(rf".*{deleted_user_suffix}(_\d+)?$")
 
 
-def user_query_with_joined_groups() -> Query:
-    return User.query.options(joinedload(User.groups))
+def user_query_with_joined_groups() -> Select:
+    return select(User).options(joinedload(User.groups))
 
 
 class User(db.Model, TimeStampMixin, SCIMEntity):
@@ -486,9 +487,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         self._email = new_email
         if prev_email != new_email:
             if create_contact:
-                new_primary = UserContact.query.filter_by(
-                    user_id=self.id, channel=Channel.EMAIL, contact=new_email
-                ).first()
+                new_primary = db.session.scalars(
+                    select(UserContact).filter_by(
+                        user_id=self.id, channel=Channel.EMAIL, contact=prev_email
+                    )
+                ).one_or_none()
                 if not new_primary:
                     # If new primary contact does not exist for the email, create it
                     # This is used mainly for CLI operations where email of the user is changed directly
@@ -534,10 +537,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     @property
     def scim_extra_data(self):
         """Any extra data that should be returned in the SCIM API response."""
-        email_contacts = UserContact.query.filter_by(
-            user=self, channel=Channel.EMAIL, verified=True
+        email_contacts_stmt = select(UserContact).filter_by(
+            user_id=self.id, channel=Channel.EMAIL, verified=True
         )
-        return {"emails": [{"value": uc.contact} for uc in email_contacts]}
+        return {
+            "emails": [
+                {"value": uc.contact} for uc in db.session.scalars(email_contacts_stmt)
+            ]
+        }
 
     def __repr__(self):
         return f"<User(id={self.id}, name={self.name}, email={self.email}, real_name={self.real_name})>"
@@ -584,7 +591,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         locked_groups = get_locked_active_groups()
         if locked_groups is None:
             return effective_real_groups()
-        return UserGroup.query.filter(UserGroup.id.in_(locked_groups)).all()
+        return db.session.scalars(
+            select(UserGroup).filter(UserGroup.id.in_(locked_groups))
+        ).all()
 
     @property
     def effective_group_ids(self):
@@ -682,25 +691,27 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_by_name(name: str) -> Optional["User"]:
-        return user_query_with_joined_groups().filter_by(name=name).first()
+        return db.session.scalars(
+            user_query_with_joined_groups().filter_by(name=name).limit(1)
+        ).first()
 
     @staticmethod
     def get_by_id(uid: int) -> Optional["User"]:
-        return user_query_with_joined_groups().get(uid)
+        return db.session.get(User, uid, options=[joinedload(User.groups)])
 
     @staticmethod
     def get_by_email(email: str) -> Optional["User"]:
         if email is None:
             raise Exception("Tried to find an user by null email")
-        return user_query_with_joined_groups().filter_by(email=email).first()
+        return db.session.scalars(
+            user_query_with_joined_groups().filter_by(email=email).limit(1)
+        ).first()
 
     @staticmethod
     def get_by_email_case_insensitive(email: str) -> list["User"]:
-        return (
-            user_query_with_joined_groups()
-            .filter(func.lower(User.email).in_([email]))
-            .all()
-        )
+        return db.session.scalars(
+            user_query_with_joined_groups().filter(func.lower(User.email).in_([email]))
+        ).all()
 
     @staticmethod
     def get_by_email_case_insensitive_or_username(
@@ -718,8 +729,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def verified_email_name_parts(self) -> list[str]:
         email_parts = [
             uc.contact.split("@")
-            for uc in UserContact.query.filter_by(
-                user=self, channel=Channel.EMAIL, verified=True
+            for uc in db.session.scalars(
+                select(UserContact).filter_by(
+                    user=self, channel=Channel.EMAIL, verified=True
+                )
             )
         ]
         return [parts[0].lower() for parts in email_parts]
@@ -790,22 +803,25 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             group_condition = UserGroup.name == self.name
         else:
             group_condition = UserGroup.name == ANONYMOUS_GROUPNAME
-        return (
-            Folder.query.join(BlockAccess, BlockAccess.block_id == Folder.id)
+
+        stmt = (
+            select(Folder)
+            .join(BlockAccess, BlockAccess.block_id == Folder.id)
             .join(UserGroup, UserGroup.id == BlockAccess.usergroup_id)
             .filter(
                 (Folder.location == "users")
                 & group_condition
                 & (BlockAccess.type == AccessType.owner.value)
             )
-            .with_entities(Folder)
+            .with_only_columns(Folder)
             .options(
                 defaultload(Folder._block)
                 .joinedload(Block.accesses)
                 .joinedload(BlockAccess.usergroup)
             )
-            .all()
         )
+
+        return db.session.scalars(stmt).unique().all()
 
     @cached_property
     def personal_folder_prop(self) -> Folder:
@@ -843,21 +859,21 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     def get_groups(
         self, include_special: bool = True, include_expired: bool = True
-    ) -> Query:
+    ) -> Select:
         special_groups = [ANONYMOUS_GROUPNAME]
         if self.logged_in:
             special_groups.append(LOGGED_IN_GROUPNAME)
         filter_expr = UserGroupMember.user_id == self.id
         if not include_expired:
             filter_expr = filter_expr & membership_current
-        q = UserGroup.query.filter(
-            UserGroup.id.in_(
-                db.session.query(UserGroupMember.usergroup_id).filter(filter_expr)
-            )
+        stmt = select(UserGroup).filter(
+            UserGroup.id.in_(select(UserGroupMember.usergroup_id).filter(filter_expr))
         )
         if include_special:
-            q = q.union(UserGroup.query.filter(UserGroup.name.in_(special_groups)))
-        return q
+            stmt = stmt.union(
+                select(UserGroup).filter(UserGroup.name.in_(special_groups))
+            )
+        return stmt
 
     def add_to_group(
         self,
@@ -908,14 +924,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :param options: Additional DB load options.
         :return: UserContact if found, otherwise None.
         """
-        q = UserContact.query.filter(
+
+        stmt = select(UserContact).filter(
             (UserContact.user == self)
             & (UserContact.channel == channel)
             & (UserContact.contact == contact)
         )
         if options:
-            q = q.options(*options)
-        return q.first()
+            stmt = stmt.options(*options)
+        return db.session.scalars(stmt).one_or_none()
 
     @staticmethod
     def get_scimuser() -> "User":
@@ -1325,11 +1342,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         """Remove user's permissions to the specified item (block)"""
         if isinstance(access_type, AccessType):
             access_type = access_type.value
-        BlockAccess.query.filter_by(
-            block_id=block_id,
-            usergroup_id=self.get_personal_group().id,
-            type=get_access_type_id(access_type),
-        ).delete()
+        stmt = delete(BlockAccess).where(
+            (BlockAccess.block_id == block_id)
+            & (BlockAccess.usergroup_id == self.get_personal_group().id)
+            & (BlockAccess.type == get_access_type_id(access_type))
+        )
+        db.session.execute(stmt)
 
     def get_notify_settings(self, item: DocInfo | Folder) -> dict:
         # TODO: Instead of conversion, expose all notification types in UI
@@ -1432,13 +1450,16 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if self.is_special:
             return False
         teacher_group_id = (
-            db.session.query(ScimUserGroup.group_id)
-            .join(UserGroup)
-            .join(UserGroupMember)
-            .filter(
-                (UserGroupMember.user_id == self.id)
-                & ScimUserGroup.external_id.like("%-teachers")
+            db.session.execute(
+                select(ScimUserGroup.group_id)
+                .join(UserGroup)
+                .join(UserGroupMember)
+                .filter(
+                    (UserGroupMember.user_id == self.id)
+                    & ScimUserGroup.external_id.like("%-teachers")
+                )
             )
+            .scalars()
             .first()
         )
         return teacher_group_id is not None
@@ -1476,8 +1497,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         external_ids: dict[int, str] = (
             {
                 s.group_id: s.external_id
-                for s in ScimUserGroup.query.filter(
-                    ScimUserGroup.group_id.in_([g.id for g in self.groups])
+                for s in db.session.scalars(
+                    select(ScimUserGroup).filter(
+                        ScimUserGroup.group_id.in_([g.id for g in self.groups])
+                    )
                 ).all()
             }
             if full

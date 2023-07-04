@@ -2,9 +2,10 @@
 from dataclasses import field
 from typing import Any
 
-from flask import render_template, session, flash, Response
+from flask import render_template, flash, Response
 from flask import request
 from jinja2 import TemplateNotFound
+from sqlalchemy import select
 
 from timApp.admin.user_cli import do_soft_delete
 from timApp.answer.answer_models import AnswerUpload
@@ -56,9 +57,11 @@ def verify_new_styles(curr_prefs: Preferences, new_prefs: Preferences) -> None:
     if not new_style_doc_ids:
         return
 
-    new_style_docs: list[DocEntry] = DocEntry.query.filter(
-        DocEntry.id.in_(new_style_doc_ids)
-    ).all()
+    new_style_docs: list[DocEntry] = (
+        db.session.execute(select(DocEntry).filter(DocEntry.id.in_(new_style_doc_ids)))
+        .scalars()
+        .all()
+    )
 
     if len(new_style_docs) != len(new_style_doc_ids):
         raise NotExist("Some style docs could not be found")
@@ -118,18 +121,44 @@ def get_setting(name: str) -> Response:
 def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
     """Returns all data associated with a user."""
     block_query = get_owned_objects_query(u)
-    docs = DocEntry.query.filter(DocEntry.id.in_(block_query)).all()
-    folders = Folder.query.filter(Folder.id.in_(block_query)).all()
-    images = Block.query.filter(
-        Block.id.in_(block_query) & (Block.type_id == BlockType.Image.value)
-    ).all()
-    files = Block.query.filter(
-        Block.id.in_(block_query) & (Block.type_id == BlockType.File.value)
-    ).all()
+    docs = (
+        db.session.execute(select(DocEntry).filter(DocEntry.id.in_(block_query)))
+        .scalars()
+        .all()
+    )
+    folders = (
+        db.session.execute(select(Folder).filter(Folder.id.in_(block_query)))
+        .scalars()
+        .all()
+    )
+    images = (
+        db.session.execute(
+            select(Block).filter(
+                Block.id.in_(block_query) & (Block.type_id == BlockType.Image.value)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    files = (
+        db.session.execute(
+            select(Block).filter(
+                Block.id.in_(block_query) & (Block.type_id == BlockType.File.value)
+            )
+        )
+        .scalars()
+        .all()
+    )
     answers = u.answers.all()
-    answer_uploads = AnswerUpload.query.filter(
-        AnswerUpload.answer_id.in_([a.id for a in answers])
-    ).all()
+    answer_uploads = (
+        db.session.execute(
+            select(AnswerUpload).filter(
+                AnswerUpload.answer_id.in_([a.id for a in answers])
+            )
+        )
+        .scalars()
+        .all()
+    )
     answers_no_points = list(map(hide_points, answers))
     answers_no_points = list(map(hide_points_modifier, answers_no_points))
     for d in docs:

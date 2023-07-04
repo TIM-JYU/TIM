@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import langcodes
+from sqlalchemy import select
 
 from timApp.timdb.sqa import db
 
@@ -92,7 +93,7 @@ class Language(db.Model):
         """
         # TODO Instead of the code -parameter being str-type, could
         #  langcodes.Language type be more convenient to caller?
-        return cls.query.get(code)
+        return db.session.get(cls, code)
 
     @classmethod
     def query_all(cls) -> list["Language"]:
@@ -101,7 +102,7 @@ class Language(db.Model):
 
         :return: All the languages found from database.
         """
-        return cls.query.all()
+        return db.session.execute(select(cls)).scalars().all()
 
     def __str__(self) -> str:
         """

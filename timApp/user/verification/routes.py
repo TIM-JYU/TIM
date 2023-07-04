@@ -1,6 +1,5 @@
-from typing import Optional
-
 from flask import render_template, Response
+from sqlalchemy import select
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound  # type: ignore
 
 from timApp.auth.accesshelper import verify_logged_in
@@ -24,9 +23,15 @@ def get_verification_data(
     if not verify_type_parsed:
         error = "Invalid verification type"
 
-    verification: Verification | None = Verification.query.filter_by(
-        token=verify_token, type=verify_type_parsed
-    ).first()
+    verification: Verification | None = (
+        db.session.execute(
+            select(Verification)
+            .filter_by(token=verify_token, type=verify_type_parsed)
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
 
     if not verification:
         error = "No verification found for the token and type"

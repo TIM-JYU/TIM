@@ -2,12 +2,15 @@
 from collections import defaultdict
 from operator import itemgetter, attrgetter
 
+from sqlalchemy import select
+
 from timApp.answer.answers import get_users_for_tasks
 from timApp.auth.sessioninfo import get_current_user_id, user_context_with_logged_in
 from timApp.document.docentry import DocEntry
 from timApp.document.viewcontext import default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.plugin.plugin import find_task_ids
+from timApp.timdb.sqa import db
 
 
 def gamify(initial_data: YamlBlock):
@@ -84,7 +87,7 @@ def get_sorted_lists(items, item_name: str):
             filtered_items.append(item)
         # Sort both so they can be looped simultaneusly without value mismatches.
     docs = sorted(
-        DocEntry.query.filter(DocEntry.name.in_(item_path_list)).all(),
+        db.session.execute(select(DocEntry).filter(DocEntry.name.in_(item_path_list))).scalars().all(),
         key=attrgetter("path"),
     )
     items = sorted(filtered_items, key=itemgetter("path"))

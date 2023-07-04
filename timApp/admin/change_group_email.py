@@ -1,3 +1,5 @@
+from sqlalchemy import select
+
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
@@ -12,7 +14,10 @@ def change_email() -> None:
     while True:
         # groupname = input("Input group to edit: ")
         groupname = "mallikurssinryhma1"
-        group = UserGroup.query.filter_by(name="mallikurssinryhma1").first()
+        group = db.session.scalars(
+            select(UserGroup).filter_by(name=groupname)
+            .limit(1)
+        ).first()
         users: list[User] = group.users
         new_email = input("Input new email suffix: ")
         print("New values:")

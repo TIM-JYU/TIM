@@ -5,9 +5,11 @@ from re import Pattern
 
 import attr
 from flask import has_request_context, request
+from sqlalchemy import select
 
 from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
+from timApp.timdb.sqa import db
 from timApp.user.settings.style_utils import resolve_themes
 from tim_common.html_sanitize import sanitize_css
 
@@ -43,7 +45,11 @@ class Preferences:
             return []
         ordering = {d: i for i, d in enumerate(self.style_doc_ids)}
         return sorted(
-            DocEntry.query.filter(DocEntry.id.in_(self.style_doc_ids)).all(),
+            db.session.execute(
+                select(DocEntry).filter(DocEntry.id.in_(self.style_doc_ids))
+            )
+            .scalars()
+            .all(),
             key=lambda d: ordering[d.id],
         )
 

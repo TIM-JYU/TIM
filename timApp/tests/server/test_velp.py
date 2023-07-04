@@ -13,8 +13,7 @@ Tested routes from velp.py:
 """
 import json
 
-from timApp.util.utils import get_current_time
-from timApp.user.usergroup import UserGroup
+from sqlalchemy import select
 
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.accesstype import AccessType
@@ -25,6 +24,8 @@ from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
+from timApp.util.utils import get_current_time
 from timApp.velp.annotation import Annotation
 from timApp.velp.velp import create_new_velp, DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.velp.velp_models import (
@@ -365,11 +366,37 @@ class VelpGroupDeletionTest(TimRouteTest):
         self.assertEqual(f"roskis/{g['name']}", deleted.path)
 
         # database should not contain any references to the velp group
-        vg = VelpGroup.query.filter_by(id=g["id"]).first()
-        v_in_g = VelpInGroup.query.filter_by(velp_group_id=g["id"]).all()
-        vg_sel = VelpGroupSelection.query.filter_by(velp_group_id=g["id"]).all()
-        vg_def = VelpGroupDefaults.query.filter_by(velp_group_id=g["id"]).all()
-        vg_in_doc = VelpGroupsInDocument.query.filter_by(velp_group_id=g["id"]).all()
+        vg = (
+            db.session.execute(select(VelpGroup).filter_by(id=g["id"]).limit(1))
+            .scalars()
+            .first()
+        )
+        v_in_g = (
+            db.session.execute(select(VelpInGroup).filter_by(velp_group_id=g["id"]))
+            .scalars()
+            .all()
+        )
+        vg_sel = (
+            db.session.execute(
+                select(VelpGroupSelection).filter_by(velp_group_id=g["id"])
+            )
+            .scalars()
+            .all()
+        )
+        vg_def = (
+            db.session.execute(
+                select(VelpGroupDefaults).filter_by(velp_group_id=g["id"])
+            )
+            .scalars()
+            .all()
+        )
+        vg_in_doc = (
+            db.session.execute(
+                select(VelpGroupsInDocument).filter_by(velp_group_id=g["id"])
+            )
+            .scalars()
+            .all()
+        )
 
         self.assertEqual(None, vg)
         self.assertEqual(0, len(v_in_g))
@@ -388,11 +415,37 @@ class VelpGroupDeletionTest(TimRouteTest):
         self.assertEqual(f"roskis/{g2['name']}", deleted.path)
 
         # database should not contain any references to the velp group
-        vg2 = VelpGroup.query.filter_by(id=g2["id"]).first()
-        v_in_g2 = VelpInGroup.query.filter_by(velp_group_id=g2["id"]).all()
-        vg_sel2 = VelpGroupSelection.query.filter_by(velp_group_id=g2["id"]).all()
-        vg_def2 = VelpGroupDefaults.query.filter_by(velp_group_id=g2["id"]).all()
-        vg_in_doc2 = VelpGroupsInDocument.query.filter_by(velp_group_id=g2["id"]).all()
+        vg2 = (
+            db.session.execute(select(VelpGroup).filter_by(id=g2["id"]).limit(1))
+            .scalars()
+            .first()
+        )
+        v_in_g2 = (
+            db.session.execute(select(VelpInGroup).filter_by(velp_group_id=g2["id"]))
+            .scalars()
+            .all()
+        )
+        vg_sel2 = (
+            db.session.execute(
+                select(VelpGroupSelection).filter_by(velp_group_id=g2["id"])
+            )
+            .scalars()
+            .all()
+        )
+        vg_def2 = (
+            db.session.execute(
+                select(VelpGroupDefaults).filter_by(velp_group_id=g2["id"])
+            )
+            .scalars()
+            .all()
+        )
+        vg_in_doc2 = (
+            db.session.execute(
+                select(VelpGroupsInDocument).filter_by(velp_group_id=g2["id"])
+            )
+            .scalars()
+            .all()
+        )
 
         self.assertEqual(None, vg2)
         self.assertEqual(0, len(v_in_g2))
@@ -817,7 +870,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         self.get(g_doc.url, expect_status=403)
 
     def test_velp_group_mass_edit_permissions(self):
-
         self.login_test1()
         d1 = self.create_doc(title="test velp group permissions")
         d2 = self.create_doc(title="test velp group permissions 2")

@@ -8,7 +8,7 @@ import requests
 from flask import Blueprint, current_app, request, Response
 from marshmallow import validates, ValidationError
 from marshmallow.utils import _Missing, missing
-from sqlalchemy import any_, true
+from sqlalchemy import any_, true, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
@@ -739,7 +739,11 @@ def get_sisu_assessments(
         usergroups = groups_setting
     else:
         usergroups = groups
-    ugs = UserGroup.query.filter(UserGroup.name.in_(usergroups)).all()
+    ugs = (
+        db.session.execute(select(UserGroup).filter(UserGroup.name.in_(usergroups)))
+        .scalars()
+        .all()
+    )
     requested = set(usergroups)
     found = {ug.name for ug in ugs}
     not_found_gs = requested - found

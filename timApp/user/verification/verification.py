@@ -4,6 +4,7 @@ from functools import cache
 from typing import Optional
 
 from flask import render_template_string, url_for
+from sqlalchemy import select
 from sqlalchemy.orm import load_only
 
 from timApp.document.docentry import DocEntry
@@ -127,11 +128,19 @@ class SetPrimaryContactVerification(ContactAddVerification):
 
         if not self.contact:
             return
-        current_primary = UserContact.query.filter_by(
-            user_id=self.user_id,
-            channel=self.contact.channel,
-            primary=PrimaryContact.true,
-        ).first()
+        current_primary = (
+            db.session.execute(
+                select(UserContact)
+                .filter_by(
+                    user_id=self.user_id,
+                    channel=self.contact.channel,
+                    primary=PrimaryContact.true,
+                )
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
         with db.session.no_autoflush:
             if current_primary:
                 current_primary.primary = None
@@ -141,8 +150,12 @@ class SetPrimaryContactVerification(ContactAddVerification):
 
             # We update email directly since we already resolved the contact in previous steps
             u = (
-                User.query.filter_by(id=self.user_id)
-                .options(load_only(User.email, User.id))
+                db.session.execute(
+                    select(User)
+                    .filter_by(id=self.user_id)
+                    .options(load_only(User.email, User.id))
+                )
+                .scalars()
                 .one()
             )
             old_email = u._email

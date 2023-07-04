@@ -1,17 +1,16 @@
 import datetime as dt
-import pytz
 
+import pytz
 import sqlalchemy as sa
+from celery import schedules
+from celery.utils.log import get_logger
 from sqlalchemy import func
 from sqlalchemy.event import listen
 from sqlalchemy.orm import relationship, foreign, remote
 from sqlalchemy.sql import select, insert, update
 
-from celery import schedules
-from celery.utils.log import get_logger
-
-from .tzcrontab import TzAwareCrontab
 from .session import ModelBase
+from .tzcrontab import TzAwareCrontab
 from ..item.block import Block
 from ..plugin.taskid import TaskId
 from ..util.utils import cached_property
@@ -67,8 +66,10 @@ class IntervalSchedule(ModelBase, ModelMixin):
     def from_schedule(cls, session, schedule, period=SECONDS):
         every = max(schedule.run_every.total_seconds(), 0)
         model = (
-            session.query(IntervalSchedule)
-            .filter_by(every=every, period=period)
+            session.execute(
+                select(IntervalSchedule).filter_by(every=every, period=period).limit(1)
+            )
+            .scalars()
             .first()
         )
         if not model:
@@ -126,7 +127,11 @@ class CrontabSchedule(ModelBase, ModelMixin):
         }
         if schedule.tz:
             spec.update({"timezone": schedule.tz.zone})
-        model = session.query(CrontabSchedule).filter_by(**spec).first()
+        model = (
+            session.execute(select(CrontabSchedule).filter_by(**spec).limit(1))
+            .scalars()
+            .first()
+        )
         if not model:
             model = cls(**spec)
             session.add(model)
@@ -157,7 +162,9 @@ class SolarSchedule(ModelBase, ModelMixin):
             "latitude": schedule.lat,
             "longitude": schedule.lon,
         }
-        model = session.query(SolarSchedule).filter_by(**spec).first()
+        model = (
+            session.execute(select(SolarSchedule).filter_by(**spec)).scalars().first()
+        )
         if not model:
             model = cls(**spec)
             session.add(model)
@@ -211,13 +218,16 @@ class PeriodicTaskChanged(ModelBase, ModelMixin):
 
     @classmethod
     def last_change(cls, session):
-        periodic_tasks = session.query(PeriodicTaskChanged).get(1)
+        periodic_tasks = (
+            session.execute(select(PeriodicTaskChanged).filter_by(id=1))
+            .scalars()
+            .first()
+        )
         if periodic_tasks:
             return periodic_tasks.last_update
 
 
 class PeriodicTask(ModelBase, ModelMixin):
-
     __tablename__ = "celery_periodic_task"
     __table_args__ = {"sqlite_autoincrement": True}
 

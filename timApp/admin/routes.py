@@ -1,6 +1,7 @@
 import os
 
 from flask import flash, url_for, Response
+from sqlalchemy import select
 
 from timApp.auth.accesshelper import verify_admin
 from timApp.timdb.sqa import db
@@ -45,13 +46,13 @@ def restart_server() -> Response:
 @admin_bp.get("/users/search/<term>")
 def search_users(term: str, full: bool = False) -> Response:
     verify_admin()
-    result = (
-        User.query.filter(
+    result: list[User] = db.session.scalars(
+        select(User)
+        .filter(
             User.name.ilike(f"%{term}%")
             | User.real_name.ilike(f"%{term}%")
             | User.email.ilike(f"%{term}%")
         )
         .order_by(User.id)
-        .all()
-    )
+    ).all()
     return json_response([u.to_json(contacts=True, full=full) for u in result])

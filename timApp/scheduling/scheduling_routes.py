@@ -4,6 +4,7 @@ from typing import Any, Generator
 
 from flask import current_app, Response
 from isodate import Duration
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import (
@@ -60,12 +61,13 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
     verify_logged_in()
     u = get_current_user_object()
 
-    q = (
-        Block.query.filter_by(type_id=BlockType.ScheduledFunction.value)
+    stmt = (
+        select(PeriodicTask)
+        .select_from(Block)
+        .filter_by(type_id=BlockType.ScheduledFunction.value)
         .join(BlockAccess)
         .filter(BlockAccess.type == AccessType.owner.value)
         .join(PeriodicTask)
-        .with_entities(PeriodicTask)
         .options(
             joinedload(PeriodicTask.block)
             .joinedload(Block.accesses)
@@ -77,13 +79,21 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
         verify_admin()
 
     if not all_users:
-        q = q.filter(BlockAccess.block_id.in_(get_owned_objects_query(u).subquery()))
+        stmt = stmt.filter(
+            BlockAccess.block_id.in_(get_owned_objects_query(u).subquery())
+        )
 
-    scheduled_fns: list[PeriodicTask] = q.all()
+    scheduled_fns: list[PeriodicTask] = db.session.execute(stmt).scalars().all()
 
-    docentries = DocEntry.query.filter(
-        DocEntry.id.in_([t.task_id.doc_id for t in scheduled_fns])
-    ).all()
+    docentries = (
+        db.session.execute(
+            select(DocEntry).filter(
+                DocEntry.id.in_([t.task_id.doc_id for t in scheduled_fns])
+            )
+        )
+        .scalars()
+        .all()
+    )
     d_map = {d.id: d for d in docentries}
 
     def gen() -> Generator[ScheduledFunctionItem, None, None]:
@@ -131,16 +141,26 @@ def add_scheduled_function(
     min_interval = current_app.config["MINIMUM_SCHEDULED_FUNCTION_INTERVAL"]
     if secs < min_interval:
         raise RouteException(f"Minimum interval is {min_interval} seconds.")
-    schedule = IntervalSchedule.query.filter_by(
-        every=secs, period=IntervalSchedule.SECONDS
-    ).first()
+    schedule: IntervalSchedule | None = (
+        db.session.execute(
+            select(IntervalSchedule)
+            .filter_by(every=secs, period=IntervalSchedule.SECONDS)
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if not schedule:
         schedule = IntervalSchedule(every=secs, period=IntervalSchedule.SECONDS)
         db.session.add(schedule)
 
     assert p.task_id is not None
     task_id_str = p.task_id.doc_task
-    existing = PeriodicTask.query.filter_by(name=task_id_str).first()
+    existing = (
+        db.session.execute(select(PeriodicTask).filter_by(name=task_id_str).limit(1))
+        .scalars()
+        .first()
+    )
     if existing:
         raise RouteException(
             "A scheduled function for this plugin already exists. Remove the existing function first before adding a "
@@ -166,10 +186,18 @@ def delete_scheduled_plugin_run(
     function_id: int,
 ) -> Response:
     pto: PeriodicTask = (
-        Block.query.filter_by(id=function_id, type_id=BlockType.ScheduledFunction.value)
-        .join(PeriodicTask)
-        .with_entities(PeriodicTask)
-    ).first()
+        (
+            db.session.execute(
+                select(PeriodicTask)
+                .select_from(Block)
+                .filter_by(id=function_id, type_id=BlockType.ScheduledFunction.value)
+                .join(PeriodicTask)
+                .limit(1)
+            )
+        )
+        .scalars()
+        .first()
+    )
     if not pto:
         raise NotExist("scheduled function not found")
     u = get_current_user_object()

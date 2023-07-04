@@ -8,6 +8,7 @@ from typing import Any, TypedDict, Sequence
 
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
@@ -30,6 +31,7 @@ from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
+from timApp.timdb.sqa import db
 from timApp.user.user import User, get_membership_end, get_membership_added
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import (
@@ -177,19 +179,20 @@ def get_sisu_group_desc_for_table(g: UserGroup) -> str:
 
 def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
     gs = get_potential_groups(user, sisu_id)
-    docs_with_course_tag = (
-        Tag.query.filter_by(type=TagType.CourseCode)
-        .with_entities(Tag.block_id)
-        .subquery()
-    )
+    docs_with_course_tag = select(Tag.block_id).filter_by(type=TagType.CourseCode)
     tags = (
-        Tag.query.filter(
-            Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs])
-            & Tag.block_id.in_(docs_with_course_tag)
+        db.session.execute(
+            select(Tag)
+            .filter(
+                Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs])
+                & Tag.block_id.in_(docs_with_course_tag)
+            )
+            .options(joinedload(Tag.block).joinedload(Block.docentries))
         )
-        .options(joinedload(Tag.block).joinedload(Block.docentries))
+        .scalars()
         .all()
     )
+
     tag_map = {t.name[len(GROUP_TAG_PREFIX) :]: t for t in tags}
 
     def get_course_page(ug: UserGroup) -> str | None:

@@ -9,6 +9,7 @@ from celery.utils.log import get_logger
 from celery.utils.time import maybe_make_aware
 from kombu.utils.encoding import safe_str, safe_repr
 from kombu.utils.json import dumps, loads
+from sqlalchemy import select
 
 from .models import (
     PeriodicTask,
@@ -191,7 +192,7 @@ class ModelEntry(ScheduleEntry):
         with session_cleanup(session):
             # Object may not be synchronized, so only
             # change the fields we care about.
-            obj = session.query(PeriodicTask).get(self.model.id)
+            obj = session.get(PeriodicTask, self.model.id)
 
             for field in self.save_fields:
                 setattr(obj, field, getattr(self.model, field))
@@ -224,7 +225,11 @@ class ModelEntry(ScheduleEntry):
         """
         session = Session()
         with session_cleanup(session):
-            periodic_task = session.query(PeriodicTask).filter_by(name=name).first()
+            periodic_task = (
+                session.execute(select(PeriodicTask).filter_by(name=name).limit(1))
+                .scalars()
+                .first()
+            )
             if not periodic_task:
                 periodic_task = PeriodicTask(name=name)
             temp = cls._unpack_fields(session, **entry)
@@ -349,7 +354,11 @@ class DatabaseScheduler(Scheduler):
         with session_cleanup(session):
             logger.debug("DatabaseScheduler: Fetching database schedule")
             # get all enabled PeriodicTask
-            models = session.query(self.Model).filter_by(enabled=True).all()
+            models = (
+                session.execute(select(self.Model).filter_by(enabled=True))
+                .scalars()
+                .all()
+            )
             s = {}
             for model in models:
                 try:
@@ -363,7 +372,7 @@ class DatabaseScheduler(Scheduler):
     def schedule_changed(self):
         session = self.Session()
         with session_cleanup(session):
-            changes = session.query(self.Changes).get(1)
+            changes = session.get(self.Changes, 1)
             if not changes:
                 changes = self.Changes(id=1)
                 session.add(changes)

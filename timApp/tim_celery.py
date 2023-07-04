@@ -14,6 +14,7 @@ from celery import Celery
 from celery.signals import after_setup_logger
 from celery.utils.log import get_task_logger
 from marshmallow import EXCLUDE, ValidationError
+from sqlalchemy import delete
 
 from timApp.answer.routes import post_answer_impl, AnswerRouteResult
 from timApp.document.usercontext import UserContext
@@ -252,14 +253,19 @@ def cleanup_verifications():
     now = get_current_time()
     end_time_unreacted = now - timedelta(seconds=max_unreacted_interval)
     end_time_reacted = now - timedelta(seconds=max_reacted_interval)
-    Verification.query.filter(
-        (Verification.requested_at < end_time_unreacted)
-        & (Verification.reacted_at == None)
-    ).delete()
-    Verification.query.filter(
-        (Verification.requested_at < end_time_reacted)
-        & (Verification.reacted_at != None)
-    ).delete()
+    db.session.execute(
+        delete(Verification).where(
+            (Verification.requested_at < end_time_unreacted)
+            & (Verification.reacted_at == None)
+        )
+    )
+    db.session.execute(
+        delete(Verification).where(
+            (Verification.requested_at < end_time_reacted)
+            & (Verification.reacted_at != None)
+        )
+    )
+
     db.session.commit()
 
 

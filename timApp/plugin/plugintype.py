@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import filelock
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 import timApp
@@ -40,7 +41,11 @@ class PluginType(db.Model, PluginTypeBase):
 
     @staticmethod
     def resolve(p_type: str) -> "PluginType":
-        pt = PluginType.query.filter_by(type=p_type).first()
+        pt = (
+            db.session.execute(select(PluginType).filter_by(type=p_type))
+            .scalars()
+            .first()
+        )
         if pt:
             return pt
 
@@ -62,7 +67,11 @@ class PluginType(db.Model, PluginTypeBase):
                     raise
 
         # We have to re-query the database since the other session was closed
-        return PluginType.query.filter_by(type=p_type).one()
+        return (
+            db.session.execute(select(PluginType).filter_by(type=p_type))
+            .scalars()
+            .one()
+        )
 
     def get_type(self) -> str:
         return self.type

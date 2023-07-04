@@ -13,7 +13,7 @@ from PIL import UnidentifiedImageError
 from PIL.Image import DecompressionBombError, registered_extensions
 from flask import Blueprint, request, send_file, Response, url_for
 from img2pdf import convert
-from sqlalchemy import case
+from sqlalchemy import case, select
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import (
@@ -124,11 +124,16 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
 
     relfilename = check_and_format_filename(relfilename)
     block = (
-        Block.query.filter(
-            (Block.description.startswith(relfilename))
-            & (Block.type_id == BlockType.Upload.value)
+        db.session.execute(
+            select(Block)
+            .filter(
+                (Block.description.startswith(relfilename))
+                & (Block.type_id == BlockType.Upload.value)
+            )
+            .order_by(Block.description.desc())
+            .limit(1)
         )
-        .order_by(Block.description.desc())
+        .scalars()
         .first()
     )
     if not block or (
@@ -171,11 +176,15 @@ def get_multiple_pluginuploads(relfilenames: list[str]) -> list[PluginUpload]:
         value=Block.description,
     )
     blocks: list[Block] = (
-        Block.query.filter(
-            (Block.description.in_(filenames))
-            & (Block.type_id == BlockType.Upload.value)
+        db.session.execute(
+            select(Block)
+            .filter(
+                (Block.description.in_(filenames))
+                & (Block.type_id == BlockType.Upload.value)
+            )
+            .order_by(ordering)
         )
-        .order_by(ordering)
+        .scalars()
         .all()
     )
     if len(blocks) < len(
@@ -641,7 +650,7 @@ def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: i
             "Some images could no longer be found, please delete the broken images first"
         )
     byte_images = []
-    for (block, file) in zip(blocks, files):
+    for block, file in zip(blocks, files):
         img = Image.open(io.BytesIO(block.data))
         try:
             rotation = file["rotation"]

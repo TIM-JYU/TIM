@@ -3,6 +3,7 @@ from typing import Callable
 
 from flask import render_template_string, Response
 from marshmallow import missing
+from sqlalchemy import select
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
@@ -136,11 +137,18 @@ def _do_group_op(
     apply: Callable[[User, UserGroup], None],
 ) -> tuple[bool, bool, dict[str, str]]:
     user_groups: set[str] = set(
-        g for g, in user.get_groups(include_expired=False).with_entities(UserGroup.name)
+        g
+        for g, in db.session.execute(
+            user.get_groups(include_expired=False).with_only_columns(UserGroup.name)
+        )
     )
 
     result = dict.fromkeys(groups, "")
-    ugs: list[UserGroup] = UserGroup.query.filter(UserGroup.name.in_(groups)).all()
+    ugs: list[UserGroup] = (
+        db.session.execute(select(UserGroup).filter(UserGroup.name.in_(groups)))
+        .scalars()
+        .all()
+    )
 
     all_ok = True
     is_course = False

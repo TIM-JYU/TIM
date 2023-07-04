@@ -192,7 +192,7 @@ class UserTest(TimDbTest):
         b = insert_block(
             BlockType.Document, "testing", [self.test_user_2.get_personal_group()]
         )
-        user = User.query.get(TEST_USER_1_ID)
+        user = db.session.get(User, TEST_USER_1_ID)
         self.assertFalse(user.has_view_access(b))
         v = AccessType.view
 
@@ -220,7 +220,7 @@ class UserTest(TimDbTest):
         self.remove(pg1, b, v)
 
     def test_last_name_switch(self):
-        for (fn1, fn2) in [
+        for fn1, fn2 in [
             (lambda x: x, last_name_to_first),
             (last_name_to_last, lambda x: x),
         ]:

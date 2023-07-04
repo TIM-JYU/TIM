@@ -10,7 +10,7 @@ from flask import Response
 from flask import current_app
 from flask import request
 from flask import session
-from sqlalchemy import func
+from sqlalchemy import func, select, delete
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import StaleDataError
@@ -595,7 +595,11 @@ def get_lecture_users(lecture: Lecture):
     lecturers = []
     students = []
 
-    activity = Useractivity.query.filter_by(lecture=lecture).all()
+    activity = (
+        db.session.execute(select(Useractivity).filter_by(lecture=lecture))
+        .scalars()
+        .all()
+    )
     cur_time = get_current_time()
 
     for ac in activity:
@@ -718,23 +722,27 @@ def clean_dictionaries_by_lecture(lecture: Lecture):
     stop_showing_points(lecture)
     for a in lecture.useractivity:
         db.session.delete(a)
-    QuestionActivity.query.filter(
-        (
-            QuestionActivity.asked_id.in_(
-                AskedQuestion.query.filter_by(
-                    lecture_id=lecture.lecture_id
-                ).with_entities(AskedQuestion.asked_id)
+    db.session.execute(
+        delete(QuestionActivity)
+        .where(
+            (
+                QuestionActivity.asked_id.in_(
+                    select(AskedQuestion.asked_id).filter_by(
+                        lecture_id=lecture.lecture_id
+                    )
+                )
+            )
+            & QuestionActivity.kind.in_(
+                [
+                    QuestionActivityKind.Usershown,
+                    QuestionActivityKind.Pointsshown,
+                    QuestionActivityKind.Pointsclosed,
+                    QuestionActivityKind.Useranswered,
+                ]
             )
         )
-        & QuestionActivity.kind.in_(
-            [
-                QuestionActivityKind.Usershown,
-                QuestionActivityKind.Pointsshown,
-                QuestionActivityKind.Pointsclosed,
-                QuestionActivityKind.Useranswered,
-            ]
-        )
-    ).delete(synchronize_session="fetch")
+        .execution_options(synchronize_session="fetch")
+    )
 
 
 def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
@@ -747,7 +755,9 @@ def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
             QuestionActivityKind.Pointsshown,
         ],
     )
-    Runningquestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
+    db.session.execute(
+        delete(Runningquestion).where(Runningquestion.lecture_id == lecture.lecture_id)
+    )
     stop_showing_points(lecture)
 
 
@@ -773,9 +783,8 @@ def delete_lecture(m: DeleteLectureModel):
     lecture = get_lecture_from_request(lecture_id=m.lecture_id)
     with db.session.no_autoflush:
         empty_lecture(lecture)
-        Message.query.filter_by(lecture_id=lecture.lecture_id).delete()
-        LectureAnswer.query.filter_by(lecture_id=lecture.lecture_id).delete()
-        AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
+        for t in (Message, LectureAnswer, AskedQuestion):
+            db.session.execute(delete(t).where(t.lecture_id == lecture.lecture_id))
         db.session.delete(lecture)
     db.session.commit()
 
@@ -915,7 +924,7 @@ def ask_question():
         if not doc_id:
             raise RouteException("doc_id missing")
         if question_id:
-            question = Question.query.get(question_id)  # Old version???
+            question = db.session.get(Question, question_id)  # Old version???
             question_json_str = question.questionjson
             markup = json.loads(question_json_str)
         else:
@@ -990,13 +999,15 @@ def show_points(m: ShowAnswerPointsModel):
 
 
 def stop_showing_points(lecture: Lecture):
-    Showpoints.query.filter(
-        Showpoints.asked_id.in_(
-            AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).with_entities(
-                AskedQuestion.asked_id
+    db.session.execute(
+        delete(Showpoints)
+        .where(
+            Showpoints.asked_id.in_(
+                select(AskedQuestion.asked_id).filter_by(lecture_id=lecture.lecture_id)
             )
         )
-    ).delete(synchronize_session="fetch")
+        .execution_options(synchronize_session="fetch")
+    )
 
 
 @lecture_routes.post("/updatePoints/")
@@ -1023,10 +1034,14 @@ def update_question_points():
 
 
 def delete_activity(question: AskedQuestion, kinds):
-    QuestionActivity.query.filter(
-        (QuestionActivity.asked_id == question.asked_id)
-        & QuestionActivity.kind.in_(kinds)
-    ).delete(synchronize_session="fetch")
+    db.session.execute(
+        delete(QuestionActivity)
+        .where(
+            (QuestionActivity.asked_id == question.asked_id)
+            & QuestionActivity.kind.in_(kinds)
+        )
+        .execution_options(synchronize_session="fetch")
+    )
 
 
 @lecture_routes.get("/getQuestionByParId")

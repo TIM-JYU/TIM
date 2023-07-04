@@ -8,6 +8,7 @@ from typing import Iterable, Generator, Match, Any
 
 import yaml
 from marshmallow import missing, ValidationError, EXCLUDE
+from sqlalchemy import select
 
 from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
@@ -32,6 +33,7 @@ from timApp.plugin.plugintype import CONTENT_FIELD_NAME_MAP, PluginTypeLazy
 from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.rndutils import myhash, SeedClass
 from timApp.util.utils import try_load_json, get_current_time, Range
@@ -600,11 +602,17 @@ class Plugin:
                 b = TaskBlock.get_by_task(self.task_id.doc_task)
                 if not b:
                     return
-                ba = BlockAccess.query.filter_by(
-                    block_id=b.id,
-                    type=AccessType.view.value,
-                    usergroup_id=current_user.get_personal_group().id,
-                ).first()
+                ba = (
+                    db.session.execute(
+                        select(BlockAccess).filter_by(
+                            block_id=b.id,
+                            type=AccessType.view.value,
+                            usergroup_id=current_user.get_personal_group().id,
+                        )
+                    )
+                    .scalars()
+                    .first()
+                )
                 if not ba:
                     return
                 self.access_end_for_user = ba.accessible_to
@@ -631,11 +639,17 @@ class Plugin:
                 self.hidden = True
                 b = TaskBlock.get_by_task(tid.doc_task)
                 if b:
-                    ba = BlockAccess.query.filter_by(
-                        block_id=b.id,
-                        type=AccessType.view.value,
-                        usergroup_id=current_user.get_personal_group().id,
-                    ).first()
+                    ba = (
+                        db.session.execute(
+                            select(BlockAccess).filter_by(
+                                block_id=b.id,
+                                type=AccessType.view.value,
+                                usergroup_id=current_user.get_personal_group().id,
+                            )
+                        )
+                        .scalars()
+                        .first()
+                    )
                     if ba and ba.accessible_to:
                         if ba.accessible_to < get_current_time():
                             self.hidden = False

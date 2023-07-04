@@ -24,7 +24,7 @@ from typing import Literal
 
 from flask import Response, render_template_string, url_for
 from marshmallow import missing
-from sqlalchemy import false, true, func
+from sqlalchemy import false, true, func, select, update
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -364,9 +364,13 @@ def export_ical(user: User) -> Response:
     :param user: User to generate ICS link for
     :return:
     """
-    user_data: ExportedCalendar = ExportedCalendar.query.filter(
-        ExportedCalendar.user_id == user.id
-    ).one_or_none()
+    user_data: ExportedCalendar = (
+        db.session.execute(
+            select(ExportedCalendar).filter(ExportedCalendar.user_id == user.id)
+        )
+        .scalars()
+        .one_or_none()
+    )
     if user_data is not None:
         hash_code = user_data.calendar_hash
         url = url_for("calendar_plugin.get_ical", key=hash_code, _external=True)
@@ -409,9 +413,11 @@ def get_ical(opts: ICalFilterOptions) -> Response:
 
     :return: ICS file that can be exported otherwise 404 if user data does not exist.
     """
-    user_data: ExportedCalendar = ExportedCalendar.query.filter_by(
-        calendar_hash=opts.key
-    ).one_or_none()
+    user_data: ExportedCalendar = (
+        db.session.execute(select(ExportedCalendar).filter_by(calendar_hash=opts.key))
+        .scalars()
+        .one_or_none()
+    )
     if user_data is None:
         raise NotExist()
 
@@ -472,7 +478,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     """
     filter_opts = filter_opts or FilterOptions()
 
-    q = Event.query
+    stmt = select(Event)
     event_queries = []
     event_filter = false()
 
@@ -490,7 +496,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     subquery_event_groups_all = (
         u.get_groups(include_expired=False, include_special=False)
         .join(EventGroup, EventGroup.usergroup_id == UserGroup.id)
-        .with_entities(EventGroup.event_id)
+        .with_only_columns(EventGroup.event_id)
     )
     subquery_event_groups = subquery_event_groups_all
     # Apply group filter if there is one
@@ -504,15 +510,15 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
 
     # Filter out any tags and groups
     if filter_opts.tags is not None:
-        q = q.join(EventTag, Event.tags)
+        stmt = stmt.join(EventTag, Event.tags)
         # noinspection PyUnresolvedReferences
         event_filter &= EventTag.tag.in_(filter_opts.tags)
 
-    q = q.filter(event_filter)
+    stmt = stmt.filter(event_filter)
 
     if filter_opts.showImportant:
         # noinspection PyUnresolvedReferences
-        important_q = Event.query.filter(
+        important_q = select(Event).filter(
             Event.event_id.in_(subquery_event_groups_all) & Event.important.is_(True)
         )
         event_queries.append(important_q)
@@ -522,27 +528,28 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         enrolled_subquery = (
             u.get_groups(include_expired=False)
             .join(Enrollment, Enrollment.usergroup_id == UserGroup.id)
-            .with_entities(Enrollment.event_id)
+            .with_only_columns(Enrollment.event_id)
             .subquery()
         )
         # noinspection PyUnresolvedReferences
-        booked_query = Event.query.filter(Event.event_id.in_(enrolled_subquery))
+        booked_query = select(Event).filter(Event.event_id.in_(enrolled_subquery))
         event_queries.append(booked_query)
 
     if filter_opts.showBookedByMin is not None:
         booked_min_subquery = (
-            Event.query.filter(Event.creator == u)
+            select(Event)
+            .filter(Event.creator == u)
             .outerjoin(Enrollment)
             .group_by(Event.event_id)
-            .with_entities(
+            .with_only_columns(
                 Event.event_id, func.count(Enrollment.event_id).label("count")
             )
         ).subquery()
         booked_min_query = (
-            db.session.query(booked_min_subquery)
+            select(Event)
+            .select_from(booked_min_subquery)
             .join(Event, Event.event_id == booked_min_subquery.c.event_id)
             .filter(booked_min_subquery.c.count >= filter_opts.showBookedByMin)
-            .with_entities(Event)
         )
         event_queries.append(booked_min_query)
 
@@ -554,10 +561,10 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         timing_filter &= Event.end_time <= filter_opts.toDate
 
     if event_queries:
-        q = q.union(*event_queries)
-    q = q.filter(timing_filter)
+        stmt = stmt.union(*event_queries)
+    stmt = stmt.filter(timing_filter)
 
-    return q.all()
+    return db.session.execute(stmt).scalars().all()
 
 
 @calendar_plugin.get("/events", model=FilterOptions)
@@ -694,7 +701,11 @@ def save_events(
     _replace_group_wildcards(event_ug_names)
 
     # noinspection PyUnresolvedReferences
-    event_ugs = UserGroup.query.filter(UserGroup.name.in_(event_ug_names)).all()
+    event_ugs = (
+        db.session.execute(select(UserGroup).filter(UserGroup.name.in_(event_ug_names)))
+        .scalars()
+        .all()
+    )
     event_ugs_dict = {ug.name: ug for ug in event_ugs}
     event_tags = set(
         [
@@ -798,7 +809,11 @@ def save_events(
         if calendar_event.id is not missing:
             if not modify_existing:
                 raise AccessDenied("Cannot modify existing events via this route")
-            event: Event = Event.query.filter_by(event_id=calendar_event.id).first()
+            event: Event = (
+                db.session.execute(select(Event).filter_by(event_id=calendar_event.id))
+                .scalars()
+                .first()
+            )
             if not event:
                 raise NotExist(f"Event with id {calendar_event.id} not found")
             rights = event.get_enrollment_right(user)
@@ -949,7 +964,11 @@ def send_email_to_enrolled_users(
     enrolled_users = event.enrolled_users
     user_accounts = []
     for user_group in enrolled_users:
-        user_account = User.query.filter(User.name == user_group.name).one_or_none()
+        user_account = (
+            db.session.execute(select(User).filter(User.name == user_group.name))
+            .scalars()
+            .one_or_none()
+        )
         if user_account is None:
             raise NotExist()
         user_accounts.append(user_account)
@@ -995,9 +1014,13 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
     if not enrollment:
         raise NotExist()
 
-    Enrollment.query.filter_by(event_id=enrollment.event_id).update(
-        {"booker_message": Enrollment.booker_message + f"\n{new_message}"},
-        synchronize_session="fetch",
+    db.session.execute(
+        update(Enrollment)
+        .where(Enrollment.event_id == enrollment.event_id)
+        .values(
+            {"booker_message": Enrollment.booker_message + f"\n{new_message}"},
+        )
+        .execution_options(synchronize_session="fetch")
     )
     db.session.commit()
 

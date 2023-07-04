@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TypedDict, Any, DefaultDict, Literal
 
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_global_answers
@@ -78,7 +78,11 @@ def handle_jsrunner_groups(groupdata: JsrunnerGroups | None, curr_user: User) ->
                 group_members_state[ug] = UserGroupMembersState(
                     before=current_state, after=set(current_state)
                 )
-            users: list[User] = User.query.filter(User.id.in_(uids)).all()
+            users: list[User] = (
+                db.session.execute(select(User).filter(User.id.in_(uids)))
+                .scalars()
+                .all()
+            )
             found_user_ids = {u.id for u in users}
             missing_ids = set(uids) - found_user_ids
             if missing_ids:
@@ -224,7 +228,9 @@ def save_fields(
     doc_map: dict[int, DocInfo] = {}
     user_map: dict[int, User] = {
         u.id: u
-        for u in User.query.filter(User.id.in_(x["user"] for x in save_obj)).all()
+        for u in db.session.execute(
+            select(User).filter(User.id.in_(x["user"] for x in save_obj))
+        ).scalars()
     }
 
     # We need this separate "add_users_to_group" parameter because the plugin may have reported missing users.
@@ -336,7 +342,8 @@ def save_fields(
         for key in user["fields"].keys()
     }
     sq = (
-        Answer.query.filter(
+        select(Answer)
+        .filter(
             Answer.task_id.in_(
                 [tid.doc_task for tid in parsed_task_ids.values() if not tid.is_global]
             )
@@ -345,14 +352,14 @@ def save_fields(
         .join(User, Answer.users)
         .filter(User.id.in_(user_map.keys()))
         .group_by(User.id, Answer.task_id)
-        .with_entities(func.max(Answer.id).label("aid"), User.id.label("uid"))
+        .with_only_columns(func.max(Answer.id).label("aid"), User.id.label("uid"))
         .subquery()
     )
-    datas: list[tuple[int, Answer]] = (
-        Answer.query.join(sq, Answer.id == sq.c.aid)
-        .with_entities(sq.c.uid, Answer)
-        .all()
-    )
+    datas: list[tuple[int, Answer]] = db.session.execute(
+        select(Answer)
+        .join(sq, Answer.id == sq.c.aid)
+        .with_only_columns(sq.c.uid, Answer)
+    ).all()
     global_answers = get_global_answers(parsed_task_ids)
     answer_map: defaultdict[int, dict[str, Answer]] = defaultdict(dict)
     for uid, a in datas:

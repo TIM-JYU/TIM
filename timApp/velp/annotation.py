@@ -10,6 +10,7 @@ import re
 from dataclasses import field
 
 from flask import Response
+from sqlalchemy import select
 
 from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import (
@@ -88,7 +89,7 @@ def add_annotation(
                 require_teacher_if_not_own=True,
             )
         except AccessDenied:
-            a: Answer = Answer.query.get(answer_id)
+            a: Answer = db.session.get(Answer, answer_id)
             if a.has_many_collaborators:
                 raise RouteException(
                     "Reviewing answers with multiple collaborators not supported yet"
@@ -224,7 +225,13 @@ def invalidate_annotation(id: int) -> Response:
 
 def get_annotation_or_abort(ann_id: int) -> Annotation:
     # Possibly bug: We need to create a new query object, otherwise raiseload() seems to pollute User's relations
-    ann = set_annotation_query_opts(db.session.query(Annotation)).get(ann_id)
+    ann = (
+        db.session.execute(
+            set_annotation_query_opts(select(Annotation).filter_by(id=ann_id)).limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if not ann:
         raise RouteException(f"Annotation with id {ann_id} not found")
     return ann

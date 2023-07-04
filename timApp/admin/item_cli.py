@@ -3,6 +3,7 @@ from secrets import token_urlsafe
 
 import click
 from flask.cli import AppGroup
+from sqlalchemy import select, delete
 
 from timApp.admin.fix_orphan_documents import (
     fix_orphans_without_docentry,
@@ -25,16 +26,18 @@ item_cli = AppGroup("item")
 
 @item_cli.command("cleanup_default_rights_names")
 def cleanup_default_right_doc_names() -> None:
-    bs: list[Block] = Block.query.filter(
-        Block.description.in_(
-            [
-                "templates/DefaultDocumentRights",
-                "templates/DefaultFolderRights",
-                "$DefaultFolderRights",
-                "$DefaultDocumentRights",
-            ]
+    bs: list[Block] = db.session.scalars(
+        select(Block).filter(
+            Block.description.in_(
+                [
+                    "templates/DefaultDocumentRights",
+                    "templates/DefaultFolderRights",
+                    "$DefaultFolderRights",
+                    "$DefaultDocumentRights",
+                ]
+            )
+            & (Block.type_id == BlockType.Document.value)
         )
-        & (Block.type_id == BlockType.Document.value)
     ).all()
     num_changed = len(bs)
     for b in bs:
@@ -50,8 +53,8 @@ def cleanup_default_right_doc_names() -> None:
 def cleanup_bookmark_docs(
     dry_run: bool, prompt_before_commit: bool, max_docs: int | None
 ) -> None:
-    new_bookmark_users: list[User] = User.query.filter(
-        User.prefs.contains('"bookmarks":')
+    new_bookmark_users: list[User] = db.session.scalars(
+        select(User).filter(User.prefs.contains('"bookmarks":'))
     ).all()
     docs_to_delete = set()
     processed_users = 0
@@ -80,11 +83,14 @@ def cleanup_bookmark_docs(
             click.echo(f"Deleting unused bookmarks document of {u}")
             block = bm_doc.block
             block.accesses = {}
-            Translation.query.filter_by(doc_id=bm_doc.id).delete()
-            ReadParagraph.query.filter_by(doc_id=bm_doc.id).delete()
-            PendingNotification.query.filter_by(doc_id=bm_doc.id).delete()
-            VelpGroupsInDocument.query.filter_by(doc_id=bm_doc.id).delete()
-            Notification.query.filter_by(block_id=bm_doc.id).delete()
+            for t in (
+                Translation,
+                ReadParagraph,
+                PendingNotification,
+                VelpGroupsInDocument,
+                Notification,
+            ):
+                db.session.execute(delete(t).where(t.doc_id == bm_doc.id))
             db.session.delete(bm_doc)
             db.session.delete(block)
     if dry_run:

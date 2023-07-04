@@ -6,6 +6,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 
 
 class PluginPreambleTest(TimRouteTest):
@@ -34,7 +35,7 @@ choices:
         plug = Plugin.from_paragraph(par, default_view_ctx)
         self.assertEqual(f"{d.id}.t", plug.task_id.doc_task)
         resp = self.post_answer(plug.type, plug.task_id.extended, [True])
-        a: Answer = Answer.query.get(resp["savedNew"])
+        a: Answer = db.session.get(Answer, resp["savedNew"])
         self.assertEqual(1, a.points)
         self.assertEqual(f"{d.id}.t", a.task_id)
         self.get_state(a.id)
@@ -56,7 +57,7 @@ choices:
             [False],
             ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()),
         )
-        a: Answer = Answer.query.get(resp["savedNew"])
+        a: Answer = db.session.get(Answer, resp["savedNew"])
         self.assertEqual(1 if create_preamble_translation else 0, a.points)
         self.assertEqual(f"{d.id}.t", a.task_id)
         self.check_plugin_ref_correct(
@@ -107,7 +108,7 @@ choices:
             [True],
             ref_from=(d.id, d.document.get_paragraphs()[0].get_id()),
         )
-        a: Answer = Answer.query.get(resp["savedNew"])
+        a: Answer = db.session.get(Answer, resp["savedNew"])
         self.assertEqual(1, a.points)
         self.assertEqual(plug.task_id.doc_task, a.task_id)
 
@@ -125,7 +126,7 @@ choices:
             [False],
             ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()),
         )
-        a: Answer = Answer.query.get(resp["savedNew"])
+        a: Answer = db.session.get(Answer, resp["savedNew"])
         self.assertEqual(0, a.points)
         self.assertEqual(plug.task_id.doc_task, a.task_id)
         self.check_plugin_ref_correct(tr, plugin_doc, plugin_par, preamble_doc=tr_p)

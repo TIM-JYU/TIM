@@ -12,7 +12,7 @@ import attr
 import dateutil.parser
 from isodate import datetime_isoformat
 from marshmallow import missing
-from sqlalchemy import func, true
+from sqlalchemy import func, true, select
 from sqlalchemy.orm import lazyload, joinedload
 
 from timApp.answer.answer import Answer
@@ -28,6 +28,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.plugin.plugin import find_task_ids, CachedPluginFinder
 from timApp.plugin.taskid import TaskId
+from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User, get_membership_end, get_membership_added
 from timApp.user.usergroup import UserGroup
@@ -129,9 +130,13 @@ class RequestedGroups:
     include_all_answered: bool = False
 
     @staticmethod
-    def from_name_list(group_names: list[str]):
+    def from_name_list(group_names: list[str]) -> "RequestedGroups":
         return RequestedGroups(
-            groups=UserGroup.query.filter(UserGroup.name.in_(group_names)).all(),
+            groups=db.session.execute(
+                select(UserGroup).filter(UserGroup.name.in_(group_names))
+            )
+            .scalars()
+            .all(),
             include_all_answered=ALL_ANSWERED_WILDCARD in group_names,
         )
 
@@ -340,6 +345,7 @@ def get_fields_and_users(
         plugin_info_fields, d, doc_map, view_ctx, user_ctx
     )
 
+    # FIXME: SQLAlchemy check behaviour
     sub = []
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
     # That's why we split the list of task ids in chunks of size 6 and merge the results.
@@ -353,8 +359,12 @@ def get_fields_and_users(
             # Ensure user filter gets applied even if group filter is skipped in include_all_answered
             q = q.filter(user_filter)
         sub += (
-            q.group_by(Answer.task_id, User.id)
-            .with_entities(func.max(Answer.id), User.id)
+            db.session.execute(
+                q.group_by(Answer.task_id, User.id).with_only_columns(
+                    func.max(Answer.id), User.id
+                )
+            )
+            .scalars()
             .all()
         )
     aid_uid_map = defaultdict(list)
@@ -363,7 +373,7 @@ def get_fields_and_users(
         aid_uid_map[aid].append(uid)
         user_ids.add(uid)
 
-    q1 = User.query.join(UserGroup, join_relation).filter(group_filter)
+    q1 = select(User).join(UserGroup, join_relation).filter(group_filter)
     if requested_groups.include_all_answered:
         # if no group filter is given, attempt to get users that have valid answers only using the user
         # ids from previous query
@@ -371,27 +381,38 @@ def get_fields_and_users(
         # Ensure that user filter gets applied even if group filter was None
         if user_filter is not None:
             id_filter = id_filter & user_filter
-        q2 = User.query.filter(id_filter)
+        q2 = select(User).filter(id_filter)
         q = q1.union(q2)
     else:
         q = q1
-    q = q.with_entities(User).order_by(User.id).options(lazyload(User.groups))
+    q = q.with_only_columns(User).order_by(User.id).options(lazyload(User.groups))
     if member_filter_type != MembershipFilter.Current:
         q = q.options(joinedload(User.memberships))
-    users: list[User] = q.all()
+    users: list[User] = db.session.execute(q).scalars().all()
     user_map = {}
     for u in users:
         user_map[u.id] = u
     global_taskids = [t for t in task_ids if t.is_global]
     global_answer_ids = (
-        valid_answers_query(global_taskids)
-        .group_by(Answer.task_id)
-        .with_entities(func.max(Answer.id))
+        db.session.execute(
+            valid_answers_query(global_taskids)
+            .group_by(Answer.task_id)
+            .with_only_columns(func.max(Answer.id))
+        )
+        .scalars()
         .all()
     )
-    answs = Answer.query.filter(
-        Answer.id.in_(itertools.chain((aid for aid, _ in sub), global_answer_ids))
-    ).all()
+    answs = (
+        db.session.execute(
+            select(Answer).filter(
+                Answer.id.in_(
+                    itertools.chain((aid for aid, _ in sub), global_answer_ids)
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
     answers_with_users: list[tuple[int, Answer | None]] = []
     for a in answs:
         uids = aid_uid_map.get(a.id)
@@ -412,13 +433,17 @@ def get_fields_and_users(
             counts[u.id] = {}
         cnt = func.count(Answer.id).label("cnt")
         answer_counts = (
-            Answer.query.filter(
-                Answer.task_id.in_([tid.doc_task for tid in tasks_with_count_field])
+            db.session.execute(
+                select(Answer)
+                .filter(
+                    Answer.task_id.in_([tid.doc_task for tid in tasks_with_count_field])
+                )
+                .join(User, Answer.users)
+                .filter(User.id.in_([u.id for u in users]))
+                .group_by(User.id, Answer.task_id)
+                .with_only_columns(User.id, Answer.task_id, cnt)
             )
-            .join(User, Answer.users)
-            .filter(User.id.in_([u.id for u in users]))
-            .group_by(User.id, Answer.task_id)
-            .with_entities(User.id, Answer.task_id, cnt)
+            .scalars()
             .all()
         )
         for uid, taskid, count in answer_counts:
@@ -545,10 +570,11 @@ def get_tally_field_values(
         pts = get_points_by_rule(
             rule=psr,
             task_ids=tids,
-            user_ids=User.query.join(UserGroup, join_relation)
-            .filter(group_filter)
-            .with_entities(User.id)
-            .subquery()
+            user_ids=db.session.execute(
+                select(User.id).join(UserGroup, join_relation).filter(group_filter)
+            )
+            .scalars()
+            .all()
             if group_filter is not None
             else None,
             answer_filter=ans_filter,

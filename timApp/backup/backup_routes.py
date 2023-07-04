@@ -1,4 +1,5 @@
 from flask import Response
+from sqlalchemy import select
 
 from timApp.answer.backup import save_answer_backup
 from timApp.answer.exportedanswer import ExportedAnswer
@@ -49,15 +50,15 @@ def receive_user_memberships(
         user.add_to_group(ug, None)
 
     if removed_memberships:
-        removed_memberships_objs: list[UserGroupMember] = (
-            UserGroupMember.query.join(UserGroup, UserGroupMember.group)
+        removed_memberships_objs: list[UserGroupMember] = db.session.execute(
+            select(UserGroupMember).join(UserGroup, UserGroupMember.group)
             .join(User, UserGroupMember.user)
             .filter(
                 (User.name == user.name)
                 & UserGroup.name.in_(removed_memberships)
                 & membership_current
             )
-        ).all()
+        ).scalars()
 
         for ugm in removed_memberships_objs:
             ugm.set_expired()

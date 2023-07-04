@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import foreign
 
 from timApp.document.docinfo import DocInfo
@@ -93,11 +94,11 @@ class DocEntry(db.Model, DocInfo):
 
     @staticmethod
     def get_all() -> list[DocEntry]:
-        return DocEntry.query.all()
+        return db.session.execute(select(DocEntry)).scalars().all()
 
     @staticmethod
     def find_all_by_id(doc_id: int) -> list[DocEntry]:
-        return DocEntry.query.filter_by(id=doc_id).all()
+        return db.session.execute(select(DocEntry).filter_by(id=doc_id)).scalars().all()
 
     @staticmethod
     def find_by_id(doc_id: int, docentry_load_opts: Any = None) -> DocInfo | None:
@@ -105,13 +106,13 @@ class DocEntry(db.Model, DocInfo):
 
         TODO: This method doesn't really belong in DocEntry class.
         """
-        q = DocEntry.query.filter_by(id=doc_id)
+        stmt = select(DocEntry).filter_by(id=doc_id)
         if docentry_load_opts:
-            q = q.options(*docentry_load_opts)
-        d = q.first()
+            stmt = stmt.options(*docentry_load_opts)
+        d = db.session.execute(stmt.limit(1)).scalars().first()
         if d:
             return d
-        return Translation.query.get(doc_id)
+        return db.session.get(Translation, doc_id)
 
     @staticmethod
     def find_by_path(
@@ -126,7 +127,7 @@ class DocEntry(db.Model, DocInfo):
         """
         if docentry_load_opts is None:
             docentry_load_opts = []
-        d = DocEntry.query.options(*docentry_load_opts).get(path)
+        d = db.session.get(DocEntry, path, options=docentry_load_opts)
         if d:
             return d
         # try translation
@@ -140,10 +141,16 @@ class DocEntry(db.Model, DocInfo):
             if entry is not None:
                 # Match lang id using LIKE to allow for partial matches.
                 # This is a simple way to allow mapping /en to newer /en-US or /en-GB.
-                tr = Translation.query.filter(
-                    (Translation.src_docid == entry.id)
-                    & (Translation.lang_id.like(f"{lang}%"))
-                ).first()
+                tr = (
+                    db.session.execute(
+                        select(Translation).filter(
+                            (Translation.src_docid == entry.id)
+                            & (Translation.lang_id.like(f"{lang}%"))
+                        )
+                    )
+                    .scalars()
+                    .first()
+                )
                 if tr is not None:
                     tr.docentry = entry
                     return tr
@@ -249,21 +256,21 @@ def get_documents(
 
     """
 
-    q = DocEntry.query
+    stmt = select(DocEntry)
     if not include_nonpublic:
-        q = q.filter_by(public=True)
+        stmt = stmt.filter_by(public=True)
     if filter_folder is not None:
         filter_folder = filter_folder.strip("/") + "/"
         if filter_folder == "/":
             filter_folder = ""
-        q = q.filter(DocEntry.name.like(filter_folder + "%"))
+        stmt = stmt.filter(DocEntry.name.like(filter_folder + "%"))
         if not search_recursively:
-            q = q.filter(DocEntry.name.notlike(filter_folder + "%/%"))
+            stmt = stmt.filter(DocEntry.name.notlike(filter_folder + "%/%"))
     if custom_filter is not None:
-        q = q.filter(custom_filter)
+        stmt = stmt.filter(custom_filter)
     if query_options is not None:
-        q = q.options(query_options)
-    result = q.all()
+        stmt = stmt.options(query_options)
+    result = db.session.execute(stmt).scalars().all()
     if not filter_user:
         return result
     return [r for r in result if filter_user.has_view_access(r)]

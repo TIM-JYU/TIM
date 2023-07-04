@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Any
 
+from sqlalchemy import select
 from sqlalchemy.ext.hybrid import hybrid_property  # type: ignore
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound  # type: ignore
 
@@ -115,13 +116,21 @@ class MessageListModel(db.Model):
     @staticmethod
     def get_by_email(email: str) -> Optional["MessageListModel"]:
         name, domain = email.split("@", 1)
-        return MessageListModel.query.filter_by(
-            name=name, email_list_domain=domain
-        ).first()
+        return (
+            db.session.execute(
+                select(MessageListModel).filter_by(name=name, email_list_domain=domain)
+            )
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def from_manage_doc_id(doc_id: int) -> "MessageListModel":
-        return MessageListModel.query.filter_by(manage_doc_id=doc_id).one()
+        return (
+            db.session.execute(select(MessageListModel).filter_by(manage_doc_id=doc_id))
+            .scalars()
+            .one()
+        )
 
     @staticmethod
     def from_name(name: str) -> "MessageListModel":
@@ -144,7 +153,11 @@ class MessageListModel(db.Model):
         :param name_candidate: The name of the message list.
         :return: Return the message list after query by name. Returns at most one result or None if no there are hits.
         """
-        return MessageListModel.query.filter_by(name=name_candidate).first()
+        return (
+            db.session.execute(select(MessageListModel).filter_by(name=name_candidate))
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def name_exists(name_candidate: str) -> bool:
@@ -153,8 +166,10 @@ class MessageListModel(db.Model):
         :param name_candidate: The name we are checking if it already is already in use by another list.
         """
         return (
-            db.session.query(MessageListModel.name)
-            .filter_by(name=name_candidate)
+            db.session.execute(
+                select(MessageListModel.name).filter_by(name=name_candidate).limit(1)
+            )
+            .scalars()
             .first()
             is not None
         )
@@ -322,7 +337,7 @@ class MessageListMember(db.Model):
             return self.is_external_member()
         from timApp.user.usergroup import UserGroup
 
-        ug = UserGroup.query.filter_by(id=gid).one()
+        ug = db.session.exectute(select(UserGroup).filter_by(id=gid)).scalars().one()
         return ug.is_personal_group
 
     def is_group(self) -> bool:

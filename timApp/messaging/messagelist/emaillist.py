@@ -5,6 +5,7 @@ from urllib.error import HTTPError
 from mailmanclient import Client, MailingList, Domain, Member
 from mailmanclient.restbase.connection import Connection
 from marshmallow import EXCLUDE
+from sqlalchemy import select, delete
 
 from timApp.messaging.messagelist.listinfo import (
     ListInfo,
@@ -777,7 +778,6 @@ def update_mailing_list_address(old: str, new: str) -> None:
     if not check_mailman_connection():
         return
     try:
-
         usr = _client.get_user(old)
         addr = usr.add_address(new, absorb_existing=True)
         addr.verify()
@@ -798,20 +798,24 @@ def update_mailing_list_address(old: str, new: str) -> None:
         # TODO: This is irreversible, i.e. user changing primary email back doesn't restore old external membership
 
         for old_member, new_member in member_pairs:
-            delete_ids_q = (
-                db.session.query(MessageListExternalMember.id)
+            delete_ids_stmt = (
+                select(MessageListExternalMember.id)
                 .join(MessageListModel)
                 .filter(
                     (MessageListExternalMember.email_address == new)
                     & (MessageListModel.mailman_list_id == new_member.list_id)
                 )
-            ).all()
-            MessageListExternalMember.query.filter(
-                MessageListExternalMember.id.in_(delete_ids_q)
-            ).delete(synchronize_session=False)
-            MessageListMember.query.filter(
-                MessageListMember.id.in_(delete_ids_q)
-            ).delete(synchronize_session=False)
+            )
+            db.session.execute(
+                delete(MessageListExternalMember)
+                .where(MessageListExternalMember.id.in_(delete_ids_stmt))
+                .execution_options(synchronize_session=False)
+            )
+            db.session.execute(
+                delete(MessageListMember)
+                .where(MessageListMember.id.in_(delete_ids_stmt))
+                .execution_options(synchronize_session=False)
+            )
             new_member.unsubscribe()
 
         for member in old_members.values():

@@ -5,6 +5,7 @@ from threading import Thread
 from typing import DefaultDict, Callable
 
 from flask import current_app
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import (
@@ -81,15 +82,18 @@ def get_user_notify_settings():
 
 
 def get_current_user_notifications(limit: int | None = None):
-    q = (
-        Notification.query.filter_by(user_id=get_current_user_id())
+    stmt = (
+        select(Notification)
+        .filter_by(user_id=get_current_user_id())
         .options(joinedload(Notification.block).joinedload(Block.docentries))
         .options(joinedload(Notification.block).joinedload(Block.folder))
         .options(joinedload(Notification.block).joinedload(Block.translation))
-    ).order_by(Notification.block_id.desc())
+        .order_by(Notification.block_id.desc())
+    )
+
     if limit is not None:
-        q = q.limit(limit)
-    nots = q.all()
+        stmt = stmt.limit(limit)
+    nots = db.session.execute(stmt).scalars().all()
     return nots
 
 

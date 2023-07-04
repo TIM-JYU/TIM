@@ -20,9 +20,10 @@ from typing import (
 # noinspection PyUnresolvedReferences
 from bs4 import UnicodeDammit
 from flask import current_app
-from sqlalchemy import func, Numeric, Float, true, case
+from sqlalchemy import func, Numeric, Float, true, case, select
 from sqlalchemy.dialects.postgresql import aggregate_order_by
-from sqlalchemy.orm import selectinload, defaultload, Query, joinedload, contains_eager
+from sqlalchemy.orm import selectinload, defaultload, joinedload, contains_eager
+from sqlalchemy.sql import Select, Subquery
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -48,41 +49,46 @@ class ExistingAnswersInfo:
     count: int
 
 
-def get_answers_query(task_id: TaskId, users: list[User], only_valid: bool) -> Query:
-    q = Answer.query.filter_by(task_id=task_id.doc_task)
+def get_answers_query(task_id: TaskId, users: list[User], only_valid: bool) -> Select:
+    stmt = select(Answer).filter_by(task_id=task_id.doc_task)
     if only_valid:
-        q = q.filter_by(valid=True)
+        stmt = stmt.filter_by(valid=True)
     if not task_id.is_global:
-        q = (
-            q.join(User, Answer.users)
-            .filter(User.id.in_([u.id for u in users]))
-            .group_by(Answer.id)
-            .with_entities(Answer.id)
-            .having(
-                (func.array_agg(aggregate_order_by(User.id, User.id)))
-                == sorted(u.id for u in users)
+        stmt = select(Answer).filter(
+            Answer.id.in_(
+                stmt.join(User, Answer.users)
+                .filter(User.id.in_([u.id for u in users]))
+                .group_by(Answer.id)
+                .with_only_columns([Answer.id])
+                .having(
+                    (func.array_agg(aggregate_order_by(User.id, User.id)))
+                    == sorted(u.id for u in users)
+                )
+                .subquery()
             )
-        ).subquery()
-        q = Answer.query.filter(Answer.id.in_(q))
-    q = q.order_by(Answer.id.desc())
-    return q
+        )
+    stmt = stmt.order_by(Answer.id.desc())
+    return stmt
 
 
 def get_latest_answers_query(
     task_id: TaskId, users: list[User], only_valid: bool
-) -> Query:
-    q = Answer.query.filter_by(task_id=task_id.doc_task)
+) -> Select:
+    stmt = select(Answer).filter_by(task_id=task_id.doc_task)
     if only_valid:
-        q = q.filter_by(valid=True)
-    sq = (
-        q.join(User, Answer.users)
+        stmt = stmt.filter_by(valid=True)
+    stmt_sub = (
+        stmt.join(User, Answer.users)
         .filter(User.id.in_([u.id for u in users]))
         .group_by(User.id)
         .with_entities(func.max(Answer.id).label("aid"), User.id.label("uid"))
         .subquery()
     )
-    datas = Answer.query.join(sq, Answer.id == sq.c.aid).with_entities(Answer)
-    return datas
+    return (
+        select(Answer)
+        .join(stmt_sub, Answer.id == stmt_sub.c.aid)
+        .with_only_columns(Answer)
+    )
 
 
 def is_redundant_answer(
@@ -284,7 +290,7 @@ def get_all_answers(
     if options.period_from is None or options.period_to is None:
         raise ValueError("Answer period must be specified.")
 
-    q = get_all_answer_initial_query(
+    stmt = get_all_answer_initial_query(
         options.period_from,
         options.period_to,
         task_ids,
@@ -293,10 +299,10 @@ def get_all_answers(
         options.include_inactive_memberships,
     )
 
-    q = q.options(defaultload(Answer.users).lazyload(User.groups))
+    stmt = stmt.options(defaultload(Answer.users).lazyload(User.groups))
 
     if options.consent is not None:
-        q = q.filter_by(consent=options.consent)
+        stmt = stmt.filter_by(consent=options.consent)
 
     match options.age:
         case AgeOptions.MIN:
@@ -309,19 +315,23 @@ def get_all_answers(
             minmax = Answer.id.label("minmax")
             counts = Answer.valid.label("count")
 
-    q = q.add_columns(minmax, counts)
+    # stmt = stmt.add_columns(minmax, counts)
     if options.age != AgeOptions.ALL:
-        q = q.group_by(Answer.task_id, User.id)
-    q = q.with_entities(minmax, counts)
-    sub = q.subquery()
-    q = Answer.query.join(sub, Answer.id == sub.c.minmax).join(User, Answer.users)
-    q = q.outerjoin(PluginType).options(contains_eager(Answer.plugin_type))
+        stmt = stmt.group_by(Answer.task_id, User.id)
+    stmt = stmt.with_only_columns(minmax, counts)
+    sub_stmt: Subquery = stmt.subquery()
+    stmt = (
+        select(Answer)
+        .join(sub_stmt, Answer.id == sub_stmt.c.minmax)
+        .join(User, Answer.users)
+    )
+    stmt = stmt.outerjoin(PluginType).options(contains_eager(Answer.plugin_type))
     match options.sort:
         case SortOptions.USERNAME:
-            q = q.order_by(User.name, Answer.task_id, Answer.answered_on)
+            stmt = stmt.order_by(User.name, Answer.task_id, Answer.answered_on)
         case SortOptions.TASK:
-            q = q.order_by(Answer.task_id, User.name, Answer.answered_on)
-    q = q.with_entities(Answer, User, sub.c.count)
+            stmt = stmt.order_by(Answer.task_id, User.name, Answer.answered_on)
+    stmt = stmt.with_only_columns(Answer, User, sub_stmt.c.count)
     result = []
     result_json = []
 
@@ -329,7 +339,7 @@ def get_all_answers(
     if options.print == AnswerPrintOptions.ANSWERS_NO_LINE:
         lf = ""
 
-    qq: Iterable[tuple[Answer, User, int]] = q
+    qq: Iterable[tuple[Answer, User, int]] = db.session.execute(stmt)
     cnt = 0
     hidden_user_names: dict[str, str] = {}
 
@@ -471,31 +481,33 @@ def get_all_answer_initial_query(
     valid: ValidityOptions,
     groups: list[str] | None = None,
     include_expired_members: bool = False,
-) -> Query:
-    q = Answer.query.filter(
-        (period_from <= Answer.answered_on) & (Answer.answered_on < period_to)
-    ).filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
+) -> Select:
+    stmt = (
+        select(Answer)
+        .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
+        .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
+    )
     match valid:
         case ValidityOptions.ALL:
             pass
         case ValidityOptions.INVALID:
-            q = q.filter_by(valid=False)
+            stmt = stmt.filter_by(valid=False)
         case ValidityOptions.VALID:
-            q = q.filter_by(valid=True)
-    q = q.join(User, Answer.users)
+            stmt = stmt.filter_by(valid=True)
+    stmt = stmt.join(User, Answer.users)
     if groups:
-        q = q.join(
+        stmt = stmt.join(
             UserGroup, User.groups_dyn if include_expired_members else User.groups
         ).filter(UserGroup.name.in_(groups))
-    return q
+    return stmt
 
 
 def get_existing_answers_info(
     users: list[User], task_id: TaskId, only_valid: bool
 ) -> ExistingAnswersInfo:
-    q = get_answers_query(task_id, users, only_valid)
-    latest = q.first()
-    count = q.count()
+    stmt = get_answers_query(task_id, users, only_valid)
+    latest = db.session.scalars(stmt.limit(1)).first()
+    count = db.session.scalar(stmt.with_only_columns([func.count()]))
     return ExistingAnswersInfo(latest_answer=latest, count=count)
 
 
@@ -515,11 +527,11 @@ user_field_to_point_sum_field = {
 }
 
 
-def valid_answers_query(task_ids: list[TaskId], valid: bool | None = True) -> Query:
-    return Answer.query.filter(valid_taskid_filter(task_ids, valid))
+def valid_answers_query(task_ids: list[TaskId], valid: bool | None = True) -> Select:
+    return select(Answer).filter(valid_taskid_filter(task_ids, valid))
 
 
-def valid_taskid_filter(task_ids: list[TaskId], valid: bool | None = True) -> Query:
+def valid_taskid_filter(task_ids: list[TaskId], valid: bool | None = True) -> Any:
     res = Answer.task_id.in_(task_ids_to_strlist(task_ids))
     if valid is not None:
         res = res & (Answer.valid == valid)
@@ -552,15 +564,16 @@ def get_users_for_tasks(
         return []
 
     subquery_annotantions = (
-        Annotation.query.filter_by(valid_until=None)
+        select(Annotation)
+        .filter_by(valid_until=None)
         .group_by(Annotation.answer_id)
-        .with_entities(
+        .with_only_columns(
             Annotation.answer_id.label("annotation_answer_id"),
             func.sum(Annotation.points).label("velp_points"),
         )
         .subquery()
     )
-    subquery_answers = Answer.query.with_entities(
+    subquery_answers = select(
         Answer.id, Answer.points, Answer.answered_on, Answer.valid
     ).subquery()
     if answer_filter is None:
@@ -578,7 +591,7 @@ def get_users_for_tasks(
         .filter(answer_filter)
         .join(UserAnswer, UserAnswer.answer_id == Answer.id)
         .group_by(UserAnswer.user_id, Answer.task_id)
-        .with_entities(
+        .with_only_columns(
             Answer.task_id,
             UserAnswer.user_id.label("uid"),
             func.max(Answer.id).filter(Answer.valid == True).label("aid_valid"),
@@ -589,7 +602,7 @@ def get_users_for_tasks(
     )
 
     sub_joined = (
-        db.session.query(subquery_user_answers, subquery_answers, subquery_annotantions)
+        select(subquery_user_answers, subquery_answers, subquery_annotantions)
         .outerjoin(
             subquery_answers,
             # Pick the latest valid answer.
@@ -610,19 +623,23 @@ def get_users_for_tasks(
         )
         .subquery()
     )
-    main = User.query.join(UserAnswer, UserAnswer.user_id == User.id).join(
-        sub_joined,
-        (
+    main_stmt = (
+        select(User)
+        .join(UserAnswer, UserAnswer.user_id == User.id)
+        .join(
+            sub_joined,
             (
-                (sub_joined.c.aid_valid != None)
-                & (sub_joined.c.aid_valid == UserAnswer.answer_id)
+                (
+                    (sub_joined.c.aid_valid != None)
+                    & (sub_joined.c.aid_valid == UserAnswer.answer_id)
+                )
+                | (
+                    (sub_joined.c.aid_valid == None)
+                    & (sub_joined.c.aid_any == UserAnswer.answer_id)
+                )
             )
-            | (
-                (sub_joined.c.aid_valid == None)
-                & (sub_joined.c.aid_any == UserAnswer.answer_id)
-            )
+            & (User.id == sub_joined.c.uid),
         )
-        & (User.id == sub_joined.c.uid),
     )
     group_by_cols = []
     cols = []
@@ -635,14 +652,14 @@ def get_users_for_tasks(
         group_by_cols.append(doc_id)
         cols.append(doc_id)
     if user_ids is not None:
-        main = main.filter(User.id.in_(user_ids))
+        main_stmt = main_stmt.filter(User.id.in_(user_ids))
     if current_app.config["LOAD_STUDENT_IDS_IN_TEACHER"]:
-        main = main.options(joinedload("uniquecodes"))
-    main = main.group_by(User.id, *group_by_cols)
+        main_stmt = main_stmt.options(joinedload("uniquecodes"))
+    main_stmt = main_stmt.group_by(User.id, *group_by_cols)
 
     # prevents error:
     # column "usergroup_1.id" must appear in the GROUP BY clause or be used in an aggregate function
-    main = main.options(selectinload(User.groups))
+    main_stmt = main_stmt.options(selectinload(User.groups))
     task_sum = (
         func.round(
             func.sum(
@@ -676,7 +693,7 @@ def get_users_for_tasks(
     else:
         time_cols = []
 
-    main = main.with_entities(
+    main_stmt = main_stmt.with_only_columns(
         User,
         func.count(sub_joined.c.task_id).label("task_count"),
         task_sum,
@@ -690,7 +707,7 @@ def get_users_for_tasks(
     ).order_by(User.real_name)
 
     def g() -> Generator[UserTaskEntry, None, None]:
-        for r in main:
+        for r in db.session.execute(main_stmt):
             d = r._asdict()
             d["user"] = d.pop("User")
             task = d["task_points"]
@@ -1089,16 +1106,17 @@ def add_missing_users_from_groups(result: list, usergroups: list[UserGroup]) -> 
 
 def get_global_answers(parsed_task_ids: dict[str, TaskId]) -> list[Answer]:
     sq2 = (
-        Answer.query.filter(
+        select(Answer)
+        .filter(
             Answer.task_id.in_(
                 [tid.doc_task for tid in parsed_task_ids.values() if tid.is_global]
             )
         )
         .group_by(Answer.task_id)
-        .with_entities(func.max(Answer.id).label("aid"))
+        .with_only_columns(func.max(Answer.id).label("aid"))
         .subquery()
     )
     global_datas = (
-        Answer.query.join(sq2, Answer.id == sq2.c.aid).with_entities(Answer).all()
+        select(Answer).join(sq2, Answer.id == sq2.c.aid).with_only_columns(Answer).all()
     )
-    return global_datas
+    return db.session.scalars(global_datas).all()

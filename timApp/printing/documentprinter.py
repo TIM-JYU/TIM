@@ -269,7 +269,6 @@ class DocumentPrinter:
             ]
         ] = []
         for par in pars:
-
             # do not print document settings pars
             if par.is_setting():
                 continue
@@ -577,7 +576,6 @@ class DocumentPrinter:
         """
 
         with tempfile.NamedTemporaryFile(suffix=".latex", delete=True) as template_file:
-
             if self._template_to_use:
                 template_content = DocumentPrinter.parse_template_content(
                     doc_to_print=self._doc_entry, template_doc=self._template_to_use
@@ -651,7 +649,6 @@ class DocumentPrinter:
 
             # TODO: add also variables from texpandocvariables document setting, but this may lead to security hole?
             try:
-
                 tim_convert_text(
                     source=src,
                     from_format=from_format,
@@ -741,7 +738,6 @@ class DocumentPrinter:
 
         current_folder = doc_entry.parent
         while current_folder is not None:
-
             path = os.path.join(current_folder.get_full_path(), TEMPLATES_FOLDER)
 
             templates_folder = Folder.find_by_path(path)
@@ -868,15 +864,20 @@ class DocumentPrinter:
     ) -> str | None:
         # noinspection PyUnresolvedReferences
         existing_print: PrintedDoc | None = (
-            PrintedDoc.query.filter_by(
-                doc_id=self._doc_entry.id,
-                template_doc_id=self.get_template_id(),
-                file_type=file_type.value,
-                version=self.hash_doc_print(
-                    plugins_user_print=plugins_user_print, url_macros=url_macros
-                ),
+            db.session.execute(
+                select(PrintedDoc)
+                .filter_by(
+                    doc_id=self._doc_entry.id,
+                    template_doc_id=self.get_template_id(),
+                    file_type=file_type.value,
+                    version=self.hash_doc_print(
+                        plugins_user_print=plugins_user_print, url_macros=url_macros
+                    ),
+                )
+                .order_by(PrintedDoc.id.desc())
+                .limit(1)
             )
-            .order_by(PrintedDoc.id.desc())
+            .scalars()
             .first()
         )
         if existing_print is None or not os.path.exists(existing_print.path_to_file):
@@ -999,7 +1000,6 @@ def tim_convert_input(
             else:
                 f.write(source)
     else:
-
         input_file = [source] if not string_input else []
         args = [pandoc_path, "--from=" + from_format, "--to=" + to]
 

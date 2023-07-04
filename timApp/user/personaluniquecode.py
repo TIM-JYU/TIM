@@ -1,7 +1,8 @@
-from typing import Optional
-
 import re
 from dataclasses import dataclass
+from typing import Optional
+
+from sqlalchemy import select
 
 from timApp.timdb.sqa import db
 from timApp.user.hakaorganization import HakaOrganization
@@ -49,9 +50,14 @@ class PersonalUniqueCode(db.Model):
         code: str, org: str, codetype: str
     ) -> Optional["PersonalUniqueCode"]:
         return (
-            PersonalUniqueCode.query.filter_by(code=code, type=codetype)
-            .join(HakaOrganization)
-            .filter_by(name=org)
+            db.session.execute(
+                select(PersonalUniqueCode)
+                .filter_by(code=code, type=codetype)
+                .join(HakaOrganization)
+                .filter_by(name=org)
+                .limit(1)
+            )
+            .scalars()
             .first()
         )
 

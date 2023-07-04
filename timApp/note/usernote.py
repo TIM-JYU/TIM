@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlalchemy import func
 
 from timApp.timdb.sqa import db
@@ -68,4 +66,4 @@ class UserNote(db.Model):
 
 
 def get_comment_by_id(c_id: int) -> UserNote | None:
-    return UserNote.query.get(c_id)
+    return db.session.get(UserNote, c_id)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable, Any, TYPE_CHECKING
 
-from sqlalchemy import true, and_
+from sqlalchemy import true, and_, select, delete
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry, get_documents
@@ -46,11 +46,11 @@ class Folder(db.Model, Item):
 
     @staticmethod
     def get_by_id(fid) -> Folder | None:
-        return Folder.query.get(fid) if fid != ROOT_FOLDER_ID else Folder.get_root()
+        return db.session.get(Folder, fid) if fid != ROOT_FOLDER_ID else Folder.get_root()
 
     @staticmethod
     def find_by_location(location, name) -> Folder | None:
-        return Folder.query.filter_by(name=name, location=location).first()
+        return db.session.execute(select(Folder).filter_by(name=name, location=location)).scalars().first()
 
     @staticmethod
     def find_by_path(path, fallback_to_id=False) -> Folder | None:
@@ -111,10 +111,10 @@ class Folder(db.Model, Item):
                 if root_path
                 else true()
             )
-        q = Folder.query.filter(f_filter)
+        stmt = select(Folder).filter(f_filter)
         if filter_ids:
-            q = q.filter(Folder.id.in_(filter_ids))
-        return q.all()
+            stmt = stmt.filter(Folder.id.in_(filter_ids))
+        return db.session.execute(stmt).scalars().all()
 
     def is_root(self) -> bool:
         return self.id == -1
@@ -122,8 +122,8 @@ class Folder(db.Model, Item):
     def delete(self):
         assert self.is_empty
         db.session.delete(self)
-        BlockAccess.query.filter_by(block_id=self.id).delete()
-        Block.query.filter_by(type_id=BlockType.Folder.value, id=self.id).delete()
+        db.session.execute(delete(BlockAccess).where(BlockAccess.block_id==self.id))
+        db.session.execute(delete(Block).where((Block.type_id==BlockType.Folder.value) & (Block.id==self.id)))
 
     def rename(self, new_name: str):
         assert "/" not in new_name
@@ -144,25 +144,25 @@ class Folder(db.Model, Item):
 
     def rename_content(self, old_path: str, new_path: str):
         """Renames contents of the folder."""
-        docs_in_folder: list[DocEntry] = DocEntry.query.filter(
+        docs_in_folder: list[DocEntry] = db.session.execute(select(DocEntry).filter(
             DocEntry.name.like(old_path + "/%")
-        ).all()
+        )).scalars().all()
         for d in docs_in_folder:
             d.name = d.name.replace(old_path, new_path, 1)
 
-        folders_in_folder = Folder.query.filter(
+        folders_in_folder = db.session.execute(select(Folder).filter(
             (Folder.location == old_path) | (Folder.location.like(old_path + "/%"))
-        ).all()
+        )).scalars().all()
         for f in folders_in_folder:
             f.location = f.location.replace(old_path, new_path, 1)
 
     @property
     def is_empty(self):
-        q = Folder.query.filter_by(location=self.path)
-        if db.session.query(q.exists()).scalar():
+        stmt = select(Folder.id).filter_by(location=self.path)
+        if db.session.execute(stmt.limit()).first():
             return False
-        q = DocEntry.query.filter(DocEntry.name.like(self.path + "/%"))
-        return not db.session.query(q.exists()).scalar()
+        stmt = select(DocEntry.id).filter(DocEntry.name.like(self.path + "/%"))
+        return not db.session.execute(stmt.limit(1)).first()
 
     @property
     def parent(self) -> Folder | None:
@@ -201,10 +201,10 @@ class Folder(db.Model, Item):
 
     def get_document(
         self, relative_path: str, create_if_not_exist=False, creator_group=None
-    ) -> None | (DocEntry):
-        doc = DocEntry.query.filter_by(
+    ) -> None | DocEntry:
+        doc = db.session.execute(select(DocEntry).filter_by(
             name=join_location(self.get_full_path(), relative_path)
-        ).first()
+        )).scalars().first()
         if doc is not None:
             return doc
         if create_if_not_exist:
@@ -283,7 +283,7 @@ class Folder(db.Model, Item):
             return Folder.get_root()
 
         rel_path, rel_name = split_location(path)
-        folder = Folder.query.filter_by(name=rel_name, location=rel_path).first()
+        folder = db.session.execute(select(Folder).filter_by(name=rel_name, location=rel_path)).scalars().first()
         if folder is not None:
             return folder
 

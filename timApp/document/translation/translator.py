@@ -21,9 +21,9 @@ __date__ = "25.4.2022"
 from dataclasses import dataclass
 
 import pypandoc
+from sqlalchemy import select
+from sqlalchemy.orm import with_polymorphic
 
-from timApp.timdb.sqa import db
-from timApp.user.usergroup import UserGroup
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import (
@@ -33,9 +33,10 @@ from timApp.document.translation.translationparser import (
     Table,
     Translate,
 )
+from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 from timApp.util import logger
 from timApp.util.flask.requesthelper import RouteException
-
 
 TranslateBlock = list[TranslateApproval]
 """Typedef to represent logically connected parts of non- and translatable text.
@@ -208,9 +209,9 @@ class TranslationServiceKey(db.Model):
         :return: The first matching TranslationServiceKey instance, if one is
          found.
         """
-        return TranslationServiceKey.query.get(
+        return db.session.execute(select(TranslationServiceKey).filter(
             TranslationServiceKey.group_id == user_group
-        )
+        )).first()
 
     def to_json(self) -> dict:
         """
@@ -278,11 +279,10 @@ class TranslateProcessor:
          the user sets to their account).
         """
 
-        translator = (
-            TranslationService.query.with_polymorphic("*")
+        translator = db.session.execute(
+            select(with_polymorphic(TranslationService, "*"))
             .filter(TranslationService.service_name == translator_code)
-            .one()
-        )
+        ).scalars().one()
 
         if user_group is not None and isinstance(
             translator, RegisteredTranslationService

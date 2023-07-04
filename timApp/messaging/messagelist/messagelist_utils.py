@@ -13,6 +13,7 @@ from urllib.parse import SplitResult, parse_qs, urlsplit
 from flask import render_template_string
 from isodate import datetime_isoformat
 from mailmanclient import MailingList
+from sqlalchemy import select
 from sqlalchemy.orm import load_only
 
 from timApp.auth.accesshelper import has_manage_access, AccessDenied
@@ -694,7 +695,11 @@ def get_message_list_owners(mlist: MessageListModel) -> list[UserGroup]:
     :param mlist: The message list we want to know the owners.
     :return: A list of owners, as their personal user group.
     """
-    manage_doc_block = Block.query.filter_by(id=mlist.manage_doc_id).one()
+    manage_doc_block = (
+        db.session.execute(select(Block).filter_by(id=mlist.manage_doc_id))
+        .scalars()
+        .one()
+    )
     return manage_doc_block.owners
 
 
@@ -1302,13 +1307,21 @@ def sync_usergroup_messagelist_members(
     if not user_ids:
         return
 
-    user_query = User.query.filter(User.id.in_(user_ids)).options(
-        load_only(User.id, User.email, User.real_name)
+    user_stmt = (
+        select(User)
+        .filter(User.id.in_(user_ids))
+        .options(load_only(User.id, User.email, User.real_name))
     )
-    users = {user.id: user for user in user_query}
+    users = {user.id: user for user in db.session.execute(user_stmt).scalars()}
     try:
         for ug_id, diff in diffs.items():
-            ug_memberships = MessageListTimMember.query.filter_by(group_id=ug_id).all()
+            ug_memberships = (
+                db.session.execute(
+                    select(MessageListTimMember).filter_by(group_id=ug_id)
+                )
+                .scalars()
+                .all()
+            )
             for group_tim_member in ug_memberships:
                 group_message_list: MessageListModel = group_tim_member.message_list
                 if group_message_list.email_list_domain:

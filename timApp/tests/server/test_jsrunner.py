@@ -1,8 +1,10 @@
 """Server tests for jsrunner plugin."""
 import json
 from datetime import datetime, timezone
+from select import select
 
 import requests
+from sqlalchemy import func
 
 from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
@@ -1147,9 +1149,9 @@ tools.setString("GLO_a", tools.getString("GLO_a") + "b")
         a = Answer(content=json.dumps({"c": "a"}), valid=True, task_id=f"{d.id}.GLO_a")
         self.test_user_1.answers.append(a)
         db.session.commit()
-        total_answer_count_before = Answer.query.count()
+        total_answer_count_before = db.session.scalar(select(func.count(Answer.id)))
         self.do_jsrun(d)
-        total_answer_count_after = Answer.query.count()
+        total_answer_count_after = db.session.scalar(select(func.count(Answer)))
         self.assertEqual(1, total_answer_count_after - total_answer_count_before)
         self.verify_answer_content(
             f"{d.id}.GLO_a", "c", "ab", self.test_user_1, expected_count=2

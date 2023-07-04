@@ -10,6 +10,7 @@ from flask import request
 from flask import session
 from flask import url_for
 from flask.sessions import SecureCookieSession
+from sqlalchemy import select, delete
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
 from timApp.auth.accesshelper import (
@@ -266,7 +267,11 @@ def do_email_signup_or_password_reset(
     password_hash = create_password_hash(password)
     new_password = True
     if not is_simple_email_login_enabled():
-        nu = NewUser.query.filter_by(email=email).first()
+        nu = (
+            db.session.execute(select(NewUser).filter_by(email=email).limit(1))
+            .scalars()
+            .first()
+        )
         if nu:
             nu.pass_ = password_hash
             new_password = False
@@ -312,9 +317,10 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
         name_filter = [u.name, u.email]
     else:
         name_filter = [email_or_username]
-    nus = NewUser.query.filter(NewUser.email.in_(name_filter))
     valid_nu = None
-    for nu in nus:
+    for nu in db.session.execute(
+        select(NewUser).filter(NewUser.email.in_(name_filter))
+    ).scalars():
         if nu.check_password(oldpass):
             valid_nu = nu
     if not valid_nu:
@@ -396,8 +402,10 @@ def email_signup_finish(
         )
         db.session.flush()
 
-    NewUser.query.filter(NewUser.email.in_((user.name, user.email))).delete(
-        synchronize_session=False
+    db.session.execute(
+        delete(NewUser)
+        .where(NewUser.email.in_((user.name, user.email)))
+        .execution_options(synchronize_session=False)
     )
     db.session.flush()
     set_user_to_session(user)
@@ -566,16 +574,18 @@ def quick_login(username: str) -> Response:
 
     if user == User.get_model_answer_user():
         curr_user = get_current_user_object()
-        if not (
-            User.query.join(UserGroup, User.groups)
+        stmt = (
+            select(User.id)
+            .join(UserGroup, User.groups)
             .filter(User.id == curr_user.id)
             .filter(
                 UserGroup.name.in_(
                     current_app.config["QUICKLOGIN_ALLOWED_MODEL_ANSWER_GROUPS"]
                 )
             )
-            .with_entities(User.id)
-            .first()
+        )
+        if not (
+            db.session.execute(stmt.limit(1)).scalars().first()
             and not check_admin_access(user=user)
         ):
             raise AccessDenied("Sorry, you don't have permission to quickLogin.")

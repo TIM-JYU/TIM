@@ -129,7 +129,7 @@ saveButton: Tallenna
         db.session.commit()
         def_group_res = self.post(f"{d.id}/create_default_velp_group")
         default_group_id = def_group_res["id"]
-        vg = VelpGroup.query.get(default_group_id)
+        vg = db.session.get(VelpGroup, default_group_id)
         new_velp, _ = create_new_velp(
             self.test_user_1.id,
             "content",

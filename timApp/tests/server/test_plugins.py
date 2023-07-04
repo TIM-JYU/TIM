@@ -8,6 +8,7 @@ from itertools import product
 import dateutil.parser
 from lxml import html
 from lxml.html import HtmlElement
+from sqlalchemy import select, func
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
@@ -554,9 +555,10 @@ type: upload
         self.do_plugin_upload(d, "test", "test.txt", f"{d.id}.testupload", "testupload")
         self.get(f"/uploads/{d.id}/testupload/testuser1/1/test.txt")
         a = (
-            Answer.query.filter_by(task_id=f"{d.id}.testupload")
+            select(Answer)
+            .filter_by(task_id=f"{d.id}.testupload")
             .join(AnswerUpload)
-            .with_entities(AnswerUpload)
+            .with_only_columns(AnswerUpload)
             .first()
         )
 
@@ -1212,7 +1214,7 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
             expect_content=expect_content,
         )
         if expect_status == 200:
-            a = Answer.query.get(answer_id)
+            a = db.session.get(Answer, answer_id)
             self.assertEqual(
                 float(points) if points not in ("", None) else None, a.points
             )
@@ -1475,7 +1477,12 @@ choices:
         p2 = Plugin.from_paragraph(d.document.get_paragraphs()[1], default_view_ctx)
         self.post_answer(p.type, p.task_id.doc_task, [True, False, False])
         self.post_answer(p.type, p.task_id.doc_task, [True, True, False])
-        self.assertEqual(2, Answer.query.filter_by(task_id=p.task_id.doc_task).count())
+        self.assertEqual(
+            2,
+            db.session.scalar(
+                select(func.count(Answer.id)).filter_by(task_id=p.task_id.doc_task)
+            ),
+        )
         self.get(
             f"/renameAnswers/{p.task_id.task_name}/ä/{d.id}",
             expect_status=400,
@@ -1492,8 +1499,18 @@ choices:
                 "error": "The new name conflicts with 2 other answers with the same task name."
             },
         )
-        self.assertEqual(0, Answer.query.filter_by(task_id=p.task_id.doc_task).count())
-        self.assertEqual(2, Answer.query.filter_by(task_id=f"{d.id}.t_new").count())
+        self.assertEqual(
+            0,
+            db.session.scalar(
+                select(func.count(Answer.id)).filter_by(task_id=p.task_id.doc_task)
+            ),
+        )
+        self.assertEqual(
+            2,
+            db.session.scalar(
+                select(func.count(Answer)).filter_by(task_id=f"{d.id}.t_new")
+            ),
+        )
         self.post_answer(p2.type, p2.task_id.doc_task, [True, True, False])
         self.get(
             f"/renameAnswers/t_new/{p2.task_id.task_name}/{d.id}",
@@ -1518,7 +1535,12 @@ choices:
             query_string={"force": "true"},
             expect_content={"modified": 2, "conflicts": 1},
         )
-        self.assertEqual(3, Answer.query.filter_by(task_id=p2.task_id.doc_task).count())
+        self.assertEqual(
+            3,
+            db.session.scalar(
+                select(func.count(Answer.id)).filter_by(task_id=p2.task_id.doc_task)
+            ),
+        )
         self.login_test2()
         self.get(
             f"/renameAnswers/t_new/{p2.task_id.task_name}/{d.id}", expect_status=403
@@ -1547,7 +1569,7 @@ choices:
         self.login_test2()
         a = self.post_answer("mmcq", f"{did}.t", [False, False, False])
         aid = a["savedNew"]
-        a: Answer = Answer.query.get(aid)
+        a: Answer = db.session.get(Answer, aid)
         self.assertIsNone(a.saver)
         self.login_test1()
 
@@ -1560,10 +1582,10 @@ choices:
             user_id=self.test_user_2.id,
             answer_id=aid,
         )["savedNew"]
-        a: Answer = Answer.query.get(fix_id)
+        a: Answer = db.session.get(Answer, fix_id)
         self.assertEqual(1, len(a.users_all))
         self.assertEqual(a.saver, self.current_user)
-        a: Answer = Answer.query.get(aid)
+        a: Answer = db.session.get(Answer, aid)
         self.assertEqual(1, len(a.users_all))
 
     def test_pali(self):
@@ -1859,16 +1881,16 @@ needed_len: 6
         r = self.post_answer("pali", f"{d.id}.t.points", user_input={"userword": 4})
         aid = r["savedNew"]
         self.assertIsInstance(aid, int)
-        a = Answer.query.get(aid)
+        a = db.session.get(Answer, aid)
         self.assertEqual(4, a.points)
         r = self.post_answer("pali", f"{d.id}.t.points", user_input={"userword": 5})
         self.assertIsNone(r["savedNew"])
-        a = Answer.query.get(aid)
+        a = db.session.get(Answer, aid)
         self.assertEqual(5, a.points)
 
         r = self.post_answer("pali", f"{d.id}.t.points", user_input={"userword": "6"})
         self.assertIsNone(r["savedNew"])
-        a = Answer.query.get(aid)
+        a = db.session.get(Answer, aid)
         self.assertEqual(6, a.points)
 
         r = self.post_answer(
@@ -1910,7 +1932,7 @@ needed_len: 6
         )
         r = self.post_answer("pali", f"{d.id}.t.points", user_input={"userword": None})
         self.assertIsNone(r["savedNew"])
-        a = Answer.query.get(aid)
+        a = db.session.get(Answer, aid)
         self.assertEqual(None, a.points)
 
         # ensure these routes won't throw exceptions

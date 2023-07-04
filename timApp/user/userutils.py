@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 
 import bcrypt
+from sqlalchemy import select
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
@@ -12,6 +13,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
 from timApp.item.item import ItemBase
 from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
@@ -63,7 +65,7 @@ def get_anon_user_id() -> int:
 
 def get_access_type_id(access_type: str) -> int:
     if not access_type_map:
-        result = AccessTypeModel.query.all()
+        result = db.session.execute(select(AccessTypeModel)).scalars().all()
         for row in result:
             access_type_map[row.name] = row.id
     return access_type_map[access_type]
@@ -87,11 +89,19 @@ def expire_access(
     :param access_type: The kind of access. Possible values are listed in accesstype table.
     :return: The BlockAccess object if there was previous access. Also returns whether the access was expired before.
     """
-    ba: BlockAccess | None = BlockAccess.query.filter_by(
-        type=access_type.value,
-        block_id=block.id,
-        usergroup_id=group.id,
-    ).first()
+    ba: BlockAccess | None = (
+        db.session.execute(
+            select(BlockAccess)
+            .filter_by(
+                type=access_type.value,
+                block_id=block.id,
+                usergroup_id=group.id,
+            )
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if not ba:
         return None, False
     if ba.expired:

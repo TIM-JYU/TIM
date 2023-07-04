@@ -2,9 +2,10 @@ import re
 import traceback
 from dataclasses import field, dataclass
 from functools import cached_property
-from typing import Optional, Any, Generator
+from typing import Any, Generator
 
 from flask import Blueprint, request, current_app, Response
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
@@ -218,11 +219,13 @@ def get_groups(args: GetGroupsModel) -> Response:
     if not m:
         raise SCIMException(422, "Unsupported filter")
     groups = (
-        ScimUserGroup.query.filter(
-            ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1)))
+        db.session.execute(
+            select(UserGroup)
+            .select_from(ScimUserGroup)
+            .filter(ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1))))
+            .join(UserGroup)
         )
-        .join(UserGroup)
-        .with_entities(UserGroup)
+        .scalars()
         .all()
     )
 
@@ -387,9 +390,15 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
 
     added_users = set()
     scimuser = User.get_scimuser()
-    existing_accounts: list[User] = User.query.filter(
-        User.name.in_(current_usernames) | User.email.in_(emails)
-    ).all()
+    existing_accounts: list[User] = (
+        db.session.execute(
+            select(User).filter(
+                User.name.in_(current_usernames) | User.email.in_(emails)
+            )
+        )
+        .scalars()
+        .all()
+    )
     existing_accounts_dict: dict[str, User] = {u.name: u for u in existing_accounts}
     existing_accounts_by_email_dict: dict[str, User] = {
         u.email: u for u in existing_accounts
@@ -577,9 +586,14 @@ def group_scim(ug: UserGroup) -> dict:
 def try_get_group_by_scim(group_id: str) -> UserGroup | None:
     try:
         ug = (
-            ScimUserGroup.query.filter_by(external_id=scim_group_to_tim(group_id))
-            .join(UserGroup)
-            .with_entities(UserGroup)
+            db.session.execute(
+                select(UserGroup)
+                .select_from(ScimUserGroup)
+                .filter_by(external_id=scim_group_to_tim(group_id))
+                .join(UserGroup)
+                .limit(1)
+            )
+            .scalars()
             .first()
         )
     except ValueError:

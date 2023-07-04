@@ -1,4 +1,6 @@
 """Server tests for peer review."""
+from sqlalchemy import select, delete
+
 from timApp.answer.answer import Answer
 from timApp.peerreview.peerreview import PeerReview
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -41,15 +43,15 @@ class PeerReviewTest(TimRouteTest):
         self.assertIn(
             "Not enough users to form pairs (0 but at least 2 users needed)", r
         )
-        rq = PeerReview.query.filter_by(block_id=d.id)
-        self.assertEqual(0, len(rq.all()))
+        rq = select(PeerReview).filter_by(block_id=d.id)
+        self.assertEqual(0, len(db.session.execute(rq).scalars().all()))
         self.add_answer(d, "t", "x", user=self.test_user_1)
         db.session.commit()
         r = self.get(f"{url}?b={b}&size=1")
         self.assertIn(
             "Not enough users to form pairs (1 but at least 2 users needed)", r
         )
-        self.assertEqual(0, len(rq.all()))
+        self.assertEqual(0, len(db.session.execute(rq).scalars().all()))
         self.add_answer(d, "t", "x", user=self.test_user_2)
         db.session.commit()
         r = self.get(f"{url}?b={b}&size=1")
@@ -59,10 +61,14 @@ class PeerReviewTest(TimRouteTest):
 
         def check_peerreview_rows_t():
             prs: list[PeerReview] = (
-                PeerReview.query.filter_by(block_id=d.id)
-                .order_by(
-                    PeerReview.reviewer_id,
+                db.session.execute(
+                    select(PeerReview)
+                    .filter_by(block_id=d.id)
+                    .order_by(
+                        PeerReview.reviewer_id,
+                    )
                 )
+                .scalars()
                 .all()
             )
             self.assertEqual(2, len(prs))
@@ -75,7 +81,8 @@ class PeerReviewTest(TimRouteTest):
 
         # pairing without group works using everyone who answered the document
         check_peerreview_rows_t()
-        PeerReview.query.filter_by(block_id=d.id).delete()
+
+        db.session.execute(delete(PeerReview).where(PeerReview.block_id == d.id))
         d.document.add_setting("group", "testusers1")
         ug = UserGroup.create("testusers1")
         ug.users.append(self.test_user_1)
@@ -85,7 +92,7 @@ class PeerReviewTest(TimRouteTest):
         self.get(f"{url}?b={b}&size=1")
         # pairing with group ignores group members who haven't answered the document
         check_peerreview_rows_t()
-        PeerReview.query.filter_by(block_id=d.id).delete()
+        db.session.execute(delete(PeerReview).where(PeerReview.block_id == d.id))
         self.add_answer(d, "t", "x", user=self.test_user_3)
         ug = UserGroup.create("testuser3isnothere")
         ug.users.append(self.test_user_1)
@@ -95,14 +102,14 @@ class PeerReviewTest(TimRouteTest):
         self.get(f"{url}?b={b}&size=1")
         # pairing with group setting ignores users who answered but aren't in the group
         check_peerreview_rows_t()
-        PeerReview.query.filter_by(block_id=d.id).delete()
+        db.session.execute(delete(PeerReview).where(PeerReview.block_id == d.id))
         db.session.commit()
         dt = self.create_translation(d, lang="en-GB")
         tr_url = dt.get_url_for_view("review")
         self.get(f"{tr_url}?b={dt.document.get_paragraphs()[1].id}&size=1")
         # Peer-review generation works for one task in translated document
         check_peerreview_rows_t()
-        PeerReview.query.filter_by(block_id=d.id).delete()
+        db.session.execute(delete(PeerReview).where(PeerReview.block_id == d.id))
         db.session.commit()
         self.get(
             f"{url}?b={pars[3].id}&size=1",
@@ -122,10 +129,14 @@ class PeerReviewTest(TimRouteTest):
         d.document.add_setting("group", "testusers1")
         self.get(f"{url}?area=rev")
         prs: list[PeerReview] = (
-            PeerReview.query.filter_by(block_id=d.id)
-            .order_by(
-                PeerReview.reviewer_id,
+            db.session.execute(
+                select(PeerReview)
+                .filter_by(block_id=d.id)
+                .order_by(
+                    PeerReview.reviewer_id,
+                )
             )
+            .scalars()
             .all()
         )
 
@@ -146,14 +157,14 @@ class PeerReviewTest(TimRouteTest):
         # Testuser1 and Testuser3 answered only to some tasks in the area => PR rows are still generated for every task
         check_area_prs()
 
-        PeerReview.query.filter_by(block_id=d.id).delete()
+        db.session.execute(delete(PeerReview).where(PeerReview.block_id == d.id))
         db.session.commit()
         self.get(f"{tr_url}?area=rev")
         # Peer generation works for an area in translated document
         check_area_prs()
 
-        PeerReview.query.filter_by(block_id=d.id).delete()
-        all_answers = Answer.query.all()
+        db.session.execute(delete(PeerReview).where(PeerReview.block_id == d.id))
+        all_answers = db.session.execute(select(Answer)).scalars().all()
         for a in all_answers:
             a.users_all = []
         db.session.commit()

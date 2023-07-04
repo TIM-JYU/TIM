@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional, NamedTuple, Union
 
 import magic
+from sqlalchemy import select
 from werkzeug.utils import secure_filename
 
 from timApp.answer.answer_models import AnswerUpload
@@ -49,15 +50,22 @@ class UploadedFile(ItemBase):
 
     @staticmethod
     def find_by_id(block_id: int) -> Optional["UploadedFile"]:
-        b: Block | None = Block.query.get(block_id)
+        b: Block | None = db.session.get(Block, block_id)
         return UploadedFile._wrap(b)
 
     @staticmethod
     def find_first_child(block: Block, name: str) -> Optional["UploadedFile"]:
         b = (
-            Block.query.join(BlockAssociation, BlockAssociation.child == Block.id)
-            .filter((BlockAssociation.parent == block.id) & (Block.description == name))
-            .order_by(Block.id.desc())
+            db.session.execute(
+                select(Block)
+                .join(BlockAssociation, BlockAssociation.child == Block.id)
+                .filter(
+                    (BlockAssociation.parent == block.id) & (Block.description == name)
+                )
+                .order_by(Block.id.desc())
+                .limit(1)
+            )
+            .scalars()
             .first()
         )
         return UploadedFile._wrap(b)

@@ -1,8 +1,9 @@
 from functools import lru_cache
 
-from timApp.timdb.sqa import db
-
 from flask import current_app
+from sqlalchemy import select
+
+from timApp.timdb.sqa import db
 
 
 class HakaOrganization(db.Model):
@@ -13,7 +14,11 @@ class HakaOrganization(db.Model):
 
     @staticmethod
     def get_or_create(name: str):
-        found = HakaOrganization.query.filter_by(name=name).first()
+        found = (
+            db.session.execute(select(HakaOrganization).filter_by(name=name).limit(1))
+            .scalars()
+            .first()
+        )
         if not found:
             found = HakaOrganization(name=name)
             db.session.add(found)

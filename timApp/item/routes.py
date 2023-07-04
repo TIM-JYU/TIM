@@ -16,6 +16,7 @@ from flask import request
 from flask import session
 from markupsafe import Markup
 from marshmallow import EXCLUDE
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload, defaultload
 
 from timApp.answer.answers import add_missing_users_from_groups, get_points_by_rule
@@ -378,9 +379,12 @@ def gen_cache(
         accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
         group_ids = {a.usergroup_id for a in accesses if not a.expired}
         users: list[tuple[User, UserGroup]] = (
-            User.query.join(UserGroup, User.groups)
-            .filter(UserGroup.id.in_(group_ids))
-            .with_entities(User, UserGroup)
+            db.session.execute(
+                select(User, UserGroup)
+                .join(UserGroup, User.groups)
+                .filter(UserGroup.id.in_(group_ids))
+            )
+            .scalars()
             .all()
         )
         groups_that_need_access_check = {
@@ -770,7 +774,13 @@ def render_doc_view(
                 flash(str(e))
         ugs_without_access = []
         if usergroups is not None:
-            ugs = UserGroup.query.filter(UserGroup.name.in_(usergroups)).all()
+            ugs = (
+                db.session.execute(
+                    select(UserGroup).filter(UserGroup.name.in_(usergroups))
+                )
+                .scalars()
+                .all()
+            )
             if len(ugs) != len(usergroups):
                 not_found_ugs = set(usergroups) - set(ug.name for ug in ugs)
                 flash(f"Following groups were not found: {not_found_ugs}")
@@ -1174,8 +1184,12 @@ def get_linked_groups(i: Item) -> tuple[list[UserGroupWithSisuInfo], list[str]]:
             list(
                 map(
                     UserGroupWithSisuInfo,
-                    get_usergroup_eager_query()
-                    .filter(UserGroup.name.in_(group_tags))
+                    db.session.execute(
+                        get_usergroup_eager_query().filter(
+                            UserGroup.name.in_(group_tags)
+                        )
+                    )
+                    .scalars()
                     .all(),
                 )
             ),

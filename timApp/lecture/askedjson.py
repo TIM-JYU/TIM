@@ -2,6 +2,8 @@ import json
 from copy import deepcopy
 from typing import Any
 
+from sqlalchemy import select
+
 from timApp.timdb.sqa import db
 
 
@@ -27,7 +29,11 @@ class AskedJson(db.Model):
 
 
 def get_asked_json_by_hash(json_hash: str) -> AskedJson | None:
-    return AskedJson.query.filter_by(hash=json_hash).first()
+    return (
+        db.session.execute(select(AskedJson).filter_by(hash=json_hash))
+        .scalars()
+        .first()
+    )
 
 
 # NOTE: Do NOT add more fields here for new qst attributes. These are ONLY for backward compatibility.

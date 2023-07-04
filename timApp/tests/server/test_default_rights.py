@@ -1,6 +1,7 @@
 from operator import itemgetter
 
 from dateutil import parser
+from sqlalchemy import select
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -20,7 +21,11 @@ class DefaultRightTest(TimRouteTest):
     def test_document_default_rights(self):
         self.login_test1()
         doc = self.create_doc().document
-        docentry = DocEntry.query.filter_by(id=doc.doc_id).one()
+        docentry = (
+            db.session.execute(select(DocEntry).filter_by(id=doc.doc_id))
+            .scalars()
+            .one()
+        )
         folder: Folder = docentry.parent
         folder_owner_id = folder.owners[0].id
         kg = get_home_organization_group()

@@ -4,8 +4,10 @@ from functools import lru_cache
 from typing import TYPE_CHECKING
 
 import attr
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.sql import Select
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
@@ -236,19 +238,35 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_by_name(name) -> UserGroup:
-        return UserGroup.query.filter_by(name=name).first()
+        return (
+            db.session.execute(select(UserGroup).filter_by(name=name).limit(1))
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def get_anonymous_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=ANONYMOUS_GROUPNAME).one()
+        return (
+            db.session.execute(select(UserGroup).filter_by(name=ANONYMOUS_GROUPNAME))
+            .scalars()
+            .one()
+        )
 
     @staticmethod
     def get_admin_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=ADMIN_GROUPNAME).one()
+        return (
+            db.session.execute(select(UserGroup).filter_by(name=ADMIN_GROUPNAME))
+            .scalars()
+            .one()
+        )
 
     @staticmethod
     def get_groupadmin_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=GROUPADMIN_GROUPNAME).one()
+        return (
+            db.session.execute(select(UserGroup).filter_by(name=GROUPADMIN_GROUPNAME))
+            .scalars()
+            .one()
+        )
 
     @staticmethod
     def get_organization_group(org: str) -> UserGroup:
@@ -262,13 +280,24 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_organizations() -> list[UserGroup]:
-        return UserGroup.query.filter(
-            UserGroup.name.endswith(" users") & UserGroup.name.notin_(SPECIAL_GROUPS)
-        ).all()
+        return (
+            db.session.execute(
+                select(UserGroup).filter(
+                    UserGroup.name.endswith(" users")
+                    & UserGroup.name.notin_(SPECIAL_GROUPS)
+                )
+            )
+            .scalars()
+            .all()
+        )
 
     @staticmethod
     def get_teachers_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=TEACHERS_GROUPNAME).one()
+        return (
+            db.session.execute(select(UserGroup).filter_by(name=TEACHERS_GROUPNAME))
+            .scalars()
+            .one()
+        )
 
     @staticmethod
     def get_user_creator_group() -> UserGroup:
@@ -289,7 +318,11 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_logged_in_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=LOGGED_IN_GROUPNAME).one()
+        return (
+            db.session.execute(select(UserGroup).filter_by(name=LOGGED_IN_GROUPNAME))
+            .scalars()
+            .one()
+        )
 
 
 @lru_cache
@@ -307,17 +340,21 @@ def get_admin_group_id() -> int:
     return UserGroup.get_admin_group().id
 
 
-def get_usergroup_eager_query():
+def get_usergroup_eager_query() -> Select:
     from timApp.item.block import Block
 
-    return UserGroup.query.options(
-        joinedload(UserGroup.admin_doc).joinedload(Block.docentries)
-    ).options(joinedload(UserGroup.current_memberships))
+    return (
+        select(UserGroup)
+        .options(joinedload(UserGroup.admin_doc).joinedload(Block.docentries))
+        .options(joinedload(UserGroup.current_memberships))
+    )
 
 
 def get_sisu_groups_by_filter(f) -> list[UserGroup]:
     gs: list[UserGroup] = (
-        get_usergroup_eager_query().join(ScimUserGroup).filter(f).all()
+        db.session.execute(get_usergroup_eager_query().join(ScimUserGroup).filter(f))
+        .scalars()
+        .all()
     )
     return gs
 

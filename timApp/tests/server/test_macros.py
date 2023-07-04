@@ -73,7 +73,7 @@ header: %%username%% and %%realname%%
         )
         p, _ = Plugin.from_task_id(
             f"{d.id}.test",
-            UserContext.from_one_user(User.query.get(TEST_USER_1_ID)),
+            UserContext.from_one_user(db.session.get(User, TEST_USER_1_ID)),
             default_view_ctx,
         )
         self.assertEqual("testuser1 and Test user 1", p.values["header"])
@@ -87,7 +87,7 @@ header: %%username%% and %%realname%%
         )
         p, _ = Plugin.from_task_id(
             f"{d.id}.test",
-            UserContext.from_one_user(User.query.get(TEST_USER_2_ID)),
+            UserContext.from_one_user(db.session.get(User, TEST_USER_2_ID)),
             default_view_ctx,
         )
         self.assertEqual("testuser2 and Test user 2", p.values["header"])

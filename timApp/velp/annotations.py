@@ -9,8 +9,9 @@ annotations as well as adding comments to the annotations. The module also retri
 
 from enum import Enum, unique
 
-from sqlalchemy import func, true
-from sqlalchemy.orm import joinedload, contains_eager, Query
+from sqlalchemy import func, true, select
+from sqlalchemy.orm import joinedload, contains_eager
+from sqlalchemy.sql import Select
 
 from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
@@ -19,6 +20,7 @@ from timApp.peerreview.util.peerreview_utils import (
     get_reviews_where_user_is_reviewer_query,
     is_peerreview_enabled,
 )
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import VelpContent, VelpVersion, Velp, AnnotationComment
@@ -69,39 +71,43 @@ def get_annotations_with_comments_in_document(
                 Annotation.annotator_id == user.id
             )
     anns = (
-        set_annotation_query_opts(
-            Annotation.query.filter_by(document_id=d.id)
-            .filter(
-                (Annotation.valid_until == None)
-                | (Annotation.valid_until >= func.current_timestamp())
+        db.session.execute(
+            set_annotation_query_opts(
+                select(Annotation)
+                .filter_by(document_id=d.id)
+                .filter(
+                    (Annotation.valid_until == None)
+                    | (Annotation.valid_until >= func.current_timestamp())
+                )
+                .filter((Annotation.annotator_id == user.id) | vis_filter)
+                .join(VelpVersion)
+                .join(Velp)
+                .join(VelpContent)
+                .filter(VelpContent.language_id == language_id)
+                .outerjoin(Answer)
+                .outerjoin(User, Answer.users_all)
+                .filter(answer_filter)
+                .filter(own_review_filter)
+                .order_by(
+                    Annotation.depth_start.desc(),
+                    Annotation.node_start.desc(),
+                    Annotation.offset_start.desc(),
+                )
             )
-            .filter((Annotation.annotator_id == user.id) | vis_filter)
-            .join(VelpVersion)
-            .join(Velp)
-            .join(VelpContent)
-            .filter(VelpContent.language_id == language_id)
-            .outerjoin(Answer)
-            .outerjoin(User, Answer.users_all)
-            .filter(answer_filter)
-            .filter(own_review_filter)
-            .order_by(
-                Annotation.depth_start.desc(),
-                Annotation.node_start.desc(),
-                Annotation.offset_start.desc(),
+            .options(contains_eager(Annotation.velp_content))
+            .options(contains_eager(Annotation.answer).contains_eager(Answer.users_all))
+            .options(
+                contains_eager(Annotation.velp_version).contains_eager(VelpVersion.velp)
             )
+            .with_only_columns(Annotation)
         )
-        .options(contains_eager(Annotation.velp_content))
-        .options(contains_eager(Annotation.answer).contains_eager(Answer.users_all))
-        .options(
-            contains_eager(Annotation.velp_version).contains_eager(VelpVersion.velp)
-        )
-        .with_entities(Annotation)
+        .scalars()
         .all()
     )
     return anns
 
 
-def set_annotation_query_opts(q: Query) -> Query:
+def set_annotation_query_opts(q: Select) -> Select:
     return (
         q.options(
             joinedload(Annotation.velp_content, innerjoin=True).load_only(

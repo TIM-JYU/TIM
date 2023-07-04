@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from timApp.document.version import Version
 from timApp.notification.notification import NotificationType
@@ -88,7 +88,11 @@ class AnswerNotification(PendingNotification):
 
 def get_pending_notifications() -> list[PendingNotification]:
     return (
-        PendingNotification.query.filter(PendingNotification.processed == None)
-        .order_by(PendingNotification.created.asc())
+        db.session.execute(
+            select(PendingNotification)
+            .filter(PendingNotification.processed == None)
+            .order_by(PendingNotification.created.asc())
+        )
+        .scalars()
         .all()
     )

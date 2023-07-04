@@ -2,7 +2,7 @@ import json
 from json import JSONDecodeError
 from typing import Optional
 
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.orm import lazyload
 
 from timApp.lecture.lecture import Lecture
@@ -45,7 +45,7 @@ class LectureAnswer(db.Model):
 
     @staticmethod
     def get_by_id(ans_id: int) -> Optional["LectureAnswer"]:
-        return LectureAnswer.query.get(ans_id)
+        return db.session.get(LectureAnswer, ans_id)
 
     def get_parsed_answer(self):
         # If lecture question's rows are randomized, it will be saved as a dict
@@ -86,15 +86,15 @@ class LectureAnswer(db.Model):
 def get_totals(
     lecture: Lecture, user: User | None = None
 ) -> list[tuple[User, float, int]]:
-    q = User.query
+    stmt = select(User)
     if user:
-        q = q.filter_by(id=user.id)
-    q = (
-        q.join(LectureAnswer)
+        stmt = stmt.filter_by(id=user.id)
+    stmt = (
+        stmt.join(LectureAnswer)
         .options(lazyload(User.groups))
         .filter_by(lecture_id=lecture.lecture_id)
         .group_by(User.id)
         .order_by(User.name)
         .with_entities(User, func.sum(LectureAnswer.points), func.count())
     )
-    return q.all()
+    return db.session.execute(stmt).scalars().all()

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from flask import Response
-from sqlalchemy import true
+from sqlalchemy import true, select
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import (
@@ -143,11 +143,13 @@ def get_notes(
         time_restriction = time_restriction & (UserNote.created < end)
     d_ids = [d.id for d in docs]
     ns = (
-        UserNote.query.filter(
-            UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction
+        db.session.execute(
+            select(UserNote)
+            .filter(UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction)
+            .options(joinedload(UserNote.usergroup))
+            .options(joinedload(UserNote.block).joinedload(Block.docentries))
         )
-        .options(joinedload(UserNote.usergroup))
-        .options(joinedload(UserNote.block).joinedload(Block.docentries))
+        .scalars()
         .all()
     )
     all_count = len(ns)
@@ -157,13 +159,19 @@ def get_notes(
         deleted_notes = list(
             map(
                 DeletedNote,
-                PendingNotification.query.filter(
-                    PendingNotification.doc_id.in_(d_ids)
-                    & (PendingNotification.kind == NotificationType.CommentDeleted)
+                db.session.execute(
+                    select(PendingNotification)
+                    .filter(
+                        PendingNotification.doc_id.in_(d_ids)
+                        & (PendingNotification.kind == NotificationType.CommentDeleted)
+                    )
+                    .options(
+                        joinedload(PendingNotification.block).joinedload(
+                            Block.docentries
+                        )
+                    )
                 )
-                .options(
-                    joinedload(PendingNotification.block).joinedload(Block.docentries)
-                )
+                .scalars()
                 .all(),
             )
         )

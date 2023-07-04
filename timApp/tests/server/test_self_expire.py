@@ -1,3 +1,5 @@
+from sqlalchemy import select
+
 from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
@@ -68,7 +70,11 @@ class TestSelfExpire(TimRouteTest):
             },
         )
 
-        ans: list[Answer] = Answer.query.filter_by(task_id=f"{d.id}.test").all()
+        ans: list[Answer] = (
+            db.session.execute(select(Answer).filter_by(task_id=f"{d.id}.test"))
+            .scalars()
+            .all()
+        )
         self.assertEqual(len(ans), 1)
         self.assertEqual([u.name for u in ans[0].users_all], [self.test_user_2.name])
         self.assertEqual(ans[0].content, '{"c": "1"}')

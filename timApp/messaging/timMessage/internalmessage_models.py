@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Optional, TYPE_CHECKING
 
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from timApp.timdb.sqa import db
 
@@ -127,9 +127,13 @@ class InternalMessageReadReceipt(db.Model):
     def get_for_user(
         user: "User", message: InternalMessage
     ) -> Optional["InternalMessageReadReceipt"]:
-        return InternalMessageReadReceipt.query.filter_by(
-            user=user, message=message
-        ).first()
+        return (
+            db.session.execute(
+                select(InternalMessageReadReceipt).filter_by(user=user, message=message)
+            )
+            .scalars()
+            .first()
+        )
 
     def to_json(self) -> dict[str, Any]:
         return {

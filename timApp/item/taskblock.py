@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+from sqlalchemy import select
 
-from timApp.timdb.sqa import db
 from timApp.item.block import Block, BlockType, insert_block
+from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
 
 class TaskBlock(db.Model):
-
     __tablename__ = "taskblock"
     id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     task_id = db.Column(db.Text, primary_key=True)
@@ -16,11 +16,19 @@ class TaskBlock(db.Model):
 
     @staticmethod
     def get_by_task(task_id: str) -> TaskBlock | None:
-        return TaskBlock.query.filter_by(task_id=task_id).first()
+        return (
+            db.session.execute(select(TaskBlock).filter_by(task_id=task_id))
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def get_block_by_task(task_id: str) -> Block | None:
-        task_block = TaskBlock.query.filter_by(task_id=task_id).first()
+        task_block = (
+            db.session.execute(select(TaskBlock).filter_by(task_id=task_id))
+            .scalars()
+            .first()
+        )
         if task_block is not None:
             return task_block.block
         else:

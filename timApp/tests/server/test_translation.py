@@ -1,5 +1,7 @@
 from unittest.mock import patch, Mock
 
+from sqlalchemy import select
+
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -83,6 +85,13 @@ class QuotaLimitedTestTranslator(ReversingTranslationService):
 
 
 class TranslationTest(TimTranslationTest):
+    def get_deepl_service(self) -> DeeplTranslationService:
+        return (
+            db.session.execute(select(DeeplTranslationService).limit(1))
+            .scalars()
+            .first()
+        )
+
     def test_translation_create(self):
         self.login_test1()
         doc = self.create_doc()
@@ -450,7 +459,7 @@ Baz
         tr_json = self.json_post(
             f"/translate/{d.id}/{lang.lang_code}/{data}", {"doc_title": "title"}
         )
-        tr_doc = Translation.query.get(tr_json["id"]).document
+        tr_doc = db.session.get(Translation, tr_json["id"]).document
         tr_doc.clear_mem_cache()
         mds = map(lambda x: x.md, tr_doc.get_paragraphs())
         self.assertEqual("ooF", next(mds))
@@ -471,7 +480,7 @@ Baz
 """
         )
         d.lang_id = "orig"
-        data = DeeplTranslationService.query.first().service_name
+        data = self.get_deepl_service().service_name
         self.json_post(
             f"/translate/{d.id}/{lang.lang_code}/{data}",
             {"doc_title": "title"},
@@ -494,7 +503,7 @@ Baz
         d.lang_id = "orig"
         self.logout()
         self.login_test2()
-        data = DeeplTranslationService.query.first().service_name
+        data = self.get_deepl_service().service_name
         self.json_post(
             f"/translate/{d.id}/{lang.lang_code}/{data}",
             {"doc_title": "title"},
@@ -559,7 +568,7 @@ Baz
         tr = self.create_translation(d)
         tr_doc = tr.document
         id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
-        data = DeeplTranslationService.query.first().service_name
+        data = self.get_deepl_service().service_name
         self.json_post(
             f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}",
             expect_status=404,
@@ -582,7 +591,7 @@ Baz
         self.login_test2()
         tr_doc = tr.document
         id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
-        data = DeeplTranslationService.query.first().service_name
+        data = self.get_deepl_service().service_name
         self.json_post(
             f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}",
             expect_status=403,
@@ -677,7 +686,7 @@ Baz qux [qux](www.example.com)
 Baz qux [qux](www.example.com)
 """
 
-        transl = DeeplTranslationService.query.first().service_name
+        transl = self.get_deepl_service().service_name
         data = {
             "originaltext": md,
         }
@@ -702,7 +711,7 @@ Baz qux [qux](www.example.com)
 Baz qux [qux](www.example.com)
 """
 
-        transl = DeeplTranslationService.query.first().service_name
+        transl = self.get_deepl_service().service_name
         data = {
             "originaltext": md,
         }

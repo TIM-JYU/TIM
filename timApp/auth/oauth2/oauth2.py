@@ -1,5 +1,4 @@
 import time
-from typing import Optional
 
 from authlib.integrations.flask_oauth2 import AuthorizationServer, ResourceProtector
 from authlib.integrations.sqla_oauth2 import (
@@ -9,6 +8,7 @@ from authlib.integrations.sqla_oauth2 import (
 from authlib.oauth2 import OAuth2Request
 from authlib.oauth2.rfc6749 import grants
 from flask import Flask
+from sqlalchemy import select, delete
 
 from timApp.auth.oauth2.models import OAuth2Client, OAuth2Token, OAuth2AuthorizationCode
 from timApp.timdb.sqa import db
@@ -26,13 +26,19 @@ class RefreshTokenGrant(grants.RefreshTokenGrant):
     INCLUDE_NEW_REFRESH_TOKEN = True
 
     def authenticate_refresh_token(self, refresh_token: str) -> OAuth2Token | None:
-        token: OAuth2Token = OAuth2Token.query.filter_by(refresh_token=refresh_token)
+        token: OAuth2Token = (
+            db.session.execute(
+                select(OAuth2Token).filter_by(refresh_token=refresh_token).limit(1)
+            )
+            .scalars()
+            .first()
+        )
         if token and not token.is_revoked() and not token.is_expired():
             return token
         return None
 
     def authenticate_user(self, credential: OAuth2Token) -> User:
-        return User.query.get(credential.user_id)
+        return db.session.get(User, credential.user_id)
 
     def revoke_old_credential(self, credential: OAuth2Token) -> None:
         credential.refresh_token_revoked_at = int(time.time())
@@ -64,9 +70,15 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
     def query_authorization_code(
         self, code: str, client: OAuth2Client
     ) -> OAuth2AuthorizationCode | None:
-        auth_code = OAuth2AuthorizationCode.query.filter_by(
-            code=code, client_id=client.client_id
-        ).first()
+        auth_code = (
+            db.session.execute(
+                select(OAuth2AuthorizationCode).filter_by(
+                    code=code, client_id=client.client_id
+                )
+            )
+            .scalars()
+            .first()
+        )
         if auth_code and not auth_code.is_expired():
             return auth_code
         return None
@@ -78,7 +90,7 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
         db.session.commit()
 
     def authenticate_user(self, authorization_code: OAuth2AuthorizationCode) -> User:
-        return User.query.get(authorization_code.user_id)
+        return db.session.get(User, authorization_code.user_id)
 
 
 def query_client(client_id: str) -> OAuth2Client:
@@ -96,11 +108,13 @@ require_oauth = ResourceProtector()
 
 def delete_expired_oauth2_tokens() -> None:
     now_time = int(time.time())
-    OAuth2Token.query.filter(
-        (OAuth2Token.expires_in + OAuth2Token.issued_at < now_time)
-        | (OAuth2Token.access_token_revoked_at < now_time)
-        | (OAuth2Token.refresh_token_revoked_at < now_time)
-    ).delete()
+    db.session.execute(
+        delete(OAuth2Token).where(
+            (OAuth2Token.expires_in + OAuth2Token.issued_at < now_time)
+            | (OAuth2Token.access_token_revoked_at < now_time)
+            | (OAuth2Token.refresh_token_revoked_at < now_time)
+        )
+    )
     db.session.commit()
 
 

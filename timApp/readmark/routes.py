@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from flask import Blueprint, request
 from flask import current_app, Response
-from sqlalchemy import func, distinct, true
+from sqlalchemy import func, distinct, true, select
 from sqlalchemy.exc import IntegrityError
 
 from timApp.auth.accesshelper import (
@@ -131,13 +130,18 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
         for p in pars:
             if unread:
                 rp = (
-                    ReadParagraph.query.filter_by(
-                        usergroup_id=group_id,
-                        doc_id=p.get_doc_id(),
-                        par_id=p.get_id(),
-                        type=paragraph_type,
+                    db.session.execute(
+                        select(ReadParagraph)
+                        .filter_by(
+                            usergroup_id=group_id,
+                            doc_id=p.get_doc_id(),
+                            par_id=p.get_id(),
+                            type=paragraph_type,
+                        )
+                        .order_by(ReadParagraph.timestamp.desc())
+                        .limit(1)
                     )
-                    .order_by(ReadParagraph.timestamp.desc())
+                    .scalars()
                     .first()
                 )
                 if not rp:
@@ -210,15 +214,16 @@ def get_statistics(doc_path):
     if group_opt:
         group_names = split_by_semicolon(group_opt)
         extra_condition = extra_condition & UserGroup.name.in_(
-            User.query.join(UserGroup, User.groups)
+            select(User.name)
+            .join(UserGroup, User.groups)
             .filter(UserGroup.name.in_(group_names))
-            .with_entities(User.name)
         )
     if consent:
         extra_condition = extra_condition & UserGroup.id.in_(
-            User.query.join(UserGroup, User.groups)
+            select(UserGroup.id)
+            .select_from(User)
+            .join(UserGroup, User.groups)
             .filter(User.consent == consent)
-            .with_entities(UserGroup.id)
         )
     if block_opt:
         block_ids = split_by_semicolon(block_opt)
@@ -251,14 +256,14 @@ def get_statistics(doc_path):
         raise RouteException(
             f"Invalid sort option. Possible values are {seq_to_str(column_names)}."
         )
-    q = (
-        UserGroup.query.join(ReadParagraph)
+    stmt = (
+        select(UserGroup)
+        .join(ReadParagraph)
         .filter_by(doc_id=d.id)
         .filter(extra_condition)
-        .add_columns(*cols)
         .group_by(UserGroup)
         .order_by(col_to_sort)
-        .with_entities(UserGroup.name, *cols)
+        .with_only_columns(UserGroup.name, *cols)
     )
 
     def maybe_hide_name_from_row(row):
@@ -271,12 +276,12 @@ def get_statistics(doc_path):
         return dict(zip(column_names, maybe_hide_name_from_row(row)))
 
     if result_format == "count":
-        reads = list(map(row_to_dict, q.all()))
+        reads = list(map(row_to_dict, db.session.execute(stmt).all()))
 
         return Response(str(len(reads)), mimetype="text/plain")
 
     if result_format == "userid":
-        reads = list(map(row_to_dict, q.all()))
+        reads = list(map(row_to_dict, db.session.execute(stmt).all()))
 
         result = ""
         for r in reads:
@@ -289,8 +294,8 @@ def get_statistics(doc_path):
 
         def gen_rows():
             yield column_names
-            yield from (maybe_hide_name_from_row(row) for row in q)
+            yield from (maybe_hide_name_from_row(row) for row in stmt)
 
         return csv_response(gen_rows(), dialect=csv_dialect)
     else:
-        return json_response(list(map(row_to_dict, q.all())))
+        return json_response(list(map(row_to_dict, stmt.all())))
