@@ -293,7 +293,7 @@ export class QuantumBoard {
      * @param pos2 position of the pair of the swap gate
      */
     addSwap(pos: GatePos, pos2: GatePos | null = null) {
-        if (pos2 && pos.target === pos2.time && pos.target !== pos2.target) {
+        if (pos2 && pos.time === pos2.time && pos.target !== pos2.target) {
             this.remove(pos.target, pos.time);
             this.remove(pos2.target, pos2.time);
             this.board[pos.target][pos.time] = new Swap(pos2.target);

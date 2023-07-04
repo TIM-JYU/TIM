@@ -3,16 +3,11 @@ import type {
     Qubit,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
-import type {Complex, Matrix} from "mathjs";
+import type {Matrix} from "mathjs";
 import {
-    divide,
-    pi,
-    e,
-    pow,
     dotPow,
     abs,
     transpose,
-    complex,
     multiply,
     kron,
     matrix,
@@ -22,76 +17,30 @@ import {
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import type {Cell, QuantumBoard} from "tim/plugin/quantumcircuit/quantum-board";
 import {Control, Gate, Swap} from "tim/plugin/quantumcircuit/quantum-board";
+import type {GateService} from "tim/plugin/quantumcircuit/gate.service";
 
 export class QuantumCircuitSimulator {
     board: QuantumBoard;
     qubits: Qubit[];
     result?: Matrix;
-    gateNameToMatrix: Map<string, Matrix> = new Map();
 
-    identityMatrix = matrix([
-        [1, 0],
-        [0, 1],
-    ]);
-
-    swapMatrix = matrix([
-        [1, 0, 0, 0],
-        [0, 0, 1, 0],
-        [0, 1, 0, 0],
-        [0, 0, 0, 1],
-    ]);
-
-    constructor(board: QuantumBoard, qubits: Qubit[]) {
+    constructor(
+        private gateService: GateService,
+        board: QuantumBoard,
+        qubits: Qubit[]
+    ) {
         this.board = board;
         this.qubits = qubits;
-        const H = multiply(
-            matrix([
-                [1, 1],
-                [1, -1],
-            ]),
-            1 / Math.sqrt(2)
-        );
-        const X = matrix([
-            [0, 1],
-            [1, 0],
-        ]);
-        const Y = matrix([
-            [0, complex(0, -1)],
-            [complex(0, 1), 0],
-        ]);
-        const Z = matrix([
-            [1, 0],
-            [0, -1],
-        ]);
-        const S = matrix([
-            [1, 0],
-            [0, complex(0, 1)],
-        ]);
-        const tValue = pow(
-            e,
-            divide(multiply(complex(0, 1), pi) as Complex, 4) as Complex
-        ) as Complex;
-        const T = matrix([
-            [1, 0],
-            [0, tValue],
-        ]);
-
-        this.gateNameToMatrix.set("H", H);
-        this.gateNameToMatrix.set("X", X);
-        this.gateNameToMatrix.set("Y", Y);
-        this.gateNameToMatrix.set("Z", Z);
-        this.gateNameToMatrix.set("S", S);
-        this.gateNameToMatrix.set("T", T);
     }
 
     private getCellMatrix(cell: Cell) {
         if (cell instanceof Gate) {
-            const firstGateMatrix = this.gateNameToMatrix.get(cell.name);
+            const firstGateMatrix = this.gateService.getMatrix(cell.name);
             if (firstGateMatrix) {
                 return firstGateMatrix;
             }
         }
-        return this.identityMatrix;
+        return this.gateService.identityMatrix;
     }
 
     /**
@@ -146,25 +95,17 @@ export class QuantumCircuitSimulator {
     private buildColumnFromSingleGates(gateControls: number[][], colI: number) {
         let columnMatrix;
         for (let i = 0; i < gateControls.length; i++) {
-            // replace controls and gates with identity matrix
-            if (
-                gateControls[i].length > 0 ||
-                this.board.get(i, colI) instanceof Control
-            ) {
-                const gateMatrix = this.identityMatrix;
-                if (columnMatrix) {
-                    columnMatrix = kron(columnMatrix, gateMatrix);
-                } else {
-                    columnMatrix = gateMatrix;
-                }
+            const cell = this.board.get(i, colI);
+            let gateMatrix = this.gateService.identityMatrix;
+
+            if (cell instanceof Gate && gateControls[i].length === 0) {
+                gateMatrix = this.getCellMatrix(this.board.get(i, colI));
+            }
+
+            if (columnMatrix) {
+                columnMatrix = kron(columnMatrix, gateMatrix);
             } else {
-                // use 2x2 gate if one exists
-                const gateMatrix = this.getCellMatrix(this.board.get(i, colI));
-                if (columnMatrix) {
-                    columnMatrix = kron(columnMatrix, gateMatrix);
-                } else {
-                    columnMatrix = gateMatrix;
-                }
+                columnMatrix = gateMatrix;
             }
         }
         return columnMatrix;
@@ -214,12 +155,12 @@ export class QuantumCircuitSimulator {
         }
         if (currI < destI) {
             for (let i = currI; i < destI; i++) {
-                const swap = this.padMatrix(this.swapMatrix, i, 2);
+                const swap = this.padMatrix(this.gateService.swapMatrix, i, 2);
                 applySwap(i, swap);
             }
         } else {
             for (let i = currI - 1; i >= destI; i--) {
-                const swap = this.padMatrix(this.swapMatrix, i, 2);
+                const swap = this.padMatrix(this.gateService.swapMatrix, i, 2);
                 applySwap(i, swap);
             }
         }
@@ -287,12 +228,12 @@ export class QuantumCircuitSimulator {
                 const gate = this.buildControlledGate(i, colI, gateControls[i]);
                 result = this.applyMultiQubitGate(qubits, gate, result);
             }
-            // cell.target > i is added so that swap is not applied twice
+            // (cell.target > i) is added so that swap is not applied twice
             if (cell instanceof Swap && cell.target > i) {
                 const qubits = [i, cell.target];
                 result = this.applyMultiQubitGate(
                     qubits,
-                    this.swapMatrix,
+                    this.gateService.swapMatrix,
                     result
                 );
             }

@@ -6,7 +6,7 @@ import type {
     OnInit,
 } from "@angular/core";
 import {Component, NgModule, ViewChild, ElementRef} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -43,6 +43,8 @@ import {
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {timeout} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
+import {GateService} from "tim/plugin/quantumcircuit/gate.service";
+import {DomSanitizer} from "@angular/platform-browser";
 
 export interface Qubit {
     value: number;
@@ -71,10 +73,16 @@ const GateInfo = t.type({
     controls: nullable(t.array(t.number)),
 });
 
+const CustomGateInfo = t.type({
+    name: t.string,
+    matrix: t.string,
+});
+
 // All settings that are defined in the plugin markup YAML
 const QuantumCircuitMarkup = t.intersection([
     t.partial({
         initialCircuit: nullable(t.array(GateInfo)),
+        customGates: nullable(t.array(CustomGateInfo)),
     }),
     GenericPluginMarkup,
     t.type({
@@ -186,6 +194,15 @@ export class QuantumCircuitComponent
     selectedGate: GatePos | null = null;
 
     measurements: Measurement[] = [];
+
+    constructor(
+        private gateService: GateService,
+        el: ElementRef,
+        http: HttpClient,
+        domSanitizer: DomSanitizer
+    ) {
+        super(el, http, domSanitizer);
+    }
 
     get nQubits() {
         return this.markup.nQubits;
@@ -325,12 +342,15 @@ export class QuantumCircuitComponent
             return;
         }
         for (const gateData of this.markup.initialCircuit) {
-            if (gateData.name.toLowerCase() === "swap") {
+            if (gateData.name === "swap") {
                 if (gateData.controls && gateData.controls.length === 1) {
-                    this.board.addSwap(gateData, {
-                        target: gateData.controls[0],
-                        time: gateData.time,
-                    });
+                    this.board.addSwap(
+                        {target: gateData.target, time: gateData.time},
+                        {
+                            target: gateData.controls[0],
+                            time: gateData.time,
+                        }
+                    );
                 }
             } else {
                 const gate = new Gate(gateData.name);
@@ -346,6 +366,15 @@ export class QuantumCircuitComponent
         }
     }
 
+    registerCustomGates() {
+        if (!this.markup.customGates) {
+            return;
+        }
+        for (const gate of this.markup.customGates) {
+            this.gateService.registerCustomGate(gate.name, gate.matrix);
+        }
+    }
+
     /**
      * Initializes board, qubits and outputs.
      */
@@ -358,6 +387,8 @@ export class QuantumCircuitComponent
             });
         }
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
+
+        this.registerCustomGates();
 
         this.addInitialGates();
 
@@ -384,7 +415,11 @@ export class QuantumCircuitComponent
     }
 
     initializeSimulator() {
-        this.simulator = new QuantumCircuitSimulator(this.board, this.qubits);
+        this.simulator = new QuantumCircuitSimulator(
+            this.gateService,
+            this.board,
+            this.qubits
+        );
 
         this.runSimulation(false);
     }

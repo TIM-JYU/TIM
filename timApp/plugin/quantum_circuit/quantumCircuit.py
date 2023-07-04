@@ -27,10 +27,17 @@ class GateType:
 
 
 @dataclass
+class CustomGateInfo:
+    name: str
+    matrix: str
+
+
+@dataclass
 class QuantumCircuitMarkup(GenericMarkupModel):
     """Class that defines plugin markup (the YAML settings and their types)"""
 
     initialCircuit: list[GateType] | None = None
+    customGates: list[CustomGateInfo] | None = None
     nQubits: int | None = None
     nMoments: int | None = None
 
