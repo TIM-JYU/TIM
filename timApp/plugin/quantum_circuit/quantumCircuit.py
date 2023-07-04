@@ -31,15 +31,26 @@ class CustomGateInfo:
     name: str
     matrix: str
 
+    def to_json(self) -> dict:
+        return asdict(self)
+
 
 @dataclass
 class QuantumCircuitMarkup(GenericMarkupModel):
     """Class that defines plugin markup (the YAML settings and their types)"""
 
-    initialCircuit: list[GateType] | None = None
-    customGates: list[CustomGateInfo] | None = None
     nQubits: int | None = None
     nMoments: int | None = None
+    qubitNotation: str | None = None
+    showChart: bool | None = None
+    showPrintField: bool | None = None
+    showOutputBits: bool | None = None
+    samplingMode: str | None = None
+    nSamples: int | None = None
+
+    initialCircuit: list[GateType] | None = None
+    customGates: list[CustomGateInfo] | None = None
+    gates: list[str] | None = None
 
 
 @dataclass

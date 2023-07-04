@@ -119,25 +119,70 @@ export class GateService {
     }
 
     /**
-     * Add a new gate to list with given name and parses
+     * Replaces default set of gates with user defined ones.
+     * @param gateNames names of gates to use from default set of gates
+     * @param customGates gates defined by user
+     */
+    registerUserDefinedGates(
+        gateNames: string[],
+        customGates: {name: string; matrix: string}[]
+    ) {
+        // don't override default ones if user didn't provide their owns
+        if (gateNames.length === 0) {
+            return;
+        }
+
+        this.gates = [];
+
+        for (const gateName of gateNames) {
+            const m = this.gateNameToMatrix.get(gateName);
+            if (m) {
+                this.gates.push({
+                    name: gateName,
+                    matrix: m,
+                });
+            }
+        }
+
+        for (const customGate of customGates) {
+            const parsedCustomGate = this.parseCustomGate(
+                customGate.name,
+                customGate.matrix
+            );
+            if (parsedCustomGate) {
+                this.gates.push(parsedCustomGate);
+                this.gateNameToMatrix.set(
+                    parsedCustomGate.name,
+                    parsedCustomGate.matrix
+                );
+            }
+        }
+
+        this.gateNameToMatrix = new Map<string, Matrix>();
+        for (const gate of this.gates) {
+            this.gateNameToMatrix.set(gate.name, gate.matrix);
+        }
+    }
+
+    /**
+     * Parses a new gate with given name and parses
      * its matrix from string.
      * Matrix is parsed using syntax specified in
      * https://mathjs.org/docs/expressions/syntax.html
-     * @param name name to register by. Should be unique
+     * @param name name of gate. Should be unique
      * @param matrixStr string to parse matrix from
      */
-    registerCustomGate(name: string, matrixStr: string) {
+    private parseCustomGate(name: string, matrixStr: string) {
         try {
             const customMatrix = evaluate(matrixStr);
             if (!(customMatrix instanceof Matrix)) {
                 console.error("invalid custom matrix value", name, matrixStr);
-                return;
+                return undefined;
             }
-            this.gates.push({
+            return {
                 name: name,
                 matrix: customMatrix,
-            });
-            this.gateNameToMatrix.set(name, customMatrix);
+            };
         } catch (error) {
             console.error("invalid custom matrix value", name, matrixStr);
         }

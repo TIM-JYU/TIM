@@ -83,11 +83,21 @@ const QuantumCircuitMarkup = t.intersection([
     t.partial({
         initialCircuit: nullable(t.array(GateInfo)),
         customGates: nullable(t.array(CustomGateInfo)),
+        gates: nullable(t.array(t.string)),
     }),
     GenericPluginMarkup,
     t.type({
         nQubits: withDefault(t.number, 1),
         nMoments: withDefault(t.number, 5),
+        qubitNotation: withDefault(t.keyof({braket: null, bit: null}), "bit"),
+        showChart: withDefault(t.boolean, true),
+        showPrintField: withDefault(t.boolean, true),
+        showOutputBits: withDefault(t.boolean, true),
+        samplingMode: withDefault(
+            t.keyof({sample: null, autoSample: null, matrix: null}),
+            "matrix"
+        ),
+        nSamples: withDefault(t.number, 100),
     }),
 ]);
 
@@ -366,15 +376,6 @@ export class QuantumCircuitComponent
         }
     }
 
-    registerCustomGates() {
-        if (!this.markup.customGates) {
-            return;
-        }
-        for (const gate of this.markup.customGates) {
-            this.gateService.registerCustomGate(gate.name, gate.matrix);
-        }
-    }
-
     /**
      * Initializes board, qubits and outputs.
      */
@@ -388,7 +389,10 @@ export class QuantumCircuitComponent
         }
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
 
-        this.registerCustomGates();
+        this.gateService.registerUserDefinedGates(
+            this.markup.gates ?? [],
+            this.markup.customGates ?? []
+        );
 
         this.addInitialGates();
 
@@ -435,6 +439,8 @@ export class QuantumCircuitComponent
             this.qcContainer.nativeElement.offsetWidth / (this.nMoments + 4);
         const gateSize = (2 / 3) * baseSize;
 
+        const useBraket = this.markup.qubitNotation === "braket";
+
         this.circuitStyleOptions = {
             baseSize: baseSize,
             gateSize: gateSize,
@@ -443,7 +449,7 @@ export class QuantumCircuitComponent
                 medium: "grey",
                 light: "white",
             },
-            useBraket: false,
+            useBraket: useBraket,
             timeAxisHeight: 30,
             gateBorderRadius: 2,
         };
