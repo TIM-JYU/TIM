@@ -1,7 +1,9 @@
 FROM ubuntu:22.04 as base
+LABEL org.opencontainers.image.authors="tim@jyu.fi"
+LABEL org.opencontainers.image.source="https://github.com/TIM-JYU/TIM"
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
-    APT_CLEANUP="rm -rf /var/lib/apt/lists /dvisvgm-2.4 /usr/share/doc ~/.cache"
+    APT_CLEANUP="rm -rf /var/lib/apt/lists /usr/share/doc ~/.cache"
 
 # Configure timezone and locale
 RUN bash -c "${APT_INSTALL} locales tzdata && ${APT_CLEANUP}"
@@ -95,10 +97,12 @@ FROM base as complete
 
 # Install Python, pip and other necessary packages
 
+ENV PY_VERSION=3.11
+ENV PYTHON=python$PY_VERSION
 RUN bash -c "add-apt-repository -y ppa:deadsnakes/ppa && ${APT_CLEANUP}"
-RUN bash -c "${APT_INSTALL} python3.10 python3.10-distutils && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} ${PYTHON} ${PYTHON}-distutils && ${APT_CLEANUP}"
 
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 20
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/${PYTHON} 20
 
 # lxml dependencies
 # C-parser for PyYAML
@@ -116,18 +120,18 @@ RUN bash -c "${APT_INSTALL} \
  libxmlsec1-openssl \
  libxslt-dev \
  libyaml-dev \
- python3.10-dev \
+${PYTHON}-dev \
  voikko-fi \
  zlib1g-dev \
  && ${APT_CLEANUP}"
 
-RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py
+RUN wget -q https://bootstrap.pypa.io/get-pip.py && ${PYTHON} get-pip.py && rm get-pip.py
 
 # Install xmlsec binary which is needed for PySAML2
 RUN bash -c "${APT_INSTALL} xmlsec1 && ${APT_CLEANUP}"
 
-ENV PIP_INSTALL="python3.10 -m pip install"
-RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.3.1 requests && ${APT_CLEANUP}"
+ENV PIP_INSTALL="${PYTHON} -m pip install"
+RUN bash -c "${PIP_INSTALL} --upgrade --ignore-installed poetry==1.5.1 requests blinker && ${APT_CLEANUP}"
 
 COPY pyproject.toml poetry.lock ./
 RUN bash -c " \
@@ -166,9 +170,9 @@ RUN (curl -sL https://deb.nodesource.com/setup_16.x | bash -) && bash -c "${APT_
 RUN npm i npm@6 -g && bash -c "${APT_CLEANUP}"
 
 # Flask-Testing does not let us configure host, so we do it here.
-RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.10/dist-packages/flask_testing/utils.py
+RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/${PYTHON}/dist-packages/flask_testing/utils.py
 # Fix newest Werkzeug incompatibility
-RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import cached_property/" /usr/local/lib/python3.10/dist-packages/flask_testing/utils.py
+RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import cached_property/" /usr/local/lib/${PYTHON}/dist-packages/flask_testing/utils.py
 
 RUN wget -q https://www.texlive.info/CTAN/support/latexmk/latexmk.pl -O /usr/bin/latexmk
 
