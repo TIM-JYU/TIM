@@ -65,6 +65,7 @@ class Answer(db.Model):
         back_populates="answers_alt",
         order_by="User.real_name",
         lazy="select",
+        overlaps="users",
     )
     annotations = db.relationship("Annotation", back_populates="answer")
     saver = db.relationship(

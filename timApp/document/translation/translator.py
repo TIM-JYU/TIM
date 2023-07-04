@@ -230,6 +230,8 @@ class TranslationServiceKey(db.Model):
 class RegisteredTranslationService(TranslationService):
     """A translation service whose use is constrained by user group."""
 
+    __abstract__ = True
+
     def register(self, user_group: UserGroup) -> None:
         """
         Set some state to the service object based on user group.

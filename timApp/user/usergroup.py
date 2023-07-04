@@ -83,22 +83,26 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
         secondaryjoin="UserGroupMember.user_id == User.id",
         back_populates="groups",
+        overlaps="group, user",
     )
     memberships = db.relationship(
         UserGroupMember,
         back_populates="group",
         lazy="dynamic",
+        overlaps="users",
     )
     memberships_sel = db.relationship(
         UserGroupMember,
         back_populates="group",
         cascade="all, delete-orphan",
+        overlaps="memberships, users",
     )
     current_memberships: dict[int, UserGroupMember] = db.relationship(
         UserGroupMember,
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
         collection_class=attribute_mapped_collection("user_id"),
         back_populates="group",
+        overlaps="memberships, memberships_sel, users",
     )
     accesses = db.relationship(
         "BlockAccess",
@@ -109,13 +113,17 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         "BlockAccess",
         collection_class=attribute_mapped_collection("group_collection_key"),
         cascade="all, delete-orphan",
+        overlaps="accesses, usergroup",
     )
     readparagraphs = db.relationship(
         "ReadParagraph", back_populates="usergroup", lazy="dynamic"
     )
-    readparagraphs_alt = db.relationship("ReadParagraph")
+    readparagraphs_alt = db.relationship(
+        "ReadParagraph",
+        overlaps="readparagraphs, usergroup",
+    )
     notes = db.relationship("UserNote", back_populates="usergroup", lazy="dynamic")
-    notes_alt = db.relationship("UserNote")
+    notes_alt = db.relationship("UserNote", overlaps="notes, usergroup")
 
     admin_doc: Block = db.relationship(
         "Block",

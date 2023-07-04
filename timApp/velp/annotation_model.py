@@ -1,7 +1,6 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 from timApp.timdb.sqa import db
 
@@ -142,6 +141,7 @@ class Annotation(db.Model):
     velp_content = db.relationship(
         "VelpContent",
         primaryjoin="VelpContent.version_id == foreign(Annotation.velp_version_id)",
+        overlaps="velp_version",
     )
 
     def set_position_info(self, coordinates: AnnotationPosition) -> None:

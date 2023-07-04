@@ -1,10 +1,8 @@
 import json
 from contextlib import contextmanager
 from datetime import timedelta, datetime
-from typing import Optional
 
 from sqlalchemy import func
-from sqlalchemy.exc import InvalidRequestError
 
 from timApp.lecture.askedjson import AskedJson
 from timApp.lecture.lecture import Lecture
@@ -39,7 +37,9 @@ class AskedQuestion(db.Model):
     answers = db.relationship(
         "LectureAnswer", back_populates="asked_question", lazy="dynamic"
     )
-    answers_all = db.relationship("LectureAnswer", back_populates="asked_question")
+    answers_all = db.relationship(
+        "LectureAnswer", back_populates="asked_question", overlaps="answers"
+    )
     running_question = db.relationship(
         "Runningquestion", back_populates="asked_question", lazy="select", uselist=False
     )

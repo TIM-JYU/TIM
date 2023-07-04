@@ -5,12 +5,10 @@ import sqlalchemy
 from celery import current_app
 from celery import schedules
 from celery.beat import Scheduler, ScheduleEntry
-from celery.five import values, items
-from celery.utils.encoding import safe_str, safe_repr
 from celery.utils.log import get_logger
 from celery.utils.time import maybe_make_aware
+from kombu.utils.encoding import safe_str, safe_repr
 from kombu.utils.json import dumps, loads
-from multiprocessing.util import Finalize
 
 from .models import (
     PeriodicTask,
@@ -21,6 +19,8 @@ from .models import (
 )
 from .session import SessionManager
 from .session import session_cleanup
+
+# from multiprocessing.util import Finalize
 
 # This scheduler must wake up more frequently than the
 # regular of 5 minutes because it needs to take external
@@ -310,7 +310,6 @@ class ModelEntry(ScheduleEntry):
 
 
 class DatabaseScheduler(Scheduler):
-
     Entry = ModelEntry
     Model = PeriodicTask
     Changes = PeriodicTaskChanged
@@ -331,7 +330,7 @@ class DatabaseScheduler(Scheduler):
 
         self._dirty = set()
         Scheduler.__init__(self, *args, **kwargs)
-        self._finalize = Finalize(self, self.sync, exitpriority=5)
+        # self._finalize = Finalize(self, self.sync, exitpriority=5)
         self.max_interval = (
             kwargs.get("max_interval")
             or self.app.conf.beat_max_loop_interval
@@ -402,7 +401,7 @@ class DatabaseScheduler(Scheduler):
                     self.schedule[name].save()  # save to database
                     logger.debug(f"{name} save to database")
                     _tried.add(name)
-                except (KeyError) as exc:
+                except KeyError as exc:
                     logger.error(exc)
                     _failed.add(name)
         except sqlalchemy.exc.IntegrityError as exc:
@@ -415,7 +414,7 @@ class DatabaseScheduler(Scheduler):
 
     def update_from_dict(self, mapping):
         s = {}
-        for name, entry_fields in items(mapping):
+        for name, entry_fields in mapping.items():
             # {'task': 'celery.backend_cleanup',
             #  'schedule': schedules.crontab('0', '4', '*'),
             #  'options': {'expires': 43200}}
@@ -472,7 +471,7 @@ class DatabaseScheduler(Scheduler):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(
                     "Current schedule:\n%s",
-                    "\n".join(repr(entry) for entry in values(self._schedule)),
+                    "\n".join(repr(entry) for entry in self._schedule.values()),
                 )
         # logger.debug(self._schedule)
         return self._schedule

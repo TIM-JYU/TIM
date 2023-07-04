@@ -80,6 +80,7 @@ class Block(db.Model):
         primaryjoin=id == BlockAssociation.__table__.c.child,
         secondaryjoin=id == BlockAssociation.__table__.c.parent,
         lazy="select",
+        overlaps="children",
     )
     notifications = db.relationship(
         "Notification", back_populates="block", lazy="dynamic"
@@ -95,6 +96,7 @@ class Block(db.Model):
         secondary=UserGroupDoc.__table__,
         lazy="select",
         uselist=False,
+        overlaps="admin_doc",
     )
 
     #  If this Block corresponds to a message list's manage document, indicates the message list

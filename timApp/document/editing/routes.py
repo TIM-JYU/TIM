@@ -55,7 +55,8 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.qst.qst import question_convert_js_to_yaml
 from timApp.plugin.save_plugin import save_plugin
 from timApp.readmark.readings import mark_read
-from timApp.timdb.dbaccess import get_timdb
+
+# from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile
@@ -80,7 +81,7 @@ def update_document(doc_id):
     :return: A JSON object containing the versions of the document.
 
     """
-    timdb = get_timdb()
+    # timdb = get_timdb()
     docentry = get_doc_or_abort(doc_id)
     verify_edit_access(docentry)
     if "file" in request.files:
@@ -149,12 +150,10 @@ def update_document(doc_id):
     except (TimDbException, ValidationException) as e:
         raise RouteException(str(e))
     pars = doc.get_paragraphs()
-    return manage_response(docentry, pars, timdb, ver_before)
+    return manage_response(docentry, pars, ver_before)
 
 
-def manage_response(
-    docentry: DocInfo, pars: list[DocParagraph], timdb, ver_before: Version
-):
+def manage_response(docentry: DocInfo, pars: list[DocParagraph], ver_before: Version):
     doc = docentry.document_as_current_user
     chg = doc.get_changelog()
     notify_doc_watchers(
@@ -169,7 +168,7 @@ def manage_response(
 
 @edit_page.post("/postNewTaskNames/")
 def rename_task_ids():
-    timdb = get_timdb()
+    # timdb = get_timdb()
     doc_id, duplicates = verify_json_params("docId", "duplicates")
     manage_view = verify_json_params("manageView", require=False, default=False)
     docinfo = get_doc_or_abort(doc_id)
@@ -230,7 +229,7 @@ def rename_task_ids():
             update_cache=current_app.config["IMMEDIATE_PRELOAD"],
         )
     else:
-        return manage_response(docinfo, pars, timdb, ver_before)
+        return manage_response(docinfo, pars, ver_before)
 
 
 @edit_page.post("/postParagraphQ/")

@@ -296,6 +296,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         & (UserContact.channel == Channel.EMAIL),
         lazy="select",
         uselist=False,
+        overlaps="user, contacts",
     )
     """
     The primary email contact for the user.
@@ -322,7 +323,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """User's consent changes."""
 
     contacts: list[UserContact] = db.relationship(
-        "UserContact", back_populates="user", lazy="select"
+        "UserContact",
+        back_populates="user",
+        lazy="select",
+        overlaps="primary_email_contact",
     )
     """User's contacts."""
 
@@ -337,6 +341,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
         back_populates="users",
         lazy="select",
+        overlaps="user, current_memberships, group, memberships, memberships_sel",
     )
     """Current groups of the user is a member of."""
 
@@ -345,6 +350,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         UserGroupMember.__table__,
         primaryjoin=id == UserGroupMember.user_id,
         lazy="dynamic",
+        overlaps="group, groups, user, users, current_memberships, memberships, memberships_sel",
     )
     """All groups of the user as a dynamic query."""
 
@@ -353,6 +359,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_deleted,
         lazy="dynamic",
+        overlaps="group, groups, groups_dyn, user, users, current_memberships, memberships, memberships_sel",
     )
     """All groups the user is no longer a member of as a dynamic query."""
 
@@ -360,12 +367,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         UserGroupMember,
         foreign_keys="UserGroupMember.user_id",
         lazy="dynamic",
+        overlaps="groups, groups_dyn, groups_inactive, user, users",
     )
     """User's group memberships as a dynamic query."""
 
     memberships: list[UserGroupMember] = db.relationship(
         UserGroupMember,
         foreign_keys="UserGroupMember.user_id",
+        overlaps="groups_inactive, memberships_dyn, user, users",
     )
     """All user's group memberships."""
 
@@ -373,7 +382,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         UserGroupMember,
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
         collection_class=attribute_mapped_collection("usergroup_id"),
-        # back_populates="group",
+        overlaps="groups, groups_dyn, groups_inactive, memberships, memberships_dyn, user, users",
     )
     """Active group memberships mapped by user group ID."""
 
@@ -405,7 +414,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """User's activity during lectures."""
 
     answers = db.relationship(
-        "Answer", secondary=UserAnswer.__table__, back_populates="users", lazy="dynamic"
+        "Answer",
+        secondary=UserAnswer.__table__,
+        back_populates="users",
+        lazy="dynamic",
+        overlaps="users_all",
     )
     """User's answers to tasks as a dynamic query."""
 
@@ -426,17 +439,24 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         "UserSession",
         primaryjoin=(id == UserSession.user_id) & ~UserSession.expired,
         collection_class=attribute_mapped_collection("session_id"),
+        overlaps="sessions, user",
     )
     """Active sessions mapped by the session ID."""
 
     # Used for copying
-    notifications_alt = db.relationship("Notification")
-    owned_lectures_alt = db.relationship("Lecture")
-    lectureanswers_alt = db.relationship("LectureAnswer")
-    messages_alt = db.relationship("Message")
-    answers_alt = db.relationship("Answer", secondary=UserAnswer.__table__)
-    annotations_alt = db.relationship("Annotation")
-    velps_alt = db.relationship("Velp")
+    notifications_alt = db.relationship("Notification", overlaps="notifications, user")
+    owned_lectures_alt = db.relationship("Lecture", overlaps="owned_lectures, owner")
+    lectureanswers_alt = db.relationship(
+        "LectureAnswer", overlaps="lectureanswers, user"
+    )
+    messages_alt = db.relationship("Message", overlaps="messages, user")
+    answers_alt = db.relationship(
+        "Answer",
+        secondary=UserAnswer.__table__,
+        overlaps="answers, users",
+    )
+    annotations_alt = db.relationship("Annotation", overlaps="annotations, annotator")
+    velps_alt = db.relationship("Velp", overlaps="velps, creator")
 
     def update_email(
         self,

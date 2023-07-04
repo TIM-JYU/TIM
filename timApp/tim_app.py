@@ -134,7 +134,7 @@ from timApp.velp.velp_models import (
     LabelInVelp,
     AnnotationComment,
 )
-from tim_common.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonProvider
 
 # All SQLAlchemy models must be imported in this module.
 all_models = (
@@ -238,6 +238,9 @@ all_models = (
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
 
+app.json = TimJsonProvider(app)
+app.json_provider_class = TimJsonProvider
+
 # The autoescape setting needs to be forced because the template file extension used in TIM is jinja2.
 # The more accurate file extension helps IDEs recognize the file type better.
 app.jinja_env.autoescape = True
@@ -272,9 +275,6 @@ app.jinja_env.filters["timreldatetime"] = humanize_datetime
 app.jinja_env.add_extension("jinja2.ext.do")
 
 mimetypes.add_type("text/plain", ".scss")
-
-app.json_encoder = TimJsonEncoder
-
 # Caddy sets the following headers:
 # X-Forwarded-For: <ip>
 # X-Forwarded-Proto: <http/https>

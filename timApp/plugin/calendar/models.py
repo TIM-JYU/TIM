@@ -201,6 +201,7 @@ class Event(db.Model):
         Enrollment.__table__,
         primaryjoin=event_id == Enrollment.event_id,
         lazy="select",
+        overlaps="event, usergroup",
     )
     """List of usergroups that are enrolled in the event"""
 
@@ -209,6 +210,7 @@ class Event(db.Model):
         lazy="select",
         back_populates="event",
         cascade="all, delete-orphan",
+        overlaps="enrolled_users",
     )
     """Enrollment information for the event"""
 

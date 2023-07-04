@@ -2,7 +2,9 @@ import datetime
 import json
 from dataclasses import is_dataclass, fields
 from enum import Enum
+from typing import Any
 
+from flask.json.provider import JSONProvider
 from isodate import duration_isoformat
 from isodate.duration import Duration
 from jinja2 import Undefined
@@ -14,6 +16,14 @@ try:
     sqlalchemy_imported = True
 except ImportError:
     sqlalchemy_imported = False
+
+
+class TimJsonProvider(JSONProvider):
+    def dumps(self, obj: Any, **kwargs: Any) -> str:
+        return json.dumps(obj, cls=TimJsonEncoder, **kwargs)
+
+    def loads(self, s: str | bytes, **kwargs: Any) -> Any:
+        return json.loads(s, **kwargs)
 
 
 class TimJsonEncoder(json.JSONEncoder):

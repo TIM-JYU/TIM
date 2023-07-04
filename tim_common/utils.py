@@ -1,3 +1,4 @@
+from dataclasses import field
 from typing import Any, Mapping
 
 import marshmallow
@@ -7,6 +8,11 @@ from marshmallow.fields import Boolean
 from marshmallow.utils import _Missing
 
 Missing = _Missing
+Missing.__hash__ = lambda self: id(self)  # type: ignore
+
+#
+
+missing_field = field(default_factory=lambda: marshmallow.missing)  # type: ignore
 
 _BoolField = Boolean()
 

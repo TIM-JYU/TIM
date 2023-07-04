@@ -1,6 +1,5 @@
 """Defines all data models related to velps."""
 from datetime import datetime
-from typing import Dict, Any
 
 from sqlalchemy.orm.collections import attribute_mapped_collection  # type: ignore
 
@@ -256,5 +255,5 @@ class VelpVersion(db.Model):
         db.DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
 
-    velp: Velp = db.relationship("Velp")
-    content: list[VelpContent] = db.relationship("VelpContent")
+    velp: Velp = db.relationship("Velp", overlaps="velp_versions")
+    content: list[VelpContent] = db.relationship("VelpContent", overlaps="velp_version")
