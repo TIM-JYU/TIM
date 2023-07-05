@@ -56,6 +56,7 @@ export interface QubitOutput {
  * One input output pair measured from circuit
  */
 export interface Measurement {
+    value: number;
     input: string;
     output: string;
 }
@@ -238,6 +239,27 @@ export class QuantumCircuitComponent
     }
 
     /**
+     * Collects statistics from simulator.
+     */
+    collectStats() {
+        const mode = this.markup.samplingMode;
+        if (mode === "matrix") {
+            this.quantumChartData = this.simulator.getProbabilities();
+        } else if (mode === "autoSample") {
+            this.quantumChartData = this.simulator.getProbabilities(
+                this.markup.nSamples
+            );
+        } else {
+            this.quantumChartData = this.simulator.getProbabilities(
+                undefined,
+                this.measurements
+            );
+        }
+
+        this.setQubitOutputs();
+    }
+
+    /**
      * Runs simulator and updates statistics.
      * @param delay whether to run simulator instantly
      */
@@ -256,14 +278,13 @@ export class QuantumCircuitComponent
                 const timeDiff = endTime.getTime() - startTime.getTime();
                 console.log(`simulation ended in: ${timeDiff}ms`);
 
-                this.quantumChartData = this.simulator.getProbabilities();
-                this.setQubitOutputs();
+                this.collectStats();
+
                 this.timeoutId = -1;
             }, 0);
         } else {
             this.simulator.run();
-            this.quantumChartData = this.simulator.getProbabilities();
-            this.setQubitOutputs();
+            this.collectStats();
         }
     }
 
@@ -353,6 +374,13 @@ export class QuantumCircuitComponent
             return;
         }
         this.measurements = [measurement, ...this.measurements];
+
+        if (this.markup.samplingMode === "sample") {
+            this.quantumChartData = this.simulator.getProbabilities(
+                undefined,
+                this.measurements
+            );
+        }
     }
 
     /**
@@ -360,6 +388,7 @@ export class QuantumCircuitComponent
      */
     handleClearMeasurements() {
         this.measurements = [];
+        this.collectStats();
     }
 
     /**

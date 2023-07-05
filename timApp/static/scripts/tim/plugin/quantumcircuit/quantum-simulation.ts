@@ -289,6 +289,25 @@ export class QuantumCircuitSimulator {
     }
 
     /**
+     * Returns a random integer in range [0, weights.length-1]
+     * Relative probability of each number is based on weights.
+     * @param weights probabilities associated to each choice
+     */
+    private randomChoice(weights: number[]) {
+        const randomNum = Math.random();
+
+        // choose one possible outcome based on probabilities
+        let cumulativeProbability = 0;
+        for (let i = 0; i < weights.length; i++) {
+            cumulativeProbability += weights[i];
+            if (randomNum < cumulativeProbability) {
+                return i;
+            }
+        }
+        console.log("got here");
+    }
+
+    /**
      * Get one measurement chosen randomly from possible outcomes and their relative probabilities.
      */
     sample(): Measurement | undefined {
@@ -303,35 +322,80 @@ export class QuantumCircuitSimulator {
             probabilities.push(probability);
         });
 
-        const randomNum = Math.random();
+        const output = this.randomChoice(probabilities);
+        if (output !== undefined) {
+            return {
+                input: input,
+                output: this.indexToBitstring(output),
+                value: output,
+            };
+        }
+        return undefined;
+    }
 
-        // choose one possible outcome based on probabilities
-        let cumulativeProbability = 0;
-        for (let i = 0; i < probabilities.length; i++) {
-            cumulativeProbability += probabilities[i];
-            if (randomNum < cumulativeProbability) {
-                return {
-                    input: input,
-                    output: this.indexToBitstring(i),
-                };
+    private computeProbabilitiesBySampling(result: Matrix, sampleSize: number) {
+        const probabilities: number[] = [];
+        result.forEach((probability) => {
+            probabilities.push(probability);
+        });
+
+        // draw samples and keep track of how many times they occur
+        const counter = Array(probabilities.length).fill(0);
+        for (let i = 0; i < sampleSize; i++) {
+            const sample = this.randomChoice(probabilities);
+
+            if (sample !== undefined) {
+                counter[sample]++;
             }
         }
+        return counter.map((v) => (v / sampleSize) * 100.0);
+    }
 
-        return undefined;
+    computeProbabilitiesFromMeasurements(
+        measurements: Measurement[],
+        n: number
+    ) {
+        // draw samples and keep track of how many times they occur
+        const counter = Array(n).fill(0);
+        for (const measurement of measurements) {
+            counter[measurement.value]++;
+        }
+
+        return counter.map((v) => (v / measurements.length) * 100.0);
     }
 
     /**
      * Gets probabilities and labels for each output.
+     * @param sampleSize if given then use this many samples to compute probabilities for outputs
+     * @param measurements if give then use them to compute probabilities for outputs
      */
-    getProbabilities(): QuantumChartData {
+    getProbabilities(
+        sampleSize: number | undefined = undefined,
+        measurements: Measurement[] | undefined = undefined
+    ): QuantumChartData {
         if (!this.result) {
             console.log("run simulator first");
             return {probabilities: [], labels: []};
         }
-        const probabilities: number[] = [];
+
+        let probabilities: number[] = [];
+        if (sampleSize !== undefined) {
+            probabilities = this.computeProbabilitiesBySampling(
+                this.result,
+                sampleSize
+            );
+        }
+        if (measurements !== undefined) {
+            probabilities = this.computeProbabilitiesFromMeasurements(
+                measurements,
+                this.result.size()[0]
+            );
+        }
         const labels: string[] = [];
         this.result.forEach((value, i) => {
-            probabilities.push(value * 100);
+            if (sampleSize === undefined && measurements === undefined) {
+                probabilities.push(value * 100);
+            }
             // index should be number[] but it seems to be typed incorrectly as number
             const label: number = this.getNumber(i);
             const bitString: string = this.indexToBitstring(label);
