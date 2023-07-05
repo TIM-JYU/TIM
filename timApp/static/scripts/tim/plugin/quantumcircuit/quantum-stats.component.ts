@@ -2,7 +2,6 @@ import type {
     AfterViewInit,
     OnChanges,
     OnInit,
-    PipeTransform,
     SimpleChanges,
 } from "@angular/core";
 import {
@@ -12,22 +11,9 @@ import {
     Output,
     ViewChild,
     ElementRef,
-    Pipe,
 } from "@angular/core";
 import type {Measurement} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {ChartData, ChartOptions} from "chart.js";
-
-/**
- * Turns a list of measurement objects into multiline string format to be added into a textarea.
- */
-@Pipe({name: "measurementsFormat"})
-export class MeasurementsPipe implements PipeTransform {
-    transform(measurements: Measurement[]) {
-        return measurements
-            .map((m) => `Input: ${m.input}; Output: ${m.output}`)
-            .join("\n");
-    }
-}
 
 /**
  * Data for the chart.

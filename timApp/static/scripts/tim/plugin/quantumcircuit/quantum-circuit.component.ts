@@ -29,10 +29,7 @@ import {
     RangePipe,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
-import {
-    MeasurementsPipe,
-    QuantumStatsComponent,
-} from "tim/plugin/quantumcircuit/quantum-stats.component";
+import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {NgChartsModule} from "ng2-charts";
 import {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
 import {
@@ -107,6 +104,9 @@ const QuantumCircuitFields = t.intersection([
     t.type({}),
 ]);
 
+/**
+ * Colors to use for UI elements.
+ */
 export interface Colors {
     dark: string;
     medium: string;
@@ -329,6 +329,9 @@ export class QuantumCircuitComponent
         }
     }
 
+    /**
+     * Sample and add a new measurement to beginning of measurements.
+     */
     handleMeasure() {
         const measurement = this.simulator.sample();
         if (!measurement) {
@@ -479,7 +482,6 @@ export class QuantumCircuitComponent
         QuantumToolboxComponent,
         QuantumCircuitBoardComponent,
         QuantumStatsComponent,
-        MeasurementsPipe,
         InstanceofPipe,
         RangePipe,
     ],
