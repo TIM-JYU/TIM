@@ -119,6 +119,19 @@ export class GateService {
     }
 
     /**
+     * Get number of qubits this gate takes.
+     * @param name name of gate to get size for
+     */
+    getGateSize(name: string) {
+        const gate = this.gateNameToMatrix.get(name);
+        if (!gate) {
+            return 1;
+        }
+        const sideLength = gate.size()[0];
+        return Math.floor(Math.log2(sideLength));
+    }
+
+    /**
      * Replaces default set of gates with user defined ones.
      * @param gateNames names of gates to use from default set of gates
      * @param customGates gates defined by user
@@ -128,19 +141,16 @@ export class GateService {
         customGates: {name: string; matrix: string}[]
     ) {
         // don't override default ones if user didn't provide their owns
-        if (gateNames.length === 0) {
-            return;
-        }
-
-        this.gates = [];
-
-        for (const gateName of gateNames) {
-            const m = this.gateNameToMatrix.get(gateName);
-            if (m) {
-                this.gates.push({
-                    name: gateName,
-                    matrix: m,
-                });
+        if (gateNames.length > 0) {
+            this.gates = [];
+            for (const gateName of gateNames) {
+                const m = this.gateNameToMatrix.get(gateName);
+                if (m) {
+                    this.gates.push({
+                        name: gateName,
+                        matrix: m,
+                    });
+                }
             }
         }
 
@@ -151,10 +161,6 @@ export class GateService {
             );
             if (parsedCustomGate) {
                 this.gates.push(parsedCustomGate);
-                this.gateNameToMatrix.set(
-                    parsedCustomGate.name,
-                    parsedCustomGate.matrix
-                );
             }
         }
 

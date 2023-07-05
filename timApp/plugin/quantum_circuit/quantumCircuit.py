@@ -1,4 +1,5 @@
 from dataclasses import dataclass, asdict
+from typing import Union
 
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
@@ -16,14 +17,37 @@ quantum_circuit_plugin = TypedBlueprint(
 
 
 @dataclass
-class GateType:
+class SingleOrMultiQubitGateInfo:
     name: str
-    target: int
     time: int
-    controls: list[int] | None = None
+    target: int
 
     def to_json(self) -> dict:
         return asdict(self)
+
+
+@dataclass
+class SwapGateInfo:
+    time: int
+    swap1: int
+    swap2: int
+
+    def to_json(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class ControlGateInfo:
+    name: str
+    time: int
+    target: int
+    controls: list[int]
+
+    def to_json(self) -> dict:
+        return asdict(self)
+
+
+GateInfo = Union[SingleOrMultiQubitGateInfo, SwapGateInfo, ControlGateInfo]
 
 
 @dataclass
@@ -48,7 +72,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     samplingMode: str | None = None
     nSamples: int | None = None
 
-    initialCircuit: list[GateType] | None = None
+    initialCircuit: list[GateInfo] | None = None
     customGates: list[CustomGateInfo] | None = None
     gates: list[str] | None = None
 

@@ -35,6 +35,7 @@ import {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulat
 import {
     Control,
     Gate,
+    MultiQubitGate,
     QuantumBoard,
 } from "tim/plugin/quantumcircuit/quantum-board";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -61,15 +62,38 @@ export interface Measurement {
     output: string;
 }
 
-/**
- * Name, target, time and optionally a list of controls.
- */
-const GateInfo = t.type({
+const ControlGateInfo = t.type({
     name: t.string,
-    target: t.number,
     time: t.number,
-    controls: nullable(t.array(t.number)),
+    target: t.number,
+    controls: t.array(t.number),
 });
+
+/**
+ * Assume that multi-qubit gate uses qubits starting from target until it's size is matched.
+ */
+const SingleOrMultiQubitGateInfo = t.type({
+    name: t.string,
+    time: t.number,
+    target: t.number,
+});
+
+const SwapGateInfo = t.type({
+    time: t.number,
+    swap1: t.number,
+    swap2: t.number,
+});
+
+const GateInfo = t.union([
+    SingleOrMultiQubitGateInfo,
+    SwapGateInfo,
+    ControlGateInfo,
+]);
+
+type IGateInfo = t.TypeOf<typeof GateInfo>;
+type ISingleOrMultiQubitGateInfo = t.TypeOf<typeof SingleOrMultiQubitGateInfo>;
+type ISwapGateInfo = t.TypeOf<typeof SwapGateInfo>;
+type IControlGateInfo = t.TypeOf<typeof ControlGateInfo>;
 
 const CustomGateInfo = t.type({
     name: t.string,
@@ -398,27 +422,54 @@ export class QuantumCircuitComponent
         if (!this.markup.initialCircuit) {
             return;
         }
+
+        function isSwap(gate: IGateInfo): gate is ISwapGateInfo {
+            return "swap1" in gate;
+        }
+
+        function isControl(gate: IGateInfo): gate is IControlGateInfo {
+            return "controls" in gate;
+        }
+
+        function isSingleOrMultiQubit(
+            gate: IGateInfo
+        ): gate is ISingleOrMultiQubitGateInfo {
+            return !isSwap(gate) && !isControl(gate);
+        }
+
         for (const gateData of this.markup.initialCircuit) {
-            if (gateData.name === "swap") {
-                if (gateData.controls && gateData.controls.length === 1) {
-                    this.board.addSwap(
+            if (isSwap(gateData)) {
+                this.board.addSwap(
+                    {target: gateData.swap1, time: gateData.time},
+                    {
+                        target: gateData.swap2,
+                        time: gateData.time,
+                    }
+                );
+            } else if (isControl(gateData)) {
+                const gate = new Gate(gateData.name);
+                this.board.set(gateData.target, gateData.time, gate);
+                for (const controlTarget of gateData.controls) {
+                    const control = new Control(gateData.target);
+                    this.board.set(controlTarget, gateData.time, control);
+                }
+            } else if (isSingleOrMultiQubit(gateData)) {
+                const size = this.gateService.getGateSize(gateData.name);
+                if (size > 1) {
+                    const gate = new MultiQubitGate(gateData.name, size);
+                    this.board.addMultiQubitGate(
                         {target: gateData.target, time: gateData.time},
-                        {
-                            target: gateData.controls[0],
-                            time: gateData.time,
-                        }
+                        gate
+                    );
+                } else {
+                    const gate = new Gate(gateData.name);
+                    this.board.addGate(
+                        {target: gateData.target, time: gateData.time},
+                        gate
                     );
                 }
             } else {
-                const gate = new Gate(gateData.name);
-                this.board.set(gateData.target, gateData.time, gate);
-                if (!gateData.controls) {
-                    continue;
-                }
-                for (const controlData of gateData.controls) {
-                    const control = new Control(gateData.target);
-                    this.board.set(controlData, gateData.time, control);
-                }
+                console.log("missing type", gateData);
             }
         }
     }
@@ -483,7 +534,7 @@ export class QuantumCircuitComponent
         await timeout();
         // Compute sizes for board cells based on available space and number of cells
         const baseSize =
-            this.qcContainer.nativeElement.offsetWidth / (this.nMoments + 4);
+            this.qcContainer.nativeElement.clientWidth / (this.nMoments + 4);
         const gateSize = (2 / 3) * baseSize;
 
         const useBraket = this.markup.qubitNotation === "braket";

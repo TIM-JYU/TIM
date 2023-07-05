@@ -11,6 +11,32 @@ export class Gate {
     }
 }
 
+export class MultiQubitGate {
+    name: string;
+    size: number;
+
+    constructor(name: string, size: number) {
+        this.name = name;
+        this.size = size;
+    }
+
+    toString() {
+        return this.name;
+    }
+}
+
+export class MultiQubitGateCell {
+    target: number;
+
+    constructor(target: number) {
+        this.target = target;
+    }
+
+    toString() {
+        return "";
+    }
+}
+
 export class Control {
     target: number;
 
@@ -65,12 +91,29 @@ export class QuantumBoard {
     }
 
     /**
-     * Adds new gate on board. Removes gates that are connected to previous gate at that location.
+     * Adds new gate on board. Also removes gates that are connected to previous gate at that location.
      * @param pos position to put gate in
      * @param gate gate to put add
      */
     addGate(pos: GatePos, gate: Gate) {
         this.set(pos.target, pos.time, gate);
+    }
+
+    /**
+     * Adds new multi-qubit gate on board. Removes gates that are connected to previous gate at that
+     * location or ones under it that will be also occupied by this gate.
+     * @param pos position of first qubit this gate should occupy
+     * @param gate gate to add
+     */
+    addMultiQubitGate(pos: GatePos, gate: MultiQubitGate) {
+        this.set(pos.target, pos.time, gate);
+        for (let i = 0; i < gate.size - 1; i++) {
+            this.set(
+                pos.target + i + 1,
+                pos.time,
+                new MultiQubitGateCell(pos.target)
+            );
+        }
     }
 
     /**
