@@ -146,6 +146,7 @@ export interface CircuitStyleOptions {
                         [qubits]="qubits"
                         [qubitOutputs]="qubitOutputs"
                         [circuitStyleOptions]="circuitStyleOptions"
+                        [showOutputBits]="showOutputBits"
                         (qubitChange)="handleQubitChange($event)"
                         (gateDrop)="handleGateDrop($event)"
                         (gateMove)="handleGateMove($event)"
@@ -158,6 +159,8 @@ export interface CircuitStyleOptions {
                 <tim-quantum-stats [measurements]="measurements"
                                    [quantumChartData]="quantumChartData"
                                    [nQubits]="nQubits"
+                                   [showChart]="showChart"
+                                   [showPrintField]="showPrintField"
                                    (clear)="handleClearMeasurements()"
                                    (measure)="handleMeasure()">
                 </tim-quantum-stats>
@@ -220,6 +223,18 @@ export class QuantumCircuitComponent
 
     get nMoments() {
         return this.markup.nMoments;
+    }
+
+    get showChart() {
+        return this.markup.showChart;
+    }
+
+    get showPrintField() {
+        return this.markup.showPrintField;
+    }
+
+    get showOutputBits() {
+        return this.markup.showOutputBits;
     }
 
     /**

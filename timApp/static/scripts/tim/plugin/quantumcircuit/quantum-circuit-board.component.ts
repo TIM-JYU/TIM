@@ -276,7 +276,7 @@ export class RangePipe implements PipeTransform {
                     <img alt="measurement icon" src="/static/images/quantum-measurement.svg"
                          [style.height.px]="circuitStyleOptions.gateSize"
                          [style.width.px]="circuitStyleOptions.gateSize"/>
-                    <button class="output-value">{{output.value}}</button>
+                    <button *ngIf="showOutputBits" class="output-value">{{output.value}}</button>
                 </div>
             </div>
 
@@ -317,6 +317,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
     @Input()
     qubitOutputs!: QubitOutput[];
+
+    @Input()
+    showOutputBits: boolean = true;
 
     @Output()
     qubitChange = new EventEmitter<number>();

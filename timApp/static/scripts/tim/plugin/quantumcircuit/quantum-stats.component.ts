@@ -28,7 +28,7 @@ export interface QuantumChartData {
     selector: "tim-quantum-stats",
     template: `
         <div class="stats-container">
-            <div class="chart">
+            <div class="chart" *ngIf="showChart">
                 <div class="chart-inner" #chartInnerElement>
                     <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions" [data]="chartData"></canvas>
                 </div>
@@ -36,7 +36,7 @@ export interface QuantumChartData {
 
             <div class="output-container">
 
-                <div class="output-print">
+                <div class="output-print" *ngIf="showPrintField">
                     <table #outputTable class="output-table">
                         <thead>
                         <tr>
@@ -56,12 +56,12 @@ export interface QuantumChartData {
                     </table>
                 </div>
 
-                <div class="buttons">
+                <div class="buttons" *ngIf="showPrintField">
                     <button class="timButton" (click)="handleMeasure()">Mittaa</button>
                     <button class="timButton" (click)="handleClear()">Tyhjennä</button>
                 </div>
 
-                <label class="font-weight-normal">
+                <label class="font-weight-normal" *ngIf="showChart">
                     <input type="checkbox" [(ngModel)]="hideZeroRows" (ngModelChange)="updateChart()"/>
                     Piilota 0% rivit
                 </label>
@@ -74,14 +74,11 @@ export interface QuantumChartData {
 export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     hideZeroRows: boolean = false;
 
-    @ViewChild("chartCanvas")
-    chartCanvas!: ElementRef<HTMLCanvasElement>;
-
     @ViewChild("chartInnerElement")
-    chartInner!: ElementRef<HTMLDivElement>;
+    chartInner?: ElementRef<HTMLDivElement>;
 
     @ViewChild("outputTable")
-    table!: ElementRef<HTMLTableElement>;
+    table?: ElementRef<HTMLTableElement>;
 
     chartData!: ChartData<"bar", number[]>;
 
@@ -114,6 +111,12 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
         labels: [],
         probabilities: [],
     };
+
+    @Input()
+    showChart: boolean = true;
+
+    @Input()
+    showPrintField: boolean = true;
 
     @Input()
     nQubits!: number;
@@ -180,11 +183,16 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     }
 
     ngAfterViewInit(): void {
-        this.updateChart();
+        if (this.showChart) {
+            this.updateChart();
+        }
         const charWidth = 12;
-        // | "# " | nQubits chars | nQubits chars |
-        const tableWidth = 2 * charWidth + 2 * charWidth * this.nQubits;
-        this.table.nativeElement.style.width = `${tableWidth}px`;
+
+        if (this.table) {
+            // | "# " | nQubits chars | nQubits chars |
+            const tableWidth = 2 * charWidth + 2 * charWidth * this.nQubits;
+            this.table.nativeElement.style.width = `${tableWidth}px`;
+        }
     }
 
     /**
@@ -193,7 +201,7 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
      */
     ngOnChanges(changes: SimpleChanges): void {
         const chartChange = changes.quantumChartData;
-        if (chartChange) {
+        if (chartChange && this.showChart) {
             this.updateChart();
         }
     }
