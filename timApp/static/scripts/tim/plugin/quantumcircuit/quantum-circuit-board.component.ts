@@ -100,7 +100,6 @@ export class RangePipe implements PipeTransform {
                 </div>
             </div>
 
-
             <div class="circuit-right-container">
                 <div class="moments">
                     <div class="moment" *ngFor="let i of board.nMoments | range"

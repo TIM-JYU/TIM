@@ -16,7 +16,12 @@ import {
 } from "mathjs";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import type {Cell, QuantumBoard} from "tim/plugin/quantumcircuit/quantum-board";
-import {Control, Gate, Swap} from "tim/plugin/quantumcircuit/quantum-board";
+import {
+    Control,
+    Gate,
+    MultiQubitGate,
+    Swap,
+} from "tim/plugin/quantumcircuit/quantum-board";
 import type {GateService} from "tim/plugin/quantumcircuit/gate.service";
 
 export class QuantumCircuitSimulator {
@@ -34,7 +39,7 @@ export class QuantumCircuitSimulator {
     }
 
     private getCellMatrix(cell: Cell) {
-        if (cell instanceof Gate) {
+        if (cell instanceof Gate || cell instanceof MultiQubitGate) {
             const firstGateMatrix = this.gateService.getMatrix(cell.name);
             if (firstGateMatrix) {
                 return firstGateMatrix;
@@ -88,18 +93,28 @@ export class QuantumCircuitSimulator {
     }
 
     /**
-     * Takes all 2x2 gates in row and makes a matrix out of them.
+     * Takes all single and multiqubit gates in column and makes a matrix out of them.
      * @param gateControls controls for each qubit at given time
      * @param colI time
      */
-    private buildColumnFromSingleGates(gateControls: number[][], colI: number) {
+    private buildColumnFromAdjacentGates(
+        gateControls: number[][],
+        colI: number
+    ) {
         let columnMatrix;
-        for (let i = 0; i < gateControls.length; i++) {
+        let i = 0;
+        while (i < gateControls.length) {
             const cell = this.board.get(i, colI);
             let gateMatrix = this.gateService.identityMatrix;
 
             if (cell instanceof Gate && gateControls[i].length === 0) {
-                gateMatrix = this.getCellMatrix(this.board.get(i, colI));
+                gateMatrix = this.getCellMatrix(cell);
+                i++;
+            } else if (cell instanceof MultiQubitGate) {
+                gateMatrix = this.getCellMatrix(cell);
+                i += cell.size;
+            } else {
+                i++;
             }
 
             if (columnMatrix) {
@@ -108,6 +123,7 @@ export class QuantumCircuitSimulator {
                 columnMatrix = gateMatrix;
             }
         }
+
         return columnMatrix;
     }
 
@@ -215,7 +231,7 @@ export class QuantumCircuitSimulator {
      */
     private applyColumnMatrix(colI: number, output: Matrix) {
         const gateControls = this.getGateControls(colI);
-        let result = this.buildColumnFromSingleGates(gateControls, colI);
+        let result = this.buildColumnFromAdjacentGates(gateControls, colI);
         if (!result) {
             return undefined;
         }

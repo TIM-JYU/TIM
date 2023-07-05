@@ -339,7 +339,15 @@ export class QuantumCircuitComponent
         } else if (gate.name === "swap") {
             this.board.addSwap(gate);
         } else {
-            this.board.addGate(gate, new Gate(gate.name));
+            const size = this.gateService.getGateSize(gate.name);
+            if (size > 1) {
+                this.board.addMultiQubitGate(
+                    gate,
+                    new MultiQubitGate(gate.name, size)
+                );
+            } else {
+                this.board.addGate(gate, new Gate(gate.name));
+            }
         }
 
         this.selectedGate = null;

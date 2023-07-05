@@ -57,7 +57,13 @@ export class Swap {
     }
 }
 
-export type Cell = Gate | Control | Swap | undefined;
+export type Cell =
+    | Gate
+    | Control
+    | Swap
+    | MultiQubitGate
+    | MultiQubitGateCell
+    | undefined;
 
 /**
  * Quatum circuit board containing information about gates in circuit.
