@@ -93,7 +93,7 @@ export class QuantumCircuitSimulator {
     }
 
     /**
-     * Takes all single and multiqubit gates in column and makes a matrix out of them.
+     * Takes all single and multi-qubit gates in column and makes a matrix out of them.
      * @param gateControls controls for each qubit at given time
      * @param colI time
      */
@@ -290,7 +290,7 @@ export class QuantumCircuitSimulator {
     }
 
     /**
-     * Transforms bit into corresponding qubit state.
+     * Transforms a bit into corresponding qubit state.
      * @param value bit value either 0 or 1
      */
     private bitToVector(value: number) {

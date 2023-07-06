@@ -100,6 +100,8 @@ const CustomGateInfo = t.type({
     matrix: t.string,
 });
 
+export type ICustomGateInfo = t.TypeOf<typeof CustomGateInfo>;
+
 // All settings that are defined in the plugin markup YAML
 const QuantumCircuitMarkup = t.intersection([
     t.partial({
@@ -193,6 +195,7 @@ export interface CircuitStyleOptions {
         </div>
     `,
     styleUrls: ["./quantum-circuit.component.scss"],
+    providers: [GateService],
 })
 export class QuantumCircuitComponent
     extends AngularPluginBase<
@@ -423,6 +426,18 @@ export class QuantumCircuitComponent
         this.collectStats();
     }
 
+    isSwap(gate: IGateInfo): gate is ISwapGateInfo {
+        return "swap1" in gate;
+    }
+
+    isControl(gate: IGateInfo): gate is IControlGateInfo {
+        return "controls" in gate;
+    }
+
+    isSingleOrMultiQubit(gate: IGateInfo): gate is ISingleOrMultiQubitGateInfo {
+        return !this.isSwap(gate) && !this.isControl(gate);
+    }
+
     /**
      * Add gates from initialCircuit to board.
      */
@@ -431,22 +446,8 @@ export class QuantumCircuitComponent
             return;
         }
 
-        function isSwap(gate: IGateInfo): gate is ISwapGateInfo {
-            return "swap1" in gate;
-        }
-
-        function isControl(gate: IGateInfo): gate is IControlGateInfo {
-            return "controls" in gate;
-        }
-
-        function isSingleOrMultiQubit(
-            gate: IGateInfo
-        ): gate is ISingleOrMultiQubitGateInfo {
-            return !isSwap(gate) && !isControl(gate);
-        }
-
         for (const gateData of this.markup.initialCircuit) {
-            if (isSwap(gateData)) {
+            if (this.isSwap(gateData)) {
                 this.board.addSwap(
                     {target: gateData.swap1, time: gateData.time},
                     {
@@ -454,14 +455,14 @@ export class QuantumCircuitComponent
                         time: gateData.time,
                     }
                 );
-            } else if (isControl(gateData)) {
+            } else if (this.isControl(gateData)) {
                 const gate = new Gate(gateData.name);
                 this.board.set(gateData.target, gateData.time, gate);
                 for (const controlTarget of gateData.controls) {
                     const control = new Control(gateData.target);
                     this.board.set(controlTarget, gateData.time, control);
                 }
-            } else if (isSingleOrMultiQubit(gateData)) {
+            } else if (this.isSingleOrMultiQubit(gateData)) {
                 const size = this.gateService.getGateSize(gateData.name);
                 if (size > 1) {
                     const gate = new MultiQubitGate(gateData.name, size);
@@ -496,8 +497,8 @@ export class QuantumCircuitComponent
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
 
         this.gateService.registerUserDefinedGates(
-            this.markup.gates ?? [],
-            this.markup.customGates ?? []
+            this.markup.gates,
+            this.markup.customGates
         );
 
         this.addInitialGates();

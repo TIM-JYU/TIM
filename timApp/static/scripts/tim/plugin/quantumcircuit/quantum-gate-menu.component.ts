@@ -9,7 +9,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
     template: `
         <!--suppress HtmlUnknownAttribute -->
 
-        <div class="gate-container">
+        <div class="gate-container" *ngIf="gates.length > 0">
             <p class="gate-container-heading">Portit</p>
 
             <div class="gate-list">
@@ -68,7 +68,9 @@ export class QuantumGateMenuComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.gateService.getGates().subscribe((gates) => (this.gates = gates));
+        this.gateService
+            .getMenuGates()
+            .subscribe((gates) => (this.gates = gates));
     }
 
     /**

@@ -12,15 +12,15 @@ import {
     Matrix,
 } from "mathjs";
 import {of} from "rxjs";
+import type {ICustomGateInfo} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 export interface Gate {
     name: string;
     matrix: Matrix;
+    hidden: boolean;
 }
 
-@Injectable({
-    providedIn: "root",
-})
+@Injectable()
 export class GateService {
     gates: Gate[] = [];
     gateNameToMatrix: Map<string, Matrix> = new Map();
@@ -74,34 +74,42 @@ export class GateService {
             {
                 name: "H",
                 matrix: H,
+                hidden: false,
             },
             {
                 name: "X",
                 matrix: X,
+                hidden: false,
             },
             {
                 name: "Y",
                 matrix: Y,
+                hidden: false,
             },
             {
                 name: "Z",
                 matrix: Z,
+                hidden: false,
             },
             {
                 name: "S",
                 matrix: S,
+                hidden: false,
             },
             {
                 name: "T",
                 matrix: T,
+                hidden: false,
             },
             {
                 name: "swap",
                 matrix: this.swapMatrix,
+                hidden: false,
             },
             {
                 name: "control",
                 matrix: this.identityMatrix,
+                hidden: false,
             },
         ];
 
@@ -110,8 +118,11 @@ export class GateService {
         }
     }
 
-    getGates() {
-        return of(this.gates);
+    /**
+     * Get gates to be shown in menu to user.
+     */
+    getMenuGates() {
+        return of(this.gates.filter((g) => !g.hidden));
     }
 
     getMatrix(name: string) {
@@ -131,42 +142,46 @@ export class GateService {
         return Math.floor(Math.log2(sideLength));
     }
 
-    /**
-     * Replaces default set of gates with user defined ones.
-     * @param gateNames names of gates to use from default set of gates
-     * @param customGates gates defined by user
-     */
-    registerUserDefinedGates(
-        gateNames: string[],
-        customGates: {name: string; matrix: string}[]
-    ) {
-        // don't override default ones if user didn't provide their owns
-        if (gateNames.length > 0) {
-            this.gates = [];
-            for (const gateName of gateNames) {
-                const m = this.gateNameToMatrix.get(gateName);
-                if (m) {
-                    this.gates.push({
-                        name: gateName,
-                        matrix: m,
-                    });
-                }
-            }
-        }
-
+    private registerCustomGates(customGates: ICustomGateInfo[]) {
         for (const customGate of customGates) {
             const parsedCustomGate = this.parseCustomGate(
                 customGate.name,
                 customGate.matrix
             );
             if (parsedCustomGate) {
-                this.gates.push(parsedCustomGate);
+                this.gates.push({
+                    name: parsedCustomGate.name,
+                    matrix: parsedCustomGate.matrix,
+                    hidden: false,
+                });
+                this.gateNameToMatrix.set(
+                    parsedCustomGate.name,
+                    parsedCustomGate.matrix
+                );
             }
         }
+    }
 
-        this.gateNameToMatrix = new Map<string, Matrix>();
-        for (const gate of this.gates) {
-            this.gateNameToMatrix.set(gate.name, gate.matrix);
+    /**
+     * Adds user defined gates.
+     * @param gateNames names of gates to show in menu
+     * @param customGates self defined gates
+     */
+    registerUserDefinedGates(
+        gateNames: string[] | null | undefined,
+        customGates: ICustomGateInfo[] | null | undefined
+    ) {
+        if (customGates) {
+            this.registerCustomGates(customGates);
+        }
+
+        // set which ones are visible in menu
+        if (gateNames !== undefined && gateNames !== null) {
+            const menuSet = new Set(gateNames);
+            for (const gate of this.gates) {
+                const visibleInMenu = menuSet.has(gate.name);
+                gate.hidden = !visibleInMenu;
+            }
         }
     }
 
