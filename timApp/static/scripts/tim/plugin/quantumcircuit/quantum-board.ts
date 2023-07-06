@@ -272,17 +272,12 @@ export class QuantumBoard {
         }
     }
 
-    private getMultiQubitGateCells(target: number, time: number) {
-        const cells = [];
-        for (let i = 0; i < this.board.length; i++) {
-            const cell = this.board[i][time];
-            if (cell instanceof MultiQubitGateCell && cell.target === target) {
-                cells.push(i);
-            }
-        }
-        return cells;
-    }
-
+    /**
+     * Moves multi-qubit gate if there's room for its full size.
+     * @param oldPos position to move the gate from
+     * @param newPos position to move the gate to
+     * @param gate the multi-qubit gate
+     */
     private moveMultiQubitGate(
         oldPos: GatePos,
         newPos: GatePos,
@@ -292,11 +287,10 @@ export class QuantumBoard {
         if (newPos.target + gate.size > this.board.length) {
             return;
         }
-        const cells = this.getMultiQubitGateCells(oldPos.target, oldPos.time);
         this.remove(oldPos.target, oldPos.time);
         this.set(newPos.target, newPos.time, gate);
-        for (const cell of cells) {
-            this.set(cell, newPos.time, new MultiQubitGateCell(newPos.target));
+        for (let i = newPos.target + 1; i < newPos.target + gate.size; i++) {
+            this.set(i, newPos.time, new MultiQubitGateCell(newPos.target));
         }
     }
 
