@@ -219,7 +219,7 @@ export class RangePipe implements PipeTransform {
                                   [attr.font-size]="circuitStyleOptions.gateSize / 2"
                                   dominant-baseline="central" text-anchor="middle">X
                             </text>
-                            
+
                             <!-- MultiQubit gate -->
                             <rect *ngIf="!isBeingDragged(i, j) && gate|instanceof: MultiQubitGate as g"
                                   [class.selected-gate]="selectedGate && i === selectedGate.target && j === selectedGate.time"
@@ -228,7 +228,7 @@ export class RangePipe implements PipeTransform {
                                   [attr.x]="j * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
                                   [attr.y]="i * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
                                   [attr.width]="circuitStyleOptions.gateSize"
-                                  [attr.height]="circuitStyleOptions.baseSize * g.size - (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
+                                  [attr.height]="circuitStyleOptions.baseSize * g.size - (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize)"
                                   [attr.rx]="circuitStyleOptions.gateBorderRadius"
                                   [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
                             <text *ngIf="!isBeingDragged(i, j) && gate|instanceof: MultiQubitGate as g"
@@ -282,6 +282,24 @@ export class RangePipe implements PipeTransform {
                               [attr.font-size]="circuitStyleOptions.gateSize / 2"
                               dominant-baseline="central" text-anchor="middle">X
                         </text>
+
+                        <!-- MultiQubit gate -->
+                        <rect *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: MultiQubitGate as g"
+                              class="gate"
+                              [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
+                              [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
+                              [attr.width]="circuitStyleOptions.gateSize"
+                              [attr.height]="circuitStyleOptions.baseSize * g.size - (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize)"
+                              [attr.rx]="circuitStyleOptions.gateBorderRadius"
+                              [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
+                        <text
+                                *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: MultiQubitGate as g"
+                                class="gate-text"
+                                [attr.x]="(gateBeingDragged.gate.time * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
+                                [attr.y]="(gateBeingDragged.gate.target * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
+                                dominant-baseline="middle"
+                                text-anchor="middle"
+                                [attr.stroke]="colors.dark">{{g.name}}</text>
                     </g>
 
 

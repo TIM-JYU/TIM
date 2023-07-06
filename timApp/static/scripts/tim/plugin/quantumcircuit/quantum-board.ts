@@ -66,7 +66,7 @@ export type Cell =
     | undefined;
 
 /**
- * Quatum circuit board containing information about gates in circuit.
+ * Quantum circuit board containing information about gates in circuit.
  */
 export class QuantumBoard {
     board: Cell[][];
@@ -112,6 +112,10 @@ export class QuantumBoard {
      * @param gate gate to add
      */
     addMultiQubitGate(pos: GatePos, gate: MultiQubitGate) {
+        // would go out of bounds
+        if (pos.target + gate.size > this.board.length) {
+            return;
+        }
         this.set(pos.target, pos.time, gate);
         for (let i = 0; i < gate.size - 1; i++) {
             this.set(
@@ -156,7 +160,7 @@ export class QuantumBoard {
 
     /**
      * Moves gate from position to another.
-     * If times doesn't change then try to reconnect controls.
+     * If time doesn't change then try to reconnect controls.
      * @param oldPos position to move from
      * @param newPos position to move to
      * @param gate gate to move
@@ -268,6 +272,34 @@ export class QuantumBoard {
         }
     }
 
+    private getMultiQubitGateCells(target: number, time: number) {
+        const cells = [];
+        for (let i = 0; i < this.board.length; i++) {
+            const cell = this.board[i][time];
+            if (cell instanceof MultiQubitGateCell && cell.target === target) {
+                cells.push(i);
+            }
+        }
+        return cells;
+    }
+
+    private moveMultiQubitGate(
+        oldPos: GatePos,
+        newPos: GatePos,
+        gate: MultiQubitGate
+    ) {
+        // would go out of bounds
+        if (newPos.target + gate.size > this.board.length) {
+            return;
+        }
+        const cells = this.getMultiQubitGateCells(oldPos.target, oldPos.time);
+        this.remove(oldPos.target, oldPos.time);
+        this.set(newPos.target, newPos.time, gate);
+        for (const cell of cells) {
+            this.set(cell, newPos.time, new MultiQubitGateCell(newPos.target));
+        }
+    }
+
     /**
      * Moves cell from position to another.
      * @param oldPos
@@ -285,6 +317,10 @@ export class QuantumBoard {
             this.moveControl(oldPos, newPos, cell, target);
         } else if (cell instanceof Swap) {
             this.moveSwap(oldPos, newPos, cell);
+        } else if (cell instanceof MultiQubitGate) {
+            this.moveMultiQubitGate(oldPos, newPos, cell);
+        } else {
+            console.log("unhandled move case", cell);
         }
     }
 
@@ -390,11 +426,16 @@ export class QuantumBoard {
     }
 
     /**
-     * Removes gate from board and controls or swap pair associated with it.
+     * Removes gate from board and cells connected to it.
      * @param target target of gate to remove
      * @param time time of gate to remove
      */
     remove(target: number, time: number) {
+        let multiQubitTarget;
+        const multiQubitCell = this.board[target][time];
+        if (multiQubitCell instanceof MultiQubitGateCell) {
+            multiQubitTarget = multiQubitCell.target;
+        }
         this.board[target][time] = undefined;
 
         // remove connected gates in same column
@@ -407,6 +448,19 @@ export class QuantumBoard {
                 this.board[i][time] = undefined;
             }
             if (cell instanceof Swap && cell.target === target) {
+                this.board[i][time] = undefined;
+            }
+            if (cell instanceof MultiQubitGateCell && cell.target === target) {
+                this.board[i][time] = undefined;
+            }
+            if (multiQubitTarget !== undefined && i === multiQubitTarget) {
+                this.board[i][time] = undefined;
+            }
+            if (
+                multiQubitTarget !== undefined &&
+                cell instanceof MultiQubitGateCell &&
+                cell.target === multiQubitTarget
+            ) {
                 this.board[i][time] = undefined;
             }
         }
