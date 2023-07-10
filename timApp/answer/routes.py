@@ -2007,17 +2007,17 @@ def get_model_answer(task_id: str, answer_id: int | None = None) -> Response:
                     f"You need to attempt at least {model_answer_info.count} times before viewing the model answer"
                 )
         if (
-            model_answer_info.points is not None
-            and model_answer_info.points is not missing
+            model_answer_info.minPoints is not None
+            and model_answer_info.minPoints is not missing
         ):
             prev_ans = current_user.get_answers_for_task(tid.doc_task).first()
             if (
                 not prev_ans
                 or prev_ans.points is None
-                or prev_ans.points < model_answer_info.points
+                or prev_ans.points < model_answer_info.minPoints
             ):
                 raise AccessDenied(
-                    f"You need at least {model_answer_info.points} points from this task to view the model answer"
+                    f"You need at least {model_answer_info.minPoints} points from this task to view the model answer"
                 )
         if model_answer_info.lock:
             b = TaskBlock.get_by_task(tid.doc_task)

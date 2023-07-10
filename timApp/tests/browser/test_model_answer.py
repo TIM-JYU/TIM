@@ -153,14 +153,14 @@ modelAnswer:
  lock: true
  answer: Hello
  count: 0
- points: 0
+ minPoints: 0
 ````
 ```` {#nonepoints plugin="textfield"}
 modelAnswer:
  lock: true
  answer: Hello
  count: 0
- points: 
+ minPoints: 
 ````
 ```` {#missingpoints plugin="textfield"}
 modelAnswer:
