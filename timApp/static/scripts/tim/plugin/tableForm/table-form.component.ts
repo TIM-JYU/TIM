@@ -114,6 +114,7 @@ const TableFormMarkup = t.intersection([
         // runScripts: t.array(t.union([t.string, RunScriptModel])),
         runScripts: t.array(t.union([t.string, RunScriptModel])),
         dataView: nullable(DataViewSettingsType),
+        replyToEmail: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -279,6 +280,7 @@ const sortLang = "fi";
             <tim-message-send [(recipientList)]="recipientList"
                               [docId]="currentDocumentID()"
                               [storageKey]="this.taskIdFull"
+                              [replyToEmail]="markup['replyToEmail']"
             ></tim-message-send>
             <pre *ngIf="result">{{result}}</pre>
             <pre *ngIf="error" [innerHtml]="error"></pre>

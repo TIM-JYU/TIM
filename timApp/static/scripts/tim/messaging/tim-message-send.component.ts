@@ -214,6 +214,8 @@ export class TimMessageSendComponent {
     docId?: number;
     @Input()
     storageKey?: string;
+    @Input()
+    replyToEmail?: string | null;
     messageSubject: string = "";
     messageBody: string = "";
     showOptions: boolean = false;
@@ -440,6 +442,7 @@ export class TimMessageSendComponent {
                 msg: this.messageBody,
                 bccme: this.emailbccme,
                 replyall: this.timMessageOptions.replyAll,
+                reply_to: this.replyToEmail ?? null,
             })
         );
         if (!response.ok) {

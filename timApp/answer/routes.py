@@ -173,6 +173,7 @@ PointsType = Union[
     None,  # Clear points, only by teacher
 ]
 
+
 # TODO: loggable route (points in url?)
 @answers.put("/saveReview/<int(signed=True):user_id>/<task_id>")
 def save_review_points(
@@ -565,10 +566,14 @@ def multisendemail(
     msg: str,
     bccme: bool = False,
     replyall: bool = False,
+    reply_to: str | None = None,
 ) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_teacher_access(d)
     mail_from = get_current_user_object().email
+    reply_to_email = None
+    if not replyall:
+        reply_to_email = reply_to if reply_to else mail_from
     bcc = ""
     if bccme:
         bcc = mail_from
@@ -577,7 +582,7 @@ def multisendemail(
         subject=subject,
         msg=msg,
         mail_from=mail_from,
-        reply_to=mail_from if not replyall else None,
+        reply_to=reply_to_email,
         bcc=bcc,
         reply_all=replyall,
     )
