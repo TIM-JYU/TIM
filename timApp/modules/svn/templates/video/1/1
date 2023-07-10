@@ -1,0 +1,14 @@
+PDF link
+Link to open PDF file in an embedded PDF viewer
+``` {plugin="showPdf"}
+type: small
+iframe: true
+open: false
+videoicon: false
+videoname: "Open PDF file"
+hidetext: "Hide PDF viewer"
+doclink: null
+width: 800
+height: 600
+file: URLHERE
+```

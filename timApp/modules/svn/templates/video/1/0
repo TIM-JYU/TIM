@@ -1,0 +1,14 @@
+Embedded PDF viewer
+Basic embedded PDF viewer
+``` {plugin="showPdf"}
+type: small
+iframe: true
+open: true
+videoicon: false
+videoname: "Toggle PDF viewer"
+hidetext: "Hide PDF viewer"
+doctext: "(click here to PDF open in new tab)"
+width: 800
+height: 600
+file: URLHERE
+```
