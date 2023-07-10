@@ -90,6 +90,7 @@ class InfoModel:
     max_answers: int | None
     user_id: str
     valid: bool  # could be False e.g. if answering deadline has passed
+    show_points: bool
 
     @property
     def primary_user(self) -> str:

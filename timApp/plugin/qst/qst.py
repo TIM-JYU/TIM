@@ -707,7 +707,7 @@ def qst_try_hide_points(jso):
     limit_reached = get_num_value(info, "max_answers", 1) <= get_num_value(
         info, "earlier_answers", 0
     )
-    show_points = markup.get("showPoints", True)
+    show_points = info.get("show_points", True) if info is not None else True
     if not limit_reached or not show_points:
         markup.pop("points", None)
         markup.pop("expl", None)

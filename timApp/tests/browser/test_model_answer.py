@@ -245,3 +245,65 @@ modelAnswer:
         db.session.commit()
         self.get(f"/getModelAnswer/{d.id}.nonepoints")
         self.get(f"/getModelAnswer/{d.id}.missingpoints")
+
+    def test_model_answer_hidepoints(self):
+        self.login_test1()
+        self.login_browser_quick_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {#cs plugin="csPlugin"}
+type: text/tiny
+pointsRule:
+    expectCode: "1"
+modelAnswer:
+    answer: "1"
+    hidePoints: true
+```
+``` {#qst question="false" plugin="qst"}
+answerFieldType: radio
+expl: {}
+headers: []
+modelAnswer:
+    answer: "1"
+    hidePoints: true
+points: '1:1'
+questionText: ""
+questionTitle: ""
+questionType: radio-vertical
+rows:
+- "1"
+- "2"
+- "3"
+```
+
+        """
+        )
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        db.session.refresh(Block.query.get(d.block.id))
+        self.login_test2()
+        self.post_answer("csPlugin", f"{d.id}.cs", user_input={"usercode": "1"})
+        self.post_answer("qst", f"{d.id}.qst", user_input={"answers": [["1"]]})
+
+        def check_answers_for_points(taskid: str, visible: bool):
+            answers = self.get_task_answers(f"{d.id}.{taskid}", self.current_user)
+            if visible:
+                self.assertIsNotNone(answers[0]["points"])
+            else:
+                self.assertIsNone(answers[0]["points"])
+
+        check_answers_for_points("cs", False)
+        data = self.get(d.url_relative, as_tree=True)
+        json = self.get_plugin_json(data.cssselect(".parContent tim-qst")[0])
+        self.assertIsNone(json.get("markup").get("points"))
+        self.get(f"/getModelAnswer/{d.id}.cs")
+        self.get(f"/getModelAnswer/{d.id}.qst")
+        check_answers_for_points("cs", True)
+        data = self.get(d.url_relative, as_tree=True)
+        json = self.get_plugin_json(data.cssselect(".parContent tim-qst")[0])
+        self.assertIsNotNone(json.get("markup").get("points"))
+        d.document.set_settings({"global_plugin_attrs": {"all": {"showPoints": False}}})
+        check_answers_for_points("cs", False)
+        data = self.get(d.url_relative, as_tree=True)
+        json = self.get_plugin_json(data.cssselect(".parContent tim-qst")[0])
+        self.assertIsNone(json.get("markup").get("points"))

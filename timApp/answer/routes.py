@@ -1523,7 +1523,7 @@ def find_tim_vars(plugin: Plugin) -> dict:
         "maxPoints": plugin.max_points(),
         "userMin": plugin.user_min_points(),
         "userMax": plugin.user_max_points(),
-        "showPoints": plugin.show_points(),
+        "showPoints": plugin.known.show_points(),
         "deadline": plugin.deadline(),
         "starttime": plugin.starttime(),
         "answerLimit": plugin.answer_limit(),
@@ -1809,7 +1809,8 @@ def get_answers(task_id: str, user_id: int) -> Response:
         for answer in user_answers:
             for u in answer.users_all:
                 maybe_hide_name(d, u, model_u)
-    if p and not p.known.show_points() and not curr_user.has_teacher_access(d):
+    # TODO: if modelAnswer hides points then teacher access could be checked first to skip TaskBlock query
+    if p and not p.show_points() and not curr_user.has_teacher_access(d):
         user_answers = list(map(hide_points, user_answers))
     rights = get_user_rights_for_item(d, curr_user)
     if has_no_higher_right(d.document.get_settings().anonymize_reviewers(), rights):
@@ -1955,7 +1956,7 @@ def get_jsframe_data(task_id: str, user_id: str) -> Response:
 
 
 @answers.get("/getModelAnswer/<task_id>")
-def get_model_answer(task_id: str) -> Response:
+def get_model_answer(task_id: str, answer_id: int | None = None) -> Response:
     tid = TaskId.parse(task_id)
     d = get_doc_or_abort(tid.doc_id)
     verify_view_access(d)
@@ -2038,7 +2039,19 @@ def get_model_answer(task_id: str) -> Response:
     answer_html = md_to_html(
         model_answer_info.answer, dumbo_options=dumbo_opts, ignore_errors=True
     )
-    return json_response({"answer": answer_html})
+    points = None
+    if answer_id and plug.known.show_points():
+        try:
+            answer, _ = verify_answer_access(
+                answer_id,
+                current_user.id,
+                view_ctx,
+                allow_grace_period=True,
+            )
+        except PluginException as e:
+            raise RouteException(str(e))
+        points = answer.points
+    return json_response({"answer": answer_html, "points": points})
 
 
 @answers.get("/getState")

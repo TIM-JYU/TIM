@@ -338,6 +338,8 @@ export class AnswerBrowserComponent
         }
         this.showFeedback(args.topfeedback);
         this.loader.showFeedback(args.feedback);
+        console.log("sa", this.selectedAnswer);
+        console.log("la", this.loadedAnswer);
         this.cdr.detectChanges();
     }
 
@@ -1259,6 +1261,8 @@ export class AnswerBrowserComponent
     }
 
     async showModelAnswer() {
+        console.log("sa", this.selectedAnswer);
+        console.log("la", this.loadedAnswer);
         if (this.modelAnswerFetched) {
             this.modelAnswerVisible = !this.modelAnswerVisible;
             if (this.modelAnswerVisible && this.modelAnswerRef) {
@@ -1304,9 +1308,12 @@ export class AnswerBrowserComponent
         }
         this.loading++;
         const r = await to(
-            $http.get<{answer: string}>(this.getModelAnswerLink(), {
-                params: {...parParams},
-            })
+            $http.get<{answer: string; points?: number}>(
+                this.getModelAnswerLink(),
+                {
+                    params: {...parParams, answer_id: this.selectedAnswer?.id},
+                }
+            )
         );
         this.loading--;
         if (!r.ok) {
@@ -1316,6 +1323,11 @@ export class AnswerBrowserComponent
         if (this.modelAnswer?.lock) {
             this.modelAnswer.alreadyLocked = true;
             this.viewctrl.informAboutLock(this.taskId);
+        }
+        if (this.selectedAnswer) {
+            this.points = r.result.data.points;
+            this.selectedAnswer.points = r.result.data.points;
+            if (this.taskInfo) this.taskInfo.showPoints = true;
         }
         this.modelAnswerFetched = true;
         this.modelAnswerVisible = true;
