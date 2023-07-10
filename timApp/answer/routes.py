@@ -439,14 +439,15 @@ def get_useranswers_for_task(
         .group_by(Answer.task_id)
         .subquery()
     )
-    answs: list[Answer] = Answer.query.join(sub, Answer.id == sub.c.col).all()
+    answs: list[Answer] = (
+        Answer.query.join(sub, Answer.id == sub.c.col)
+        .options(joinedload(Answer.users_all))
+        .all()
+    )
     for answer in answs:
-        if len(answer.users_all) > 1:
-            answer_map[answer.task_id] = answer.to_json()
-        else:
-            asd = answer.to_json()
-            asd.pop("users")
-            answer_map[answer.task_id] = asd
+        asd = answer.to_json()
+        asd.pop("points", None)
+        answer_map[answer.task_id] = asd
     return answs
 
 
