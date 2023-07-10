@@ -7,7 +7,7 @@ open: true
 videoicon: false
 videoname: "Toggle PDF viewer"
 hidetext: "Hide PDF viewer"
-doctext: "(click here to PDF open in new tab)"
+doctext: "(click here to open the PDF in a new tab)"
 width: 800
 height: 600
 file: URLHERE

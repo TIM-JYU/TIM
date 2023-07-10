@@ -8,9 +8,8 @@ videoicon: false
 stem: "PDF file:"
 hidetext: Hide PDF
 videoname: "Open PDF viewer"
-doctext: "(click here to PDF open in new tab)"
+doctext: "(click here to open the PDF in a new tab)"
 width: 800
 height: 600
 file: URLHERE
-doclink: URLHERE
 ```
