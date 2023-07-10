@@ -176,8 +176,8 @@ const ShowFileAll = t.type({
                     {{duration}} {{span}}</a>
                 &ngsp;
                 <tim-video-link
-                        *ngIf="markup.doclink"
-                        [doclink]="markup.doclink"
+                        *ngIf="markup.doctext"
+                        [doclink]="markup.doclink ?? markup.file"
                         [doctext]="doctext"
                         [target]="markup.target"
                 ></tim-video-link>
@@ -229,8 +229,8 @@ const ShowFileAll = t.type({
                     </a>
                 </div>
                 <tim-video-link
-                        *ngIf="markup.doclink"
-                        [doclink]="markup.doclink"
+                        *ngIf="markup.doctext"
+                        [doclink]="markup.doclink ?? markup.file"
                         [doctext]="doctext"
                         [target]="markup.target"
                 ></tim-video-link>
