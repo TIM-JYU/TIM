@@ -1327,7 +1327,9 @@ export class AnswerBrowserComponent
         if (this.selectedAnswer) {
             this.points = r.result.data.points;
             this.selectedAnswer.points = r.result.data.points;
-            if (this.taskInfo) this.taskInfo.showPoints = true;
+            if (this.taskInfo) {
+                this.taskInfo.showPoints = true;
+            }
         }
         this.modelAnswerFetched = true;
         this.modelAnswerVisible = true;
