@@ -239,7 +239,10 @@ def qst_answer_jso(m: QstAnswerModel):
     jsonmarkup = m.markup.get_visible_data()
     convert_qst_md(jsonmarkup)  # TODO get mathtype from doc settings?
     save = answers
-    if not markup.show_points():
+    show_points = (
+        info.show_points if info is not None and info.show_points is not None else True
+    )
+    if not show_points:
         jsonmarkup.pop("expl", None)
         jsonmarkup.pop("points", None)
         jsonmarkup.pop("defaultPoints", None)
