@@ -74,6 +74,7 @@ Hi {#t3#} $x$
                 "max_answers": None,
                 "user_id": "testuser1",
                 "valid": True,
+                "show_points": True,
             },
             state=s,
         )
