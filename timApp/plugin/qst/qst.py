@@ -247,6 +247,10 @@ def qst_answer_jso(m: QstAnswerModel):
         jsonmarkup.pop("points", None)
         jsonmarkup.pop("defaultPoints", None)
 
+    # TODO: Qst sends entire plugin markup for building the ui
+    #  -> Should send only attributes used by qst ui
+    jsonmarkup.pop("modelAnswer", None)
+
     savedText = "Saved"  # markup.savedText or "Saved"
 
     web = {
