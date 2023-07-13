@@ -338,8 +338,6 @@ export class AnswerBrowserComponent
         }
         this.showFeedback(args.topfeedback);
         this.loader.showFeedback(args.feedback);
-        console.log("sa", this.selectedAnswer);
-        console.log("la", this.loadedAnswer);
         this.cdr.detectChanges();
     }
 
@@ -1261,8 +1259,6 @@ export class AnswerBrowserComponent
     }
 
     async showModelAnswer() {
-        console.log("sa", this.selectedAnswer);
-        console.log("la", this.loadedAnswer);
         if (this.modelAnswerFetched) {
             this.modelAnswerVisible = !this.modelAnswerVisible;
             if (this.modelAnswerVisible && this.modelAnswerRef) {
