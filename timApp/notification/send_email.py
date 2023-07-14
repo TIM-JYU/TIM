@@ -116,10 +116,11 @@ def multi_send_email_impl(
                 try:
                     # TODO: Mailmerge here possible templates.
                     send_extra = ""
-                    send_to = (
-                        [*rcp, bccmail] if isinstance(rcp, list) else [rcp, bccmail]
-                    )
+                    send_to = rcp if isinstance(rcp, list) else [rcp]
                     send_to = [m for m in send_to if m]
+                    send_to_str = ",".join(send_to)
+                    if bccmail:
+                        send_to.append(bccmail)
                     if rcp == bcc:
                         send_extra = extra
                     mime_msg = MIMEText(
@@ -128,7 +129,7 @@ def multi_send_email_impl(
                     mime_msg["Subject"] = subject
                     mime_msg["From"] = mail_from
                     mime_msg["Bcc"] = bccmail
-                    mime_msg["To"] = ",".join(send_to)
+                    mime_msg["To"] = send_to_str
                     mime_msg["Date"] = formatdate(localtime=True)
                     if reply_to:
                         mime_msg.add_header("Reply-To", reply_to)

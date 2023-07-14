@@ -1,0 +1,15 @@
+PDF viewer (full example)
+Full example of embedding a PDF viewer
+``` {plugin="showPdf"}
+type: small
+iframe: true
+open: false
+videoicon: false
+stem: "PDF file:"
+hidetext: Hide PDF
+videoname: "Open PDF viewer"
+doctext: "(click here to open the PDF in a new tab)"
+width: 800
+height: 600
+file: URLHERE
+```
