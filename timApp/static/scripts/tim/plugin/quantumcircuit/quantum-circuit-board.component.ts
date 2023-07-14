@@ -17,10 +17,9 @@ import type {
     Qubit,
     QubitOutput,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import type {Cell} from "tim/plugin/quantumcircuit/quantum-board";
 import {
     Control,
-    Gate,
-    MultiQubitGate,
     QuantumBoard,
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
@@ -48,6 +47,13 @@ export interface GateDrop {
     time: number;
     target: number;
     name: string;
+}
+
+// gate that is currently being dragged
+export interface GateBeingDragged {
+    gate: GatePos;
+    offset: [number, number];
+    originalBounds: DOMRect;
 }
 
 // https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242
@@ -83,6 +89,45 @@ export class RangePipe implements PipeTransform {
     }
 }
 
+interface CellData {
+    cell: Cell;
+    target: number;
+    time: number;
+    chosen: boolean;
+}
+
+/**
+ * Get cells as flat array in correct order to be displayed in svg.
+ */
+@Pipe({
+    name: "cells",
+})
+export class CellPipe implements PipeTransform {
+    public transform(board: QuantumBoard, dragged?: GatePos): CellData[] {
+        const cells = [];
+        for (let i = 0; i < board.length; i++) {
+            for (let j = 0; j < board.board[i].length; j++) {
+                cells.push({
+                    target: i,
+                    time: j,
+                    cell: board.board[i][j],
+                    chosen: dragged?.target === i && dragged.time === j,
+                });
+            }
+        }
+        // empty cells first
+        cells.sort((a, b) => {
+            let av = a.cell === undefined ? 0 : 1;
+            let bv = b.cell === undefined ? 0 : 1;
+            av = a.chosen ? 2 : av;
+            bv = b.chosen ? 2 : bv;
+            return av - bv;
+        });
+
+        return cells;
+    }
+}
+
 @Component({
     selector: "tim-quantum-circuit-board",
     template: `
@@ -96,7 +141,7 @@ export class RangePipe implements PipeTransform {
                      class="qubit">
                     <div>{{qubit.name}}</div>
                     <button class="qubit-toggle-button"
-                            (click)="toggleQubit($event, i)">{{getQubitText(qubit)}}</button>
+                            (click)="toggleQubit($event, i)">{{qubit.text}}</button>
                 </div>
             </div>
 
@@ -124,27 +169,8 @@ export class RangePipe implements PipeTransform {
                           [attr.x2]="board.nMoments * circuitStyleOptions.baseSize"
                           [attr.y2]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"></line>
 
-                    <!-- empty gate placeholders-->
-                    <g *ngFor="let gates of board; let i=index">
-                        <g *ngFor="let gate of gates; let j=index"
-                           (drop)="handleDrop($event, i, j)"
-                           (dragover)="handleDragOver($event, i, j)"
-                           (dragleave)="handleDragLeave()"
-                           [attr.data-time]="j"
-                           [attr.data-target]="i"
-                           class="gate-drop">
-                            <rect [class.drag-over-element]="isBeingDraggedOver(i,j)" *ngIf="!gate"
-                                  [attr.x]="j * circuitStyleOptions.baseSize"
-                                  [attr.y]="i * circuitStyleOptions.baseSize"
-                                  [attr.width]="circuitStyleOptions.baseSize"
-                                  [attr.height]="circuitStyleOptions.baseSize"
-                                  [attr.fill]="colors.light" fill-opacity="0"
-                            />
-                        </g>
-                    </g>
-
                     <!-- wires -->
-                    <g *ngFor="let gates of board; let i=index">
+                    <g *ngFor="let gates of board.board; let i=index">
                         <g *ngFor="let gate of gates; let j=index">
                             <line *ngIf="gate|instanceof: Control as c"
                                   [attr.stroke]="colors.dark"
@@ -167,142 +193,24 @@ export class RangePipe implements PipeTransform {
                         </g>
                     </g>
 
-                    <!-- gates -->
-                    <g *ngFor="let gates of board; let i=index">
-                        <g *ngFor="let gate of gates; let j=index"
-                           (drop)="handleDrop($event, i, j)"
-                           (mousedown)="handleDragStart($event, i, j)"
-                           (touchstart)="handleDragStart($event, i, j)"
-                           (dragover)="handleDragOver($event, i, j)"
-                           (dragleave)="handleDragLeave()"
-                           [attr.data-time]="j"
-                           [attr.data-target]="i"
-                           class="gate-drop">
-
-                            <!-- normal gate-->
-                            <rect *ngIf="!isBeingDragged(i, j) && gate|instanceof: Gate as g"
-                                  [class.selected-gate]="selectedGate && i === selectedGate.target && j === selectedGate.time"
-                                  class="gate"
-                                  [class.drag-over-element]="isBeingDraggedOver(i,j)"
-                                  [attr.x]="j * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                                  [attr.y]="i * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                                  [attr.width]="circuitStyleOptions.gateSize"
-                                  [attr.height]="circuitStyleOptions.gateSize"
-                                  [attr.rx]="circuitStyleOptions.gateBorderRadius"
-                                  [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                            <text *ngIf="!isBeingDragged(i, j) && gate|instanceof: Gate as g"
-                                  class="gate-text"
-                                  [attr.x]="(j * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                                  [attr.y]="(i * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                                  dominant-baseline="middle"
-                                  text-anchor="middle"
-                                  [attr.stroke]="colors.dark">{{g.name}}</text>
-
-                            <!-- control gate -->
-                            <circle *ngIf="!isBeingDragged(i, j) && gate|instanceof: Control as c"
-                                    [class.selected-gate]="selectedGate && i === selectedGate.target && j === selectedGate.time"
-                                    class="gate"
-                                    [class.drag-over-element]="isBeingDraggedOver(i,j)"
-                                    [attr.cx]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                    [attr.cy]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                    [attr.r]="circuitStyleOptions.gateSize/4"
-                                    [attr.fill]="colors.dark" [attr.stroke]="colors.dark"/>
-
-                            <!-- Swap gate -->
-                            <text *ngIf="!isBeingDragged(i, j) && gate|instanceof: Swap as s"
-                                  [class.selected-gate]="selectedGate && i === selectedGate.target && j === selectedGate.time"
-                                  class="gate"
-                                  [class.drag-over-element]="isBeingDraggedOver(i, j)"
-                                  [attr.x]="j * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize / 2)"
-                                  [attr.y]="i * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize / 2)"
-                                  [attr.stroke]="colors.dark"
-                                  [attr.font-size]="circuitStyleOptions.gateSize / 2"
-                                  dominant-baseline="central" text-anchor="middle">X
-                            </text>
-
-                            <!-- MultiQubit gate -->
-                            <rect *ngIf="!isBeingDragged(i, j) && gate|instanceof: MultiQubitGate as g"
-                                  [class.selected-gate]="selectedGate && i === selectedGate.target && j === selectedGate.time"
-                                  class="gate"
-                                  [class.drag-over-element]="isBeingDraggedOver(i,j)"
-                                  [attr.x]="j * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                                  [attr.y]="i * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                                  [attr.width]="circuitStyleOptions.gateSize"
-                                  [attr.height]="circuitStyleOptions.baseSize * g.size - (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize)"
-                                  [attr.rx]="circuitStyleOptions.gateBorderRadius"
-                                  [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                            <text *ngIf="!isBeingDragged(i, j) && gate|instanceof: MultiQubitGate as g"
-                                  class="gate-text"
-                                  [attr.x]="(j * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                                  [attr.y]="(i * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                                  dominant-baseline="middle"
-                                  text-anchor="middle"
-                                  [attr.stroke]="colors.dark">{{g.name}}</text>
-                        </g>
+                    <g tim-svg-cell *ngFor="let gate of board | cells: gateBeingDragged?.gate"
+                       [circuitStyleOptions]="circuitStyleOptions"
+                       [cell]="gate.cell"
+                       [isSelected]="selectedGate !== null && gate.target === selectedGate.target && gate.time === selectedGate.time"
+                       [isBeingDraggedOver]="dragOverElement !== null && dragOverElement.time === gate.time && dragOverElement.target === gate.target"
+                       [target]="gate.target"
+                       [time]="gate.time"
+                       (drop)="handleDrop($event, gate.target, gate.time)"
+                       (mousedown)="handleDragStart($event, gate.target, gate.time)"
+                       (touchstart)="handleDragStart($event, gate.target, gate.time)"
+                       (dragover)="handleDragOver($event, gate.target, gate.time)"
+                       (dragleave)="handleDragLeave()"
+                       [attr.data-time]="gate.time"
+                       [attr.data-target]="gate.target"
+                       class="gate-drop"
+                       [class.chosen]="gate.chosen"
+                    >
                     </g>
-
-                    <!-- Gate being dragged placed after others so it's on top -->
-                    <g *ngIf="gateBeingDragged"
-                       (mousedown)="handleDragStart($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
-                       (touchstart)="handleDragStart($event, gateBeingDragged.gate.target, gateBeingDragged.gate.time)"
-                       [attr.data-time]="gateBeingDragged.gate.time"
-                       [attr.data-target]="gateBeingDragged.gate.target"
-                       class="gate-drop chosen">
-                        <!-- normal gate-->
-                        <rect *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: Gate"
-                              class="gate"
-                              [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                              [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                              [attr.width]="circuitStyleOptions.gateSize"
-                              [attr.height]="circuitStyleOptions.gateSize"
-                              [attr.rx]="circuitStyleOptions.gateBorderRadius"
-                              [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                        <text *ngIf="board.get(gateBeingDragged.gate.target,gateBeingDragged.gate.time)|instanceof: Gate"
-                              class="gate-text"
-                              [attr.x]="(gateBeingDragged.gate.time * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                              [attr.y]="(gateBeingDragged.gate.target * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                              dominant-baseline="middle"
-                              text-anchor="middle"
-                              [attr.fill]="colors.dark">{{board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)}}</text>
-
-                        <!-- control gate -->
-                        <circle *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: Control"
-                                class="gate"
-                                [attr.cx]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                [attr.cy]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                [attr.r]="circuitStyleOptions.gateSize/4"
-                                [attr.fill]="colors.dark" [attr.stroke]="colors.dark"/>
-
-                        <!-- Swap gate -->
-                        <text *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: Swap"
-                              class="gate"
-                              [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize / 2)"
-                              [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize / 2)"
-                              [attr.stroke]="colors.dark"
-                              [attr.font-size]="circuitStyleOptions.gateSize / 2"
-                              dominant-baseline="central" text-anchor="middle">X
-                        </text>
-
-                        <!-- MultiQubit gate -->
-                        <rect *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: MultiQubitGate as g"
-                              class="gate"
-                              [attr.x]="gateBeingDragged.gate.time * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                              [attr.y]="gateBeingDragged.gate.target * circuitStyleOptions.baseSize + (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize) / 2"
-                              [attr.width]="circuitStyleOptions.gateSize"
-                              [attr.height]="circuitStyleOptions.baseSize * g.size - (circuitStyleOptions.baseSize - circuitStyleOptions.gateSize)"
-                              [attr.rx]="circuitStyleOptions.gateBorderRadius"
-                              [attr.fill]="colors.light" [attr.stroke]="colors.medium"/>
-                        <text
-                                *ngIf="board.get(gateBeingDragged.gate.target, gateBeingDragged.gate.time)|instanceof: MultiQubitGate as g"
-                                class="gate-text"
-                                [attr.x]="(gateBeingDragged.gate.time * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                                [attr.y]="(gateBeingDragged.gate.target * circuitStyleOptions.baseSize) + (circuitStyleOptions.baseSize / 2)"
-                                dominant-baseline="middle"
-                                text-anchor="middle"
-                                [attr.stroke]="colors.dark">{{g.name}}</text>
-                    </g>
-
-
                 </svg>
             </div>
 
@@ -323,20 +231,14 @@ export class RangePipe implements PipeTransform {
     styleUrls: ["./quantum-circuit-board.component.scss"],
 })
 export class QuantumCircuitBoardComponent implements OnInit {
-    protected readonly Gate = Gate;
     protected readonly Control = Control;
     protected readonly Swap = Swap;
-    protected readonly MultiQubitGate = MultiQubitGate;
 
     // Cell in board that is being dragged over
-    dragOverElement?: GatePos;
+    dragOverElement: GatePos | null = null;
 
     // gate that is currently being dragged
-    gateBeingDragged: {
-        gate: GatePos;
-        offset: [number, number];
-        originalBounds: DOMRect;
-    } | null = null;
+    gateBeingDragged: GateBeingDragged | null = null;
 
     @ViewChild("svgElement")
     svgElement!: ElementRef<SVGSVGElement>;
@@ -380,30 +282,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
         return this.circuitStyleOptions.colors;
     }
 
-    /**
-     * Check if given gate is currently being dragged.
-     * @param target gate's qubit
-     * @param time gate's time
-     */
-    isBeingDragged(target: number, time: number) {
-        return (
-            this.gateBeingDragged?.gate.target === target &&
-            this.gateBeingDragged.gate.time === time
-        );
-    }
-
-    /**
-     * Gets the text for qubit in correct format.
-     * @param qubit qubit to format
-     */
-    getQubitText(qubit: Qubit) {
-        const rightAngleChar = "\u27E9";
-        if (this.circuitStyleOptions.useBraket) {
-            return `|${qubit.value}${rightAngleChar}`;
-        }
-        return qubit.value.toString();
-    }
-
     ngOnInit(): void {}
 
     /**
@@ -428,7 +306,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
             return;
         }
 
-        this.dragOverElement = undefined;
+        this.dragOverElement = null;
         this.gateDrop.emit({
             target: target,
             time: time,
@@ -458,22 +336,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
      * Remove drag over status from element after drag leaves it.
      */
     handleDragLeave() {
-        this.dragOverElement = undefined;
-    }
-
-    /**
-     * Checks if given cell is being dragged over.
-     * @param target cell's qubit
-     * @param time cell's time
-     */
-    isBeingDraggedOver(target: number, time: number) {
-        if (!this.dragOverElement) {
-            return false;
-        }
-        return (
-            this.dragOverElement.time === time &&
-            this.dragOverElement.target === target
-        );
+        this.dragOverElement = null;
     }
 
     /**
@@ -551,6 +414,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
     ) {
         event.preventDefault();
         if (!event.currentTarget) {
+            return;
+        }
+        if (this.board.get(target, time) === undefined) {
             return;
         }
         const [cursorX, cursorY] = this.getCursorPosition(event);
@@ -684,7 +550,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
         ) {
             this.gateRemove.emit(this.gateBeingDragged.gate);
             this.gateBeingDragged = null;
-            this.dragOverElement = undefined;
+            this.dragOverElement = null;
             return;
         }
 
@@ -698,7 +564,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
         ) {
             this.gateSelect.emit(this.gateBeingDragged.gate);
             this.gateBeingDragged = null;
-            this.dragOverElement = undefined;
+            this.dragOverElement = null;
             return;
         }
 
@@ -713,6 +579,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
         }
 
         this.gateBeingDragged = null;
-        this.dragOverElement = undefined;
+        this.dragOverElement = null;
     }
 }

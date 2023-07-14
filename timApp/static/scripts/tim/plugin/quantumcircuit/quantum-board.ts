@@ -96,6 +96,20 @@ export class QuantumBoard {
         );
     }
 
+    clone() {
+        const copy = new QuantumBoard(this.nQubits, this.nMoments);
+        const board: Cell[][] = [];
+        for (const row of this.board) {
+            const bRow: Cell[] = [];
+            for (const cell of row) {
+                bRow.push(cell);
+            }
+            board.push(bRow);
+        }
+        copy.board = board;
+        return copy;
+    }
+
     /**
      * Adds new gate on board. Also removes gates that are connected to previous gate at that location.
      * @param pos position to put gate in
@@ -457,15 +471,6 @@ export class QuantumBoard {
             ) {
                 this.board[i][time] = undefined;
             }
-        }
-    }
-
-    /**
-     * Iterator for board. Returns rows of board.
-     */
-    *[Symbol.iterator]() {
-        for (const row of this.board) {
-            yield row;
         }
     }
 }

@@ -4,16 +4,7 @@ import type {
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 import type {Matrix} from "mathjs";
-import {
-    dotPow,
-    abs,
-    transpose,
-    multiply,
-    kron,
-    matrix,
-    identity,
-    index,
-} from "mathjs";
+import {dotPow, abs, transpose, multiply, kron, identity, index} from "mathjs";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import type {Cell, QuantumBoard} from "tim/plugin/quantumcircuit/quantum-board";
 import {
@@ -78,7 +69,7 @@ export class QuantumCircuitSimulator {
     private getGateControls(colI: number) {
         // initialize so that each gate has no controls
         const gateControls: number[][] = [];
-        for (const _ of this.board) {
+        for (const _ of this.board.board) {
             gateControls.push([]);
         }
         // add controls to gates
@@ -261,7 +252,7 @@ export class QuantumCircuitSimulator {
      * Run simulation on current circuit and qubits.
      */
     run() {
-        const inputQubits = this.qubits.map((q) => this.bitToVector(q.value));
+        const inputQubits = this.qubits.map((q) => q.asVector());
 
         let input = inputQubits[0];
         for (let i = 1; i < inputQubits.length; i++) {
@@ -287,17 +278,6 @@ export class QuantumCircuitSimulator {
             return i[0];
         }
         return i;
-    }
-
-    /**
-     * Transforms a bit into corresponding qubit state.
-     * @param value bit value either 0 or 1
-     */
-    private bitToVector(value: number) {
-        if (value === 0) {
-            return matrix([1, 0]);
-        }
-        return matrix([0, 1]);
     }
 
     private indexToBitstring(i: number) {
@@ -421,5 +401,9 @@ export class QuantumCircuitSimulator {
             probabilities: probabilities,
             labels: labels,
         };
+    }
+
+    setBoard(board: QuantumBoard) {
+        this.board = board;
     }
 }

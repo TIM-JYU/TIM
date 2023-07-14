@@ -118,9 +118,6 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     @Input()
     showPrintField: boolean = true;
 
-    @Input()
-    nQubits!: number;
-
     @Output()
     clear = new EventEmitter<void>();
 
@@ -188,9 +185,10 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
         }
         const charWidth = 12;
 
-        if (this.table) {
+        if (this.table && this.quantumChartData.labels.length > 0) {
+            const nQubits = this.quantumChartData.labels[0].length;
             // | "# " | nQubits chars | nQubits chars |
-            const tableWidth = 2 * charWidth + 2 * charWidth * this.nQubits;
+            const tableWidth = 2 * charWidth + 2 * charWidth * nQubits;
             this.table.nativeElement.style.width = `${tableWidth}px`;
         }
     }

@@ -1,8 +1,9 @@
-import type {OnInit} from "@angular/core";
+import type {OnDestroy, OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {Gate} from "tim/plugin/quantumcircuit/gate.service";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
+import type {Subscription} from "rxjs";
 
 @Component({
     selector: "tim-quantum-gate-menu",
@@ -25,13 +26,17 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 
                         <svg *ngSwitchCase="'swap'" [attr.width]="circuitStyleOptions.gateSize" [attr.height]="circuitStyleOptions.gateSize"
                              class="swap-gate">
-                            <text x="50%" y="25%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark"
+                            <text x="50%" y="25%" 
+                                  [attr.fill]="circuitStyleOptions.colors.dark" 
+                                  [attr.stroke]="circuitStyleOptions.colors.dark"
                                   dominant-baseline="middle" text-anchor="middle"
                                   [attr.font-size]="circuitStyleOptions.gateSize / 3">X
                             </text>
-                            <line [attr.stroke]="colors.dark" stroke-width="2" x1="50%" x2="50%" y1="25%"
+                            <line [attr.stroke]="circuitStyleOptions.colors.dark" stroke-width="2" x1="50%" x2="50%" y1="25%"
                                   y2="75%"></line>
-                            <text x="50%" y="75%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark"
+                            <text x="50%" y="75%" 
+                                  [attr.fill]="circuitStyleOptions.colors.dark" 
+                                  [attr.stroke]="circuitStyleOptions.colors.dark"
                                   dominant-baseline="middle" text-anchor="middle"
                                   [attr.font-size]="circuitStyleOptions.gateSize / 3">X
                             </text>
@@ -40,10 +45,13 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                         <svg *ngSwitchDefault [attr.width]="circuitStyleOptions.gateSize"
                              [attr.height]="circuitStyleOptions.gateSize">
                             <rect [attr.x]="0" [attr.y]="0" [attr.width]="circuitStyleOptions.gateSize"
-                                  [attr.height]="circuitStyleOptions.gateSize" [attr.fill]="colors.light"
-                                  [attr.stroke]="colors.dark"
+                                  [attr.height]="circuitStyleOptions.gateSize" 
+                                  [attr.fill]="circuitStyleOptions.colors.light"
+                                  [attr.stroke]="circuitStyleOptions.colors.dark"
                                   rx="2"/>
-                            <text x="50%" y="50%" [attr.fill]="colors.dark" [attr.stroke]="colors.dark"
+                            <text x="50%" y="50%" 
+                                  [attr.fill]="circuitStyleOptions.colors.dark" 
+                                  [attr.stroke]="circuitStyleOptions.colors.dark"
                                   dominant-baseline="middle"
                                   text-anchor="middle">{{gate.name}}</text>
                         </svg>
@@ -55,20 +63,17 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
     `,
     styleUrls: ["./quantum-gate-menu.component.scss"],
 })
-export class QuantumGateMenuComponent implements OnInit {
+export class QuantumGateMenuComponent implements OnInit, OnDestroy {
     gates: Gate[] = [];
+    subscription!: Subscription;
 
     @Input()
     circuitStyleOptions!: CircuitStyleOptions;
 
     constructor(private gateService: GateService) {}
 
-    get colors() {
-        return this.circuitStyleOptions.colors;
-    }
-
     ngOnInit(): void {
-        this.gateService
+        this.subscription = this.gateService
             .getMenuGates()
             .subscribe((gates) => (this.gates = gates));
     }
@@ -80,5 +85,9 @@ export class QuantumGateMenuComponent implements OnInit {
      */
     handleDragStart(event: DragEvent, gate: string) {
         event.dataTransfer?.setData("text/plain", gate);
+    }
+
+    ngOnDestroy(): void {
+        this.subscription.unsubscribe();
     }
 }

@@ -24,6 +24,7 @@ import type {
     GatePos,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {
+    CellPipe,
     InstanceofPipe,
     QuantumCircuitBoardComponent,
     RangePipe,
@@ -43,10 +44,57 @@ import {timeout} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import {DomSanitizer} from "@angular/platform-browser";
+import {SvgCellComponent} from "tim/plugin/quantumcircuit/svg-cell.component";
+import {matrix} from "mathjs";
 
-export interface Qubit {
+/**
+ * Information about qubit.
+ * Value is the qubit state presented as 0 or 1 (could be [a,b] where a,b are complex numbers).
+ * Name is shows on screen.
+ * text is used to represent the value of qubit e.g. |0> or 0.
+ */
+export class Qubit {
     value: number;
     name: string;
+    text: string;
+    circuitStyleOptions: CircuitStyleOptions;
+
+    constructor(
+        value: number,
+        name: string,
+        circuitStyleOptions: CircuitStyleOptions
+    ) {
+        this.value = value;
+        this.name = name;
+        this.circuitStyleOptions = circuitStyleOptions;
+        this.text = this.getQubitText();
+    }
+
+    /**
+     * Gets the text for qubit in correct format.
+     */
+    private getQubitText() {
+        const rightAngleChar = "\u27E9";
+        if (this.circuitStyleOptions.useBraket) {
+            return `|${this.value}${rightAngleChar}`;
+        }
+        return this.value.toString();
+    }
+
+    /**
+     * Transforms a bit into corresponding qubit state.
+     */
+    asVector() {
+        if (this.value === 0) {
+            return matrix([1, 0]);
+        }
+        return matrix([0, 1]);
+    }
+
+    toggled() {
+        const newValue = this.value === 0 ? 1 : 0;
+        return new Qubit(newValue, this.name, this.circuitStyleOptions);
+    }
 }
 
 export interface QubitOutput {
@@ -185,7 +233,6 @@ export interface CircuitStyleOptions {
             <div class="stats">
                 <tim-quantum-stats [measurements]="measurements"
                                    [quantumChartData]="quantumChartData"
-                                   [nQubits]="nQubits"
                                    [showChart]="showChart"
                                    [showPrintField]="showPrintField"
                                    (clear)="handleClearMeasurements()"
@@ -316,20 +363,25 @@ export class QuantumCircuitComponent
     }
 
     /**
-     * Toggle qubits initial state between 0 and 1
+     * Toggle state of qubit between basis states.
+     * @param qubitId qubit to toggle
      */
     handleQubitChange(qubitId: number) {
         if (qubitId < 0 || qubitId >= this.qubits.length) {
             console.log("non-existing qubitId", qubitId);
             return;
         }
-        if (this.qubits[qubitId].value === 0) {
-            this.qubits[qubitId].value = 1;
-        } else {
-            this.qubits[qubitId].value = 0;
-        }
+        this.qubits[qubitId] = this.qubits[qubitId].toggled();
 
         this.runSimulation();
+    }
+
+    /**
+     * Override reference to board for change detection to work.
+     */
+    updateBoard() {
+        this.board = this.board.clone();
+        this.simulator.setBoard(this.board);
     }
 
     /**
@@ -353,6 +405,8 @@ export class QuantumCircuitComponent
             }
         }
 
+        this.updateBoard();
+
         this.selectedGate = null;
 
         this.runSimulation();
@@ -365,6 +419,7 @@ export class QuantumCircuitComponent
     handleGateMove(gateMove: GateMove) {
         this.board.moveCell(gateMove.from, gateMove.to, this.selectedGate);
         this.selectedGate = null;
+        this.updateBoard();
         this.runSimulation();
     }
 
@@ -376,7 +431,7 @@ export class QuantumCircuitComponent
         this.board.remove(gate.target, gate.time);
 
         this.selectedGate = null;
-
+        this.updateBoard();
         this.runSimulation();
     }
 
@@ -488,11 +543,11 @@ export class QuantumCircuitComponent
      */
     initializeBoard() {
         this.qubits = [];
+        const defaultValue = 0;
         for (let i = 0; i < this.nQubits; i++) {
-            this.qubits.push({
-                name: `q[${i}]`,
-                value: 0,
-            });
+            this.qubits.push(
+                new Qubit(defaultValue, `q[${i}]`, this.circuitStyleOptions)
+            );
         }
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
 
@@ -554,7 +609,7 @@ export class QuantumCircuitComponent
             colors: {
                 dark: "black",
                 medium: "grey",
-                light: "white",
+                light: "#fca534",
             },
             useBraket: useBraket,
             timeAxisHeight: 30,
@@ -585,9 +640,11 @@ export class QuantumCircuitComponent
         QuantumGateMenuComponent,
         QuantumToolboxComponent,
         QuantumCircuitBoardComponent,
+        SvgCellComponent,
         QuantumStatsComponent,
         InstanceofPipe,
         RangePipe,
+        CellPipe,
     ],
     exports: [QuantumCircuitComponent],
     imports: [
