@@ -70,6 +70,11 @@ export class Qubit {
         this.text = this.getQubitText();
     }
 
+    updateNotation(circuitStyleOptions: CircuitStyleOptions) {
+        this.circuitStyleOptions = circuitStyleOptions;
+        this.text = this.getQubitText();
+    }
+
     /**
      * Gets the text for qubit in correct format.
      */
@@ -615,6 +620,10 @@ export class QuantumCircuitComponent
             timeAxisHeight: 30,
             gateBorderRadius: 2,
         };
+
+        for (const qubit of this.qubits) {
+            qubit.updateNotation(this.circuitStyleOptions);
+        }
     }
 
     ngOnInit(): void {

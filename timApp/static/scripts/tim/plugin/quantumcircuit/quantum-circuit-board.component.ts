@@ -164,7 +164,7 @@ export class CellPipe implements PipeTransform {
                      (touchcancel)="handleDragEnd($event)"
                 >
                     <!-- lines -->
-                    <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="colors.dark"
+                    <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="circuitStyleOptions.colors.dark"
                           [attr.x1]="0" [attr.y1]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"
                           [attr.x2]="board.nMoments * circuitStyleOptions.baseSize"
                           [attr.y2]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"></line>
@@ -173,7 +173,7 @@ export class CellPipe implements PipeTransform {
                     <g *ngFor="let gates of board.board; let i=index">
                         <g *ngFor="let gate of gates; let j=index">
                             <line *ngIf="gate|instanceof: Control as c"
-                                  [attr.stroke]="colors.dark"
+                                  [attr.stroke]="circuitStyleOptions.colors.dark"
                                   [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                   [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                   [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
@@ -182,7 +182,7 @@ export class CellPipe implements PipeTransform {
 
                             <g *ngIf="gate|instanceof: Swap as s">
                                 <line *ngIf="s.target > i"
-                                      [attr.stroke]="colors.dark"
+                                      [attr.stroke]="circuitStyleOptions.colors.dark"
                                       [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                       [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                       [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
@@ -277,10 +277,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
     gateSelect = new EventEmitter<GatePos>();
 
     constructor() {}
-
-    get colors() {
-        return this.circuitStyleOptions.colors;
-    }
 
     ngOnInit(): void {}
 
