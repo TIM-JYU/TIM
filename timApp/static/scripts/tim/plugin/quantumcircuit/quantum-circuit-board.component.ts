@@ -115,7 +115,7 @@ export class CellPipe implements PipeTransform {
                 });
             }
         }
-        // empty cells first
+        // empty cells first, then gates, then dragged gate
         cells.sort((a, b) => {
             let av = a.cell === undefined ? 0 : 1;
             let bv = b.cell === undefined ? 0 : 1;
@@ -134,12 +134,12 @@ export class CellPipe implements PipeTransform {
         <!--suppress HtmlUnknownAttribute -->
 
         <div class="circuit-container">
-            <div class="qubits">
+            <div class="qubits" [style.width.px]="circuitStyleOptions.baseSize * 2">
                 <div class="left-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"
                      [style.width.%]="100"></div>
                 <div *ngFor="let qubit of qubits; let i=index" [style.height.px]="circuitStyleOptions.baseSize"
                      class="qubit">
-                    <div>{{qubit.name}}</div>
+                    <div class="qubit-name">{{qubit.name}}</div>
                     <button class="qubit-toggle-button"
                             (click)="toggleQubit($event, i)">{{qubit.text}}</button>
                 </div>
@@ -204,17 +204,18 @@ export class CellPipe implements PipeTransform {
                        (mousedown)="handleDragStart($event, gate.target, gate.time)"
                        (touchstart)="handleDragStart($event, gate.target, gate.time)"
                        (dragover)="handleDragOver($event, gate.target, gate.time)"
-                       (dragleave)="handleDragLeave()"
+                       (dragleave)="handleDragLeave(gate.target, gate.time)"
                        [attr.data-time]="gate.time"
                        [attr.data-target]="gate.target"
                        class="gate-drop"
                        [class.chosen]="gate.chosen"
                     >
                     </g>
+
                 </svg>
             </div>
 
-            <div class="output-container">
+            <div class="output-container" [style.width.px]="circuitStyleOptions.baseSize * 2">
                 <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"></div>
                 <div class="output" *ngFor="let output of qubitOutputs"
                      [style.height.px]="circuitStyleOptions.baseSize">
@@ -297,6 +298,12 @@ export class QuantumCircuitBoardComponent implements OnInit {
      */
     handleDrop(event: DragEvent, target: number, time: number) {
         event.preventDefault();
+        if (
+            target === this.gateBeingDragged?.gate.target &&
+            time === this.gateBeingDragged.gate.time
+        ) {
+            return;
+        }
         const gateName = event.dataTransfer?.getData("text/plain");
         if (gateName === undefined) {
             return;
@@ -321,6 +328,12 @@ export class QuantumCircuitBoardComponent implements OnInit {
         target: number,
         time: number
     ) {
+        if (
+            target === this.gateBeingDragged?.gate.target &&
+            time === this.gateBeingDragged.gate.time
+        ) {
+            return;
+        }
         this.dragOverElement = {
             target: target,
             time: time,
@@ -331,7 +344,13 @@ export class QuantumCircuitBoardComponent implements OnInit {
     /**
      * Remove drag over status from element after drag leaves it.
      */
-    handleDragLeave() {
+    handleDragLeave(target: number, time: number) {
+        if (
+            target === this.gateBeingDragged?.gate.target &&
+            time === this.gateBeingDragged.gate.time
+        ) {
+            return;
+        }
         this.dragOverElement = null;
     }
 
@@ -415,17 +434,22 @@ export class QuantumCircuitBoardComponent implements OnInit {
         if (this.board.get(target, time) === undefined) {
             return;
         }
+        if (
+            target === this.gateBeingDragged?.gate.target &&
+            time === this.gateBeingDragged.gate.time
+        ) {
+            return;
+        }
         const [cursorX, cursorY] = this.getCursorPosition(event);
         const offset = this.getMousePosition(cursorX, cursorY);
         if (!offset) {
             return;
         }
-
         const group = event.currentTarget as SVGGElement;
 
         // Get all the transforms currently on this element
-        const transforms = group.transform.baseVal;
 
+        const transforms = group.transform.baseVal;
         this.gateBeingDragged = {
             gate: {target: target, time: time},
             offset: offset,
@@ -445,8 +469,6 @@ export class QuantumCircuitBoardComponent implements OnInit {
      * @param event movement on screen event
      */
     handleDrag(event: MouseEvent | TouchEvent) {
-        event.preventDefault();
-
         const group = this.getActiveGroup();
         if (this.gateBeingDragged && group) {
             // dragged group is added to top of list so reinitialize transform
@@ -528,11 +550,14 @@ export class QuantumCircuitBoardComponent implements OnInit {
         event.preventDefault();
         if (!this.gateBeingDragged) {
             this.gateBeingDragged = null;
+            this.dragOverElement = null;
             return;
         }
+
         const group = this.getActiveGroup();
         if (!group) {
             this.gateBeingDragged = null;
+            this.dragOverElement = null;
             return;
         }
         // if cursor is outside the circuit (svg element) then remove the gate being dragged

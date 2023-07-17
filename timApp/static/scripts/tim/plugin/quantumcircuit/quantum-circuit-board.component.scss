@@ -42,8 +42,10 @@ svg text::selection {
 .qubit {
   display: flex;
   align-items: center;
-  padding: 0 0.5em 0 0.5em;
-  gap: 0.5em;
+}
+
+.qubit-name {
+  overflow-x: auto;
 }
 
 .qubit-toggle-button {
@@ -94,4 +96,14 @@ svg text::selection {
 
 .selected-gate {
   stroke: #ffdd00;
+}
+
+@media (min-width: 500px) {
+  .qubit-toggle-button {
+    margin-left: 0.5em;
+  }
+
+  .qubit {
+    padding: 0 0.5em 0 0.5em;
+  }
 }

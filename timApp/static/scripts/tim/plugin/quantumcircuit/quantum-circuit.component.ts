@@ -213,7 +213,7 @@ export interface CircuitStyleOptions {
 @Component({
     selector: "tim-quantum-circuit",
     template: `
-        <div #qcContainer class="circuit-container">
+        <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
             <div class="top-menu">
                 <tim-quantum-gate-menu [circuitStyleOptions]="circuitStyleOptions"></tim-quantum-gate-menu>
                 <tim-quantum-toolbox></tim-quantum-toolbox>
@@ -596,12 +596,9 @@ export class QuantumCircuitComponent
     }
 
     /**
-     * Compute dimensions for elements.
+     * Compute sizes for board cells based on available space and number of cells.
      */
-    async ngAfterViewInit() {
-        // when entering paragraph editor, qcContainer width is zero for some reason and timeout fixes that
-        await timeout();
-        // Compute sizes for board cells based on available space and number of cells
+    setSizes() {
         const baseSize =
             this.qcContainer.nativeElement.clientWidth / (this.nMoments + 4);
         const gateSize = (2 / 3) * baseSize;
@@ -620,6 +617,23 @@ export class QuantumCircuitComponent
             timeAxisHeight: 30,
             gateBorderRadius: 2,
         };
+    }
+
+    /**
+     * Resize elements.
+     */
+    handleResize() {
+        this.setSizes();
+    }
+
+    /**
+     * Compute dimensions for elements.
+     */
+    async ngAfterViewInit() {
+        // when entering paragraph editor, qcContainer width is zero for some reason and timeout fixes that
+        await timeout();
+
+        this.setSizes();
 
         for (const qubit of this.qubits) {
             qubit.updateNotation(this.circuitStyleOptions);

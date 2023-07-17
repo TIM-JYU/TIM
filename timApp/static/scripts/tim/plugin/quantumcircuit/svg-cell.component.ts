@@ -18,7 +18,6 @@ import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.com
     selector: "[tim-svg-cell]",
     template: `
         <!--suppress HtmlUnknownAttribute -->
-
         <!-- normal gate-->
         <svg:rect *ngIf="cell|instanceof: Gate as g"
                   [class.selected-gate]="isSelected"
