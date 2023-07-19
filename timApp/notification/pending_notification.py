@@ -21,7 +21,7 @@ class PendingNotification(db.Model):
     processed = db.Column(db.DateTime(timezone=True), nullable=True, index=True)
     kind = db.Column(db.Enum(NotificationType), nullable=False)
 
-    user: User = db.relationship("User", lazy="joined")
+    user: User = db.relationship("User", lazy="selectin")
     block = db.relationship("Block")
 
     @property

@@ -41,7 +41,7 @@ class DocEntry(db.Model, DocInfo):
     public = db.Column(db.Boolean, nullable=False, default=True)
     """Whether the document is visible in directory listing."""
 
-    _block = db.relationship("Block", back_populates="docentries", lazy="joined")
+    _block = db.relationship("Block", back_populates="docentries", lazy="selectin")
 
     trs: list[Translation] = db.relationship(
         "Translation",

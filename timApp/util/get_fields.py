@@ -13,7 +13,7 @@ import dateutil.parser
 from isodate import datetime_isoformat
 from marshmallow import missing
 from sqlalchemy import func, true, select
-from sqlalchemy.orm import lazyload, joinedload
+from sqlalchemy.orm import lazyload, selectinload
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import (
@@ -387,7 +387,7 @@ def get_fields_and_users(
         q = q1
     q = q.with_only_columns(User).order_by(User.id).options(lazyload(User.groups))
     if member_filter_type != MembershipFilter.Current:
-        q = q.options(joinedload(User.memberships))
+        q = q.options(selectinload(User.memberships))
     users: list[User] = db.session.execute(q).scalars().all()
     user_map = {}
     for u in users:

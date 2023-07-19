@@ -22,7 +22,7 @@ from bs4 import UnicodeDammit
 from flask import current_app
 from sqlalchemy import func, Numeric, Float, true, case, select
 from sqlalchemy.dialects.postgresql import aggregate_order_by
-from sqlalchemy.orm import selectinload, defaultload, joinedload, contains_eager
+from sqlalchemy.orm import defaultload, selectinload, contains_eager
 from sqlalchemy.sql import Select, Subquery
 
 from timApp.answer.answer import Answer
@@ -654,7 +654,7 @@ def get_users_for_tasks(
     if user_ids is not None:
         main_stmt = main_stmt.filter(User.id.in_(user_ids))
     if current_app.config["LOAD_STUDENT_IDS_IN_TEACHER"]:
-        main_stmt = main_stmt.options(joinedload("uniquecodes"))
+        main_stmt = main_stmt.options(selectinload("uniquecodes"))
     main_stmt = main_stmt.group_by(User.id, *group_by_cols)
 
     # prevents error:

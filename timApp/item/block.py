@@ -62,7 +62,7 @@ class Block(db.Model):
     accesses = db.relationship(
         "BlockAccess",
         back_populates="block",
-        lazy="joined",
+        lazy="selectin",
         cascade="all, delete-orphan",
         collection_class=attribute_mapped_collection("block_collection_key"),
     )

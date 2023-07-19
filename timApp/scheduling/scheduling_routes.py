@@ -5,7 +5,7 @@ from typing import Any, Generator
 from flask import current_app, Response
 from isodate import Duration
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -69,9 +69,9 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
         .filter(BlockAccess.type == AccessType.owner.value)
         .join(PeriodicTask)
         .options(
-            joinedload(PeriodicTask.block)
-            .joinedload(Block.accesses)
-            .joinedload(BlockAccess.usergroup)
+            selectinload(PeriodicTask.block)
+            .selectinload(Block.accesses)
+            .selectinload(BlockAccess.usergroup)
         )
     )
 

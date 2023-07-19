@@ -6,7 +6,7 @@ from typing import DefaultDict, Callable
 
 from flask import current_app
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -85,9 +85,9 @@ def get_current_user_notifications(limit: int | None = None):
     stmt = (
         select(Notification)
         .filter_by(user_id=get_current_user_id())
-        .options(joinedload(Notification.block).joinedload(Block.docentries))
-        .options(joinedload(Notification.block).joinedload(Block.folder))
-        .options(joinedload(Notification.block).joinedload(Block.translation))
+        .options(selectinload(Notification.block).selectinload(Block.docentries))
+        .options(selectinload(Notification.block).selectinload(Block.folder))
+        .options(selectinload(Notification.block).selectinload(Block.translation))
         .order_by(Notification.block_id.desc())
     )
 

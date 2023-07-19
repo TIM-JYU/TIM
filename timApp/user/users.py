@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -43,11 +43,11 @@ def get_rights_holders_all(block_ids: list[int], order_by=None):
     result: list[tuple[BlockAccess, UserGroup, User | None]] = db.session.execute(
         select(BlockAccess)
         .options(
-            joinedload(BlockAccess.usergroup)
-            .joinedload(UserGroup.admin_doc)
-            .joinedload(Block.docentries)
+            selectinload(BlockAccess.usergroup)
+            .selectinload(UserGroup.admin_doc)
+            .selectinload(Block.docentries)
         )
-        .options(joinedload(BlockAccess.atype))
+        .options(selectinload(BlockAccess.atype))
         .filter(BlockAccess.block_id.in_(block_ids))
         .join(UserGroup)
         .outerjoin(User, User.name == UserGroup.name)

@@ -12,7 +12,7 @@ class TaskBlock(db.Model):
     id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     task_id = db.Column(db.Text, primary_key=True)
 
-    block = db.relationship("Block", lazy="joined")
+    block = db.relationship("Block", lazy="selectin")
 
     @staticmethod
     def get_by_task(task_id: str) -> TaskBlock | None:

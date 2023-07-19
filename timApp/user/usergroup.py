@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import attr
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.sql import Select
 
@@ -345,8 +345,8 @@ def get_usergroup_eager_query() -> Select:
 
     return (
         select(UserGroup)
-        .options(joinedload(UserGroup.admin_doc).joinedload(Block.docentries))
-        .options(joinedload(UserGroup.current_memberships))
+        .options(selectinload(UserGroup.admin_doc).selectinload(Block.docentries))
+        .options(selectinload(UserGroup.current_memberships))
     )
 
 

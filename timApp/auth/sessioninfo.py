@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from flask import session, g, request, has_request_context
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from timApp.document.usercontext import UserContext
 from timApp.timdb.sqa import db
@@ -27,7 +27,7 @@ def get_current_user_object() -> User:
         u: User | None = db.session.get(
             User,
             curr_id,
-            options=[joinedload(User.lectures), joinedload(User.groups)],
+            options=[selectinload(User.lectures), selectinload(User.groups)],
         )
         if u is None:
             if curr_id != 0:

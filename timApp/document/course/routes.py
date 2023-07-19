@@ -3,10 +3,9 @@ Contains course related routes.
 """
 
 from flask import Blueprint, current_app, Response
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.item.block import Block
 from timApp.util.flask.responsehelper import json_response
@@ -50,6 +49,6 @@ def get_documents_from_bookmark_folder(foldername: str) -> Response:
     docs = get_documents(
         filter_user=get_current_user_object(),
         custom_filter=DocEntry.name.in_(paths),
-        query_options=joinedload(DocEntry._block).joinedload(Block.tags),
+        query_options=selectinload(DocEntry._block).selectinload(Block.tags),
     )
     return json_response(docs)

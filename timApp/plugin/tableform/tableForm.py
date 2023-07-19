@@ -9,7 +9,7 @@ from typing import Any, TypedDict, Sequence
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
@@ -187,7 +187,7 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
                 Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs])
                 & Tag.block_id.in_(docs_with_course_tag)
             )
-            .options(joinedload(Tag.block).joinedload(Block.docentries))
+            .options(selectinload(Tag.block).selectinload(Block.docentries))
         )
         .scalars()
         .all()

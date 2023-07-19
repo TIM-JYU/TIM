@@ -14,7 +14,7 @@ class AskedJson(db.Model):
     hash = db.Column(db.Text, nullable=False)
 
     asked_questions = db.relationship(
-        "AskedQuestion", back_populates="asked_json", lazy="joined"
+        "AskedQuestion", back_populates="asked_json", lazy="selectin"
     )
 
     def to_json(self, hide_points=False):

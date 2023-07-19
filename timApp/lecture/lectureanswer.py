@@ -39,9 +39,9 @@ class LectureAnswer(db.Model):
     points = db.Column(db.Float)
 
     asked_question = db.relationship(
-        "AskedQuestion", back_populates="answers", lazy="joined"
+        "AskedQuestion", back_populates="answers", lazy="selectin"
     )
-    user = db.relationship("User", back_populates="lectureanswers", lazy="joined")
+    user = db.relationship("User", back_populates="lectureanswers", lazy="selectin")
 
     @staticmethod
     def get_by_id(ans_id: int) -> Optional["LectureAnswer"]:

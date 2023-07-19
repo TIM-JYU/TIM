@@ -10,7 +10,7 @@ and their labels. The module also retrieves the data related to velps and their 
 from typing import Iterable
 
 from sqlalchemy import func, delete, select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from timApp.timdb.sqa import db
 from timApp.velp.velp_models import (
@@ -251,12 +251,8 @@ def get_velp_content_for_document(
             & (VelpGroupsInDocument.doc_id == doc_id)
         )
         .with_only_columns(Velp)
-        .options(joinedload(Velp.groups, innerjoin=True).raiseload(VelpGroup.block))
-        .options(
-            joinedload(Velp.velp_versions, innerjoin=True).joinedload(
-                VelpVersion.content, innerjoin=True
-            )
-        )
+        .options(selectinload(Velp.groups).raiseload(VelpGroup.block))
+        .options(selectinload(Velp.velp_versions).selectinload(VelpVersion.content))
     )
     return vq.all()
 

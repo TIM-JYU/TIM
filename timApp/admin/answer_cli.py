@@ -7,7 +7,7 @@ from typing import Sequence
 import click
 from flask.cli import AppGroup
 from sqlalchemy import func, select, delete
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from timApp.admin.datetimetype import DateTimeType
 from timApp.admin.timitemtype import TimDocumentType, TimItemType
@@ -225,11 +225,15 @@ def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
         sys.exit(1)
     stmt = select(Answer).filter(Answer.task_id.startswith(f"{doc.id}."))
     total = db.session.scalar(stmt.with_only_columns([func.count()]))
-    anss: list[Answer] = db.session.scalars(
-        stmt.filter(func.length(Answer.content) > limit).options(
-            joinedload(Answer.users_all)
+    anss: list[Answer] = (
+        db.session.execute(
+            stmt.filter(func.length(Answer.content) > limit).options(
+                selectinload(Answer.users_all)
+            )
         )
-    ).all()
+        .scalars()
+        .all()
+    )
     note = " (answer truncated)"
     try_keys = ["usercode", "c", "userinput"]
     truncated = 0

@@ -22,7 +22,13 @@ def get_read_expiry_condition(delta: timedelta):
 def get_readings(
     usergroup_id: int, doc: Document, filter_condition=None
 ) -> list[ReadParagraph]:
-    return get_readings_filtered_query(usergroup_id, doc, filter_condition).all()
+    return (
+        db.session.execute(
+            get_readings_filtered_query(usergroup_id, doc, filter_condition)
+        )
+        .scalars()
+        .all()
+    )
 
 
 def has_anything_read(usergroup_ids: list[int], doc: Document) -> bool:

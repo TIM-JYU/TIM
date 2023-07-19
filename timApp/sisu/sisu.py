@@ -10,7 +10,7 @@ from marshmallow import validates, ValidationError
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import any_, true, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
@@ -281,9 +281,9 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
 
             # Update rights for already existing activated groups.
             docs = d.parent.get_all_documents(
-                query_options=joinedload(DocEntry._block)
-                .joinedload(Block.managed_usergroup)
-                .joinedload(UserGroup.external_id),
+                query_options=selectinload(DocEntry._block)
+                .selectinload(Block.managed_usergroup)
+                .selectinload(UserGroup.external_id),
             )
             for doc in docs:
                 if doc == d:

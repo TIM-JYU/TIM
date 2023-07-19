@@ -12,7 +12,7 @@ from flask import request
 from flask import session
 from sqlalchemy import func, select, delete
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm.exc import StaleDataError
 
 from timApp.auth.accesshelper import (
@@ -89,13 +89,13 @@ def get_lecture_info():
     u = get_current_user_object()
     lecture_questions: list[AskedQuestion] = (
         lecture.asked_questions.options(
-            joinedload(AskedQuestion.answers_all).raiseload(
+            selectinload(AskedQuestion.answers_all).raiseload(
                 LectureAnswer.asked_question
             )
         )
         .options(
-            joinedload(AskedQuestion.answers_all)
-            .joinedload(LectureAnswer.user)
+            selectinload(AskedQuestion.answers_all)
+            .selectinload(LectureAnswer.user)
             .raiseload(User.groups)
         )
         .all()

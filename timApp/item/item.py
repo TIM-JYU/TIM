@@ -125,13 +125,13 @@ class Item(ItemBase):
             select(Folder)
             .filter(tuple_(Folder.location, Folder.name).in_(path_tuples))
             .order_by(func.length(Folder.location).desc())
-            .options(defaultload(Folder._block).joinedload(Block.relevance))
+            .options(defaultload(Folder._block).selectinload(Block.relevance))
         )
         if eager_load_groups:
             crumbs_stmt = crumbs_stmt.options(
                 defaultload(Folder._block)
-                .joinedload(Block.accesses)
-                .joinedload(BlockAccess.usergroup)
+                .selectinload(Block.accesses)
+                .selectinload(BlockAccess.usergroup)
             )
         crumbs = db.session.execute(crumbs_stmt).scalars().all()
         if include_root:

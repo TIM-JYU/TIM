@@ -4,7 +4,7 @@ from itertools import accumulate
 from typing import Iterable, Generator, TYPE_CHECKING
 
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
@@ -184,7 +184,7 @@ class DocInfo(Item):
                     (Translation.src_docid == DocEntry.id)
                     & (Translation.lang_id == self.lang_id),
                 )
-            ).scalars().all()
+            ).all()
 
         result = get_docs(paths)
         result.sort(key=lambda x: path_index_map[x[0].path])
@@ -246,7 +246,7 @@ class DocInfo(Item):
 
         stmt = (
             select(Notification)
-            .options(joinedload(Notification.user).joinedload(User.groups))
+            .options(selectinload(Notification.user).selectinload(User.groups))
             .filter(Notification.block_id.in_([f.id for f in items]))
         )
         stmt = stmt.filter(condition)

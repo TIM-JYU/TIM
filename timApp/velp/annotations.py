@@ -10,7 +10,7 @@ annotations as well as adding comments to the annotations. The module also retri
 from enum import Enum, unique
 
 from sqlalchemy import func, true, select
-from sqlalchemy.orm import joinedload, contains_eager
+from sqlalchemy.orm import selectinload, contains_eager
 from sqlalchemy.sql import Select
 
 from timApp.answer.answer import Answer
@@ -109,28 +109,22 @@ def get_annotations_with_comments_in_document(
 
 def set_annotation_query_opts(q: Select) -> Select:
     return (
-        q.options(
-            joinedload(Annotation.velp_content, innerjoin=True).load_only(
-                VelpContent.content
-            )
-        )
+        q.options(selectinload(Annotation.velp_content).load_only(VelpContent.content))
         .options(
-            joinedload(Annotation.comments)
-            .joinedload(AnnotationComment.commenter, innerjoin=True)
+            selectinload(Annotation.comments)
+            .selectinload(AnnotationComment.commenter)
+            .raiseload(User.groups)
+        )
+        .options(selectinload(Annotation.annotator).raiseload(User.groups))
+        .options(
+            selectinload(Annotation.answer)
+            .selectinload(Answer.users_all)
             .raiseload(User.groups)
         )
         .options(
-            joinedload(Annotation.annotator, innerjoin=True).raiseload(User.groups)
-        )
-        .options(
-            joinedload(Annotation.answer)
-            .joinedload(Answer.users_all)
-            .raiseload(User.groups)
-        )
-        .options(
-            joinedload(Annotation.velp_version, innerjoin=True)
+            selectinload(Annotation.velp_version)
             .load_only(VelpVersion.id, VelpVersion.velp_id)
-            .joinedload(VelpVersion.velp)
+            .selectinload(VelpVersion.velp)
             .load_only(Velp.color)
         )
     )

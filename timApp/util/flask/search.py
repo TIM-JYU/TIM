@@ -13,7 +13,7 @@ from typing import Match, Type
 from flask import Blueprint, json, Request
 from flask import request
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload, defaultload
+from sqlalchemy.orm import selectinload, defaultload
 
 from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
 from timApp.auth.sessioninfo import get_current_user_object
@@ -363,7 +363,7 @@ def validate_query(query: str, search_whole_words: bool) -> None:
 # Query options for loading DocEntry relevance eagerly; it should speed up search cache processing because
 # we know we'll need relevance.
 docentry_eager_relevance_opt = (
-    defaultload(DocEntry._block).joinedload(Block.relevance),
+    defaultload(DocEntry._block).selectinload(Block.relevance),
 )
 
 
@@ -737,7 +737,7 @@ def fetch_search_items(search_items: dict, search_folder: str) -> list[DocInfo]:
                 (DocEntry.id.in_(search_items.keys()))
                 & (DocEntry.name.like(search_folder + "%"))
             )
-            .options(joinedload(DocEntry._block).joinedload(Block.relevance))
+            .options(selectinload(DocEntry._block).selectinload(Block.relevance))
         )
         .scalars()
         .all()

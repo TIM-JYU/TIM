@@ -11,7 +11,7 @@ from flask import current_app
 from flask import request
 from marshmallow.utils import missing
 from sqlalchemy import func, select
-from sqlalchemy.orm import lazyload, joinedload, selectinload
+from sqlalchemy.orm import lazyload, selectinload
 from werkzeug.exceptions import NotFound
 
 from timApp.answer.answer import Answer, AnswerData
@@ -172,6 +172,7 @@ PointsType = Union[
     str,  # Points as string, convert them to float
     None,  # Clear points, only by teacher
 ]
+
 
 # TODO: loggable route (points in url?)
 @answers.put("/saveReview/<int(signed=True):user_id>/<task_id>")
@@ -1792,7 +1793,7 @@ def get_answers(task_id: str, user_id: int) -> Response:
             select(Answer)
             .filter_by(task_id=tid.doc_task)
             .order_by(Answer.id.desc())
-            .options(joinedload(Answer.users_all))
+            .options(selectinload(Answer.users_all))
         ).all()
         user = curr_user
     else:

@@ -29,10 +29,10 @@ class AskedQuestion(db.Model):
     expl = db.Column(db.Text)
 
     asked_json: AskedJson = db.relationship(
-        "AskedJson", back_populates="asked_questions", lazy="joined"
+        "AskedJson", back_populates="asked_questions", lazy="selectin"
     )
     lecture: Lecture = db.relationship(
-        "Lecture", back_populates="asked_questions", lazy="joined"
+        "Lecture", back_populates="asked_questions", lazy="selectin"
     )
     answers = db.relationship(
         "LectureAnswer", back_populates="asked_question", lazy="dynamic"

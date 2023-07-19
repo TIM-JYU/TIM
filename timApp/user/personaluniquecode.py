@@ -30,9 +30,9 @@ class PersonalUniqueCode(db.Model):
     type = db.Column(db.Text, nullable=False, primary_key=True)
     """The type of the code, e.g. student or employee."""
 
-    user = db.relationship("User", back_populates="uniquecodes", lazy="joined")
+    user = db.relationship("User", back_populates="uniquecodes", lazy="selectin")
     organization = db.relationship(
-        "HakaOrganization", back_populates="uniquecodes", lazy="joined"
+        "HakaOrganization", back_populates="uniquecodes", lazy="selectin"
     )
 
     __table_args__ = (db.UniqueConstraint("org_id", "code", "type"),)

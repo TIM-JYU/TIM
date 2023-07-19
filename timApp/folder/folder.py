@@ -38,7 +38,7 @@ class Folder(db.Model, Item):
 
     __table_args__ = (db.UniqueConstraint("name", "location", name="folder_uc"),)
 
-    _block = db.relationship("Block", back_populates="folder", lazy="joined")
+    _block = db.relationship("Block", back_populates="folder", lazy="selectin")
 
     @staticmethod
     def get_root() -> Folder:
@@ -46,11 +46,17 @@ class Folder(db.Model, Item):
 
     @staticmethod
     def get_by_id(fid) -> Folder | None:
-        return db.session.get(Folder, fid) if fid != ROOT_FOLDER_ID else Folder.get_root()
+        return (
+            db.session.get(Folder, fid) if fid != ROOT_FOLDER_ID else Folder.get_root()
+        )
 
     @staticmethod
     def find_by_location(location, name) -> Folder | None:
-        return db.session.execute(select(Folder).filter_by(name=name, location=location)).scalars().first()
+        return (
+            db.session.execute(select(Folder).filter_by(name=name, location=location))
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def find_by_path(path, fallback_to_id=False) -> Folder | None:
@@ -122,8 +128,12 @@ class Folder(db.Model, Item):
     def delete(self):
         assert self.is_empty
         db.session.delete(self)
-        db.session.execute(delete(BlockAccess).where(BlockAccess.block_id==self.id))
-        db.session.execute(delete(Block).where((Block.type_id==BlockType.Folder.value) & (Block.id==self.id)))
+        db.session.execute(delete(BlockAccess).where(BlockAccess.block_id == self.id))
+        db.session.execute(
+            delete(Block).where(
+                (Block.type_id == BlockType.Folder.value) & (Block.id == self.id)
+            )
+        )
 
     def rename(self, new_name: str):
         assert "/" not in new_name
@@ -144,15 +154,26 @@ class Folder(db.Model, Item):
 
     def rename_content(self, old_path: str, new_path: str):
         """Renames contents of the folder."""
-        docs_in_folder: list[DocEntry] = db.session.execute(select(DocEntry).filter(
-            DocEntry.name.like(old_path + "/%")
-        )).scalars().all()
+        docs_in_folder: list[DocEntry] = (
+            db.session.execute(
+                select(DocEntry).filter(DocEntry.name.like(old_path + "/%"))
+            )
+            .scalars()
+            .all()
+        )
         for d in docs_in_folder:
             d.name = d.name.replace(old_path, new_path, 1)
 
-        folders_in_folder = db.session.execute(select(Folder).filter(
-            (Folder.location == old_path) | (Folder.location.like(old_path + "/%"))
-        )).scalars().all()
+        folders_in_folder = (
+            db.session.execute(
+                select(Folder).filter(
+                    (Folder.location == old_path)
+                    | (Folder.location.like(old_path + "/%"))
+                )
+            )
+            .scalars()
+            .all()
+        )
         for f in folders_in_folder:
             f.location = f.location.replace(old_path, new_path, 1)
 
@@ -202,9 +223,15 @@ class Folder(db.Model, Item):
     def get_document(
         self, relative_path: str, create_if_not_exist=False, creator_group=None
     ) -> None | DocEntry:
-        doc = db.session.execute(select(DocEntry).filter_by(
-            name=join_location(self.get_full_path(), relative_path)
-        )).scalars().first()
+        doc = (
+            db.session.execute(
+                select(DocEntry).filter_by(
+                    name=join_location(self.get_full_path(), relative_path)
+                )
+            )
+            .scalars()
+            .first()
+        )
         if doc is not None:
             return doc
         if create_if_not_exist:
@@ -283,7 +310,13 @@ class Folder(db.Model, Item):
             return Folder.get_root()
 
         rel_path, rel_name = split_location(path)
-        folder = db.session.execute(select(Folder).filter_by(name=rel_name, location=rel_path)).scalars().first()
+        folder = (
+            db.session.execute(
+                select(Folder).filter_by(name=rel_name, location=rel_path)
+            )
+            .scalars()
+            .first()
+        )
         if folder is not None:
             return folder
 

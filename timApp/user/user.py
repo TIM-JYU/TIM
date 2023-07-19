@@ -9,7 +9,7 @@ import filelock
 from flask import current_app, has_request_context
 from sqlalchemy import func, select, delete
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import joinedload, defaultload
+from sqlalchemy.orm import selectinload, defaultload
 from sqlalchemy.orm.collections import (
     attribute_mapped_collection,
 )
@@ -236,7 +236,7 @@ deleted_user_pattern = re.compile(rf".*{deleted_user_suffix}(_\d+)?$")
 
 
 def user_query_with_joined_groups() -> Select:
-    return select(User).options(joinedload(User.groups))
+    return select(User).options(selectinload(User.groups))
 
 
 class User(db.Model, TimeStampMixin, SCIMEntity):
@@ -697,7 +697,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_by_id(uid: int) -> Optional["User"]:
-        return db.session.get(User, uid, options=[joinedload(User.groups)])
+        return db.session.get(User, uid, options=[selectinload(User.groups)])
 
     @staticmethod
     def get_by_email(email: str) -> Optional["User"]:
@@ -816,8 +816,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             .with_only_columns(Folder)
             .options(
                 defaultload(Folder._block)
-                .joinedload(Block.accesses)
-                .joinedload(BlockAccess.usergroup)
+                .selectinload(Block.accesses)
+                .selectinload(BlockAccess.usergroup)
             )
         )
 
@@ -1425,7 +1425,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     def get_answers_for_task(self, task_id: str):
         return (
-            self.answers.options(joinedload(Answer.users_all))
+            self.answers.options(selectinload(Answer.users_all))
             .order_by(Answer.id.desc())
             .filter_by(task_id=task_id)
         )

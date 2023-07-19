@@ -8,7 +8,7 @@ __date__ = "29.5.2022"
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import Select
 
 from timApp.document.docinfo import DocInfo
@@ -23,7 +23,7 @@ from timApp.util.utils import get_current_time
 def get_reviews_where_user_is_reviewer(d: DocInfo, user: User) -> list[PeerReview]:
     """Return all peer_review rows where block_is is d.id and the person making the review is the given user"""
     stmt = get_reviews_where_user_is_reviewer_query(d, user).options(
-        joinedload(PeerReview.reviewable)
+        selectinload(PeerReview.reviewable)
     )
     return db.session.execute(stmt).scalars().all()
 
@@ -43,7 +43,7 @@ def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
 def get_reviews_targeting_user(d: DocInfo, user: User) -> list[PeerReview]:
     """Return all peer_review rows where block_id is d.id and the user is the review target"""
     stmt = get_reviews_targeting_user_query(d, user).options(
-        joinedload(PeerReview.reviewable)
+        selectinload(PeerReview.reviewable)
     )
     return db.session.execute(stmt).scalars().all()
 

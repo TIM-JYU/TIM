@@ -148,7 +148,7 @@ class VelpGroup(db.Model):
     )
     block: Block = db.relationship(
         "Block",
-        lazy="joined",
+        lazy="selectin",
     )
     # docentry = db.relationship(
     #     'DocEntry',

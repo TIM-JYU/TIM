@@ -7,7 +7,7 @@ from datetime import datetime
 from flask import request, Response
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError  # type: ignore
 
 from timApp.auth.accesshelper import (
@@ -281,7 +281,7 @@ def get_tagged_documents() -> Response:
             )
 
     if list_doc_tags:
-        query_options = joinedload(DocEntry._block).joinedload(Block.tags)
+        query_options = selectinload(DocEntry._block).selectinload(Block.tags)
     else:
         query_options = None
 
@@ -303,7 +303,7 @@ def get_tagged_document_by_id(doc_id: int) -> Response:
     docs = get_documents(
         filter_user=get_current_user_object(),
         custom_filter=DocEntry.id.in_([doc_id]),
-        query_options=joinedload(DocEntry._block).joinedload(Block.tags),
+        query_options=selectinload(DocEntry._block).selectinload(Block.tags),
     )
     if not docs:
         raise NotExist("Document not found or not accessible!")

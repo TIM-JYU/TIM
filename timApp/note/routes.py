@@ -4,7 +4,7 @@ from typing import Any
 
 from flask import Response
 from sqlalchemy import true, select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesshelper import (
     verify_comment_right,
@@ -146,8 +146,8 @@ def get_notes(
         db.session.execute(
             select(UserNote)
             .filter(UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction)
-            .options(joinedload(UserNote.usergroup))
-            .options(joinedload(UserNote.block).joinedload(Block.docentries))
+            .options(selectinload(UserNote.usergroup))
+            .options(selectinload(UserNote.block).selectinload(Block.docentries))
         )
         .scalars()
         .all()
@@ -166,7 +166,7 @@ def get_notes(
                         & (PendingNotification.kind == NotificationType.CommentDeleted)
                     )
                     .options(
-                        joinedload(PendingNotification.block).joinedload(
+                        selectinload(PendingNotification.block).selectinload(
                             Block.docentries
                         )
                     )
