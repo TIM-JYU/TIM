@@ -384,7 +384,7 @@ def get_answers(user, task_ids, answer_map):
         sub = (
             valid_answers_query(task_ids)
             .add_columns(col, cnt)
-            .with_entities(col, cnt)
+            .with_only_columns(col, cnt)
             .group_by(Answer.task_id)
             .subquery()
         )

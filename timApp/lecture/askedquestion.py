@@ -15,6 +15,8 @@ from timApp.util.utils import get_current_time
 
 class AskedQuestion(db.Model):
     __tablename__ = "askedquestion"
+    __allow_unmapped__ = True
+    
     asked_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(
         db.Integer, db.ForeignKey("lecture.lecture_id"), nullable=False
@@ -41,13 +43,13 @@ class AskedQuestion(db.Model):
         "LectureAnswer", back_populates="asked_question", overlaps="answers"
     )
     running_question = db.relationship(
-        "Runningquestion", back_populates="asked_question", lazy="select", uselist=False
+        "Runningquestion", back_populates="asked_question", lazy="select", uselist=False, cascade_backrefs=False
     )
     questionactivity = db.relationship(
-        "QuestionActivity", back_populates="asked_question", lazy="dynamic"
+        "QuestionActivity", back_populates="asked_question", lazy="dynamic", cascade_backrefs=False
     )
     showpoints = db.relationship(
-        "Showpoints", back_populates="asked_question", lazy="select"
+        "Showpoints", back_populates="asked_question", lazy="select", cascade_backrefs=False
     )
 
     @property

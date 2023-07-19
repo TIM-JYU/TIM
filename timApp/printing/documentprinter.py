@@ -11,6 +11,7 @@ from pathlib import Path
 from flask import current_app
 from pypandoc import _as_unicode, _validate_formats
 from pypandoc.py3compat import string_types, cast_bytes
+from sqlalchemy import select
 
 from timApp.auth.accesshelper import has_view_access
 from timApp.auth.sessioninfo import get_current_user_object
@@ -49,6 +50,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.dbaccess import get_files_path
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.utils import cache_folder_path
 from tim_common.html_sanitize import sanitize_html
@@ -862,7 +864,6 @@ class DocumentPrinter:
         plugins_user_print: bool = False,
         url_macros: dict[str, str] | None = None,
     ) -> str | None:
-        # noinspection PyUnresolvedReferences
         existing_print: PrintedDoc | None = (
             db.session.execute(
                 select(PrintedDoc)
@@ -1053,8 +1054,7 @@ def tim_convert_input(
         stderr = _decode_result(stderr)
         if stdout or stderr:
             raise RuntimeError(
-                'Pandoc died with exitcode "%s" during conversion. \nSource=\n%s'
-                % (stdout + stderr, number_lines(source))
+                f'Pandoc died with error "{stderr}" during conversion.\nOutput: {stdout}.\nSource=\n{number_lines(source)}'
             )
 
         with open(latex_file, encoding="utf-8") as r:

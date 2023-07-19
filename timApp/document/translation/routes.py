@@ -207,6 +207,7 @@ def create_translation_route(
     cite_doc = create_document_and_block(get_current_user_object().get_personal_group())
 
     tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
+    db.session.add(tr)
     tr.title = title
 
     add_reference_pars(

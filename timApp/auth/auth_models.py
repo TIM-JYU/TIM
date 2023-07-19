@@ -16,6 +16,8 @@ class AccessTypeModel(db.Model):
     """A kind of access that a UserGroup may have to a Block."""
 
     __tablename__ = "accesstype"
+    __allow_unmapped__ = True
+
     id = db.Column(db.Integer, primary_key=True)
     """Access type identifier."""
 
@@ -35,6 +37,8 @@ class BlockAccess(db.Model):
     """A single permission. Relates a UserGroup with a Block along with an AccessType."""
 
     __tablename__ = "blockaccess"
+    __allow_unmapped__ = True
+    
     block_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     usergroup_id = db.Column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True

@@ -8,6 +8,8 @@ class ReadParagraph(db.Model):
     """Denotes that a User(Group) has read a specific paragraph in some way."""
 
     __tablename__ = "readparagraph"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     """Readmark id."""
 
@@ -37,3 +39,5 @@ class ReadParagraph(db.Model):
     )
 
     usergroup = db.relationship("UserGroup", back_populates="readparagraphs")
+
+

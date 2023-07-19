@@ -33,6 +33,7 @@ class Language(db.Model):
     """
 
     __tablename__ = "language"
+    __allow_unmapped__ = True
 
     lang_code = db.Column(db.Text, nullable=False, primary_key=True)
     """Standardized code of the language."""

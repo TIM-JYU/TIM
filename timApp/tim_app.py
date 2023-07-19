@@ -254,12 +254,6 @@ Request.user_agent_class = SimpleUserAgent
 setup_logging(app)
 
 # Compress(app)
-
-# Disabling object expiration on commit makes testing easier
-# because sometimes objects would expire after calling a route.
-if app.config["TESTING"]:
-    db.session = db.create_scoped_session({"expire_on_commit": False})
-
 db.init_app(app)
 db.app = app
 migrate = Migrate(app, db)
@@ -307,7 +301,7 @@ def print_schema(bind: str | None = None):
     models = inspect.getmembers(
         sys.modules[__name__], lambda x: inspect.isclass(x) and hasattr(x, "__table__")
     )
-    eng = db.get_engine(app, bind)
+    eng = db.engines[bind]
 
     for _, model_class in models:
         print(CreateTable(model_class.__table__).compile(eng), end=";")

@@ -11,6 +11,8 @@ from timApp.user.hakaorganization import HakaOrganization
 class PersonalUniqueCode(db.Model):
     """The database model for the 'schacPersonalUniqueCode' Haka attribute."""
 
+    __allow_unmapped__ = True
+
     user_id = db.Column(
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False, primary_key=True
     )

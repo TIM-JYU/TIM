@@ -1,3 +1,4 @@
+from typing import Type
 from unittest.mock import patch, Mock
 
 from sqlalchemy import select
@@ -17,7 +18,9 @@ from timApp.document.translation.reversingtranslator import (
 from timApp.document.translation.translation import Translation
 from timApp.document.translation.translator import Usage, TranslateBlock
 from timApp.document.yamlblock import YamlBlock
+from timApp.tests.db.timdbtest import TimDbTest
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.util.utils import static_tim_doc
 
@@ -27,7 +30,16 @@ with.
 """
 
 
-class TimTranslationTest(TimRouteTest):
+def setup_translation_test(cls: Type) -> None:
+    with app.app_context():
+        db.session.add(ReversingTranslationService())
+        db.session.add(QuotaLimitedTestTranslator())
+        cls.reverselang = Language(**REVERSE_LANG)
+        db.session.add(cls.reverselang)
+        db.session.commit()
+
+
+class TimTranslationTest(TimDbTest):
     """Test class containing the reversing translation service and its
     preferred target language.
     """
@@ -35,11 +47,22 @@ class TimTranslationTest(TimRouteTest):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        db.session.add(ReversingTranslationService())
-        db.session.add(QuotaLimitedTestTranslator())
-        cls.reverselang = Language(**REVERSE_LANG)
-        db.session.add(cls.reverselang)
-        db.session.commit()
+        setup_translation_test(cls)
+
+    @property
+    def reverselang(self) -> Language:
+        return db.session.get(Language, REVERSE_LANG["lang_code"])
+
+
+class TimTranslationRouteTest(TimRouteTest):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        setup_translation_test(cls)
+
+    @property
+    def reverselang(self) -> Language:
+        return db.session.get(Language, REVERSE_LANG["lang_code"])
 
 
 class QuotaLimitedTestTranslator(ReversingTranslationService):
@@ -84,7 +107,7 @@ class QuotaLimitedTestTranslator(ReversingTranslationService):
     __mapper_args__ = {"polymorphic_identity": "QuotaLimited"}
 
 
-class TranslationTest(TimTranslationTest):
+class TranslationTest(TimTranslationRouteTest):
     def get_deepl_service(self) -> DeeplTranslationService:
         return (
             db.session.execute(select(DeeplTranslationService).limit(1))

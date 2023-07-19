@@ -67,7 +67,7 @@ def get_notes(
         .filter(f)
         .order_by(UserNote.id)
     )
-    return process_notes(db.session.execute(stmt).scalars().all())
+    return process_notes(db.session.execute(stmt).all())
 
 
 def move_notes(src_par: DocParagraph, dest_par: DocParagraph):

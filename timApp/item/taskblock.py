@@ -9,6 +9,8 @@ from timApp.user.usergroup import UserGroup
 
 class TaskBlock(db.Model):
     __tablename__ = "taskblock"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     task_id = db.Column(db.Text, primary_key=True)
 

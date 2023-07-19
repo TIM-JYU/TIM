@@ -80,7 +80,7 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
 
     if not all_users:
         stmt = stmt.filter(
-            BlockAccess.block_id.in_(get_owned_objects_query(u).subquery())
+            BlockAccess.block_id.in_(get_owned_objects_query(u))
         )
 
     scheduled_fns: list[PeriodicTask] = db.session.execute(stmt).scalars().all()

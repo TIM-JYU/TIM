@@ -10,6 +10,8 @@ external_id_re = re.compile(
 
 class ScimUserGroup(db.Model):
     __tablename__ = "scimusergroup"
+    __allow_unmapped__ = True
+    
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"), primary_key=True)
     external_id = db.Column(db.Text, unique=True, nullable=False)
 

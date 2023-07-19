@@ -18,6 +18,7 @@ class InternalMessage(db.Model):
     """A TIM message."""
 
     __tablename__ = "internalmessage"
+    __allow_unmapped__ = True
 
     id = db.Column(db.Integer, primary_key=True)
     """Message identifier."""
@@ -70,6 +71,7 @@ class InternalMessageDisplay(db.Model):
     """Where and for whom a TIM message is displayed."""
 
     __tablename__ = "internalmessage_display"
+    __allow_unmapped__ = True
 
     id = db.Column(db.Integer, primary_key=True)
     """Message display identifier."""
@@ -105,6 +107,7 @@ class InternalMessageReadReceipt(db.Model):
     """Metadata about read receipts."""
 
     __tablename__ = "internalmessage_readreceipt"
+    __allow_unmapped__ = True
 
     message_id = db.Column(
         db.Integer, db.ForeignKey("internalmessage.id"), primary_key=True

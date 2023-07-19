@@ -259,8 +259,9 @@ class RightLog:
         if not emails:
             emails = [
                 e
-                for e, in db.session.execute(
-                    select(User.email).join(User, UserGroup.users)
+                for e in db.session.execute(
+                    select(User.email)
+                    .join(User, UserGroup.users)
                     .filter(UserGroup.name == r.group)
                 ).scalars()
             ]
@@ -438,9 +439,10 @@ def receive_right(
 ) -> Response:
     check_secret(secret, "DIST_RIGHTS_RECEIVE_SECRET")
     uges = db.session.execute(
-        select(UserGroup, User.email).join(User, UserGroup.name == User.name)
+        select(UserGroup, User.email)
+        .join(User, UserGroup.name == User.name)
         .filter(User.email.in_(re.email for re in rights))
-    ).scalars().all()
+    )
     group_map = {}
     for ug, email in uges:
         group_map[email] = ug
@@ -542,8 +544,9 @@ def get_current_rights_route(
         raise RouteException(f"Unknown target: {target}")
     groups_list = groups.split(",")
     emails = db.session.execute(
-        select(User.email).join(UserGroup, User.groups)
+        select(User.email)
+        .join(UserGroup, User.groups)
         .filter(UserGroup.name.in_(groups_list))
         .order_by(User.email)
-    ).scalars().all()
-    return json_response([{"email": e, "right": rights.get_right(e)} for e, in emails])
+    ).scalars()
+    return json_response([{"email": e, "right": rights.get_right(e)} for e in emails])

@@ -5,6 +5,8 @@ from timApp.timdb.sqa import db
 
 class Useractivity(db.Model):
     __tablename__ = "useractivity"
+    __allow_unmapped__ = True
+    
     lecture_id = db.Column(
         db.Integer, db.ForeignKey("lecture.lecture_id"), primary_key=True
     )

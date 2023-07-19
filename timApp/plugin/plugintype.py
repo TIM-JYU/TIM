@@ -35,6 +35,8 @@ class PluginTypeBase:
 # TODO: Right now values are added dynamically to the table when saving answers. Instead add them on TIM start.
 class PluginType(db.Model, PluginTypeBase):
     __tablename__ = "plugintype"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
 
     type = db.Column(db.Text, nullable=False, unique=True)
@@ -53,7 +55,7 @@ class PluginType(db.Model, PluginTypeBase):
         # Use a lock to prevent concurrent access
         with filelock.FileLock("/tmp/plugin_type_create.lock"):
             try:
-                tmp_session = db.create_session({})
+                tmp_session = db._make_session_factory({})
                 session = tmp_session()
                 session.add(PluginType(type=p_type))
                 session.commit()

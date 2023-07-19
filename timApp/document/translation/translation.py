@@ -15,6 +15,8 @@ class Translation(db.Model, DocInfo):
     """
 
     __tablename__ = "translation"
+    __allow_unmapped__ = True
+    
     doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     src_docid = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
     lang_id = db.Column(db.Text, nullable=False)
@@ -64,8 +66,8 @@ class Translation(db.Model, DocInfo):
 
 def add_tr_entry(doc_id: int, item: DocInfo, tr: Translation) -> Translation:
     new_tr = Translation(doc_id=doc_id, src_docid=item.id, lang_id=tr.lang_id)
+    db.session.add(new_tr)
     new_tr.title = tr.title
     # Set docentry so that it can be used without extra queries in other methods
     new_tr.docentry = item
-    db.session.add(new_tr)
     return new_tr

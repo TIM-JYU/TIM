@@ -66,7 +66,6 @@ class Changelog:
                 .filter(UserGroup.id.in_(usergroup_ids))
                 .outerjoin(User, User.name == UserGroup.name)
             )
-            .scalars()
             .all()
         )  # type: List[Tuple[UserGroup, Optional[User]]]
         for ug, u in result:

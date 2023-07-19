@@ -10,6 +10,7 @@ GroupingKey = tuple[int, str]
 
 class PendingNotification(db.Model):
     __tablename__ = "pendingnotification"
+    __allow_unmapped__ = True
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)

@@ -196,6 +196,7 @@ def grant_access(
         duration=duration,
         require_confirm=require_confirm,
     )
+    db.session.add(ba)
     group.accesses_alt[key] = ba
     return ba
 

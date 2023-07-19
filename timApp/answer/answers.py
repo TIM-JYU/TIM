@@ -54,19 +54,17 @@ def get_answers_query(task_id: TaskId, users: list[User], only_valid: bool) -> S
     if only_valid:
         stmt = stmt.filter_by(valid=True)
     if not task_id.is_global:
-        stmt = select(Answer).filter(
-            Answer.id.in_(
-                stmt.join(User, Answer.users)
-                .filter(User.id.in_([u.id for u in users]))
-                .group_by(Answer.id)
-                .with_only_columns([Answer.id])
-                .having(
-                    (func.array_agg(aggregate_order_by(User.id, User.id)))
-                    == sorted(u.id for u in users)
-                )
-                .subquery()
+        stmt = (
+            stmt.join(User, Answer.users)
+            .filter(User.id.in_([u.id for u in users]))
+            .group_by(Answer.id)
+            .having(
+                (func.array_agg(aggregate_order_by(User.id, User.id)))
+                == sorted(u.id for u in users)
             )
+            .with_only_columns(Answer.id)
         )
+        stmt = select(Answer).filter(Answer.id.in_(stmt))
     stmt = stmt.order_by(Answer.id.desc())
     return stmt
 
@@ -81,14 +79,10 @@ def get_latest_answers_query(
         stmt.join(User, Answer.users)
         .filter(User.id.in_([u.id for u in users]))
         .group_by(User.id)
-        .with_entities(func.max(Answer.id).label("aid"), User.id.label("uid"))
+        .with_only_columns(func.max(Answer.id).label("aid"), User.id.label("uid"))
         .subquery()
     )
-    return (
-        select(Answer)
-        .join(stmt_sub, Answer.id == stmt_sub.c.aid)
-        .with_only_columns(Answer)
-    )
+    return select(Answer).join(stmt_sub, Answer.id == stmt_sub.c.aid)
 
 
 def is_redundant_answer(
@@ -506,8 +500,8 @@ def get_existing_answers_info(
     users: list[User], task_id: TaskId, only_valid: bool
 ) -> ExistingAnswersInfo:
     stmt = get_answers_query(task_id, users, only_valid)
-    latest = db.session.scalars(stmt.limit(1)).first()
-    count = db.session.scalar(stmt.with_only_columns([func.count()]))
+    latest = db.session.execute(stmt.limit(1)).scalars().first()
+    count = db.session.scalar(select(func.count()).select_from(stmt.subquery()))
     return ExistingAnswersInfo(latest_answer=latest, count=count)
 
 
@@ -663,7 +657,7 @@ def get_users_for_tasks(
     task_sum = (
         func.round(
             func.sum(
-                case([(sub_joined.c.valid == True, sub_joined.c.points)], else_=0)
+                case((sub_joined.c.valid == True, sub_joined.c.points), else_=0)
             ).cast(Numeric),
             4,
         )
@@ -673,7 +667,7 @@ def get_users_for_tasks(
     velp_sum = (
         func.round(
             func.sum(
-                case([(sub_joined.c.valid == True, sub_joined.c.velp_points)], else_=0)
+                case((sub_joined.c.valid == True, sub_joined.c.velp_points), else_=0)
             ).cast(Numeric),
             4,
         )
@@ -1116,7 +1110,5 @@ def get_global_answers(parsed_task_ids: dict[str, TaskId]) -> list[Answer]:
         .with_only_columns(func.max(Answer.id).label("aid"))
         .subquery()
     )
-    global_datas = (
-        select(Answer).join(sq2, Answer.id == sq2.c.aid).with_only_columns(Answer).all()
-    )
-    return db.session.scalars(global_datas).all()
+    global_datas = select(Answer).join(sq2, Answer.id == sq2.c.aid)
+    return db.session.execute(global_datas).scalars().all()

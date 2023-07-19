@@ -9,7 +9,7 @@ from flask import render_template
 from flask import request
 from flask import session
 from flask import url_for
-from flask.sessions import SecureCookieSession
+from flask.sessions import SessionMixin
 from sqlalchemy import select, delete
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
@@ -598,7 +598,7 @@ def quick_login(username: str) -> Response:
     return update_locale_lang(safe_redirect(url_for("view_page.index_page")))
 
 
-def log_in_as_anonymous(sess: SecureCookieSession) -> User:
+def log_in_as_anonymous(sess: SessionMixin) -> User:
     user_name = "Anonymous"
     user_real_name = "Guest"
     user = create_anonymous_user(user_name, user_real_name)

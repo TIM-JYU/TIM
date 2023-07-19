@@ -478,7 +478,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     """
     filter_opts = filter_opts or FilterOptions()
 
-    stmt = select(Event)
+    stmt = select(Event.event_id)
     event_queries = []
     event_filter = false()
 
@@ -506,7 +506,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
             UserGroup.name.in_(filter_opts.groups)
         )
     # noinspection PyUnresolvedReferences
-    event_filter |= Event.event_id.in_(subquery_event_groups.subquery())
+    event_filter |= Event.event_id.in_(subquery_event_groups)
 
     # Filter out any tags and groups
     if filter_opts.tags is not None:
@@ -518,7 +518,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
 
     if filter_opts.showImportant:
         # noinspection PyUnresolvedReferences
-        important_q = select(Event).filter(
+        important_q = select(Event.event_id).filter(
             Event.event_id.in_(subquery_event_groups_all) & Event.important.is_(True)
         )
         event_queries.append(important_q)
@@ -529,10 +529,11 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
             u.get_groups(include_expired=False)
             .join(Enrollment, Enrollment.usergroup_id == UserGroup.id)
             .with_only_columns(Enrollment.event_id)
-            .subquery()
         )
         # noinspection PyUnresolvedReferences
-        booked_query = select(Event).filter(Event.event_id.in_(enrolled_subquery))
+        booked_query = select(Event.event_id).filter(
+            Event.event_id.in_(enrolled_subquery)
+        )
         event_queries.append(booked_query)
 
     if filter_opts.showBookedByMin is not None:
@@ -546,7 +547,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
             )
         ).subquery()
         booked_min_query = (
-            select(Event)
+            select(Event.event_id)
             .select_from(booked_min_subquery)
             .join(Event, Event.event_id == booked_min_subquery.c.event_id)
             .filter(booked_min_subquery.c.count >= filter_opts.showBookedByMin)
@@ -562,6 +563,9 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
 
     if event_queries:
         stmt = stmt.union(*event_queries)
+        stmt = select(Event).filter(Event.event_id.in_(stmt))
+    else:
+        stmt = stmt.with_only_columns(Event)
     stmt = stmt.filter(timing_filter)
 
     return db.session.execute(stmt).scalars().all()

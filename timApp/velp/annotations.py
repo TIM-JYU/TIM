@@ -10,7 +10,7 @@ annotations as well as adding comments to the annotations. The module also retri
 from enum import Enum, unique
 
 from sqlalchemy import func, true, select
-from sqlalchemy.orm import selectinload, contains_eager
+from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.sql import Select
 
 from timApp.answer.answer import Answer
@@ -64,15 +64,13 @@ def get_annotations_with_comments_in_document(
         if is_peerreview_enabled(d):
             answer_filter |= User.id.in_(
                 get_reviews_where_user_is_reviewer_query(d, user)
-                .with_entities(PeerReview.reviewable_id)
-                .subquery()
+                .with_only_columns(PeerReview.reviewable_id)
             )
             own_review_filter = (User.id == user.id) | (
                 Annotation.annotator_id == user.id
             )
-    anns = (
-        db.session.execute(
-            set_annotation_query_opts(
+
+    q = (set_annotation_query_opts(
                 select(Annotation)
                 .filter_by(document_id=d.id)
                 .filter(
@@ -94,12 +92,15 @@ def get_annotations_with_comments_in_document(
                     Annotation.offset_start.desc(),
                 )
             )
-            .options(contains_eager(Annotation.velp_content))
-            .options(contains_eager(Annotation.answer).contains_eager(Answer.users_all))
+            .options(joinedload(Annotation.velp_content))
+            .options(joinedload(Annotation.answer).selectinload(Answer.users_all))
             .options(
-                contains_eager(Annotation.velp_version).contains_eager(VelpVersion.velp)
+                joinedload(Annotation.velp_version).joinedload(VelpVersion.velp)
             )
-            .with_only_columns(Annotation)
+            .with_only_columns(Annotation))
+    anns = (
+        db.session.execute(
+            q
         )
         .scalars()
         .all()
@@ -112,19 +113,19 @@ def set_annotation_query_opts(q: Select) -> Select:
         q.options(selectinload(Annotation.velp_content).load_only(VelpContent.content))
         .options(
             selectinload(Annotation.comments)
-            .selectinload(AnnotationComment.commenter)
+            .joinedload(AnnotationComment.commenter)
             .raiseload(User.groups)
         )
         .options(selectinload(Annotation.annotator).raiseload(User.groups))
         .options(
-            selectinload(Annotation.answer)
+            joinedload(Annotation.answer)
             .selectinload(Answer.users_all)
             .raiseload(User.groups)
         )
         .options(
             selectinload(Annotation.velp_version)
             .load_only(VelpVersion.id, VelpVersion.velp_id)
-            .selectinload(VelpVersion.velp)
+            .joinedload(VelpVersion.velp)
             .load_only(Velp.color)
         )
     )

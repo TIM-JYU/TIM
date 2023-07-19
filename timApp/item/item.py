@@ -31,7 +31,7 @@ class ItemBase:
     def block(self) -> Block:
         # Relationships are not loaded when constructing an object with __init__.
         if not hasattr(self, "_block") or self._block is None:
-            self._block = db.session.get(Block, self.id)
+            self._block = db.session.get(Block, self.id, populate_existing=True)
         return self._block
 
     @property
@@ -125,13 +125,13 @@ class Item(ItemBase):
             select(Folder)
             .filter(tuple_(Folder.location, Folder.name).in_(path_tuples))
             .order_by(func.length(Folder.location).desc())
-            .options(defaultload(Folder._block).selectinload(Block.relevance))
+            .options(defaultload(Folder._block).joinedload(Block.relevance))
         )
         if eager_load_groups:
             crumbs_stmt = crumbs_stmt.options(
                 defaultload(Folder._block)
                 .selectinload(Block.accesses)
-                .selectinload(BlockAccess.usergroup)
+                .joinedload(BlockAccess.usergroup)
             )
         crumbs = db.session.execute(crumbs_stmt).scalars().all()
         if include_root:

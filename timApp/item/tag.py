@@ -1,5 +1,4 @@
 from enum import Enum, unique
-from typing import Optional
 
 from timApp.timdb.sqa import db
 
@@ -22,6 +21,8 @@ class Tag(db.Model):
     """A tag with associated document id, tag name, type and expiration date."""
 
     __tablename__ = "tag"
+    __allow_unmapped__ = True
+    
     block_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     name = db.Column(db.Text, primary_key=True)
     type = db.Column(db.Enum(TagType), nullable=False)

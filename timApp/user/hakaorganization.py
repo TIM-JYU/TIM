@@ -7,6 +7,8 @@ from timApp.timdb.sqa import db
 
 
 class HakaOrganization(db.Model):
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False, unique=True)
 

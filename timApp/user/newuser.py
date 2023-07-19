@@ -8,6 +8,8 @@ class NewUser(db.Model):
     """A user that is going to register to TIM via email and has not yet completed the registration process."""
 
     __tablename__ = "newuser"
+    __allow_unmapped__ = True
+    
     email = db.Column(db.Text, primary_key=True)
     """Email address."""
 

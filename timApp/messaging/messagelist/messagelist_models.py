@@ -34,6 +34,7 @@ class MessageListModel(db.Model):
     """Database model for message lists"""
 
     __tablename__ = "messagelist"
+    __allow_unmapped__ = True
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -265,6 +266,7 @@ class MessageListMember(db.Model):
     """Database model for members of a message list."""
 
     __tablename__ = "messagelist_member"
+    __allow_unmapped__ = True
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -506,6 +508,7 @@ class MessageListDistribution(db.Model):
     """Message list member's chosen distribution channels."""
 
     __tablename__ = "messagelist_distribution"
+    __allow_unmapped__ = True
 
     id = db.Column(db.Integer, primary_key=True)
 

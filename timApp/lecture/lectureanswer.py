@@ -26,6 +26,8 @@ def unshuffle_lectureanswer(
 
 class LectureAnswer(db.Model):
     __tablename__ = "lectureanswer"
+    __allow_unmapped__ = True
+    
     answer_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
     question_id = db.Column(
@@ -95,6 +97,6 @@ def get_totals(
         .filter_by(lecture_id=lecture.lecture_id)
         .group_by(User.id)
         .order_by(User.name)
-        .with_entities(User, func.sum(LectureAnswer.points), func.count())
+        .with_only_columns(User, func.sum(LectureAnswer.points), func.count())
     )
-    return db.session.execute(stmt).scalars().all()
+    return db.session.execute(stmt).all()

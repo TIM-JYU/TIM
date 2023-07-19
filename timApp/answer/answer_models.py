@@ -8,6 +8,8 @@ class AnswerTag(db.Model):
     """
 
     __tablename__ = "answertag"
+    __allow_unmapped__ = True
+
     id = db.Column(db.Integer, primary_key=True)
     answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
     tag = db.Column(db.Text, nullable=False)
@@ -17,6 +19,8 @@ class AnswerUpload(db.Model):
     """Associates uploaded files (Block with type BlockType.AnswerUpload) with Answers."""
 
     __tablename__ = "answerupload"
+    __allow_unmapped__ = True
+
     upload_block_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"))
 
@@ -32,6 +36,8 @@ class UserAnswer(db.Model):
     """Associates Users with Answers."""
 
     __tablename__ = "useranswer"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)

@@ -1,6 +1,7 @@
 from lxml import html
 
 from timApp.answer.answer import Answer
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.viewcontext import default_view_ctx
@@ -60,6 +61,9 @@ choices:
         a: Answer = db.session.get(Answer, resp["savedNew"])
         self.assertEqual(1 if create_preamble_translation else 0, a.points)
         self.assertEqual(f"{d.id}.t", a.task_id)
+        # Reattach the documents to the session
+        db.session.add(tr)
+        d = DocEntry.find_by_id(d.id)
         self.check_plugin_ref_correct(
             tr, d, p.document.get_paragraphs()[0], preamble_doc=tr_p
         )
@@ -177,8 +181,11 @@ choices:
             .getparent()
             .getparent()
         )
+        doc_to_check = DocEntry.find_by_id(doc_to_check.id)
+        expected_doc = DocEntry.find_by_id(expected_doc.id)
         # print(html.tostring(par, pretty_print=True).decode())
         if preamble_doc:
+            preamble_doc = DocEntry.find_by_id(preamble_doc.id)
             self.assertEqual(preamble_doc.path, par.attrib["data-from-preamble"])
         else:
             self.assertIsNone(par.attrib.get("data-from-preamble"))

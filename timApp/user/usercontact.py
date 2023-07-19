@@ -32,6 +32,7 @@ class UserContact(db.Model):
     """TIM users' additional contact information."""
 
     __tablename__ = "usercontact"
+    __allow_unmapped__ = True
 
     __table_args__ = (
         # A user should not have the same contact for the channel

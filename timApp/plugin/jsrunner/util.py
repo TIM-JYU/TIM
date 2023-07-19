@@ -470,12 +470,12 @@ def save_fields(
                 valid=True,
                 saver=curr_user,
             )
+            db.session.add(ans)
             saveresult.fields_changed += 1
             # If this was a global task, add it to all users in the answer map so we won't save it multiple times.
             if task_id.is_global:
                 for uid in user_map.keys():
                     answer_map[uid][ans.task_id] = ans
-            db.session.add(ans)
     return saveresult
 
 

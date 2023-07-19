@@ -7,6 +7,8 @@ class PeerReview(db.Model):
     """A peer review to a task."""
 
     __tablename__ = "peer_review"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     """Review identifier."""
 

@@ -73,7 +73,7 @@ def get_uid_gid(
         .all()
     )
     group = (
-        db.sesion.execute(select(UserGroup).filter_by(name=group_name).limit(1))
+        db.session.execute(select(UserGroup).filter_by(name=group_name).limit(1))
         .scalars()
         .first()
     )

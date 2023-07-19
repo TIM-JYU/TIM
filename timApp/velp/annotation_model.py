@@ -44,6 +44,8 @@ class Annotation(db.Model):
     """
 
     __tablename__ = "annotation"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     """Annotation identifier."""
 

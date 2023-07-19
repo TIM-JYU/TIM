@@ -224,4 +224,4 @@ texprint: "- %%selitys%% ([LIITE %%liiteNro%% / lista %%lista%%](%%server+linkki
         r = self.upload_file(
             d, b"""<svg xmlns="http://www.w3.org/2000/svg"></svg>""", "test.svg"
         )
-        self.check_mime(r["file"], "image/svg+xml")
+        self.check_mime(r["image"], "image/svg+xml")

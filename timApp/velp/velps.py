@@ -252,9 +252,9 @@ def get_velp_content_for_document(
         )
         .with_only_columns(Velp)
         .options(selectinload(Velp.groups).raiseload(VelpGroup.block))
-        .options(selectinload(Velp.velp_versions).selectinload(VelpVersion.content))
+        .options(selectinload(Velp.velp_versions).joinedload(VelpVersion.content))
     )
-    return vq.all()
+    return db.session.execute(vq).scalars().all()
 
 
 def get_velp_label_content_for_document(

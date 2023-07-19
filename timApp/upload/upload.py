@@ -1,4 +1,3 @@
-import imghdr
 import io
 import json
 import os
@@ -51,6 +50,7 @@ from timApp.upload.uploadedfile import (
     is_script_safe_mimetype,
 )
 from timApp.user.user import User
+from timApp.util.file_utils import guess_image_type
 from timApp.util.flask.requesthelper import (
     use_model,
     RouteException,
@@ -594,7 +594,7 @@ def upload_image_or_file(d: DocInfo, file):
 
 def upload_image_or_file_impl(d: DocInfo, file):
     content = file.read()
-    imgtype = imghdr.what(None, h=content)
+    imgtype = guess_image_type(content)
     type_str = "image" if imgtype else "file"
     f = save_file_and_grant_access(d, content, file, BlockType.from_str(type_str))
     return f, type_str
@@ -688,12 +688,11 @@ def get_image(image_id: str, image_filename: str) -> Response:
     verify_view_access(f, check_parents=True)
     if image_filename != f.filename:
         raise NotExist("Image not found")
-    img_data = f.data
-    imgtype = imghdr.what(None, h=img_data)
+    imgtype = guess_image_type(f.filesystem_path)
     # Redirect if we can't deduce the image type
     if not imgtype:
         return safe_redirect(
             url_for("upload.get_file", file_id=image_id, file_filename=image_filename)
         )
-    f = io.BytesIO(img_data)
+    f = io.BytesIO(f.data)
     return send_file(f, mimetype="image/" + imgtype)

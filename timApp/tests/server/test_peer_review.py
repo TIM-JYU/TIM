@@ -116,7 +116,7 @@ class PeerReviewTest(TimRouteTest):
             expect_status=400,
             expect_content={"error": "Requested block is inside an area"},
         )
-        self.assertEqual(0, len(rq.all()))
+        self.assertEqual(0, len(db.session.execute(rq).all()))
         tu1_ans = self.add_answer(d, "ta1", "tu1", user=self.test_user_1)
         tu3_ans = self.add_answer(d, "ta2", "tu2", user=self.test_user_3)
         db.session.commit()
@@ -125,7 +125,7 @@ class PeerReviewTest(TimRouteTest):
             expect_status=400,
             expect_content={"error": "Area revs not found"},
         )
-        self.assertEqual(0, len(rq.all()))
+        self.assertEqual(0, len(db.session.execute(rq).all()))
         d.document.add_setting("group", "testusers1")
         self.get(f"{url}?area=rev")
         prs: list[PeerReview] = (
@@ -176,10 +176,10 @@ class PeerReviewTest(TimRouteTest):
         self.assertIn(
             "Not enough users to form pairs (1 but at least 2 users needed)", r
         )
-        self.assertEqual(0, len(rq.all()))
+        self.assertEqual(0, len(db.session.execute(rq).all()))
         d.document.add_setting("peer_review_allow_invalid", True)
         r = self.get(f"{url}?b={b}&size=1")
         self.assertNotIn(
             "Not enough users to form pairs (1 but at least 2 users needed)", r
         )
-        self.assertEqual(2, len(rq.all()))
+        self.assertEqual(2, len(db.session.execute(rq).all()))

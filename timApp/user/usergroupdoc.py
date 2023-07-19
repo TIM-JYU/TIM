@@ -7,5 +7,7 @@ class UserGroupDoc(db.Model):
     """
 
     __tablename__ = "usergroupdoc"
+    __allow_unmapped__ = True
+
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"), primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)

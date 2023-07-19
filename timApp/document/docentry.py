@@ -29,6 +29,8 @@ class DocEntry(db.Model, DocInfo):
     """
 
     __tablename__ = "docentry"
+    __allow_unmapped__ = True
+    
     name = db.Column(db.Text, primary_key=True)
     """Full path of the document.
     
@@ -41,7 +43,7 @@ class DocEntry(db.Model, DocInfo):
     public = db.Column(db.Boolean, nullable=False, default=True)
     """Whether the document is visible in directory listing."""
 
-    _block = db.relationship("Block", back_populates="docentries", lazy="selectin")
+    _block = db.relationship("Block", back_populates="docentries", lazy="joined")
 
     trs: list[Translation] = db.relationship(
         "Translation",
@@ -52,6 +54,7 @@ class DocEntry(db.Model, DocInfo):
         # TODO: This feels slightly hacky. This relationship attribute might be better in Block class, although that
         #  doesn't sound ideal either.
         passive_deletes="all",
+        cascade_backrefs=False,
     )
 
     __table_args__ = (db.Index("docentry_id_idx", "id"),)

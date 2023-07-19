@@ -384,7 +384,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
             stmt = select(User).filter(User.id.in_([int(i) for i in idents]))
         except ValueError as e:
             return args.make_answer_error(f"User ids must be ints ({e})")
-        users = {str(u.id): u for u in db.sesion.execute(stmt).scalars()}
+        users = {str(u.id): u for u in db.session.execute(stmt).scalars()}
     elif id_prop == "email":
         stmt = select(User).filter(User.email.in_(idents))
         users = {u.email: u for u in db.session.execute(stmt).scalars()}

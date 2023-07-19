@@ -294,8 +294,8 @@ def get_statistics(doc_path):
 
         def gen_rows():
             yield column_names
-            yield from (maybe_hide_name_from_row(row) for row in stmt)
+            yield from (maybe_hide_name_from_row(row) for row in db.session.execute(stmt))
 
         return csv_response(gen_rows(), dialect=csv_dialect)
     else:
-        return json_response(list(map(row_to_dict, stmt.all())))
+        return json_response(list(map(row_to_dict, db.session.execute(stmt).all())))

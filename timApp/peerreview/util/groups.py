@@ -24,7 +24,7 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
     if user_groups:
         user_ids = [
             uid
-            for uid, in db.session.execute(
+            for uid in db.session.execute(
                 select(UserGroupMember.user_id)
                 .join(UserGroup, UserGroupMember.group)
                 .filter(membership_current & (UserGroup.name.in_(user_groups)))

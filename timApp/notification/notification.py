@@ -29,6 +29,8 @@ class Notification(db.Model):
     """Notification settings for a User for a block."""
 
     __tablename__ = "notification"
+    __allow_unmapped__ = True
+    
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
     """User id."""
 

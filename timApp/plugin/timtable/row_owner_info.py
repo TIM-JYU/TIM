@@ -8,6 +8,8 @@ class RowOwnerInfo(db.Model):
     """
 
     __tablename__ = "rowownerinfo"
+    __allow_unmapped__ = True
+    
     doc_id = db.Column(db.Integer, primary_key=True)
     par_id = db.Column(db.Text, primary_key=True)
     unique_row_id = db.Column(db.Integer, primary_key=True)

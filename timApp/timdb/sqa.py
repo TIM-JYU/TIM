@@ -6,12 +6,24 @@ name is class name in lowercase.
 Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs.io/en/latest/>.
 
 """
+import os
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm.base import instance_state
 
-db = SQLAlchemy()
+session_options = {
+    "future": True,
+}
+engine_options = {
+    "future": True,
+}
+if os.environ.get("TIM_TESTING", None):
+    # Disabling object expiration on commit makes testing easier
+    # because sometimes objects would expire after calling a route.
+    session_options["expire_on_commit"] = False
+
+db = SQLAlchemy(session_options=session_options, engine_options=engine_options)
 
 
 class TimeStampMixin:
@@ -24,18 +36,12 @@ class TimeStampMixin:
     )
 
 
-# UserGroupMember = db.Table('usergroupmember',
-#                            db.Column('usergroup_id', db.Integer, db.ForeignKey('usergroup.id'), primary_key=True),
-#                            db.Column('user_id', db.Integer, db.ForeignKey('useraccount.id'), primary_key=True),
-#                            )
-
-
 def tim_main_execute(sql: str, params=None):
-    return db.session.execute(sql, params, bind=get_tim_main_engine())
+    return db.session.execute(text(sql), params, bind_arguments={"bind": get_tim_main_engine()})
 
 
 def get_tim_main_engine():
-    return db.get_engine()
+    return db.engine
 
 
 def include_if_loaded(attr_name: str, obj, key_name=None):

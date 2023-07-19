@@ -214,7 +214,7 @@ class PermissionEditModelBase:
             db.session.execute(
                 select(UserGroup).filter(UserGroup.name.in_(self.groups))
             )
-            .scalar()
+            .scalars()
             .all()
         )
 

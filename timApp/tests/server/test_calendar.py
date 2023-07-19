@@ -148,7 +148,7 @@ class CalendarBookMessageTest(CalendarTest):
         self.test_user_2.add_to_group(ug, None)
         ug.admin_doc = d.block
         self.test_user_1.grant_access(d.block, AccessType.manage)
-        db.session.commit()
+        self.commit_db()
 
         self.login_test1()
         event = self.post_event(self.test_user_1, "event_message_send_test1")

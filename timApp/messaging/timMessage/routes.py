@@ -379,11 +379,11 @@ def send_message_or_reply(message: MessageBody, options: MessageOptions) -> Resp
     )
     recipients = get_recipient_users(message.recipients)
     message_doc = create_tim_message(tim_message, options, message, recipients)
-    db.session.add(tim_message)
 
     pages = get_display_pages(options.pageList.splitlines())
     create_message_displays(tim_message, pages, recipients)
 
+    db.session.add(tim_message)
     db.session.commit()
 
     return json_response({"docPath": message_doc.path})

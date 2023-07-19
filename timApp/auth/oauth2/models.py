@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 from authlib.integrations.sqla_oauth2 import (
     OAuth2TokenMixin,
@@ -103,6 +102,8 @@ class OAuth2Client(ClientMixin):
 
 class OAuth2Token(db.Model, OAuth2TokenMixin):
     __tablename__ = "oauth2_token"
+    __allow_unmapped__ = True
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"))
     user = db.relationship("User")
@@ -110,6 +111,8 @@ class OAuth2Token(db.Model, OAuth2TokenMixin):
 
 class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
     __tablename__ = "oauth2_auth_code"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"))
     user = db.relationship("User")

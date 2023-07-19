@@ -384,7 +384,6 @@ def gen_cache(
                 .join(UserGroup, User.groups)
                 .filter(UserGroup.id.in_(group_ids))
             )
-            .scalars()
             .all()
         )
         groups_that_need_access_check = {

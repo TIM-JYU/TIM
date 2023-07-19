@@ -240,7 +240,15 @@ saveButton: Tallenna
             "select[title='List of reviewers']"
         )
         velper_selector_dropdown = Select(velper_selector_element)
-        velper_selector_dropdown.select_by_index(1)
+        tu2_index = next(
+            (
+                i
+                for i, option in enumerate(velper_selector_dropdown.options)
+                if "testuser2" in option.text
+            ),
+            None,
+        )
+        velper_selector_dropdown.select_by_index(tu2_index)
         velp_to_use = self.find_element_avoid_staleness(
             # Original: "velp-window:nth-child(2) .velp"
             # Since newVelp-velpWindow is now is outside velp container,

@@ -61,6 +61,8 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     """
 
     __tablename__ = "usergroup"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     """Usergroup identifier."""
 
@@ -110,12 +112,14 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         "BlockAccess",
         back_populates="usergroup",
         lazy="dynamic",
+        cascade_backrefs=False,
     )
     accesses_alt: dict[tuple[int, int], BlockAccess] = db.relationship(
         "BlockAccess",
         collection_class=attribute_mapped_collection("group_collection_key"),
         cascade="all, delete-orphan",
         overlaps="accesses, usergroup",
+        cascade_backrefs=False,
     )
     readparagraphs = db.relationship(
         "ReadParagraph", back_populates="usergroup", lazy="dynamic"
@@ -124,7 +128,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         "ReadParagraph",
         overlaps="readparagraphs, usergroup",
     )
-    notes = db.relationship("UserNote", back_populates="usergroup", lazy="dynamic")
+    notes = db.relationship("UserNote", back_populates="usergroup", lazy="dynamic", cascade_backrefs=False)
     notes_alt = db.relationship("UserNote", overlaps="notes, usergroup")
 
     admin_doc: Block = db.relationship(
@@ -144,7 +148,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     )
 
     internalmessage_display: InternalMessageDisplay | None = db.relationship(
-        "InternalMessageDisplay", back_populates="usergroup"
+        "InternalMessageDisplay", back_populates="usergroup", cascade_backrefs=False
     )
 
     def __repr__(self):

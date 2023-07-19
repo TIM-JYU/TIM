@@ -24,6 +24,7 @@ class UserGroupMember(db.Model):
     """
 
     __tablename__ = "usergroupmember"
+    __allow_unmapped__ = True
 
     usergroup_id = db.Column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True

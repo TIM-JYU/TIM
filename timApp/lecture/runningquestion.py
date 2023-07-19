@@ -5,6 +5,8 @@ from timApp.timdb.sqa import db
 
 
 class Runningquestion(db.Model):
+    __allow_unmapped__ = True
+    
     asked_id = db.Column(
         db.Integer, db.ForeignKey("askedquestion.asked_id"), primary_key=True
     )

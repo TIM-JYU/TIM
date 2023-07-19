@@ -122,33 +122,49 @@ def delete_answers_with_ids(
 ) -> AnswerDeleteResult:
     if not isinstance(ids, list):
         raise TypeError("ids should be a list of answer ids")
-    d_ua = db.session.scalars(
-        delete(UserAnswer)
-        .where(UserAnswer.answer_id.in_(ids))
-        .returning(UserAnswer.id)
-        .execution_options(synchronize_session=False)
-    ).all()
-    d_as = db.session.scalars(
-        delete(AnswerSaver)
-        .where(AnswerSaver.answer_id.in_(ids))
-        .returning(AnswerSaver.id)
-        .execution_options(synchronize_session=False)
-    ).all()
-    anns_stmt = select(Annotation.id).filter(Annotation.answer_id.in_(ids))
-    d_acs = db.session.scalars(
-        delete(AnnotationComment)
-        .where(
-            AnnotationComment.annotation_id.in_(anns_stmt.with_entities(Annotation.id))
+    d_ua = len(
+        db.session.execute(
+            delete(UserAnswer)
+            .where(UserAnswer.answer_id.in_(ids))
+            .returning(UserAnswer.id)
+            .execution_options(synchronize_session=False)
+        ).all()
+    )
+    d_as = len(
+        (
+            db.session.execute(
+                delete(AnswerSaver)
+                .where(AnswerSaver.answer_id.in_(ids))
+                .returning(AnswerSaver.user_id, AnswerSaver.answer_id)
+                .execution_options(synchronize_session=False)
+            ).all()
         )
-        .returning(AnnotationComment.id)
-        .execution_options(synchronize_session=False)
-    ).all()
-    d_anns = db.session.scalars(
-        delete(Annotation)
-        .where(Annotation.id.in_(anns_stmt))
-        .returning(Annotation.id)
-        .execution_options(synchronize_session=False)
-    ).all()
+    )
+    anns_stmt = select(Annotation.id).filter(Annotation.answer_id.in_(ids))
+    d_acs = len(
+        (
+            db.session.execute(
+                delete(AnnotationComment)
+                .where(
+                    AnnotationComment.annotation_id.in_(
+                        anns_stmt.with_only_columns(Annotation.id)
+                    )
+                )
+                .returning(AnnotationComment.id)
+                .execution_options(synchronize_session=False)
+            ).all()
+        )
+    )
+    d_anns = len(
+        (
+            db.session.execute(
+                delete(Annotation)
+                .where(Annotation.id.in_(anns_stmt))
+                .returning(Annotation.id)
+                .execution_options(synchronize_session=False)
+            ).all()
+        )
+    )
     ans_items_stmt = select(Answer).filter(Answer.id.in_(ids))
     if verbose:
         click.echo(
@@ -159,12 +175,14 @@ def delete_answers_with_ids(
                 ]
             )
         )
-    d_ans = db.session.scalars(
-        delete(Answer)
-        .where(Answer.id.in_(ans_items_stmt.with_only_columns([Answer.id])))
-        .returning(Answer.id)
-        .execution_options(synchronize_session=False)
-    ).all()
+    d_ans = len(
+        db.session.execute(
+            delete(Answer)
+            .where(Answer.id.in_(ans_items_stmt.with_only_columns(Answer.id)))
+            .returning(Answer.id)
+            .execution_options(synchronize_session=False)
+        ).all()
+    )
     return AnswerDeleteResult(
         useranswer=d_ua,
         answersaver=d_as,
@@ -224,7 +242,7 @@ def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
         click.echo("limit must be >= to")
         sys.exit(1)
     stmt = select(Answer).filter(Answer.task_id.startswith(f"{doc.id}."))
-    total = db.session.scalar(stmt.with_only_columns([func.count()]))
+    total = db.session.scalar(stmt.with_only_columns(func.count()))
     anss: list[Answer] = (
         db.session.execute(
             stmt.filter(func.length(Answer.content) > limit).options(
@@ -347,13 +365,13 @@ def delete_old_answers(d: DocInfo, tasks: list[str]) -> DeleteResult:
     base_query = valid_answers_query(
         [TaskId(doc_id=d.id, task_name=t) for t in tasks]
     ).join(User, Answer.users)
-    latest = base_query.group_by(Answer.task_id, User.id).with_entities(
+    latest = base_query.group_by(Answer.task_id, User.id).with_only_columns(
         func.max(Answer.id)
     )
-    todelete = base_query.filter(Answer.id.notin_(latest)).with_entities(Answer.id)
-    tot = base_query.count()
-    del_tot = todelete.count()
-    adr = delete_answers_with_ids(todelete.all())
+    todelete = base_query.filter(Answer.id.notin_(latest)).with_only_columns(Answer.id)
+    tot = db.session.scalar(base_query.with_only_columns(func.count()))
+    del_tot = db.session.scalar(todelete.with_only_columns(func.count()))
+    adr = delete_answers_with_ids(db.session.execute(todelete).scalars().all())
     r = DeleteResult(total=tot, deleted=del_tot, adr=adr)
     return r
 

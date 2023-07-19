@@ -26,6 +26,7 @@ class Folder(db.Model, Item):
     """Represents a folder in the directory hierarchy."""
 
     __tablename__ = "folder"
+    __allow_unmapped__ = True
 
     id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     """Folder identifier."""
@@ -38,7 +39,7 @@ class Folder(db.Model, Item):
 
     __table_args__ = (db.UniqueConstraint("name", "location", name="folder_uc"),)
 
-    _block = db.relationship("Block", back_populates="folder", lazy="selectin")
+    _block = db.relationship("Block", back_populates="folder", lazy="joined")
 
     @staticmethod
     def get_root() -> Folder:

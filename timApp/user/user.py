@@ -248,6 +248,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """
 
     __tablename__ = "useraccount"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     """User identifier."""
 
@@ -328,11 +330,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         back_populates="user",
         lazy="select",
         overlaps="primary_email_contact",
+        cascade_backrefs=False,
     )
     """User's contacts."""
 
     notifications = db.relationship(
-        "Notification", back_populates="user", lazy="dynamic"
+        "Notification",
+        back_populates="user",
+        lazy="dynamic",
+        cascade_backrefs=False,
     )
     """Notification settings for the user. Represents what notifications the user wants to receive."""
 
@@ -407,7 +413,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """Lecture messages that the user sent to lectures as a dynamic query."""
 
     questionactivity = db.relationship(
-        "QuestionActivity", back_populates="user", lazy="select"
+        "QuestionActivity", back_populates="user", lazy="select", cascade_backrefs=False
     )
     """User's activity on lecture questions."""
 
@@ -420,6 +426,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         back_populates="users",
         lazy="dynamic",
         overlaps="users_all",
+        cascade_backrefs=False,
     )
     """User's answers to tasks as a dynamic query."""
 
@@ -432,7 +439,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """Velps created by the user as a dynamic query."""
 
     sessions: list[UserSession] = db.relationship(
-        "UserSession", back_populates="user", lazy="select"
+        "UserSession", back_populates="user", lazy="select", cascade_backrefs=False
     )
     """All user's sessions as a dynamic query."""
 
@@ -455,6 +462,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         "Answer",
         secondary=UserAnswer.__table__,
         overlaps="answers, users",
+        cascade_backrefs=False,
     )
     annotations_alt = db.relationship("Annotation", overlaps="annotations, annotator")
     velps_alt = db.relationship("Velp", overlaps="velps, creator")
@@ -487,11 +495,17 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         self._email = new_email
         if prev_email != new_email:
             if create_contact:
-                new_primary = db.session.scalars(
-                    select(UserContact).filter_by(
-                        user_id=self.id, channel=Channel.EMAIL, contact=prev_email
+                new_primary = (
+                    db.session.execute(
+                        select(UserContact)
+                        .filter_by(
+                            user_id=self.id, channel=Channel.EMAIL, contact=new_email
+                        )
+                        .limit(1)
                     )
-                ).one_or_none()
+                    .scalars()
+                    .first()
+                )
                 if not new_primary:
                     # If new primary contact does not exist for the email, create it
                     # This is used mainly for CLI operations where email of the user is changed directly
@@ -617,7 +631,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         locked_groups = get_locked_active_groups()
         return locked_groups if locked_groups is not None else effective_real_groups()
 
-    @cached_property
+    @property
     def is_admin(self):
         return get_admin_group_id() in self.effective_group_ids
 
@@ -703,9 +717,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def get_by_email(email: str) -> Optional["User"]:
         if email is None:
             raise Exception("Tried to find an user by null email")
-        return db.session.scalars(
+        return db.session.execute(
             user_query_with_joined_groups().filter_by(email=email).limit(1)
-        ).first()
+        ).scalars().first()
 
     @staticmethod
     def get_by_email_case_insensitive(email: str) -> list["User"]:
@@ -817,11 +831,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             .options(
                 defaultload(Folder._block)
                 .selectinload(Block.accesses)
-                .selectinload(BlockAccess.usergroup)
+                .joinedload(BlockAccess.usergroup)
             )
         )
 
-        return db.session.scalars(stmt).unique().all()
+        return db.session.scalars(stmt).all()
 
     @cached_property
     def personal_folder_prop(self) -> Folder:
@@ -863,17 +877,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         special_groups = [ANONYMOUS_GROUPNAME]
         if self.logged_in:
             special_groups.append(LOGGED_IN_GROUPNAME)
-        filter_expr = UserGroupMember.user_id == self.id
+        member_condition = UserGroupMember.user_id == self.id
         if not include_expired:
-            filter_expr = filter_expr & membership_current
-        stmt = select(UserGroup).filter(
-            UserGroup.id.in_(select(UserGroupMember.usergroup_id).filter(filter_expr))
+            member_condition = member_condition & membership_current
+        group_condition = UserGroup.id.in_(
+            select(UserGroupMember.usergroup_id).filter(member_condition)
         )
         if include_special:
-            stmt = stmt.union(
-                select(UserGroup).filter(UserGroup.name.in_(special_groups))
-            )
-        return stmt
+            group_condition = group_condition | UserGroup.name.in_(special_groups)
+        return select(UserGroup).filter(group_condition)
 
     def add_to_group(
         self,
@@ -904,7 +916,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             existing.membership_end = None
             new_add = False
         else:
-            self.memberships.append(UserGroupMember(group=ug, adder=added_by))
+            ugm = UserGroupMember(group=ug, adder=added_by)
+            self.memberships.append(ugm)
+            db.session.add(ugm)
             new_add = True
         # On changing of group, sync this person to the user group's message lists.
         if sync_mailing_lists:

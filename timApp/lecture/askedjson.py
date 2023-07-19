@@ -9,6 +9,8 @@ from timApp.timdb.sqa import db
 
 class AskedJson(db.Model):
     __tablename__ = "askedjson"
+    __allow_unmapped__ = True
+    
     asked_json_id = db.Column(db.Integer, primary_key=True)
     json = db.Column(db.Text, nullable=False)
     hash = db.Column(db.Text, nullable=False)

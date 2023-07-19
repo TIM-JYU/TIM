@@ -3,55 +3,56 @@ from json import loads
 from lxml import html
 
 from timApp.auth.accesstype import AccessType
-from timApp.tests.browser.browsertest import BrowserTest
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import static_tim_doc
 
 
-class QuestionTest(BrowserTest):
+class QuestionTest(TimRouteTest):
     def test_question_html(self):
-        self.login_test1()
-        d = self.create_doc(from_file=static_tim_doc("questions.md"))
-        pars = d.document.get_paragraphs()
-        data = self.get(d.url_relative, as_tree=True)
-        first_id = pars[0].get_id()
-        self.assert_plugin_json(
-            data.cssselect(".parContent tim-qst")[0],
-            self.create_plugin_json(
-                d,
-                "test1",
-                par_id=first_id,
-                toplevel={"show_result": False},
-                markup={
-                    "answerFieldType": "radio",
-                    "headers": [],
-                    "isTask": False,
-                    "questionText": "What day is it today?",
-                    "questionTitle": "Today",
-                    "questionType": "radio-vertical",
-                    "rows": ["Monday", "Wednesday", "Friday"],
-                    "timeLimit": 90,
-                },
-            ),
-        )
+        with self.internal_container_ctx():
+            self.login_test1()
+            d = self.create_doc(from_file=static_tim_doc("questions.md"))
+            pars = d.document.get_paragraphs()
+            data = self.get(d.url_relative, as_tree=True)
+            first_id = pars[0].get_id()
+            self.assert_plugin_json(
+                data.cssselect(".parContent tim-qst")[0],
+                self.create_plugin_json(
+                    d,
+                    "test1",
+                    par_id=first_id,
+                    toplevel={"show_result": False},
+                    markup={
+                        "answerFieldType": "radio",
+                        "headers": [],
+                        "isTask": False,
+                        "questionText": "What day is it today?",
+                        "questionTitle": "Today",
+                        "questionType": "radio-vertical",
+                        "rows": ["Monday", "Wednesday", "Friday"],
+                        "timeLimit": 90,
+                    },
+                ),
+            )
 
-        second_id = pars[1].get_id()
-        result = data.cssselect(f"#{second_id} .parContent tim-qst")
-        self.assertEqual(1, len(result))
+            second_id = pars[1].get_id()
+            result = data.cssselect(f"#{second_id} .parContent tim-qst")
+            self.assertEqual(1, len(result))
 
-        expected_element = html.fromstring(
-            f"""
-            <div class="par"
-                 id="{pars[2].get_id()}"
-                 t="{pars[2].get_hash()}"
-                 attrs="{{&#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test3&#34;}}">
-                <span class="headerlink">
-                <a href="#{'test3'}" title="Permanent link to paragraph">
-                    <span class="header-anchor">#</span>
-                </a>
-                <span title="Copy reference" class="header-name">{'test3'}</span>
-                </span>
-                <div ng-non-bindable tabindex="0" class="parContent" id="{'test3'}">
+            expected_element = html.fromstring(
+                f"""
+                <div class="par"
+                     id="{pars[2].get_id()}"
+                     t="{pars[2].get_hash()}"
+                     attrs="{{&#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test3&#34;}}">
+                    <span class="headerlink">
+                    <a href="#{'test3'}" title="Permanent link to paragraph">
+                        <span class="header-anchor">#</span>
+                    </a>
+                    <span title="Copy reference" class="header-name">{'test3'}</span>
+                    </span>
+                    <div ng-non-bindable tabindex="0" class="parContent" id="{'test3'}">
                     <pre><code>
 json:
   answerFieldType: radio
@@ -65,93 +66,94 @@ json:
   - Friday
   timeLimit: 90
 points: '2:1'</code></pre>
+                    </div>
+                    <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
+                    <div class="readline"
+                         title="Click to mark this paragraph as read"></div>
                 </div>
-                <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
-                <div class="readline"
-                     title="Click to mark this paragraph as read"></div>
-            </div>
-                    """
-        )
-        self.assert_elements_equal(
-            expected_element, data.cssselect("#" + pars[2].get_id())[0]
-        )
+                        """
+            )
+            self.assert_elements_equal(
+                expected_element, data.cssselect("#" + pars[2].get_id())[0]
+            )
 
-        self.get(
-            "/getQuestionByParId",
-            query_string={"doc_id": d.id, "par_id": first_id},
-            expect_content={
-                "docId": d.id,
-                "markup": {
-                    "answerFieldType": "radio",
-                    "defaultPoints": 0.5,
-                    "headers": [],
-                    "points": "2:1",
-                    "questionText": "What day is it today?",
-                    "questionTitle": "Today",
-                    "questionType": "radio-vertical",
-                    "rows": ["Monday", "Wednesday", "Friday"],
-                    "timeLimit": 90,
+            self.get(
+                "/getQuestionByParId",
+                query_string={"doc_id": d.id, "par_id": first_id},
+                expect_content={
+                    "docId": d.id,
+                    "markup": {
+                        "answerFieldType": "radio",
+                        "defaultPoints": 0.5,
+                        "headers": [],
+                        "points": "2:1",
+                        "questionText": "What day is it today?",
+                        "questionTitle": "Today",
+                        "questionType": "radio-vertical",
+                        "rows": ["Monday", "Wednesday", "Friday"],
+                        "timeLimit": 90,
+                    },
+                    "parId": first_id,
+                    "qst": True,
+                    "isPreamble": False,
+                    "taskId": "test1",
                 },
-                "parId": first_id,
-                "qst": True,
-                "isPreamble": False,
-                "taskId": "test1",
-            },
-        )
+            )
 
-        self.get(
-            "/getQuestionByParId",
-            query_string={"doc_id": d.id, "par_id": second_id},
-            expect_content={
-                "docId": d.id,
-                "markup": {
-                    "answerFieldType": "radio",
-                    "headers": [],
-                    "points": "2:1",
-                    "questionText": "What day is it today?",
-                    "questionTitle": "Today",
-                    "questionType": "radio-vertical",
-                    "rows": ["Monday", "Wednesday", "Friday"],
-                    "timeLimit": 1,
+            self.get(
+                "/getQuestionByParId",
+                query_string={"doc_id": d.id, "par_id": second_id},
+                expect_content={
+                    "docId": d.id,
+                    "markup": {
+                        "answerFieldType": "radio",
+                        "headers": [],
+                        "points": "2:1",
+                        "questionText": "What day is it today?",
+                        "questionTitle": "Today",
+                        "questionType": "radio-vertical",
+                        "rows": ["Monday", "Wednesday", "Friday"],
+                        "timeLimit": 1,
+                    },
+                    "parId": second_id,
+                    "qst": False,
+                    "isPreamble": False,
+                    "taskId": "test2",
                 },
-                "parId": second_id,
-                "qst": False,
-                "isPreamble": False,
-                "taskId": "test2",
-            },
-        )
+            )
 
-        self.get(
-            "/getQuestionByParId",
-            query_string={"doc_id": d.id, "par_id": pars[2].get_id()},
-            expect_status=400,
-            expect_content={"error": f"Paragraph is not a plugin: {pars[2].get_id()}"},
-        )
+            self.get(
+                "/getQuestionByParId",
+                query_string={"doc_id": d.id, "par_id": pars[2].get_id()},
+                expect_status=400,
+                expect_content={"error": f"Paragraph is not a plugin: {pars[2].get_id()}"},
+            )
 
-        normal_par_id = pars[3].get_id()
-        self.get(
-            "/getQuestionByParId",
-            query_string={"doc_id": d.id, "par_id": normal_par_id},
-            expect_status=400,
-            expect_content={"error": f"Paragraph is not a plugin: {normal_par_id}"},
-        )
+            normal_par_id = pars[3].get_id()
+            self.get(
+                "/getQuestionByParId",
+                query_string={"doc_id": d.id, "par_id": normal_par_id},
+                expect_status=400,
+                expect_content={"error": f"Paragraph is not a plugin: {normal_par_id}"},
+            )
 
     def test_question_invalid_numeric_keys(self):
-        self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        with self.internal_container_ctx():
+            self.login_test1()
+            d = self.create_doc(
+                initial_par="""
 #- {plugin=qst}
 1:1|
 #- {plugin=qst}
 1:[]
-        """
-        )
-        self.get(d.url)
+"""
+            )
+            self.get(d.url)
 
-    def test_hidden_points(self):
-        self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        def test_hidden_points(self):
+            self.login_test1()
+            d = self.create_doc(
+                initial_par="""
 #- {#t plugin=qst question="false"}
 answerFieldType: radio
 answerLimit: 1
@@ -169,58 +171,58 @@ rows:
 - x
 - def
 """
-        )
-        d.document.set_settings({"global_plugin_attrs": {"qst": {"showPoints": False}}})
-        self.test_user_2.grant_access(d, AccessType.view)
-        db.session.commit()
-        db.session.refresh(d)
-        r = self.post_answer("qst", f"{d.id}.t", user_input={"answers": [["2"], ["1"]]})
-        self.assertEqual(
-            {
-                "markup": {
-                    "answerFieldType": "radio",
-                    "answerLimit": 1,
-                    "headers": ["a", "b"],
-                    "matrixType": "radiobutton-horizontal",
-                    "questionText": "test",
-                    "questionTitle": "test",
-                    "questionType": "matrix",
-                    "rows": ["x", "def"],
-                    "showPoints": False,
+            )
+            d.document.set_settings({"global_plugin_attrs": {"qst": {"showPoints": False}}})
+            self.test_user_2.grant_access(d, AccessType.view)
+            db.session.commit()
+            db.session.refresh(d)
+            r = self.post_answer("qst", f"{d.id}.t", user_input={"answers": [["2"], ["1"]]})
+            self.assertEqual(
+                {
+                    "markup": {
+                        "answerFieldType": "radio",
+                        "answerLimit": 1,
+                        "headers": ["a", "b"],
+                        "matrixType": "radiobutton-horizontal",
+                        "questionText": "test",
+                        "questionTitle": "test",
+                        "questionType": "matrix",
+                        "rows": ["x", "def"],
+                        "showPoints": False,
+                    },
+                    "result": "Saved",
+                    "show_result": True,
+                    "state": [["2"], ["1"]],
                 },
-                "result": "Saved",
-                "show_result": True,
-                "state": [["2"], ["1"]],
-            },
-            r["web"],
-        )
-        self.assertTrue("error" not in r)
-        answers = self.get_task_answers(f"{d.id}.t", self.current_user)
-        self.assertEqual(0.5, answers[0]["points"])
-        self.login_test2()
-        r = self.post_answer("qst", f"{d.id}.t", user_input={"answers": [["2"], ["1"]]})
-        self.assertEqual(
-            {
-                "markup": {
-                    "answerFieldType": "radio",
-                    "answerLimit": 1,
-                    "headers": ["a", "b"],
-                    "matrixType": "radiobutton-horizontal",
-                    "questionText": "test",
-                    "questionTitle": "test",
-                    "questionType": "matrix",
-                    "rows": ["x", "def"],
-                    "showPoints": False,
+                r["web"],
+            )
+            self.assertTrue("error" not in r)
+            answers = self.get_task_answers(f"{d.id}.t", self.current_user)
+            self.assertEqual(0.5, answers[0]["points"])
+            self.login_test2()
+            r = self.post_answer("qst", f"{d.id}.t", user_input={"answers": [["2"], ["1"]]})
+            self.assertEqual(
+                {
+                    "markup": {
+                        "answerFieldType": "radio",
+                        "answerLimit": 1,
+                        "headers": ["a", "b"],
+                        "matrixType": "radiobutton-horizontal",
+                        "questionText": "test",
+                        "questionTitle": "test",
+                        "questionType": "matrix",
+                        "rows": ["x", "def"],
+                        "showPoints": False,
+                    },
+                    "result": "Saved",
+                    "show_result": True,
+                    "state": [["2"], ["1"]],
                 },
-                "result": "Saved",
-                "show_result": True,
-                "state": [["2"], ["1"]],
-            },
-            r["web"],
-        )
-        self.assertTrue("error" not in r)
-        answers = self.get_task_answers(f"{d.id}.t", self.current_user)
-        self.assertEqual(None, answers[0]["points"])  # Should be hidden.
+                r["web"],
+            )
+            self.assertTrue("error" not in r)
+            answers = self.get_task_answers(f"{d.id}.t", self.current_user)
+            self.assertEqual(None, answers[0]["points"])  # Should be hidden.
 
     def test_question_shuffle(self):
         """
@@ -285,6 +287,7 @@ rows:
         """
         )
         db.session.commit()
+        db.session.add(d)
         db.session.refresh(d)
         self.login_test3()
         self.post_answer(

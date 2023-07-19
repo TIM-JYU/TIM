@@ -143,7 +143,7 @@ class TestSignUp(TimRouteTest):
         self.json_post("/emailSignup", {"email": email})
         self.assertEqual(
             db.session.execute(select(NewUser.email)).scalars().all(),
-            [("someonecase@example.com",)],
+            ["someonecase@example.com"],
         )
         self.json_post(
             "/checkTempPass",
@@ -169,7 +169,7 @@ class TestSignUp(TimRouteTest):
         self.json_post("/emailSignup", {"email": email})
         self.assertEqual(
             db.session.execute(select(NewUser.email)).scalars().all(),
-            [("whitespace@example.com",)],
+            ["whitespace@example.com"],
         )
         self.json_post(
             "/checkTempPass",
@@ -218,9 +218,9 @@ class TestSignUp(TimRouteTest):
     def test_signup(self):
         email = "testingsignup@example.com"
         self.json_post("/emailSignup", {"email": email})
-        self.assertEqual(db.session.execute(select(NewUser.email)).scalars().all(), [(email,)])
+        self.assertEqual(db.session.execute(select(NewUser.email)).scalars().all(), [email])
         self.json_post("/emailSignup", {"email": email})
-        self.assertEqual(db.session.execute(select(NewUser.email)).scalars().all(), [(email,)])
+        self.assertEqual(db.session.execute(select(NewUser.email)).scalars().all(), [email])
         self.json_post(
             "/emailSignupFinish",
             {

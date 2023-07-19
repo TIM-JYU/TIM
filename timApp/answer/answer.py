@@ -15,6 +15,8 @@ class AnswerSaver(db.Model):
     """
 
     __tablename__ = "answersaver"
+    __allow_unmapped__ = True
+
     answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
 
@@ -23,6 +25,8 @@ class Answer(db.Model):
     """An answer to a task."""
 
     __tablename__ = "answer"
+    __allow_unmapped__ = True
+
     id = db.Column(db.Integer, primary_key=True)
     """Answer identifier."""
 

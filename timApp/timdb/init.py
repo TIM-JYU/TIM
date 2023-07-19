@@ -9,7 +9,6 @@ import sqlalchemy.exc
 from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-from sqlalchemy.orm import Session
 from sqlalchemy_utils import database_exists, create_database
 
 from timApp.admin.language_cli import add_all_supported_languages
@@ -30,10 +29,7 @@ from timApp.item.block import BlockType
 from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_DOC_PREFIX
 from timApp.plugin.calendar.models import EnrollmentType
 from timApp.tim_app import app
-from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db, get_tim_main_engine
-
-# from timApp.timdb.timdb import TimDb
 from timApp.user.settings.style_utils import (
     OFFICIAL_STYLES_PATH,
     USER_STYLES_PATH,
@@ -72,13 +68,10 @@ def database_has_tables():
 
 
 def initialize_database(create_docs: bool = True) -> None:
-    files_root_path = get_files_path()
     db_uri = app.config["DB_URI"]
     was_created = postgre_create_database(db_uri)
     if was_created:
         log_info(f"Database {db_uri} was created.")
-    # timdb = TimDb(files_root_path=files_root_path)
-    # sess = timdb.session
 
     with app.app_context():
         sess = db.session
@@ -174,7 +167,7 @@ def initialize_database(create_docs: bool = True) -> None:
                     BlockType.Document,
                 )
 
-                verify_contact_message_template = import_document_from_file(
+                _ = import_document_from_file(
                     static_tim_doc("initial/contact_verify_message.md"),
                     "settings/verify-templates/contact",
                     admin_group,
@@ -206,7 +199,6 @@ def initialize_database(create_docs: bool = True) -> None:
 
     if not app.config["TESTING"]:
         exit_if_not_db_up_to_date()
-    # timdb.close()
 
 
 def create_style_docs() -> tuple[list[Folder], list[DocInfo]]:

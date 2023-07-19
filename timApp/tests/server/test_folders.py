@@ -3,7 +3,6 @@ from datetime import timedelta
 from sqlalchemy import event
 
 from timApp.auth.accesstype import AccessType
-from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.block import BlockType
@@ -174,7 +173,7 @@ class FolderTest(TimRouteTest):
         self.create_doc(self.get_personal_item_path("perf/x"))
         d = self.create_doc(self.get_personal_item_path("perf/y"))
         self.get(d.url)
-        eng = db.get_engine()
+        eng = db.engine
 
         stmts = 0
         db.session.expunge_all()
@@ -187,11 +186,30 @@ class FolderTest(TimRouteTest):
             nonlocal stmts
             stmts += 1
 
+        item_path = self.get_personal_item_path("perf")
         event.listen(eng, "before_cursor_execute", before_cursor_execute)
-        self.get("/view/" + self.get_personal_item_path("perf"))
+        self.get(f"/view/{item_path}")
         event.remove(eng, "before_cursor_execute", before_cursor_execute)
 
-        self.assertEqual(stmts, 11)
+        # NOTE: In general, the number of statements should be kept as low as possible for fast performance.
+        # Usually the main reason for statement number increase is the use of eager relationship loading.
+        # However, one should also balance the amount of data loaded.
+        # For example, selectinload() will always increase statement count, but will likely simplify queries
+        # and will reduce the amount of data the database has to return.
+        #
+        # In general, if this test fails, then
+        # 1. Place a breakpoint into before_cursor_execute()
+        # 2. Debug the test
+        # 3. Step through each statement and check the call stack to see where the statement is originating from
+        # 4. Check the queries that generate the statements and inspect any relationships.
+        #    - Check if any relationships are loaded lazily (e.g. lazy="select"). Check if they can be loaded eagerly.
+        #    - By default, use selectinload()
+        #    - Any relationships that return only one object (one-to-one, many-to-one) may use joinedload()
+        #       to reduce the number of statements
+        #    - If unsure, try joinedload() and see if the test fails. If so, use selectinload().
+        # 5. If all optimizations are done, update the expected statement count below.
+
+        self.assertEqual(stmts, 13)
 
 
 class FolderCopyTest(TimRouteTest):
@@ -328,48 +346,32 @@ class FolderCopyTest(TimRouteTest):
         f2c = Folder.find_by_path(self.get_personal_item_path("b/f2"))
         t1g = self.test_user_1.get_personal_group()
         self.assertEqual(
-            [
-                BlockAccess(
-                    block_id=f1c.id, usergroup_id=t1g.id, type=AccessType.owner.value
-                ),
-                BlockAccess(
-                    block_id=f1c.id, usergroup_id=t2g.id, type=AccessType.view.value
-                ),
-            ],
-            list(f1c.block.accesses.values()),
+            {
+                (f1c.id, t1g.id, AccessType.owner.value),
+                (f1c.id, t2g.id, AccessType.view.value),
+            },
+            {(a.block_id, a.usergroup_id, a.type) for a in f1c.block.accesses.values()},
         )
         self.assertEqual(
-            [
-                BlockAccess(
-                    block_id=f2c.id, usergroup_id=t1g.id, type=AccessType.owner.value
-                ),
-                BlockAccess(
-                    block_id=f2c.id, usergroup_id=t2g.id, type=AccessType.edit.value
-                ),
-            ],
-            list(f2c.block.accesses.values()),
+            {
+                (f2c.id, t1g.id, AccessType.owner.value),
+                (f2c.id, t2g.id, AccessType.edit.value),
+            },
+            {(a.block_id, a.usergroup_id, a.type) for a in f2c.block.accesses.values()},
         )
         self.assertEqual(
-            [
-                BlockAccess(
-                    block_id=d2c.id, usergroup_id=t1g.id, type=AccessType.owner.value
-                ),
-                BlockAccess(
-                    block_id=d2c.id, usergroup_id=t2g.id, type=AccessType.teacher.value
-                ),
-            ],
-            list(d2c.block.accesses.values()),
+            {
+                (d2c.id, t1g.id, AccessType.owner.value),
+                (d2c.id, t2g.id, AccessType.teacher.value),
+            },
+            {(a.block_id, a.usergroup_id, a.type) for a in d2c.block.accesses.values()},
         )
         self.assertEqual(
-            [
-                BlockAccess(
-                    block_id=d2.id, usergroup_id=t1g.id, type=AccessType.owner.value
-                ),
-                BlockAccess(
-                    block_id=d2.id, usergroup_id=t2g.id, type=AccessType.teacher.value
-                ),
-            ],
-            list(d2.block.accesses.values()),
+            {
+                (d2.id, t1g.id, AccessType.owner.value),
+                (d2.id, t2g.id, AccessType.teacher.value),
+            },
+            {(a.block_id, a.usergroup_id, a.type) for a in d2.block.accesses.values()},
         )
         trs = sorted(f1d1c.translations, key=lambda tr: tr.lang_id)
         self.assertEqual(["", "en", "sv"], [tr.lang_id for tr in trs])

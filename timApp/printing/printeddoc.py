@@ -8,6 +8,8 @@ class PrintedDoc(db.Model):
     (CSS printing does not count because it happens entirely in browser)."""
 
     __tablename__ = "printed_doc"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
     """Id of the printed document."""

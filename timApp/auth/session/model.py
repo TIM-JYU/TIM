@@ -20,6 +20,7 @@ class UserSession(db.Model):
     """
 
     __tablename__ = "usersession"
+    __allow_unmapped__ = True
 
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
     """

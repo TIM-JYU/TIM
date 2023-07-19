@@ -358,15 +358,11 @@ def get_fields_and_users(
         elif user_filter is not None:
             # Ensure user filter gets applied even if group filter is skipped in include_all_answered
             q = q.filter(user_filter)
-        sub += (
-            db.session.execute(
-                q.group_by(Answer.task_id, User.id).with_only_columns(
-                    func.max(Answer.id), User.id
-                )
+        sub += db.session.execute(
+            q.group_by(Answer.task_id, User.id).with_only_columns(
+                func.max(Answer.id), User.id
             )
-            .scalars()
-            .all()
-        )
+        ).all()
     aid_uid_map = defaultdict(list)
     user_ids = set()
     for aid, uid in sub:
@@ -382,7 +378,8 @@ def get_fields_and_users(
         if user_filter is not None:
             id_filter = id_filter & user_filter
         q2 = select(User).filter(id_filter)
-        q = q1.union(q2)
+        q = q1.with_only_columns(User.id).union(q2.with_only_columns(User.id))
+        q = select(User).filter(User.id.in_(q))
     else:
         q = q1
     q = q.with_only_columns(User).order_by(User.id).options(lazyload(User.groups))
@@ -432,20 +429,16 @@ def get_fields_and_users(
         for u in users:
             counts[u.id] = {}
         cnt = func.count(Answer.id).label("cnt")
-        answer_counts = (
-            db.session.execute(
-                select(Answer)
-                .filter(
-                    Answer.task_id.in_([tid.doc_task for tid in tasks_with_count_field])
-                )
-                .join(User, Answer.users)
-                .filter(User.id.in_([u.id for u in users]))
-                .group_by(User.id, Answer.task_id)
-                .with_only_columns(User.id, Answer.task_id, cnt)
+        answer_counts = db.session.execute(
+            select(Answer)
+            .filter(
+                Answer.task_id.in_([tid.doc_task for tid in tasks_with_count_field])
             )
-            .scalars()
-            .all()
-        )
+            .join(User, Answer.users)
+            .filter(User.id.in_([u.id for u in users]))
+            .group_by(User.id, Answer.task_id)
+            .with_only_columns(User.id, Answer.task_id, cnt)
+        ).all()
         for uid, taskid, count in answer_counts:
             counts[uid][taskid] = count
 

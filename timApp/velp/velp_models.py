@@ -11,6 +11,8 @@ class VelpContent(db.Model):
     """The actual content of a Velp."""
 
     __tablename__ = "velpcontent"
+    __allow_unmapped__ = True
+
     version_id = db.Column(
         db.Integer, db.ForeignKey("velpversion.id"), primary_key=True
     )
@@ -25,6 +27,8 @@ class AnnotationComment(db.Model):
     """A comment in an Annotation."""
 
     __tablename__ = "annotationcomment"
+    __allow_unmapped__ = True
+
     id = db.Column(db.Integer, primary_key=True)
     """Comment identifier."""
 
@@ -62,12 +66,16 @@ class LabelInVelp(db.Model):
     """Associates VelpLabels with Velps."""
 
     __tablename__ = "labelinvelp"
+    __allow_unmapped__ = True
+
     label_id = db.Column(db.Integer, db.ForeignKey("velplabel.id"), primary_key=True)
     velp_id = db.Column(db.Integer, db.ForeignKey("velp.id"), primary_key=True)
 
 
 class VelpInGroup(db.Model):
     __tablename__ = "velpingroup"
+    __allow_unmapped__ = True
+
     velp_group_id = db.Column(
         db.Integer, db.ForeignKey("velpgroup.id"), primary_key=True
     )
@@ -78,6 +86,8 @@ class Velp(db.Model):
     """A Velp is a kind of category for Annotations and is visually represented by a Post-it note."""
 
     __tablename__ = "velp"
+    __allow_unmapped__ = True
+
     id = db.Column(db.Integer, primary_key=True)
     creator_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
     creation_time = db.Column(
@@ -130,6 +140,8 @@ class VelpGroup(db.Model):
     """Represents a group of Velps."""
 
     __tablename__ = "velpgroup"
+    __allow_unmapped__ = True
+
     id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     name = db.Column(db.Text)
     creation_time = db.Column(
@@ -164,6 +176,8 @@ class VelpGroup(db.Model):
 
 class VelpGroupDefaults(db.Model):
     __tablename__ = "velpgroupdefaults"
+    __allow_unmapped__ = True
+
     doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     target_type = db.Column(
         db.Integer, nullable=False
@@ -179,12 +193,16 @@ class VelpGroupLabel(db.Model):
     """Currently not used (0 rows in production DB as of 5th July 2018)."""
 
     __tablename__ = "velpgrouplabel"
+    __allow_unmapped__ = True
+
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
 
 
 class VelpGroupSelection(db.Model):
     __tablename__ = "velpgroupselection"
+    __allow_unmapped__ = True
+
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     target_type = db.Column(
@@ -205,6 +223,8 @@ class VelpGroupsInDocument(db.Model):
     """
 
     __tablename__ = "velpgroupsindocument"
+    __allow_unmapped__ = True
+
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     velp_group_id = db.Column(
@@ -216,6 +236,8 @@ class VelpLabel(db.Model):
     """A label that can be assigned to a Velp."""
 
     __tablename__ = "velplabel"
+    __allow_unmapped__ = True
+
     id = db.Column(db.Integer, primary_key=True)
     # TODO make not nullable
     creator_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=True)
@@ -231,6 +253,8 @@ class VelpLabel(db.Model):
 
 class VelpLabelContent(db.Model):
     __tablename__ = "velplabelcontent"
+    __allow_unmapped__ = True
+
     velplabel_id = db.Column(
         db.Integer, db.ForeignKey("velplabel.id"), primary_key=True
     )
@@ -249,6 +273,8 @@ class VelpLabelContent(db.Model):
 
 class VelpVersion(db.Model):
     __tablename__ = "velpversion"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     velp_id = db.Column(db.Integer, db.ForeignKey("velp.id"), nullable=False)
     modify_time = db.Column(

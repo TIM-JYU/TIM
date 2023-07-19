@@ -133,7 +133,7 @@ class SCIMGroupModel(SCIMCommonModel):
 SCIMGroupModelSchema = class_schema(SCIMGroupModel)
 
 
-@dataclass(frozen=True)
+@dataclass
 class SCIMException(Exception):
     code: int
     msg: str

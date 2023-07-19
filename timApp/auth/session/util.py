@@ -182,7 +182,7 @@ def verify_session_for(username: str, session_id: str | None = None) -> None:
     :param username: Username of the user to verify the session for.
     :param session_id: If specified, verify the specific session ID. If None, verify the latest added session.
     """
-    user_subquery = select(User.id).filter(User.name == username).subquery()
+    user_subquery = select(User.id).filter(User.name == username)
     stmt_base = (
         update(UserSession)
         .where(UserSession.user_id.in_(user_subquery))
@@ -199,7 +199,6 @@ def verify_session_for(username: str, session_id: str | None = None) -> None:
             .filter(UserSession.user_id.in_(user_subquery))
             .order_by(UserSession.logged_in_at.desc())
             .limit(1)
-            .subquery()
         )
         stmt_expire = stmt_base.where(UserSession.session_id.notin_(subquery))
         stmt_verify = stmt_base.where(UserSession.session_id.in_(subquery))
@@ -218,7 +217,7 @@ def invalidate_sessions_for(username: str, session_id: str | None = None) -> Non
     :param username: Username of the user to invalidate the session for.
     :param session_id: If specified, invalidate the specific session ID. If None, invalidate all sessions.
     """
-    user_subquery = select(User.id).filter(User.name == username).subquery()
+    user_subquery = select(User.id).filter(User.name == username)
     stmt_invalidate = (
         update(UserSession)
         .filter(UserSession.user_id.in_(user_subquery))

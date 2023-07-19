@@ -75,6 +75,7 @@ class TranslationService(db.Model):
     """
 
     __tablename__ = "translationservice"
+    __allow_unmapped__ = True
 
     id = db.Column(db.Integer, primary_key=True)
     """Translation service identifier."""
@@ -178,6 +179,7 @@ class TranslationServiceKey(db.Model):
     """
 
     __tablename__ = "translationservicekey"
+    __allow_unmapped__ = True
 
     id = db.Column(db.Integer, primary_key=True)
     """Key identifier."""

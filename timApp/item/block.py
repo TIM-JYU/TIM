@@ -28,6 +28,8 @@ class Block(db.Model):
     """The "base class" for all database objects that are part of the permission system."""
 
     __tablename__ = "block"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     """A unique identifier for the Block."""
 
@@ -49,15 +51,16 @@ class Block(db.Model):
     """When this Block was last modified."""
 
     docentries = db.relationship("DocEntry", back_populates="_block")
-    folder = db.relationship("Folder", back_populates="_block", uselist=False)
+    folder = db.relationship("Folder", back_populates="_block", uselist=False, cascade_backrefs=False)
     translation = db.relationship(
         "Translation",
         back_populates="_block",
         uselist=False,
         foreign_keys="Translation.doc_id",
+        cascade_backrefs=False,
     )
     answerupload = db.relationship(
-        "AnswerUpload", back_populates="block", lazy="dynamic"
+        "AnswerUpload", back_populates="block", lazy="dynamic", cascade_backrefs=False
     )
     accesses = db.relationship(
         "BlockAccess",
@@ -65,6 +68,7 @@ class Block(db.Model):
         lazy="selectin",
         cascade="all, delete-orphan",
         collection_class=attribute_mapped_collection("block_collection_key"),
+        cascade_backrefs=False,
     )
     tags: list[Tag] = db.relationship("Tag", back_populates="block", lazy="select")
     children = db.relationship(
@@ -106,10 +110,10 @@ class Block(db.Model):
     )
 
     internalmessage: InternalMessage | None = db.relationship(
-        "InternalMessage", back_populates="block"
+        "InternalMessage", back_populates="block", cascade_backrefs=False
     )
     internalmessage_display: InternalMessageDisplay | None = db.relationship(
-        "InternalMessageDisplay", back_populates="display_block"
+        "InternalMessageDisplay", back_populates="display_block", cascade_backrefs=False
     )
 
     def __json__(self):
@@ -211,6 +215,7 @@ def insert_block(
                 type=AccessType.owner.value,
                 accessible_from=get_current_time(),
             )
+            db.session.add(access)
             b.accesses[(owner_group.id, AccessType.owner.value)] = access
             # Also register to accesses_alt because it may be used by other methods in the same session
             owner_group.accesses_alt[(b.id, AccessType.owner.value)] = access

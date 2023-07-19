@@ -1,5 +1,7 @@
 import re
 
+from flask import g
+
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -15,6 +17,8 @@ from timApp.user.usergroup import UserGroup
 class BookmarkTestBase(TimRouteTest):
     def get_bookmarks(self, expect_status=200):
         bms = self.get("/bookmarks/get", expect_status=expect_status)
+        # Pop the user from the active globals because the above GET will expire it (since session is expired)
+        g.pop("user", None)
         return bms
 
 
@@ -255,7 +259,6 @@ bookmarks:
 class BookmarkTest2(BookmarkTestBase):
     def test_automatic_course_bookmark_update(self):
         self.login_test1()
-        self.get("/")
         d = self.create_doc()
         d.block.tags.append(Tag(name="TIEP111", type=TagType.CourseCode))
         d.block.tags.append(Tag(name="group:ohj1opiskelijat", type=TagType.Regular))
@@ -264,7 +267,6 @@ class BookmarkTest2(BookmarkTestBase):
         d2.block.tags.append(Tag(name="TIEP112", type=TagType.CourseCode))
         d2.block.tags.append(Tag(name="group:ohj2opiskelijat", type=TagType.Regular))
         db.session.commit()
-        self.get("/")
         ug = UserGroup(name="ohj1opiskelijat", display_name="asd asd")
         tu1 = self.test_user_1
         tu1.groups.append(ug)

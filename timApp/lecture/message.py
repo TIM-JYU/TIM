@@ -5,6 +5,8 @@ from timApp.timdb.sqa import db
 
 class Message(db.Model):
     __tablename__ = "message"
+    __allow_unmapped__ = True
+    
     msg_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(
         db.Integer, db.ForeignKey("lecture.lecture_id"), nullable=False

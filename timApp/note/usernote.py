@@ -7,6 +7,8 @@ class UserNote(db.Model):
     """A comment/note that has been posted in a document paragraph."""
 
     __tablename__ = "usernotes"
+    __allow_unmapped__ = True
+    
     id = db.Column(db.Integer, primary_key=True)
     """Comment id."""
 

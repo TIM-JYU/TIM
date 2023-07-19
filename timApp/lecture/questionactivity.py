@@ -13,6 +13,8 @@ class QuestionActivityKind(Enum):
 
 class QuestionActivity(db.Model):
     __tablename__ = "question_activity"
+    __allow_unmapped__ = True
+    
     asked_id = db.Column(
         db.Integer, db.ForeignKey("askedquestion.asked_id"), primary_key=True
     )

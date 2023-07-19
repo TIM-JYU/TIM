@@ -396,6 +396,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   volumes:
    - .:/service:rw
   environment:
+   TIM_TESTING: 1
    TIM_SETTINGS: testconfig.py
    PYTHONPATH: /service
    CI: ${CI:-false}

@@ -748,15 +748,14 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         # test user 2 should not have access anymore
         self.get(deleted.url, expect_status=403)
         # admin should still be able to access
-        test_user_2 = get_current_user_object()
-        self.make_admin(test_user_2)
+        self.make_admin(self.test_user_2)
         self.get(deleted.url, expect_status=200)
         # remove testuser2 from admin group to prevent it from affecting other tests
         self.json_post(
             f"/groups/removemember/{UserGroup.get_admin_group().name}",
-            {"names": [test_user_2.name]},
+            {"names": [self.test_user_2.name]},
             expect_content={
-                "removed": [test_user_2.name],
+                "removed": [self.test_user_2.name],
                 "does_not_belong": [],
                 "not_exist": [],
             },
@@ -1007,6 +1006,7 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             {"name": "folder-group", "target_type": 2},
         )
         db.session.commit()
+        db.session.expire_all()
 
         g_persnl_doc = get_doc_or_abort(g_persnl["id"])
         g_docmnt_doc = get_doc_or_abort(g_docmnt["id"])

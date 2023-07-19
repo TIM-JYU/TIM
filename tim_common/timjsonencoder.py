@@ -56,7 +56,7 @@ class TimJsonEncoder(json.JSONEncoder):
                     f
                     for f in flds
                     if not f.startswith("_")
-                    and f not in ["metadata", "query", "query_class"]
+                    and f not in ["metadata", "query", "query_class", "registry"]
                 ]
             for field in flds:
                 value = o.__getattribute__(field)

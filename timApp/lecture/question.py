@@ -3,6 +3,8 @@ from timApp.timdb.sqa import db
 
 class Question(db.Model):
     __tablename__ = "question"
+    __allow_unmapped__ = True
+    
     question_id = db.Column(db.Integer, primary_key=True)
     doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
     par_id = db.Column(db.Text, nullable=False)

@@ -555,10 +555,14 @@ type: upload
         self.do_plugin_upload(d, "test", "test.txt", f"{d.id}.testupload", "testupload")
         self.get(f"/uploads/{d.id}/testupload/testuser1/1/test.txt")
         a = (
-            select(Answer)
-            .filter_by(task_id=f"{d.id}.testupload")
-            .join(AnswerUpload)
-            .with_only_columns(AnswerUpload)
+            db.session.execute(
+                select(Answer)
+                .filter_by(task_id=f"{d.id}.testupload")
+                .join(AnswerUpload)
+                .with_only_columns(AnswerUpload)
+                .limit(1)
+            )
+            .scalars()
             .first()
         )
 
@@ -1006,7 +1010,6 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
         self.login_test1()
         doc = self.create_doc(from_file=static_tim_doc("mmcq_example.md"))
         d = doc.document
-        timdb = self.get_db()
         self.test_user_2.grant_access(doc, AccessType.view)
         db.session.commit()
         task_ids = [
@@ -1508,7 +1511,7 @@ choices:
         self.assertEqual(
             2,
             db.session.scalar(
-                select(func.count(Answer)).filter_by(task_id=f"{d.id}.t_new")
+                select(func.count(Answer.id)).filter_by(task_id=f"{d.id}.t_new")
             ),
         )
         self.post_answer(p2.type, p2.task_id.doc_task, [True, True, False])
@@ -1955,9 +1958,10 @@ needed_len: 6
         """
         )
         tr = self.create_translation(d)
+        tr_url = tr.url
         s = {"userword": "test"}
         self.post_answer("pali", f"{d.id}.t", user_input=s)
-        r = self.get(tr.url, as_tree=True)
+        r = self.get(tr_url, as_tree=True)
         self.assert_plugin_json(
             r.cssselect(".parContent pali-runner")[0],
             self.create_plugin_json(

@@ -50,6 +50,7 @@ class Verification(db.Model):
     verification."""
 
     __tablename__ = "verification"
+    __allow_unmapped__ = True
 
     token = db.Column(db.Text, primary_key=True)
     """Verification token used for action verification"""

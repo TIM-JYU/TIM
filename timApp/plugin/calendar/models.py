@@ -27,6 +27,8 @@ class EventGroup(db.Model):
     """Information about a user group participating in an event."""
 
     __tablename__ = "eventgroup"
+    __allow_unmapped__ = True
+
     event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
     """Event the the group belongs to"""
 
@@ -49,6 +51,8 @@ class Enrollment(db.Model):
     """A single enrollment in an event"""
 
     __tablename__ = "enrollment"
+    __allow_unmapped__ = True
+
     event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
     """Event the enrollment is for"""
 
@@ -95,6 +99,8 @@ class EventTagAttachment(db.Model):
     """Attachment information for the event tag"""
 
     __tablename__ = "eventtagattachment"
+    __allow_unmapped__ = True
+
     event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
     """Event the tag is attached to"""
     tag_id = db.Column(db.Integer, db.ForeignKey("eventtag.tag_id"), primary_key=True)
@@ -105,6 +111,8 @@ class EventTag(db.Model):
     """A string tag that can be attached to an event"""
 
     __tablename__ = "eventtag"
+    __allow_unmapped__ = True
+
     tag_id = db.Column(db.Integer, primary_key=True)
     """The id of the tag"""
 
@@ -172,6 +180,8 @@ class Event(db.Model):
     """A calendar event. Event has metadata (title, time, location) and various participating user groups."""
 
     __tablename__ = "event"
+    __allow_unmapped__ = True
+
     event_id = db.Column(db.Integer, primary_key=True)
     """Identification number of the event"""
 
@@ -412,6 +422,8 @@ class EnrollmentType(db.Model):
     """Table for enrollment type, combines enrollment type ID to specific enrollment type"""
 
     __tablename__ = "enrollmenttype"
+    __allow_unmapped__ = True
+
     enroll_type_id = db.Column(db.Integer, primary_key=True)
     """Enrollment type"""
 
@@ -423,6 +435,8 @@ class ExportedCalendar(db.Model):
     """Information about exported calendars"""
 
     __tablename__ = "exportedcalendar"
+    __allow_unmapped__ = True
+    
     user_id = db.Column(
         db.Integer, db.ForeignKey("useraccount.id"), primary_key=True, nullable=False
     )

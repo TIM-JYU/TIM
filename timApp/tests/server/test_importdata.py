@@ -1,11 +1,7 @@
 """Server tests for importData plugin."""
 import json
-from contextlib import contextmanager
 
-import responses
-from requests import PreparedRequest
-
-from timApp.tests.browser.browsertest import BrowserTest
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.user import User
@@ -58,18 +54,27 @@ def field_result(
     }
 
 
-class ImportDataTestBase(BrowserTest):
+class ImportDataTestBase(TimRouteTest):
     def imp(self, d, data, expect, status: int, task=None, aalto_return=None):
         if not task:
             task = "t"
-        with self.importdata_ctx(aalto_return):
-            self.post_answer(
-                "importData",
-                f"{d.id}.{task}",
-                data,
-                expect_content=expect,
-                expect_status=status,
-            )
+            
+        def init_mock(m):
+            m.add(
+                    "GET",
+                    "https://plus.cs.aalto.fi/api/v2/courses/1234/aggregatedata/?format=json",
+                    body=json.dumps(aalto_return),
+                    status=200,
+                )
+
+        self.post_answer(
+            "importData",
+            f"{d.id}.{task}",
+            data,
+            expect_content=expect,
+            expect_status=status,
+            init_mock=init_mock,
+        )
 
     def grant_user_creation_right(self):
         self.current_user.add_to_group(
