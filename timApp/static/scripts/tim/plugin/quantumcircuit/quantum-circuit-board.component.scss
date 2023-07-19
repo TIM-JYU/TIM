@@ -94,8 +94,9 @@ svg text::selection {
   pointer-events: none;
 }
 
-.selected-gate {
-  stroke: #ffdd00;
+.gate-drop:hover {
+  stroke: grey;
+  fill-opacity: 100;
 }
 
 @media (min-width: 500px) {

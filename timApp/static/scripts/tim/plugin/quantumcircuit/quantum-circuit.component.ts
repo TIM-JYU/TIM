@@ -193,11 +193,18 @@ export interface Colors {
     light: string;
 }
 
+export interface Color {
+    text: string;
+    fill: string;
+    selection: string;
+}
+
 /**
  * Styling related options for circuit.
  */
 export interface CircuitStyleOptions {
     colors: Colors;
+    gateColors: Map<string, Color>;
     // relative size of circuit cells (side length) and other elements
     baseSize: number;
     // size of gates (side length)
@@ -277,6 +284,48 @@ export class QuantumCircuitComponent
             medium: "grey",
             light: "white",
         },
+        gateColors: new Map<string, Color>([
+            [
+                "basic",
+                {
+                    fill: "#0098e9",
+                    text: "#000000",
+                    selection: "#000000",
+                },
+            ],
+            [
+                "phase",
+                {
+                    fill: "#fca534",
+                    text: "#000000",
+                    selection: "#000000",
+                },
+            ],
+            [
+                "custom",
+                {
+                    fill: "#a9875a",
+                    text: "#000000",
+                    selection: "#000000",
+                },
+            ],
+            [
+                "swap",
+                {
+                    fill: "#000000",
+                    text: "#ffffff",
+                    selection: "#00ff00",
+                },
+            ],
+            [
+                "control",
+                {
+                    fill: "#000000",
+                    text: "#ffffff",
+                    selection: "#00ff00",
+                },
+            ],
+        ]),
         useBraket: false,
         timeAxisHeight: 30,
         gateBorderRadius: 2,
@@ -601,7 +650,7 @@ export class QuantumCircuitComponent
     setSizes() {
         const baseSize =
             this.qcContainer.nativeElement.clientWidth / (this.nMoments + 4);
-        const gateSize = (2 / 3) * baseSize;
+        const gateSize = 0.8 * baseSize;
 
         const useBraket = this.markup.qubitNotation === "braket";
 
@@ -613,6 +662,7 @@ export class QuantumCircuitComponent
                 medium: "grey",
                 light: "#fca534",
             },
+            gateColors: this.circuitStyleOptions.gateColors,
             useBraket: useBraket,
             timeAxisHeight: 30,
             gateBorderRadius: 2,

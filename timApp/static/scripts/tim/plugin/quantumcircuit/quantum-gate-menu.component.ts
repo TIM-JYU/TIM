@@ -1,9 +1,15 @@
 import type {OnDestroy, OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
+import type {Color} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
-import type {Gate} from "tim/plugin/quantumcircuit/gate.service";
+import type {ServiceGate} from "tim/plugin/quantumcircuit/gate.service";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import type {Subscription} from "rxjs";
+
+interface MenuGate {
+    color: Color;
+    name: string;
+}
 
 @Component({
     selector: "tim-quantum-gate-menu",
@@ -19,7 +25,8 @@ import type {Subscription} from "rxjs";
                     <div [ngSwitch]="gate.name">
                         <svg *ngSwitchCase="'control'" [attr.width]="circuitStyleOptions.gateSize"
                              [attr.height]="circuitStyleOptions.gateSize">
-                            <circle [attr.cx]="circuitStyleOptions.gateSize/2"
+                            <circle [attr.fill]="gate.color.fill"
+                                    [attr.cx]="circuitStyleOptions.gateSize/2"
                                     [attr.cy]="circuitStyleOptions.gateSize/2"
                                     [attr.r]="circuitStyleOptions.gateSize/4"/>
                         </svg>
@@ -27,7 +34,7 @@ import type {Subscription} from "rxjs";
                         <svg *ngSwitchCase="'swap'" [attr.width]="circuitStyleOptions.gateSize" [attr.height]="circuitStyleOptions.gateSize"
                              class="swap-gate">
                             <text x="50%" y="25%" 
-                                  [attr.fill]="circuitStyleOptions.colors.dark" 
+                                  [attr.fill]="gate.color.fill" 
                                   [attr.stroke]="circuitStyleOptions.colors.dark"
                                   dominant-baseline="middle" text-anchor="middle"
                                   [attr.font-size]="circuitStyleOptions.gateSize / 3">X
@@ -35,7 +42,7 @@ import type {Subscription} from "rxjs";
                             <line [attr.stroke]="circuitStyleOptions.colors.dark" stroke-width="2" x1="50%" x2="50%" y1="25%"
                                   y2="75%"></line>
                             <text x="50%" y="75%" 
-                                  [attr.fill]="circuitStyleOptions.colors.dark" 
+                                  [attr.fill]="gate.color.text" 
                                   [attr.stroke]="circuitStyleOptions.colors.dark"
                                   dominant-baseline="middle" text-anchor="middle"
                                   [attr.font-size]="circuitStyleOptions.gateSize / 3">X
@@ -46,12 +53,11 @@ import type {Subscription} from "rxjs";
                              [attr.height]="circuitStyleOptions.gateSize">
                             <rect [attr.x]="0" [attr.y]="0" [attr.width]="circuitStyleOptions.gateSize"
                                   [attr.height]="circuitStyleOptions.gateSize" 
-                                  [attr.fill]="circuitStyleOptions.colors.light"
+                                  [attr.fill]="gate.color.fill"
                                   [attr.stroke]="circuitStyleOptions.colors.dark"
                                   rx="2"/>
                             <text x="50%" y="50%" 
-                                  [attr.fill]="circuitStyleOptions.colors.dark" 
-                                  [attr.stroke]="circuitStyleOptions.colors.dark"
+                                  [attr.stroke]="gate.color.text"
                                   dominant-baseline="middle"
                                   text-anchor="middle">{{gate.name}}</text>
                         </svg>
@@ -64,7 +70,7 @@ import type {Subscription} from "rxjs";
     styleUrls: ["./quantum-gate-menu.component.scss"],
 })
 export class QuantumGateMenuComponent implements OnInit, OnDestroy {
-    gates: Gate[] = [];
+    gates: MenuGate[] = [];
     subscription!: Subscription;
 
     @Input()
@@ -75,7 +81,25 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.subscription = this.gateService
             .getMenuGates()
-            .subscribe((gates) => (this.gates = gates));
+            .subscribe((gates) => {
+                this.gates = gates.map((g) => ({
+                    name: g.name,
+                    color: this.getColor(g),
+                }));
+            });
+    }
+
+    getColor(gate: ServiceGate): Color {
+        const color = this.circuitStyleOptions.gateColors.get(gate.group);
+        if (color) {
+            return color;
+        } else {
+            return {
+                fill: "white",
+                text: "black",
+                selection: "00ff00",
+            };
+        }
     }
 
     /**

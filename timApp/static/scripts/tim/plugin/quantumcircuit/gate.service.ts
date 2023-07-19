@@ -14,15 +14,16 @@ import {
 import {of} from "rxjs";
 import type {ICustomGateInfo} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
-export interface Gate {
+export interface ServiceGate {
     name: string;
     matrix: Matrix;
     hidden: boolean;
+    group: "basic" | "phase" | "swap" | "control" | "custom";
 }
 
 @Injectable()
 export class GateService {
-    gates: Gate[] = [];
+    gates: ServiceGate[] = [];
     gateNameToMatrix: Map<string, Matrix> = new Map();
 
     identityMatrix = matrix([
@@ -75,41 +76,49 @@ export class GateService {
                 name: "H",
                 matrix: H,
                 hidden: false,
+                group: "basic",
             },
             {
                 name: "X",
                 matrix: X,
                 hidden: false,
+                group: "basic",
             },
             {
                 name: "Y",
                 matrix: Y,
                 hidden: false,
+                group: "basic",
             },
             {
                 name: "Z",
                 matrix: Z,
                 hidden: false,
+                group: "basic",
             },
             {
                 name: "S",
                 matrix: S,
                 hidden: false,
+                group: "phase",
             },
             {
                 name: "T",
                 matrix: T,
                 hidden: false,
+                group: "phase",
             },
             {
                 name: "swap",
                 matrix: this.swapMatrix,
                 hidden: false,
+                group: "swap",
             },
             {
                 name: "control",
                 matrix: this.identityMatrix,
                 hidden: false,
+                group: "control",
             },
         ];
 
@@ -127,6 +136,14 @@ export class GateService {
 
     getMatrix(name: string) {
         return this.gateNameToMatrix.get(name);
+    }
+
+    private getGate(name: string) {
+        return this.gates.find((g) => g.name === name);
+    }
+
+    getGateGroup(name: string) {
+        return this.getGate(name)?.group;
     }
 
     /**
@@ -153,6 +170,7 @@ export class GateService {
                     name: parsedCustomGate.name,
                     matrix: parsedCustomGate.matrix,
                     hidden: false,
+                    group: "custom",
                 });
                 this.gateNameToMatrix.set(
                     parsedCustomGate.name,
