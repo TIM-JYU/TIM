@@ -4,6 +4,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 0.5em;
+  border: 1px solid black;
 }
 
 .chart {
@@ -59,6 +60,7 @@ tr {
   .stats-container {
     flex-direction: row;
     gap: 1em;
+    padding: 0.5em;
   }
 }
 

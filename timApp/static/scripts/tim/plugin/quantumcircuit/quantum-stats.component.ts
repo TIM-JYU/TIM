@@ -27,7 +27,7 @@ export interface QuantumChartData {
 @Component({
     selector: "tim-quantum-stats",
     template: `
-        <div class="stats-container">
+        <div class="stats-container" [hidden]="!showChart && !showPrintField">
             <div class="chart" *ngIf="showChart">
                 <div class="chart-inner" #chartInnerElement>
                     <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions" [data]="chartData"></canvas>
