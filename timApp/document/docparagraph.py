@@ -352,9 +352,7 @@ class DocParagraph:
         if self.original:
             basic_data = self.original.get_basic_data()
             target_data = self.get_basic_data()
-            # TODO: target_data.doc_id should probably be set to something sane instead of None,
-            #       however this resolves issue #3424 with translated preambles for now
-            target_data.doc_id = self.ref_doc.doc_id if self.ref_doc else None
+            target_data.doc_id = self.ref_doc.doc_id
         else:
             basic_data = self.get_basic_data()
             target_data = None
@@ -1371,7 +1369,10 @@ def create_final_par(
         if first_ref.is_translation():
             final_par.doc = first_ref.doc
             if not is_any_norm_reference:
-                final_par.ref_doc = first_ref.doc.get_source_document()
+                # Only set ref_doc for par if it has a source reference
+                src_doc = first_ref.doc.get_source_document()
+                if src_doc:
+                    final_par.ref_doc = src_doc
     elif last_ref.is_translation():
         final_par.doc = last_ref.doc
         final_par.ref_doc = last_ref.doc.get_source_document()
