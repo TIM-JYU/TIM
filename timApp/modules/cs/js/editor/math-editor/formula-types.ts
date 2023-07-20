@@ -7,6 +7,33 @@
  */
 
 export type ReplacePair = [RegExp, string] | undefined;
+export type ReplaceFunction =
+    | [(what: string, to: string) => string, string]
+    | undefined;
+
+export function isReplacePair(
+    pair: ReplacePair | ReplaceFunction
+): pair is ReplacePair {
+    return pair !== undefined && typeof pair[0] === "object";
+}
+
+export function matchAndReplace(
+    s: string,
+    replace: ReplacePair | ReplaceFunction,
+    replaceWith?: string
+): string {
+    if (replace === undefined) {
+        return s;
+    }
+    const replacement = replaceWith ?? replace[1];
+    if (isReplacePair(replace)) {
+        const regex = replace[0];
+        return s.replace(regex, replacement);
+    } else {
+        return replace[0](s, replacement);
+    }
+}
+
 type MaybeStringPair = [string, string] | undefined;
 
 /**
@@ -50,7 +77,7 @@ type FormulaProperties = {
     // First value is search RegExp and second is replace string.
     // No replacing if undefined.
     writeReplace: ReplacePair;
-    editReplace: ReplacePair;
+    editReplace: ReplacePair | ReplaceFunction;
     // starting mark of the formula
     start: string;
     // ending mark of the formula
@@ -65,6 +92,19 @@ type FormulaProperties = {
     // active field correctly when starting to edit.
     activeFieldConstant: number;
 };
+
+// This is needed because Safari <16.4 does not support lookbehind
+// See https://caniuse.com/js-regexp-lookbehind
+function lookBehindReplace(what: string, to: string, regex: RegExp) {
+    const reversed = what.split("").reverse().join("");
+    const reversedReplaced = reversed.replace(regex, to);
+    return reversedReplaced.split("").reverse().join("");
+}
+
+const alignMarkEditReplace: ReplaceFunction = [
+    (what, to) => lookBehindReplace(what, to, /&(?!\\)/gm),
+    "＆",
+];
 
 /**
  * Properties determine how the different types of formulas behave.
@@ -104,7 +144,7 @@ export const FormulaPropertyList: FormulaProperties[] = [
         beginEndKeyword: "align*",
         typeReplace: ["\\&", "＆"],
         writeReplace: [/＆/gm, "&"],
-        editReplace: undefined, // FIXME: This does not work on Safari < 16.4: [/(?<!\\)&/gm, "＆"],
+        editReplace: alignMarkEditReplace,
         start: "\\begin{align*}\n",
         end: "\n\\end{align*}",
         join: "\\\\\n",
@@ -116,7 +156,7 @@ export const FormulaPropertyList: FormulaProperties[] = [
         beginEndKeyword: "alignat",
         typeReplace: ["\\&", "＆"],
         writeReplace: [/＆/gm, "&"],
-        editReplace: undefined, // FIXME: This does not work on Safari < 16.4: [/(?<!\\)&/gm, "＆"],
+        editReplace: alignMarkEditReplace,
         start: "\\begin{alignat*}{}\n",
         end: "\n\\end{alignat*}",
         join: "\\\\\n",
@@ -128,7 +168,7 @@ export const FormulaPropertyList: FormulaProperties[] = [
         beginEndKeyword: "gather",
         typeReplace: ["\\&", "＆"],
         writeReplace: [/＆/gm, "&"],
-        editReplace: undefined, // FIXME: This does not work on Safari < 16.4: [/(?<!\\)&/gm, "＆"],
+        editReplace: alignMarkEditReplace,
         start: "\\begin{gather*}\n",
         end: "\n\\end{gather*}",
         join: "\\\\\n",
