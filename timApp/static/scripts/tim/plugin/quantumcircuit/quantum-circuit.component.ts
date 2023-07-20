@@ -516,8 +516,8 @@ export class QuantumCircuitComponent
             } else {
                 this.selectedGate = gate;
             }
-            this.updateBoard();
         }
+        this.updateBoard();
     }
 
     /**
