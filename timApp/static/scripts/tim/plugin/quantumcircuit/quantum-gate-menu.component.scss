@@ -17,6 +17,7 @@ svg text::selection {
   display: flex;
   flex-direction: column;
   border: 1px solid black;
+  width: 50vw;
 }
 
 .gate-container-heading {
@@ -26,10 +27,10 @@ svg text::selection {
 }
 
 .gate-list {
-  display: flex;
-  flex-direction: row;
-  gap: 0.25em;
+  display: grid;
   padding: 0.25em;
+  column-gap: 0.25em;
+  row-gap: 0.25em;
 }
 
 .gate-container svg {

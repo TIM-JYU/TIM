@@ -647,8 +647,11 @@ export class QuantumCircuitComponent
      * Compute sizes for board cells based on available space and number of cells.
      */
     setSizes() {
-        const baseSize =
+        // qubit name | qubit bit value | nMoments * space for gate | measure-logo | output bit
+        let baseSize =
             this.qcContainer.nativeElement.clientWidth / (this.nMoments + 4);
+        // don't make gates excessively large
+        baseSize = Math.min(50, baseSize);
         const gateSize = 0.8 * baseSize;
 
         const useBraket = this.markup.qubitNotation === "braket";
