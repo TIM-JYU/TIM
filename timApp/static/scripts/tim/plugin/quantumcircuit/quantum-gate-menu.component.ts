@@ -111,6 +111,9 @@ export class QuantumGateMenuComponent
      * Update css-grid to have as many columns as fit in available space.
      */
     updateColumns() {
+        if (!this.gateListElement) {
+            return;
+        }
         // 5 pixels is the gap between grid elements
         const nCols = Math.floor(
             this.gateListElement.nativeElement.clientWidth /
