@@ -21,7 +21,11 @@ import type {
     MathFieldMethods,
     MathQuillConfig,
 } from "vendor/mathquill/mathquill";
-import {FormulaPropertyList, FormulaType} from "./formula-types";
+import {
+    FormulaPropertyList,
+    FormulaType,
+    matchAndReplace,
+} from "./formula-types";
 
 /**
  * Specifies which field the typed text should go in.
@@ -350,10 +354,9 @@ export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
             if (properties) {
                 if (properties.editReplace) {
                     try {
-                        const regex = new RegExp(properties.editReplace[0]);
-                        visualInput = visualInput.replace(
-                            regex,
-                            properties.editReplace[1]
+                        visualInput = matchAndReplace(
+                            visualInput,
+                            properties.editReplace
                         );
                     } catch (err) {
                         console.log(
