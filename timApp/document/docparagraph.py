@@ -352,7 +352,9 @@ class DocParagraph:
         if self.original:
             basic_data = self.original.get_basic_data()
             target_data = self.get_basic_data()
-            target_data.doc_id = self.ref_doc.doc_id
+            # TODO: target_data.doc_id should probably be set to something sane instead of None,
+            #       however this resolves issue #3424 with translated preambles for now
+            target_data.doc_id = self.ref_doc.doc_id if self.ref_doc else None
         else:
             basic_data = self.get_basic_data()
             target_data = None
