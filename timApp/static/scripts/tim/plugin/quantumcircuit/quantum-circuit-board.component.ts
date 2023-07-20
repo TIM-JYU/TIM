@@ -17,7 +17,6 @@ import type {
     Qubit,
     QubitOutput,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
-import type {Cell} from "tim/plugin/quantumcircuit/quantum-board";
 import {
     Control,
     QuantumBoard,
@@ -89,45 +88,6 @@ export class RangePipe implements PipeTransform {
     }
 }
 
-interface CellData {
-    cell: Cell;
-    target: number;
-    time: number;
-    chosen: boolean;
-}
-
-/**
- * Get cells as flat array in correct order to be displayed in svg.
- */
-@Pipe({
-    name: "cells",
-})
-export class CellPipe implements PipeTransform {
-    public transform(board: QuantumBoard, dragged?: GatePos): CellData[] {
-        const cells = [];
-        for (let i = 0; i < board.length; i++) {
-            for (let j = 0; j < board.board[i].length; j++) {
-                cells.push({
-                    target: i,
-                    time: j,
-                    cell: board.board[i][j],
-                    chosen: dragged?.target === i && dragged.time === j,
-                });
-            }
-        }
-        // empty cells first, then gates, then dragged gate
-        cells.sort((a, b) => {
-            let av = a.cell === undefined ? 0 : 1;
-            let bv = b.cell === undefined ? 0 : 1;
-            av = a.chosen ? 2 : av;
-            bv = b.chosen ? 2 : bv;
-            return av - bv;
-        });
-
-        return cells;
-    }
-}
-
 @Component({
     selector: "tim-quantum-circuit-board",
     template: `
@@ -189,28 +149,32 @@ export class CellPipe implements PipeTransform {
                                       [attr.y2]="s.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
                                 ></line>
                             </g>
-
                         </g>
                     </g>
 
-                    <g tim-svg-cell *ngFor="let gate of board | cells: gateBeingDragged?.gate"
-                       [circuitStyleOptions]="circuitStyleOptions"
-                       [cell]="gate.cell"
-                       [isSelected]="selectedGate !== null && gate.target === selectedGate.target && gate.time === selectedGate.time"
-                       [isBeingDraggedOver]="dragOverElement !== null && dragOverElement.time === gate.time && dragOverElement.target === gate.target"
-                       [target]="gate.target"
-                       [time]="gate.time"
-                       (drop)="handleDrop($event, gate.target, gate.time)"
-                       (mousedown)="handleDragStart($event, gate.target, gate.time)"
-                       (touchstart)="handleDragStart($event, gate.target, gate.time)"
-                       (dragover)="handleDragOver($event, gate.target, gate.time)"
-                       (dragleave)="handleDragLeave(gate.target, gate.time)"
-                       [attr.data-time]="gate.time"
-                       [attr.data-target]="gate.target"
-                       class="gate-drop"
-                       [class.chosen]="gate.chosen"
-                    >
+                    <g *ngFor="let gates of board.board; let i = index">
+                        <g *ngFor="let gate of gates; let j=index" tim-svg-cell
+                           [circuitStyleOptions]="circuitStyleOptions"
+                           [cell]="gate"
+                           [isSelected]="selectedGate !== null && i === selectedGate.target && j ===
+                            selectedGate.time"
+                           [isBeingDraggedOver]="dragOverElement !== null && dragOverElement.time === j &&
+                            dragOverElement.target === i"
+                           [target]="i"
+                           [time]="j"
+                           (drop)="handleDrop($event, i, j)"
+                           (mousedown)="handleDragStart($event, i, j)"
+                           (touchstart)="handleDragStart($event, i, j)"
+                           (dragover)="handleDragOver($event, i, j)"
+                           (dragleave)="handleDragLeave(i, j)"
+                           [attr.data-time]="j"
+                           [attr.data-target]="i"
+                           class="gate-drop"
+                           [class.chosen]="gateBeingDragged !== null && gateBeingDragged.gate.target === i && gateBeingDragged.gate.time === j">
+                        </g>
+
                     </g>
+
 
                 </svg>
             </div>

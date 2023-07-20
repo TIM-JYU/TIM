@@ -24,7 +24,6 @@ import type {
     GatePos,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import {
-    CellPipe,
     InstanceofPipe,
     QuantumCircuitBoardComponent,
     RangePipe,
@@ -717,7 +716,6 @@ export class QuantumCircuitComponent
         QuantumStatsComponent,
         InstanceofPipe,
         RangePipe,
-        CellPipe,
     ],
     exports: [QuantumCircuitComponent],
     imports: [

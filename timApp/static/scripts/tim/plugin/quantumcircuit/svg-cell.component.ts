@@ -198,8 +198,6 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
      * @param changes possible change to sizes
      */
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.cell || changes.circuitStyleOptions) {
-            this.updateSizes();
-        }
+        this.updateSizes();
     }
 }
