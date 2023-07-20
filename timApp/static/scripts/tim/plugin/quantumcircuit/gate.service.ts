@@ -19,6 +19,7 @@ export interface ServiceGate {
     matrix: Matrix;
     hidden: boolean;
     group: "basic" | "phase" | "swap" | "control" | "custom";
+    description: string;
 }
 
 @Injectable()
@@ -77,48 +78,56 @@ export class GateService {
                 matrix: H,
                 hidden: false,
                 group: "basic",
+                description: "Hadamard",
             },
             {
                 name: "X",
                 matrix: X,
                 hidden: false,
                 group: "basic",
+                description: "Pauli-X",
             },
             {
                 name: "Y",
                 matrix: Y,
                 hidden: false,
                 group: "basic",
+                description: "Pauli-Y",
             },
             {
                 name: "Z",
                 matrix: Z,
                 hidden: false,
                 group: "basic",
+                description: "Pauli-Z",
             },
             {
                 name: "S",
                 matrix: S,
                 hidden: false,
                 group: "phase",
+                description: "Phase S",
             },
             {
                 name: "T",
                 matrix: T,
                 hidden: false,
                 group: "phase",
+                description: "Phase T",
             },
             {
                 name: "swap",
                 matrix: this.swapMatrix,
                 hidden: false,
                 group: "swap",
+                description: "Swap",
             },
             {
                 name: "control",
                 matrix: this.identityMatrix,
                 hidden: false,
                 group: "control",
+                description: "Control",
             },
         ];
 
@@ -171,6 +180,7 @@ export class GateService {
                     matrix: parsedCustomGate.matrix,
                     hidden: false,
                     group: "custom",
+                    description: customGate.description,
                 });
                 this.gateNameToMatrix.set(
                     parsedCustomGate.name,

@@ -9,6 +9,7 @@ import type {Subscription} from "rxjs";
 interface MenuGate {
     color: Color;
     name: string;
+    description: string;
 }
 
 @Component({
@@ -17,16 +18,19 @@ interface MenuGate {
         <!--suppress HtmlUnknownAttribute -->
 
         <div class="gate-container" *ngIf="gates.length > 0">
-            <p class="gate-container-heading">Portit</p>
+            <p class="gate-container-heading">Raahaa portti piiriin tästä</p>
 
             <div class="gate-list" #gateListElement
                  [ngStyle]="{'grid-template-columns': colsStyle}"
             >
                 <div class="svg-container" *ngFor="let gate of gates" draggable="true"
+                     [title]="gate.description"
                      (dragstart)="handleDragStart($event, gate.name)">
                     <div [ngSwitch]="gate.name">
-                        <svg *ngSwitchCase="'control'" [attr.width]="circuitStyleOptions.gateSize"
-                             [attr.height]="circuitStyleOptions.gateSize">
+                        <svg *ngSwitchCase="'control'" 
+                             [attr.width]="circuitStyleOptions.gateSize"
+                             [attr.height]="circuitStyleOptions.gateSize"
+                        >
                             <circle [attr.fill]="gate.color.fill"
                                     [attr.cx]="circuitStyleOptions.gateSize/2"
                                     [attr.cy]="circuitStyleOptions.gateSize/2"
@@ -110,6 +114,7 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy, OnChanges {
                 this.gates = gates.map((g) => ({
                     name: g.name,
                     color: this.getColor(g),
+                    description: g.description,
                 }));
                 if (this.gateListElement) {
                     this.updateColumns();

@@ -55,6 +55,14 @@ tr {
   font-family: "courier new", courier, monospace;
 }
 
+.stats-description {
+  margin: 0;
+}
+
+.measurements-description {
+  margin: 0;
+}
+
 
 @media (min-width: 500px) {
   .stats-container {

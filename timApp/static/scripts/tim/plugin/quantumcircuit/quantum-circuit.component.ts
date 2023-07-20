@@ -150,6 +150,7 @@ type IControlGateInfo = t.TypeOf<typeof ControlGateInfo>;
 const CustomGateInfo = t.type({
     name: t.string,
     matrix: t.string,
+    description: t.string,
 });
 
 export type ICustomGateInfo = t.TypeOf<typeof CustomGateInfo>;
@@ -246,6 +247,8 @@ export interface CircuitStyleOptions {
                                    [quantumChartData]="quantumChartData"
                                    [showChart]="showChart"
                                    [showPrintField]="showPrintField"
+                                   [samplingMode]="samplingMode"
+                                   [nSamples]="nSamples"
                                    (clear)="handleClearMeasurements()"
                                    (measure)="handleMeasure()">
                 </tim-quantum-stats>
@@ -363,6 +366,14 @@ export class QuantumCircuitComponent
 
     get showOutputBits() {
         return this.markup.showOutputBits;
+    }
+
+    get samplingMode() {
+        return this.markup.samplingMode;
+    }
+
+    get nSamples() {
+        return this.markup.nSamples;
     }
 
     /**

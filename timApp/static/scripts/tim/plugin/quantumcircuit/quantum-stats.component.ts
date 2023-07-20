@@ -28,14 +28,19 @@ export interface QuantumChartData {
     selector: "tim-quantum-stats",
     template: `
         <div class="stats-container" [hidden]="!showChart && !showPrintField">
-            <div class="chart" *ngIf="showChart">
-                <div class="chart-inner" #chartInnerElement>
-                    <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions" [data]="chartData"></canvas>
+            <div>
+                <p class="stats-description">{{statsDescription}}</p>
+                <div class="chart" *ngIf="showChart">
+                    <div class="chart-inner" #chartInnerElement>
+                        <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions"
+                                [data]="chartData"></canvas>
+                    </div>
                 </div>
             </div>
 
             <div class="output-container">
 
+                <p class="measurements-description">Tehdyt mittaukset</p>
                 <div class="output-print" *ngIf="showPrintField">
                     <table #outputTable class="output-table">
                         <thead>
@@ -103,6 +108,8 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
         backgroundColor: "#004494",
     };
 
+    statsDescription: string = "";
+
     @Input()
     measurements!: Measurement[];
 
@@ -118,6 +125,12 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     @Input()
     showPrintField: boolean = true;
 
+    @Input()
+    samplingMode!: "matrix" | "sample" | "autoSample";
+
+    @Input()
+    nSamples!: number;
+
     @Output()
     clear = new EventEmitter<void>();
 
@@ -126,7 +139,24 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
     constructor() {}
 
-    ngOnInit(): void {}
+    updateStatsDescription() {
+        switch (this.samplingMode) {
+            case "autoSample":
+                this.statsDescription = `Ulostulojen todennäköisyydet ${this.nSamples} otoksen perusteella`;
+                break;
+            case "sample":
+                this.statsDescription = `Ulostulojen todennäköisyydet tehtyjen ${this.measurements.length} mittauksen perusteella`;
+                break;
+            case "matrix":
+                this.statsDescription =
+                    "Ulostulojen todennäköisyydet matriisilaskun perusteella";
+                break;
+        }
+    }
+
+    ngOnInit(): void {
+        this.updateStatsDescription();
+    }
 
     /**
      * Clear measurements.
@@ -201,6 +231,9 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
         const chartChange = changes.quantumChartData;
         if (chartChange && this.showChart) {
             this.updateChart();
+        }
+        if (changes.measurements) {
+            this.updateStatsDescription();
         }
     }
 }
