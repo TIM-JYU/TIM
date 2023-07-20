@@ -1,3 +1,4 @@
+import os
 from argparse import ArgumentParser
 from time import sleep
 
@@ -83,12 +84,13 @@ def run(args: Arguments) -> None:
 
     env = {
         "TEST_COMMAND": test_command_joined,
+        "SKIP_JSRUNNER_START": os.environ.get("SKIP_JSRUNNER_START", "false"),
     }
     if args.new_screenshots:
         env["NEW_SCREENSHOTS"] = "1"
 
     res = run_compose(
-        ["up", "--exit-code-from", "tests", "--abort-on-container-exit", "tests"],
+        ["up", "--exit-code-from", "tests", "--attach", "tests", "tests"],
         "test",
         override_profile=False,
         extra_env=env,

@@ -212,6 +212,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    - /root/.npm
    - /root/.config
    - /tmp
+  environment:
+    SKIP_JSRUNNER_START: ${SKIP_JSRUNNER_START:-false}
  drag:
   image: ${compose.images_repository}/tim:${tim.image_tag}
   volumes:
