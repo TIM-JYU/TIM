@@ -246,9 +246,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
     ngOnInit(): void {}
 
     /**
-     * Qubit's value changed.
-     * @param event click on qubit's value
-     * @param id qubit's identifier (row)
+     * The value of qubit changed.
+     * @param event click on qubit
+     * @param id identifier for qubit
      */
     toggleQubit(event: MouseEvent, id: number) {
         this.qubitChange.emit(id);
@@ -345,14 +345,14 @@ export class QuantumCircuitBoardComponent implements OnInit {
     }
 
     /**
-     * Add's initial transform to transform list if needed, so it isn't empty when it's value is needed.
+     * Adds initial transform to transform list if needed, so it isn't empty when it's value is needed.
      * @param group group being transformed
      */
     addInitialTransform(group: SVGGElement) {
         // Get all the transforms currently on this element
         const transforms = group.transform.baseVal;
 
-        // Ensure the first transform is a translate transform
+        // Ensure the first transform is a translation transform
         if (
             transforms.length === 0 ||
             transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE
