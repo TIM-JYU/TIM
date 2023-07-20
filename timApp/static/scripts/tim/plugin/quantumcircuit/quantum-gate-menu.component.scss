@@ -28,12 +28,8 @@ svg text::selection {
 .gate-list {
   display: grid;
   padding: 0.25em;
-  column-gap: 0.25em;
-  row-gap: 0.25em;
-}
-
-.gate-container svg {
-  display: block;
+  column-gap: 5px;
+  row-gap: 5px;
 }
 
 .svg-container {
