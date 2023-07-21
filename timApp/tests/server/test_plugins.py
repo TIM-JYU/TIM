@@ -1780,6 +1780,7 @@ needed_len: 6
                     "max_answers": None,
                     "user_id": "testuser1",
                     "valid": True,
+                    "show_points": True,
                 },
             ),
         )
@@ -1891,6 +1892,7 @@ needed_len: 6
                 "max_answers": None,
                 "user_id": "testuser1",
                 "valid": True,
+                "show_points": True,
             },
         )
         self.assert_same_html(
@@ -1947,6 +1949,7 @@ needed_len: 6
                     "max_answers": None,
                     "user_id": "testuser1",
                     "valid": True,
+                    "show_points": True,
                 },
             ),
         )
@@ -2257,7 +2260,7 @@ a: b
                 "deadline": None,
                 "maxPoints": None,
                 "pointsText": "Points:",
-                "showPoints": {},
+                "showPoints": True,
                 "starttime": None,
                 "triesText": "Tries left:",
                 "userMax": 0.5,

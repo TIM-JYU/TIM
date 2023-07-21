@@ -12,6 +12,7 @@ from marshmallow import missing, ValidationError, EXCLUDE
 from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -194,6 +195,7 @@ class Plugin:
         self.lazy = None
         self.access_end_for_user = None
         self.hidden: None | bool = None
+        self._show_points = None
 
     # TODO don't set task_id in HTML or JSON at all if there isn't one.
     #  Currently at least csPlugin cannot handle taskID being None.
@@ -305,7 +307,19 @@ class Plugin:
         return self.limit_defaults.get(self.type)
 
     def show_points(self):
-        return self.known.showPoints
+        if self._show_points is not None:
+            return self._show_points
+        # explicit showPoints: False should override modelAnswer.hidePoints check
+        if not self.known.show_points():
+            self._show_points = False
+            return self._show_points
+        elif self.known.modelAnswer and self.known.modelAnswer.hidePoints:
+            self.set_access_end_for_user()
+            if not self.access_end_for_user:
+                self._show_points = False
+                return self._show_points
+        self._show_points = True
+        return self._show_points
 
     def points_multiplier(self, default=1):
         if self.known.pointsRule and self.known.pointsRule.multiplier is not missing:
@@ -377,6 +391,7 @@ class Plugin:
             # indicates whether we are just looking at an answer, not actually posting a new one
             "look_answer": look_answer,
             "valid": valid,
+            "show_points": self.show_points(),
         }
 
     def set_render_options(
@@ -560,8 +575,11 @@ class Plugin:
         """
         Changes access_end_for_user to match the end of user's plugin access
         """
+        # TODO: These checks should be done as  single mass query if opening a document with plugins that need TaskBlock checks
+        if self.access_end_for_user:
+            return
         if self.task_id:
-            current_user = user if user else self.options.user_ctx.logged_user
+            current_user = user if user else get_current_user_object()
             if not current_user.has_teacher_access(self.par.doc.get_docinfo()):
                 # TODO: unlockable plugin shouldn't be a "placed" plugin in pluginify
                 b = TaskBlock.get_by_task(self.task_id.doc_task)

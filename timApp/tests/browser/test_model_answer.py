@@ -1,7 +1,10 @@
 from selenium.webdriver.common.by import By
 
+from timApp.answer.answers import save_answer
 from timApp.auth.accesstype import AccessType
 from timApp.item.block import Block
+from timApp.item.taskblock import TaskBlock
+from timApp.plugin.taskid import TaskId
 from timApp.tests.browser.browsertest import (
     BrowserTest,
 )
@@ -139,3 +142,168 @@ hidden area
             By.CSS_SELECTOR, ".area_afterLock .parContent"
         )[1]
         self.assertEqual("hidden area", text_par.text)
+
+    def test_model_answer_points(self):
+        self.login_test1()
+        self.login_browser_quick_test1()
+        d = self.create_doc(
+            initial_par="""
+```` {#zeropoints plugin="textfield"}
+modelAnswer:
+ lock: true
+ answer: Hello
+ count: 0
+ minPoints: 0
+````
+```` {#nonepoints plugin="textfield"}
+modelAnswer:
+ lock: true
+ answer: Hello
+ count: 0
+ minPoints: 
+````
+```` {#missingpoints plugin="textfield"}
+modelAnswer:
+ lock: true
+ answer: Hello
+ count: 0
+````
+"""
+        )
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        db.session.refresh(Block.query.get(d.block.id))
+        self.login_test2()
+        error_msg = "points from this task to view the model answer"
+        self.get(
+            f"/getModelAnswer/{d.id}.zeropoints",
+            expect_status=403,
+            expect_content="You need at least 0.0 points from this task to view the model answer",
+        )
+        save_answer(
+            [self.test_user_2],
+            TaskId.parse(f"{d.id}.zeropoints"),
+            content={"c": "input"},
+            points=-1,
+        )
+        db.session.commit()
+        self.get(
+            f"/getModelAnswer/{d.id}.zeropoints",
+            expect_status=403,
+            expect_content="You need at least 0.0 points from this task to view the model answer",
+        )
+        save_answer(
+            [self.test_user_2],
+            TaskId.parse(f"{d.id}.zeropoints"),
+            content={"c": "input"},
+            points=None,
+        )
+        db.session.commit()
+        self.get(
+            f"/getModelAnswer/{d.id}.zeropoints",
+            expect_status=403,
+            expect_content="You need at least 0.0 points from this task to view the model answer",
+        )
+        tb = TaskBlock.get_block_by_task(f"{d.id}.zeropoints")
+        self.assertIsNone(tb)
+        save_answer(
+            [self.test_user_2],
+            TaskId.parse(f"{d.id}.zeropoints"),
+            content={"c": "input"},
+            points=0,
+        )
+        db.session.commit()
+        self.get(f"/getModelAnswer/{d.id}.zeropoints", expect_status=200)
+        tb = TaskBlock.get_block_by_task(f"{d.id}.zeropoints")
+        self.assertIsNotNone(tb)
+        save_answer(
+            [self.test_user_2],
+            TaskId.parse(f"{d.id}.zeropoints"),
+            content={"c": "input"},
+            points=-2,
+        )
+        db.session.commit()
+        self.get(
+            f"/getModelAnswer/{d.id}.zeropoints",
+            expect_status=403,
+            expect_content="You need at least 0.0 points from this task to view the model answer",
+        )
+        save_answer(
+            [self.test_user_2],
+            TaskId.parse(f"{d.id}.nonepoints"),
+            content={"c": "input"},
+            points=-1,
+        )
+        db.session.commit()
+        self.get(f"/getModelAnswer/{d.id}.nonepoints")
+        save_answer(
+            [self.test_user_2],
+            TaskId.parse(f"{d.id}.nonepoints"),
+            content={"c": "input"},
+            points=None,
+        )
+        db.session.commit()
+        self.get(f"/getModelAnswer/{d.id}.nonepoints")
+        self.get(f"/getModelAnswer/{d.id}.missingpoints")
+
+    def test_model_answer_hidepoints(self):
+        self.login_test1()
+        self.login_browser_quick_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {#cs plugin="csPlugin"}
+type: text/tiny
+pointsRule:
+    expectCode: "1"
+modelAnswer:
+    answer: "1"
+    hidePoints: true
+```
+``` {#qst question="false" plugin="qst"}
+answerFieldType: radio
+expl: {}
+headers: []
+modelAnswer:
+    answer: "1"
+    hidePoints: true
+points: '1:1'
+questionText: ""
+questionTitle: ""
+questionType: radio-vertical
+rows:
+- "1"
+- "2"
+- "3"
+```
+
+        """
+        )
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        db.session.refresh(Block.query.get(d.block.id))
+        self.login_test2()
+        self.post_answer("csPlugin", f"{d.id}.cs", user_input={"usercode": "1"})
+        self.post_answer("qst", f"{d.id}.qst", user_input={"answers": [["1"]]})
+
+        def check_answers_for_points(taskid: str, visible: bool):
+            answers = self.get_task_answers(f"{d.id}.{taskid}", self.current_user)
+            if visible:
+                self.assertIsNotNone(answers[0]["points"])
+            else:
+                self.assertIsNone(answers[0]["points"])
+
+        check_answers_for_points("cs", False)
+        data = self.get(d.url_relative, as_tree=True)
+        json = self.get_plugin_json(data.cssselect(".parContent tim-qst")[0])
+        self.assertIsNone(json.get("markup").get("points"))
+        self.get(f"/getModelAnswer/{d.id}.cs")
+        self.get(f"/getModelAnswer/{d.id}.qst")
+        check_answers_for_points("cs", True)
+        data = self.get(d.url_relative, as_tree=True)
+        json = self.get_plugin_json(data.cssselect(".parContent tim-qst")[0])
+        self.assertIsNotNone(json.get("markup").get("points"))
+        d.document.set_settings({"global_plugin_attrs": {"all": {"showPoints": False}}})
+        check_answers_for_points("cs", False)
+        data = self.get(d.url_relative, as_tree=True)
+        json = self.get_plugin_json(data.cssselect(".parContent tim-qst")[0])
+        self.assertIsNone(json.get("markup").get("points"))

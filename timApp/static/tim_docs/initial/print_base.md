@@ -353,6 +353,8 @@ macros
 \newcommand{\runo}[1]{\begin{center}\it{#1}\end{center}}
 \newcommand{\kuvavasen}[1]{#1}
 \newcommand{\timButton}[1]{\bgtim{\white{{#1}}}}
+\newcommand{\troutofdate}[1]{#1}
+\newcommand{\checktr}[1]{#1}
 
 \newenvironment{huomautus}{\begin{tcolorbox}}{\end{tcolorbox}}
 

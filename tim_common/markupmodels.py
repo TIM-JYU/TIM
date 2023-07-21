@@ -94,6 +94,8 @@ class ModelAnswerInfo:
     lockedAnswerMessage: str | None | Missing = missing
     lockConfirmation: str | None | Missing = missing
     lockedLinkText: str | None | Missing = missing
+    minPoints: float | None | Missing = missing
+    hidePoints: bool | None | Missing = missing
     revealDate: PluginDateTime | datetime | None | Missing = missing
 
 
