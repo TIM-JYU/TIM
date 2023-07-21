@@ -2,8 +2,10 @@ import type {GatePos} from "tim/plugin/quantumcircuit/quantum-circuit-board.comp
 
 export class Gate {
     name: string;
-    constructor(name: string) {
+    editable: boolean;
+    constructor(name: string, editable: boolean) {
         this.name = name;
+        this.editable = editable;
     }
 
     toString() {
@@ -14,10 +16,11 @@ export class Gate {
 export class MultiQubitGate {
     name: string;
     size: number;
-
-    constructor(name: string, size: number) {
+    editable: boolean;
+    constructor(name: string, size: number, editable: boolean) {
         this.name = name;
         this.size = size;
+        this.editable = editable;
     }
 
     toString() {
@@ -27,9 +30,11 @@ export class MultiQubitGate {
 
 export class MultiQubitGateCell {
     target: number;
+    editable: boolean;
 
-    constructor(target: number) {
+    constructor(target: number, editable: boolean) {
         this.target = target;
+        this.editable = editable;
     }
 
     toString() {
@@ -39,9 +44,11 @@ export class MultiQubitGateCell {
 
 export class Control {
     target: number;
+    editable: boolean;
 
-    constructor(target: number) {
+    constructor(target: number, editable: boolean) {
         this.target = target;
+        this.editable = editable;
     }
 
     toString() {
@@ -51,9 +58,11 @@ export class Control {
 
 export class Swap {
     target: number;
+    editable: boolean;
 
-    constructor(target: number) {
+    constructor(target: number, editable: boolean) {
         this.target = target;
+        this.editable = editable;
     }
 }
 
@@ -135,7 +144,7 @@ export class QuantumBoard {
             this.set(
                 pos.target + i + 1,
                 pos.time,
-                new MultiQubitGateCell(pos.target)
+                new MultiQubitGateCell(pos.target, gate.editable)
             );
         }
     }
@@ -189,7 +198,7 @@ export class QuantumBoard {
         // reconnect controls
         for (const c of controls) {
             if (c !== newPos.target) {
-                this.set(c, newPos.time, new Control(newPos.target));
+                this.set(c, newPos.time, new Control(newPos.target, true));
             }
         }
     }
@@ -220,7 +229,7 @@ export class QuantumBoard {
                 this.set(
                     newPos.target,
                     newPos.time,
-                    new Control(targetPos.target)
+                    new Control(targetPos.target, true)
                 );
             } else {
                 if (newPos.target !== control.target) {
@@ -229,7 +238,7 @@ export class QuantumBoard {
                     this.set(
                         newPos.target,
                         newPos.time,
-                        new Control(control.target)
+                        new Control(control.target, true)
                     );
                 }
             }
@@ -244,13 +253,17 @@ export class QuantumBoard {
                 this.set(
                     newPos.target,
                     newPos.time,
-                    new Control(targetPos.target)
+                    new Control(targetPos.target, true)
                 );
             } else {
                 const target = this.findControllable(newPos);
                 if (target !== undefined) {
                     this.remove(oldPos.target, oldPos.time);
-                    this.set(newPos.target, newPos.time, new Control(target));
+                    this.set(
+                        newPos.target,
+                        newPos.time,
+                        new Control(target, true)
+                    );
                 }
             }
         }
@@ -272,16 +285,22 @@ export class QuantumBoard {
             this.remove(oldPos.target, oldPos.time);
             this.remove(newPos.target, newPos.time);
             this.remove(swap.target, newPos.time);
-            this.board[newPos.target][newPos.time] = new Swap(swap.target);
-            this.board[swap.target][newPos.time] = new Swap(newPos.target);
+            this.board[newPos.target][newPos.time] = new Swap(
+                swap.target,
+                swap.editable
+            );
+            this.board[swap.target][newPos.time] = new Swap(
+                newPos.target,
+                swap.editable
+            );
         } else {
             const pair = this.findSwapPair(newPos);
             if (pair !== undefined) {
                 this.remove(oldPos.target, oldPos.time);
                 this.remove(newPos.target, newPos.time);
                 this.remove(pair, newPos.time);
-                this.board[newPos.target][newPos.time] = new Swap(pair);
-                this.board[pair][newPos.time] = new Swap(newPos.target);
+                this.board[newPos.target][newPos.time] = new Swap(pair, true);
+                this.board[pair][newPos.time] = new Swap(newPos.target, true);
             }
         }
     }
@@ -304,7 +323,11 @@ export class QuantumBoard {
         this.remove(oldPos.target, oldPos.time);
         this.set(newPos.target, newPos.time, gate);
         for (let i = newPos.target + 1; i < newPos.target + gate.size; i++) {
-            this.set(i, newPos.time, new MultiQubitGateCell(newPos.target));
+            this.set(
+                i,
+                newPos.time,
+                new MultiQubitGateCell(newPos.target, true)
+            );
         }
     }
 
@@ -346,12 +369,16 @@ export class QuantumBoard {
             }
             const cell = this.get(gatePos.target, gatePos.time);
             if (cell instanceof Gate) {
-                this.set(pos.target, pos.time, new Control(gatePos.target));
+                this.set(
+                    pos.target,
+                    pos.time,
+                    new Control(gatePos.target, true)
+                );
             }
         } else if (!gatePos) {
             const target = this.findControllable(pos);
             if (target !== undefined) {
-                this.set(pos.target, pos.time, new Control(target));
+                this.set(pos.target, pos.time, new Control(target, true));
             }
         }
     }
@@ -389,15 +416,15 @@ export class QuantumBoard {
         if (pos2 && pos.time === pos2.time && pos.target !== pos2.target) {
             this.remove(pos.target, pos.time);
             this.remove(pos2.target, pos2.time);
-            this.board[pos.target][pos.time] = new Swap(pos2.target);
-            this.board[pos2.target][pos2.time] = new Swap(pos.target);
+            this.board[pos.target][pos.time] = new Swap(pos2.target, true);
+            this.board[pos2.target][pos2.time] = new Swap(pos.target, true);
         } else {
             const pair = this.findSwapPair(pos);
             if (pair !== undefined) {
                 this.remove(pos.target, pos.time);
                 this.remove(pair, pos.time);
-                this.board[pos.target][pos.time] = new Swap(pair);
-                this.board[pair][pos.time] = new Swap(pos.target);
+                this.board[pos.target][pos.time] = new Swap(pair, true);
+                this.board[pair][pos.time] = new Swap(pos.target, true);
             }
         }
     }

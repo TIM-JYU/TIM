@@ -1,6 +1,8 @@
 from dataclasses import dataclass, asdict
 from typing import Union
 
+from marshmallow import missing
+
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
@@ -9,7 +11,7 @@ from tim_common.pluginserver_flask import (
     PluginReqs,
     register_html_routes,
 )
-from tim_common.utils import DurationSchema
+from tim_common.utils import DurationSchema, Missing
 
 quantum_circuit_plugin = TypedBlueprint(
     "quantum_circuit_plugin", __name__, url_prefix="/quantumCircuit"
@@ -21,6 +23,7 @@ class SingleOrMultiQubitGateInfo:
     name: str
     time: int
     target: int
+    editable: bool | Missing | None = True
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -31,6 +34,7 @@ class SwapGateInfo:
     time: int
     swap1: int
     swap2: int
+    editable: bool | Missing | None = True
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -42,6 +46,7 @@ class ControlGateInfo:
     time: int
     target: int
     controls: list[int]
+    editable: bool | Missing | None = True
 
     def to_json(self) -> dict:
         return asdict(self)
