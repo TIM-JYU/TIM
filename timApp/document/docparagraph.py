@@ -1369,7 +1369,10 @@ def create_final_par(
         if first_ref.is_translation():
             final_par.doc = first_ref.doc
             if not is_any_norm_reference:
-                final_par.ref_doc = first_ref.doc.get_source_document()
+                # Only set ref_doc for par if it has a source reference
+                src_doc = first_ref.doc.get_source_document()
+                if src_doc:
+                    final_par.ref_doc = src_doc
     elif last_ref.is_translation():
         final_par.doc = last_ref.doc
         final_par.ref_doc = last_ref.doc.get_source_document()
