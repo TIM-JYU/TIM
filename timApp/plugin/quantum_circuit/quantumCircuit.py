@@ -1,8 +1,6 @@
 from dataclasses import dataclass, asdict
 from typing import Union
 
-from marshmallow import missing
-
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
