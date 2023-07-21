@@ -170,6 +170,7 @@ export class RangePipe implements PipeTransform {
                            [attr.data-time]="j"
                            [attr.data-target]="i"
                            class="gate-drop"
+                           [class.uneditable]="gate !== undefined && !gate.editable"
                            [class.chosen]="gateBeingDragged !== null && gateBeingDragged.gate.target === i && gateBeingDragged.gate.time === j">
                         </g>
 
@@ -396,6 +397,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
             return;
         }
         if (this.board.get(target, time) === undefined) {
+            return;
+        }
+        if (this.board.get(target, time)?.editable === false) {
             return;
         }
         if (

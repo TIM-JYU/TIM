@@ -119,7 +119,7 @@ const ControlGateInfo = t.type({
     time: t.number,
     target: t.number,
     controls: t.array(t.number),
-    editable: nullable(t.boolean),
+    editable: withDefault(t.boolean, true),
 });
 
 /**
@@ -129,14 +129,14 @@ const SingleOrMultiQubitGateInfo = t.type({
     name: t.string,
     time: t.number,
     target: t.number,
-    editable: nullable(t.boolean),
+    editable: withDefault(t.boolean, true),
 });
 
 const SwapGateInfo = t.type({
     time: t.number,
     swap1: t.number,
     swap2: t.number,
-    editable: nullable(t.boolean),
+    editable: withDefault(t.boolean, true),
 });
 
 const GateInfo = t.union([
@@ -459,7 +459,7 @@ export class QuantumCircuitComponent
         if (gate.name === "control") {
             this.board.addControl(gate, this.selectedGate);
         } else if (gate.name === "swap") {
-            this.board.addSwap(gate);
+            this.board.addSwap(gate, null, true);
         } else {
             const size = this.gateService.getGateSize(gate.name);
             if (size > 1) {
@@ -495,8 +495,9 @@ export class QuantumCircuitComponent
      * @param gate gate to remove
      */
     handleGateRemove(gate: GatePos) {
-        this.board.remove(gate.target, gate.time);
-
+        if (this.board.get(gate.target, gate.time)?.editable !== false) {
+            this.board.remove(gate.target, gate.time);
+        }
         this.selectedGate = null;
         this.updateBoard();
         this.runSimulation();
@@ -570,25 +571,22 @@ export class QuantumCircuitComponent
         }
 
         for (const gateData of this.markup.initialCircuit) {
-            console.log(gateData);
             if (this.isSwap(gateData)) {
                 this.board.addSwap(
                     {target: gateData.swap1, time: gateData.time},
                     {
                         target: gateData.swap2,
                         time: gateData.time,
-                    }
+                    },
+                    gateData.editable
                 );
             } else if (this.isControl(gateData)) {
-                const gate = new Gate(
-                    gateData.name,
-                    gateData.editable === true
-                );
+                const gate = new Gate(gateData.name, gateData.editable);
                 this.board.set(gateData.target, gateData.time, gate);
                 for (const controlTarget of gateData.controls) {
                     const control = new Control(
                         gateData.target,
-                        gateData.editable === true
+                        gateData.editable
                     );
                     this.board.set(controlTarget, gateData.time, control);
                 }
@@ -598,17 +596,14 @@ export class QuantumCircuitComponent
                     const gate = new MultiQubitGate(
                         gateData.name,
                         size,
-                        gateData.editable === true
+                        gateData.editable
                     );
                     this.board.addMultiQubitGate(
                         {target: gateData.target, time: gateData.time},
                         gate
                     );
                 } else {
-                    const gate = new Gate(
-                        gateData.name,
-                        gateData.editable === true
-                    );
+                    const gate = new Gate(gateData.name, gateData.editable);
                     this.board.addGate(
                         {target: gateData.target, time: gateData.time},
                         gate

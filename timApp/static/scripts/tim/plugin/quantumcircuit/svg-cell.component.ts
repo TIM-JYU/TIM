@@ -23,7 +23,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
         <!-- Empty gate placeholder or backdrop for any other element -->
         <svg:rect
                   [class.drag-over-element]="isBeingDraggedOver"
-                  [class.gate]="cell !== undefined"
+                  [class.gate]="cell?.editable"
                   [attr.x]="x"
                   [attr.y]="y"
                   [attr.width]="circuitStyleOptions.baseSize"
@@ -35,7 +35,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
         <svg:rect *ngIf="cell|instanceof: Gate as g"
                   [style.stroke]="isSelected ? color.selection : color.fill"
                   [style.stroke-width]="isSelected ? 2 : 1"
-                  class="gate"
+                  [class.gate]="g.editable"
                   [class.drag-over-element]="isBeingDraggedOver"
                   [attr.x]="gx"
                   [attr.y]="gy"
@@ -54,17 +54,17 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 
         <!-- control gate -->
         <svg:circle *ngIf="cell|instanceof: Control as c"
-                    class="gate"
+                    [class.gate]="c.editable"
                     [class.drag-over-element]="isBeingDraggedOver"
                     [attr.cx]="cx"
                     [attr.cy]="cy"
                     [attr.r]="circuitStyleOptions.gateSize/4"
-                    [attr.fill]="circuitStyleOptions.colors.dark"
+                    [attr.fill]="color.fill"
                     [attr.stroke]="circuitStyleOptions.colors.dark"></svg:circle>
 
         <!-- Swap gate -->
         <svg:text *ngIf="cell|instanceof: Swap as s"
-                  class="gate"
+                  [class.gate]="s.editable"
                   [class.drag-over-element]="isBeingDraggedOver"
                   [attr.x]="cx"
                   [attr.y]="cy"
@@ -75,14 +75,14 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 
         <!-- MultiQubit gate -->
         <svg:rect *ngIf="cell|instanceof: MultiQubitGate as g"
-                  class="gate"
+                  [class.gate]="g.editable"
                   [class.drag-over-element]="isBeingDraggedOver"
                   [attr.x]="gx"
                   [attr.y]="gy"
                   [attr.width]="gw"
                   [attr.height]="gh"
                   [attr.rx]="circuitStyleOptions.gateBorderRadius"
-                  [attr.fill]="circuitStyleOptions.colors.light"
+                  [attr.fill]="color.fill"
                   [attr.stroke]="circuitStyleOptions.colors.medium"></svg:rect>
         <svg:text *ngIf="cell|instanceof: MultiQubitGate as g"
                   class="gate-text"

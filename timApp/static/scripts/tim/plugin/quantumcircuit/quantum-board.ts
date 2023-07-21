@@ -125,6 +125,9 @@ export class QuantumBoard {
      * @param gate gate to put add
      */
     addGate(pos: GatePos, gate: Gate) {
+        if (this.get(pos.target, pos.time)?.editable === false) {
+            return;
+        }
         this.set(pos.target, pos.time, gate);
     }
 
@@ -139,6 +142,17 @@ export class QuantumBoard {
         if (pos.target + gate.size > this.board.length) {
             return;
         }
+
+        // only add if all cells it occupies are editable
+        if (this.get(pos.target, pos.time)?.editable === false) {
+            return;
+        }
+        for (let i = 0; i < gate.size - 1; i++) {
+            if (this.get(pos.target + i + 1, pos.time)?.editable === false) {
+                return;
+            }
+        }
+
         this.set(pos.target, pos.time, gate);
         for (let i = 0; i < gate.size - 1; i++) {
             this.set(
@@ -342,6 +356,21 @@ export class QuantumBoard {
             return;
         }
         const cell = this.get(oldPos.target, oldPos.time);
+
+        if (cell?.editable === false) {
+            return;
+        }
+        const newPosCell = this.get(newPos.target, newPos.time);
+        if (newPosCell?.editable === false) {
+            return;
+        }
+        if (target !== null) {
+            const targetCell = this.get(target.target, target.time);
+            if (targetCell?.editable === false) {
+                return;
+            }
+        }
+
         if (cell instanceof Gate) {
             this.moveGate(oldPos, newPos, cell);
         } else if (cell instanceof Control) {
@@ -363,6 +392,9 @@ export class QuantumBoard {
      * @param gatePos position to set as target for the control
      */
     addControl(pos: GatePos, gatePos: GatePos | null) {
+        if (this.get(pos.target, pos.time)?.editable === false) {
+            return;
+        }
         if (gatePos) {
             if (gatePos.time !== pos.time || gatePos.target === pos.target) {
                 return;
@@ -411,20 +443,30 @@ export class QuantumBoard {
      * Removes connections to gate at position.
      * @param pos position to add swap to
      * @param pos2 position of the pair of the swap gate
+     * @param editable whether the swap gate is editable
      */
-    addSwap(pos: GatePos, pos2: GatePos | null = null) {
+    addSwap(pos: GatePos, pos2: GatePos | null = null, editable: boolean) {
+        if (this.get(pos.target, pos.time)?.editable === false) {
+            return;
+        }
+        if (
+            pos2 !== null &&
+            this.get(pos2.target, pos2.time)?.editable === false
+        ) {
+            return;
+        }
         if (pos2 && pos.time === pos2.time && pos.target !== pos2.target) {
             this.remove(pos.target, pos.time);
             this.remove(pos2.target, pos2.time);
-            this.board[pos.target][pos.time] = new Swap(pos2.target, true);
-            this.board[pos2.target][pos2.time] = new Swap(pos.target, true);
+            this.board[pos.target][pos.time] = new Swap(pos2.target, editable);
+            this.board[pos2.target][pos2.time] = new Swap(pos.target, editable);
         } else {
             const pair = this.findSwapPair(pos);
             if (pair !== undefined) {
                 this.remove(pos.target, pos.time);
                 this.remove(pair, pos.time);
-                this.board[pos.target][pos.time] = new Swap(pair, true);
-                this.board[pair][pos.time] = new Swap(pos.target, true);
+                this.board[pos.target][pos.time] = new Swap(pair, editable);
+                this.board[pair][pos.time] = new Swap(pos.target, editable);
             }
         }
     }
