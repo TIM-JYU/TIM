@@ -1,6 +1,8 @@
 from dataclasses import dataclass, asdict
 from typing import Union
 
+from flask import render_template_string
+
 from timApp.tim_app import csrf
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
@@ -108,9 +110,28 @@ class QuantumCircuitHtmlModel(
         return "tim-quantum-circuit"
 
     def get_static_html(self) -> str:
-        return """
-            <div>Quantum circuit</div>
+        return render_static_quantum_circuit(self)
+
+
+def render_static_quantum_circuit(m: QuantumCircuitHtmlModel):
+    return render_template_string(
         """
+        <div class="panel panel-default">
+            <div class="panel-heading" style="background-color: #004494; color: white;">
+                {% if header %}
+                    <h4>{{header}}</h4>
+                {% endif %}
+            </div>
+            <div class="panel-body">
+                {% if stem %}
+                    <p>{{ stem }}</p>
+                {% endif %}
+                <p class="alert alert-info">Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla.</p>
+            </div>
+        </div>
+    """.strip(),
+        **asdict(m.markup)
+    )
 
 
 @dataclass

@@ -291,7 +291,7 @@ export interface CircuitStyleOptions {
                         </button>
                     </div>
                 </div>
-                
+
                 <div>{{result}}</div>
             </ng-container>
             <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
@@ -683,7 +683,7 @@ export class QuantumCircuitComponent
 
     /**
      * Add gates from initialCircuit to board.
-     * @oaram circuit gates to add to board
+     * @param circuit gates to add to board
      */
     addInitialGates(circuit: ICircuit) {
         if (!circuit) {
