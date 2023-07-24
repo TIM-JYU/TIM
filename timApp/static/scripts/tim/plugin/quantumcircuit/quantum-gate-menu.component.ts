@@ -1,11 +1,5 @@
-import type {
-    AfterViewInit,
-    OnChanges,
-    OnDestroy,
-    OnInit,
-    SimpleChanges,
-} from "@angular/core";
-import {Component, Input, ViewChild, ElementRef} from "@angular/core";
+import type {OnDestroy, OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import type {Color} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {ServiceGate} from "tim/plugin/quantumcircuit/gate.service";
@@ -26,9 +20,7 @@ interface MenuGate {
         <div class="gate-container" *ngIf="gates.length > 0">
             <p class="gate-container-heading">Raahaa portti piiriin tästä</p>
 
-            <div class="gate-list" #gateListElement
-                 [ngStyle]="{'grid-template-columns': colsStyle}"
-            >
+            <div class="gate-list">
                 <div class="svg-container" *ngFor="let gate of gates" draggable="true"
                      [title]="gate.description"
                      [style.width.px]="circuitStyleOptions.gateSize"
@@ -85,42 +77,14 @@ interface MenuGate {
     `,
     styleUrls: ["./quantum-gate-menu.component.scss"],
 })
-export class QuantumGateMenuComponent
-    implements OnInit, OnDestroy, OnChanges, AfterViewInit
-{
+export class QuantumGateMenuComponent implements OnInit, OnDestroy {
     gates: MenuGate[] = [];
     subscription!: Subscription;
-
-    colsStyle!: string;
-
-    @ViewChild("gateListElement")
-    gateListElement!: ElementRef<HTMLDivElement>;
 
     @Input()
     circuitStyleOptions!: CircuitStyleOptions;
 
     constructor(private gateService: GateService) {}
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.circuitStyleOptions && this.gateListElement) {
-            this.updateColumns();
-        }
-    }
-
-    /**
-     * Update css-grid to have as many columns as fit in available space.
-     */
-    updateColumns() {
-        if (!this.gateListElement) {
-            return;
-        }
-        // 5 pixels is the gap between grid elements
-        const nCols = Math.floor(
-            this.gateListElement.nativeElement.clientWidth /
-                (this.circuitStyleOptions.baseSize + 5)
-        );
-        this.colsStyle = `repeat(${nCols}, ${this.circuitStyleOptions.baseSize}px)`;
-    }
 
     ngOnInit(): void {
         this.subscription = this.gateService
@@ -131,9 +95,6 @@ export class QuantumGateMenuComponent
                     color: this.getColor(g),
                     description: g.description,
                 }));
-                if (this.gateListElement) {
-                    this.updateColumns();
-                }
             });
     }
 
@@ -161,9 +122,5 @@ export class QuantumGateMenuComponent
 
     ngOnDestroy(): void {
         this.subscription.unsubscribe();
-    }
-
-    ngAfterViewInit(): void {
-        this.updateColumns();
     }
 }
