@@ -37,6 +37,7 @@ import {
     Gate,
     MultiQubitGate,
     QuantumBoard,
+    Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {timeout} from "tim/util/utils";
@@ -45,6 +46,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {SvgCellComponent} from "tim/plugin/quantumcircuit/svg-cell.component";
 import {matrix} from "mathjs";
+import {PurifyModule} from "tim/util/purify.module";
 
 /**
  * Information about qubit.
@@ -158,12 +160,21 @@ const CustomGateInfo = t.type({
 
 export type ICustomGateInfo = t.TypeOf<typeof CustomGateInfo>;
 
+const CircuitType = nullable(t.array(GateInfo));
+
+type ICircuit = t.TypeOf<typeof CircuitType>;
+
+const InputBitsType = nullable(t.array(t.number));
+type IUserInput = t.TypeOf<typeof InputBitsType>;
+
 // All settings that are defined in the plugin markup YAML
 const QuantumCircuitMarkup = t.intersection([
     t.partial({
         initialCircuit: nullable(t.array(GateInfo)),
         customGates: nullable(t.array(CustomGateInfo)),
         gates: nullable(t.array(t.string)),
+        modelCircuit: nullable(t.array(GateInfo)),
+        modelInput: nullable(t.array(t.number)),
     }),
     GenericPluginMarkup,
     t.type({
@@ -184,7 +195,14 @@ const QuantumCircuitMarkup = t.intersection([
 // All data that plugin receives from the server (Markup + any extra state data)
 const QuantumCircuitFields = t.intersection([
     getTopLevelFields(QuantumCircuitMarkup),
-    t.type({}),
+    t.type({
+        state: nullable(
+            t.type({
+                userCircuit: nullable(t.array(GateInfo)),
+                userInput: nullable(t.array(t.number)),
+            })
+        ),
+    }),
 ]);
 
 /**
@@ -223,40 +241,63 @@ export interface CircuitStyleOptions {
 @Component({
     selector: "tim-quantum-circuit",
     template: `
-        <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
-            <div class="top-menu">
-                <tim-quantum-gate-menu [circuitStyleOptions]="circuitStyleOptions"></tim-quantum-gate-menu>
-                <tim-quantum-toolbox></tim-quantum-toolbox>
-            </div>
+        <tim-plugin-frame [markupError]="markupError">
+            <tim-plugin-header *ngIf="header" header>
+                <span [innerHTML]="header | purify"></span>
+            </tim-plugin-header>
+            <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
+            <ng-container body>
+                <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
+                    <div class="top-menu">
+                        <tim-quantum-gate-menu [circuitStyleOptions]="circuitStyleOptions"></tim-quantum-gate-menu>
+                        <tim-quantum-toolbox></tim-quantum-toolbox>
+                    </div>
 
-            <div class="circuit">
-                <tim-quantum-circuit-board
-                        [board]="board" 
-                        [selectedGate]="selectedGate"
-                        [qubits]="qubits"
-                        [qubitOutputs]="qubitOutputs"
-                        [circuitStyleOptions]="circuitStyleOptions"
-                        [showOutputBits]="showOutputBits"
-                        (qubitChange)="handleQubitChange($event)"
-                        (gateDrop)="handleGateDrop($event)"
-                        (gateMove)="handleGateMove($event)"
-                        (gateRemove)="handleGateRemove($event)"
-                        (gateSelect)="handleGateSelect($event)"
-                ></tim-quantum-circuit-board>
-            </div>
+                    <div class="circuit">
+                        <tim-quantum-circuit-board
+                                [board]="board"
+                                [selectedGate]="selectedGate"
+                                [qubits]="qubits"
+                                [qubitOutputs]="qubitOutputs"
+                                [circuitStyleOptions]="circuitStyleOptions"
+                                [showOutputBits]="showOutputBits"
+                                (qubitChange)="handleQubitChange($event)"
+                                (gateDrop)="handleGateDrop($event)"
+                                (gateMove)="handleGateMove($event)"
+                                (gateRemove)="handleGateRemove($event)"
+                                (gateSelect)="handleGateSelect($event)"
+                        ></tim-quantum-circuit-board>
+                    </div>
 
-            <div class="stats">
-                <tim-quantum-stats [measurements]="measurements"
-                                   [quantumChartData]="quantumChartData"
-                                   [showChart]="showChart"
-                                   [showPrintField]="showPrintField"
-                                   [samplingMode]="samplingMode"
-                                   [nSamples]="nSamples"
-                                   (clear)="handleClearMeasurements()"
-                                   (measure)="handleMeasure()">
-                </tim-quantum-stats>
-            </div>
-        </div>
+                    <div class="stats">
+                        <tim-quantum-stats [measurements]="measurements"
+                                           [quantumChartData]="quantumChartData"
+                                           [showChart]="showChart"
+                                           [showPrintField]="showPrintField"
+                                           [samplingMode]="samplingMode"
+                                           [nSamples]="nSamples"
+                                           (clear)="handleClearMeasurements()"
+                                           (measure)="handleMeasure()">
+                        </tim-quantum-stats>
+                    </div>
+
+                    <div class="buttons">
+                        <button class="timButton"
+                                (click)="save()">
+                            Tallenna
+                        </button>
+                        <button class="btn btn-default btn-xs"
+                                (click)="reset()">Palauta
+                        </button>
+                    </div>
+                </div>
+                
+                <div>{{result}}</div>
+            </ng-container>
+            <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
+
+        </tim-plugin-frame>
+
     `,
     styleUrls: ["./quantum-circuit.component.scss"],
     providers: [GateService],
@@ -342,6 +383,8 @@ export class QuantumCircuitComponent
 
     measurements: Measurement[] = [];
 
+    result: string = "";
+
     constructor(
         private gateService: GateService,
         el: ElementRef,
@@ -377,6 +420,81 @@ export class QuantumCircuitComponent
 
     get nSamples() {
         return this.markup.nSamples;
+    }
+
+    serializeUserCircuit(): ICircuit {
+        const userCircuit: ICircuit = [];
+        const board = this.board.board;
+        for (let targetI = 0; targetI < board.length; targetI++) {
+            for (let timeI = 0; timeI < board[targetI].length; timeI++) {
+                const cell = board[targetI][timeI];
+                if (cell instanceof Gate) {
+                    const controls = [];
+                    for (
+                        let controlTargetI = 0;
+                        controlTargetI < board.length;
+                        controlTargetI++
+                    ) {
+                        const control = board[controlTargetI][timeI];
+                        if (
+                            control instanceof Control &&
+                            control.target === targetI
+                        ) {
+                            controls.push(controlTargetI);
+                        }
+                    }
+                    userCircuit.push({
+                        name: cell.name,
+                        editable: cell.editable,
+                        target: targetI,
+                        time: timeI,
+                        controls: controls,
+                    });
+                } else if (cell instanceof MultiQubitGate) {
+                    userCircuit.push({
+                        name: cell.name,
+                        time: timeI,
+                        target: targetI,
+                        editable: cell.editable,
+                    });
+                } else if (cell instanceof Swap && targetI < cell.target) {
+                    userCircuit.push({
+                        swap1: targetI,
+                        swap2: cell.target,
+                        time: timeI,
+                        editable: cell.editable,
+                    });
+                }
+            }
+        }
+        return userCircuit;
+    }
+
+    async save() {
+        const userCircuit = this.serializeUserCircuit();
+
+        const userInput: IUserInput = this.qubits.map((q) => q.value);
+
+        const params = {
+            input: {
+                userCircuit: userCircuit,
+                userInput: userInput,
+            },
+        };
+        const r = await this.postAnswer<{
+            web: {result?: string; error?: string};
+        }>(params);
+        if (r.ok) {
+            const res = r.result.web.result;
+            this.result = res ?? "";
+        } else {
+            const error = r.result.error.error;
+            console.log(error);
+        }
+    }
+
+    reset() {
+        console.log("implement reset");
     }
 
     /**
@@ -751,6 +869,7 @@ export class QuantumCircuitComponent
         NgChartsModule,
         TimUtilityModule,
         FormsModule,
+        PurifyModule,
     ],
 })
 export class QuantumCircuitModule implements DoBootstrap {

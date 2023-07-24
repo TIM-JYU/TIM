@@ -1,19 +1,16 @@
 from dataclasses import dataclass, asdict
 from typing import Union
 
-from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.tim_app import csrf
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
     PluginReqs,
-    register_html_routes,
+    create_blueprint,
+    GenericAnswerModel,
+    PluginAnswerResp,
 )
-from tim_common.utils import DurationSchema, Missing
-
-quantum_circuit_plugin = TypedBlueprint(
-    "quantum_circuit_plugin", __name__, url_prefix="/quantumCircuit"
-)
+from tim_common.utils import Missing
 
 
 @dataclass
@@ -75,6 +72,8 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     showOutputBits: bool | None = None
     samplingMode: str | None = None
     nSamples: int | None = None
+    modelCircuit: list[GateInfo] | None = None
+    modelInput: list[int] | None = None
 
     initialCircuit: list[GateInfo] | None = None
     customGates: list[CustomGateInfo] | None = None
@@ -85,14 +84,16 @@ class QuantumCircuitMarkup(GenericMarkupModel):
 class QuantumCircuitStateModel:
     """Class that defines plugin state (the JSON answer data of a task)"""
 
-    pass
+    userCircuit: list[GateInfo] | None = None
+    userInput: list[int] | None = None
 
 
 @dataclass
 class QuantumCircuitInputModel:
     """Class that defines data that browser sends to the server"""
 
-    pass
+    userCircuit: list[GateInfo] | None = None
+    userInput: list[int] | None = None
 
 
 @dataclass
@@ -112,17 +113,48 @@ class QuantumCircuitHtmlModel(
         """
 
 
+@dataclass
+class QuantumCircuitAnswerModel(
+    GenericAnswerModel[
+        QuantumCircuitInputModel, QuantumCircuitMarkup, QuantumCircuitStateModel
+    ]
+):
+    pass
+
+
+def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
+    # initial_circuit = args.markup.initialCircuit
+
+    model_circuit = args.markup.modelCircuit
+    model_input = args.markup.modelInput
+
+    if model_circuit is None:
+        return args.make_answer_error("Missing modelCircuit")
+    if model_input is None:
+        return args.make_answer_error("Missing modelInput")
+
+    user_circuit = args.input.userCircuit
+    user_input = args.input.userInput
+
+    return {
+        "save": {"userCircuit": user_circuit, "userInput": user_input},
+        "tim_info": {"points": 1.0},
+        "web": {"result": "hello"},
+    }
+
+
 def reqs_handler() -> PluginReqs:
     """Return plugins' dependencies and info on how to render it"""
 
     return {"js": ["quantumCircuit"], "multihtml": True}
 
 
-# Register generic plugin routes
-# Note: there is also create_nontask_blueprint that does this + creates the blueprint,
-# but for now it's better to create the blueprint manually
-register_html_routes(
-    quantum_circuit_plugin,
-    class_schema(QuantumCircuitHtmlModel, base_schema=DurationSchema),
+quantum_circuit_plugin = create_blueprint(
+    __name__,
+    "quantumCircuit",
+    QuantumCircuitHtmlModel,
+    QuantumCircuitAnswerModel,
+    answer,
     reqs_handler,
+    csrf,
 )
