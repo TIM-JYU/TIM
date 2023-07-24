@@ -494,7 +494,8 @@ export class QuantumCircuitComponent
     }
 
     reset() {
-        console.log("implement reset");
+        this.initializeBoard(true);
+        this.runSimulation(true);
     }
 
     /**
@@ -682,13 +683,14 @@ export class QuantumCircuitComponent
 
     /**
      * Add gates from initialCircuit to board.
+     * @oaram circuit gates to add to board
      */
-    addInitialGates() {
-        if (!this.markup.initialCircuit) {
+    addInitialGates(circuit: ICircuit) {
+        if (!circuit) {
             return;
         }
 
-        for (const gateData of this.markup.initialCircuit) {
+        for (const gateData of circuit) {
             if (this.isSwap(gateData)) {
                 this.board.addSwap(
                     {target: gateData.swap1, time: gateData.time},
@@ -735,15 +737,27 @@ export class QuantumCircuitComponent
 
     /**
      * Initializes board, qubits and outputs.
+     * @param reset whether this call is to reset board to initial state
      */
-    initializeBoard() {
+    initializeBoard(reset: boolean) {
         this.qubits = [];
         const defaultValue = 0;
-        for (let i = 0; i < this.nQubits; i++) {
-            this.qubits.push(
-                new Qubit(defaultValue, `q[${i}]`, this.circuitStyleOptions)
-            );
+        const userInput = this.attrsall.state?.userInput;
+        if (userInput && !reset) {
+            for (let i = 0; i < this.nQubits; i++) {
+                const value = userInput[i];
+                this.qubits.push(
+                    new Qubit(value, `q[${i}]`, this.circuitStyleOptions)
+                );
+            }
+        } else {
+            for (let i = 0; i < this.nQubits; i++) {
+                this.qubits.push(
+                    new Qubit(defaultValue, `q[${i}]`, this.circuitStyleOptions)
+                );
+            }
         }
+
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
 
         this.gateService.registerUserDefinedGates(
@@ -751,7 +765,13 @@ export class QuantumCircuitComponent
             this.markup.customGates
         );
 
-        this.addInitialGates();
+        const userCircuit = this.attrsall.state?.userCircuit;
+
+        if (userCircuit && !reset) {
+            this.addInitialGates(userCircuit);
+        } else if (this.markup.initialCircuit) {
+            this.addInitialGates(this.markup.initialCircuit);
+        }
 
         this.qubitOutputs = [];
         for (let i = 0; i < this.nQubits; i++) {
@@ -837,7 +857,7 @@ export class QuantumCircuitComponent
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.initializeBoard();
+        this.initializeBoard(false);
 
         this.initializeSimulator();
     }

@@ -139,7 +139,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},
         "tim_info": {"points": 1.0},
-        "web": {"result": "hello"},
+        "web": {"result": "oikein"},
     }
 
 
