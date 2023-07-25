@@ -113,7 +113,7 @@ class QuantumCircuitHtmlModel(
         return render_static_quantum_circuit(self)
 
 
-def render_static_quantum_circuit(m: QuantumCircuitHtmlModel):
+def render_static_quantum_circuit(m: QuantumCircuitHtmlModel) -> str:
     return render_template_string(
         """
         <div class="panel panel-default">
