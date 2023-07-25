@@ -36,6 +36,7 @@ import {
     Control,
     Gate,
     MultiQubitGate,
+    MultiQubitGateCell,
     QuantumBoard,
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
@@ -45,6 +46,7 @@ import {FormsModule} from "@angular/forms";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {SvgCellComponent} from "tim/plugin/quantumcircuit/svg-cell.component";
+import type {Matrix} from "mathjs";
 import {matrix} from "mathjs";
 import {PurifyModule} from "tim/util/purify.module";
 
@@ -238,6 +240,10 @@ export interface CircuitStyleOptions {
     gateBorderRadius: number;
 }
 
+export interface ActiveGateInfo {
+    matrix: Matrix;
+}
+
 @Component({
     selector: "tim-quantum-circuit",
     template: `
@@ -250,7 +256,7 @@ export interface CircuitStyleOptions {
                 <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
                     <div class="top-menu">
                         <tim-quantum-gate-menu [circuitStyleOptions]="circuitStyleOptions"></tim-quantum-gate-menu>
-                        <tim-quantum-toolbox></tim-quantum-toolbox>
+                        <tim-quantum-toolbox [activeGateInfo]="activeGateInfo"></tim-quantum-toolbox>
                     </div>
 
                     <div class="circuit">
@@ -380,6 +386,8 @@ export class QuantumCircuitComponent
     board!: QuantumBoard;
 
     selectedGate: GatePos | null = null;
+
+    activeGateInfo?: ActiveGateInfo;
 
     measurements: Measurement[] = [];
 
@@ -636,12 +644,49 @@ export class QuantumCircuitComponent
         this.runSimulation();
     }
 
+    getGateName(pos: GatePos) {
+        const cell = this.board.get(pos.target, pos.time);
+        if (cell instanceof Gate || cell instanceof MultiQubitGate) {
+            return cell.name;
+        }
+        if (cell instanceof Control) {
+            const targetGate = this.board.get(cell.target, pos.time);
+            if (targetGate instanceof Gate) {
+                return targetGate.name;
+            }
+        }
+        if (cell instanceof Swap) {
+            return "swap";
+        }
+        if (cell instanceof MultiQubitGateCell) {
+            const targetGate = this.board.get(cell.target, pos.time);
+            if (targetGate instanceof MultiQubitGate) {
+                return targetGate.name;
+            }
+        }
+    }
+
+    updateActiveGate(gate: GatePos) {
+        const name = this.getGateName(gate);
+        if (name !== undefined) {
+            const mat = this.gateService.getMatrix(name);
+            if (mat) {
+                this.activeGateInfo = {
+                    matrix: mat,
+                };
+            }
+        }
+    }
+
     /**
      * Marks gate as selected.
      * @param gate position of gate on board
      */
     handleGateSelect(gate: GatePos) {
         const cell = this.board.get(gate.target, gate.time);
+
+        this.updateActiveGate(gate);
+
         if (cell instanceof Gate) {
             // same was selected so unselect it
             if (
