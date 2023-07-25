@@ -156,6 +156,7 @@ export class RangePipe implements PipeTransform {
                         <g *ngFor="let gate of gates; let j=index" tim-svg-cell
                            [circuitStyleOptions]="circuitStyleOptions"
                            [cell]="gate"
+                           [board]="board"
                            [isSelected]="selectedGate !== null && i === selectedGate.target && j ===
                             selectedGate.time"
                            [isBeingDraggedOver]="dragOverElement !== null && dragOverElement.time === j &&

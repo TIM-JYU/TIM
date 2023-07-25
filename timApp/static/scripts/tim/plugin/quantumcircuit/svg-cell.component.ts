@@ -10,6 +10,7 @@ import {
     Control,
     Gate,
     MultiQubitGate,
+    QuantumBoard,
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
 import type {Color} from "tim/plugin/quantumcircuit/quantum-circuit.component";
@@ -106,6 +107,9 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
     cell!: Cell;
 
     @Input()
+    board!: QuantumBoard;
+
+    @Input()
     circuitStyleOptions!: CircuitStyleOptions;
 
     @Input()
@@ -173,7 +177,19 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
             color = this.circuitStyleOptions.gateColors.get(group ?? "");
         } else if (this.cell instanceof Control) {
             const group = this.gateService.getGateGroup("control");
-            color = this.circuitStyleOptions.gateColors.get(group ?? "");
+            const target = this.cell.target;
+            const targetCell = this.board.get(target, this.time);
+            // use same color for control as its target
+            if (targetCell instanceof Gate) {
+                const targetGroup = this.gateService.getGateGroup(
+                    targetCell.name
+                );
+                color = this.circuitStyleOptions.gateColors.get(
+                    targetGroup ?? ""
+                );
+            } else {
+                color = this.circuitStyleOptions.gateColors.get(group ?? "");
+            }
         } else if (this.cell instanceof Swap) {
             const group = this.gateService.getGateGroup("swap");
             color = this.circuitStyleOptions.gateColors.get(group ?? "");
