@@ -147,6 +147,19 @@ export class GateService {
         return this.gateNameToMatrix.get(name);
     }
 
+    /**
+     * Check if gate with given name exists and is in gate menu
+     * @param name
+     */
+    isMenuGate(name: string) {
+        for (const gate of this.gates) {
+            if (!gate.hidden && gate.name === name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private getGate(name: string) {
         return this.gates.find((g) => g.name === name);
     }
