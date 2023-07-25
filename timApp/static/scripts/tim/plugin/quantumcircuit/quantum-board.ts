@@ -455,7 +455,10 @@ export class QuantumBoard {
         ) {
             return;
         }
-        if (pos2 && pos.time === pos2.time && pos.target !== pos2.target) {
+        if (pos.target === pos2?.target) {
+            return;
+        }
+        if (pos2 && pos.time === pos2.time) {
             this.remove(pos.target, pos.time);
             this.remove(pos2.target, pos2.time);
             this.board[pos.target][pos.time] = new Swap(pos2.target, editable);

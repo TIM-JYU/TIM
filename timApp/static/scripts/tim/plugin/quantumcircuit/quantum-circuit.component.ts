@@ -438,18 +438,28 @@ export class QuantumCircuitComponent
                         const control = board[controlTargetI][timeI];
                         if (
                             control instanceof Control &&
-                            control.target === targetI
+                            control.target === targetI &&
+                            controlTargetI !== targetI
                         ) {
                             controls.push(controlTargetI);
                         }
                     }
-                    userCircuit.push({
-                        name: cell.name,
-                        editable: cell.editable,
-                        target: targetI,
-                        time: timeI,
-                        controls: controls,
-                    });
+                    if (controls.length > 0) {
+                        userCircuit.push({
+                            name: cell.name,
+                            editable: cell.editable,
+                            target: targetI,
+                            time: timeI,
+                            controls: controls,
+                        });
+                    } else {
+                        userCircuit.push({
+                            name: cell.name,
+                            target: targetI,
+                            time: timeI,
+                            editable: cell.editable,
+                        });
+                    }
                 } else if (cell instanceof MultiQubitGate) {
                     userCircuit.push({
                         name: cell.name,
@@ -704,6 +714,9 @@ export class QuantumCircuitComponent
                 const gate = new Gate(gateData.name, gateData.editable);
                 this.board.set(gateData.target, gateData.time, gate);
                 for (const controlTarget of gateData.controls) {
+                    if (controlTarget === gateData.target) {
+                        continue;
+                    }
                     const control = new Control(
                         gateData.target,
                         gateData.editable
