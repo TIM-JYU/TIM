@@ -1,4 +1,5 @@
 from sqlalchemy import func
+from sqlalchemy.orm import mapped_column
 
 from timApp.timdb.sqa import db
 
@@ -7,39 +8,43 @@ class UserNote(db.Model):
     """A comment/note that has been posted in a document paragraph."""
 
     __tablename__ = "usernotes"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
+
+    id = mapped_column(db.Integer, primary_key=True)
     """Comment id."""
 
-    usergroup_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"), nullable=False)
+    usergroup_id = mapped_column(
+        db.Integer, db.ForeignKey("usergroup.id"), nullable=False
+    )
     """The UserGroup id who posted the comment."""
 
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
     """The document id in which this comment was posted."""
 
-    par_id = db.Column(db.Text, nullable=False)
+    par_id = mapped_column(db.Text, nullable=False)
     """The paragraph id in which this comment was posted."""
 
-    par_hash = db.Column(db.Text, nullable=False)
+    par_hash = mapped_column(db.Text, nullable=False)
     """The paragraph hash at the time this comment was posted."""
 
-    content = db.Column(db.Text, nullable=False)
+    content = mapped_column(db.Text, nullable=False)
     """Comment content."""
 
-    created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    created = mapped_column(
+        db.DateTime(timezone=True), nullable=False, default=func.now()
+    )
     """Comment creation timestamp."""
 
-    modified = db.Column(db.DateTime(timezone=True))
+    modified = mapped_column(db.DateTime(timezone=True))
     """Comment modification timestamp."""
 
-    access = db.Column(db.Text, nullable=False)
+    access = mapped_column(db.Text, nullable=False)
     """Who can see this comment. So far valid values are 'everyone' and 'justme'."""
 
-    tags = db.Column(db.Text, nullable=False)
+    tags = mapped_column(db.Text, nullable=False)
     """Tags for the comment."""
 
-    html = db.Column(db.Text)
+    html = mapped_column(db.Text)
     """Comment HTML cache."""
 
     usergroup = db.relationship("UserGroup", back_populates="notes")

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from sqlalchemy import select
+from sqlalchemy.orm import mapped_column
 
 from timApp.timdb.sqa import db
 from timApp.user.hakaorganization import HakaOrganization
@@ -11,14 +12,14 @@ from timApp.user.hakaorganization import HakaOrganization
 class PersonalUniqueCode(db.Model):
     """The database model for the 'schacPersonalUniqueCode' Haka attribute."""
 
-    __allow_unmapped__ = True
+    
 
-    user_id = db.Column(
+    user_id = mapped_column(
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False, primary_key=True
     )
     """User id."""
 
-    org_id = db.Column(
+    org_id = mapped_column(
         db.Integer,
         db.ForeignKey("haka_organization.id"),
         nullable=False,
@@ -26,10 +27,10 @@ class PersonalUniqueCode(db.Model):
     )
     """Organization id."""
 
-    code = db.Column(db.Text, nullable=False, index=True)
+    code = mapped_column(db.Text, nullable=False, index=True)
     """The actual code. This could be e.g. student id or employee id."""
 
-    type = db.Column(db.Text, nullable=False, primary_key=True)
+    type = mapped_column(db.Text, nullable=False, primary_key=True)
     """The type of the code, e.g. student or employee."""
 
     user = db.relationship("User", back_populates="uniquecodes", lazy="selectin")

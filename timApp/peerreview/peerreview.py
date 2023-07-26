@@ -1,5 +1,7 @@
 from typing import Any
 
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 
@@ -7,41 +9,41 @@ class PeerReview(db.Model):
     """A peer review to a task."""
 
     __tablename__ = "peer_review"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
+    
+    id = mapped_column(db.Integer, primary_key=True)
     """Review identifier."""
 
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=True)
+    answer_id = mapped_column(db.Integer, db.ForeignKey("answer.id"), nullable=True)
     """Answer id."""
 
-    task_name = db.Column(db.Text, nullable=True)
+    task_name = mapped_column(db.Text, nullable=True)
     """Task name"""
 
-    block_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    block_id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
     """Doc id"""
 
-    reviewer_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    reviewer_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
     """Reviewer id"""
 
-    reviewable_id = db.Column(
+    reviewable_id = mapped_column(
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False
     )
     """Reviewable id"""
 
-    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    start_time = mapped_column(db.DateTime(timezone=True), nullable=False)
     """Review start time"""
 
-    end_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    end_time = mapped_column(db.DateTime(timezone=True), nullable=False)
     """Review end time"""
 
-    reviewed = db.Column(db.Boolean, default=False)
+    reviewed = mapped_column(db.Boolean, default=False)
     """Review status"""
 
-    points = db.Column(db.Float)
+    points = mapped_column(db.Float)
     """Points given by the reviewer"""
 
-    comment = db.Column(db.Text)
+    comment = mapped_column(db.Text)
     """Review comment"""
 
     __table_args__ = (

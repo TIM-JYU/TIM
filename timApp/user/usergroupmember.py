@@ -13,6 +13,7 @@ All this information is contained in :class:`UserGroupMember` which links a user
 from datetime import timedelta
 
 from sqlalchemy import func
+from sqlalchemy.orm import mapped_column
 
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
@@ -24,31 +25,35 @@ class UserGroupMember(db.Model):
     """
 
     __tablename__ = "usergroupmember"
-    __allow_unmapped__ = True
+    
 
-    usergroup_id = db.Column(
+    usergroup_id = mapped_column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
     """ID of the usergroup the member belongs to."""
 
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
+    user_id = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True
+    )
     """ID of the user that belongs to the usergroup."""
 
-    membership_end = db.Column(db.DateTime(timezone=True))
+    membership_end = mapped_column(db.DateTime(timezone=True))
     """Timestamp for when the membership ended.
     
     .. note:: The timestamp is used to determine soft deletion.
               If the end timestamp is present, the user is considered deleted from the group.
     """
 
-    membership_added = db.Column(db.DateTime(timezone=True), default=get_current_time)
+    membership_added = mapped_column(
+        db.DateTime(timezone=True), default=get_current_time
+    )
     """Timestamp for when the user was last time added as the active member.
     
     .. note:: The timestamp is used **for logging purposes only**.
               In other words, it is not used to determine soft deletion or other membership state.
     """
 
-    added_by = db.Column(db.Integer, db.ForeignKey("useraccount.id"))
+    added_by = mapped_column(db.Integer, db.ForeignKey("useraccount.id"))
     """User ID of the user who added the membership."""
 
     user = db.relationship(

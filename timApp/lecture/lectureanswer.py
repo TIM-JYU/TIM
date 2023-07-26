@@ -3,7 +3,7 @@ from json import JSONDecodeError
 from typing import Optional
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import lazyload
+from sqlalchemy.orm import lazyload, mapped_column
 
 from timApp.lecture.lecture import Lecture
 from timApp.timdb.sqa import db
@@ -26,19 +26,19 @@ def unshuffle_lectureanswer(
 
 class LectureAnswer(db.Model):
     __tablename__ = "lectureanswer"
-    __allow_unmapped__ = True
     
-    answer_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
-    question_id = db.Column(
+
+    answer_id = mapped_column(db.Integer, primary_key=True)
+    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    question_id = mapped_column(
         db.Integer, db.ForeignKey("askedquestion.asked_id"), nullable=False
     )
-    lecture_id = db.Column(
+    lecture_id = mapped_column(
         db.Integer, db.ForeignKey("lecture.lecture_id"), nullable=False
     )
-    answer = db.Column(db.Text, nullable=False)
-    answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
-    points = db.Column(db.Float)
+    answer = mapped_column(db.Text, nullable=False)
+    answered_on = mapped_column(db.DateTime(timezone=True), nullable=False)
+    points = mapped_column(db.Float)
 
     asked_question = db.relationship(
         "AskedQuestion", back_populates="answers", lazy="selectin"

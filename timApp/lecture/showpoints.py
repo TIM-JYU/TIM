@@ -1,11 +1,13 @@
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 
 class Showpoints(db.Model):
     __tablename__ = "showpoints"
-    __allow_unmapped__ = True
     
-    asked_id = db.Column(
+
+    asked_id = mapped_column(
         db.Integer, db.ForeignKey("askedquestion.asked_id"), primary_key=True
     )
 

@@ -1,5 +1,7 @@
 from enum import Enum, unique
 
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 
@@ -21,12 +23,12 @@ class Tag(db.Model):
     """A tag with associated document id, tag name, type and expiration date."""
 
     __tablename__ = "tag"
-    __allow_unmapped__ = True
     
-    block_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    name = db.Column(db.Text, primary_key=True)
-    type = db.Column(db.Enum(TagType), nullable=False)
-    expires = db.Column(db.DateTime(timezone=True))
+
+    block_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    name = mapped_column(db.Text, primary_key=True)
+    type = mapped_column(db.Enum(TagType), nullable=False)
+    expires = mapped_column(db.DateTime(timezone=True))
 
     block = db.relationship("Block", back_populates="tags")
 

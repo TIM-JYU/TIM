@@ -1,5 +1,7 @@
 from enum import Enum
 
+from sqlalchemy.orm import mapped_column
+
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.timdb.sqa import db
 
@@ -32,7 +34,7 @@ class UserContact(db.Model):
     """TIM users' additional contact information."""
 
     __tablename__ = "usercontact"
-    __allow_unmapped__ = True
+
 
     __table_args__ = (
         # A user should not have the same contact for the channel
@@ -55,26 +57,28 @@ class UserContact(db.Model):
         ),
     )
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
     """Which user owns this contact information."""
 
-    contact = db.Column(db.Text, nullable=False)
+    contact = mapped_column(db.Text, nullable=False)
     """Contact identifier for a channel."""
 
-    channel = db.Column(db.Enum(Channel), nullable=False)
+    channel = mapped_column(db.Enum(Channel), nullable=False)
     """Channel the contact information points to."""
 
-    verified = db.Column(db.Boolean, nullable=False, default=False)
+    verified = mapped_column(db.Boolean, nullable=False, default=False)
     """Whether this contact info is verified by the user.
     
     If False, the user has made a claim for a contact info, but has not yet verified it's ownership."""
 
-    primary = db.Column(db.Enum(PrimaryContact))
+    primary = mapped_column(db.Enum(PrimaryContact))
     """Whether the contact is primary for the user"""
 
-    contact_origin: ContactOrigin = db.Column(db.Enum(ContactOrigin), nullable=False)
+    contact_origin = mapped_column(
+        db.Enum(ContactOrigin), nullable=False
+    ) # : ContactOrigin
     """How the contact was added."""
 
     user = db.relationship("User", back_populates="contacts", lazy="select")

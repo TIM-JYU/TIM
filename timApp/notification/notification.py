@@ -1,6 +1,8 @@
 import enum
 
-from timApp.item.block import Block, BlockType
+from sqlalchemy.orm import mapped_column
+
+from timApp.item.block import BlockType
 from timApp.timdb.sqa import db, is_attribute_loaded
 from timApp.util.logger import log_warning
 
@@ -29,19 +31,21 @@ class Notification(db.Model):
     """Notification settings for a User for a block."""
 
     __tablename__ = "notification"
-    __allow_unmapped__ = True
     
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
+
+    user_id = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True
+    )
     """User id."""
 
-    block_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    block_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     """Item id."""
 
-    notification_type = db.Column(db.Enum(NotificationType), primary_key=True)
+    notification_type = mapped_column(db.Enum(NotificationType), primary_key=True)
     """Notification type."""
 
     user = db.relationship("User", back_populates="notifications")
-    block: Block = db.relationship("Block", back_populates="notifications")
+    block = db.relationship("Block", back_populates="notifications") # : Block
 
     def to_json(self) -> dict:
         j = {"type": self.notification_type}

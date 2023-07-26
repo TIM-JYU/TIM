@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy import select
+from sqlalchemy.orm import mapped_column
 
 from timApp.item.block import Block, BlockType, insert_block
 from timApp.timdb.sqa import db
@@ -9,10 +10,10 @@ from timApp.user.usergroup import UserGroup
 
 class TaskBlock(db.Model):
     __tablename__ = "taskblock"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    task_id = db.Column(db.Text, primary_key=True)
+
+    id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    task_id = mapped_column(db.Text, primary_key=True)
 
     block = db.relationship("Block", lazy="selectin")
 

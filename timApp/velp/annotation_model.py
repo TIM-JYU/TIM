@@ -2,6 +2,8 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 
@@ -44,36 +46,36 @@ class Annotation(db.Model):
     """
 
     __tablename__ = "annotation"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
+    
+    id = mapped_column(db.Integer, primary_key=True)
     """Annotation identifier."""
 
-    velp_version_id = db.Column(
+    velp_version_id = mapped_column(
         db.Integer, db.ForeignKey("velpversion.id"), nullable=False
     )
     """Id of the velp that has been used for this annotation."""
 
-    annotator_id = db.Column(
+    annotator_id = mapped_column(
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False
     )
     """Id of the User who created the annotation."""
 
-    points = db.Column(db.Float)
+    points = mapped_column(db.Float)
     """Points associated with the annotation."""
 
-    creation_time = db.Column(
+    creation_time = mapped_column(
         db.DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
     """Creation time."""
 
-    valid_from = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    valid_from = mapped_column(db.DateTime(timezone=True), default=datetime.utcnow)
     """Since when should this annotation be valid."""
 
-    valid_until = db.Column(db.DateTime(timezone=True))
+    valid_until = mapped_column(db.DateTime(timezone=True))
     """Until when should this annotation be valid."""
 
-    visible_to = db.Column(db.Integer)
+    visible_to = mapped_column(db.Integer)
     """Who should this annotation be visible to.
     
     Possible values are denoted by AnnotationVisibility enum:
@@ -85,55 +87,55 @@ class Annotation(db.Model):
     
     """
 
-    document_id = db.Column(db.Integer, db.ForeignKey("block.id"))
+    document_id = mapped_column(db.Integer, db.ForeignKey("block.id"))
     """Id of the document in case this is a paragraph annotation."""
 
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"))
+    answer_id = mapped_column(db.Integer, db.ForeignKey("answer.id"))
     """Id of the Answer in case this is an answer annotation."""
 
-    paragraph_id_start = db.Column(db.Text)
+    paragraph_id_start = mapped_column(db.Text)
     """The id of the paragraph where this annotation starts from (in case this is a paragraph annotation)."""
 
-    paragraph_id_end = db.Column(db.Text)
+    paragraph_id_end = mapped_column(db.Text)
     """The id of the paragraph where this annotation ends (in case this is a paragraph annotation)."""
 
-    offset_start = db.Column(db.Integer)
+    offset_start = mapped_column(db.Integer)
     """Positional information about the annotation."""
 
-    node_start = db.Column(db.Integer)
+    node_start = mapped_column(db.Integer)
     """Positional information about the annotation."""
 
-    depth_start = db.Column(db.Integer)
+    depth_start = mapped_column(db.Integer)
     """Positional information about the annotation."""
 
-    offset_end = db.Column(db.Integer)
+    offset_end = mapped_column(db.Integer)
     """Positional information about the annotation."""
 
-    node_end = db.Column(db.Integer)
+    node_end = mapped_column(db.Integer)
     """Positional information about the annotation."""
 
-    depth_end = db.Column(db.Integer)
+    depth_end = mapped_column(db.Integer)
     """Positional information about the annotation."""
 
-    hash_start = db.Column(db.Text)
+    hash_start = mapped_column(db.Text)
     """Positional information about the annotation."""
 
-    hash_end = db.Column(db.Text)
+    hash_end = mapped_column(db.Text)
     """Positional information about the annotation."""
 
-    color = db.Column(db.Text)
+    color = mapped_column(db.Text)
     """Color for the annotation."""
 
-    element_path_start = db.Column(db.Text)
+    element_path_start = mapped_column(db.Text)
     """Positional information about the annotation."""
 
-    element_path_end = db.Column(db.Text)
+    element_path_end = mapped_column(db.Text)
     """Positional information about the annotation."""
 
-    draw_data = db.Column(db.Text)
+    draw_data = mapped_column(db.Text)
     """Drawing information about the annotation (for annotations on images)."""
 
-    style = db.Column(db.Integer)
+    style = mapped_column(db.Integer)
     """Appearance of the annotation"""
 
     annotator = db.relationship("User", back_populates="annotations")

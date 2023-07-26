@@ -4,17 +4,12 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import func
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.blockassociation import BlockAssociation
-from timApp.item.tag import Tag
-from timApp.messaging.messagelist.messagelist_models import MessageListModel
-from timApp.messaging.timMessage.internalmessage_models import (
-    InternalMessage,
-    InternalMessageDisplay,
-)
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
@@ -28,30 +23,32 @@ class Block(db.Model):
     """The "base class" for all database objects that are part of the permission system."""
 
     __tablename__ = "block"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
+
+    id = mapped_column(db.Integer, primary_key=True)
     """A unique identifier for the Block."""
 
-    latest_revision_id = db.Column(db.Integer)
+    latest_revision_id = mapped_column(db.Integer)
     """Old field that is not used anymore."""
 
-    type_id = db.Column(db.Integer, nullable=False)
+    type_id = mapped_column(db.Integer, nullable=False)
     """Type of the Block, see BlockType enum for possible types."""
 
-    description = db.Column(db.Text)
+    description = mapped_column(db.Text)
     """Additional information about the Block. This is used for different purposes by different BlockTypes,
     so it isn't merely a "description".
     """
 
-    created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    created = mapped_column(db.DateTime(timezone=True), nullable=False, default=func.now())
     """When this Block was created."""
 
-    modified = db.Column(db.DateTime(timezone=True), default=func.now())
+    modified = mapped_column(db.DateTime(timezone=True), default=func.now())
     """When this Block was last modified."""
 
     docentries = db.relationship("DocEntry", back_populates="_block")
-    folder = db.relationship("Folder", back_populates="_block", uselist=False, cascade_backrefs=False)
+    folder = db.relationship(
+        "Folder", back_populates="_block", uselist=False, cascade_backrefs=False
+    )
     translation = db.relationship(
         "Translation",
         back_populates="_block",
@@ -70,7 +67,7 @@ class Block(db.Model):
         collection_class=attribute_mapped_collection("block_collection_key"),
         cascade_backrefs=False,
     )
-    tags: list[Tag] = db.relationship("Tag", back_populates="block", lazy="select")
+    tags = db.relationship("Tag", back_populates="block", lazy="select")  # : list[Tag]
     children = db.relationship(
         "Block",
         secondary=BlockAssociation.__table__,
@@ -95,26 +92,26 @@ class Block(db.Model):
     )
 
     # If this Block corresponds to a group's manage document, indicates the group being managed.
-    managed_usergroup: UserGroup | None = db.relationship(
+    managed_usergroup = db.relationship(
         "UserGroup",
         secondary=UserGroupDoc.__table__,
         lazy="select",
         uselist=False,
         overlaps="admin_doc",
-    )
+    )  # : UserGroup | None
 
     #  If this Block corresponds to a message list's manage document, indicates the message list
     #  being managed.
-    managed_messagelist: MessageListModel | None = db.relationship(
+    managed_messagelist = db.relationship(
         "MessageListModel", back_populates="block", lazy="select"
-    )
+    )  # : MessageListModel | None
 
-    internalmessage: InternalMessage | None = db.relationship(
+    internalmessage = db.relationship(
         "InternalMessage", back_populates="block", cascade_backrefs=False
-    )
-    internalmessage_display: InternalMessageDisplay | None = db.relationship(
+    )  # : InternalMessage | None
+    internalmessage_display = db.relationship(
         "InternalMessageDisplay", back_populates="display_block", cascade_backrefs=False
-    )
+    )  # : InternalMessageDisplay | None
 
     def __json__(self):
         return ["id", "type_id", "description", "created", "modified"]

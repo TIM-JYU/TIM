@@ -3,17 +3,18 @@ from copy import deepcopy
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.orm import mapped_column
 
 from timApp.timdb.sqa import db
 
 
 class AskedJson(db.Model):
     __tablename__ = "askedjson"
-    __allow_unmapped__ = True
     
-    asked_json_id = db.Column(db.Integer, primary_key=True)
-    json = db.Column(db.Text, nullable=False)
-    hash = db.Column(db.Text, nullable=False)
+    
+    asked_json_id = mapped_column(db.Integer, primary_key=True)
+    json = mapped_column(db.Text, nullable=False)
+    hash = mapped_column(db.Text, nullable=False)
 
     asked_questions = db.relationship(
         "AskedQuestion", back_populates="asked_json", lazy="selectin"

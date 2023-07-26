@@ -1,9 +1,9 @@
 """
 Database models for session management.
 """
-from datetime import datetime
 
 from sqlalchemy.ext.hybrid import hybrid_property  # type: ignore
+from sqlalchemy.orm import mapped_column
 
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
@@ -20,29 +20,30 @@ class UserSession(db.Model):
     """
 
     __tablename__ = "usersession"
-    __allow_unmapped__ = True
 
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
+    user_id = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True
+    )
     """
     User ID of the user who owns the session.
     """
 
-    session_id = db.Column(db.Text, primary_key=True)
+    session_id = mapped_column(db.Text, primary_key=True)
     """
     Unique session ID.
     """
 
-    logged_in_at = db.Column(db.DateTime, nullable=False, default=get_current_time)
+    logged_in_at = mapped_column(db.DateTime, nullable=False, default=get_current_time)
     """
     The time when the user logged in and the session was created.
     """
 
-    expired_at: datetime | None = db.Column(db.DateTime, nullable=True)
+    expired_at = mapped_column(db.DateTime, nullable=True)
     """
     The time when the session was expired.
     """
 
-    origin = db.Column(db.Text, nullable=False)
+    origin = mapped_column(db.Text, nullable=False)
     """
     Information about the origin of the session.
     May include user agent and any other information about login state.

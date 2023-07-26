@@ -22,7 +22,7 @@ from dataclasses import dataclass
 
 import pypandoc
 from sqlalchemy import select
-from sqlalchemy.orm import with_polymorphic
+from sqlalchemy.orm import with_polymorphic, mapped_column
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.translation.language import Language
@@ -75,12 +75,12 @@ class TranslationService(db.Model):
     """
 
     __tablename__ = "translationservice"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
     """Translation service identifier."""
 
-    service_name = db.Column(db.Text, unique=True, nullable=False)
+    service_name = mapped_column(db.Text, unique=True, nullable=False)
     """Human-readable name of the machine translator. Also used as an
     identifier."""
 
@@ -179,25 +179,25 @@ class TranslationServiceKey(db.Model):
     """
 
     __tablename__ = "translationservicekey"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
     """Key identifier."""
 
     # TODO Come up with a better name?
-    api_key = db.Column(db.Text, nullable=False)
+    api_key = mapped_column(db.Text, nullable=False)
     """The key needed for using related service."""
 
-    group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"), nullable=False)
-    group: UserGroup = db.relationship("UserGroup", uselist=False)
+    group_id = mapped_column(db.Integer, db.ForeignKey("usergroup.id"), nullable=False)
+    group = db.relationship("UserGroup", uselist=False) # : UserGroup
     """The group that can use this key."""
 
-    service_id = db.Column(
+    service_id = mapped_column(
         db.Integer,
         db.ForeignKey("translationservice.id"),
         nullable=False,
     )
-    service: TranslationService = db.relationship("TranslationService", uselist=False)
+    service = db.relationship("TranslationService", uselist=False) # : TranslationService
     """The service that this key is used in."""
 
     @staticmethod

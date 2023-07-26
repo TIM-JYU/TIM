@@ -2,15 +2,16 @@ from functools import lru_cache
 
 from flask import current_app
 from sqlalchemy import select
+from sqlalchemy.orm import mapped_column
 
 from timApp.timdb.sqa import db
 
 
 class HakaOrganization(db.Model):
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False, unique=True)
+    
+    id = mapped_column(db.Integer, primary_key=True)
+    name = mapped_column(db.Text, nullable=False, unique=True)
 
     uniquecodes = db.relationship("PersonalUniqueCode", back_populates="organization")
 

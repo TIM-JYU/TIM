@@ -1,15 +1,17 @@
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 
 class Question(db.Model):
     __tablename__ = "question"
-    __allow_unmapped__ = True
     
-    question_id = db.Column(db.Integer, primary_key=True)
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
-    par_id = db.Column(db.Text, nullable=False)
-    question_title = db.Column(db.Text, nullable=False)
-    answer = db.Column(db.Text)
-    questionjson = db.Column(db.Text)
-    points = db.Column(db.Text)
-    expl = db.Column(db.Text)
+
+    question_id = mapped_column(db.Integer, primary_key=True)
+    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    par_id = mapped_column(db.Text, nullable=False)
+    question_title = mapped_column(db.Text, nullable=False)
+    answer = mapped_column(db.Text)
+    questionjson = mapped_column(db.Text)
+    points = mapped_column(db.Text)
+    expl = mapped_column(db.Text)

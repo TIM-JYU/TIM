@@ -1,4 +1,5 @@
 from sqlalchemy import UniqueConstraint
+from sqlalchemy.orm import mapped_column
 
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
@@ -15,11 +16,11 @@ class Translation(db.Model, DocInfo):
     """
 
     __tablename__ = "translation"
-    __allow_unmapped__ = True
     
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    src_docid = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
-    lang_id = db.Column(db.Text, nullable=False)
+    
+    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    src_docid = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    lang_id = mapped_column(db.Text, nullable=False)
     __table_args__ = (UniqueConstraint("src_docid", "lang_id", name="translation_uc"),)
 
     _block = db.relationship(

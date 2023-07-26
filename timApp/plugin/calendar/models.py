@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Optional, Iterable
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import mapped_column
 
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -27,20 +28,20 @@ class EventGroup(db.Model):
     """Information about a user group participating in an event."""
 
     __tablename__ = "eventgroup"
-    __allow_unmapped__ = True
+    
 
-    event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
+    event_id = mapped_column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
     """Event the the group belongs to"""
 
-    usergroup_id = db.Column(
+    usergroup_id = mapped_column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
     """The usergroup that belongs to the group"""
 
-    manager = db.Column(db.Boolean)
+    manager = mapped_column(db.Boolean)
     """Is the group a manager (i.e. is able to modify event settings)?"""
 
-    extra = db.Column(db.Boolean, nullable=False, default=False)
+    extra = mapped_column(db.Boolean, nullable=False, default=False)
     """Is this group an extra group (i.e. can it enroll without affecting the event capacity)?"""
 
     user_group = db.relationship(UserGroup, lazy="select")
@@ -51,20 +52,20 @@ class Enrollment(db.Model):
     """A single enrollment in an event"""
 
     __tablename__ = "enrollment"
-    __allow_unmapped__ = True
+    
 
-    event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
+    event_id = mapped_column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
     """Event the enrollment is for"""
 
-    usergroup_id = db.Column(
+    usergroup_id = mapped_column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
     """The usergroup that is enrolled (i.e. booked) in the event"""
 
-    booker_message = db.Column(db.Text)
+    booker_message = mapped_column(db.Text)
     """The message left by the booker"""
 
-    enroll_type_id = db.Column(
+    enroll_type_id = mapped_column(
         db.Integer, db.ForeignKey("enrollmenttype.enroll_type_id"), nullable=False
     )
     """Type of the enrollment"""
@@ -75,7 +76,7 @@ class Enrollment(db.Model):
     usergroup = db.relationship(UserGroup, lazy="select")
     """User group that booked the event"""
 
-    extra = db.Column(db.Boolean, nullable=False, default=False)
+    extra = mapped_column(db.Boolean, nullable=False, default=False)
     """Is this an extra enrollment (i.e. can it enroll without affecting the event capacity)?"""
 
     @staticmethod
@@ -99,11 +100,11 @@ class EventTagAttachment(db.Model):
     """Attachment information for the event tag"""
 
     __tablename__ = "eventtagattachment"
-    __allow_unmapped__ = True
+    
 
-    event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
+    event_id = mapped_column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
     """Event the tag is attached to"""
-    tag_id = db.Column(db.Integer, db.ForeignKey("eventtag.tag_id"), primary_key=True)
+    tag_id = mapped_column(db.Integer, db.ForeignKey("eventtag.tag_id"), primary_key=True)
     """Tag that is attached to the event"""
 
 
@@ -111,20 +112,20 @@ class EventTag(db.Model):
     """A string tag that can be attached to an event"""
 
     __tablename__ = "eventtag"
-    __allow_unmapped__ = True
+    
 
-    tag_id = db.Column(db.Integer, primary_key=True)
+    tag_id = mapped_column(db.Integer, primary_key=True)
     """The id of the tag"""
 
-    tag = db.Column(db.Text, nullable=False)
+    tag = mapped_column(db.Text, nullable=False)
     """The tag itself"""
 
-    events: list["Event"] = db.relationship(
+    events = db.relationship(
         "Event",
         secondary=EventTagAttachment.__table__,
         lazy="select",
         back_populates="tags",
-    )
+    ) # : list["Event"]
 
     @staticmethod
     def get_or_create(tags: Iterable[str]) -> list["EventTag"]:
@@ -180,82 +181,82 @@ class Event(db.Model):
     """A calendar event. Event has metadata (title, time, location) and various participating user groups."""
 
     __tablename__ = "event"
-    __allow_unmapped__ = True
+    
 
-    event_id = db.Column(db.Integer, primary_key=True)
+    event_id = mapped_column(db.Integer, primary_key=True)
     """Identification number of the event"""
 
-    location = db.Column(db.Text)
+    location = mapped_column(db.Text)
     """Location of the event"""
 
-    max_size = db.Column(db.Integer)
+    max_size = mapped_column(db.Integer)
     """How many people can attend the event"""
 
-    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    start_time = mapped_column(db.DateTime(timezone=True), nullable=False)
     """Start time of the event"""
 
-    end_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    end_time = mapped_column(db.DateTime(timezone=True), nullable=False)
     """End time of the event"""
 
-    message = db.Column(db.Text)
+    message = mapped_column(db.Text)
     """Message visible to anyone who can see the event"""
 
-    title = db.Column(db.Text, nullable=False)
+    title = mapped_column(db.Text, nullable=False)
     """Title of the event"""
 
-    signup_before = db.Column(db.DateTime(timezone=True))
+    signup_before = mapped_column(db.DateTime(timezone=True))
     """Time until signup is closed"""
 
-    creator_user_id = db.Column(
+    creator_user_id = mapped_column(
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False
     )
     """User who created the event originally"""
 
-    origin_doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=True)
+    origin_doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=True)
     """Document that was used to create the event"""
 
     origin_doc = db.relationship("Block", lazy="select")
     """Document that was used to create the event"""
 
-    enrolled_users: list[UserGroup] = db.relationship(
+    enrolled_users = db.relationship(
         UserGroup,
         Enrollment.__table__,
         primaryjoin=event_id == Enrollment.event_id,
         lazy="select",
         overlaps="event, usergroup",
-    )
+    ) # : list[UserGroup]
     """List of usergroups that are enrolled in the event"""
 
-    enrollments: list[Enrollment] = db.relationship(
+    enrollments = db.relationship(
         Enrollment,
         lazy="select",
         back_populates="event",
         cascade="all, delete-orphan",
         overlaps="enrolled_users",
-    )
+    ) # : list[Enrollment]
     """Enrollment information for the event"""
 
-    creator: User = db.relationship(User)
+    creator = db.relationship(User) # : User
     """User who created the event originally"""
 
-    send_notifications = db.Column(db.Boolean, nullable=False, default=True)
+    send_notifications = mapped_column(db.Boolean, nullable=False, default=True)
     """Whether to send notifications related to enrollment to the event"""
 
-    important = db.Column(db.Boolean, nullable=False, default=False)
+    important = mapped_column(db.Boolean, nullable=False, default=False)
     """Whether the event is important (i.e. should be show as special in calendar)"""
 
-    event_groups: list[EventGroup] = db.relationship(
+    event_groups = db.relationship(
         EventGroup,
         foreign_keys="EventGroup.event_id",
         cascade="all,delete-orphan",
-    )
+    ) # : list[EventGroup]
 
-    tags: list[EventTag] = db.relationship(
+    tags = db.relationship(
         EventTag,
         secondary=EventTagAttachment.__table__,
         lazy="select",
         back_populates="events",
-    )
+    ) # : list[EventTag]
     """Tags attached to the event"""
 
     @property
@@ -422,12 +423,12 @@ class EnrollmentType(db.Model):
     """Table for enrollment type, combines enrollment type ID to specific enrollment type"""
 
     __tablename__ = "enrollmenttype"
-    __allow_unmapped__ = True
+    
 
-    enroll_type_id = db.Column(db.Integer, primary_key=True)
+    enroll_type_id = mapped_column(db.Integer, primary_key=True)
     """Enrollment type"""
 
-    enroll_type = db.Column(db.Text, nullable=False)
+    enroll_type = mapped_column(db.Text, nullable=False)
     """Name of the enrollment type"""
 
 
@@ -435,14 +436,14 @@ class ExportedCalendar(db.Model):
     """Information about exported calendars"""
 
     __tablename__ = "exportedcalendar"
-    __allow_unmapped__ = True
     
-    user_id = db.Column(
+    
+    user_id = mapped_column(
         db.Integer, db.ForeignKey("useraccount.id"), primary_key=True, nullable=False
     )
     """User who created the exported calendar"""
 
-    calendar_hash = db.Column(db.Text, nullable=False)
+    calendar_hash = mapped_column(db.Text, nullable=False)
     """Hash of the exported calendar"""
 
     user = db.relationship(User)

@@ -6,7 +6,7 @@ from celery import schedules
 from celery.utils.log import get_logger
 from sqlalchemy import func
 from sqlalchemy.event import listen
-from sqlalchemy.orm import relationship, foreign, remote
+from sqlalchemy.orm import relationship, foreign, remote, mapped_column
 from sqlalchemy.sql import select, insert, update
 
 from .session import ModelBase
@@ -37,7 +37,7 @@ class ModelMixin:
 class IntervalSchedule(ModelBase, ModelMixin):
     __tablename__ = "celery_interval_schedule"
     __table_args__ = {"sqlite_autoincrement": True}
-    __allow_unmapped__ = True
+    
 
     DAYS = "days"
     HOURS = "hours"
@@ -45,10 +45,10 @@ class IntervalSchedule(ModelBase, ModelMixin):
     SECONDS = "seconds"
     MICROSECONDS = "microseconds"
 
-    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    id = mapped_column(sa.Integer, primary_key=True, autoincrement=True)
 
-    every = sa.Column(sa.Integer, nullable=False)
-    period = sa.Column(sa.String(24))
+    every = mapped_column(sa.Integer, nullable=False)
+    period = mapped_column(sa.String(24))
 
     def __repr__(self):
         if self.every == 1:
@@ -87,15 +87,15 @@ class IntervalSchedule(ModelBase, ModelMixin):
 class CrontabSchedule(ModelBase, ModelMixin):
     __tablename__ = "celery_crontab_schedule"
     __table_args__ = {"sqlite_autoincrement": True}
-    __allow_unmapped__ = True
+    
 
-    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    minute = sa.Column(sa.String(60 * 4), default="*")
-    hour = sa.Column(sa.String(24 * 4), default="*")
-    day_of_week = sa.Column(sa.String(64), default="*")
-    day_of_month = sa.Column(sa.String(31 * 4), default="*")
-    month_of_year = sa.Column(sa.String(64), default="*")
-    timezone = sa.Column(sa.String(64), default="UTC")
+    id = mapped_column(sa.Integer, primary_key=True, autoincrement=True)
+    minute = mapped_column(sa.String(60 * 4), default="*")
+    hour = mapped_column(sa.String(24 * 4), default="*")
+    day_of_week = mapped_column(sa.String(64), default="*")
+    day_of_month = mapped_column(sa.String(31 * 4), default="*")
+    month_of_year = mapped_column(sa.String(64), default="*")
+    timezone = mapped_column(sa.String(64), default="UTC")
 
     def __repr__(self):
         return "{} {} {} {} {} (m/h/d/dM/MY) {}".format(
@@ -144,13 +144,13 @@ class CrontabSchedule(ModelBase, ModelMixin):
 class SolarSchedule(ModelBase, ModelMixin):
     __tablename__ = "celery_solar_schedule"
     __table_args__ = {"sqlite_autoincrement": True}
-    __allow_unmapped__ = True
+    
 
-    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    id = mapped_column(sa.Integer, primary_key=True, autoincrement=True)
 
-    event = sa.Column(sa.String(24))
-    latitude = sa.Column(sa.Float())
-    longitude = sa.Column(sa.Float())
+    event = mapped_column(sa.String(24))
+    latitude = mapped_column(sa.Float())
+    longitude = mapped_column(sa.Float())
 
     @property
     def schedule(self):
@@ -182,10 +182,10 @@ class PeriodicTaskChanged(ModelBase, ModelMixin):
     """Helper table for tracking updates to periodic tasks."""
 
     __tablename__ = "celery_periodic_task_changed"
-    __allow_unmapped__ = True
+    
 
-    id = sa.Column(sa.Integer, primary_key=True)
-    last_update = sa.Column(
+    id = mapped_column(sa.Integer, primary_key=True)
+    last_update = mapped_column(
         sa.DateTime(timezone=True), nullable=False, default=dt.datetime.now
     )
 
@@ -234,60 +234,60 @@ class PeriodicTaskChanged(ModelBase, ModelMixin):
 class PeriodicTask(ModelBase, ModelMixin):
     __tablename__ = "celery_periodic_task"
     __table_args__ = {"sqlite_autoincrement": True}
-    __allow_unmapped__ = True
+    
 
-    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    block_id = sa.Column(sa.Integer, sa.ForeignKey("block.id"), nullable=True)
+    id = mapped_column(sa.Integer, primary_key=True, autoincrement=True)
+    block_id = mapped_column(sa.Integer, sa.ForeignKey("block.id"), nullable=True)
     block = relationship(Block)
     # name
-    name = sa.Column(sa.String(255), unique=True)
+    name = mapped_column(sa.String(255), unique=True)
     # task name
-    task = sa.Column(sa.String(255))
+    task = mapped_column(sa.String(255))
 
     # not use ForeignKey
-    interval_id = sa.Column(sa.Integer)
+    interval_id = mapped_column(sa.Integer)
     interval = relationship(
         IntervalSchedule,
         uselist=False,
         primaryjoin=foreign(interval_id) == remote(IntervalSchedule.id),
     )
 
-    crontab_id = sa.Column(sa.Integer)
+    crontab_id = mapped_column(sa.Integer)
     crontab = relationship(
         CrontabSchedule,
         uselist=False,
         primaryjoin=foreign(crontab_id) == remote(CrontabSchedule.id),
     )
 
-    solar_id = sa.Column(sa.Integer)
+    solar_id = mapped_column(sa.Integer)
     solar = relationship(
         SolarSchedule,
         uselist=False,
         primaryjoin=foreign(solar_id) == remote(SolarSchedule.id),
     )
 
-    args = sa.Column(sa.Text(), default="[]")
-    kwargs = sa.Column(sa.Text(), default="{}")
+    args = mapped_column(sa.Text(), default="[]")
+    kwargs = mapped_column(sa.Text(), default="{}")
     # queue for celery
-    queue = sa.Column(sa.String(255))
+    queue = mapped_column(sa.String(255))
     # exchange for celery
-    exchange = sa.Column(sa.String(255))
+    exchange = mapped_column(sa.String(255))
     # routing_key for celery
-    routing_key = sa.Column(sa.String(255))
-    priority = sa.Column(sa.Integer())
-    expires = sa.Column(sa.DateTime(timezone=True))
+    routing_key = mapped_column(sa.String(255))
+    priority = mapped_column(sa.Integer())
+    expires = mapped_column(sa.DateTime(timezone=True))
 
     # 只执行一次
-    one_off = sa.Column(sa.Boolean(), default=False)
-    start_time = sa.Column(sa.DateTime(timezone=True))
-    enabled = sa.Column(sa.Boolean(), default=True)
-    last_run_at = sa.Column(sa.DateTime(timezone=True))
-    total_run_count = sa.Column(sa.Integer(), nullable=False, default=0)
+    one_off = mapped_column(sa.Boolean(), default=False)
+    start_time = mapped_column(sa.DateTime(timezone=True))
+    enabled = mapped_column(sa.Boolean(), default=True)
+    last_run_at = mapped_column(sa.DateTime(timezone=True))
+    total_run_count = mapped_column(sa.Integer(), nullable=False, default=0)
     # 修改时间
-    date_changed = sa.Column(
+    date_changed = mapped_column(
         sa.DateTime(timezone=True), default=func.now(), onupdate=func.now()
     )
-    description = sa.Column(sa.Text(), default="")
+    description = mapped_column(sa.Text(), default="")
 
     no_changes = False
 

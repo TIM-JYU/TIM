@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
-from sqlalchemy.orm import foreign
+from sqlalchemy.orm import foreign, mapped_column
 
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
@@ -29,23 +29,23 @@ class DocEntry(db.Model, DocInfo):
     """
 
     __tablename__ = "docentry"
-    __allow_unmapped__ = True
     
-    name = db.Column(db.Text, primary_key=True)
+
+    name = mapped_column(db.Text, primary_key=True)
     """Full path of the document.
     
     TODO: Improve the name.
     """
 
-    id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
     """Document identifier."""
 
-    public = db.Column(db.Boolean, nullable=False, default=True)
+    public = mapped_column(db.Boolean, nullable=False, default=True)
     """Whether the document is visible in directory listing."""
 
     _block = db.relationship("Block", back_populates="docentries", lazy="joined")
 
-    trs: list[Translation] = db.relationship(
+    trs = db.relationship(
         "Translation",
         primaryjoin=id == foreign(Translation.src_docid),
         back_populates="docentry",
@@ -55,7 +55,7 @@ class DocEntry(db.Model, DocInfo):
         #  doesn't sound ideal either.
         passive_deletes="all",
         cascade_backrefs=False,
-    )
+    )  # : list[Translation]
 
     __table_args__ = (db.Index("docentry_id_idx", "id"),)
 
@@ -155,7 +155,6 @@ class DocEntry(db.Model, DocInfo):
                     .first()
                 )
                 if tr is not None:
-                    tr.docentry = entry
                     return tr
         if fallback_to_id:
             try:

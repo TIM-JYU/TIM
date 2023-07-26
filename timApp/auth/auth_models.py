@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from sqlalchemy.orm import mapped_column
+
 from timApp.auth.accesstype import AccessType
 
 if TYPE_CHECKING:
@@ -16,12 +18,12 @@ class AccessTypeModel(db.Model):
     """A kind of access that a UserGroup may have to a Block."""
 
     __tablename__ = "accesstype"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
     """Access type identifier."""
 
-    name = db.Column(db.Text, nullable=False)
+    name = mapped_column(db.Text, nullable=False)
     """Access type name, such as 'view', 'edit', 'manage', etc."""
 
     accesses = db.relationship("BlockAccess", back_populates="atype")
@@ -37,19 +39,19 @@ class BlockAccess(db.Model):
     """A single permission. Relates a UserGroup with a Block along with an AccessType."""
 
     __tablename__ = "blockaccess"
-    __allow_unmapped__ = True
     
-    block_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    usergroup_id = db.Column(
+
+    block_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    usergroup_id = mapped_column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
-    type = db.Column(db.Integer, db.ForeignKey("accesstype.id"), primary_key=True)
-    accessible_from = db.Column(db.DateTime(timezone=True))
-    accessible_to = db.Column(db.DateTime(timezone=True))
-    duration = db.Column(db.Interval)
-    duration_from = db.Column(db.DateTime(timezone=True))
-    duration_to = db.Column(db.DateTime(timezone=True))
-    require_confirm = db.Column(db.Boolean)
+    type = mapped_column(db.Integer, db.ForeignKey("accesstype.id"), primary_key=True)
+    accessible_from = mapped_column(db.DateTime(timezone=True))
+    accessible_to = mapped_column(db.DateTime(timezone=True))
+    duration = mapped_column(db.Interval)
+    duration_from = mapped_column(db.DateTime(timezone=True))
+    duration_to = mapped_column(db.DateTime(timezone=True))
+    require_confirm = mapped_column(db.Boolean)
 
     block = db.relationship("Block", back_populates="accesses")
     usergroup = db.relationship("UserGroup", back_populates="accesses")

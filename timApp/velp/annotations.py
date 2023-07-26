@@ -63,54 +63,47 @@ def get_annotations_with_comments_in_document(
         answer_filter = (User.id == user.id) | (User.id == None)
         if is_peerreview_enabled(d):
             answer_filter |= User.id.in_(
-                get_reviews_where_user_is_reviewer_query(d, user)
-                .with_only_columns(PeerReview.reviewable_id)
+                get_reviews_where_user_is_reviewer_query(d, user).with_only_columns(
+                    PeerReview.reviewable_id
+                )
             )
             own_review_filter = (User.id == user.id) | (
                 Annotation.annotator_id == user.id
             )
 
-    q = (set_annotation_query_opts(
-                select(Annotation)
-                .filter_by(document_id=d.id)
-                .filter(
-                    (Annotation.valid_until == None)
-                    | (Annotation.valid_until >= func.current_timestamp())
-                )
-                .filter((Annotation.annotator_id == user.id) | vis_filter)
-                .join(VelpVersion)
-                .join(Velp)
-                .join(VelpContent)
-                .filter(VelpContent.language_id == language_id)
-                .outerjoin(Answer)
-                .outerjoin(User, Answer.users_all)
-                .filter(answer_filter)
-                .filter(own_review_filter)
-                .order_by(
-                    Annotation.depth_start.desc(),
-                    Annotation.node_start.desc(),
-                    Annotation.offset_start.desc(),
-                )
+    q = (
+        set_annotation_query_opts(
+            select(Annotation)
+            .filter_by(document_id=d.id)
+            .filter(
+                (Annotation.valid_until == None)
+                | (Annotation.valid_until >= func.current_timestamp())
             )
-            .options(joinedload(Annotation.velp_content))
-            .options(joinedload(Annotation.answer).selectinload(Answer.users_all))
-            .options(
-                joinedload(Annotation.velp_version).joinedload(VelpVersion.velp)
+            .filter((Annotation.annotator_id == user.id) | vis_filter)
+            .join(VelpVersion)
+            .join(Velp)
+            .join(VelpContent)
+            .filter(VelpContent.language_id == language_id)
+            .outerjoin(Answer)
+            .outerjoin(User, Answer.users_all)
+            .filter(answer_filter)
+            .filter(own_review_filter)
+            .order_by(
+                Annotation.depth_start.desc(),
+                Annotation.node_start.desc(),
+                Annotation.offset_start.desc(),
             )
-            .with_only_columns(Annotation))
-    anns = (
-        db.session.execute(
-            q
         )
-        .scalars()
-        .all()
+        .options(joinedload(Annotation.answer).selectinload(Answer.users_all))
+        .with_only_columns(Annotation)
     )
+    anns = db.session.execute(q).scalars().all()
     return anns
 
 
 def set_annotation_query_opts(q: Select) -> Select:
     return (
-        q.options(selectinload(Annotation.velp_content).load_only(VelpContent.content))
+        q.options(joinedload(Annotation.velp_content).load_only(VelpContent.content))
         .options(
             selectinload(Annotation.comments)
             .joinedload(AnnotationComment.commenter)
@@ -123,7 +116,7 @@ def set_annotation_query_opts(q: Select) -> Select:
             .raiseload(User.groups)
         )
         .options(
-            selectinload(Annotation.velp_version)
+            joinedload(Annotation.velp_version)
             .load_only(VelpVersion.id, VelpVersion.velp_id)
             .joinedload(VelpVersion.velp)
             .load_only(Velp.color)

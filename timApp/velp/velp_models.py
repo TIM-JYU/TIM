@@ -1,9 +1,9 @@
 """Defines all data models related to velps."""
 from datetime import datetime
 
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm.collections import attribute_mapped_collection  # type: ignore
 
-from timApp.item.block import Block
 from timApp.timdb.sqa import db
 
 
@@ -11,14 +11,14 @@ class VelpContent(db.Model):
     """The actual content of a Velp."""
 
     __tablename__ = "velpcontent"
-    __allow_unmapped__ = True
+    
 
-    version_id = db.Column(
+    version_id = mapped_column(
         db.Integer, db.ForeignKey("velpversion.id"), primary_key=True
     )
-    language_id = db.Column(db.Text, primary_key=True)
-    content = db.Column(db.Text)
-    default_comment = db.Column(db.Text)
+    language_id = mapped_column(db.Text, primary_key=True)
+    content = mapped_column(db.Text)
+    default_comment = mapped_column(db.Text)
 
     velp_version = db.relationship("VelpVersion")
 
@@ -27,27 +27,27 @@ class AnnotationComment(db.Model):
     """A comment in an Annotation."""
 
     __tablename__ = "annotationcomment"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
     """Comment identifier."""
 
-    annotation_id = db.Column(
+    annotation_id = mapped_column(
         db.Integer, db.ForeignKey("annotation.id"), nullable=False
     )
     """Annotation id."""
 
-    comment_time = db.Column(
+    comment_time = mapped_column(
         db.DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
     """Comment timestamp."""
 
-    commenter_id = db.Column(
+    commenter_id = mapped_column(
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False
     )
     """Commenter user id."""
 
-    content = db.Column(db.Text)
+    content = mapped_column(db.Text)
     """Comment text."""
 
     commenter = db.relationship("User")
@@ -66,39 +66,43 @@ class LabelInVelp(db.Model):
     """Associates VelpLabels with Velps."""
 
     __tablename__ = "labelinvelp"
-    __allow_unmapped__ = True
+    
 
-    label_id = db.Column(db.Integer, db.ForeignKey("velplabel.id"), primary_key=True)
-    velp_id = db.Column(db.Integer, db.ForeignKey("velp.id"), primary_key=True)
+    label_id = mapped_column(
+        db.Integer, db.ForeignKey("velplabel.id"), primary_key=True
+    )
+    velp_id = mapped_column(db.Integer, db.ForeignKey("velp.id"), primary_key=True)
 
 
 class VelpInGroup(db.Model):
     __tablename__ = "velpingroup"
-    __allow_unmapped__ = True
+    
 
-    velp_group_id = db.Column(
+    velp_group_id = mapped_column(
         db.Integer, db.ForeignKey("velpgroup.id"), primary_key=True
     )
-    velp_id = db.Column(db.Integer, db.ForeignKey("velp.id"), primary_key=True)
+    velp_id = mapped_column(db.Integer, db.ForeignKey("velp.id"), primary_key=True)
 
 
 class Velp(db.Model):
     """A Velp is a kind of category for Annotations and is visually represented by a Post-it note."""
 
     __tablename__ = "velp"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
-    creator_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
-    creation_time = db.Column(
+    id = mapped_column(db.Integer, primary_key=True)
+    creator_id = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), nullable=False
+    )
+    creation_time = mapped_column(
         db.DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
-    default_points = db.Column(db.Float)
-    valid_from = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
-    valid_until = db.Column(db.DateTime(timezone=True))
-    color = db.Column(db.Text)
-    visible_to = db.Column(db.Integer, nullable=False)
-    style = db.Column(db.Integer)
+    default_points = mapped_column(db.Float)
+    valid_from = mapped_column(db.DateTime(timezone=True), default=datetime.utcnow)
+    valid_until = mapped_column(db.DateTime(timezone=True))
+    color = mapped_column(db.Text)
+    visible_to = mapped_column(db.Integer, nullable=False)
+    style = mapped_column(db.Integer)
 
     creator = db.relationship("User", back_populates="velps")
     labels = db.relationship(
@@ -114,9 +118,9 @@ class Velp(db.Model):
         collection_class=attribute_mapped_collection("id"),
         cascade="all",
     )
-    velp_versions: list["VelpVersion"] = db.relationship(
+    velp_versions = db.relationship(
         "VelpVersion", order_by="VelpVersion.id.desc()"
-    )
+    ) # : list["VelpVersion"]
 
     def to_json(self) -> dict:
         vv = self.velp_versions[0]
@@ -140,16 +144,16 @@ class VelpGroup(db.Model):
     """Represents a group of Velps."""
 
     __tablename__ = "velpgroup"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    name = db.Column(db.Text)
-    creation_time = db.Column(
+    id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    name = mapped_column(db.Text)
+    creation_time = mapped_column(
         db.DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
-    valid_from = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
-    valid_until = db.Column(db.DateTime(timezone=True))
-    default_group = db.Column(db.Boolean, default=False)
+    valid_from = mapped_column(db.DateTime(timezone=True), default=datetime.utcnow)
+    valid_until = mapped_column(db.DateTime(timezone=True))
+    default_group = mapped_column(db.Boolean, default=False)
 
     velps = db.relationship(
         "Velp",
@@ -158,10 +162,10 @@ class VelpGroup(db.Model):
         collection_class=attribute_mapped_collection("id"),
         cascade="all",
     )
-    block: Block = db.relationship(
+    block = db.relationship(
         "Block",
         lazy="selectin",
-    )
+    ) # : Block
     # docentry = db.relationship(
     #     'DocEntry',
     # )
@@ -176,41 +180,43 @@ class VelpGroup(db.Model):
 
 class VelpGroupDefaults(db.Model):
     __tablename__ = "velpgroupdefaults"
-    __allow_unmapped__ = True
+    
 
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    target_type = db.Column(
+    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    target_type = mapped_column(
         db.Integer, nullable=False
     )  # 0 = document, 1 = paragraph, 2 = area
-    target_id = db.Column(db.Text, primary_key=True)
-    velp_group_id = db.Column(
+    target_id = mapped_column(db.Text, primary_key=True)
+    velp_group_id = mapped_column(
         db.Integer, db.ForeignKey("velpgroup.id"), primary_key=True
     )
-    selected = db.Column(db.Boolean, default=False)
+    selected = mapped_column(db.Boolean, default=False)
 
 
 class VelpGroupLabel(db.Model):
     """Currently not used (0 rows in production DB as of 5th July 2018)."""
 
     __tablename__ = "velpgrouplabel"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.Text, nullable=False)
+    id = mapped_column(db.Integer, primary_key=True)
+    content = mapped_column(db.Text, nullable=False)
 
 
 class VelpGroupSelection(db.Model):
     __tablename__ = "velpgroupselection"
-    __allow_unmapped__ = True
+    
 
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    target_type = db.Column(
+    user_id = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True
+    )
+    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    target_type = mapped_column(
         db.Integer, nullable=False
     )  # 0 = document, 1 = paragraph, 2 = area
-    target_id = db.Column(db.Text, primary_key=True)
-    selected = db.Column(db.Boolean, default=False)
-    velp_group_id = db.Column(
+    target_id = mapped_column(db.Text, primary_key=True)
+    selected = mapped_column(db.Boolean, default=False)
+    velp_group_id = mapped_column(
         db.Integer, db.ForeignKey("velpgroup.id"), primary_key=True
     )
 
@@ -223,11 +229,13 @@ class VelpGroupsInDocument(db.Model):
     """
 
     __tablename__ = "velpgroupsindocument"
-    __allow_unmapped__ = True
+    
 
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    velp_group_id = db.Column(
+    user_id = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True
+    )
+    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    velp_group_id = mapped_column(
         db.Integer, db.ForeignKey("velpgroup.id"), primary_key=True
     )
 
@@ -236,11 +244,13 @@ class VelpLabel(db.Model):
     """A label that can be assigned to a Velp."""
 
     __tablename__ = "velplabel"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
     # TODO make not nullable
-    creator_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=True)
+    creator_id = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), nullable=True
+    )
 
     creator = db.relationship("User")
     velps = db.relationship(
@@ -253,13 +263,13 @@ class VelpLabel(db.Model):
 
 class VelpLabelContent(db.Model):
     __tablename__ = "velplabelcontent"
-    __allow_unmapped__ = True
+    
 
-    velplabel_id = db.Column(
+    velplabel_id = mapped_column(
         db.Integer, db.ForeignKey("velplabel.id"), primary_key=True
     )
-    language_id = db.Column(db.Text, primary_key=True)
-    content = db.Column(db.Text)
+    language_id = mapped_column(db.Text, primary_key=True)
+    content = mapped_column(db.Text)
 
     velplabel = db.relationship("VelpLabel")
 
@@ -273,13 +283,13 @@ class VelpLabelContent(db.Model):
 
 class VelpVersion(db.Model):
     __tablename__ = "velpversion"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
-    velp_id = db.Column(db.Integer, db.ForeignKey("velp.id"), nullable=False)
-    modify_time = db.Column(
+
+    id = mapped_column(db.Integer, primary_key=True)
+    velp_id = mapped_column(db.Integer, db.ForeignKey("velp.id"), nullable=False)
+    modify_time = mapped_column(
         db.DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
 
-    velp: Velp = db.relationship("Velp", overlaps="velp_versions")
-    content: list[VelpContent] = db.relationship("VelpContent", overlaps="velp_version")
+    velp = db.relationship("Velp", overlaps="velp_versions") # : Velp
+    content = db.relationship("VelpContent", overlaps="velp_version") # : list[VelpContent]

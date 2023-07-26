@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import select, func
+from sqlalchemy.orm import mapped_column
 
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.timdb.sqa import db
@@ -11,16 +12,18 @@ from timApp.util.utils import get_current_time
 
 class Lecture(db.Model):
     __tablename__ = "lecture"
-    __allow_unmapped__ = True
     
-    lecture_id = db.Column(db.Integer, primary_key=True)
-    lecture_code = db.Column(db.Text)
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
-    lecturer = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
-    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
-    end_time = db.Column(db.DateTime(timezone=True))
-    password = db.Column(db.Text)
-    options = db.Column(db.Text)
+
+    lecture_id = mapped_column(db.Integer, primary_key=True)
+    lecture_code = mapped_column(db.Text)
+    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    lecturer = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), nullable=False
+    )
+    start_time = mapped_column(db.DateTime(timezone=True), nullable=False)
+    end_time = mapped_column(db.DateTime(timezone=True))
+    password = mapped_column(db.Text)
+    options = mapped_column(db.Text)
 
     users = db.relationship(
         "User",
@@ -29,11 +32,17 @@ class Lecture(db.Model):
         lazy="dynamic",
     )
     asked_questions = db.relationship(
-        "AskedQuestion", back_populates="lecture", lazy="dynamic", cascade_backrefs=False
+        "AskedQuestion",
+        back_populates="lecture",
+        lazy="dynamic",
+        cascade_backrefs=False,
     )
     messages = db.relationship("Message", back_populates="lecture", lazy="dynamic")
     running_questions = db.relationship(
-        "Runningquestion", back_populates="lecture", lazy="select", cascade_backrefs=False
+        "Runningquestion",
+        back_populates="lecture",
+        lazy="select",
+        cascade_backrefs=False,
     )
     useractivity = db.relationship(
         "Useractivity", back_populates="lecture", lazy="select"

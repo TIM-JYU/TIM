@@ -5,7 +5,7 @@ from typing import Optional
 
 from flask import render_template_string, url_for
 from sqlalchemy import select
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, mapped_column
 
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
@@ -50,24 +50,24 @@ class Verification(db.Model):
     verification."""
 
     __tablename__ = "verification"
-    __allow_unmapped__ = True
+    
 
-    token = db.Column(db.Text, primary_key=True)
+    token = mapped_column(db.Text, primary_key=True)
     """Verification token used for action verification"""
 
-    type: VerificationType = db.Column(db.Enum(VerificationType), primary_key=True)
+    type = mapped_column(db.Enum(VerificationType), primary_key=True) # : VerificationType
     """The type of verification, see VerificationType class for details."""
 
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
     """User that can react to verification request."""
 
-    requested_at = db.Column(db.DateTime(timezone=True))
+    requested_at = mapped_column(db.DateTime(timezone=True))
     """When a verification has been added to db, pending sending to a user."""
 
-    reacted_at = db.Column(db.DateTime(timezone=True))
+    reacted_at = mapped_column(db.DateTime(timezone=True))
     """When the user reacted to verification request."""
 
-    user: User = db.relationship("User", lazy="select")
+    user = db.relationship("User", lazy="select") # : User
     """User that can react to verification request."""
 
     @property
@@ -87,11 +87,11 @@ class Verification(db.Model):
 
 
 class ContactAddVerification(Verification):
-    contact_id = db.Column(db.Integer, db.ForeignKey("usercontact.id"))
+    contact_id = mapped_column(db.Integer, db.ForeignKey("usercontact.id"))
 
-    contact: UserContact | None = db.relationship(
+    contact = db.relationship(
         "UserContact", lazy="select", uselist=False
-    )
+    ) # : UserContact | None
     """Contact to verify."""
 
     @property

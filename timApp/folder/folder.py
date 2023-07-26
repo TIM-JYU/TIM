@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Iterable, Any, TYPE_CHECKING
 
 from sqlalchemy import true, and_, select, delete
+from sqlalchemy.orm import mapped_column
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry, get_documents
@@ -26,15 +27,15 @@ class Folder(db.Model, Item):
     """Represents a folder in the directory hierarchy."""
 
     __tablename__ = "folder"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     """Folder identifier."""
 
-    name = db.Column(db.Text, nullable=False)
+    name = mapped_column(db.Text, nullable=False)
     """Folder name (last part of path)."""
 
-    location = db.Column(db.Text, nullable=False)
+    location = mapped_column(db.Text, nullable=False)
     """Folder location (first parts of the path)."""
 
     __table_args__ = (db.UniqueConstraint("name", "location", name="folder_uc"),)

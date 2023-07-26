@@ -1,5 +1,7 @@
 from enum import Enum
 
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 
@@ -13,13 +15,15 @@ class QuestionActivityKind(Enum):
 
 class QuestionActivity(db.Model):
     __tablename__ = "question_activity"
-    __allow_unmapped__ = True
     
-    asked_id = db.Column(
+
+    asked_id = mapped_column(
         db.Integer, db.ForeignKey("askedquestion.asked_id"), primary_key=True
     )
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
-    kind = db.Column(db.Enum(QuestionActivityKind), primary_key=True)
+    user_id = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True
+    )
+    kind = mapped_column(db.Enum(QuestionActivityKind), primary_key=True)
 
     asked_question = db.relationship(
         "AskedQuestion", back_populates="questionactivity", lazy="select"

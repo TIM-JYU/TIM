@@ -3,9 +3,8 @@ from contextlib import contextmanager
 from datetime import timedelta, datetime
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import mapped_column
 
-from timApp.lecture.askedjson import AskedJson
-from timApp.lecture.lecture import Lecture
 from timApp.lecture.question_utils import qst_rand_array, qst_filter_markup_points
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
 from timApp.timdb.sqa import db
@@ -15,27 +14,27 @@ from timApp.util.utils import get_current_time
 
 class AskedQuestion(db.Model):
     __tablename__ = "askedquestion"
-    __allow_unmapped__ = True
     
-    asked_id = db.Column(db.Integer, primary_key=True)
-    lecture_id = db.Column(
+    
+    asked_id = mapped_column(db.Integer, primary_key=True)
+    lecture_id = mapped_column(
         db.Integer, db.ForeignKey("lecture.lecture_id"), nullable=False
     )
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"))
-    par_id = db.Column(db.Text)
-    asked_time = db.Column(db.DateTime(timezone=True), nullable=False)
-    points = db.Column(db.Text)  # not a single number; cannot be numeric
-    asked_json_id = db.Column(
+    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"))
+    par_id = mapped_column(db.Text)
+    asked_time = mapped_column(db.DateTime(timezone=True), nullable=False)
+    points = mapped_column(db.Text)  # not a single number; cannot be numeric
+    asked_json_id = mapped_column(
         db.Integer, db.ForeignKey("askedjson.asked_json_id"), nullable=False
     )
-    expl = db.Column(db.Text)
+    expl = mapped_column(db.Text)
 
-    asked_json: AskedJson = db.relationship(
+    asked_json = db.relationship(
         "AskedJson", back_populates="asked_questions", lazy="selectin"
-    )
-    lecture: Lecture = db.relationship(
+    ) # : AskedJson
+    lecture = db.relationship(
         "Lecture", back_populates="asked_questions", lazy="selectin"
-    )
+    ) # : Lecture
     answers = db.relationship(
         "LectureAnswer", back_populates="asked_question", lazy="dynamic"
     )

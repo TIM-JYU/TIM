@@ -1,3 +1,5 @@
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 
@@ -8,12 +10,12 @@ class RowOwnerInfo(db.Model):
     """
 
     __tablename__ = "rowownerinfo"
-    __allow_unmapped__ = True
     
-    doc_id = db.Column(db.Integer, primary_key=True)
-    par_id = db.Column(db.Text, primary_key=True)
-    unique_row_id = db.Column(db.Integer, primary_key=True)
-    usergroup_id = db.Column(
+
+    doc_id = mapped_column(db.Integer, primary_key=True)
+    par_id = mapped_column(db.Text, primary_key=True)
+    unique_row_id = mapped_column(db.Integer, primary_key=True)
+    usergroup_id = mapped_column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=False
     )
 

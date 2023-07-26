@@ -272,24 +272,25 @@ def start_page():
 def install_sql_hook():
     prev_exec_time = get_current_time()
 
-    @event.listens_for(db.engine, "before_execute")
-    def receive_before_execute(conn, clauseelement, multiparams, params):
-        nonlocal prev_exec_time
-        curr = get_current_time()
-        print(
-            f"--------------------------------------TIMING: {curr} ({curr - prev_exec_time})"
-        )
-        prev_exec_time = curr
-        for r in traceback.format_stack():
-            if (
-                r.startswith('  File "/service/')
-                and not receive_before_execute.__name__ in r
-            ):
-                print(r, end="")
-        try:
-            print(clauseelement)
-        except Exception as e:
-            print(f"<unprintable clauseelement>: {e}")
+    with app.app_context():
+        @event.listens_for(db.engine, "before_execute")
+        def receive_before_execute(conn, clauseelement, multiparams, params):
+            nonlocal prev_exec_time
+            curr = get_current_time()
+            print(
+                f"--------------------------------------TIMING: {curr} ({curr - prev_exec_time})"
+            )
+            prev_exec_time = curr
+            for r in traceback.format_stack():
+                if (
+                    r.startswith('  File "/service/')
+                    and not receive_before_execute.__name__ in r
+                ):
+                    print(r, end="")
+            try:
+                print(clauseelement, multiparams, params)
+            except Exception as e:
+                print(f"<unprintable clauseelement>: {e}")
 
 
 if app.config["TESTING"]:

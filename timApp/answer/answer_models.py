@@ -1,3 +1,5 @@
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 
@@ -8,21 +10,23 @@ class AnswerTag(db.Model):
     """
 
     __tablename__ = "answertag"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
-    tag = db.Column(db.Text, nullable=False)
+    id = mapped_column(db.Integer, primary_key=True)
+    answer_id = mapped_column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
+    tag = mapped_column(db.Text, nullable=False)
 
 
 class AnswerUpload(db.Model):
     """Associates uploaded files (Block with type BlockType.AnswerUpload) with Answers."""
 
     __tablename__ = "answerupload"
-    __allow_unmapped__ = True
+    
 
-    upload_block_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"))
+    upload_block_id = mapped_column(
+        db.Integer, db.ForeignKey("block.id"), primary_key=True
+    )
+    answer_id = mapped_column(db.Integer, db.ForeignKey("answer.id"))
 
     block = db.relationship("Block", back_populates="answerupload")
     answer = db.relationship("Answer", back_populates="uploads")
@@ -36,9 +40,9 @@ class UserAnswer(db.Model):
     """Associates Users with Answers."""
 
     __tablename__ = "useranswer"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+
+    id = mapped_column(db.Integer, primary_key=True)
+    answer_id = mapped_column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
+    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
     __table_args__ = (db.UniqueConstraint("answer_id", "user_id"),)

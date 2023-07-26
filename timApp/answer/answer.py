@@ -2,9 +2,9 @@ import json
 from typing import Any
 
 from sqlalchemy import func
+from sqlalchemy.orm import mapped_column
 
 from timApp.answer.answer_models import UserAnswer
-from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db, include_if_loaded
 
@@ -15,50 +15,52 @@ class AnswerSaver(db.Model):
     """
 
     __tablename__ = "answersaver"
-    __allow_unmapped__ = True
+    
 
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
+    answer_id = mapped_column(db.Integer, db.ForeignKey("answer.id"), primary_key=True)
+    user_id = mapped_column(
+        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True
+    )
 
 
 class Answer(db.Model):
     """An answer to a task."""
 
     __tablename__ = "answer"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
     """Answer identifier."""
 
-    task_id = db.Column(db.Text, nullable=False, index=True)
+    task_id = mapped_column(db.Text, nullable=False, index=True)
     """Task id to which this answer was posted. In the form "doc_id.name", for example "2.task1"."""
 
-    origin_doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=True)
+    origin_doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=True)
     """The document in which the answer was saved"""
 
-    plugin_type_id = db.Column(
+    plugin_type_id = mapped_column(
         db.Integer, db.ForeignKey("plugintype.id"), nullable=True
     )
     """Plugin type the answer was saved on"""
 
-    content = db.Column(db.Text, nullable=False)
+    content = mapped_column(db.Text, nullable=False)
     """Answer content."""
 
-    points = db.Column(db.Float)
+    points = mapped_column(db.Float)
     """Points."""
 
-    answered_on = db.Column(
+    answered_on = mapped_column(
         db.DateTime(timezone=True), nullable=False, default=func.now()
     )
     """Answer timestamp."""
 
-    valid = db.Column(db.Boolean, nullable=False)
+    valid = mapped_column(db.Boolean, nullable=False)
     """Whether this answer is valid."""
 
-    last_points_modifier = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
+    last_points_modifier = mapped_column(db.Integer, db.ForeignKey("usergroup.id"))
     """The UserGroup who modified the points last. Null if the points have been given by the task automatically."""
 
-    plugin_type: PluginType | None = db.relationship("PluginType", lazy="select")
+    plugin_type = db.relationship("PluginType", lazy="select") # : PluginType | None
     uploads = db.relationship("AnswerUpload", back_populates="answer", lazy="dynamic")
     users = db.relationship(
         "User", secondary=UserAnswer.__table__, back_populates="answers", lazy="dynamic"

@@ -19,6 +19,7 @@ from typing import Optional
 
 import langcodes
 from sqlalchemy import select
+from sqlalchemy.orm import mapped_column
 
 from timApp.timdb.sqa import db
 
@@ -33,21 +34,22 @@ class Language(db.Model):
     """
 
     __tablename__ = "language"
-    __allow_unmapped__ = True
+    
 
-    lang_code = db.Column(db.Text, nullable=False, primary_key=True)
+    lang_code = mapped_column(db.Text, nullable=False, primary_key=True)
     """Standardized code of the language."""
 
     # TODO should this be unique?
-    lang_name = db.Column(db.Text, nullable=False)
+    lang_name = mapped_column(db.Text, nullable=False)
     """IANA's name for the language."""
 
-    flag_uri = db.Column(db.Text)
+    flag_uri = mapped_column(db.Text)
     """Path to a picture representing the language."""
 
-    autonym = db.Column(db.Text, nullable=False)
+    autonym = mapped_column(db.Text, nullable=False)
     """Native name for the language."""
 
+    # FIXME: Turn into postinit
     def __init__(
         self, lang_code: str, lang_name: str, autonym: str, flag_uri: str | None = None
     ):

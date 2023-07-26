@@ -5,15 +5,9 @@ from typing import TYPE_CHECKING
 
 import attr
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm import selectinload, mapped_column, attribute_mapped_collection
 from sqlalchemy.sql import Select
 
-from timApp.auth.auth_models import BlockAccess
-from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
-from timApp.messaging.timMessage.internalmessage_models import (
-    InternalMessageDisplay,
-)
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
@@ -61,15 +55,15 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     """
 
     __tablename__ = "usergroup"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
+
+    id = mapped_column(db.Integer, primary_key=True)
     """Usergroup identifier."""
 
-    name = db.Column(db.Text, nullable=False, unique=True)
+    name = mapped_column(db.Text, nullable=False, unique=True)
     """Usergroup name (textual identifier)."""
 
-    display_name = db.Column(db.Text, nullable=True)
+    display_name = mapped_column(db.Text, nullable=True)
     """Usergroup display name. Currently only used for storing certain Sisu course properties:
      - course code
      - period (P1...P5)
@@ -101,26 +95,26 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         cascade="all, delete-orphan",
         overlaps="memberships, users",
     )
-    current_memberships: dict[int, UserGroupMember] = db.relationship(
+    current_memberships = db.relationship(
         UserGroupMember,
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
         collection_class=attribute_mapped_collection("user_id"),
         back_populates="group",
         overlaps="memberships, memberships_sel, users",
-    )
+    )  # : dict[int, UserGroupMember]
     accesses = db.relationship(
         "BlockAccess",
         back_populates="usergroup",
         lazy="dynamic",
         cascade_backrefs=False,
     )
-    accesses_alt: dict[tuple[int, int], BlockAccess] = db.relationship(
+    accesses_alt = db.relationship(
         "BlockAccess",
         collection_class=attribute_mapped_collection("group_collection_key"),
         cascade="all, delete-orphan",
         overlaps="accesses, usergroup",
         cascade_backrefs=False,
-    )
+    )  # : dict[tuple[int, int], BlockAccess]
     readparagraphs = db.relationship(
         "ReadParagraph", back_populates="usergroup", lazy="dynamic"
     )
@@ -128,28 +122,30 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         "ReadParagraph",
         overlaps="readparagraphs, usergroup",
     )
-    notes = db.relationship("UserNote", back_populates="usergroup", lazy="dynamic", cascade_backrefs=False)
+    notes = db.relationship(
+        "UserNote", back_populates="usergroup", lazy="dynamic", cascade_backrefs=False
+    )
     notes_alt = db.relationship("UserNote", overlaps="notes, usergroup")
 
-    admin_doc: Block = db.relationship(
+    admin_doc = db.relationship(
         "Block",
         secondary=UserGroupDoc.__table__,
         lazy="select",
         uselist=False,
-    )
+    )  # : Block
 
     # For groups created from SCIM API
-    external_id: ScimUserGroup = db.relationship(
+    external_id = db.relationship(
         "ScimUserGroup", lazy="select", uselist=False
-    )
+    )  # : ScimUserGroup
 
-    messagelist_membership: list[MessageListTimMember] = db.relationship(
+    messagelist_membership = db.relationship(
         "MessageListTimMember", back_populates="user_group"
-    )
+    )  # : list[MessageListTimMember]
 
-    internalmessage_display: InternalMessageDisplay | None = db.relationship(
+    internalmessage_display = db.relationship(
         "InternalMessageDisplay", back_populates="usergroup", cascade_backrefs=False
-    )
+    )  # : InternalMessageDisplay | None
 
     def __repr__(self):
         return f"<UserGroup(id={self.id}, name={self.name})>"

@@ -1,5 +1,7 @@
 import re
 
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 uuid_re = "[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}"
@@ -10,10 +12,10 @@ external_id_re = re.compile(
 
 class ScimUserGroup(db.Model):
     __tablename__ = "scimusergroup"
-    __allow_unmapped__ = True
     
-    group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"), primary_key=True)
-    external_id = db.Column(db.Text, unique=True, nullable=False)
+    
+    group_id = mapped_column(db.Integer, db.ForeignKey("usergroup.id"), primary_key=True)
+    external_id = mapped_column(db.Text, unique=True, nullable=False)
 
     @property
     def is_studysubgroup(self) -> bool:

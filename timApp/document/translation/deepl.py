@@ -19,6 +19,7 @@ import langcodes
 from requests import post, Response
 from requests.exceptions import JSONDecodeError
 from sqlalchemy import select
+from sqlalchemy.orm import mapped_column
 
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import TranslateApproval, NoTranslate
@@ -54,23 +55,23 @@ class DeeplTranslationService(RegisteredTranslationService):
 
     # TODO Would be better as nullable=False, but that prevents creating
     #  non-DeeplTranslationService -subclasses of TranslationService.
-    service_url = db.Column(db.Text)
+    service_url = mapped_column(db.Text)
     """The url base for the API calls."""
 
     # TODO Would be better as nullable=False, but that prevents creating
     #  non-DeeplTranslationService -subclasses of TranslationService.
-    ignore_tag = db.Column(db.Text)
+    ignore_tag = mapped_column(db.Text)
     """The XML-tag name to use for ignoring pieces of text when XML-handling is
     used. Should be chosen to be some uncommon string not found in many texts.
     """
 
-    headers: dict[str, str]
-    """Request-headers needed for authentication with the API-key."""
-
-    source_Language_code: str
-    """The source language's code (helps handling regional variants that DeepL
-    doesn't differentiate).
-    """
+    # headers: ClassVar[dict[str, str]]
+    # """Request-headers needed for authentication with the API-key."""
+    #
+    # source_Language_code: ClassVar[str]
+    # """The source language's code (helps handling regional variants that DeepL
+    # doesn't differentiate).
+    # """
 
     def register(self, user_group: UserGroup) -> None:
         """

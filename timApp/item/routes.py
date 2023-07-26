@@ -17,7 +17,7 @@ from flask import session
 from markupsafe import Markup
 from marshmallow import EXCLUDE
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload, defaultload
+from sqlalchemy.orm import defaultload, joinedload
 
 from timApp.answer.answers import add_missing_users_from_groups, get_points_by_rule
 from timApp.auth.accesshelper import (
@@ -521,16 +521,16 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     doc_info = DocEntry.find_by_path(
         item_path,
         fallback_to_id=True,
-        docentry_load_opts=(
+        docentry_load_opts=[
             defaultload(DocEntry._block)
             .defaultload(Block.accesses)
-            .selectinload(BlockAccess.usergroup),
-            selectinload(DocEntry.trs)
+            .joinedload(BlockAccess.usergroup),
+            joinedload(DocEntry.trs)
             # TODO: These selectinloads are for some reason very inefficient at least for certain documents.
             #  See https://github.com/TIM-JYU/TIM/issues/2201. Needs more investigation.
             # .selectinload(Translation.docentry),
             # selectinload(DocEntry.trs).selectinload(Translation._block)
-        ),
+        ],
     )
     if doc_info is None:
         return try_return_folder(item_path)

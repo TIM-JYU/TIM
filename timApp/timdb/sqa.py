@@ -10,6 +10,7 @@ import os
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, text
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm.base import instance_state
 
 session_options = {
@@ -27,8 +28,8 @@ db = SQLAlchemy(session_options=session_options, engine_options=engine_options)
 
 
 class TimeStampMixin:
-    created = db.Column(db.DateTime(timezone=True), nullable=True, default=func.now())
-    modified = db.Column(
+    created = mapped_column(db.DateTime(timezone=True), nullable=True, default=func.now())
+    modified = mapped_column(
         db.DateTime(timezone=True),
         nullable=True,
         default=func.now(),

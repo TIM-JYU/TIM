@@ -6,6 +6,7 @@ from authlib.integrations.sqla_oauth2 import (
     OAuth2AuthorizationCodeMixin,
 )
 from authlib.oauth2.rfc6749 import ClientMixin, scope_to_list, list_to_scope
+from sqlalchemy.orm import mapped_column
 
 from timApp.timdb.sqa import db
 
@@ -102,17 +103,17 @@ class OAuth2Client(ClientMixin):
 
 class OAuth2Token(db.Model, OAuth2TokenMixin):
     __tablename__ = "oauth2_token"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"))
+    id = mapped_column(db.Integer, primary_key=True)
+    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"))
     user = db.relationship("User")
 
 
 class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
     __tablename__ = "oauth2_auth_code"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"))
+
+    id = mapped_column(db.Integer, primary_key=True)
+    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"))
     user = db.relationship("User")

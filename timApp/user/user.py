@@ -3,17 +3,19 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Optional, Union, MutableMapping
+from typing import Optional, Union
 
 import filelock
 from flask import current_app, has_request_context
 from sqlalchemy import func, select, delete
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import selectinload, defaultload
-from sqlalchemy.orm.collections import (
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import (
+    selectinload,
+    defaultload,
     attribute_mapped_collection,
 )
-from sqlalchemy.orm.strategy_options import loader_option
+from sqlalchemy.orm.interfaces import LoaderOption
 from sqlalchemy.sql import Select
 
 from timApp.answer.answer import Answer
@@ -30,9 +32,6 @@ from timApp.item.block import Block
 from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.messaging.messagelist.listinfo import Channel
-from timApp.messaging.timMessage.internalmessage_models import (
-    InternalMessageReadReceipt,
-)
 from timApp.notification.notification import Notification, NotificationType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
@@ -248,36 +247,36 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """
 
     __tablename__ = "useraccount"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
+
+    id = mapped_column(db.Integer, primary_key=True)
     """User identifier."""
 
-    name = db.Column(db.Text, nullable=False, unique=True)
+    name = mapped_column(db.Text, nullable=False, unique=True)
     """User name (not full name). Used to identify the user and during log-in."""
 
-    given_name = db.Column(db.Text)
+    given_name = mapped_column(db.Text)
     """User's given name."""
 
-    last_name = db.Column(db.Text)
+    last_name = mapped_column(db.Text)
     """User's last name."""
 
-    real_name = db.Column(db.Text)
+    real_name = mapped_column(db.Text)
     """Real (full) name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
 
-    _email = db.Column("email", db.Text, unique=True)
+    _email = mapped_column("email", db.Text, unique=True)
     """Email address."""
 
-    prefs = db.Column(db.Text)
+    prefs = mapped_column(db.Text)
     """Preferences as a JSON string."""
 
-    pass_ = db.Column("pass", db.Text)
+    pass_ = mapped_column("pass", db.Text)
     """Password hashed with bcrypt."""
 
-    consent = db.Column(db.Enum(Consent), nullable=True)
+    consent = mapped_column(db.Enum(Consent), nullable=True)
     """Current consent for cookie/data collection."""
 
-    origin = db.Column(db.Enum(UserOrigin), nullable=True)
+    origin = mapped_column(db.Enum(UserOrigin), nullable=True)
     """How the user registered to TIM."""
 
     uniquecodes = db.relationship(
@@ -287,9 +286,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     )
     """Personal unique codes used to identify the user via Haka Identity Provider."""
 
-    internalmessage_readreceipt: InternalMessageReadReceipt | None = db.relationship(
+    internalmessage_readreceipt = db.relationship(
         "InternalMessageReadReceipt", back_populates="user"
-    )
+    ) # : InternalMessageReadReceipt | None
     """User's read receipts for internal messages."""
 
     primary_email_contact = db.relationship(
@@ -325,13 +324,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     consents = db.relationship("ConsentChange", back_populates="user", lazy="select")
     """User's consent changes."""
 
-    contacts: list[UserContact] = db.relationship(
+    contacts = db.relationship(
         "UserContact",
         back_populates="user",
         lazy="select",
         overlaps="primary_email_contact",
         cascade_backrefs=False,
-    )
+    )  # : list[UserContact]
     """User's contacts."""
 
     notifications = db.relationship(
@@ -342,14 +341,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     )
     """Notification settings for the user. Represents what notifications the user wants to receive."""
 
-    groups: list[UserGroup] = db.relationship(
+    groups = db.relationship(
         UserGroup,
         UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
         back_populates="users",
         lazy="select",
         overlaps="user, current_memberships, group, memberships, memberships_sel",
-    )
+    )  # : list[UserGroup]
     """Current groups of the user is a member of."""
 
     groups_dyn = db.relationship(
@@ -378,11 +377,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     )
     """User's group memberships as a dynamic query."""
 
-    memberships: list[UserGroupMember] = db.relationship(
+    memberships = db.relationship(
         UserGroupMember,
         foreign_keys="UserGroupMember.user_id",
         overlaps="groups_inactive, memberships_dyn, user, users",
-    )
+    ) # : list[UserGroupMember]
     """All user's group memberships."""
 
     active_memberships = db.relationship(
@@ -438,17 +437,17 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     velps = db.relationship("Velp", back_populates="creator", lazy="dynamic")
     """Velps created by the user as a dynamic query."""
 
-    sessions: list[UserSession] = db.relationship(
+    sessions = db.relationship(
         "UserSession", back_populates="user", lazy="select", cascade_backrefs=False
-    )
+    ) # : list[UserSession]
     """All user's sessions as a dynamic query."""
 
-    active_sessions: MutableMapping[str, UserSession] = db.relationship(
+    active_sessions = db.relationship(
         "UserSession",
         primaryjoin=(id == UserSession.user_id) & ~UserSession.expired,
         collection_class=attribute_mapped_collection("session_id"),
         overlaps="sessions, user",
-    )
+    ) # : MutableMapping[str, UserSession]
     """Active sessions mapped by the session ID."""
 
     # Used for copying
@@ -717,9 +716,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def get_by_email(email: str) -> Optional["User"]:
         if email is None:
             raise Exception("Tried to find an user by null email")
-        return db.session.execute(
-            user_query_with_joined_groups().filter_by(email=email).limit(1)
-        ).scalars().first()
+        return (
+            db.session.execute(
+                user_query_with_joined_groups().filter_by(email=email).limit(1)
+            )
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def get_by_email_case_insensitive(email: str) -> list["User"]:
@@ -929,7 +932,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         self,
         channel: Channel,
         contact: str,
-        options: list[loader_option] | None = None,
+        options: list[LoaderOption] | None = None,
     ) -> UserContact | None:
         """Find user's contact by channel and contact contents.
 

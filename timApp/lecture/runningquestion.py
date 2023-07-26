@@ -1,26 +1,27 @@
 from datetime import datetime
 
-from timApp.lecture.askedquestion import AskedQuestion
+from sqlalchemy.orm import mapped_column
+
 from timApp.timdb.sqa import db
 
 
 class Runningquestion(db.Model):
-    __allow_unmapped__ = True
     
-    asked_id = db.Column(
+    
+    asked_id = mapped_column(
         db.Integer, db.ForeignKey("askedquestion.asked_id"), primary_key=True
     )
-    lecture_id = db.Column(
+    lecture_id = mapped_column(
         db.Integer, db.ForeignKey("lecture.lecture_id"), primary_key=True
     )  # TODO should not be part of primary key (asked_id is enough)
-    ask_time = db.Column(
+    ask_time = mapped_column(
         db.DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
-    end_time = db.Column(db.DateTime(timezone=True))
+    end_time = mapped_column(db.DateTime(timezone=True))
 
-    asked_question: AskedQuestion = db.relationship(
+    asked_question = db.relationship(
         "AskedQuestion", back_populates="running_question", lazy="select"
-    )
+    ) # : AskedQuestion
     lecture = db.relationship(
         "Lecture", back_populates="running_questions", lazy="select"
     )

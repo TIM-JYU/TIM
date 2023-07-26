@@ -4,6 +4,7 @@ from typing import Any
 import filelock
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import mapped_column
 
 import timApp
 from timApp.timdb.sqa import db
@@ -35,11 +36,11 @@ class PluginTypeBase:
 # TODO: Right now values are added dynamically to the table when saving answers. Instead add them on TIM start.
 class PluginType(db.Model, PluginTypeBase):
     __tablename__ = "plugintype"
-    __allow_unmapped__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
+    
+    id = mapped_column(db.Integer, primary_key=True)
 
-    type = db.Column(db.Text, nullable=False, unique=True)
+    type = mapped_column(db.Text, nullable=False, unique=True)
 
     @staticmethod
     def resolve(p_type: str) -> "PluginType":

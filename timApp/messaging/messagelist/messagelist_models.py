@@ -4,6 +4,7 @@ from typing import Optional, Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.hybrid import hybrid_property  # type: ignore
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound  # type: ignore
 
 from timApp.messaging.messagelist.listinfo import (
@@ -34,65 +35,65 @@ class MessageListModel(db.Model):
     """Database model for message lists"""
 
     __tablename__ = "messagelist"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
 
-    manage_doc_id = db.Column(db.Integer, db.ForeignKey("block.id"))
+    manage_doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"))
     """The document which manages a message list."""
 
-    name = db.Column(db.Text)
+    name = mapped_column(db.Text)
     """The name of a message list."""
 
-    can_unsubscribe = db.Column(db.Boolean)
+    can_unsubscribe = mapped_column(db.Boolean)
     """If a member can unsubscribe from this list on their own."""
 
-    email_list_domain = db.Column(db.Text)
+    email_list_domain = mapped_column(db.Text)
     """The domain used for an email list attached to a message list. If None/null, then message list doesn't have an 
     attached email list. This is a tad silly at this point in time, because JYU TIM only has one domain. However, 
     this allows quick adaptation if more domains are added or otherwise changed in the future. """
 
-    archive = db.Column(db.Enum(ArchiveType))
+    archive = mapped_column(db.Enum(ArchiveType))
     """The archive policy of a message list."""
 
-    notify_owner_on_change = db.Column(db.Boolean)
+    notify_owner_on_change = mapped_column(db.Boolean)
     """Should the owner of the message list be notified if there are changes on message list members."""
 
-    description = db.Column(db.Text)
+    description = mapped_column(db.Text)
     """A short description what a message list is about."""
 
-    info = db.Column(db.Text)
+    info = mapped_column(db.Text)
     """Additional information about the message list."""
 
-    removed = db.Column(db.DateTime(timezone=True))
+    removed = mapped_column(db.DateTime(timezone=True))
     """When this list has been marked for removal."""
 
-    default_send_right = db.Column(db.Boolean)
+    default_send_right = mapped_column(db.Boolean)
     """Default send right for new members who join the list on their own."""
 
-    default_delivery_right = db.Column(db.Boolean)
+    default_delivery_right = mapped_column(db.Boolean)
     """Default delivery right for new members who join the list on their own."""
 
-    tim_user_can_join = db.Column(db.Boolean)
+    tim_user_can_join = mapped_column(db.Boolean)
     """Flag if TIM users can join the list on their own."""
 
-    subject_prefix = db.Column(db.Text)
+    subject_prefix = mapped_column(db.Text)
     """What prefix message subjects that go through the list get."""
 
-    only_text = db.Column(db.Boolean)
+    only_text = mapped_column(db.Boolean)
     """Flag if only text format messages are allowed on a list."""
 
-    default_reply_type = db.Column(db.Enum(ReplyToListChanges))
+    default_reply_type = mapped_column(db.Enum(ReplyToListChanges))
     """Default reply type for the list."""
 
-    non_member_message_pass = db.Column(db.Boolean)
+    non_member_message_pass = mapped_column(db.Boolean)
     """Flag if non members messages to the list are passed straight through without moderation."""
 
-    allow_attachments = db.Column(db.Boolean)
+    allow_attachments = mapped_column(db.Boolean)
     """Flag if attachments are allowed on the list. The list of allowed attachment file extensions are stored at 
     listoptions.py """
 
-    message_verification = db.Column(
+    message_verification = mapped_column(
         db.Enum(MessageVerificationType),
         nullable=False,
         default=MessageVerificationType.MUNGE_FROM,
@@ -104,9 +105,9 @@ class MessageListModel(db.Model):
     )
     """Relationship to the document that is used to manage this message list."""
 
-    members: list["MessageListTimMember"] = db.relationship(
+    members = db.relationship(
         "MessageListMember", back_populates="message_list", lazy="select"
-    )
+    ) # : list["MessageListTimMember"]
     """All the members of the list."""
 
     distribution = db.relationship(
@@ -266,32 +267,32 @@ class MessageListMember(db.Model):
     """Database model for members of a message list."""
 
     __tablename__ = "messagelist_member"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
 
-    message_list_id = db.Column(db.Integer, db.ForeignKey("messagelist.id"))
+    message_list_id = mapped_column(db.Integer, db.ForeignKey("messagelist.id"))
     """What message list a member belongs to."""
 
-    send_right = db.Column(db.Boolean)
+    send_right = mapped_column(db.Boolean)
     """If a member can send messages to a message list."""
 
-    delivery_right = db.Column(db.Boolean)
+    delivery_right = mapped_column(db.Boolean)
     """If a member can get messages from a message list."""
 
-    membership_ended = db.Column(db.DateTime(timezone=True))
+    membership_ended = mapped_column(db.DateTime(timezone=True))
     """When member's membership on a list ended. This is set when member is removed from a list. A value of None means 
     the member is still on the list."""
 
-    join_method = db.Column(db.Enum(MemberJoinMethod))
+    join_method = mapped_column(db.Enum(MemberJoinMethod))
     """How the member came to a list."""
 
-    membership_verified = db.Column(db.DateTime(timezone=True))
+    membership_verified = mapped_column(db.DateTime(timezone=True))
     """When the user's joining was verified. If user is added e.g. by a teacher to a course's message list, 
     this date is the date teacher added the member. If the member was invited, then this is the date they verified 
     their join. """
 
-    member_type = db.Column(db.Text)
+    member_type = mapped_column(db.Text)
     """Discriminator for polymorhphic members."""
 
     message_list = db.relationship(
@@ -402,9 +403,9 @@ class MessageListTimMember(MessageListMember):
 
     __tablename__ = "messagelist_tim_member"
 
-    id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
+    id = mapped_column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
-    group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
+    group_id = mapped_column(db.Integer, db.ForeignKey("usergroup.id"))
     """A UserGroup id for a member."""
 
     member = db.relationship(
@@ -461,12 +462,12 @@ class MessageListExternalMember(MessageListMember):
 
     __tablename__ = "messagelist_external_member"
 
-    id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
+    id = mapped_column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
-    email_address = db.Column(db.Text)
+    email_address = mapped_column(db.Text)
     """Email address of message list's external member."""
 
-    display_name = db.Column(db.Text)
+    display_name = mapped_column(db.Text)
     """Display name for external user, which in most cases should be the external member's address' owner's name."""
 
     member = db.relationship(
@@ -508,17 +509,17 @@ class MessageListDistribution(db.Model):
     """Message list member's chosen distribution channels."""
 
     __tablename__ = "messagelist_distribution"
-    __allow_unmapped__ = True
+    
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = mapped_column(db.Integer, primary_key=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"))
+    user_id = mapped_column(db.Integer, db.ForeignKey("messagelist_member.id"))
     """Message list member's id, if this row is about message list member's channel distribution."""
 
-    message_list_id = db.Column(db.Integer, db.ForeignKey("messagelist.id"))
+    message_list_id = mapped_column(db.Integer, db.ForeignKey("messagelist.id"))
     """Message list's id, if this row is about message list's channel distribution."""
 
-    channel = db.Column(db.Enum(Channel))
+    channel = mapped_column(db.Enum(Channel))
     """Which message channels are used by a message list or a user."""
 
     member = db.relationship(
