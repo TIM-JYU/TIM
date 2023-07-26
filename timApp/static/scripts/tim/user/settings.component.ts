@@ -123,13 +123,13 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
     template: `
         <h1 i18n>TIM settings</h1>
         <div class="form">
-            <bootstrap-form-panel [disabled]="saving" title="Preferred language" i18n-title anchorID="prefs_language" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Preferred language" i18n-title anchorId="prefs_language" [showHeadingAnchors]="true">
                 <div class="flex cl">
                     <tim-language-selector [(language)]="settings.language"></tim-language-selector>
                     <settings-button-panel [saved]="submit" [reloadAfterSave]="true"></settings-button-panel>
                 </div>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title anchorID="prefs_styles" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title anchorId="prefs_styles" [showHeadingAnchors]="true">
                 <tim-alert *ngIf="styleError">
                     <strong>{{styleError.title}}</strong>
                     <p>{{styleError.message}}</p>
@@ -252,7 +252,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                     <ng-container i18n>Compiling style, please wait</ng-container>
                 </div>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Editor" i18n-title anchorID="prefs_editor" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Editor" i18n-title anchorId="prefs_editor" [showHeadingAnchors]="true">
                 <div class="checkbox">
                     <label>
                         <input type="checkbox" name="use_document_word_list"
@@ -267,7 +267,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                 </label>
                 <settings-button-panel [saved]="submit"></settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Notifications" i18n-title anchorID="prefs_notifications" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Notifications" i18n-title anchorId="prefs_notifications" [showHeadingAnchors]="true">
                 <h4 i18n>Subscribed items</h4>
                 <p *ngIf="notifications.length > 0" i18n>You get emails from the following documents and folders:</p>
                 <p *ngIf="notifications.length === 0" i18n>You haven't subscribed to any documents or folders.</p>
@@ -310,7 +310,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                 </div>
                 <settings-button-panel [saved]="submit"></settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Menus" i18n-title anchorID="prefs_menus" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Menus" i18n-title anchorId="prefs_menus" [showHeadingAnchors]="true">
                 <div class="form-view">
                     <label for="max-toc-size" class="input-group-label" i18n>
                         Collapse document index with more than
@@ -357,7 +357,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                 </div>
                 <settings-button-panel [saved]="submit"></settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Other settings" i18n-title anchorID="prefs_misc" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Other settings" i18n-title anchorId="prefs_misc" [showHeadingAnchors]="true">
                 <div class="checkbox" id="othersettings"><label>
                     <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
                            [disabled]="saving">
@@ -370,7 +370,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                     <span *ngIf="storageClear" i18n>Local storage cleared.</span>
                 </settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Your account information" i18n-title anchorID="prefs_account" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Your account information" i18n-title anchorId="prefs_account" [showHeadingAnchors]="true">
                 <div class="account-info">
                     <label for="account-name" i18n>Username</label>
                     <div><input id="account-name" class="form-control" type="text" [value]="user.name" disabled>
@@ -472,7 +472,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                     <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
                 </settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorID="prefs_delAcc" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorId="prefs_delAcc" [showHeadingAnchors]="true">
                 <button class="timButton btn-danger"
                         (click)="beginDeleteAccount()"
                         *ngIf="!deletingAccount" i18n>Delete account...
