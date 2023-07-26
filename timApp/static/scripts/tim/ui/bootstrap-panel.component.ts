@@ -11,7 +11,7 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
     selector: "bootstrap-panel",
     template: `
         <div class="panel panel-{{ severity ? severity : 'default' }}" [hidden]="show === false">
-            <div class="panel-heading" [attr.id]="anchorID">
+            <div class="panel-heading" [attr.id]="anchorId">
                 <ng-container *ngIf="title">{{ title }}</ng-container>
                 <ng-container *ngIf="titleTemplate">
                     <ng-container *ngTemplateOutlet="titleTemplate"></ng-container>
@@ -19,8 +19,8 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
                 <a *ngIf="showClose">
                     <tim-close-button (click)="close()"></tim-close-button>
                 </a>
-                <span class="headerlink" *ngIf="showHeadingAnchors && anchorID">
-                    <a href="#{{ anchorID }}" title="Permanent link to paragraph" class="">
+                <span class="headerlink" *ngIf="showHeadingAnchors && anchorId">
+                    <a href="#{{ anchorId }}" title="Permanent link to paragraph" class="">
                         <span class="header-anchor">#</span>
                     </a>
                 </span>
@@ -38,7 +38,7 @@ export class BootstrapPanelComponent {
     @Input() showClose?: boolean;
     @Input() title?: string;
     @Input() titleTemplate?: TemplateRef<unknown>;
-    @Input() anchorID?: string;
+    @Input() anchorId?: string;
     @Input() showHeadingAnchors?: boolean = false;
 
     close() {
@@ -50,7 +50,9 @@ export class BootstrapPanelComponent {
 @Component({
     selector: "bootstrap-form-panel",
     template: `
-        <bootstrap-panel [severity]="severity" [show]="show" [showClose]="showClose" [title]="title" [titleTemplate]="titleTemplate" (closed)="closed.emit($event)" [anchorID]="anchorID" [showHeadingAnchors]="showHeadingAnchors">
+        <bootstrap-panel [severity]="severity" [show]="show" [showClose]="showClose" [title]="title"
+                         [titleTemplate]="titleTemplate" (closed)="closed.emit($event)" [anchorId]="anchorId"
+                         [showHeadingAnchors]="showHeadingAnchors">
             <form>
                 <fieldset [disabled]="disabled">
                     <ng-content></ng-content>
@@ -68,6 +70,6 @@ export class BootstrapFormPanelComponent {
     @Input() showClose?: boolean;
     @Input() title?: string;
     @Input() titleTemplate?: TemplateRef<unknown>;
-    @Input() anchorID?: string;
+    @Input() anchorId?: string;
     @Input() showHeadingAnchors?: boolean = false;
 }
