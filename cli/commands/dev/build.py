@@ -27,7 +27,7 @@ If no tag is specified, the task is built with all tags.
 # 2. Specify the task and valid tags in the BUILD_TASKS dictionary.
 
 
-def build_tim(tag: Optional[str], no_cache: bool) -> Optional[List[str]]:
+def build_tim(tag: Optional[str], no_cache: bool, build_args: List[str]) -> Optional[List[str]]:
     config = get_config()
     image_suffix = "-base" if tag == "base" else ""
     image_name = f"{config.images_repository}/tim{image_suffix}"
@@ -35,10 +35,16 @@ def build_tim(tag: Optional[str], no_cache: bool) -> Optional[List[str]]:
     image_name_latest = f"{image_name}:latest"
     cwd = Path.cwd()
     dockerfile = cwd / "timApp" / "Dockerfile"
+    build_args_cli = []
+    if build_args:
+        for arg in build_args:
+            build_args_cli.append("--build-arg")
+            build_args_cli.append(arg)
     run_docker(
         [
             "build",
             *(["--no-cache"] if no_cache else []),
+            *build_args_cli,
             "--tag",
             image_name_specific,
             "--tag",
@@ -51,15 +57,21 @@ def build_tim(tag: Optional[str], no_cache: bool) -> Optional[List[str]]:
     return [image_name_specific, image_name_latest]
 
 
-def build_csplugin(tag: Optional[str], no_cache: bool) -> Optional[List[str]]:
+def build_csplugin(tag: Optional[str], no_cache: bool, build_args: List[str]) -> Optional[List[str]]:
     assert tag is not None
     config = get_config()
     image_name = f"{config.images_repository}/cs3:{tag}-{csplugin_image_tag()}"
     context = Path.cwd() / "timApp" / "modules" / "cs"
+    build_args_cli = []
+    if build_args:
+        for arg in build_args:
+            build_args_cli.append("--build-arg")
+            build_args_cli.append(arg)
     run_docker(
         [
             "build",
             *(["--no-cache"] if no_cache else []),
+            *build_args_cli,
             "--tag",
             image_name,
             "--target",
@@ -76,12 +88,13 @@ def build_csplugin(tag: Optional[str], no_cache: bool) -> Optional[List[str]]:
 class Arguments:
     push: bool
     no_cache: bool
+    build_args: List[str]
     tasks: List[str]
 
 
 class BuildTask(NamedTuple):
     tags: Optional[List[str]]
-    build: Callable[[Optional[str], bool], Optional[List[str]]]
+    build: Callable[[Optional[str], bool, List[str]], Optional[List[str]]]
 
 
 BUILD_TASKS: Dict[str, BuildTask] = {
@@ -104,12 +117,12 @@ def run(args: Arguments) -> None:
         if build_tags:
             for tag in build_tags:
                 log_info(f"Building {task}:{tag}")
-                images = build_task.build(tag, args.no_cache)
+                images = build_task.build(tag, args.no_cache, args.build_args)
                 if images:
                     built_images.extend(images)
         else:
             log_info(f"Building {task}")
-            images = build_task.build(None, args.no_cache)
+            images = build_task.build(None, args.no_cache, args.build_args)
             if images:
                 built_images.extend(images)
 
@@ -138,8 +151,15 @@ def init(parser: ArgumentParser) -> None:
         dest="no_cache",
     )
     parser.add_argument(
+        "--build-arg",
+        help="Build arguments to pass to the Docker build command.",
+        action="append",
+        dest="build_args",
+    )
+    parser.add_argument(
         "tasks",
         nargs="*",
         choices=choices,
         help="Tasks to build in format `task:tag`. If not specified, all tasks will be built.",
     )
+
