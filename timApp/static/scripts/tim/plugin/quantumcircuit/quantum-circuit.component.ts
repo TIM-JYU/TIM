@@ -263,6 +263,7 @@ export class ActiveGateInfo {
         this.description = description;
         this.swap = swap;
     }
+
     formatMatrixAsString() {
         const arr = this.matrix.toArray();
         const formatOptions: FormatOptions = {
@@ -272,7 +273,9 @@ export class ActiveGateInfo {
         arr.forEach((row) => {
             if (Array.isArray(row)) {
                 res += row
-                    .map((value) => format(value, formatOptions))
+                    .map((value) =>
+                        format(value, formatOptions).replace(/\s/g, "")
+                    )
                     .join(" ");
                 res += "\n";
             }

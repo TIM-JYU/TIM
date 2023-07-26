@@ -6,24 +6,24 @@ import {ActiveGateInfo} from "tim/plugin/quantumcircuit/quantum-circuit.componen
     selector: "tim-quantum-toolbox",
     template: `
         <div class="toolbox">
-            <div class="toolbox-item" *ngIf="activeGateInfo">
+            <div class="toolbox-item gate-info" *ngIf="activeGateInfo">
                 <div class="gate-info-header">
                     <div>{{activeGateInfo.description}}</div>
                     <button title="piilota" type="button" class="btn btn-default btn-sm" (click)="handleClose()">
                         <span class="glyphicon glyphicon-remove"></span>
                     </button>
                 </div>
-                matriisi:
+                Matriisi:
                 <pre>
                     <code>{{matrixString}}</code>
                 </pre>
                 <p *ngIf="controlsString" class="controls">
-                    kontrollit:
+                    Kontrollit:
                     {{controlsString}}
                 </p>
 
                 <p *ngIf="activeGateInfo.swap">
-                    swap: 
+                    Swap: 
                     {{swapString}}
                 </p>
             </div>
