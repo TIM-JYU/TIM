@@ -296,10 +296,6 @@ export class ActiveGateInfo {
     }
 }
 
-export interface ActiveGateInfo {
-    matrix: Matrix;
-}
-
 @Component({
     selector: "tim-quantum-circuit",
     template: `
@@ -835,9 +831,6 @@ export class QuantumCircuitComponent
                     gateData.editable
                 );
             } else if (this.isControl(gateData)) {
-                if (!this.gateService.isMenuGate(gateData.name)) {
-                    continue;
-                }
                 const gate = new Gate(gateData.name, gateData.editable);
                 this.board.set(gateData.target, gateData.time, gate);
                 for (const controlTarget of gateData.controls) {
@@ -851,9 +844,6 @@ export class QuantumCircuitComponent
                     this.board.set(controlTarget, gateData.time, control);
                 }
             } else if (this.isSingleOrMultiQubit(gateData)) {
-                if (!this.gateService.isMenuGate(gateData.name)) {
-                    continue;
-                }
                 const size = this.gateService.getGateSize(gateData.name);
                 if (size > 1) {
                     const gate = new MultiQubitGate(
