@@ -770,7 +770,10 @@ export class PermCtrl implements IController {
      * @param doc_id
      */
     getTranslationPath(doc_id: number) {
-        return this.translations.find((tr) => tr.id == doc_id)?.path ?? this.item.path;
+        return (
+            this.translations.find((tr) => tr.id == doc_id)?.path ??
+            this.item.path
+        );
     }
 }
 
