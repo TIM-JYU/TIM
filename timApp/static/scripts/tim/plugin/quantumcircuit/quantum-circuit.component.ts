@@ -46,8 +46,8 @@ import {FormsModule} from "@angular/forms";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {SvgCellComponent} from "tim/plugin/quantumcircuit/svg-cell.component";
-import type {Matrix} from "mathjs";
-import {matrix} from "mathjs";
+import type {Matrix, FormatOptions} from "mathjs";
+import {format, matrix} from "mathjs";
 import {PurifyModule} from "tim/util/purify.module";
 
 /**
@@ -240,6 +240,62 @@ export interface CircuitStyleOptions {
     gateBorderRadius: number;
 }
 
+export class ActiveGateInfo {
+    matrix: Matrix;
+    name: string;
+    controls: number[];
+    qubits: Qubit[];
+    description: string;
+    swap?: [number, number];
+
+    constructor(
+        name: string,
+        mat: Matrix,
+        controls: number[],
+        qubits: Qubit[],
+        description: string,
+        swap?: [number, number]
+    ) {
+        this.name = name;
+        this.matrix = mat;
+        this.qubits = qubits;
+        this.controls = controls;
+        this.description = description;
+        this.swap = swap;
+    }
+    formatMatrixAsString() {
+        const arr = this.matrix.toArray();
+        const formatOptions: FormatOptions = {
+            precision: 2,
+        };
+        let res = "";
+        arr.forEach((row) => {
+            if (Array.isArray(row)) {
+                res += row
+                    .map((value) => format(value, formatOptions))
+                    .join(" ");
+                res += "\n";
+            }
+        });
+        return res;
+    }
+
+    formatControlsAsString() {
+        return this.controls.map((ci) => this.qubits[ci].name).join(", ");
+    }
+
+    formatSwapAsString() {
+        if (!this.swap) {
+            return "";
+        }
+        return (
+            this.qubits[this.swap[0]].name +
+            ", " +
+            this.qubits[this.swap[1]].name
+        );
+    }
+}
+
 export interface ActiveGateInfo {
     matrix: Matrix;
 }
@@ -256,7 +312,7 @@ export interface ActiveGateInfo {
                 <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
                     <div class="top-menu">
                         <tim-quantum-gate-menu [circuitStyleOptions]="circuitStyleOptions"></tim-quantum-gate-menu>
-                        <tim-quantum-toolbox [activeGateInfo]="activeGateInfo"></tim-quantum-toolbox>
+                        <tim-quantum-toolbox [activeGateInfo]="activeGateInfo" (close)="handleActiveGateHide()"></tim-quantum-toolbox>
                     </div>
 
                     <div class="circuit">
@@ -437,21 +493,11 @@ export class QuantumCircuitComponent
             for (let timeI = 0; timeI < board[targetI].length; timeI++) {
                 const cell = board[targetI][timeI];
                 if (cell instanceof Gate) {
-                    const controls = [];
-                    for (
-                        let controlTargetI = 0;
-                        controlTargetI < board.length;
-                        controlTargetI++
-                    ) {
-                        const control = board[controlTargetI][timeI];
-                        if (
-                            control instanceof Control &&
-                            control.target === targetI &&
-                            controlTargetI !== targetI
-                        ) {
-                            controls.push(controlTargetI);
-                        }
-                    }
+                    const controls = this.board.getControls({
+                        target: targetI,
+                        time: timeI,
+                    });
+
                     if (controls.length > 0) {
                         userCircuit.push({
                             name: cell.name,
@@ -488,6 +534,9 @@ export class QuantumCircuitComponent
         return userCircuit;
     }
 
+    /**
+     * Save answer.
+     */
     async save() {
         const userCircuit = this.serializeUserCircuit();
 
@@ -511,6 +560,9 @@ export class QuantumCircuitComponent
         }
     }
 
+    /**
+     * Reset circuit to its initial state.
+     */
     reset() {
         this.initializeBoard(true);
         this.runSimulation(true);
@@ -615,6 +667,8 @@ export class QuantumCircuitComponent
 
         this.updateBoard();
 
+        this.handleActiveGateHide();
+
         this.selectedGate = null;
 
         this.runSimulation();
@@ -628,6 +682,7 @@ export class QuantumCircuitComponent
         this.board.moveCell(gateMove.from, gateMove.to, this.selectedGate);
         this.selectedGate = null;
         this.updateBoard();
+        this.handleActiveGateHide();
         this.runSimulation();
     }
 
@@ -641,6 +696,7 @@ export class QuantumCircuitComponent
         }
         this.selectedGate = null;
         this.updateBoard();
+        this.handleActiveGateHide();
         this.runSimulation();
     }
 
@@ -668,14 +724,33 @@ export class QuantumCircuitComponent
 
     updateActiveGate(gate: GatePos) {
         const name = this.getGateName(gate);
-        if (name !== undefined) {
-            const mat = this.gateService.getMatrix(name);
-            if (mat) {
-                this.activeGateInfo = {
-                    matrix: mat,
-                };
+        if (name === undefined) {
+            return;
+        }
+        const gateInfo = this.gateService.getGate(name);
+        if (!gateInfo) {
+            return;
+        }
+        let swapInfo: [number, number] | undefined;
+        if (name === "swap") {
+            const cell = this.board.get(gate.target, gate.time);
+            if (cell instanceof Swap) {
+                swapInfo = [gate.target, cell.target];
             }
         }
+        const controls = this.board.getControls(gate);
+        this.activeGateInfo = new ActiveGateInfo(
+            name,
+            gateInfo.matrix,
+            controls,
+            this.qubits,
+            gateInfo.description,
+            swapInfo
+        );
+    }
+
+    handleActiveGateHide() {
+        this.activeGateInfo = undefined;
     }
 
     /**

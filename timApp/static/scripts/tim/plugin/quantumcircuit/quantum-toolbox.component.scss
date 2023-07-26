@@ -2,11 +2,22 @@ a {
   font-size: 3rem;
 }
 
-.toolbox-item {
-  display: inline-block;
+.toolbox {
+  display: flex;
+  gap: 0.25em;
+  margin-left: 0.5em;
+  height: 100px;
+  overflow-y: scroll;
 }
+
 
 pre {
   display: flex;
+}
+
+.gate-info-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25em;
 }
 

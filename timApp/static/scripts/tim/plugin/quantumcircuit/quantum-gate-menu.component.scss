@@ -17,6 +17,7 @@ svg text::selection {
   display: flex;
   flex-direction: column;
   border: 1px solid black;
+  max-width: 50vw;
 }
 
 .gate-container-heading {

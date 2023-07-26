@@ -160,7 +160,7 @@ export class GateService {
         return false;
     }
 
-    private getGate(name: string) {
+    getGate(name: string) {
         return this.gates.find((g) => g.name === name);
     }
 

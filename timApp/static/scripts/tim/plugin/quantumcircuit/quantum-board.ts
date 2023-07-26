@@ -184,11 +184,19 @@ export class QuantumBoard {
         return undefined;
     }
 
-    private getControls(pos: GatePos) {
+    /**
+     * Get controls for a gate.
+     * @param pos position of the gate
+     */
+    getControls(pos: GatePos) {
         const controls = [];
         for (let i = 0; i < this.board.length; i++) {
             const cell = this.get(i, pos.time);
-            if (cell instanceof Control && cell.target === pos.target) {
+            if (
+                cell instanceof Control &&
+                cell.target === pos.target &&
+                i !== pos.target
+            ) {
                 controls.push(i);
             }
         }
