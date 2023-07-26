@@ -12,7 +12,8 @@ export function doDowngrade(
     m: IModule,
     component: string,
     angularComponent: Type<unknown>,
-    propagateDigest = Digest.DontPropagate
+    propagateDigest = Digest.DontPropagate,
+    inputs?: string[]
 ) {
     m.directive(
         component,
@@ -20,6 +21,7 @@ export function doDowngrade(
             component: angularComponent,
             downgradedModule: m.name,
             propagateDigest: propagateDigest == Digest.Propagate,
+            inputs: inputs,
         }) as Injectable<IDirectiveFactory>
     );
     return m;
