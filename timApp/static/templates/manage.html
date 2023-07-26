@@ -189,7 +189,11 @@
                         <input type="text" class="form-control" ng-model="tr.title" placeholder="Title"/>
                     </td>
                     <td>{{tr.owner.name}}</td>
-                    <td>{{tr.id}}</td>
+                    <td>{{tr.id}}
+                        <a href="/view/{{$ctrl.getTranslationPath(tr.id)}}">
+                            <i class="glyphicon glyphicon-link"></i>
+                        </a>
+                    </td>
                     <td>
                         <button class="timButton" ng-click="$ctrl.updateTranslation(tr)"
                                 ng-disabled="!$ctrl.trChanged(tr)">Update
