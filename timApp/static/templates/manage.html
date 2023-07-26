@@ -90,7 +90,7 @@
     </div>
 </div>
 
-<bootstrap-panel title="Relevance" ng-if="$ctrl.item.rights.editable" showHeadingAnchors="true" anchorID="relevance">
+<bootstrap-panel title="Relevance" ng-if="$ctrl.item.rights.editable" show-heading-anchors="true" anchor-id="relevance">
         <tim-relevance-edit [item]="$ctrl.item"></tim-relevance-edit>
 </bootstrap-panel>
 
@@ -282,7 +282,7 @@
         </div>
     </div>
 
-    <bootstrap-panel ng-if="$ctrl.item.rights.copy" title="Copy this document" showHeadingAnchors="true" anchorID="copy">
+    <bootstrap-panel ng-if="$ctrl.item.rights.copy" title="Copy this document" show-heading-anchors="true" anchor-id="copy">
         <create-item item-type="document"
                      [item-location]="$ctrl.item.location"
                      [params]="$ctrl.copyParams"></create-item>
@@ -437,7 +437,7 @@
             </form>
         </div>
     </div>
-    <bootstrap-panel title="Copy contents" ng-if="$ctrl.item.rights.copy" showHeadingAnchors="true" anchorID="copy">
+    <bootstrap-panel title="Copy contents" ng-if="$ctrl.item.rights.copy" show-heading-anchors="true" anchor-id="copy">
         <tim-copy-folder [item]="$ctrl.item"></tim-copy-folder>
     </bootstrap-panel>
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
