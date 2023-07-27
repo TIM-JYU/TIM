@@ -22,7 +22,7 @@ from dataclasses import dataclass
 
 import pypandoc
 from sqlalchemy import select
-from sqlalchemy.orm import with_polymorphic, mapped_column
+from sqlalchemy.orm import with_polymorphic, mapped_column, Mapped
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.translation.language import Language
@@ -77,10 +77,10 @@ class TranslationService(db.Model):
     __tablename__ = "translationservice"
     
 
-    id = mapped_column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Translation service identifier."""
 
-    service_name = mapped_column(db.Text, unique=True, nullable=False)
+    service_name: Mapped[str] = mapped_column(unique=True)
     """Human-readable name of the machine translator. Also used as an
     identifier."""
 
@@ -181,23 +181,19 @@ class TranslationServiceKey(db.Model):
     __tablename__ = "translationservicekey"
     
 
-    id = mapped_column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Key identifier."""
 
     # TODO Come up with a better name?
-    api_key = mapped_column(db.Text, nullable=False)
+    api_key: Mapped[str]
     """The key needed for using related service."""
 
-    group_id = mapped_column(db.Integer, db.ForeignKey("usergroup.id"), nullable=False)
-    group = db.relationship("UserGroup", uselist=False) # : UserGroup
+    group_id: Mapped[int] = mapped_column(db.ForeignKey("usergroup.id"))
+    group: Mapped[UserGroup] = db.relationship()
     """The group that can use this key."""
 
-    service_id = mapped_column(
-        db.Integer,
-        db.ForeignKey("translationservice.id"),
-        nullable=False,
-    )
-    service = db.relationship("TranslationService", uselist=False) # : TranslationService
+    service_id: Mapped[int] = mapped_column(db.ForeignKey("translationservice.id"))
+    service: Mapped[TranslationService] = db.relationship()
     """The service that this key is used in."""
 
     @staticmethod

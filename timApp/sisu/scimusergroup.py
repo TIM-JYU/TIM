@@ -1,6 +1,6 @@
 import re
 
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
 
@@ -12,10 +12,11 @@ external_id_re = re.compile(
 
 class ScimUserGroup(db.Model):
     __tablename__ = "scimusergroup"
-    
-    
-    group_id = mapped_column(db.Integer, db.ForeignKey("usergroup.id"), primary_key=True)
-    external_id = mapped_column(db.Text, unique=True, nullable=False)
+
+    group_id: Mapped[int] = mapped_column(
+        db.ForeignKey("usergroup.id"), primary_key=True
+    )
+    external_id: Mapped[str] = mapped_column(unique=True)
 
     @property
     def is_studysubgroup(self) -> bool:

@@ -3,17 +3,22 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional, Union, Dict, Tuple, TYPE_CHECKING, List
 
 import filelock
 from flask import current_app, has_request_context
 from sqlalchemy import func, select, delete
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import (
+    mapped_column,
+    Mapped,
+    attribute_keyed_dict,
+    relationship,
+    DynamicMapped,
+)
 from sqlalchemy.orm import (
     selectinload,
     defaultload,
-    attribute_mapped_collection,
 )
 from sqlalchemy.orm.interfaces import LoaderOption
 from sqlalchemy.sql import Select
@@ -77,6 +82,20 @@ from timApp.util.utils import (
     get_current_time,
 )
 from tim_common.timjsonencoder import TimJsonEncoder
+
+if TYPE_CHECKING:
+    from timApp.messaging.timMessage.internalmessage_models import (
+        InternalMessageReadReceipt,
+    )
+    from timApp.user.consentchange import ConsentChange
+    from timApp.lecture.lecture import Lecture
+    from timApp.lecture.lectureanswer import LectureAnswer
+    from timApp.lecture.message import Message
+    from timApp.lecture.questionactivity import QuestionActivity
+    from timApp.lecture.useractivity import Useractivity
+    from timApp.velp.annotation_model import Annotation
+    from timApp.velp.velp_models import Velp
+
 
 ItemOrBlock = Union[ItemBase, Block]
 maxdate = datetime.max.replace(tzinfo=timezone.utc)
@@ -247,57 +266,52 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """
 
     __tablename__ = "useraccount"
-    
 
-    id = mapped_column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """User identifier."""
 
-    name = mapped_column(db.Text, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(unique=True)
     """User name (not full name). Used to identify the user and during log-in."""
 
-    given_name = mapped_column(db.Text)
+    given_name: Mapped[Optional[str]]
     """User's given name."""
 
-    last_name = mapped_column(db.Text)
+    last_name: Mapped[Optional[str]]
     """User's last name."""
 
-    real_name = mapped_column(db.Text)
+    real_name: Mapped[Optional[str]]
     """Real (full) name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
 
-    _email = mapped_column("email", db.Text, unique=True)
+    _email: Mapped[str] = mapped_column("email", unique=True)
     """Email address."""
 
-    prefs = mapped_column(db.Text)
+    prefs: Mapped[Optional[str]]
     """Preferences as a JSON string."""
 
-    pass_ = mapped_column("pass", db.Text)
+    pass_: Mapped[Optional[str]] = mapped_column("pass")
     """Password hashed with bcrypt."""
 
-    consent = mapped_column(db.Enum(Consent), nullable=True)
+    consent: Mapped[Optional[Consent]]
     """Current consent for cookie/data collection."""
 
-    origin = mapped_column(db.Enum(UserOrigin), nullable=True)
+    origin: Mapped[Optional[UserOrigin]]
     """How the user registered to TIM."""
 
-    uniquecodes = db.relationship(
-        "PersonalUniqueCode",
+    uniquecodes: Mapped[Dict[Tuple[int, str], "PersonalUniqueCode"]] = relationship(
         back_populates="user",
-        collection_class=attribute_mapped_collection("user_collection_key"),
+        collection_class=attribute_keyed_dict("user_collection_key"),
     )
     """Personal unique codes used to identify the user via Haka Identity Provider."""
 
-    internalmessage_readreceipt = db.relationship(
-        "InternalMessageReadReceipt", back_populates="user"
-    ) # : InternalMessageReadReceipt | None
+    internalmessage_readreceipt: Mapped[
+        Optional["InternalMessageReadReceipt"]
+    ] = relationship(back_populates="user")
     """User's read receipts for internal messages."""
 
-    primary_email_contact = db.relationship(
-        UserContact,
+    primary_email_contact: Mapped["UserContact"] = relationship(
         primaryjoin=(id == UserContact.user_id)
         & (UserContact.primary == PrimaryContact.true)
         & (UserContact.channel == Channel.EMAIL),
-        lazy="select",
-        uselist=False,
         overlaps="user, contacts",
     )
     """
@@ -306,34 +320,30 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     The primary contact is the preferred email address that the user wants to receive notifications from TIM.
     """
 
-    def _get_email(self) -> str:
+    @hybrid_property
+    def email(self) -> str:
+        """
+        User's primary email address.
+
+        This is the address the user can log in with and receive notifications from TIM.
+        """
         return self._email
 
+    @email.inplace.setter
     def _set_email(self, value: str) -> None:
         self.update_email(value)
 
-    # Decorators don't work with mypy yet
-    # See https://github.com/dropbox/sqlalchemy-stubs/issues/98
-    email = hybrid_property(_get_email, _set_email)
-    """
-    User's primary email address.
-    
-    This is the address the user can log in with and receive notifications from TIM.
-    """
-
-    consents = db.relationship("ConsentChange", back_populates="user", lazy="select")
+    consents: Mapped[List["ConsentChange"]] = relationship(back_populates="user")
     """User's consent changes."""
 
-    contacts = db.relationship(
-        "UserContact",
+    contacts: Mapped[List["UserContact"]] = relationship(
         back_populates="user",
-        lazy="select",
         overlaps="primary_email_contact",
         cascade_backrefs=False,
-    )  # : list[UserContact]
+    )
     """User's contacts."""
 
-    notifications = db.relationship(
+    notifications: DynamicMapped["Notification"] = relationship(
         "Notification",
         back_populates="user",
         lazy="dynamic",
@@ -341,130 +351,126 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     )
     """Notification settings for the user. Represents what notifications the user wants to receive."""
 
-    groups = db.relationship(
-        UserGroup,
-        UserGroupMember.__table__,
+    groups: Mapped[List["UserGroup"]] = relationship(
+        secondary=UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
         back_populates="users",
-        lazy="select",
         overlaps="user, current_memberships, group, memberships, memberships_sel",
-    )  # : list[UserGroup]
+    )
     """Current groups of the user is a member of."""
 
-    groups_dyn = db.relationship(
-        UserGroup,
-        UserGroupMember.__table__,
+    groups_dyn: DynamicMapped["UserGroup"] = relationship(
+        secondary=UserGroupMember.__table__,
         primaryjoin=id == UserGroupMember.user_id,
         lazy="dynamic",
         overlaps="group, groups, user, users, current_memberships, memberships, memberships_sel",
     )
     """All groups of the user as a dynamic query."""
 
-    groups_inactive = db.relationship(
-        UserGroup,
-        UserGroupMember.__table__,
+    groups_inactive: DynamicMapped["UserGroup"] = relationship(
+        secondary=UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_deleted,
         lazy="dynamic",
         overlaps="group, groups, groups_dyn, user, users, current_memberships, memberships, memberships_sel",
     )
     """All groups the user is no longer a member of as a dynamic query."""
 
-    memberships_dyn = db.relationship(
-        UserGroupMember,
+    memberships_dyn: DynamicMapped["UserGroupMember"] = relationship(
         foreign_keys="UserGroupMember.user_id",
         lazy="dynamic",
         overlaps="groups, groups_dyn, groups_inactive, user, users",
     )
     """User's group memberships as a dynamic query."""
 
-    memberships = db.relationship(
-        UserGroupMember,
+    memberships: Mapped[List["UserGroupMember"]] = relationship(
         foreign_keys="UserGroupMember.user_id",
         overlaps="groups_inactive, memberships_dyn, user, users",
-    ) # : list[UserGroupMember]
+    )
     """All user's group memberships."""
 
-    active_memberships = db.relationship(
-        UserGroupMember,
+    active_memberships: Mapped[Dict[int, "UserGroupMember"]] = relationship(
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
-        collection_class=attribute_mapped_collection("usergroup_id"),
+        collection_class=attribute_keyed_dict("usergroup_id"),
         overlaps="groups, groups_dyn, groups_inactive, memberships, memberships_dyn, user, users",
     )
     """Active group memberships mapped by user group ID."""
 
-    lectures = db.relationship(
-        "Lecture",
+    lectures: Mapped[List["Lecture"]] = relationship(
         secondary=LectureUsers.__table__,
         back_populates="users",
-        lazy="select",
     )
     """Lectures that the user is attending at the moment."""
 
-    owned_lectures = db.relationship("Lecture", back_populates="owner", lazy="dynamic")
+    owned_lectures: DynamicMapped["Lecture"] = relationship(
+        back_populates="owner", lazy="dynamic"
+    )
     """Lectures that the user has created."""
 
-    lectureanswers = db.relationship(
-        "LectureAnswer", back_populates="user", lazy="dynamic"
+    lectureanswers: DynamicMapped["LectureAnswer"] = relationship(
+        back_populates="user", lazy="dynamic"
     )
     """Lecture answers that the user sent to lectures as a dynamic query."""
 
-    messages = db.relationship("Message", back_populates="user", lazy="dynamic")
+    messages: DynamicMapped["Message"] = relationship(
+        back_populates="user", lazy="dynamic"
+    )
     """Lecture messages that the user sent to lectures as a dynamic query."""
 
-    questionactivity = db.relationship(
-        "QuestionActivity", back_populates="user", lazy="select", cascade_backrefs=False
+    questionactivity: Mapped[List["QuestionActivity"]] = relationship(
+        back_populates="user"
     )
     """User's activity on lecture questions."""
 
-    useractivity = db.relationship("Useractivity", back_populates="user", lazy="select")
+    useractivity: Mapped[List["Useractivity"]] = relationship(back_populates="user")
     """User's activity during lectures."""
 
-    answers = db.relationship(
-        "Answer",
+    answers: DynamicMapped["Answer"] = relationship(
         secondary=UserAnswer.__table__,
         back_populates="users",
         lazy="dynamic",
         overlaps="users_all",
-        cascade_backrefs=False,
     )
     """User's answers to tasks as a dynamic query."""
 
-    annotations = db.relationship(
-        "Annotation", back_populates="annotator", lazy="dynamic"
+    annotations: DynamicMapped["Annotation"] = relationship(
+        back_populates="annotator", lazy="dynamic"
     )
     """User's task annotations as a dynamic query."""
 
-    velps = db.relationship("Velp", back_populates="creator", lazy="dynamic")
+    velps: DynamicMapped["Velp"] = relationship(
+        back_populates="creator", lazy="dynamic"
+    )
     """Velps created by the user as a dynamic query."""
 
-    sessions = db.relationship(
-        "UserSession", back_populates="user", lazy="select", cascade_backrefs=False
-    ) # : list[UserSession]
+    sessions: Mapped[List["UserSession"]] = relationship(back_populates="user")
     """All user's sessions as a dynamic query."""
 
-    active_sessions = db.relationship(
-        "UserSession",
+    active_sessions: Mapped[Dict[str, "UserSession"]] = relationship(
         primaryjoin=(id == UserSession.user_id) & ~UserSession.expired,
-        collection_class=attribute_mapped_collection("session_id"),
+        collection_class=attribute_keyed_dict("session_id"),
         overlaps="sessions, user",
-    ) # : MutableMapping[str, UserSession]
+    )
     """Active sessions mapped by the session ID."""
 
     # Used for copying
-    notifications_alt = db.relationship("Notification", overlaps="notifications, user")
-    owned_lectures_alt = db.relationship("Lecture", overlaps="owned_lectures, owner")
-    lectureanswers_alt = db.relationship(
-        "LectureAnswer", overlaps="lectureanswers, user"
+    notifications_alt: Mapped[List["Notification"]] = relationship(
+        overlaps="notifications, user"
     )
-    messages_alt = db.relationship("Message", overlaps="messages, user")
-    answers_alt = db.relationship(
-        "Answer",
+    owned_lectures_alt: Mapped[List["Lecture"]] = relationship(
+        overlaps="owned_lectures, owner"
+    )
+    lectureanswers_alt: Mapped[List["LectureAnswer"]] = relationship(
+        overlaps="lectureanswers, user"
+    )
+    messages_alt: Mapped[List["Message"]] = relationship(overlaps="messages, user")
+    answers_alt: Mapped[List["Answer"]] = relationship(
         secondary=UserAnswer.__table__,
         overlaps="answers, users",
-        cascade_backrefs=False,
     )
-    annotations_alt = db.relationship("Annotation", overlaps="annotations, annotator")
-    velps_alt = db.relationship("Velp", overlaps="velps, creator")
+    annotations_alt: Mapped[List["Annotation"]] = relationship(
+        overlaps="annotations, annotator"
+    )
+    velps_alt: Mapped[List["Velp"]] = relationship(overlaps="velps, creator")
 
     def update_email(
         self,

@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, List, Dict, Tuple
 
 import attr
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload, mapped_column, attribute_mapped_collection
+from sqlalchemy.orm import (
+    selectinload,
+    mapped_column,
+    Mapped,
+    DynamicMapped,
+    relationship,
+    attribute_keyed_dict,
+)
 from sqlalchemy.sql import Select
 
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
@@ -27,6 +34,15 @@ from timApp.user.usergroupmember import UserGroupMember, membership_current
 if TYPE_CHECKING:
     from timApp.item.block import Block
     from timApp.document.docentry import DocEntry
+    from timApp.user.user import User
+    from timApp.auth.auth_models import BlockAccess
+    from timApp.readmark.readparagraph import ReadParagraph
+    from timApp.note.usernote import UserNote
+    from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
+    from timApp.messaging.timMessage.internalmessage_models import (
+        InternalMessageDisplay,
+    )
+
 
 # Prefix is no longer needed because scimusergroup determines the Sisu (SCIM) groups.
 SISU_GROUP_PREFIX = ""
@@ -55,15 +71,14 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     """
 
     __tablename__ = "usergroup"
-    
 
-    id = mapped_column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Usergroup identifier."""
 
-    name = mapped_column(db.Text, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(unique=True)
     """Usergroup name (textual identifier)."""
 
-    display_name = mapped_column(db.Text, nullable=True)
+    display_name: Mapped[Optional[str]]
     """Usergroup display name. Currently only used for storing certain Sisu course properties:
      - course code
      - period (P1...P5)
@@ -75,77 +90,62 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def scim_display_name(self):
         return self.display_name
 
-    users = db.relationship(
-        "User",
-        UserGroupMember.__table__,
+    users: Mapped[List["User"]] = relationship(
+        secondary=UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
         secondaryjoin="UserGroupMember.user_id == User.id",
         back_populates="groups",
         overlaps="group, user",
     )
-    memberships = db.relationship(
-        UserGroupMember,
+    memberships: DynamicMapped["UserGroupMember"] = relationship(
         back_populates="group",
         lazy="dynamic",
         overlaps="users",
     )
-    memberships_sel = db.relationship(
-        UserGroupMember,
+    memberships_sel: Mapped[List["UserGroupMember"]] = relationship(
         back_populates="group",
         cascade="all, delete-orphan",
         overlaps="memberships, users",
     )
-    current_memberships = db.relationship(
-        UserGroupMember,
+    current_memberships: Mapped[Dict[int, "UserGroupMember"]] = relationship(
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
-        collection_class=attribute_mapped_collection("user_id"),
+        collection_class=attribute_keyed_dict("user_id"),
         back_populates="group",
         overlaps="memberships, memberships_sel, users",
-    )  # : dict[int, UserGroupMember]
-    accesses = db.relationship(
-        "BlockAccess",
-        back_populates="usergroup",
-        lazy="dynamic",
-        cascade_backrefs=False,
     )
-    accesses_alt = db.relationship(
-        "BlockAccess",
-        collection_class=attribute_mapped_collection("group_collection_key"),
+    accesses: DynamicMapped["BlockAccess"] = relationship(
+        back_populates="usergroup", lazy="dynamic"
+    )
+    accesses_alt: Mapped[Dict[Tuple[int, int], "BlockAccess"]] = relationship(
+        collection_class=attribute_keyed_dict("group_collection_key"),
         cascade="all, delete-orphan",
         overlaps="accesses, usergroup",
-        cascade_backrefs=False,
-    )  # : dict[tuple[int, int], BlockAccess]
-    readparagraphs = db.relationship(
-        "ReadParagraph", back_populates="usergroup", lazy="dynamic"
     )
-    readparagraphs_alt = db.relationship(
-        "ReadParagraph",
-        overlaps="readparagraphs, usergroup",
+    readparagraphs: DynamicMapped["ReadParagraph"] = relationship(
+        back_populates="usergroup", lazy="dynamic"
     )
-    notes = db.relationship(
-        "UserNote", back_populates="usergroup", lazy="dynamic", cascade_backrefs=False
+    readparagraphs_alt: Mapped[List["ReadParagraph"]] = relationship(
+        overlaps="readparagraphs, usergroup"
     )
-    notes_alt = db.relationship("UserNote", overlaps="notes, usergroup")
+    notes: DynamicMapped["UserNote"] = relationship(
+        back_populates="usergroup", lazy="dynamic"
+    )
+    notes_alt: Mapped[List["UserNote"]] = relationship(overlaps="notes, usergroup")
 
-    admin_doc = db.relationship(
-        "Block",
-        secondary=UserGroupDoc.__table__,
-        lazy="select",
-        uselist=False,
-    )  # : Block
+    admin_doc: Mapped[Optional["Block"]] = relationship(
+        secondary=UserGroupDoc.__table__
+    )
 
     # For groups created from SCIM API
-    external_id = db.relationship(
-        "ScimUserGroup", lazy="select", uselist=False
-    )  # : ScimUserGroup
+    external_id: Mapped[Optional["ScimUserGroup"]] = relationship()
 
-    messagelist_membership = db.relationship(
-        "MessageListTimMember", back_populates="user_group"
-    )  # : list[MessageListTimMember]
+    messagelist_membership: Mapped[List["MessageListTimMember"]] = relationship(
+        back_populates="user_group"
+    )
 
-    internalmessage_display = db.relationship(
-        "InternalMessageDisplay", back_populates="usergroup", cascade_backrefs=False
-    )  # : InternalMessageDisplay | None
+    internalmessage_display: Mapped[Optional["InternalMessageDisplay"]] = relationship(
+        back_populates="usergroup"
+    )
 
     def __repr__(self):
         return f"<UserGroup(id={self.id}, name={self.name})>"

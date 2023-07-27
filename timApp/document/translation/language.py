@@ -13,18 +13,15 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
-
-from dataclasses import dataclass
 from typing import Optional
 
 import langcodes
 from sqlalchemy import select
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
 
 
-@dataclass
 class Language(db.Model):
     """Represents a standardized language code used for example with
     translation documents.
@@ -34,19 +31,18 @@ class Language(db.Model):
     """
 
     __tablename__ = "language"
-    
 
-    lang_code = mapped_column(db.Text, nullable=False, primary_key=True)
+    lang_code: Mapped[str] = mapped_column(primary_key=True)
     """Standardized code of the language."""
 
     # TODO should this be unique?
-    lang_name = mapped_column(db.Text, nullable=False)
+    lang_name: Mapped[str]
     """IANA's name for the language."""
 
-    flag_uri = mapped_column(db.Text)
+    flag_uri: Mapped[Optional[str]]
     """Path to a picture representing the language."""
 
-    autonym = mapped_column(db.Text, nullable=False)
+    autonym: Mapped[str]
     """Native name for the language."""
 
     # FIXME: Turn into postinit

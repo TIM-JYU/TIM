@@ -1,12 +1,17 @@
 """
 Database models for session management.
 """
+from datetime import datetime
+from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy.ext.hybrid import hybrid_property  # type: ignore
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
 
 
 class UserSession(db.Model):
@@ -21,35 +26,35 @@ class UserSession(db.Model):
 
     __tablename__ = "usersession"
 
-    user_id = mapped_column(
-        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("useraccount.id"), primary_key=True
     )
     """
     User ID of the user who owns the session.
     """
 
-    session_id = mapped_column(db.Text, primary_key=True)
+    session_id: Mapped[str] = mapped_column(primary_key=True)
     """
     Unique session ID.
     """
 
-    logged_in_at = mapped_column(db.DateTime, nullable=False, default=get_current_time)
+    logged_in_at: Mapped[datetime] = mapped_column(default=get_current_time)
     """
     The time when the user logged in and the session was created.
     """
 
-    expired_at = mapped_column(db.DateTime, nullable=True)
+    expired_at: Mapped[Optional[datetime]]
     """
     The time when the session was expired.
     """
 
-    origin = mapped_column(db.Text, nullable=False)
+    origin: Mapped[str]
     """
     Information about the origin of the session.
     May include user agent and any other information about login state.
     """
 
-    user = db.relationship("User", back_populates="sessions")
+    user: Mapped["User"] = db.relationship("User", back_populates="sessions")
     """
     User that owns the session. Relationship to :attr:`user_id`.
     """

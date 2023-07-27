@@ -1,8 +1,13 @@
 from enum import Enum, unique
+from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
+
+if TYPE_CHECKING:
+    from timApp.item.block import Block
 
 
 @unique
@@ -23,14 +28,13 @@ class Tag(db.Model):
     """A tag with associated document id, tag name, type and expiration date."""
 
     __tablename__ = "tag"
-    
 
-    block_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    name = mapped_column(db.Text, primary_key=True)
-    type = mapped_column(db.Enum(TagType), nullable=False)
-    expires = mapped_column(db.DateTime(timezone=True))
+    block_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
+    name: Mapped[str] = mapped_column(primary_key=True)
+    type: Mapped[TagType]
+    expires: Mapped[Optional[datetime_tz]]
 
-    block = db.relationship("Block", back_populates="tags")
+    block: Mapped["Block"] = db.relationship(back_populates="tags")
 
     def __json__(self):
         return ["block_id", "name", "type", "expires"]

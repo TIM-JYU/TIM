@@ -1,4 +1,4 @@
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
 
@@ -9,7 +9,8 @@ class UserGroupDoc(db.Model):
     """
 
     __tablename__ = "usergroupdoc"
-    
 
-    group_id = mapped_column(db.Integer, db.ForeignKey("usergroup.id"), primary_key=True)
-    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    group_id: Mapped[int] = mapped_column(
+        db.ForeignKey("usergroup.id"), primary_key=True
+    )
+    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)

@@ -354,7 +354,7 @@ def log_request(response):
         status_code = response.status_code
         log_info(get_request_message(status_code))
         if request.method in ("PUT", "POST", "DELETE"):
-            log_debug(request.get_json(silent=True))
+            log_debug(str(request.get_json(silent=True)))
     return response
 
 

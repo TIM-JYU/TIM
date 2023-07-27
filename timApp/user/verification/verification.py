@@ -5,10 +5,11 @@ from typing import Optional
 
 from flask import render_template_string, url_for
 from sqlalchemy import select
-from sqlalchemy.orm import load_only, mapped_column
+from sqlalchemy.orm import load_only, mapped_column, Mapped, relationship
 
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
 from timApp.user.usercontact import UserContact, PrimaryContact
 from timApp.util.utils import get_current_time
@@ -50,24 +51,23 @@ class Verification(db.Model):
     verification."""
 
     __tablename__ = "verification"
-    
 
-    token = mapped_column(db.Text, primary_key=True)
+    token: Mapped[str] = mapped_column(primary_key=True)
     """Verification token used for action verification"""
 
-    type = mapped_column(db.Enum(VerificationType), primary_key=True) # : VerificationType
+    type: Mapped[VerificationType] = mapped_column(primary_key=True)
     """The type of verification, see VerificationType class for details."""
 
-    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
     """User that can react to verification request."""
 
-    requested_at = mapped_column(db.DateTime(timezone=True))
+    requested_at: Mapped[Optional[datetime_tz]]
     """When a verification has been added to db, pending sending to a user."""
 
-    reacted_at = mapped_column(db.DateTime(timezone=True))
+    reacted_at: Mapped[Optional[datetime_tz]]
     """When the user reacted to verification request."""
 
-    user = db.relationship("User", lazy="select") # : User
+    user: Mapped["User"] = relationship()
     """User that can react to verification request."""
 
     @property
@@ -91,7 +91,7 @@ class ContactAddVerification(Verification):
 
     contact = db.relationship(
         "UserContact", lazy="select", uselist=False
-    ) # : UserContact | None
+    )  # : UserContact | None
     """Contact to verify."""
 
     @property

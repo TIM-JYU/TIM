@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, List
 
 from sqlalchemy import select
-from sqlalchemy.orm import foreign, mapped_column
+from sqlalchemy.orm import foreign, mapped_column, Mapped
 
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
 from timApp.folder.createopts import FolderCreationOptions
-from timApp.item.block import BlockType
+from timApp.item.block import BlockType, Block
 from timApp.item.block import insert_block
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
@@ -31,22 +31,21 @@ class DocEntry(db.Model, DocInfo):
     __tablename__ = "docentry"
     
 
-    name = mapped_column(db.Text, primary_key=True)
+    name: Mapped[str] = mapped_column(primary_key=True)
     """Full path of the document.
     
     TODO: Improve the name.
     """
 
-    id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
     """Document identifier."""
 
-    public = mapped_column(db.Boolean, nullable=False, default=True)
+    public: Mapped[bool] = mapped_column(default=True)
     """Whether the document is visible in directory listing."""
 
-    _block = db.relationship("Block", back_populates="docentries", lazy="joined")
+    _block: Mapped["Block"] = db.relationship(back_populates="docentries", lazy="joined")
 
-    trs = db.relationship(
-        "Translation",
+    trs: Mapped[List[Translation]] = db.relationship(
         primaryjoin=id == foreign(Translation.src_docid),
         back_populates="docentry",
         # When a DocEntry object is deleted, we don't want to touch the translation objects at all.
@@ -54,8 +53,7 @@ class DocEntry(db.Model, DocInfo):
         # TODO: This feels slightly hacky. This relationship attribute might be better in Block class, although that
         #  doesn't sound ideal either.
         passive_deletes="all",
-        cascade_backrefs=False,
-    )  # : list[Translation]
+    )
 
     __table_args__ = (db.Index("docentry_id_idx", "id"),)
 

@@ -1,117 +1,116 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, List, Dict, Tuple
 
 from sqlalchemy import func
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm import mapped_column, Mapped, attribute_keyed_dict, DynamicMapped
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.blockassociation import BlockAssociation
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
     from timApp.folder.folder import Folder
+    from timApp.document.docentry import DocEntry
+    from timApp.document.translation.translation import Translation
+    from timApp.answer.answer_models import AnswerUpload
+    from timApp.item.tag import Tag
+    from timApp.notification.notification import Notification
+    from timApp.item.blockrelevance import BlockRelevance
+    from timApp.messaging.messagelist.messagelist_models import MessageListModel
+    from timApp.messaging.timMessage.internalmessage_models import InternalMessage, InternalMessageDisplay
 
 
 class Block(db.Model):
     """The "base class" for all database objects that are part of the permission system."""
 
     __tablename__ = "block"
-    
 
-    id = mapped_column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """A unique identifier for the Block."""
 
-    latest_revision_id = mapped_column(db.Integer)
+    latest_revision_id: Mapped[Optional[int]]
     """Old field that is not used anymore."""
 
-    type_id = mapped_column(db.Integer, nullable=False)
+    type_id: Mapped[int]
     """Type of the Block, see BlockType enum for possible types."""
 
-    description = mapped_column(db.Text)
+    description: Mapped[Optional[str]]
     """Additional information about the Block. This is used for different purposes by different BlockTypes,
     so it isn't merely a "description".
     """
 
-    created = mapped_column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    created: Mapped[datetime_tz] = mapped_column(default=func.now())
     """When this Block was created."""
 
-    modified = mapped_column(db.DateTime(timezone=True), default=func.now())
+    modified: Mapped[Optional[datetime_tz]] = mapped_column(default=func.now())
     """When this Block was last modified."""
 
-    docentries = db.relationship("DocEntry", back_populates="_block")
-    folder = db.relationship(
-        "Folder", back_populates="_block", uselist=False, cascade_backrefs=False
+    docentries: Mapped[List["DocEntry"]] = db.relationship(back_populates="_block")
+    folder: Mapped[Optional[Folder]] = db.relationship(
+        back_populates="_block"
     )
-    translation = db.relationship(
+    translation: Mapped[Optional["Translation"]] = db.relationship(
         "Translation",
         back_populates="_block",
-        uselist=False,
-        foreign_keys="Translation.doc_id",
-        cascade_backrefs=False,
+        foreign_keys="Translation.doc_id"
     )
-    answerupload = db.relationship(
-        "AnswerUpload", back_populates="block", lazy="dynamic", cascade_backrefs=False
+    answerupload: DynamicMapped[Optional["AnswerUpload"]] = db.relationship(
+        back_populates="block", lazy="dynamic"
     )
-    accesses = db.relationship(
-        "BlockAccess",
+    accesses: Mapped[Dict[Tuple[int, int], "BlockAccess"]] = db.relationship(
         back_populates="block",
         lazy="selectin",
         cascade="all, delete-orphan",
-        collection_class=attribute_mapped_collection("block_collection_key"),
-        cascade_backrefs=False,
+        collection_class=attribute_keyed_dict("block_collection_key"),
     )
-    tags = db.relationship("Tag", back_populates="block", lazy="select")  # : list[Tag]
-    children = db.relationship(
-        "Block",
+    tags: Mapped[List["Tag"]] = db.relationship("Tag", back_populates="block", lazy="select")
+    children: Mapped[List["Block"]] = db.relationship(
         secondary=BlockAssociation.__table__,
         primaryjoin=id == BlockAssociation.__table__.c.parent,
         secondaryjoin=id == BlockAssociation.__table__.c.child,
         lazy="select",
     )
-    parents = db.relationship(
-        "Block",
+    parents: Mapped[List["Block"]] = db.relationship(
         secondary=BlockAssociation.__table__,
         primaryjoin=id == BlockAssociation.__table__.c.child,
         secondaryjoin=id == BlockAssociation.__table__.c.parent,
         lazy="select",
         overlaps="children",
     )
-    notifications = db.relationship(
-        "Notification", back_populates="block", lazy="dynamic"
+    notifications: DynamicMapped["Notification"] = db.relationship(
+        back_populates="block", lazy="dynamic"
     )
 
-    relevance = db.relationship(
-        "BlockRelevance", back_populates="_block", uselist=False
+    relevance: Mapped[Optional["BlockRelevance"]] = db.relationship(
+        back_populates="_block"
     )
 
     # If this Block corresponds to a group's manage document, indicates the group being managed.
-    managed_usergroup = db.relationship(
-        "UserGroup",
+    managed_usergroup: Mapped[Optional[UserGroup]] = db.relationship(
         secondary=UserGroupDoc.__table__,
         lazy="select",
-        uselist=False,
         overlaps="admin_doc",
-    )  # : UserGroup | None
+    )
 
     #  If this Block corresponds to a message list's manage document, indicates the message list
     #  being managed.
-    managed_messagelist = db.relationship(
-        "MessageListModel", back_populates="block", lazy="select"
-    )  # : MessageListModel | None
+    managed_messagelist: Mapped[Optional["MessageListModel"]] = db.relationship(
+        back_populates="block", lazy="select"
+    )
 
-    internalmessage = db.relationship(
-        "InternalMessage", back_populates="block", cascade_backrefs=False
-    )  # : InternalMessage | None
-    internalmessage_display = db.relationship(
-        "InternalMessageDisplay", back_populates="display_block", cascade_backrefs=False
-    )  # : InternalMessageDisplay | None
+    internalmessage: Mapped[Optional["InternalMessage"]] = db.relationship(
+        back_populates="block"
+    )
+    internalmessage_display: Mapped[Optional["InternalMessageDisplay"]] = db.relationship(
+        back_populates="display_block"
+    )
 
     def __json__(self):
         return ["id", "type_id", "description", "created", "modified"]

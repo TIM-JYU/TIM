@@ -1,14 +1,21 @@
+import time
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import TYPE_CHECKING, Optional
 
-from authlib.integrations.sqla_oauth2 import (
-    OAuth2TokenMixin,
-    OAuth2AuthorizationCodeMixin,
+from authlib.oauth2.rfc6749 import (
+    ClientMixin,
+    scope_to_list,
+    list_to_scope,
+    TokenMixin,
+    AuthorizationCodeMixin,
 )
-from authlib.oauth2.rfc6749 import ClientMixin, scope_to_list, list_to_scope
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
 
 
 class Scope(Enum):
@@ -101,19 +108,72 @@ class OAuth2Client(ClientMixin):
         return grant_type in self.grant_types
 
 
-class OAuth2Token(db.Model, OAuth2TokenMixin):
+class OAuth2Token(db.Model, TokenMixin):
     __tablename__ = "oauth2_token"
-    
 
-    id = mapped_column(db.Integer, primary_key=True)
-    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"))
-    user = db.relationship("User")
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    user: Mapped["User"] = db.relationship()
+
+    client_id: Mapped[Optional[str]] = mapped_column(db.String(48))
+    token_type: Mapped[Optional[str]] = mapped_column(db.String(40))
+    access_token: Mapped[str] = mapped_column(db.String(255), unique=True)
+    refresh_token: Mapped[Optional[str]] = mapped_column(db.String(255), index=True)
+    scope: Mapped[str] = mapped_column(default="")
+    issued_at: Mapped[int] = mapped_column(default=lambda: int(time.time()))
+    access_token_revoked_at: Mapped[int] = mapped_column(default=0)
+    refresh_token_revoked_at: Mapped[int] = mapped_column(default=0)
+    expires_in: Mapped[int] = mapped_column(default=0)
+
+    def check_client(self, client):
+        return self.client_id == client.get_client_id()
+
+    def get_scope(self):
+        return self.scope
+
+    def get_expires_in(self):
+        return self.expires_in
+
+    def is_revoked(self):
+        return self.access_token_revoked_at or self.refresh_token_revoked_at
+
+    def is_expired(self):
+        if not self.expires_in:
+            return False
+
+        expires_at = self.issued_at + self.expires_in
+        return expires_at < time.time()
 
 
-class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
+class OAuth2AuthorizationCode(db.Model, AuthorizationCodeMixin):
     __tablename__ = "oauth2_auth_code"
-    
 
-    id = mapped_column(db.Integer, primary_key=True)
-    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"))
-    user = db.relationship("User")
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    user: Mapped["User"] = db.relationship()
+
+    code: Mapped[str] = mapped_column(db.String(120), unique=True)
+    client_id: Mapped[str] = mapped_column(db.String(48))
+    redirect_uri: Mapped[str] = mapped_column(default="")
+    response_type: Mapped[str] = mapped_column(default="")
+    scope: Mapped[str] = mapped_column(default="")
+    nonce: Mapped[Optional[str]]
+    auth_time: Mapped[int] = mapped_column(default=lambda: int(time.time()))
+
+    code_challenge: Mapped[Optional[str]]
+    code_challenge_method: Mapped[Optional[str]] = mapped_column(db.String(48))
+
+    def is_expired(self):
+        return self.auth_time + 300 < time.time()
+
+    def get_redirect_uri(self):
+        return self.redirect_uri
+
+    def get_scope(self):
+        return self.scope
+
+    def get_auth_time(self):
+        return self.auth_time
+
+    def get_nonce(self):
+        return self.nonce

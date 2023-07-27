@@ -1,44 +1,42 @@
 import re
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import select
-from sqlalchemy.orm import mapped_column
+from sqlalchemy import select, UniqueConstraint
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
 from timApp.user.hakaorganization import HakaOrganization
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
 
 
 class PersonalUniqueCode(db.Model):
     """The database model for the 'schacPersonalUniqueCode' Haka attribute."""
 
-    
-
-    user_id = mapped_column(
-        db.Integer, db.ForeignKey("useraccount.id"), nullable=False, primary_key=True
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("useraccount.id"), primary_key=True
     )
     """User id."""
 
-    org_id = mapped_column(
-        db.Integer,
-        db.ForeignKey("haka_organization.id"),
-        nullable=False,
-        primary_key=True,
+    org_id: Mapped[int] = mapped_column(
+        db.ForeignKey("haka_organization.id"), primary_key=True
     )
     """Organization id."""
 
-    code = mapped_column(db.Text, nullable=False, index=True)
-    """The actual code. This could be e.g. student id or employee id."""
-
-    type = mapped_column(db.Text, nullable=False, primary_key=True)
+    type: Mapped[str] = mapped_column(primary_key=True)
     """The type of the code, e.g. student or employee."""
 
-    user = db.relationship("User", back_populates="uniquecodes", lazy="selectin")
-    organization = db.relationship(
-        "HakaOrganization", back_populates="uniquecodes", lazy="selectin"
+    code: Mapped[str] = mapped_column(index=True)
+    """The actual code. This could be e.g. student id or employee id."""
+
+    user: Mapped["User"] = relationship(back_populates="uniquecodes", lazy="selectin")
+    organization: Mapped["HakaOrganization"] = relationship(
+        back_populates="uniquecodes", lazy="selectin"
     )
 
-    __table_args__ = (db.UniqueConstraint("org_id", "code", "type"),)
+    __table_args__ = (UniqueConstraint("org_id", "code", "type"),)
 
     @property
     def user_collection_key(self):

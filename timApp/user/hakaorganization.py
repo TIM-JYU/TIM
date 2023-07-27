@@ -1,19 +1,23 @@
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from flask import current_app
 from sqlalchemy import select
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
 
+if TYPE_CHECKING:
+    from timApp.user.personaluniquecode import PersonalUniqueCode
+
 
 class HakaOrganization(db.Model):
-    
-    
-    id = mapped_column(db.Integer, primary_key=True)
-    name = mapped_column(db.Text, nullable=False, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True)
 
-    uniquecodes = db.relationship("PersonalUniqueCode", back_populates="organization")
+    uniquecodes: Mapped["PersonalUniqueCode"] = relationship(
+        back_populates="organization"
+    )
 
     @staticmethod
     def get_or_create(name: str):

@@ -7,11 +7,14 @@ Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs
 
 """
 import os
+from typing import Optional
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, text
 from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm.base import instance_state
+from sqlalchemy.orm.base import instance_state, Mapped
+
+from timApp.timdb.types import add_tim_types, datetime_tz
 
 session_options = {
     "future": True,
@@ -25,12 +28,21 @@ if os.environ.get("TIM_TESTING", None):
     session_options["expire_on_commit"] = False
 
 db = SQLAlchemy(session_options=session_options, engine_options=engine_options)
+add_tim_types(db)
+
+# TODO: Finish up adding Mapping annotations to everywhere
+# TODO: Replace db.Model with custom DeclarativeBase class that also specifies __tablename__ and custom types.
+#   See https://docs.sqlalchemy.org/en/20/orm/declarative_mixins.html
+# TODO: Switch models to use dataclasses instead
+#   See https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#declarative-dataclass-mapping
+#   This should fix DeeplTranslationService's extra args, see https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#using-non-mapped-dataclass-fields
 
 
 class TimeStampMixin:
-    created = mapped_column(db.DateTime(timezone=True), nullable=True, default=func.now())
-    modified = mapped_column(
-        db.DateTime(timezone=True),
+    created: Mapped[Optional[datetime_tz]] = mapped_column(
+        nullable=True, default=func.now()
+    )
+    modified: Mapped[Optional[datetime_tz]] = mapped_column(
         nullable=True,
         default=func.now(),
         onupdate=func.now(),
@@ -38,7 +50,9 @@ class TimeStampMixin:
 
 
 def tim_main_execute(sql: str, params=None):
-    return db.session.execute(text(sql), params, bind_arguments={"bind": get_tim_main_engine()})
+    return db.session.execute(
+        text(sql), params, bind_arguments={"bind": get_tim_main_engine()}
+    )
 
 
 def get_tim_main_engine():

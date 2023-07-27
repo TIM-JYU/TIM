@@ -1,14 +1,13 @@
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
 
 
 class SlideStatus(db.Model):
     __tablename__ = "slide_status"
-    
 
-    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    status = mapped_column(db.Text, nullable=False)
+    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
+    status: Mapped[str]
 
     def __init__(self, doc_id, status):
         self.doc_id = doc_id

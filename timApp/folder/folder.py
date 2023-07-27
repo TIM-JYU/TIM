@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Iterable, Any, TYPE_CHECKING
 
 from sqlalchemy import true, and_, select, delete
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry, get_documents
@@ -27,20 +27,19 @@ class Folder(db.Model, Item):
     """Represents a folder in the directory hierarchy."""
 
     __tablename__ = "folder"
-    
 
-    id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
     """Folder identifier."""
 
-    name = mapped_column(db.Text, nullable=False)
+    name: Mapped[str]
     """Folder name (last part of path)."""
 
-    location = mapped_column(db.Text, nullable=False)
+    location: Mapped[str]
     """Folder location (first parts of the path)."""
 
     __table_args__ = (db.UniqueConstraint("name", "location", name="folder_uc"),)
 
-    _block = db.relationship("Block", back_populates="folder", lazy="joined")
+    _block: Mapped[Block] = db.relationship(back_populates="folder", lazy="joined")
 
     @staticmethod
     def get_root() -> Folder:

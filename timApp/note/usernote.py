@@ -1,54 +1,56 @@
+from typing import Optional, TYPE_CHECKING
+
 from sqlalchemy import func
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
+
+if TYPE_CHECKING:
+    from timApp.user.usergroup import UserGroup
+    from timApp.item.block import Block
 
 
 class UserNote(db.Model):
     """A comment/note that has been posted in a document paragraph."""
 
     __tablename__ = "usernotes"
-    
 
-    id = mapped_column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Comment id."""
 
-    usergroup_id = mapped_column(
-        db.Integer, db.ForeignKey("usergroup.id"), nullable=False
-    )
+    usergroup_id: Mapped[int] = mapped_column(db.ForeignKey("usergroup.id"))
     """The UserGroup id who posted the comment."""
 
-    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
     """The document id in which this comment was posted."""
 
-    par_id = mapped_column(db.Text, nullable=False)
+    par_id: Mapped[str]
     """The paragraph id in which this comment was posted."""
 
-    par_hash = mapped_column(db.Text, nullable=False)
+    par_hash: Mapped[str]
     """The paragraph hash at the time this comment was posted."""
 
-    content = mapped_column(db.Text, nullable=False)
+    content: Mapped[str]
     """Comment content."""
 
-    created = mapped_column(
-        db.DateTime(timezone=True), nullable=False, default=func.now()
-    )
+    created: Mapped[datetime_tz] = mapped_column(default=func.now())
     """Comment creation timestamp."""
 
-    modified = mapped_column(db.DateTime(timezone=True))
+    modified: Mapped[Optional[datetime_tz]]
     """Comment modification timestamp."""
 
-    access = mapped_column(db.Text, nullable=False)
+    access: Mapped[str]
     """Who can see this comment. So far valid values are 'everyone' and 'justme'."""
 
-    tags = mapped_column(db.Text, nullable=False)
+    tags: Mapped[str]
     """Tags for the comment."""
 
-    html = mapped_column(db.Text)
+    html: Mapped[Optional[str]]
     """Comment HTML cache."""
 
-    usergroup = db.relationship("UserGroup", back_populates="notes")
-    block = db.relationship("Block")
+    usergroup: Mapped["UserGroup"] = relationship(back_populates="notes")
+    block: Mapped["Block"] = relationship()
 
     @property
     def is_public(self) -> bool:

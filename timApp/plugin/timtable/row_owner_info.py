@@ -1,4 +1,6 @@
-from sqlalchemy.orm import mapped_column
+from typing import Optional
+
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
 
@@ -10,17 +12,14 @@ class RowOwnerInfo(db.Model):
     """
 
     __tablename__ = "rowownerinfo"
-    
 
-    doc_id = mapped_column(db.Integer, primary_key=True)
-    par_id = mapped_column(db.Text, primary_key=True)
-    unique_row_id = mapped_column(db.Integer, primary_key=True)
-    usergroup_id = mapped_column(
-        db.Integer, db.ForeignKey("usergroup.id"), primary_key=False
-    )
+    doc_id: Mapped[int] = mapped_column(primary_key=True)
+    par_id: Mapped[str] = mapped_column(primary_key=True)
+    unique_row_id: Mapped[int] = mapped_column(primary_key=True)
+    usergroup_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("usergroup.id"))
 
-    # usergroup = db.relationship('UserGroup', back_populates='rowOwnerInfo')
-    # block = db.relationship('Block', back_populates='tags')
+    # usergroup = relationship('UserGroup', back_populates='rowOwnerInfo')
+    # block = relationship('Block', back_populates='tags')
 
     def __json__(self):
         return ["doc_id", "par_id", "unique_row_id", "usergroup_id"]

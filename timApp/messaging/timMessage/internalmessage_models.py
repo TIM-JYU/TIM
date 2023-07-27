@@ -1,13 +1,17 @@
+from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING, List
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.user import User
+    from timApp.item.block import Block
+    from timApp.user.usergroup import UserGroup
 
 
 class DisplayType(Enum):
@@ -20,39 +24,38 @@ class InternalMessage(db.Model):
 
     __tablename__ = "internalmessage"
     
-
-    id = mapped_column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Message identifier."""
 
-    created = mapped_column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    created: Mapped[datetime_tz] = mapped_column(default=func.now())
     """Date and time when the message was created."""
 
-    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
     """Block identifier."""
 
-    par_id = mapped_column(db.Text, nullable=False)
+    par_id: Mapped[str]
     """Paragraph identifier."""
 
-    can_mark_as_read = mapped_column(db.Boolean, nullable=False)
+    can_mark_as_read: Mapped[bool]
     """Whether the recipient can mark the message as read."""
 
-    reply = mapped_column(db.Boolean, nullable=False)
+    reply: Mapped[bool]
     """Whether the message can be replied to."""
 
-    display_type = mapped_column(db.Enum(DisplayType), nullable=False)
+    display_type: Mapped[DisplayType]
     """How the message is displayed."""
 
-    expires = mapped_column(db.DateTime)
+    expires: Mapped[Optional[datetime]] = mapped_column(db.DateTime)
     """"When the message display will disappear."""
 
-    replies_to = mapped_column(db.Integer)
+    replies_to: Mapped[Optional[int]]
     """Id of the message which this messages is a reply to"""
 
-    displays = db.relationship("InternalMessageDisplay", back_populates="message")
-    readreceipts = db.relationship(
-        "InternalMessageReadReceipt", back_populates="message"
-    ) # : list["InternalMessageReadReceipt"]
-    block = db.relationship("Block", back_populates="internalmessage")
+    displays: Mapped[List["InternalMessageDisplay"]] = db.relationship(back_populates="message")
+    readreceipts: Mapped[List["InternalMessageReadReceipt"]] = db.relationship(
+        back_populates="message"
+    )
+    block: Mapped["Block"] = db.relationship(back_populates="internalmessage")
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -74,26 +77,26 @@ class InternalMessageDisplay(db.Model):
     __tablename__ = "internalmessage_display"
     
 
-    id = mapped_column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Message display identifier."""
 
-    message_id = mapped_column(
-        db.Integer, db.ForeignKey("internalmessage.id"), nullable=False
+    message_id: Mapped[int] = mapped_column(
+        db.ForeignKey("internalmessage.id")
     )
     """Message identifier."""
 
-    usergroup_id = mapped_column(db.Integer, db.ForeignKey("usergroup.id"))
+    usergroup_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("usergroup.id"))
     """Who sees the message; if null, displayed for everyone."""
 
-    display_doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"))
+    display_doc_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("block.id"))
     """
     Identifier for the document or the folder where the message is displayed. If null, 
     the message is displayed globally.
     """
 
-    message = db.relationship("InternalMessage", back_populates="displays")
-    usergroup = db.relationship("UserGroup", back_populates="internalmessage_display")
-    display_block = db.relationship("Block", back_populates="internalmessage_display")
+    message: Mapped["InternalMessage"] = db.relationship(back_populates="displays")
+    usergroup: Mapped[Optional["UserGroup"]] = db.relationship(back_populates="internalmessage_display")
+    display_block: Mapped[Optional["Block"]] = db.relationship(back_populates="internalmessage_display")
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -110,22 +113,22 @@ class InternalMessageReadReceipt(db.Model):
     __tablename__ = "internalmessage_readreceipt"
     
 
-    message_id = mapped_column(
-        db.Integer, db.ForeignKey("internalmessage.id"), primary_key=True
+    message_id: Mapped[int] = mapped_column(
+        db.ForeignKey("internalmessage.id"), primary_key=True
     )
     """Message identifier."""
 
-    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"), primary_key=True)
     """Identifier for the user who marked the message as read."""
 
-    last_seen = mapped_column(db.DateTime)
+    last_seen: Mapped[Optional[datetime]]
     """Timestamp for the last time the the message was displayed to the user"""
 
-    marked_as_read_on = mapped_column(db.DateTime)
+    marked_as_read_on: Mapped[Optional[datetime]]
     """Timestamp for when the message was marked as read."""
 
-    message = db.relationship("InternalMessage", back_populates="readreceipts")
-    user = db.relationship("User", back_populates="internalmessage_readreceipt")
+    message: Mapped["InternalMessage"] = db.relationship(back_populates="readreceipts")
+    user: Mapped["User"] = db.relationship(back_populates="internalmessage_readreceipt")
 
     @staticmethod
     def get_for_user(

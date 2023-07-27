@@ -1,4 +1,5 @@
 import datetime as dt
+from typing import Optional
 
 import pytz
 import sqlalchemy as sa
@@ -6,13 +7,14 @@ from celery import schedules
 from celery.utils.log import get_logger
 from sqlalchemy import func
 from sqlalchemy.event import listen
-from sqlalchemy.orm import relationship, foreign, remote, mapped_column
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 from sqlalchemy.sql import select, insert, update
 
 from .session import ModelBase
 from .tzcrontab import TzAwareCrontab
 from ..item.block import Block
 from ..plugin.taskid import TaskId
+from ..timdb.types import datetime_tz
 from ..util.utils import cached_property
 
 logger = get_logger("celery_sqlalchemy_scheduler.models")
@@ -45,10 +47,10 @@ class IntervalSchedule(ModelBase, ModelMixin):
     SECONDS = "seconds"
     MICROSECONDS = "microseconds"
 
-    id = mapped_column(sa.Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
-    every = mapped_column(sa.Integer, nullable=False)
-    period = mapped_column(sa.String(24))
+    every: Mapped[int]
+    period: Mapped[str] = mapped_column(sa.String(24))
 
     def __repr__(self):
         if self.every == 1:
@@ -89,13 +91,13 @@ class CrontabSchedule(ModelBase, ModelMixin):
     __table_args__ = {"sqlite_autoincrement": True}
     
 
-    id = mapped_column(sa.Integer, primary_key=True, autoincrement=True)
-    minute = mapped_column(sa.String(60 * 4), default="*")
-    hour = mapped_column(sa.String(24 * 4), default="*")
-    day_of_week = mapped_column(sa.String(64), default="*")
-    day_of_month = mapped_column(sa.String(31 * 4), default="*")
-    month_of_year = mapped_column(sa.String(64), default="*")
-    timezone = mapped_column(sa.String(64), default="UTC")
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    minute: Mapped[str] = mapped_column(sa.String(60 * 4), default="*")
+    hour: Mapped[str] = mapped_column(sa.String(24 * 4), default="*")
+    day_of_week: Mapped[str] = mapped_column(sa.String(64), default="*")
+    day_of_month: Mapped[str] = mapped_column(sa.String(31 * 4), default="*")
+    month_of_year: Mapped[str] = mapped_column(sa.String(64), default="*")
+    timezone: Mapped[str] = mapped_column(sa.String(64), default="UTC")
 
     def __repr__(self):
         return "{} {} {} {} {} (m/h/d/dM/MY) {}".format(
@@ -144,13 +146,11 @@ class CrontabSchedule(ModelBase, ModelMixin):
 class SolarSchedule(ModelBase, ModelMixin):
     __tablename__ = "celery_solar_schedule"
     __table_args__ = {"sqlite_autoincrement": True}
-    
 
-    id = mapped_column(sa.Integer, primary_key=True, autoincrement=True)
-
-    event = mapped_column(sa.String(24))
-    latitude = mapped_column(sa.Float())
-    longitude = mapped_column(sa.Float())
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    event: Mapped[Optional[str]] = mapped_column(sa.String(24))
+    latitude: Mapped[Optional[float]]
+    longitude: Mapped[Optional[float]]
 
     @property
     def schedule(self):
@@ -184,10 +184,8 @@ class PeriodicTaskChanged(ModelBase, ModelMixin):
     __tablename__ = "celery_periodic_task_changed"
     
 
-    id = mapped_column(sa.Integer, primary_key=True)
-    last_update = mapped_column(
-        sa.DateTime(timezone=True), nullable=False, default=dt.datetime.now
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    last_update: Mapped[datetime_tz] = mapped_column(default=dt.datetime.now)
 
     @classmethod
     def changed(cls, mapper, connection, target):
@@ -234,60 +232,51 @@ class PeriodicTaskChanged(ModelBase, ModelMixin):
 class PeriodicTask(ModelBase, ModelMixin):
     __tablename__ = "celery_periodic_task"
     __table_args__ = {"sqlite_autoincrement": True}
-    
 
-    id = mapped_column(sa.Integer, primary_key=True, autoincrement=True)
-    block_id = mapped_column(sa.Integer, sa.ForeignKey("block.id"), nullable=True)
-    block = relationship(Block)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    block_id: Mapped[Optional[int]] = mapped_column(sa.ForeignKey("block.id"))
+    block: Mapped[Block] = relationship(Block)
     # name
-    name = mapped_column(sa.String(255), unique=True)
+    name: Mapped[str] = mapped_column(sa.String(255), unique=True)
     # task name
-    task = mapped_column(sa.String(255))
+    task: Mapped[str] = mapped_column(sa.String(255))
 
     # not use ForeignKey
-    interval_id = mapped_column(sa.Integer)
-    interval = relationship(
-        IntervalSchedule,
-        uselist=False,
-        primaryjoin=foreign(interval_id) == remote(IntervalSchedule.id),
+    interval_id: Mapped[Optional[int]]
+    interval: Mapped[Optional[IntervalSchedule]] = relationship(
+        primaryjoin="foreign(PeriodicTask.interval_id) == remote(IntervalSchedule.id)",
     )
 
-    crontab_id = mapped_column(sa.Integer)
-    crontab = relationship(
-        CrontabSchedule,
-        uselist=False,
-        primaryjoin=foreign(crontab_id) == remote(CrontabSchedule.id),
+    crontab_id: Mapped[Optional[int]]
+    crontab: Mapped[Optional[CrontabSchedule]] = relationship(
+        primaryjoin="foreign(PeriodicTask.crontab_id) == remote(CrontabSchedule.id)",
     )
 
-    solar_id = mapped_column(sa.Integer)
-    solar = relationship(
-        SolarSchedule,
-        uselist=False,
-        primaryjoin=foreign(solar_id) == remote(SolarSchedule.id),
+    solar_id: Mapped[Optional[int]]
+    solar: Mapped[Optional[SolarSchedule]] = relationship(
+        primaryjoin="foreign(PeriodicTask.solar_id) == remote(SolarSchedule.id)",
     )
 
-    args = mapped_column(sa.Text(), default="[]")
-    kwargs = mapped_column(sa.Text(), default="{}")
+    args: Mapped[str] = mapped_column(default="[]")
+    kwargs: Mapped[str] = mapped_column(default="{}")
     # queue for celery
-    queue = mapped_column(sa.String(255))
+    queue: Mapped[Optional[str]] = mapped_column(sa.String(255))
     # exchange for celery
-    exchange = mapped_column(sa.String(255))
+    exchange: Mapped[Optional[str]] = mapped_column(sa.String(255))
     # routing_key for celery
-    routing_key = mapped_column(sa.String(255))
-    priority = mapped_column(sa.Integer())
-    expires = mapped_column(sa.DateTime(timezone=True))
+    routing_key: Mapped[Optional[str]] = mapped_column(sa.String(255))
+    priority: Mapped[Optional[int]]
+    expires: Mapped[Optional[datetime_tz]]
 
     # 只执行一次
-    one_off = mapped_column(sa.Boolean(), default=False)
-    start_time = mapped_column(sa.DateTime(timezone=True))
-    enabled = mapped_column(sa.Boolean(), default=True)
-    last_run_at = mapped_column(sa.DateTime(timezone=True))
-    total_run_count = mapped_column(sa.Integer(), nullable=False, default=0)
+    one_off: Mapped[bool] = mapped_column(default=False)
+    start_time: Mapped[Optional[datetime_tz]]
+    enabled: Mapped[bool] = mapped_column(default=True)
+    last_run_at: Mapped[Optional[datetime_tz]]
+    total_run_count: Mapped[int] = mapped_column(default=0)
     # 修改时间
-    date_changed = mapped_column(
-        sa.DateTime(timezone=True), default=func.now(), onupdate=func.now()
-    )
-    description = mapped_column(sa.Text(), default="")
+    date_changed: Mapped[datetime_tz] = mapped_column(default=func.now(), onupdate=func.now())
+    description: Mapped[str] = mapped_column(default="")
 
     no_changes = False
 

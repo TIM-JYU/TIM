@@ -1,13 +1,17 @@
 import json
 from json import JSONDecodeError
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import lazyload, mapped_column
+from sqlalchemy.orm import lazyload, mapped_column, Mapped
 
 from timApp.lecture.lecture import Lecture
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
+
+if TYPE_CHECKING:
+    from timApp.lecture.askedquestion import AskedQuestion
 
 
 def unshuffle_lectureanswer(
@@ -26,24 +30,17 @@ def unshuffle_lectureanswer(
 
 class LectureAnswer(db.Model):
     __tablename__ = "lectureanswer"
-    
 
-    answer_id = mapped_column(db.Integer, primary_key=True)
-    user_id = mapped_column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
-    question_id = mapped_column(
-        db.Integer, db.ForeignKey("askedquestion.asked_id"), nullable=False
-    )
-    lecture_id = mapped_column(
-        db.Integer, db.ForeignKey("lecture.lecture_id"), nullable=False
-    )
-    answer = mapped_column(db.Text, nullable=False)
-    answered_on = mapped_column(db.DateTime(timezone=True), nullable=False)
-    points = mapped_column(db.Float)
+    answer_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    question_id: Mapped[int] = mapped_column(db.ForeignKey("askedquestion.asked_id"))
+    lecture_id: Mapped[int] = mapped_column(db.ForeignKey("lecture.lecture_id"))
+    answer: Mapped[str]
+    answered_on: Mapped[datetime_tz]
+    points: Mapped[Optional[float]]
 
-    asked_question = db.relationship(
-        "AskedQuestion", back_populates="answers", lazy="selectin"
-    )
-    user = db.relationship("User", back_populates="lectureanswers", lazy="selectin")
+    asked_question: Mapped["AskedQuestion"] = db.relationship(back_populates="answers", lazy="selectin")
+    user: Mapped["User"] = db.relationship(back_populates="lectureanswers", lazy="selectin")
 
     @staticmethod
     def get_by_id(ans_id: int) -> Optional["LectureAnswer"]:

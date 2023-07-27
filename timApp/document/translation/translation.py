@@ -1,8 +1,14 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import UniqueConstraint
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
+
+if TYPE_CHECKING:
+    from timApp.item.block import Block
+    from timApp.document.docentry import DocEntry
 
 
 class Translation(db.Model, DocInfo):
@@ -18,17 +24,16 @@ class Translation(db.Model, DocInfo):
     __tablename__ = "translation"
     
     
-    doc_id = mapped_column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    src_docid = mapped_column(db.Integer, db.ForeignKey("block.id"), nullable=False)
-    lang_id = mapped_column(db.Text, nullable=False)
+    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
+    src_docid: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
+    lang_id: Mapped[str]
     __table_args__ = (UniqueConstraint("src_docid", "lang_id", name="translation_uc"),)
 
-    _block = db.relationship(
+    _block: Mapped["Block"] = db.relationship(
         "Block", back_populates="translation", foreign_keys=[doc_id]
     )
 
-    docentry = db.relationship(
-        "DocEntry",
+    docentry: Mapped["DocEntry"] = db.relationship(
         back_populates="trs",
         primaryjoin="foreign(Translation.src_docid) == DocEntry.id",
     )
