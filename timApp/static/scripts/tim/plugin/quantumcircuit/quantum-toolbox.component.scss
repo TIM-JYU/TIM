@@ -6,11 +6,13 @@ a {
   display: flex;
   gap: 0.25em;
   margin-left: 0.5em;
+  height: 120px;
 }
 
 .gate-info {
   border: 1px solid black;
   padding: 0.25em;
+  overflow-y: auto;
 }
 
 table {

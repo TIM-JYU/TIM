@@ -18,6 +18,7 @@ svg text::selection {
   flex-direction: column;
   border: 1px solid black;
   max-width: 50vw;
+  height: 120px;
 }
 
 .gate-container-heading {
@@ -27,6 +28,8 @@ svg text::selection {
 
 .gate-list {
   padding: 0.25em;
+  height: 120px;
+  overflow-y: auto;
 }
 
 .svg-container {
