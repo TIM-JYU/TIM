@@ -124,6 +124,7 @@ type MessageToFrame =
     | {
           msg: "jsRunnerData";
           output: string;
+          taskId: string;
       };
 
 type MessageFromFrame =
@@ -770,6 +771,7 @@ export class JsframeComponent
                         void this.send({
                             msg: "jsRunnerData",
                             output: runner.output,
+                            taskId: d.taskId,
                         });
                     }
                 });
