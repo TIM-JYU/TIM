@@ -764,6 +764,17 @@ export class PermCtrl implements IController {
     loggedIn() {
         return Users.isLoggedIn();
     }
+
+    /**
+     * Returns the path to a document specified by doc_id
+     * @param doc_id
+     */
+    getTranslationPath(doc_id: number) {
+        return (
+            this.translations.find((tr) => tr.id == doc_id)?.path ??
+            this.item.path
+        );
+    }
 }
 
 timApp.component("timManage", {

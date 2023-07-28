@@ -2,7 +2,13 @@
     Using manage view requires you to be logged in.
 </div>
 <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-    <div class="panel-heading">{{ $ctrl.objName }} rights</div>
+    <div class="panel-heading">{{ $ctrl.objName }} rights
+        <span class="headerlink">
+            <a href="#rights" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+    </div>
     <div class="panel-body">
         <uib-tabset>
             <uib-tab heading="Rights for this {{ $ctrl.objName }}">
@@ -43,7 +49,13 @@
     </div>
 </div>
 <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">
-    <div class="panel-heading">{{ $ctrl.objName }} title</div>
+    <div class="panel-heading">{{ $ctrl.objName }} title
+        <span class="headerlink">
+            <a href="#title" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+    </div>
     <div class="panel-body">
         <form>
             <div class="form-group">
@@ -62,7 +74,13 @@
 </div>
 
 <div class="panel panel-default" ng-if="$ctrl.loggedIn()">
-    <div class="panel-heading">Notifications</div>
+    <div class="panel-heading">Notifications
+        <span class="headerlink">
+            <a href="#notifications" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+    </div>
     <div class="panel-body">
         <tim-alert severity="info" ng-if="!$ctrl.item.isFolder">
             Want to quickly get notifications from multiple documents?
@@ -72,13 +90,19 @@
     </div>
 </div>
 
-<bootstrap-panel title="Relevance" ng-if="$ctrl.item.rights.editable">
+<bootstrap-panel title="Relevance" ng-if="$ctrl.item.rights.editable" show-heading-anchors="true" anchor-id="relevance">
         <tim-relevance-edit [item]="$ctrl.item"></tim-relevance-edit>
 </bootstrap-panel>
 
 <div ng-if="!$ctrl.item.isFolder">
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-        <div class="panel-heading">Short names</div>
+        <div class="panel-heading">Short names
+            <span class="headerlink">
+            <a href="#location" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+        </div>
         <div class="panel-body">
             <form class="form-horizontal" name="aliasForm">
                 <div class="row">
@@ -168,6 +192,11 @@
         <div class="panel-heading">
             Translations (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in
             Finnish</a>)
+            <span class="headerlink">
+            <a href="#translations" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
         </div>
         <div class="panel-body">
             <table class="table">
@@ -189,7 +218,11 @@
                         <input type="text" class="form-control" ng-model="tr.title" placeholder="Title"/>
                     </td>
                     <td>{{tr.owner.name}}</td>
-                    <td>{{tr.id}}</td>
+                    <td>{{tr.id}}
+                        <a href="/view/{{$ctrl.getTranslationPath(tr.id)}}">
+                            <i class="glyphicon glyphicon-link"></i>
+                        </a>
+                    </td>
                     <td>
                         <button class="timButton" ng-click="$ctrl.updateTranslation(tr)"
                                 ng-disabled="!$ctrl.trChanged(tr)">Update
@@ -253,14 +286,20 @@
         </div>
     </div>
 
-    <bootstrap-panel ng-if="$ctrl.item.rights.copy" title="Copy this document">
+    <bootstrap-panel ng-if="$ctrl.item.rights.copy" title="Copy this document" show-heading-anchors="true" anchor-id="copy">
         <create-item item-type="document"
                      [item-location]="$ctrl.item.location"
                      [params]="$ctrl.copyParams"></create-item>
     </bootstrap-panel>
 
     <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">
-        <div class="panel-heading">Edit the full document</div>
+        <div class="panel-heading">Edit the full document
+            <span class="headerlink">
+            <a href="#edit" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+        </div>
         <div class="panel-body">
             <form id="fullDocumentEditor">
                 <div id="documentEditorDiv">
@@ -296,7 +335,13 @@
     </div>
 
     <div class="panel panel-default">
-        <div class="panel-heading">Other actions</div>
+        <div class="panel-heading">Other actions
+            <span class="headerlink">
+            <a href="#misc" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+        </div>
         <div class="panel-body">
             <a ng-show="$ctrl.item.rights.copy" class="timButton"
                href="/download/{{ $ctrl.item.id }}">Download document markdown</a>
@@ -312,7 +357,13 @@
         </div>
     </div>
     <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">
-        <div class="panel-heading">Document version history</div>
+        <div class="panel-heading">Document version history
+            <span class="headerlink">
+            <a href="#history" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+        </div>
         <div class="panel-body">
             <table class="table table-condensed">
                 <thead>
@@ -351,7 +402,13 @@
 
 <div ng-if="$ctrl.item.isFolder">
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-        <div class="panel-heading">Short name and location</div>
+        <div class="panel-heading">Short name and location
+            <span class="headerlink">
+            <a href="#location" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+        </div>
         <div class="panel-body">
             <form name="folderForm">
                 <div class="form-group" tim-error-state data-for="folderForm.newName">
@@ -384,11 +441,17 @@
             </form>
         </div>
     </div>
-    <bootstrap-panel title="Copy contents" ng-if="$ctrl.item.rights.copy">
+    <bootstrap-panel title="Copy contents" ng-if="$ctrl.item.rights.copy" show-heading-anchors="true" anchor-id="copy">
         <tim-copy-folder [item]="$ctrl.item"></tim-copy-folder>
     </bootstrap-panel>
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-        <div class="panel-heading">Other actions</div>
+        <div class="panel-heading">Other actions
+            <span class="headerlink">
+            <a href="#misc" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+        </div>
         <div class="panel-body">
             <button class="btn btn-danger" ng-click="$ctrl.deleteFolder()">Delete folder
             </button>
