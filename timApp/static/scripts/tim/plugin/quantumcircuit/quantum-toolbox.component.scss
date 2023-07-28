@@ -6,16 +6,27 @@ a {
   display: flex;
   gap: 0.25em;
   margin-left: 0.5em;
-  height: 100px;
 }
 
 .gate-info {
-  overflow-y: scroll;
+  border: 1px solid black;
+  padding: 0.25em;
+}
+
+table {
+  margin-bottom: 0.25em;
+  font-family: "courier new", courier, monospace;
 }
 
 
-pre {
-  display: flex;
+p {
+  margin-bottom: 0;
+}
+
+
+hr {
+  margin: 0.25em 0 0.25em 0;
+  border-top: 1px solid lightgrey;
 }
 
 .gate-info-header {

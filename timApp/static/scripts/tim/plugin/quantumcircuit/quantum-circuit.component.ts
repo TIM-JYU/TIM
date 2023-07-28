@@ -240,15 +240,37 @@ export interface CircuitStyleOptions {
     gateBorderRadius: number;
 }
 
+/**
+ * Content to show in table cell as rounded and longer version
+ */
+export interface TableCellData {
+    rounded: string;
+    long: string;
+}
+
 export class ActiveGateInfo {
     matrix: Matrix;
     name: string;
+    target: number;
+    time: number;
     controls: number[];
     qubits: Qubit[];
     description: string;
     swap?: [number, number];
 
+    /**
+     * @param target the index of qubit related to this gate
+     * @param time the time moment related to this gate
+     * @param name the name of gate
+     * @param mat actual matrix presentation of the gate
+     * @param controls indices of qubits that control this gate if any or just an empty array
+     * @param qubits qubit objects used to get names of qubits
+     * @param description more detailed info about gate than its name
+     * @param swap pair of qubit indices for swap gate
+     */
     constructor(
+        target: number,
+        time: number,
         name: string,
         mat: Matrix,
         controls: number[],
@@ -256,6 +278,8 @@ export class ActiveGateInfo {
         description: string,
         swap?: [number, number]
     ) {
+        this.target = target;
+        this.time = time;
         this.name = name;
         this.matrix = mat;
         this.qubits = qubits;
@@ -264,20 +288,23 @@ export class ActiveGateInfo {
         this.swap = swap;
     }
 
-    formatMatrixAsString() {
+    /**
+     * Formats the matrix into an array with elements as strings
+     * to be used in html table.
+     */
+    formatMatrixAsTable() {
         const arr = this.matrix.toArray();
         const formatOptions: FormatOptions = {
             precision: 2,
         };
-        let res = "";
+        const res: TableCellData[][] = [];
         arr.forEach((row) => {
             if (Array.isArray(row)) {
-                res += row
-                    .map((value) =>
-                        format(value, formatOptions).replace(/\s/g, "")
-                    )
-                    .join(" ");
-                res += "\n";
+                const rowValues = row.map((v) => ({
+                    rounded: format(v, formatOptions).replace(/\s/g, ""),
+                    long: format(v).replace(/\s/g, ""),
+                }));
+                res.push(rowValues);
             }
         });
         return res;
@@ -296,6 +323,14 @@ export class ActiveGateInfo {
             ", " +
             this.qubits[this.swap[1]].name
         );
+    }
+
+    formatTimeAsString() {
+        return this.time.toString();
+    }
+
+    formatQubitAsString() {
+        return this.qubits[this.target].name;
     }
 }
 
@@ -699,6 +734,11 @@ export class QuantumCircuitComponent
         this.runSimulation();
     }
 
+    /**
+     * Gets the name of the gate resolving controls and multi-qubit gate cells
+     * to their target gate.
+     * @param pos position of gate to get name for
+     */
     getGateName(pos: GatePos) {
         const cell = this.board.get(pos.target, pos.time);
         if (cell instanceof Gate || cell instanceof MultiQubitGate) {
@@ -721,6 +761,10 @@ export class QuantumCircuitComponent
         }
     }
 
+    /**
+     * Sets active gate based on chosen cell.
+     * @param gate position of gate
+     */
     updateActiveGate(gate: GatePos) {
         const name = this.getGateName(gate);
         if (name === undefined) {
@@ -739,6 +783,8 @@ export class QuantumCircuitComponent
         }
         const controls = this.board.getControls(gate);
         this.activeGateInfo = new ActiveGateInfo(
+            gate.target,
+            gate.time,
             name,
             gateInfo.matrix,
             controls,
