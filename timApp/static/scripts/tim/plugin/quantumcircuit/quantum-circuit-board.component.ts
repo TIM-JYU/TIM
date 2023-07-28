@@ -123,7 +123,7 @@ export class RangePipe implements PipeTransform {
                      (touchend)="handleDragEnd($event)"
                      (touchcancel)="handleDragEnd($event)"
                 >
-                    <!-- lines -->
+                    <!-- horizontal lines -->
                     <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="circuitStyleOptions.colors.dark"
                           [attr.x1]="0" [attr.y1]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"
                           [attr.x2]="board.nMoments * circuitStyleOptions.baseSize"

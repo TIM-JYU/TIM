@@ -23,7 +23,6 @@ import {ActiveGateInfo} from "tim/plugin/quantumcircuit/quantum-circuit.componen
                     </tr>
                     </tbody>
                 </table>
-                <hr>
                 <p>Qubitti: {{qubitString}}</p>
                 <p>Aika: {{timeString}}</p>
                 <p *ngIf="controlsString" class="controls">
