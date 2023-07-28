@@ -1,0 +1,15 @@
+{
+  "exclude": [
+    "**/.mypy_cache",
+    "**/.idea",
+    "**/node_modules",
+    "**/__pycache__",
+    "**/static",
+    "**/.angular",
+    "**/tim_files",
+    "**/tim_logs",
+    "**/screenshots",
+    "**/Dumbo",
+    ".git"
+  ]
+}
