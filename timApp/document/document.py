@@ -8,7 +8,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from tempfile import mkstemp
 from time import time
-from typing import Iterable, Generator
+from typing import Iterable, Generator, Optional
 from typing import TYPE_CHECKING
 
 from filelock import FileLock
@@ -33,7 +33,6 @@ from timApp.timdb.exceptions import (
     PreambleException,
     InvalidReferenceException,
 )
-from timApp.timtypes import DocInfoType
 from timApp.util.utils import get_error_html, trim_markdown, cache_folder_path
 from tim_common.html_sanitize import presanitize_html_body
 
@@ -79,7 +78,7 @@ class Document:
         # Cache for document settings.
         self.settings_cache: DocSettings | None = None
         # The corresponding DocInfo object.
-        self.docinfo: DocInfoType = None
+        self.docinfo: Optional["DocInfo"] = None
         # Cache for own settings; see get_own_settings
         self.own_settings = None
         # Whether preamble has been loaded

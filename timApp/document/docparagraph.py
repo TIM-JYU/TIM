@@ -30,7 +30,6 @@ from timApp.markdown.markdownconverter import (
     AutoCounters,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.timtypes import DocumentType
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import count_chars_from_beginning, get_error_html, title_to_id
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
@@ -616,7 +615,6 @@ class DocParagraph:
             with shelve.open(macro_cache_file) as c, shelve.open(
                 heading_cache_file
             ) as hc:
-
                 # Basically we want the cache objects to be non-persistent, so we convert them to normal dicts
                 # Find out better way if possible...
                 for par in first_pars:
@@ -1286,7 +1284,7 @@ def is_real_id(par_id: str | None):
 
 
 def create_reference(
-    doc: DocumentType,
+    doc: "Document",
     doc_id: int,
     par_id: str,
     translator: str | None = None,

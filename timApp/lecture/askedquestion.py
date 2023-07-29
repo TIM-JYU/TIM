@@ -10,10 +10,10 @@ from timApp.lecture.question_utils import qst_rand_array, qst_filter_markup_poin
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
 from timApp.timdb.sqa import db
 from timApp.timdb.types import datetime_tz
-from timApp.timtypes import UserType
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
+    from timApp.user.user import User
     from timApp.lecture.askedjson import AskedJson
     from timApp.lecture.lecture import Lecture
     from timApp.lecture.lectureanswer import LectureAnswer
@@ -62,10 +62,10 @@ class AskedQuestion(db.Model):
             return None
         return self.asked_time + timedelta(seconds=timelimit)
 
-    def has_activity(self, kind: QuestionActivityKind, user: UserType):
+    def has_activity(self, kind: QuestionActivityKind, user: "User"):
         return self.questionactivity.filter_by(kind=kind, user_id=user.id).first()
 
-    def add_activity(self, kind: QuestionActivityKind, user: UserType):
+    def add_activity(self, kind: QuestionActivityKind, user: "User"):
         if self.has_activity(kind, user):
             return
         a = QuestionActivity(kind=kind, user=user, asked_question=self)
@@ -100,7 +100,7 @@ class AskedQuestion(db.Model):
         aj = self.asked_json.to_json()
         return aj["json"].get("defaultPoints", 0)
 
-    def build_answer_and_points(self, answer, u: UserType):
+    def build_answer_and_points(self, answer, u: "User"):
         """
         Checks whether question was randomized
         If so, set question point input accordingly and expand answer to contain randomization data
@@ -145,7 +145,7 @@ def get_asked_question(asked_id: int) -> AskedQuestion | None:
 
 
 @contextmanager
-def user_activity_lock(user: UserType):
+def user_activity_lock(user: "User"):
     db.session.execute(select(func.pg_advisory_xact_lock(user.id)))
     yield
     return

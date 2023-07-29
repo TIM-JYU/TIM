@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, TYPE_CHECKING, Union
 
 from sqlalchemy import select
 
@@ -7,10 +7,13 @@ import timApp
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.timdb.sqa import db
-from timApp.timtypes import UserOrGroup
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
+    from timApp.user.usergroup import UserGroup
 
 
-def get_author_str(u: UserOrGroup, es: list[ChangelogEntry]):
+def get_author_str(u: Union["User", "UserGroup"], es: list[ChangelogEntry]):
     display_name = u.pretty_full_name
     num_changes = len(es)
     return display_name if num_changes <= 1 else f"{display_name} ({num_changes} edits)"
@@ -18,9 +21,11 @@ def get_author_str(u: UserOrGroup, es: list[ChangelogEntry]):
 
 class AuthorInfo:
     def __init__(
-        self, user_map: dict[int, UserOrGroup], entries: dict[int, list[ChangelogEntry]]
+        self,
+        user_map: dict[int, Union["User", "UserGroup"]],
+        entries: dict[int, list[ChangelogEntry]],
     ) -> None:
-        self.authors: dict[UserOrGroup, list[ChangelogEntry]] = {}
+        self.authors: dict[Union["User", "UserGroup"], list[ChangelogEntry]] = {}
         for k, v in entries.items():
             self.authors[user_map[k]] = v
 
@@ -59,15 +64,12 @@ class Changelog:
                 par_entry_map[e.par_id][e.group_id].append(e)
         User = timApp.user.user.User
         UserGroup = timApp.user.usergroup.UserGroup
-        result = (
-            db.session.execute(
-                select(UserGroup, User)
-                .select_from(UserGroup)
-                .filter(UserGroup.id.in_(usergroup_ids))
-                .outerjoin(User, User.name == UserGroup.name)
-            )
-            .all()
-        )  # type: List[Tuple[UserGroup, Optional[User]]]
+        result = db.session.execute(
+            select(UserGroup, User)
+            .select_from(UserGroup)
+            .filter(UserGroup.id.in_(usergroup_ids))
+            .outerjoin(User, User.name == UserGroup.name)
+        ).all()  # type: List[Tuple[UserGroup, Optional[User]]]
         for ug, u in result:
             ug_obj_map[ug.id] = u or ug
         for i in par_ids:

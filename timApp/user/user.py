@@ -653,7 +653,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return has_request_context() and get_current_user_id() == self.id
 
     @property
-    def pretty_full_name(self):
+    def pretty_full_name(self) -> str:
         """Returns the user's full name."""
         if self.is_name_hidden:
             return f"User {self.id}"
