@@ -113,8 +113,8 @@ class OAuth2Token(DbModel, TokenMixin):
     __tablename__ = "oauth2_token"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
-    user: Mapped["User"] = relationship()
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("useraccount.id"))
+    user: Mapped[Optional["User"]] = relationship()
 
     client_id: Mapped[Optional[str]] = mapped_column(String(48))
     token_type: Mapped[Optional[str]] = mapped_column(String(40))

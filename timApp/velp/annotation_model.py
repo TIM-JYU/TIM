@@ -94,7 +94,7 @@ class Annotation(DbModel):
     paragraph_id_start: Mapped[Optional[str]]
     """The id of the paragraph where this annotation starts from (in case this is a paragraph annotation)."""
 
-    paragraph_id_end: Mapped[Optional[int]]
+    paragraph_id_end: Mapped[Optional[str]]
     """The id of the paragraph where this annotation ends (in case this is a paragraph annotation)."""
 
     offset_start: Mapped[Optional[int]]
