@@ -15,11 +15,13 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
+from typing import Optional
+
 import langcodes
 from requests import post, Response
 from requests.exceptions import JSONDecodeError
 from sqlalchemy import select
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import Mapped
 
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import TranslateApproval, NoTranslate
@@ -53,14 +55,14 @@ class DeeplTranslationService(RegisteredTranslationService):
         self.ignore_tag = values["ignore_tag"]
         self.service_url = values["service_url"]
 
-    # TODO Would be better as nullable=False, but that prevents creating
+    # TODO Would be better as non-optional, but that prevents creating
     #  non-DeeplTranslationService -subclasses of TranslationService.
-    service_url = mapped_column(db.Text)
+    service_url: Mapped[Optional[str]]
     """The url base for the API calls."""
 
-    # TODO Would be better as nullable=False, but that prevents creating
+    # TODO Would be better as non-optional, but that prevents creating
     #  non-DeeplTranslationService -subclasses of TranslationService.
-    ignore_tag = mapped_column(db.Text)
+    ignore_tag: Mapped[Optional[str]]
     """The XML-tag name to use for ignoring pieces of text when XML-handling is
     used. Should be chosen to be some uncommon string not found in many texts.
     """
@@ -83,10 +85,16 @@ class DeeplTranslationService(RegisteredTranslationService):
         :raises RouteException: If more than one key is found from user.
         """
         # One user group should match one service per one key.
-        api_key = db.session.execute(select(TranslationServiceKey).filter(
-            TranslationServiceKey.service_id == self.id,
-            TranslationServiceKey.group_id == user_group.id,
-        )).scalars().all()
+        api_key = (
+            db.session.execute(
+                select(TranslationServiceKey).filter(
+                    TranslationServiceKey.service_id == self.id,
+                    TranslationServiceKey.group_id == user_group.id,
+                )
+            )
+            .scalars()
+            .all()
+        )
         if len(api_key) == 0:
             raise NotExist(
                 "Please add a DeepL API key that corresponds the chosen plan into your account"

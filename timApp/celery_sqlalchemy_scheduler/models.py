@@ -39,7 +39,6 @@ class ModelMixin:
 class IntervalSchedule(ModelBase, ModelMixin):
     __tablename__ = "celery_interval_schedule"
     __table_args__ = {"sqlite_autoincrement": True}
-    
 
     DAYS = "days"
     HOURS = "hours"
@@ -50,7 +49,7 @@ class IntervalSchedule(ModelBase, ModelMixin):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
     every: Mapped[int]
-    period: Mapped[str] = mapped_column(sa.String(24))
+    period: Mapped[Optional[str]] = mapped_column(sa.String(24))
 
     def __repr__(self):
         if self.every == 1:
@@ -89,15 +88,14 @@ class IntervalSchedule(ModelBase, ModelMixin):
 class CrontabSchedule(ModelBase, ModelMixin):
     __tablename__ = "celery_crontab_schedule"
     __table_args__ = {"sqlite_autoincrement": True}
-    
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    minute: Mapped[str] = mapped_column(sa.String(60 * 4), default="*")
-    hour: Mapped[str] = mapped_column(sa.String(24 * 4), default="*")
-    day_of_week: Mapped[str] = mapped_column(sa.String(64), default="*")
-    day_of_month: Mapped[str] = mapped_column(sa.String(31 * 4), default="*")
-    month_of_year: Mapped[str] = mapped_column(sa.String(64), default="*")
-    timezone: Mapped[str] = mapped_column(sa.String(64), default="UTC")
+    minute: Mapped[Optional[str]] = mapped_column(sa.String(60 * 4), default="*")
+    hour: Mapped[Optional[str]] = mapped_column(sa.String(24 * 4), default="*")
+    day_of_week: Mapped[Optional[str]] = mapped_column(sa.String(64), default="*")
+    day_of_month: Mapped[Optional[str]] = mapped_column(sa.String(31 * 4), default="*")
+    month_of_year: Mapped[Optional[str]] = mapped_column(sa.String(64), default="*")
+    timezone: Mapped[Optional[str]] = mapped_column(sa.String(64), default="UTC")
 
     def __repr__(self):
         return "{} {} {} {} {} (m/h/d/dM/MY) {}".format(
@@ -182,7 +180,6 @@ class PeriodicTaskChanged(ModelBase, ModelMixin):
     """Helper table for tracking updates to periodic tasks."""
 
     __tablename__ = "celery_periodic_task_changed"
-    
 
     id: Mapped[int] = mapped_column(primary_key=True)
     last_update: Mapped[datetime_tz] = mapped_column(default=dt.datetime.now)
@@ -235,11 +232,11 @@ class PeriodicTask(ModelBase, ModelMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     block_id: Mapped[Optional[int]] = mapped_column(sa.ForeignKey("block.id"))
-    block: Mapped[Block] = relationship(Block)
+    block: Mapped[Optional[Block]] = relationship(Block)
     # name
-    name: Mapped[str] = mapped_column(sa.String(255), unique=True)
+    name: Mapped[Optional[str]] = mapped_column(sa.String(255), unique=True)
     # task name
-    task: Mapped[str] = mapped_column(sa.String(255))
+    task: Mapped[Optional[str]] = mapped_column(sa.String(255))
 
     # not use ForeignKey
     interval_id: Mapped[Optional[int]]
@@ -257,8 +254,8 @@ class PeriodicTask(ModelBase, ModelMixin):
         primaryjoin="foreign(PeriodicTask.solar_id) == remote(SolarSchedule.id)",
     )
 
-    args: Mapped[str] = mapped_column(default="[]")
-    kwargs: Mapped[str] = mapped_column(default="{}")
+    args: Mapped[Optional[str]] = mapped_column(default="[]")
+    kwargs: Mapped[Optional[str]] = mapped_column(default="{}")
     # queue for celery
     queue: Mapped[Optional[str]] = mapped_column(sa.String(255))
     # exchange for celery
@@ -269,14 +266,16 @@ class PeriodicTask(ModelBase, ModelMixin):
     expires: Mapped[Optional[datetime_tz]]
 
     # 只执行一次
-    one_off: Mapped[bool] = mapped_column(default=False)
+    one_off: Mapped[Optional[bool]] = mapped_column(default=False)
     start_time: Mapped[Optional[datetime_tz]]
-    enabled: Mapped[bool] = mapped_column(default=True)
+    enabled: Mapped[Optional[bool]] = mapped_column(default=True)
     last_run_at: Mapped[Optional[datetime_tz]]
     total_run_count: Mapped[int] = mapped_column(default=0)
     # 修改时间
-    date_changed: Mapped[datetime_tz] = mapped_column(default=func.now(), onupdate=func.now())
-    description: Mapped[str] = mapped_column(default="")
+    date_changed: Mapped[Optional[datetime_tz]] = mapped_column(
+        default=func.now(), onupdate=func.now()
+    )
+    description: Mapped[Optional[str]] = mapped_column(default="")
 
     no_changes = False
 

@@ -1,18 +1,18 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
 
-class BlockRelevance(db.Model):
+
+class BlockRelevance(DbModel):
     """A relevance value of a block (used in search)."""
 
-    __tablename__ = "blockrelevance"
-
-    block_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
+    block_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
     relevance: Mapped[int]
 
-    _block: Mapped["Block"] = db.relationship(back_populates="relevance")
+    _block: Mapped["Block"] = relationship(back_populates="relevance")

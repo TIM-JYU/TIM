@@ -1,10 +1,12 @@
 import enum
 from typing import TYPE_CHECKING
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.item.block import BlockType, Block
-from timApp.timdb.sqa import db, is_attribute_loaded
+from timApp.timdb.sqa import is_attribute_loaded
+from timApp.timdb.types import DbModel
 from timApp.util.logger import log_warning
 
 if TYPE_CHECKING:
@@ -32,17 +34,13 @@ class NotificationType(enum.Enum):
         )
 
 
-class Notification(db.Model):
+class Notification(DbModel):
     """Notification settings for a User for a block."""
 
-    __tablename__ = "notification"
-
-    user_id: Mapped[int] = mapped_column(
-        db.ForeignKey("useraccount.id"), primary_key=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
     """User id."""
 
-    block_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
+    block_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
     """Item id."""
 
     notification_type: Mapped[NotificationType] = mapped_column(primary_key=True)

@@ -55,9 +55,9 @@ from timApp.lecture.lectureusers import LectureUsers
 from timApp.lecture.message import Message
 from timApp.lecture.question import Question
 from timApp.lecture.questionactivity import QuestionActivity
-from timApp.lecture.runningquestion import Runningquestion
-from timApp.lecture.showpoints import Showpoints
-from timApp.lecture.useractivity import Useractivity
+from timApp.lecture.runningquestion import RunningQuestion
+from timApp.lecture.showpoints import ShowPoints
+from timApp.lecture.useractivity import UserActivity
 from timApp.messaging.messagelist.messagelist_models import (
     MessageListModel,
     MessageListMember,
@@ -198,9 +198,9 @@ all_models = (
     RegisteredTranslationService,
     ReversingTranslationService,
     RowOwnerInfo,
-    Runningquestion,
+    RunningQuestion,
     ScimUserGroup,
-    Showpoints,
+    ShowPoints,
     SlideStatus,
     Tag,
     TaskBlock,
@@ -208,7 +208,7 @@ all_models = (
     TranslationService,
     TranslationServiceKey,
     User,
-    Useractivity,
+    UserActivity,
     UserAnswer,
     UserContact,
     UserGroup,
@@ -298,15 +298,17 @@ def print_schema(bind: str | None = None):
     :param bind: The bind to use.
 
     """
-    models = inspect.getmembers(
-        sys.modules[__name__], lambda x: inspect.isclass(x) and hasattr(x, "__table__")
-    )
-    eng = db.engines[bind]
+    with app.app_context():
+        models = inspect.getmembers(
+            sys.modules[__name__],
+            lambda x: inspect.isclass(x) and hasattr(x, "__table__"),
+        )
+        eng = db.engines[bind]
 
-    for _, model_class in models:
-        print(CreateTable(model_class.__table__).compile(eng), end=";")
-    print()
-    sys.stdout.flush()
+        for _, model_class in models:
+            print(CreateTable(model_class.__table__).compile(eng), end=";")
+        print()
+        sys.stdout.flush()
 
 
 # print_schema()

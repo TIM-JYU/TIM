@@ -2,51 +2,52 @@ import json
 from datetime import datetime, timezone
 from typing import Optional, TYPE_CHECKING, List
 
-from sqlalchemy import select, func
-from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped
+from sqlalchemy import select, func, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped, relationship
 
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
     from timApp.user.user import User
     from timApp.lecture.askedquestion import AskedQuestion
     from timApp.lecture.message import Message
-    from timApp.lecture.runningquestion import Runningquestion
-    from timApp.lecture.useractivity import Useractivity
+    from timApp.lecture.runningquestion import RunningQuestion
+    from timApp.lecture.useractivity import UserActivity
 
-class Lecture(db.Model):
-    __tablename__ = "lecture"
 
+class Lecture(DbModel):
     lecture_id: Mapped[int] = mapped_column(primary_key=True)
     lecture_code: Mapped[Optional[str]]
-    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
-    lecturer: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
+    lecturer: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     start_time: Mapped[datetime_tz]
     end_time: Mapped[Optional[datetime_tz]]
     password: Mapped[Optional[str]]
     options: Mapped[Optional[str]]
 
-    users: DynamicMapped["User"] = db.relationship(
+    users: DynamicMapped["User"] = relationship(
         secondary=LectureUsers.__table__,
         back_populates="lectures",
         lazy="dynamic",
     )
-    asked_questions: DynamicMapped["AskedQuestion"] = db.relationship(
+    asked_questions: DynamicMapped["AskedQuestion"] = relationship(
         back_populates="lecture",
         lazy="dynamic",
     )
-    messages: DynamicMapped["Message"] = db.relationship(back_populates="lecture", lazy="dynamic")
-    running_questions: Mapped[List["Runningquestion"]] = db.relationship(
+    messages: DynamicMapped["Message"] = relationship(
+        back_populates="lecture", lazy="dynamic"
+    )
+    running_questions: Mapped[List["RunningQuestion"]] = relationship(
         back_populates="lecture",
         lazy="select",
     )
-    useractivity: Mapped[List["Useractivity"]] = db.relationship(
+    useractivity: Mapped[List["UserActivity"]] = relationship(
         back_populates="lecture", lazy="select"
     )
-    owner: Mapped["User"] = db.relationship(back_populates="owned_lectures")
+    owner: Mapped["User"] = relationship(back_populates="owned_lectures")
 
     @staticmethod
     def find_by_id(lecture_id: int) -> Optional["Lecture"]:

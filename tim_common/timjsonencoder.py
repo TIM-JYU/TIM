@@ -12,6 +12,7 @@ from marshmallow import missing
 
 try:
     from sqlalchemy.ext.declarative import DeclarativeMeta
+    from sqlalchemy.orm import DeclarativeBase
 
     sqlalchemy_imported = True
 except ImportError:
@@ -46,7 +47,9 @@ class TimJsonEncoder(json.JSONEncoder):
         if tojson:
             return tojson()
         # from http://stackoverflow.com/a/31569287 with some changes
-        if sqlalchemy_imported and isinstance(o.__class__, DeclarativeMeta):
+        if sqlalchemy_imported and (
+            isinstance(o, DeclarativeMeta) or isinstance(o, DeclarativeBase)
+        ):
             data = {}
             if hasattr(o, "__json__"):
                 flds = o.__json__()

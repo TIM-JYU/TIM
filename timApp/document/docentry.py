@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, List
 
-from sqlalchemy import select
-from sqlalchemy.orm import foreign, mapped_column, Mapped
+from sqlalchemy import select, ForeignKey, Index
+from sqlalchemy.orm import foreign, mapped_column, Mapped, relationship
 
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
@@ -13,6 +13,7 @@ from timApp.item.block import BlockType, Block
 from timApp.item.block import insert_block
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup, get_admin_group_id
 from timApp.util.utils import split_location
 
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from timApp.user.user import User
 
 
-class DocEntry(db.Model, DocInfo):
+class DocEntry(DbModel, DocInfo):
     """Represents a TIM document in the directory hierarchy.
 
     A document can have several aliases, which is why the primary key is "name" column and not "id".
@@ -28,24 +29,21 @@ class DocEntry(db.Model, DocInfo):
     Most of the time you should use DocInfo class instead of this.
     """
 
-    __tablename__ = "docentry"
-    
-
     name: Mapped[str] = mapped_column(primary_key=True)
     """Full path of the document.
     
     TODO: Improve the name.
     """
 
-    id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
+    id: Mapped[int] = mapped_column(ForeignKey("block.id"))
     """Document identifier."""
 
     public: Mapped[bool] = mapped_column(default=True)
     """Whether the document is visible in directory listing."""
 
-    _block: Mapped["Block"] = db.relationship(back_populates="docentries", lazy="joined")
+    _block: Mapped["Block"] = relationship(back_populates="docentries", lazy="joined")
 
-    trs: Mapped[List[Translation]] = db.relationship(
+    trs: Mapped[List[Translation]] = relationship(
         primaryjoin=id == foreign(Translation.src_docid),
         back_populates="docentry",
         # When a DocEntry object is deleted, we don't want to touch the translation objects at all.
@@ -55,7 +53,7 @@ class DocEntry(db.Model, DocInfo):
         passive_deletes="all",
     )
 
-    __table_args__ = (db.Index("docentry_id_idx", "id"),)
+    __table_args__ = (Index("docentry_id_idx", "id"),)
 
     @property
     def tr(self) -> Translation | None:

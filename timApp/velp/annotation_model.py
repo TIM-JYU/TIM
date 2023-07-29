@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING, List
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -45,22 +45,20 @@ class AnnotationPosition:
     end: AnnotationCoordinate
 
 
-class Annotation(db.Model):
+class Annotation(DbModel):
     """An annotation that can be associated with an Answer or with a DocParagraph in a Document.
 
     The annotation can start and end in specific positions, in which case the annotation is supposed to be displayed
     as highlighted text in the corresponding location.
     """
 
-    __tablename__ = "annotation"
-
     id: Mapped[int] = mapped_column(primary_key=True)
     """Annotation identifier."""
 
-    velp_version_id: Mapped[int] = mapped_column(db.ForeignKey("velpversion.id"))
+    velp_version_id: Mapped[int] = mapped_column(ForeignKey("velpversion.id"))
     """Id of the velp that has been used for this annotation."""
 
-    annotator_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    annotator_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """Id of the User who created the annotation."""
 
     points: Mapped[Optional[float]]
@@ -87,10 +85,10 @@ class Annotation(db.Model):
     
     """
 
-    document_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("block.id"))
+    document_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
     """Id of the document in case this is a paragraph annotation."""
 
-    answer_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("answer.id"))
+    answer_id: Mapped[Optional[int]] = mapped_column(ForeignKey("answer.id"))
     """Id of the Answer in case this is an answer annotation."""
 
     paragraph_id_start: Mapped[Optional[str]]

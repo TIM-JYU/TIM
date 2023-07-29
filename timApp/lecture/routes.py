@@ -50,9 +50,9 @@ from timApp.lecture.question_utils import (
     qst_handle_randomization,
 )
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
-from timApp.lecture.runningquestion import Runningquestion
-from timApp.lecture.showpoints import Showpoints
-from timApp.lecture.useractivity import Useractivity
+from timApp.lecture.runningquestion import RunningQuestion
+from timApp.lecture.showpoints import ShowPoints
+from timApp.lecture.useractivity import UserActivity
 from timApp.plugin.qst.qst import get_question_data_from_document
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
@@ -374,7 +374,7 @@ def get_new_question(
     """
     current_user = get_current_user_id()
     u = get_current_user_object()
-    rqs: list[Runningquestion] = lecture.running_questions
+    rqs: list[RunningQuestion] = lecture.running_questions
     with user_activity_lock(u):
         if rqs and rqs[0].asked_question.is_running:
             question: AskedQuestion = rqs[0].asked_question
@@ -437,7 +437,7 @@ def get_new_question(
 
 
 def get_shown_points(lecture) -> AskedQuestion | None:
-    return lecture.asked_questions.join(Showpoints).first()
+    return lecture.asked_questions.join(ShowPoints).first()
 
 
 def check_if_lecture_is_ending(lecture: Lecture):
@@ -596,7 +596,7 @@ def get_lecture_users(lecture: Lecture):
     students = []
 
     activity = (
-        db.session.execute(select(Useractivity).filter_by(lecture=lecture))
+        db.session.execute(select(UserActivity).filter_by(lecture=lecture))
         .scalars()
         .all()
     )
@@ -756,7 +756,7 @@ def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
         ],
     )
     db.session.execute(
-        delete(Runningquestion).where(Runningquestion.lecture_id == lecture.lecture_id)
+        delete(RunningQuestion).where(RunningQuestion.lecture_id == lecture.lecture_id)
     )
     stop_showing_points(lecture)
 
@@ -846,7 +846,7 @@ def join_lecture():
 
 
 def update_activity(lecture: Lecture, u: User):
-    ua = Useractivity(user_id=u.id, lecture_id=lecture.lecture_id, active=func.now())
+    ua = UserActivity(user_id=u.id, lecture_id=lecture.lecture_id, active=func.now())
     db.session.merge(ua)
 
 
@@ -871,7 +871,7 @@ def extend_question():
     q = get_asked_question(asked_id)
     if not q:
         raise NotExist()
-    rq: Runningquestion = q.running_question
+    rq: RunningQuestion = q.running_question
     if not q.is_running:
         raise RouteException("Question is not running")
     rq.end_time += timedelta(seconds=extend)
@@ -959,7 +959,7 @@ def ask_question():
         raise RouteException("Missing parameters")
 
     delete_question_temp_data(question, lecture)
-    rq = Runningquestion(
+    rq = RunningQuestion(
         lecture=lecture,
         asked_question=question,
         ask_time=question.asked_time,
@@ -986,7 +986,7 @@ def show_points(m: ShowAnswerPointsModel):
         raise NotExist()
 
     stop_showing_points(lecture)
-    sp = Showpoints(asked_question=q)
+    sp = ShowPoints(asked_question=q)
     db.session.add(sp)
 
     current_question_id = m.current_question_id
@@ -1000,9 +1000,9 @@ def show_points(m: ShowAnswerPointsModel):
 
 def stop_showing_points(lecture: Lecture):
     db.session.execute(
-        delete(Showpoints)
+        delete(ShowPoints)
         .where(
-            Showpoints.asked_id.in_(
+            ShowPoints.asked_id.in_(
                 select(AskedQuestion.asked_id).filter_by(lecture_id=lecture.lecture_id)
             )
         )

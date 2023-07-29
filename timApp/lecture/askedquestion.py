@@ -3,13 +3,13 @@ from contextlib import contextmanager
 from datetime import timedelta, datetime
 from typing import Optional, TYPE_CHECKING, List
 
-from sqlalchemy import func, select
-from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped
+from sqlalchemy import func, select, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped, relationship
 
 from timApp.lecture.question_utils import qst_rand_array, qst_filter_markup_points
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
@@ -17,42 +17,40 @@ if TYPE_CHECKING:
     from timApp.lecture.askedjson import AskedJson
     from timApp.lecture.lecture import Lecture
     from timApp.lecture.lectureanswer import LectureAnswer
-    from timApp.lecture.runningquestion import Runningquestion
-    from timApp.lecture.showpoints import Showpoints
+    from timApp.lecture.runningquestion import RunningQuestion
+    from timApp.lecture.showpoints import ShowPoints
 
 
-class AskedQuestion(db.Model):
-    __tablename__ = "askedquestion"
-
+class AskedQuestion(DbModel):
     asked_id: Mapped[int] = mapped_column(primary_key=True)
-    lecture_id: Mapped[int] = mapped_column(db.ForeignKey("lecture.lecture_id"))
-    doc_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("block.id"))
+    lecture_id: Mapped[int] = mapped_column(ForeignKey("lecture.lecture_id"))
+    doc_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
     par_id: Mapped[Optional[str]]
     asked_time: Mapped[datetime_tz]
     points: Mapped[Optional[str]]
-    asked_json_id: Mapped[int] = mapped_column(db.ForeignKey("askedjson.asked_json_id"))
+    asked_json_id: Mapped[int] = mapped_column(ForeignKey("askedjson.asked_json_id"))
     expl: Mapped[Optional[str]]
 
-    asked_json: Mapped["AskedJson"] = db.relationship(
+    asked_json: Mapped["AskedJson"] = relationship(
         back_populates="asked_questions", lazy="selectin"
     )
-    lecture: Mapped["Lecture"] = db.relationship(
+    lecture: Mapped["Lecture"] = relationship(
         back_populates="asked_questions", lazy="selectin"
     )
-    answers: DynamicMapped["LectureAnswer"] = db.relationship(
+    answers: DynamicMapped["LectureAnswer"] = relationship(
         back_populates="asked_question", lazy="dynamic"
     )
-    answers_all: Mapped[List["LectureAnswer"]] = db.relationship(
+    answers_all: Mapped[List["LectureAnswer"]] = relationship(
         back_populates="asked_question", overlaps="answers"
     )
-    running_question: Mapped[Optional["Runningquestion"]] = db.relationship(
+    running_question: Mapped[Optional["RunningQuestion"]] = relationship(
         back_populates="asked_question", lazy="select"
     )
-    questionactivity: DynamicMapped["QuestionActivity"] = db.relationship(
+    questionactivity: DynamicMapped["QuestionActivity"] = relationship(
         back_populates="asked_question", lazy="dynamic"
     )
-    showpoints: Mapped[Optional["Showpoints"]] = db.relationship(
-        "Showpoints", back_populates="asked_question", lazy="select"
+    showpoints: Mapped[Optional["ShowPoints"]] = relationship(
+        back_populates="asked_question", lazy="select"
     )
 
     @property

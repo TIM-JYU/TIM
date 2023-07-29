@@ -1,29 +1,29 @@
 from typing import Optional
 
-from sqlalchemy import func
+from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 
 
-class PrintedDoc(db.Model):
+class PrintedDoc(DbModel):
     """A printed document. A PrintedDoc is created each time a document is printed
     (CSS printing does not count because it happens entirely in browser)."""
 
     __tablename__ = "printed_doc"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
+    doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
     """Id of the printed document."""
 
-    template_doc_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("block.id"))
+    template_doc_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
     """Id of the template document."""
 
     file_type: Mapped[str]
     """The filetype of the print."""
 
-    path_to_file: Mapped[str]
+    path_to_file: Mapped[Optional[str]]
     """Path to the printed document in the filesystem."""
 
     version: Mapped[str]

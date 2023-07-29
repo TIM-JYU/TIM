@@ -1,16 +1,13 @@
-from sqlalchemy import func
+from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 from timApp.user.user import Consent, User
 
 
-class ConsentChange(db.Model):
-    __tablename__ = "consentchange"
-
+class ConsentChange(DbModel):
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     time: Mapped[datetime_tz] = mapped_column(default=func.now())
     consent: Mapped[Consent]
 

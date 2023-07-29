@@ -1,22 +1,24 @@
 import json
 from copy import deepcopy
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from sqlalchemy import select
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
+
+if TYPE_CHECKING:
+    from timApp.lecture.askedquestion import AskedQuestion
 
 
-class AskedJson(db.Model):
-    __tablename__ = "askedjson"
-
+class AskedJson(DbModel):
     asked_json_id: Mapped[int] = mapped_column(primary_key=True)
     json: Mapped[str]
     hash: Mapped[str]
 
-    asked_questions = db.relationship(
-        "AskedQuestion", back_populates="asked_json", lazy="selectin"
+    asked_questions: Mapped["AskedQuestion"] = relationship(
+        back_populates="asked_json", lazy="selectin"
     )
 
     def to_json(self, hide_points=False):

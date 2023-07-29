@@ -2,26 +2,27 @@ import re
 from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import select, UniqueConstraint
+from sqlalchemy import select, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 from timApp.user.hakaorganization import HakaOrganization
 
 if TYPE_CHECKING:
     from timApp.user.user import User
 
 
-class PersonalUniqueCode(db.Model):
+class PersonalUniqueCode(DbModel):
     """The database model for the 'schacPersonalUniqueCode' Haka attribute."""
 
-    user_id: Mapped[int] = mapped_column(
-        db.ForeignKey("useraccount.id"), primary_key=True
-    )
+    __tablename__ = "personal_unique_code"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
     """User id."""
 
     org_id: Mapped[int] = mapped_column(
-        db.ForeignKey("haka_organization.id"), primary_key=True
+        ForeignKey("haka_organization.id"), primary_key=True
     )
     """Organization id."""
 

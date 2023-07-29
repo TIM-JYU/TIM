@@ -6,12 +6,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 
 if TYPE_CHECKING:
     from timApp.user.personaluniquecode import PersonalUniqueCode
 
 
-class HakaOrganization(db.Model):
+class HakaOrganization(DbModel):
+    __tablename__ = "haka_organization"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
 

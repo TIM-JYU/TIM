@@ -4,13 +4,19 @@ from enum import Enum
 from typing import TYPE_CHECKING, Optional, List, Dict, Tuple
 
 from sqlalchemy import func
-from sqlalchemy.orm import mapped_column, Mapped, attribute_keyed_dict, DynamicMapped
+from sqlalchemy.orm import (
+    mapped_column,
+    Mapped,
+    attribute_keyed_dict,
+    DynamicMapped,
+    relationship,
+)
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.blockassociation import BlockAssociation
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.util.utils import get_current_time
@@ -24,13 +30,14 @@ if TYPE_CHECKING:
     from timApp.notification.notification import Notification
     from timApp.item.blockrelevance import BlockRelevance
     from timApp.messaging.messagelist.messagelist_models import MessageListModel
-    from timApp.messaging.timMessage.internalmessage_models import InternalMessage, InternalMessageDisplay
+    from timApp.messaging.timMessage.internalmessage_models import (
+        InternalMessage,
+        InternalMessageDisplay,
+    )
 
 
-class Block(db.Model):
+class Block(DbModel):
     """The "base class" for all database objects that are part of the permission system."""
-
-    __tablename__ = "block"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     """A unique identifier for the Block."""
@@ -52,48 +59,46 @@ class Block(db.Model):
     modified: Mapped[Optional[datetime_tz]] = mapped_column(default=func.now())
     """When this Block was last modified."""
 
-    docentries: Mapped[List["DocEntry"]] = db.relationship(back_populates="_block")
-    folder: Mapped[Optional[Folder]] = db.relationship(
-        back_populates="_block"
+    docentries: Mapped[List["DocEntry"]] = relationship(back_populates="_block")
+    folder: Mapped[Optional[Folder]] = relationship(back_populates="_block")
+    translation: Mapped[Optional["Translation"]] = relationship(
+        "Translation", back_populates="_block", foreign_keys="Translation.doc_id"
     )
-    translation: Mapped[Optional["Translation"]] = db.relationship(
-        "Translation",
-        back_populates="_block",
-        foreign_keys="Translation.doc_id"
-    )
-    answerupload: DynamicMapped[Optional["AnswerUpload"]] = db.relationship(
+    answerupload: DynamicMapped[Optional["AnswerUpload"]] = relationship(
         back_populates="block", lazy="dynamic"
     )
-    accesses: Mapped[Dict[Tuple[int, int], "BlockAccess"]] = db.relationship(
+    accesses: Mapped[Dict[Tuple[int, int], "BlockAccess"]] = relationship(
         back_populates="block",
         lazy="selectin",
         cascade="all, delete-orphan",
         collection_class=attribute_keyed_dict("block_collection_key"),
     )
-    tags: Mapped[List["Tag"]] = db.relationship("Tag", back_populates="block", lazy="select")
-    children: Mapped[List["Block"]] = db.relationship(
+    tags: Mapped[List["Tag"]] = relationship(
+        "Tag", back_populates="block", lazy="select"
+    )
+    children: Mapped[List["Block"]] = relationship(
         secondary=BlockAssociation.__table__,
         primaryjoin=id == BlockAssociation.__table__.c.parent,
         secondaryjoin=id == BlockAssociation.__table__.c.child,
         lazy="select",
     )
-    parents: Mapped[List["Block"]] = db.relationship(
+    parents: Mapped[List["Block"]] = relationship(
         secondary=BlockAssociation.__table__,
         primaryjoin=id == BlockAssociation.__table__.c.child,
         secondaryjoin=id == BlockAssociation.__table__.c.parent,
         lazy="select",
         overlaps="children",
     )
-    notifications: DynamicMapped["Notification"] = db.relationship(
+    notifications: DynamicMapped["Notification"] = relationship(
         back_populates="block", lazy="dynamic"
     )
 
-    relevance: Mapped[Optional["BlockRelevance"]] = db.relationship(
+    relevance: Mapped[Optional["BlockRelevance"]] = relationship(
         back_populates="_block"
     )
 
     # If this Block corresponds to a group's manage document, indicates the group being managed.
-    managed_usergroup: Mapped[Optional[UserGroup]] = db.relationship(
+    managed_usergroup: Mapped[Optional[UserGroup]] = relationship(
         secondary=UserGroupDoc.__table__,
         lazy="select",
         overlaps="admin_doc",
@@ -101,14 +106,14 @@ class Block(db.Model):
 
     #  If this Block corresponds to a message list's manage document, indicates the message list
     #  being managed.
-    managed_messagelist: Mapped[Optional["MessageListModel"]] = db.relationship(
+    managed_messagelist: Mapped[Optional["MessageListModel"]] = relationship(
         back_populates="block", lazy="select"
     )
 
-    internalmessage: Mapped[Optional["InternalMessage"]] = db.relationship(
+    internalmessage: Mapped[Optional["InternalMessage"]] = relationship(
         back_populates="block"
     )
-    internalmessage_display: Mapped[Optional["InternalMessageDisplay"]] = db.relationship(
+    internalmessage_display: Mapped[Optional["InternalMessageDisplay"]] = relationship(
         back_populates="display_block"
     )
 

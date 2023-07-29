@@ -21,8 +21,8 @@ __date__ = "25.4.2022"
 from dataclasses import dataclass
 
 import pypandoc
-from sqlalchemy import select
-from sqlalchemy.orm import with_polymorphic, mapped_column, Mapped
+from sqlalchemy import select, ForeignKey
+from sqlalchemy.orm import with_polymorphic, mapped_column, Mapped, relationship
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.translation.language import Language
@@ -34,6 +34,7 @@ from timApp.document.translation.translationparser import (
     Translate,
 )
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup
 from timApp.util import logger
 from timApp.util.flask.requesthelper import RouteException
@@ -69,13 +70,10 @@ class LanguagePairing:
         return self.value[item]
 
 
-class TranslationService(db.Model):
+class TranslationService(DbModel):
     """Represents the information and methods that must be available from all
     possible machine translators.
     """
-
-    __tablename__ = "translationservice"
-    
 
     id: Mapped[int] = mapped_column(primary_key=True)
     """Translation service identifier."""
@@ -170,16 +168,13 @@ class TranslationService(db.Model):
 
     # Polymorphism allows querying multiple objects by their class e.g.
     # `TranslationService.query`.
-    __mapper_args__ = {"polymorphic_on": service_name}
+    __mapper_args__ = {"polymorphic_on": "service_name"}
 
 
-class TranslationServiceKey(db.Model):
+class TranslationServiceKey(DbModel):
     """Represents an API-key (or any string value) that is needed for using a
     machine translator and that one or more users are in possession of.
     """
-
-    __tablename__ = "translationservicekey"
-    
 
     id: Mapped[int] = mapped_column(primary_key=True)
     """Key identifier."""
@@ -188,12 +183,12 @@ class TranslationServiceKey(db.Model):
     api_key: Mapped[str]
     """The key needed for using related service."""
 
-    group_id: Mapped[int] = mapped_column(db.ForeignKey("usergroup.id"))
-    group: Mapped[UserGroup] = db.relationship()
+    group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"))
+    group: Mapped[UserGroup] = relationship()
     """The group that can use this key."""
 
-    service_id: Mapped[int] = mapped_column(db.ForeignKey("translationservice.id"))
-    service: Mapped[TranslationService] = db.relationship()
+    service_id: Mapped[int] = mapped_column(ForeignKey("translationservice.id"))
+    service: Mapped[TranslationService] = relationship()
     """The service that this key is used in."""
 
     @staticmethod
@@ -207,9 +202,11 @@ class TranslationServiceKey(db.Model):
         :return: The first matching TranslationServiceKey instance, if one is
          found.
         """
-        return db.session.execute(select(TranslationServiceKey).filter(
-            TranslationServiceKey.group_id == user_group
-        )).first()
+        return db.session.execute(
+            select(TranslationServiceKey).filter(
+                TranslationServiceKey.group_id == user_group
+            )
+        ).first()
 
     def to_json(self) -> dict:
         """
@@ -277,10 +274,15 @@ class TranslateProcessor:
          the user sets to their account).
         """
 
-        translator = db.session.execute(
-            select(with_polymorphic(TranslationService, "*"))
-            .filter(TranslationService.service_name == translator_code)
-        ).scalars().one()
+        translator = (
+            db.session.execute(
+                select(with_polymorphic(TranslationService, "*")).filter(
+                    TranslationService.service_name == translator_code
+                )
+            )
+            .scalars()
+            .one()
+        )
 
         if user_group is not None and isinstance(
             translator, RegisteredTranslationService

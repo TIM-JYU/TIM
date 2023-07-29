@@ -1,16 +1,16 @@
 from typing import Any, Optional, TYPE_CHECKING
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
     from timApp.user.user import User
 
 
-class PeerReview(db.Model):
+class PeerReview(DbModel):
     """A peer review to a task."""
 
     __tablename__ = "peer_review"
@@ -18,19 +18,19 @@ class PeerReview(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     """Review identifier."""
 
-    answer_id: Mapped[int] = mapped_column(db.ForeignKey("answer.id"))
+    answer_id: Mapped[Optional[int]] = mapped_column(ForeignKey("answer.id"))
     """Answer id."""
 
     task_name: Mapped[Optional[str]]
     """Task name"""
 
-    block_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
+    block_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
     """Doc id"""
 
-    reviewer_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    reviewer_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """Reviewer id"""
 
-    reviewable_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    reviewable_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """Reviewable id"""
 
     start_time: Mapped[datetime_tz]
@@ -39,7 +39,7 @@ class PeerReview(db.Model):
     end_time: Mapped[datetime_tz]
     """Review end time"""
 
-    reviewed: Mapped[bool] = mapped_column(default=False)
+    reviewed: Mapped[Optional[bool]] = mapped_column(default=False)
     """Review status"""
 
     points: Mapped[Optional[float]]

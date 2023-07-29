@@ -1,11 +1,12 @@
 from enum import Enum
 from typing import Optional, TYPE_CHECKING, List
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -36,10 +37,8 @@ class PrimaryContact(Enum):
     true = True
 
 
-class UserContact(db.Model):
+class UserContact(DbModel):
     """TIM users' additional contact information."""
-
-    __tablename__ = "usercontact"
 
     __table_args__ = (
         # A user should not have the same contact for the channel
@@ -64,7 +63,7 @@ class UserContact(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """Which user owns this contact information."""
 
     contact: Mapped[str]

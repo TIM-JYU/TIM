@@ -1,13 +1,13 @@
 import json
 from typing import Any, Optional, List, TYPE_CHECKING
 
-from sqlalchemy import func
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import func, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.answer.answer_models import UserAnswer, AnswerUpload
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db, include_if_loaded
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -15,23 +15,17 @@ if TYPE_CHECKING:
     from timApp.plugin.plugintype import PluginType
 
 
-class AnswerSaver(db.Model):
+class AnswerSaver(DbModel):
     """Holds information about who has saved an answer. For example, in teacher view, "Save teacher's fix"
     would store the teacher in this table.
     """
 
-    __tablename__ = "answersaver"
-
-    answer_id: Mapped[int] = mapped_column(db.ForeignKey("answer.id"), primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        db.ForeignKey("useraccount.id"), primary_key=True
-    )
+    answer_id: Mapped[int] = mapped_column(ForeignKey("answer.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
 
 
-class Answer(db.Model):
+class Answer(DbModel):
     """An answer to a task."""
-
-    __tablename__ = "answer"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     """Answer identifier."""
@@ -39,12 +33,10 @@ class Answer(db.Model):
     task_id: Mapped[str] = mapped_column(index=True)
     """Task id to which this answer was posted. In the form "doc_id.name", for example "2.task1"."""
 
-    origin_doc_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("block.id"))
+    origin_doc_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
     """The document in which the answer was saved"""
 
-    plugin_type_id: Mapped[Optional[int]] = mapped_column(
-        db.ForeignKey("plugintype.id")
-    )
+    plugin_type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("plugintype.id"))
     """Plugin type the answer was saved on"""
 
     content: Mapped[str]
@@ -60,28 +52,26 @@ class Answer(db.Model):
     """Whether this answer is valid."""
 
     last_points_modifier: Mapped[Optional[int]] = mapped_column(
-        db.ForeignKey("usergroup.id")
+        ForeignKey("usergroup.id")
     )
     """The UserGroup who modified the points last. Null if the points have been given by the task automatically."""
 
-    plugin_type: Mapped["PluginType"] = db.relationship(lazy="select")
-    uploads: Mapped[List["AnswerUpload"]] = db.relationship(
+    plugin_type: Mapped["PluginType"] = relationship(lazy="select")
+    uploads: Mapped[List["AnswerUpload"]] = relationship(
         back_populates="answer", lazy="dynamic"
     )
-    users: Mapped[List["User"]] = db.relationship(
+    users: Mapped[List["User"]] = relationship(
         secondary=UserAnswer.__table__, back_populates="answers", lazy="dynamic"
     )
-    users_all: Mapped[List["User"]] = db.relationship(
+    users_all: Mapped[List["User"]] = relationship(
         secondary=UserAnswer.__table__,
         back_populates="answers_alt",
         order_by="User.real_name",
         lazy="select",
         overlaps="users",
     )
-    annotations: Mapped[List["Annotation"]] = db.relationship(back_populates="answer")
-    saver: Mapped["User"] = db.relationship(
-        lazy="select", secondary=AnswerSaver.__table__
-    )
+    annotations: Mapped[List["Annotation"]] = relationship(back_populates="answer")
+    saver: Mapped["User"] = relationship(lazy="select", secondary=AnswerSaver.__table__)
 
     @property
     def content_as_json(self) -> dict:

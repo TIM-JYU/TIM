@@ -1,17 +1,18 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import UniqueConstraint
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import UniqueConstraint, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
     from timApp.document.docentry import DocEntry
 
 
-class Translation(db.Model, DocInfo):
+class Translation(DbModel, DocInfo):
     """A translated document.
 
     Translation objects may be created in two scenarios:
@@ -21,19 +22,16 @@ class Translation(db.Model, DocInfo):
 
     """
 
-    __tablename__ = "translation"
-    
-    
-    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
-    src_docid: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
+    doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
+    src_docid: Mapped[int] = mapped_column(ForeignKey("block.id"))
     lang_id: Mapped[str]
     __table_args__ = (UniqueConstraint("src_docid", "lang_id", name="translation_uc"),)
 
-    _block: Mapped["Block"] = db.relationship(
+    _block: Mapped["Block"] = relationship(
         "Block", back_populates="translation", foreign_keys=[doc_id]
     )
 
-    docentry: Mapped["DocEntry"] = db.relationship(
+    docentry: Mapped["DocEntry"] = relationship(
         back_populates="trs",
         primaryjoin="foreign(Translation.src_docid) == DocEntry.id",
     )

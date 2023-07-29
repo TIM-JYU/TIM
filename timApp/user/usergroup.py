@@ -18,6 +18,7 @@ from sqlalchemy.sql import Select
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
+from timApp.timdb.types import DbModel
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import (
     ANONYMOUS_GROUPNAME,
@@ -57,7 +58,7 @@ def tim_group_to_scim(tim_group: str) -> str:
 ORG_GROUP_SUFFIX = " users"
 
 
-class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
+class UserGroup(DbModel, TimeStampMixin, SCIMEntity):
     """A usergroup. Each User should belong to a personal UserGroup that has the same name as the User name. No one
     else should belong to a personal UserGroup.
 
@@ -69,8 +70,6 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     In database, the User 'Anonymous user' belongs to 'Anonymous users' group. Other than that,
     the two groups are empty from the database's point of view.
     """
-
-    __tablename__ = "usergroup"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     """Usergroup identifier."""

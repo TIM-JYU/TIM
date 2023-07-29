@@ -7,9 +7,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 
-ModelBase = db.Model
+ModelBase = DbModel
 
 
 @contextmanager

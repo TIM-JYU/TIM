@@ -1,12 +1,12 @@
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.document.version import Version
 from timApp.notification.notification import NotificationType
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -15,12 +15,10 @@ if TYPE_CHECKING:
 GroupingKey = tuple[int, str]
 
 
-class PendingNotification(db.Model):
-    __tablename__ = "pendingnotification"
-
+class PendingNotification(DbModel):
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
-    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
+    doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
     discriminant: Mapped[str]
     par_id: Mapped[Optional[str]]
     text: Mapped[Optional[str]]
@@ -45,7 +43,7 @@ class PendingNotification(db.Model):
 class DocumentNotification(PendingNotification):
     """A notification that a document has changed."""
 
-    version_change = mapped_column(db.Text)  # : str  # like "1,2/1,3"
+    version_change: Mapped[Optional[str]]  # : str  # like "1,2/1,3"
 
     @property
     def version_before(self) -> Version:
@@ -81,8 +79,8 @@ class CommentNotification(PendingNotification):
 class AnswerNotification(PendingNotification):
     """A notification that an answer has been added, changed or deleted."""
 
-    answer_number = mapped_column(db.Integer)
-    task_id = mapped_column(db.Text)
+    answer_number: Mapped[Optional[int]]
+    task_id: Mapped[Optional[str]]
 
     @property
     def grouping_key(self) -> GroupingKey:

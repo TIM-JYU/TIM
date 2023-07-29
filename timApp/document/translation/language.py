@@ -20,17 +20,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 
 
-class Language(db.Model):
+class Language(DbModel):
     """Represents a standardized language code used for example with
     translation documents.
 
     NOTE: You should always use the provided class-methods for creating new
     instances!
     """
-
-    __tablename__ = "language"
 
     lang_code: Mapped[str] = mapped_column(primary_key=True)
     """Standardized code of the language."""

@@ -1,4 +1,4 @@
-"""Defines the SQLAlchemy object "db" that is used by all model classes by inheriting from db.Model.
+"""Defines the SQLAlchemy object "db" that is used by all model classes by inheriting from DbModel.
 
 __tablename__ is not mandatory but recommended in order to maintain the naming convention for tables. The default table
 name is class name in lowercase.
@@ -14,7 +14,7 @@ from sqlalchemy import func, text
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm.base import instance_state, Mapped
 
-from timApp.timdb.types import add_tim_types, datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 
 session_options = {
     "future": True,
@@ -27,10 +27,17 @@ if os.environ.get("TIM_TESTING", None):
     # because sometimes objects would expire after calling a route.
     session_options["expire_on_commit"] = False
 
-db = SQLAlchemy(session_options=session_options, engine_options=engine_options)
-add_tim_types(db)
+db = SQLAlchemy(
+    session_options=session_options, engine_options=engine_options, model_class=DbModel
+)
+# Overwrite metadata to use the DbModel's metadata
+# Flask-SQLAlchemy 3.x doesn't appear to have a correct handler of model_class, so it ends up overwriting our DbModel
+# Instead, we pass our model manually
+db.Model = DbModel
+db.metadatas[None] = DbModel.metadata
 
-# TODO: Replace db.Model with custom DeclarativeBase class that also specifies __tablename__ and custom types.
+
+# TODO: Replace DbModel with custom DeclarativeBase class that also specifies __tablename__ and custom types.
 #   See https://docs.sqlalchemy.org/en/20/orm/declarative_mixins.html
 # TODO: Switch models to use dataclasses instead
 #   See https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#declarative-dataclass-mapping

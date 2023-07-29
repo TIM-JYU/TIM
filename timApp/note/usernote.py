@@ -1,17 +1,17 @@
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import func
+from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
     from timApp.user.usergroup import UserGroup
     from timApp.item.block import Block
 
 
-class UserNote(db.Model):
+class UserNote(DbModel):
     """A comment/note that has been posted in a document paragraph."""
 
     __tablename__ = "usernotes"
@@ -19,10 +19,10 @@ class UserNote(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     """Comment id."""
 
-    usergroup_id: Mapped[int] = mapped_column(db.ForeignKey("usergroup.id"))
+    usergroup_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"))
     """The UserGroup id who posted the comment."""
 
-    doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
+    doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
     """The document id in which this comment was posted."""
 
     par_id: Mapped[str]

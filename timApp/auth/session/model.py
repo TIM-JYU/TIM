@@ -4,17 +4,18 @@ Database models for session management.
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy.ext.hybrid import hybrid_property  # type: ignore
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import ForeignKey
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
     from timApp.user.user import User
 
 
-class UserSession(db.Model):
+class UserSession(DbModel):
     """
     User session. A session is given to the user when they log in.
 
@@ -24,11 +25,7 @@ class UserSession(db.Model):
               :attr:`timApp.defaultconfig.SESSIONS_ENABLE` is set.
     """
 
-    __tablename__ = "usersession"
-
-    user_id: Mapped[int] = mapped_column(
-        db.ForeignKey("useraccount.id"), primary_key=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
     """
     User ID of the user who owns the session.
     """
@@ -54,7 +51,7 @@ class UserSession(db.Model):
     May include user agent and any other information about login state.
     """
 
-    user: Mapped["User"] = db.relationship("User", back_populates="sessions")
+    user: Mapped["User"] = relationship("User", back_populates="sessions")
     """
     User that owns the session. Relationship to :attr:`user_id`.
     """

@@ -2,9 +2,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Any, TYPE_CHECKING, List
 
-from sqlalchemy import select
+from sqlalchemy import select, ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property  # type: ignore
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound  # type: ignore
 
 from timApp.messaging.messagelist.listinfo import (
@@ -16,7 +16,7 @@ from timApp.messaging.messagelist.listinfo import (
     MessageVerificationType,
 )
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
@@ -36,64 +36,64 @@ class MemberJoinMethod(Enum):
     """User joined the list on their own."""
 
 
-class MessageListModel(db.Model):
+class MessageListModel(DbModel):
     """Database model for message lists"""
 
     __tablename__ = "messagelist"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    manage_doc_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("block.id"))
+    manage_doc_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
     """The document which manages a message list."""
 
-    name: Mapped[str]
+    name: Mapped[Optional[str]]
     """The name of a message list."""
 
-    can_unsubscribe: Mapped[bool]
+    can_unsubscribe: Mapped[Optional[bool]]
     """If a member can unsubscribe from this list on their own."""
 
-    email_list_domain: Mapped[str]
+    email_list_domain: Mapped[Optional[str]]
     """The domain used for an email list attached to a message list. If None/null, then message list doesn't have an 
     attached email list. This is a tad silly at this point in time, because JYU TIM only has one domain. However, 
     this allows quick adaptation if more domains are added or otherwise changed in the future. """
 
-    archive: Mapped[ArchiveType]
+    archive: Mapped[Optional[ArchiveType]]
     """The archive policy of a message list."""
 
-    notify_owner_on_change: Mapped[bool]
+    notify_owner_on_change: Mapped[Optional[bool]]
     """Should the owner of the message list be notified if there are changes on message list members."""
 
-    description: Mapped[str]
+    description: Mapped[Optional[str]]
     """A short description what a message list is about."""
 
-    info: Mapped[str]
+    info: Mapped[Optional[str]]
     """Additional information about the message list."""
 
-    removed: Mapped[datetime_tz]
+    removed: Mapped[Optional[datetime_tz]]
     """When this list has been marked for removal."""
 
-    default_send_right: Mapped[bool]
+    default_send_right: Mapped[Optional[bool]]
     """Default send right for new members who join the list on their own."""
 
-    default_delivery_right: Mapped[bool]
+    default_delivery_right: Mapped[Optional[bool]]
     """Default delivery right for new members who join the list on their own."""
 
-    tim_user_can_join: Mapped[bool]
+    tim_user_can_join: Mapped[Optional[bool]]
     """Flag if TIM users can join the list on their own."""
 
-    subject_prefix: Mapped[str]
+    subject_prefix: Mapped[Optional[str]]
     """What prefix message subjects that go through the list get."""
 
-    only_text: Mapped[bool]
+    only_text: Mapped[Optional[bool]]
     """Flag if only text format messages are allowed on a list."""
 
-    default_reply_type: Mapped[ReplyToListChanges]
+    default_reply_type: Mapped[Optional[ReplyToListChanges]]
     """Default reply type for the list."""
 
-    non_member_message_pass: Mapped[bool]
+    non_member_message_pass: Mapped[Optional[bool]]
     """Flag if non members messages to the list are passed straight through without moderation."""
 
-    allow_attachments: Mapped[bool]
+    allow_attachments: Mapped[Optional[bool]]
     """Flag if attachments are allowed on the list. The list of allowed attachment file extensions are stored at 
     listoptions.py """
 
@@ -102,17 +102,17 @@ class MessageListModel(db.Model):
     )
     """How to verify messages sent to the list."""
 
-    block: Mapped["Block"] = db.relationship(
+    block: Mapped["Block"] = relationship(
         back_populates="managed_messagelist", lazy="select"
     )
     """Relationship to the document that is used to manage this message list."""
 
-    members: Mapped[List["MessageListMember"]] = db.relationship(
+    members: Mapped[List["MessageListMember"]] = relationship(
         back_populates="message_list", lazy="select"
     )
     """All the members of the list."""
 
-    distribution: Mapped["MessageListDistribution"] = db.relationship(
+    distribution: Mapped["MessageListDistribution"] = relationship(
         back_populates="message_list", lazy="select"
     )
     """The message channels the list uses."""
@@ -265,27 +265,27 @@ class MessageListModel(db.Model):
         )
 
 
-class MessageListMember(db.Model):
+class MessageListMember(DbModel):
     """Database model for members of a message list."""
 
     __tablename__ = "messagelist_member"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    message_list_id: Mapped[int] = mapped_column(db.ForeignKey("messagelist.id"))
+    message_list_id: Mapped[Optional[int]] = mapped_column(ForeignKey("messagelist.id"))
     """What message list a member belongs to."""
 
-    send_right: Mapped[bool]
+    send_right: Mapped[Optional[bool]]
     """If a member can send messages to a message list."""
 
-    delivery_right: Mapped[bool]
+    delivery_right: Mapped[Optional[bool]]
     """If a member can get messages from a message list."""
 
     membership_ended: Mapped[Optional[datetime_tz]]
     """When member's membership on a list ended. This is set when member is removed from a list. A value of None means 
     the member is still on the list."""
 
-    join_method: Mapped[MemberJoinMethod]
+    join_method: Mapped[Optional[MemberJoinMethod]]
     """How the member came to a list."""
 
     membership_verified: Mapped[Optional[datetime_tz]]
@@ -293,24 +293,24 @@ class MessageListMember(db.Model):
     this date is the date teacher added the member. If the member was invited, then this is the date they verified 
     their join. """
 
-    member_type: Mapped[str]
+    member_type: Mapped[Optional[str]]
     """Discriminator for polymorhphic members."""
 
-    message_list: Mapped["MessageListModel"] = db.relationship(
+    message_list: Mapped["MessageListModel"] = relationship(
         back_populates="members", lazy="select"
     )
-    tim_member: Mapped[Optional["MessageListTimMember"]] = db.relationship(
+    tim_member: Mapped[Optional["MessageListTimMember"]] = relationship(
         back_populates="member",
         lazy="select",
         post_update=True,
     )
-    external_member: Mapped[Optional["MessageListExternalMember"]] = db.relationship(
+    external_member: Mapped[Optional["MessageListExternalMember"]] = relationship(
         back_populates="member",
         lazy="select",
         uselist=False,
         post_update=True,
     )
-    distribution: Mapped[Optional["MessageListDistribution"]] = db.relationship(
+    distribution: Mapped[Optional["MessageListDistribution"]] = relationship(
         back_populates="member", lazy="select"
     )
 
@@ -405,18 +405,18 @@ class MessageListTimMember(MessageListMember):
     __tablename__ = "messagelist_tim_member"
 
     id: Mapped[int] = mapped_column(
-        db.ForeignKey("messagelist_member.id"), primary_key=True
+        ForeignKey("messagelist_member.id"), primary_key=True
     )
 
-    group_id: Mapped[int] = mapped_column(db.ForeignKey("usergroup.id"))
+    group_id: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """A UserGroup id for a member."""
 
-    member: Mapped["MessageListMember"] = db.relationship(
+    member: Mapped["MessageListMember"] = relationship(
         back_populates="tim_member",
         post_update=True,
     )
 
-    user_group: Mapped["UserGroup"] = db.relationship(
+    user_group: Mapped["UserGroup"] = relationship(
         back_populates="messagelist_membership",
         post_update=True,
     )
@@ -460,18 +460,16 @@ class MessageListExternalMember(MessageListMember):
     __tablename__ = "messagelist_external_member"
 
     id: Mapped[int] = mapped_column(
-        db.ForeignKey("messagelist_member.id"), primary_key=True
+        ForeignKey("messagelist_member.id"), primary_key=True
     )
 
-    email_address: Mapped[str]
+    email_address: Mapped[Optional[str]]
     """Email address of message list's external member."""
 
-    display_name: Mapped[str]
+    display_name: Mapped[Optional[str]]
     """Display name for external user, which in most cases should be the external member's address' owner's name."""
 
-    member: Mapped["MessageListMember"] = db.relationship(
-        back_populates="external_member"
-    )
+    member: Mapped["MessageListMember"] = relationship(back_populates="external_member")
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
 
@@ -501,29 +499,25 @@ class MessageListExternalMember(MessageListMember):
         return ""
 
 
-class MessageListDistribution(db.Model):
+class MessageListDistribution(DbModel):
     """Message list member's chosen distribution channels."""
 
     __tablename__ = "messagelist_distribution"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    user_id: Mapped[Optional[int]] = mapped_column(
-        db.ForeignKey("messagelist_member.id")
-    )
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("messagelist_member.id"))
     """Message list member's id, if this row is about message list member's channel distribution."""
 
-    message_list_id: Mapped[Optional[int]] = mapped_column(
-        db.ForeignKey("messagelist.id")
-    )
+    message_list_id: Mapped[Optional[int]] = mapped_column(ForeignKey("messagelist.id"))
     """Message list's id, if this row is about message list's channel distribution."""
 
-    channel: Mapped[Channel]
+    channel: Mapped[Optional[Channel]]
     """Which message channels are used by a message list or a user."""
 
-    member: Mapped[Optional["MessageListMember"]] = db.relationship(
+    member: Mapped[Optional["MessageListMember"]] = relationship(
         back_populates="distribution", lazy="select"
     )
-    message_list: Mapped[Optional["MessageListModel"]] = db.relationship(
+    message_list: Mapped[Optional["MessageListModel"]] = relationship(
         back_populates="distribution", lazy="select"
     )

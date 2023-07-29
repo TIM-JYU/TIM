@@ -13,11 +13,10 @@ All this information is contained in :class:`UserGroupMember` which links a user
 from datetime import timedelta
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import func
+from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
@@ -25,21 +24,17 @@ if TYPE_CHECKING:
     from timApp.user.usergroup import UserGroup
 
 
-class UserGroupMember(db.Model):
+class UserGroupMember(DbModel):
     """
     Associates a user with a user group.
     """
 
-    __tablename__ = "usergroupmember"
-
     usergroup_id: Mapped[int] = mapped_column(
-        db.ForeignKey("usergroup.id"), primary_key=True
+        ForeignKey("usergroup.id"), primary_key=True
     )
     """ID of the usergroup the member belongs to."""
 
-    user_id: Mapped[int] = mapped_column(
-        db.ForeignKey("useraccount.id"), primary_key=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
     """ID of the user that belongs to the usergroup."""
 
     membership_end: Mapped[Optional[datetime_tz]]
@@ -49,14 +44,16 @@ class UserGroupMember(db.Model):
               If the end timestamp is present, the user is considered deleted from the group.
     """
 
-    membership_added: Mapped[datetime_tz] = mapped_column(default=get_current_time)
+    membership_added: Mapped[Optional[datetime_tz]] = mapped_column(
+        default=get_current_time
+    )
     """Timestamp for when the user was last time added as the active member.
     
     .. note:: The timestamp is used **for logging purposes only**.
               In other words, it is not used to determine soft deletion or other membership state.
     """
 
-    added_by: Mapped[Optional[int]] = mapped_column(db.ForeignKey("useraccount.id"))
+    added_by: Mapped[Optional[int]] = mapped_column(ForeignKey("useraccount.id"))
     """User ID of the user who added the membership."""
 
     user: Mapped["User"] = relationship(foreign_keys=[user_id])

@@ -4,12 +4,12 @@ from functools import cache
 from typing import Optional
 
 from flask import render_template_string, url_for
-from sqlalchemy import select
+from sqlalchemy import select, ForeignKey
 from sqlalchemy.orm import load_only, mapped_column, Mapped, relationship
 
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 from timApp.user.user import User
 from timApp.user.usercontact import UserContact, PrimaryContact
 from timApp.util.utils import get_current_time
@@ -46,11 +46,9 @@ VERIFICATION_TEMPLATES = {
 }
 
 
-class Verification(db.Model):
+class Verification(DbModel):
     """For various pending verifications, such as message list joining and contact information ownership
     verification."""
-
-    __tablename__ = "verification"
 
     token: Mapped[str] = mapped_column(primary_key=True)
     """Verification token used for action verification"""
@@ -58,7 +56,7 @@ class Verification(db.Model):
     type: Mapped[VerificationType] = mapped_column(primary_key=True)
     """The type of verification, see VerificationType class for details."""
 
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """User that can react to verification request."""
 
     requested_at: Mapped[Optional[datetime_tz]]
@@ -87,11 +85,9 @@ class Verification(db.Model):
 
 
 class ContactAddVerification(Verification):
-    contact_id = mapped_column(db.Integer, db.ForeignKey("usercontact.id"))
+    contact_id: Mapped[Optional[int]] = mapped_column(ForeignKey("usercontact.id"))
 
-    contact = db.relationship(
-        "UserContact", lazy="select", uselist=False
-    )  # : UserContact | None
+    contact: Mapped[Optional["UserContact"]] = relationship()
     """Contact to verify."""
 
     @property

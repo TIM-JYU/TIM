@@ -15,11 +15,11 @@ __date__ = "24.5.2022"
 from dataclasses import dataclass
 from typing import Optional, Iterable, List, TYPE_CHECKING
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from tim_common.dumboclient import call_dumbo
@@ -28,18 +28,16 @@ if TYPE_CHECKING:
     from timApp.item.block import Block
 
 
-class EventGroup(db.Model):
+class EventGroup(DbModel):
     """Information about a user group participating in an event."""
 
-    __tablename__ = "eventgroup"
-
     event_id: Mapped[int] = mapped_column(
-        db.ForeignKey("event.event_id"), primary_key=True
+        ForeignKey("event.event_id"), primary_key=True
     )
     """Event the the group belongs to"""
 
     usergroup_id: Mapped[int] = mapped_column(
-        db.ForeignKey("usergroup.id"), primary_key=True
+        ForeignKey("usergroup.id"), primary_key=True
     )
     """The usergroup that belongs to the group"""
 
@@ -53,18 +51,16 @@ class EventGroup(db.Model):
     """The usergroup that belongs to the group"""
 
 
-class Enrollment(db.Model):
+class Enrollment(DbModel):
     """A single enrollment in an event"""
 
-    __tablename__ = "enrollment"
-
     event_id: Mapped[int] = mapped_column(
-        db.ForeignKey("event.event_id"), primary_key=True
+        ForeignKey("event.event_id"), primary_key=True
     )
     """Event the enrollment is for"""
 
     usergroup_id: Mapped[int] = mapped_column(
-        db.ForeignKey("usergroup.id"), primary_key=True
+        ForeignKey("usergroup.id"), primary_key=True
     )
     """The usergroup that is enrolled (i.e. booked) in the event"""
 
@@ -72,7 +68,7 @@ class Enrollment(db.Model):
     """The message left by the booker"""
 
     enroll_type_id: Mapped[int] = mapped_column(
-        db.ForeignKey("enrollmenttype.enroll_type_id")
+        ForeignKey("enrollmenttype.enroll_type_id")
     )
     """Type of the enrollment"""
 
@@ -102,25 +98,19 @@ class Enrollment(db.Model):
         )
 
 
-class EventTagAttachment(db.Model):
+class EventTagAttachment(DbModel):
     """Attachment information for the event tag"""
 
-    __tablename__ = "eventtagattachment"
-
     event_id: Mapped[int] = mapped_column(
-        db.ForeignKey("event.event_id"), primary_key=True
+        ForeignKey("event.event_id"), primary_key=True
     )
     """Event the tag is attached to"""
-    tag_id: Mapped[int] = mapped_column(
-        db.ForeignKey("eventtag.tag_id"), primary_key=True
-    )
+    tag_id: Mapped[int] = mapped_column(ForeignKey("eventtag.tag_id"), primary_key=True)
     """Tag that is attached to the event"""
 
 
-class EventTag(db.Model):
+class EventTag(DbModel):
     """A string tag that can be attached to an event"""
-
-    __tablename__ = "eventtag"
 
     tag_id: Mapped[int] = mapped_column(primary_key=True)
     """The id of the tag"""
@@ -183,10 +173,8 @@ class EnrollmentRight:
         return self.can_enroll or self.can_manage_event
 
 
-class Event(db.Model):
+class Event(DbModel):
     """A calendar event. Event has metadata (title, time, location) and various participating user groups."""
-
-    __tablename__ = "event"
 
     event_id: Mapped[int] = mapped_column(primary_key=True)
     """Identification number of the event"""
@@ -212,13 +200,13 @@ class Event(db.Model):
     signup_before: Mapped[Optional[datetime_tz]]
     """Time until signup is closed"""
 
-    creator_user_id: Mapped[int] = mapped_column(db.ForeignKey("useraccount.id"))
+    creator_user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """User who created the event originally"""
 
-    origin_doc_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"))
+    origin_doc_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
     """Document that was used to create the event"""
 
-    origin_doc: Mapped["Block"] = relationship()
+    origin_doc: Mapped[Optional["Block"]] = relationship()
     """Document that was used to create the event"""
 
     enrolled_users: Mapped[List["UserGroup"]] = relationship(
@@ -415,10 +403,8 @@ class Event(db.Model):
         }
 
 
-class EnrollmentType(db.Model):
+class EnrollmentType(DbModel):
     """Table for enrollment type, combines enrollment type ID to specific enrollment type"""
-
-    __tablename__ = "enrollmenttype"
 
     enroll_type_id: Mapped[int] = mapped_column(primary_key=True)
     """Enrollment type"""
@@ -427,14 +413,10 @@ class EnrollmentType(db.Model):
     """Name of the enrollment type"""
 
 
-class ExportedCalendar(db.Model):
+class ExportedCalendar(DbModel):
     """Information about exported calendars"""
 
-    __tablename__ = "exportedcalendar"
-
-    user_id: Mapped[int] = mapped_column(
-        db.ForeignKey("useraccount.id"), primary_key=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
     """User who created the exported calendar"""
 
     calendar_hash: Mapped[str]

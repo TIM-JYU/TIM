@@ -1,10 +1,10 @@
 from enum import Enum, unique
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
@@ -24,17 +24,15 @@ class TagType(Enum):
     """The Tag is the name for a subject."""
 
 
-class Tag(db.Model):
+class Tag(DbModel):
     """A tag with associated document id, tag name, type and expiration date."""
 
-    __tablename__ = "tag"
-
-    block_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
+    block_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
     name: Mapped[str] = mapped_column(primary_key=True)
     type: Mapped[TagType]
     expires: Mapped[Optional[datetime_tz]]
 
-    block: Mapped["Block"] = db.relationship(back_populates="tags")
+    block: Mapped["Block"] = relationship(back_populates="tags")
 
     def __json__(self):
         return ["block_id", "name", "type", "expires"]

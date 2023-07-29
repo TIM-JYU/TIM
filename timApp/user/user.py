@@ -41,6 +41,7 @@ from timApp.notification.notification import Notification, NotificationType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
+from timApp.timdb.types import DbModel
 from timApp.user.hakaorganization import HakaOrganization, get_home_organization_id
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.preferences import Preferences
@@ -92,7 +93,7 @@ if TYPE_CHECKING:
     from timApp.lecture.lectureanswer import LectureAnswer
     from timApp.lecture.message import Message
     from timApp.lecture.questionactivity import QuestionActivity
-    from timApp.lecture.useractivity import Useractivity
+    from timApp.lecture.useractivity import UserActivity
     from timApp.velp.annotation_model import Annotation
     from timApp.velp.velp_models import Velp
 
@@ -257,7 +258,7 @@ def user_query_with_joined_groups() -> Select:
     return select(User).options(selectinload(User.groups))
 
 
-class User(db.Model, TimeStampMixin, SCIMEntity):
+class User(DbModel, TimeStampMixin, SCIMEntity):
     """A user account. Used to identify users.
 
     .. note:: Some user IDs are reserved for internal use:
@@ -421,7 +422,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     )
     """User's activity on lecture questions."""
 
-    useractivity: Mapped[List["Useractivity"]] = relationship(back_populates="user")
+    useractivity: Mapped[List["UserActivity"]] = relationship(back_populates="user")
     """User's activity during lectures."""
 
     answers: DynamicMapped["Answer"] = relationship(

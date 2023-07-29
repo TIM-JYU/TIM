@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Iterable, Any, TYPE_CHECKING
 
-from sqlalchemy import true, and_, select, delete
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import true, and_, select, delete, UniqueConstraint, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry, get_documents
@@ -14,6 +14,7 @@ from timApp.item.block import Block, insert_block, copy_default_rights, BlockTyp
 from timApp.item.item import Item
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location, join_location, relative_location
 
@@ -23,12 +24,10 @@ if TYPE_CHECKING:
 ROOT_FOLDER_ID = -1
 
 
-class Folder(db.Model, Item):
+class Folder(DbModel, Item):
     """Represents a folder in the directory hierarchy."""
 
-    __tablename__ = "folder"
-
-    id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
     """Folder identifier."""
 
     name: Mapped[str]
@@ -37,9 +36,9 @@ class Folder(db.Model, Item):
     location: Mapped[str]
     """Folder location (first parts of the path)."""
 
-    __table_args__ = (db.UniqueConstraint("name", "location", name="folder_uc"),)
+    __table_args__ = (UniqueConstraint("name", "location", name="folder_uc"),)
 
-    _block: Mapped[Block] = db.relationship(back_populates="folder", lazy="joined")
+    _block: Mapped[Block] = relationship(back_populates="folder", lazy="joined")
 
     @staticmethod
     def get_root() -> Folder:

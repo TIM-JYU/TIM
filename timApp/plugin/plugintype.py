@@ -4,10 +4,11 @@ from typing import Any
 import filelock
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, Session
 
 import timApp
 from timApp.timdb.sqa import db
+from timApp.timdb.types import DbModel
 
 CONTENT_FIELD_NAME_MAP = {
     "csPlugin": "usercode",
@@ -34,9 +35,7 @@ class PluginTypeBase:
 
 
 # TODO: Right now values are added dynamically to the table when saving answers. Instead add them on TIM start.
-class PluginType(db.Model, PluginTypeBase):
-    __tablename__ = "plugintype"
-
+class PluginType(DbModel, PluginTypeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     type: Mapped[str] = mapped_column(unique=True)
@@ -55,11 +54,9 @@ class PluginType(db.Model, PluginTypeBase):
         # Use a lock to prevent concurrent access
         with filelock.FileLock("/tmp/plugin_type_create.lock"):
             try:
-                tmp_session = db._make_session_factory({})
-                session = tmp_session()
-                session.add(PluginType(type=p_type))
-                session.commit()
-                session.close()
+                with Session(db.engine) as session:
+                    session.add(PluginType(type=p_type))
+                    session.commit()
             except IntegrityError as e:
                 # TODO: Try to debug why this still happens even after locking
                 if (

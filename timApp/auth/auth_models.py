@@ -3,21 +3,22 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Optional, List
 
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.auth.accesstype import AccessType
-from timApp.timdb.types import datetime_tz
+from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
     from timApp.item.distribute_rights import Right
     from timApp.item.block import Block
     from timApp.user.usergroup import UserGroup
 
-from timApp.timdb.sqa import db, include_if_loaded
+from timApp.timdb.sqa import include_if_loaded
 from timApp.util.utils import get_current_time
 
 
-class AccessTypeModel(db.Model):
+class AccessTypeModel(DbModel):
     """A kind of access that a UserGroup may have to a Block."""
 
     __tablename__ = "accesstype"
@@ -25,10 +26,10 @@ class AccessTypeModel(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     """Access type identifier."""
 
-    name: Mapped[Optional[str]]
+    name: Mapped[str]
     """Access type name, such as 'view', 'edit', 'manage', etc."""
 
-    accesses: Mapped[List["BlockAccess"]] = db.relationship(back_populates="atype")
+    accesses: Mapped[List["BlockAccess"]] = relationship(back_populates="atype")
 
     def __json__(self):
         return ["id", "name"]
@@ -37,16 +38,14 @@ class AccessTypeModel(db.Model):
         return AccessType(self.id)
 
 
-class BlockAccess(db.Model):
+class BlockAccess(DbModel):
     """A single permission. Relates a UserGroup with a Block along with an AccessType."""
 
-    __tablename__ = "blockaccess"
-
-    block_id: Mapped[int] = mapped_column(db.ForeignKey("block.id"), primary_key=True)
+    block_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
     usergroup_id: Mapped[int] = mapped_column(
-        db.ForeignKey("usergroup.id"), primary_key=True
+        ForeignKey("usergroup.id"), primary_key=True
     )
-    type: Mapped[int] = mapped_column(db.ForeignKey("accesstype.id"), primary_key=True)
+    type: Mapped[int] = mapped_column(ForeignKey("accesstype.id"), primary_key=True)
     accessible_from: Mapped[Optional[datetime_tz]]
     accessible_to: Mapped[Optional[datetime_tz]]
     duration: Mapped[Optional[timedelta]]
@@ -54,9 +53,9 @@ class BlockAccess(db.Model):
     duration_to: Mapped[Optional[datetime_tz]]
     require_confirm: Mapped[Optional[bool]]
 
-    block: Mapped["Block"] = db.relationship(back_populates="accesses")
-    usergroup: Mapped["UserGroup"] = db.relationship(back_populates="accesses")
-    atype: Mapped["AccessTypeModel"] = db.relationship(back_populates="accesses")
+    block: Mapped["Block"] = relationship(back_populates="accesses")
+    usergroup: Mapped["UserGroup"] = relationship(back_populates="accesses")
+    atype: Mapped["AccessTypeModel"] = relationship(back_populates="accesses")
 
     @property
     def duration_now(self):
