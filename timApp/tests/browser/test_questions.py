@@ -14,7 +14,7 @@ from timApp.tests.browser.browsertest import (
     find_button_by_text,
     find_by_attr_name,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 
 ChoiceList = list[tuple[str, str]]
 ElementList = list[WebElement]
@@ -389,7 +389,7 @@ class QuestionTest(BrowserTest):
 
         # check answer format is correct
         a = (
-            db.session.execute(
+            run_sql(
                 select(Answer).filter_by(task_id=f'{d.id}.{qst_par.get_attr("taskId")}')
             )
             .scalars()

@@ -4,7 +4,7 @@ from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.util.utils import get_current_time
 
@@ -71,9 +71,7 @@ class TestSelfExpire(TimRouteTest):
         )
 
         ans: list[Answer] = (
-            db.session.execute(select(Answer).filter_by(task_id=f"{d.id}.test"))
-            .scalars()
-            .all()
+            run_sql(select(Answer).filter_by(task_id=f"{d.id}.test")).scalars().all()
         )
         self.assertEqual(len(ans), 1)
         self.assertEqual([u.name for u in ans[0].users_all], [self.test_user_2.name])

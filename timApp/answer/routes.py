@@ -113,7 +113,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.plugintype import PluginTypeBase
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import (
     verify_group_view_access,
 )
@@ -188,7 +188,7 @@ def save_review_points(
     if not is_peerreview_enabled(doc):
         raise AccessDenied("Peer review is not enabled")
     peer_review = (
-        db.session.execute(
+        run_sql(
             select(PeerReview)
             .filter_by(
                 block_id=tid.doc_id,
@@ -448,9 +448,7 @@ def get_useranswers_for_task(
         .subquery()
     )
     answs: list[Answer] = (
-        db.session.execute(select(Answer).join(sub, Answer.id == sub.c.col).options(selectinload(Answer.users_all)))
-        .scalars()
-        .all()
+        run_sql(select(Answer).join(sub, Answer.id == sub.c.col).options(selectinload(Answer.users_all))).scalars().all()
     )
     for answer in answs:
         asd = answer.to_json()
@@ -474,7 +472,7 @@ def get_globals_for_tasks(task_ids: list[TaskId], answer_map: dict[str, dict]) -
         .join(sub, Answer.id == sub.c.col)
         .with_only_columns(Answer, sub.c.cnt)
     )
-    for answer, _ in db.session.execute(answers_all):
+    for answer, _ in run_sql(answers_all):
         asd = answer.to_json()
         answer_map[answer.task_id] = asd
 
@@ -1289,7 +1287,7 @@ def check_answerupload_file_accesses(
     uploads: list[AnswerUpload] = []
     doc_map = {}
     blocks = (
-        db.session.execute(
+        run_sql(
             select(Block).filter(
                 Block.description.in_(filelist)
                 & (Block.type_id == BlockType.Upload.value)
@@ -1584,7 +1582,7 @@ def export_answers(doc_path: str) -> Response:
     if not d:
         raise RouteException("Document not found")
     verify_teacher_access(d)
-    answer_list: list[tuple[Answer, str]] = db.session.execute(
+    answer_list: list[tuple[Answer, str]] = run_sql(
         select(Answer)
         .filter(Answer.task_id.startswith(f"{d.id}."))
         .join(User, Answer.users)
@@ -1624,9 +1622,7 @@ def import_answers(
         verify_group_view_access(ug)
     doc_paths = {doc_map.get(a.doc, a.doc) for a in exported_answers}
     docs = (
-        db.session.execute(select(DocEntry).filter(DocEntry.name.in_(doc_paths)))
-        .scalars()
-        .all()
+        run_sql(select(DocEntry).filter(DocEntry.name.in_(doc_paths))).scalars().all()
     )
     doc_path_map = {d.path: d for d in docs}
     missing_docs = doc_paths - set(doc_path_map)
@@ -1652,7 +1648,7 @@ def import_answers(
             f"Found: {seq_to_str([str((a.email, a.username)) for a in mixed_answers])}"
         )
 
-    existing_answers: list[tuple[Answer, str]] = db.session.execute(
+    existing_answers: list[tuple[Answer, str]] = run_sql(
         select(Answer)
         .filter(filter_cond)
         .join(User, Answer.users)
@@ -1681,7 +1677,7 @@ def import_answers(
     dupes = 0
     # noinspection PyUnresolvedReferences
     all_users = (
-        db.session.execute(
+        run_sql(
             select(User).filter(
                 email_field.in_([a.email for a in exported_answers if a.email])
                 | name_field.in_([a.username for a in exported_answers if a.username])
@@ -1805,7 +1801,7 @@ def get_answers(task_id: str, user_id: int) -> Response:
         verify_view_access(d)
         user_context = user_context_with_logged_in(curr_user)
         user_answers = (
-            db.session.execute(
+            run_sql(
                 select(Answer)
                 .filter_by(task_id=tid.doc_task)
                 .order_by(Answer.id.desc())
@@ -2211,7 +2207,7 @@ def get_task_users(task_id: str, peer_review: bool = False) -> Response:
             stmt = stmt.join(UserGroup, User.groups).filter(
                 UserGroup.name.in_(usergroups)
             )
-        users = db.session.execute(stmt).scalars().all()
+        users = run_sql(stmt).scalars().all()
     if hide_names_in_teacher(d):
         model_u = User.get_model_answer_user()
         for user in users:
@@ -2237,9 +2233,7 @@ def rename_answers(old_name: str, new_name: str, doc_path: str) -> Response:
             f"The new name conflicts with {conflicts} other answers with the same task name."
         )
     answers_to_rename = (
-        db.session.execute(select(Answer).filter_by(task_id=f"{d.id}.{old_name}"))
-        .scalars()
-        .all()
+        run_sql(select(Answer).filter_by(task_id=f"{d.id}.{old_name}")).scalars().all()
     )
     for a in answers_to_rename:
         a.task_id = f"{d.id}.{new_name}"
@@ -2265,7 +2259,7 @@ def clear_task_block(user: str, task_id: str) -> Response:
     if not b:
         return json_response({"cleared": False})
     ba = (
-        db.session.execute(
+        run_sql(
             select(BlockAccess)
             .filter_by(
                 block_id=b.id,
@@ -2316,7 +2310,7 @@ def unlock_locked_task(task_id: str) -> Response:
         b = TaskBlock.get_by_task(prerequisite_taskid.doc_task)
         if b:
             ba = (
-                db.session.execute(
+                run_sql(
                     select(BlockAccess)
                     .filter_by(
                         block_id=b.id,
@@ -2370,7 +2364,7 @@ def unlock_task(task_id: str) -> Response:
         b = insert_task_block(task_id=tid.doc_task, owner_groups=d.owners)
     else:
         ba = (
-            db.session.execute(
+            run_sql(
                 select(BlockAccess)
                 .filter_by(
                     block_id=b.id,

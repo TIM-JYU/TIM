@@ -19,7 +19,7 @@ import langcodes
 from sqlalchemy import select
 from sqlalchemy.orm import mapped_column, Mapped
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import DbModel
 
 
@@ -100,7 +100,7 @@ class Language(DbModel):
 
         :return: All the languages found from database.
         """
-        return db.session.execute(select(cls)).scalars().all()
+        return run_sql(select(cls)).scalars().all()
 
     def __str__(self) -> str:
         """

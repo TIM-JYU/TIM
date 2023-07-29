@@ -20,7 +20,7 @@ from timApp.peerreview.util.peerreview_utils import (
     get_reviews_where_user_is_reviewer_query,
     is_peerreview_enabled,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import VelpContent, VelpVersion, Velp, AnnotationComment
@@ -97,7 +97,7 @@ def get_annotations_with_comments_in_document(
         .options(joinedload(Annotation.answer).selectinload(Answer.users_all))
         .with_only_columns(Annotation)
     )
-    anns = db.session.execute(q).scalars().all()
+    anns = run_sql(q).scalars().all()
     return anns
 
 

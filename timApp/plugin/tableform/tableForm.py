@@ -31,7 +31,7 @@ from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User, get_membership_end, get_membership_added
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import (
@@ -181,7 +181,7 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
     gs = get_potential_groups(user, sisu_id)
     docs_with_course_tag = select(Tag.block_id).filter_by(type=TagType.CourseCode)
     tags = (
-        db.session.execute(
+        run_sql(
             select(Tag)
             .filter(
                 Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs])

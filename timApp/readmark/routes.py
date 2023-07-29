@@ -26,7 +26,7 @@ from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.sisu.sisu import IncorrectSettings
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import (
@@ -130,7 +130,7 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
         for p in pars:
             if unread:
                 rp = (
-                    db.session.execute(
+                    run_sql(
                         select(ReadParagraph)
                         .filter_by(
                             usergroup_id=group_id,
@@ -276,12 +276,12 @@ def get_statistics(doc_path):
         return dict(zip(column_names, maybe_hide_name_from_row(row)))
 
     if result_format == "count":
-        reads = list(map(row_to_dict, db.session.execute(stmt).all()))
+        reads = list(map(row_to_dict, run_sql(stmt).all()))
 
         return Response(str(len(reads)), mimetype="text/plain")
 
     if result_format == "userid":
-        reads = list(map(row_to_dict, db.session.execute(stmt).all()))
+        reads = list(map(row_to_dict, run_sql(stmt).all()))
 
         result = ""
         for r in reads:
@@ -294,8 +294,8 @@ def get_statistics(doc_path):
 
         def gen_rows():
             yield column_names
-            yield from (maybe_hide_name_from_row(row) for row in db.session.execute(stmt))
+            yield from (maybe_hide_name_from_row(row) for row in run_sql(stmt))
 
         return csv_response(gen_rows(), dialect=csv_dialect)
     else:
-        return json_response(list(map(row_to_dict, db.session.execute(stmt).all())))
+        return json_response(list(map(row_to_dict, run_sql(stmt).all())))

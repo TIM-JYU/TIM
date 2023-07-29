@@ -11,7 +11,7 @@ from flask import Flask
 from sqlalchemy import select, delete
 
 from timApp.auth.oauth2.models import OAuth2Client, OAuth2Token, OAuth2AuthorizationCode
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -27,9 +27,7 @@ class RefreshTokenGrant(grants.RefreshTokenGrant):
 
     def authenticate_refresh_token(self, refresh_token: str) -> OAuth2Token | None:
         token: OAuth2Token = (
-            db.session.execute(
-                select(OAuth2Token).filter_by(refresh_token=refresh_token).limit(1)
-            )
+            run_sql(select(OAuth2Token).filter_by(refresh_token=refresh_token).limit(1))
             .scalars()
             .first()
         )
@@ -71,7 +69,7 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
         self, code: str, client: OAuth2Client
     ) -> OAuth2AuthorizationCode | None:
         auth_code = (
-            db.session.execute(
+            run_sql(
                 select(OAuth2AuthorizationCode).filter_by(
                     code=code, client_id=client.client_id
                 )
@@ -108,7 +106,7 @@ require_oauth = ResourceProtector()
 
 def delete_expired_oauth2_tokens() -> None:
     now_time = int(time.time())
-    db.session.execute(
+    run_sql(
         delete(OAuth2Token).where(
             (OAuth2Token.expires_in + OAuth2Token.issued_at < now_time)
             | (OAuth2Token.access_token_revoked_at < now_time)

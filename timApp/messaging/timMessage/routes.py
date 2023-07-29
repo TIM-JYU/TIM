@@ -40,7 +40,7 @@ from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageDisplay,
     InternalMessageReadReceipt,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
@@ -146,7 +146,7 @@ def expire_tim_message(message_doc_id: int) -> Response:
     """
 
     internal_message: InternalMessage | None = (
-        db.session.execute(select(InternalMessage).filter_by(doc_id=message_doc_id))
+        run_sql(select(InternalMessage).filter_by(doc_id=message_doc_id))
         .scalars()
         .first()
     )
@@ -215,7 +215,7 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
         .filter((is_global | is_user_specific) & can_see)
     )
 
-    messages: list[InternalMessage] = db.session.execute(stmt).scalars().all()
+    messages: list[InternalMessage] = run_sql(stmt).scalars().all()
 
     full_messages = []
     for message in messages:
@@ -269,9 +269,7 @@ def get_read_receipt(doc_id: int) -> Response:
     :return:
     """
     message = (
-        db.session.execute(select(InternalMessage).filter_by(doc_id=doc_id))
-        .scalars()
-        .first()
+        run_sql(select(InternalMessage).filter_by(doc_id=doc_id)).scalars().first()
     )
     if not message:
         raise NotExist("No active messages for the document found")
@@ -495,9 +493,7 @@ def mark_as_read(message_id: int) -> Response:
     verify_logged_in()
 
     message = (
-        db.session.execute(select(InternalMessage).filter_by(id=message_id))
-        .scalars()
-        .first()
+        run_sql(select(InternalMessage).filter_by(id=message_id)).scalars().first()
     )
     if not message:
         raise NotExist("Message not found by the ID")
@@ -527,7 +523,7 @@ def cancel_read_receipt(message_id: int) -> Response:
     verify_logged_in()
 
     receipt = (
-        db.session.execute(
+        run_sql(
             select(InternalMessageReadReceipt).filter_by(
                 user_id=get_current_user_object().id, message_id=message_id
             )
@@ -565,7 +561,7 @@ def get_read_receipts(
         raise NotExist("No document found")
     verify_manage_access(doc)
 
-    read_users = db.session.execute(
+    read_users = run_sql(
         select(
             InternalMessageReadReceipt.user_id,
             InternalMessageReadReceipt.marked_as_read_on,
@@ -583,7 +579,7 @@ def get_read_receipts(
     }
 
     all_recipients = (
-        db.session.execute(
+        run_sql(
             select(User)
             .join(UserGroupMember, User.active_memberships)
             .join(
@@ -603,7 +599,7 @@ def get_read_receipts(
                 "For performance reasons, only read users can be shown for global messages"
             )
         all_recipients = (
-            db.session.execute(select(User).filter(User.id.in_(read_user_map.keys())))
+            run_sql(select(User).filter(User.id.in_(read_user_map.keys())))
             .scalars()
             .all()
         )
@@ -676,7 +672,7 @@ def get_recipient_users(recipients: list[str] | None) -> list[UserGroup]:
                     & (MessageListTimMember.membership_ended == None)
                 )
             )
-            ugs = db.session.execute(stmt).scalars().all()
+            ugs = run_sql(stmt).scalars().all()
             users.update(ugs)
 
     return list(users)

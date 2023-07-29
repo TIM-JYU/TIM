@@ -43,7 +43,7 @@ from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.get_fields import (
     get_fields_and_users,
@@ -397,7 +397,7 @@ def get_answers(user: User, task_ids, answer_map):
             .group_by(Answer.task_id)
             .subquery()
         )
-    answers: list[tuple[Answer, int]] = db.session.execute(
+    answers: list[tuple[Answer, int]] = run_sql(
         select(Answer)
         .join(sub, Answer.id == sub.c.col)
         .with_only_columns(Answer, sub.c.cnt)

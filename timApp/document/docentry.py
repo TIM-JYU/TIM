@@ -12,7 +12,7 @@ from timApp.folder.createopts import FolderCreationOptions
 from timApp.item.block import BlockType, Block
 from timApp.item.block import insert_block
 from timApp.timdb.exceptions import ItemAlreadyExistsException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup, get_admin_group_id
 from timApp.util.utils import split_location
@@ -93,11 +93,11 @@ class DocEntry(DbModel, DocInfo):
 
     @staticmethod
     def get_all() -> list[DocEntry]:
-        return db.session.execute(select(DocEntry)).scalars().all()
+        return run_sql(select(DocEntry)).scalars().all()
 
     @staticmethod
     def find_all_by_id(doc_id: int) -> list[DocEntry]:
-        return db.session.execute(select(DocEntry).filter_by(id=doc_id)).scalars().all()
+        return run_sql(select(DocEntry).filter_by(id=doc_id)).scalars().all()
 
     @staticmethod
     def find_by_id(doc_id: int, docentry_load_opts: Any = None) -> DocInfo | None:
@@ -108,7 +108,7 @@ class DocEntry(DbModel, DocInfo):
         stmt = select(DocEntry).filter_by(id=doc_id)
         if docentry_load_opts:
             stmt = stmt.options(*docentry_load_opts)
-        d = db.session.execute(stmt.limit(1)).scalars().first()
+        d = run_sql(stmt.limit(1)).scalars().first()
         if d:
             return d
         return db.session.get(Translation, doc_id)
@@ -141,7 +141,7 @@ class DocEntry(DbModel, DocInfo):
                 # Match lang id using LIKE to allow for partial matches.
                 # This is a simple way to allow mapping /en to newer /en-US or /en-GB.
                 tr = (
-                    db.session.execute(
+                    run_sql(
                         select(Translation).filter(
                             (Translation.src_docid == entry.id)
                             & (Translation.lang_id.like(f"{lang}%"))
@@ -268,7 +268,7 @@ def get_documents(
         stmt = stmt.filter(custom_filter)
     if query_options is not None:
         stmt = stmt.options(query_options)
-    result = db.session.execute(stmt).scalars().all()
+    result = run_sql(stmt).scalars().all()
     if not filter_user:
         return result
     return [r for r in result if filter_user.has_view_access(r)]

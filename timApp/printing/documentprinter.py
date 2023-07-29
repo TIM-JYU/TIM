@@ -50,7 +50,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.dbaccess import get_files_path
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.utils import cache_folder_path
 from tim_common.html_sanitize import sanitize_html
@@ -865,7 +865,7 @@ class DocumentPrinter:
         url_macros: dict[str, str] | None = None,
     ) -> str | None:
         existing_print: PrintedDoc | None = (
-            db.session.execute(
+            run_sql(
                 select(PrintedDoc)
                 .filter_by(
                     doc_id=self._doc_entry.id,

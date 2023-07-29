@@ -8,7 +8,7 @@ from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessage,
 )
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 
 
 class UrlTest(TimRouteTest):
@@ -130,7 +130,7 @@ class SendMessageTest(TimRouteTest):
         )  # tim-messages folder created successfully
 
         display = (
-            db.session.execute(
+            run_sql(
                 select(InternalMessageDisplay)
                 .filter_by(usergroup_id=self.get_test_user_1_group_id())
                 .limit(1)
@@ -139,14 +139,12 @@ class SendMessageTest(TimRouteTest):
             .first()
         )
         msg = (
-            db.session.execute(
-                select(InternalMessage).filter_by(id=display.message_id).limit(1)
-            )
+            run_sql(select(InternalMessage).filter_by(id=display.message_id).limit(1))
             .scalars()
             .first()
         )
         msg_doc = (
-            db.session.execute(select(DocEntry).filter_by(id=msg.doc_id).limit(1))
+            run_sql(select(DocEntry).filter_by(id=msg.doc_id).limit(1))
             .scalars()
             .first()
         )

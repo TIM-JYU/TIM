@@ -57,7 +57,7 @@ from timApp.messaging.messagelist.messagelist_models import (
     MessageListExternalMember,
     MessageListMember,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.upload.upload import upload_image_or_file_impl
 from timApp.upload.uploadedfile import UploadedFile
 from timApp.user.groups import verify_groupadmin
@@ -696,9 +696,7 @@ def get_message_list_owners(mlist: MessageListModel) -> list[UserGroup]:
     :return: A list of owners, as their personal user group.
     """
     manage_doc_block = (
-        db.session.execute(select(Block).filter_by(id=mlist.manage_doc_id))
-        .scalars()
-        .one()
+        run_sql(select(Block).filter_by(id=mlist.manage_doc_id)).scalars().one()
     )
     return manage_doc_block.owners
 
@@ -1312,13 +1310,11 @@ def sync_usergroup_messagelist_members(
         .filter(User.id.in_(user_ids))
         .options(load_only(User.id, User.email, User.real_name))
     )
-    users = {user.id: user for user in db.session.execute(user_stmt).scalars()}
+    users = {user.id: user for user in run_sql(user_stmt).scalars()}
     try:
         for ug_id, diff in diffs.items():
             ug_memberships = (
-                db.session.execute(
-                    select(MessageListTimMember).filter_by(group_id=ug_id)
-                )
+                run_sql(select(MessageListTimMember).filter_by(group_id=ug_id))
                 .scalars()
                 .all()
             )

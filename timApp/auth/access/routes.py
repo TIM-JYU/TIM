@@ -11,7 +11,7 @@ from timApp.auth.access.util import set_locked_access_type, set_locked_active_gr
 from timApp.auth.accesshelper import verify_logged_in, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.groups import (
     verify_group_edit_access,
     get_group_or_abort,
@@ -72,9 +72,7 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
 
     if not user.is_admin:
         groups: list[UserGroup] = (
-            db.session.execute(
-                select(UserGroup).filter(UserGroup.id.in_(group_ids_set))
-            )
+            run_sql(select(UserGroup).filter(UserGroup.id.in_(group_ids_set)))
             .scalars()
             .all()
         )
@@ -126,11 +124,7 @@ def find_editable_groups(
     verify_logged_in()
     user = get_current_user_object()
     user.bypass_access_lock = True
-    ugs = (
-        db.session.execute(select(UserGroup).filter(UserGroup.id.in_(group_ids)))
-        .scalars()
-        .all()
-    )
+    ugs = run_sql(select(UserGroup).filter(UserGroup.id.in_(group_ids))).scalars().all()
     visible_ugs = [
         ug for ug in ugs if user.is_admin or verify_group_edit_access(ug, require=False)
     ]

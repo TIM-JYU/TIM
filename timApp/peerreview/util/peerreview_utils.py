@@ -14,7 +14,7 @@ from sqlalchemy.sql import Select
 from timApp.document.docinfo import DocInfo
 from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import get_current_time
@@ -25,7 +25,7 @@ def get_reviews_where_user_is_reviewer(d: DocInfo, user: User) -> list[PeerRevie
     stmt = get_reviews_where_user_is_reviewer_query(d, user).options(
         selectinload(PeerReview.reviewable)
     )
-    return db.session.execute(stmt).scalars().all()
+    return run_sql(stmt).scalars().all()
 
 
 def get_reviews_where_user_is_reviewer_query(d: DocInfo, user: User) -> Select:
@@ -33,11 +33,7 @@ def get_reviews_where_user_is_reviewer_query(d: DocInfo, user: User) -> Select:
 
 
 def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
-    return (
-        db.session.execute(select(PeerReview).filter_by(block_id=doc.id))
-        .scalars()
-        .all()
-    )
+    return run_sql(select(PeerReview).filter_by(block_id=doc.id)).scalars().all()
 
 
 def get_reviews_targeting_user(d: DocInfo, user: User) -> list[PeerReview]:
@@ -45,7 +41,7 @@ def get_reviews_targeting_user(d: DocInfo, user: User) -> list[PeerReview]:
     stmt = get_reviews_targeting_user_query(d, user).options(
         selectinload(PeerReview.reviewable)
     )
-    return db.session.execute(stmt).scalars().all()
+    return run_sql(stmt).scalars().all()
 
 
 def get_reviews_targeting_user_query(d: DocInfo, user: User) -> Select:
@@ -60,7 +56,7 @@ def get_reviews_related_to_user(d: DocInfo, user: User) -> list[PeerReview]:
             (PeerReview.reviewable_id == user.id) | (PeerReview.reviewer_id == user.id)
         )
     )
-    return db.session.execute(stmt).scalars().all()
+    return run_sql(stmt).scalars().all()
 
 
 def has_review_access(
@@ -79,7 +75,7 @@ def has_review_access(
         stmt = stmt.filter_by(task_name=task_id.task_name)
     if reviewable_user is not None:
         stmt = stmt.filter_by(reviewable_id=reviewable_user.id)
-    return bool(db.session.execute(stmt.limit(1)).scalars().first())
+    return bool(run_sql(stmt.limit(1)).scalars().first())
 
 
 def check_review_grouping(doc: DocInfo, tasks: list[TaskId]) -> bool:
@@ -90,7 +86,7 @@ def check_review_grouping(doc: DocInfo, tasks: list[TaskId]) -> bool:
         .filter_by(block_id=doc.id)
         .filter(PeerReview.task_name.in_([t.task_name for t in tasks]))
     )
-    return bool(db.session.execute(stmt.limit(1)).scalars().first())
+    return bool(run_sql(stmt.limit(1)).scalars().first())
 
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
@@ -109,7 +105,7 @@ def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
     :param doc: Document containing reviewable answers.
     """
     return (
-        db.session.execute(
+        run_sql(
             select(PeerReview).filter_by(
                 block_id=doc.id,
             )
@@ -136,7 +132,7 @@ def change_peerreviewers_for_user(
     # TODO: Clean up; don't do one query per loop: instead fetch all users at once!
     for i in range(0, len(new_reviewers)):
         updated_user = (
-            db.session.execute(
+            run_sql(
                 select(PeerReview)
                 .filter_by(
                     block_id=doc.id,

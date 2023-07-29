@@ -5,7 +5,7 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.document.version import Version
 from timApp.notification.notification import NotificationType
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
@@ -93,7 +93,7 @@ class AnswerNotification(PendingNotification):
 
 def get_pending_notifications() -> list[PendingNotification]:
     return (
-        db.session.execute(
+        run_sql(
             select(PendingNotification)
             .filter(PendingNotification.processed == None)
             .order_by(PendingNotification.created.asc())

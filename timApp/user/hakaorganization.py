@@ -5,7 +5,7 @@ from flask import current_app
 from sqlalchemy import select
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import DbModel
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ class HakaOrganization(DbModel):
     @staticmethod
     def get_or_create(name: str):
         found = (
-            db.session.execute(select(HakaOrganization).filter_by(name=name).limit(1))
+            run_sql(select(HakaOrganization).filter_by(name=name).limit(1))
             .scalars()
             .first()
         )

@@ -20,7 +20,7 @@ from timApp.messaging.messagelist.messagelist_models import (
     MessageListMember,
 )
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User, deleted_user_pattern
 from timApp.util.flask.requesthelper import NotExist, RouteException
 from timApp.util.logger import log_warning, log_info, log_error
@@ -806,12 +806,12 @@ def update_mailing_list_address(old: str, new: str) -> None:
                     & (MessageListModel.mailman_list_id == new_member.list_id)
                 )
             )
-            db.session.execute(
+            run_sql(
                 delete(MessageListExternalMember)
                 .where(MessageListExternalMember.id.in_(delete_ids_stmt))
                 .execution_options(synchronize_session=False)
             )
-            db.session.execute(
+            run_sql(
                 delete(MessageListMember)
                 .where(MessageListMember.id.in_(delete_ids_stmt))
                 .execution_options(synchronize_session=False)

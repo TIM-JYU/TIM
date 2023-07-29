@@ -6,7 +6,7 @@ from sqlalchemy import func, select, ForeignKey
 from sqlalchemy.orm import lazyload, mapped_column, Mapped, relationship
 
 from timApp.lecture.lecture import Lecture
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz, DbModel
 from timApp.user.user import User
 
@@ -98,4 +98,4 @@ def get_totals(
         .order_by(User.name)
         .with_only_columns(User, func.sum(LectureAnswer.points), func.count())
     )
-    return db.session.execute(stmt).all()
+    return run_sql(stmt).all()

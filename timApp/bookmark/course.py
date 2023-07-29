@@ -7,7 +7,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.item.block import Block
 from timApp.item.tag import Tag, GROUP_TAG_PREFIX
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
 
@@ -17,15 +17,19 @@ def update_user_course_bookmarks() -> None:
     now = get_current_time()
     for gr in u.groups:  # type: UserGroup
         if gr.is_sisu_student_group or gr.is_self_join_course:
-            docs = db.session.execute(
-                select(DocEntry).join(Block)
-                .join(Tag)
-                .filter(
-                    (Tag.name == GROUP_TAG_PREFIX + gr.name)
-                    & ((Tag.expires == None) | (Tag.expires > now))
+            docs = (
+                run_sql(
+                    select(DocEntry)
+                    .join(Block)
+                    .join(Tag)
+                    .filter(
+                        (Tag.name == GROUP_TAG_PREFIX + gr.name)
+                        & ((Tag.expires == None) | (Tag.expires > now))
+                    )
                 )
-
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
             if not docs:
                 continue
             if len(docs) > 1:

@@ -7,7 +7,7 @@ from sqlalchemy.orm import load_only
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.listinfo import Channel
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usercontact import UserContact, ContactOrigin, PrimaryContact
 from timApp.user.verification.verification import (
     resend_verification,
@@ -54,7 +54,7 @@ def add_contact(
                 "The contact is already added but is pending verification"
             )
         verification = (
-            db.session.execute(
+            run_sql(
                 select(ContactAddVerification)
                 .filter_by(contact=existing_contact_info, reacted_at=None)
                 .limit(1)
@@ -173,7 +173,7 @@ def set_primary(
         json_response({"verify": False})
 
     primary_contact_exists = (
-        db.session.execute(
+        run_sql(
             select(UserContact.id)
             .filter_by(channel=channel, contact=contact, primary=PrimaryContact.true)
             .limit(1)
@@ -189,7 +189,7 @@ def set_primary(
         )
 
     existing_verification = (
-        db.session.execute(
+        run_sql(
             select(SetPrimaryContactVerification).filter_by(
                 contact=existing_contact,
                 reacted_at=None,

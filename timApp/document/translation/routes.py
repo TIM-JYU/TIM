@@ -49,7 +49,7 @@ from timApp.document.translation.translator import (
 from timApp.item.copy_rights import copy_rights
 from timApp.item.routes import get_document_relevance, set_relevance
 from timApp.timdb.exceptions import ItemAlreadyExistsException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.util.flask.requesthelper import verify_json_params, NotExist, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
 
@@ -153,10 +153,15 @@ def get_languages(source_languages: bool) -> Response:
     else:
         # Get the translation service by the provided service name
         # TODO Maybe change to use an id instead?
-        tr = db.session.execute(
-            select(TranslationService).with_polymorphic("*")
-            .filter(TranslationService.service_name == translator)
-        ).scalars().one()
+        tr = (
+            run_sql(
+                select(TranslationService)
+                .with_polymorphic("*")
+                .filter(TranslationService.service_name == translator)
+            )
+            .scalars()
+            .one()
+        )
 
         if isinstance(tr, RegisteredTranslationService):
             tr.register(get_current_user_object().get_personal_group())
@@ -399,7 +404,7 @@ def get_all_languages() -> Response:
     :return: JSON response containing all the available languages.
     """
 
-    langs = sorted(db.session.execute(select(Language)).scalars().all())
+    langs = sorted(run_sql(select(Language)).scalars().all())
     return json_response(langs)
 
 
@@ -422,7 +427,9 @@ def get_translators() -> Response:
     :return: JSON response containing the translators.
     """
 
-    translationservice_names = db.session.execute(select(TranslationService.service_name)).scalars().all()
+    translationservice_names = (
+        run_sql(select(TranslationService.service_name)).scalars().all()
+    )
     # The SQLAlchemy query returns a list of tuples even when values of a
     # single column were requested, so they must be unpacked.
     # TODO Add "Manual" to the TranslationService-table instead of hardcoding
@@ -443,16 +450,28 @@ def add_api_key() -> Response:
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
-    tr = db.session.execute(select(TranslationService).filter(
-        translator == TranslationService.service_name
-    )).scalars().first()
+    tr = (
+        run_sql(
+            select(TranslationService).filter(
+                translator == TranslationService.service_name
+            )
+        )
+        .scalars()
+        .first()
+    )
 
     verify_logged_in()
     user = get_current_user_object()
-    duplicate = db.session.execute(select(TranslationServiceKey).filter(
-        (tr.id == TranslationServiceKey.service_id) &
-        (user.get_personal_group().id == TranslationServiceKey.group_id)
-    )).scalars().first()
+    duplicate = (
+        run_sql(
+            select(TranslationServiceKey).filter(
+                (tr.id == TranslationServiceKey.service_id)
+                & (user.get_personal_group().id == TranslationServiceKey.group_id)
+            )
+        )
+        .scalars()
+        .first()
+    )
     if duplicate:
         raise RouteException("There is already a key for this translator for this user")
 
@@ -482,11 +501,15 @@ def remove_api_key() -> Response:
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
-    db.session.execution(delete(TranslationServiceKey).filter(
-        (key == TranslationServiceKey.api_key) &
-        (TranslationServiceKey.group_id == user.get_personal_group().id) &
-        (translator == TranslationService.service_name)
-    ).execution_options(synchronize_session=False))
+    db.session.execution(
+        delete(TranslationServiceKey)
+        .filter(
+            (key == TranslationServiceKey.api_key)
+            & (TranslationServiceKey.group_id == user.get_personal_group().id)
+            & (translator == TranslationService.service_name)
+        )
+        .execution_options(synchronize_session=False)
+    )
 
     db.session.commit()
 
@@ -510,9 +533,15 @@ def get_quota():
 
     # Get the translation service by the provided service name.
     # TODO Maybe change to use id instead?
-    tr = db.session.execute(select(TranslationService).filter(
-        translator == TranslationService.service_name
-    )).scalars().first()
+    tr = (
+        run_sql(
+            select(TranslationService).filter(
+                translator == TranslationService.service_name
+            )
+        )
+        .scalars()
+        .first()
+    )
     tr.register(get_current_user_object().get_personal_group())
 
     return json_response(tr.usage())
@@ -533,9 +562,15 @@ def get_valid_status() -> Response:
     key = req_data.get("apikey", "")
 
     # Get the translation service by the provided service name.
-    tr = db.session.execute(select(TranslationService).filter(
-        translator == TranslationService.service_name,
-    )).scalars().first()
+    tr = (
+        run_sql(
+            select(TranslationService).filter(
+                translator == TranslationService.service_name,
+            )
+        )
+        .scalars()
+        .first()
+    )
 
     # Each new translator engine should add their preferred method for
     # validating api keys here.
@@ -565,9 +600,15 @@ def get_keys() -> Response:
     verify_logged_in()
 
     user = get_current_user_object()
-    keys = db.session.execute(select(TranslationServiceKey).filter(
-        TranslationServiceKey.group_id == user.get_personal_group().id
-    )).scalars().all()
+    keys = (
+        run_sql(
+            select(TranslationServiceKey).filter(
+                TranslationServiceKey.group_id == user.get_personal_group().id
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     return json_response(keys)
 
@@ -583,9 +624,15 @@ def get_my_translators() -> Response:
     verify_logged_in()
 
     user = get_current_user_object()
-    keys = db.session.execute(select(TranslationServiceKey).filter(
-        TranslationServiceKey.group_id == user.get_personal_group().id
-    )).scalars().all()
+    keys = (
+        run_sql(
+            select(TranslationServiceKey).filter(
+                TranslationServiceKey.group_id == user.get_personal_group().id
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     result = []
     for x in keys:

@@ -35,7 +35,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import do_create_group, verify_group_edit_access
 from timApp.user.user import User, UserInfo, UserOrigin
 from timApp.user.usergroup import UserGroup
@@ -79,9 +79,7 @@ def handle_jsrunner_groups(groupdata: JsrunnerGroups | None, curr_user: User) ->
                     before=current_state, after=set(current_state)
                 )
             users: list[User] = (
-                db.session.execute(select(User).filter(User.id.in_(uids)))
-                .scalars()
-                .all()
+                run_sql(select(User).filter(User.id.in_(uids))).scalars().all()
             )
             found_user_ids = {u.id for u in users}
             missing_ids = set(uids) - found_user_ids
@@ -228,7 +226,7 @@ def save_fields(
     doc_map: dict[int, DocInfo] = {}
     user_map: dict[int, User] = {
         u.id: u
-        for u in db.session.execute(
+        for u in run_sql(
             select(User).filter(User.id.in_(x["user"] for x in save_obj))
         ).scalars()
     }
@@ -355,7 +353,7 @@ def save_fields(
         .with_only_columns(func.max(Answer.id).label("aid"), User.id.label("uid"))
         .subquery()
     )
-    datas: list[tuple[int, Answer]] = db.session.execute(
+    datas: list[tuple[int, Answer]] = run_sql(
         select(Answer)
         .join(sq, Answer.id == sq.c.aid)
         .with_only_columns(sq.c.uid, Answer)

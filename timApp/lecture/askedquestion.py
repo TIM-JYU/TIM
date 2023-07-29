@@ -8,7 +8,7 @@ from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped, relationship
 
 from timApp.lecture.question_utils import qst_rand_array, qst_filter_markup_points
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz, DbModel
 from timApp.util.utils import get_current_time
 
@@ -144,7 +144,7 @@ def get_asked_question(asked_id: int) -> AskedQuestion | None:
 
 @contextmanager
 def user_activity_lock(user: "User"):
-    db.session.execute(select(func.pg_advisory_xact_lock(user.id)))
+    run_sql(select(func.pg_advisory_xact_lock(user.id)))
     yield
     return
     # db.session.query(func.pg_advisory_lock(user.id)).all()

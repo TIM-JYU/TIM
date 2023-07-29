@@ -1,13 +1,14 @@
 from collections import defaultdict
+from typing import Sequence
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, Row
 from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.special_group_names import (
     ANONYMOUS_USERNAME,
     ANONYMOUS_GROUPNAME,
@@ -40,7 +41,7 @@ def get_rights_holders(block_id: int) -> RightsList:
 def get_rights_holders_all(block_ids: list[int], order_by=None):
     if not order_by:
         order_by = User.name
-    result: list[tuple[BlockAccess, UserGroup, User | None]] = db.session.execute(
+    result: Sequence[Row[BlockAccess, UserGroup, User | None]] = run_sql(
         select(BlockAccess)
         .options(
             selectinload(BlockAccess.usergroup)

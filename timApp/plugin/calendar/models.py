@@ -18,7 +18,7 @@ from typing import Optional, Iterable, List, TYPE_CHECKING
 from sqlalchemy import func, select, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz, DbModel
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -87,7 +87,7 @@ class Enrollment(DbModel):
     ) -> Optional["Enrollment"]:
         """Returns a specific enrollment (or none) that match the user group id and event id"""
         return (
-            db.session.execute(
+            run_sql(
                 select(Enrollment).filter(
                     Enrollment.event_id == event_id,
                     Enrollment.usergroup_id == user_group_id,
@@ -136,9 +136,7 @@ class EventTag(DbModel):
         result = []
         # noinspection PyUnresolvedReferences
         existing_tags = (
-            db.session.execute(select(EventTag).filter(EventTag.tag.in_(tags)))
-            .scalars()
-            .all()
+            run_sql(select(EventTag).filter(EventTag.tag.in_(tags))).scalars().all()
         )
         existing_tags_dict = {tag.tag: tag for tag in existing_tags}
         for tag in tags:
@@ -248,7 +246,7 @@ class Event(DbModel):
         """Returns the number of enrollments in the event"""
         # noinspection PyUnresolvedReferences
         has_extras = (
-            db.session.execute(
+            run_sql(
                 select(EventGroup.extra)
                 .filter(
                     (EventGroup.event_id == self.event_id) & EventGroup.extra.is_(True)
@@ -269,7 +267,7 @@ class Event(DbModel):
                 func.count(Enrollment.event_id).label("enrollments_count"),
             )
         )
-        res = {is_extra: count for is_extra, count in db.session.execute(stmt)}
+        res = {is_extra: count for is_extra, count in run_sql(stmt)}
         return EnrollmentCounts(
             res.get(False, 0), res.get(True, 0 if has_extras else None)
         )
@@ -286,7 +284,7 @@ class Event(DbModel):
         ug_ids = [ug.id for ug in user.groups]
         # noinspection PyUnresolvedReferences
         event_groups = (
-            db.session.execute(
+            run_sql(
                 select(EventGroup).filter(
                     (EventGroup.event_id == self.event_id)
                     & EventGroup.usergroup_id.in_(ug_ids)
@@ -317,9 +315,7 @@ class Event(DbModel):
     @staticmethod
     def get_by_id(event_id: int) -> Optional["Event"]:
         return (
-            db.session.execute(select(Event).filter_by(event_id=event_id))
-            .scalars()
-            .one_or_none()
+            run_sql(select(Event).filter_by(event_id=event_id)).scalars().one_or_none()
         )
 
     def to_json(
@@ -356,7 +352,7 @@ class Event(DbModel):
             user_group_ids = [ug.id for ug in for_user.groups]
             # noinspection PyUnresolvedReferences
             e = (
-                db.session.execute(
+                run_sql(
                     select(EventGroup.extra).filter(
                         (EventGroup.event_id == self.event_id)
                         & (EventGroup.usergroup_id.in_(user_group_ids))

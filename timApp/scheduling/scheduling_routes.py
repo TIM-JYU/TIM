@@ -23,7 +23,7 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.document.yamlblock import parse_yaml
 from timApp.item.block import Block, BlockType
 from timApp.plugin.plugin import Plugin
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import get_owned_objects_query
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
@@ -79,14 +79,12 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
         verify_admin()
 
     if not all_users:
-        stmt = stmt.filter(
-            BlockAccess.block_id.in_(get_owned_objects_query(u))
-        )
+        stmt = stmt.filter(BlockAccess.block_id.in_(get_owned_objects_query(u)))
 
-    scheduled_fns: list[PeriodicTask] = db.session.execute(stmt).scalars().all()
+    scheduled_fns: list[PeriodicTask] = run_sql(stmt).scalars().all()
 
     docentries = (
-        db.session.execute(
+        run_sql(
             select(DocEntry).filter(
                 DocEntry.id.in_([t.task_id.doc_id for t in scheduled_fns])
             )
@@ -142,7 +140,7 @@ def add_scheduled_function(
     if secs < min_interval:
         raise RouteException(f"Minimum interval is {min_interval} seconds.")
     schedule: IntervalSchedule | None = (
-        db.session.execute(
+        run_sql(
             select(IntervalSchedule)
             .filter_by(every=secs, period=IntervalSchedule.SECONDS)
             .limit(1)
@@ -157,7 +155,7 @@ def add_scheduled_function(
     assert p.task_id is not None
     task_id_str = p.task_id.doc_task
     existing = (
-        db.session.execute(select(PeriodicTask).filter_by(name=task_id_str).limit(1))
+        run_sql(select(PeriodicTask).filter_by(name=task_id_str).limit(1))
         .scalars()
         .first()
     )
@@ -187,7 +185,7 @@ def delete_scheduled_plugin_run(
 ) -> Response:
     pto: PeriodicTask = (
         (
-            db.session.execute(
+            run_sql(
                 select(PeriodicTask)
                 .select_from(Block)
                 .filter_by(id=function_id, type_id=BlockType.ScheduledFunction.value)

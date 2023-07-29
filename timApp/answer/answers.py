@@ -31,7 +31,7 @@ from timApp.answer.pointsumrule import PointSumRule, PointType, Group
 from timApp.document.viewcontext import OriginInfo
 from timApp.plugin.plugintype import PluginType, PluginTypeLazy, PluginTypeBase
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.upload.upload import get_pluginupload
 from timApp.user.user import Consent, User
 from timApp.user.usergroup import UserGroup
@@ -333,7 +333,7 @@ def get_all_answers(
     if options.print == AnswerPrintOptions.ANSWERS_NO_LINE:
         lf = ""
 
-    qq: Iterable[tuple[Answer, User, int]] = db.session.execute(stmt)
+    qq: Iterable[tuple[Answer, User, int]] = run_sql(stmt)
     cnt = 0
     hidden_user_names: dict[str, str] = {}
 
@@ -500,7 +500,7 @@ def get_existing_answers_info(
     users: list[User], task_id: TaskId, only_valid: bool
 ) -> ExistingAnswersInfo:
     stmt = get_answers_query(task_id, users, only_valid)
-    latest = db.session.execute(stmt.limit(1)).scalars().first()
+    latest = run_sql(stmt.limit(1)).scalars().first()
     count = db.session.scalar(select(func.count()).select_from(stmt.subquery()))
     return ExistingAnswersInfo(latest_answer=latest, count=count)
 
@@ -701,7 +701,7 @@ def get_users_for_tasks(
     ).order_by(User.real_name)
 
     def g() -> Generator[UserTaskEntry, None, None]:
-        for r in db.session.execute(main_stmt):
+        for r in run_sql(main_stmt):
             d = r._asdict()
             d["user"] = d.pop("User")
             task = d["task_points"]
@@ -1111,4 +1111,4 @@ def get_global_answers(parsed_task_ids: dict[str, TaskId]) -> list[Answer]:
         .subquery()
     )
     global_datas = select(Answer).join(sq2, Answer.id == sq2.c.aid)
-    return db.session.execute(global_datas).scalars().all()
+    return run_sql(global_datas).scalars().all()

@@ -4,7 +4,7 @@ from flask import flash, url_for, Response
 from sqlalchemy import select
 
 from timApp.auth.accesshelper import verify_admin
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.responsehelper import safe_redirect, json_response
@@ -46,13 +46,17 @@ def restart_server() -> Response:
 @admin_bp.get("/users/search/<term>")
 def search_users(term: str, full: bool = False) -> Response:
     verify_admin()
-    result: list[User] = db.session.scalars(
-        select(User)
-        .filter(
-            User.name.ilike(f"%{term}%")
-            | User.real_name.ilike(f"%{term}%")
-            | User.email.ilike(f"%{term}%")
+    result: list[User] = (
+        run_sql(
+            select(User)
+            .filter(
+                User.name.ilike(f"%{term}%")
+                | User.real_name.ilike(f"%{term}%")
+                | User.email.ilike(f"%{term}%")
+            )
+            .order_by(User.id)
         )
-        .order_by(User.id)
-    ).all()
+        .scalars()
+        .all()
+    )
     return json_response([u.to_json(contacts=True, full=full) for u in result])

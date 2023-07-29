@@ -31,7 +31,7 @@ from timApp.tests.db.timdbtest import (
     TEST_USER_2_USERNAME,
 )
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.special_group_names import ANONYMOUS_USERNAME
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -555,7 +555,7 @@ type: upload
         self.do_plugin_upload(d, "test", "test.txt", f"{d.id}.testupload", "testupload")
         self.get(f"/uploads/{d.id}/testupload/testuser1/1/test.txt")
         a = (
-            db.session.execute(
+            run_sql(
                 select(Answer)
                 .filter_by(task_id=f"{d.id}.testupload")
                 .join(AnswerUpload)

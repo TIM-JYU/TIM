@@ -7,7 +7,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.usernote import UserNote
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 
@@ -67,7 +67,7 @@ def get_notes(
         .filter(f)
         .order_by(UserNote.id)
     )
-    return process_notes(db.session.execute(stmt).all())
+    return process_notes(run_sql(stmt).all())
 
 
 def move_notes(src_par: DocParagraph, dest_par: DocParagraph):
@@ -80,7 +80,7 @@ def move_notes(src_par: DocParagraph, dest_par: DocParagraph):
     ) == str(dest_par.get_id()):
         return
 
-    for u in db.session.execute(
+    for u in run_sql(
         select(UserNote).filter_by(doc_id=src_par.doc.doc_id, par_id=src_par.get_id())
     ).scalars():
         u.doc_id = dest_par.doc.doc_id

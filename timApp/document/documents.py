@@ -12,7 +12,7 @@ from timApp.document.yamlblock import YamlBlock
 from timApp.item.block import Block, BlockType
 from timApp.note.usernote import UserNote
 from timApp.readmark.readparagraph import ReadParagraph
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.usergroup import UserGroup
 
 
@@ -142,14 +142,16 @@ def delete_document(document_id: int):
     for stmt in (
         delete(DocEntry).where(DocEntry.id == document_id),
         delete(BlockAccess).where(BlockAccess.block_id == document_id),
-        delete(Block).where((Block.type_id == BlockType.Document.value) & (Block.id == document_id)),
+        delete(Block).where(
+            (Block.type_id == BlockType.Document.value) & (Block.id == document_id)
+        ),
         delete(ReadParagraph).where(ReadParagraph.doc_id == document_id),
         delete(UserNote).where(UserNote.doc_id == document_id),
         delete(Translation).where(
             (Translation.doc_id == document_id) | (Translation.src_docid == document_id)
-        )
+        ),
     ):
-        db.session.execute(stmt)
+        run_sql(stmt)
 
     Document.remove(document_id)
 

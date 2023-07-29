@@ -10,26 +10,20 @@ import os
 from typing import Optional
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func, text
+from sqlalchemy import func, text, Executable, Result
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm.base import instance_state, Mapped
 
 from timApp.timdb.types import datetime_tz, DbModel
 
-session_options = {
-    "future": True,
-}
-engine_options = {
-    "future": True,
-}
+session_options = {}
+
 if os.environ.get("TIM_TESTING", None):
     # Disabling object expiration on commit makes testing easier
     # because sometimes objects would expire after calling a route.
     session_options["expire_on_commit"] = False
 
-db = SQLAlchemy(
-    session_options=session_options, engine_options=engine_options, model_class=DbModel
-)
+db = SQLAlchemy(session_options=session_options, model_class=DbModel)
 # Overwrite metadata to use the DbModel's metadata
 # Flask-SQLAlchemy 3.x doesn't appear to have a correct handler of model_class, so it ends up overwriting our DbModel
 # Instead, we pass our model manually
@@ -37,8 +31,6 @@ db.Model = DbModel
 db.metadatas[None] = DbModel.metadata
 
 
-# TODO: Replace DbModel with custom DeclarativeBase class that also specifies __tablename__ and custom types.
-#   See https://docs.sqlalchemy.org/en/20/orm/declarative_mixins.html
 # TODO: Switch models to use dataclasses instead
 #   See https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#declarative-dataclass-mapping
 #   This should fix DeeplTranslationService's extra args, see https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#using-non-mapped-dataclass-fields
@@ -53,6 +45,20 @@ class TimeStampMixin:
         default=func.now(),
         onupdate=func.now(),
     )
+
+
+def run_sql(statement: Executable, *args, **kwargs) -> Result:
+    """
+    Runs a SQL statement and returns the result.
+
+    The arguments are passed to SQLAlchemy's session.execute() function.
+
+    :param statement: The SQL statement to run
+    :param args: Arguments to pass to session.execute()
+    :param kwargs: Arguments to pass to session.execute()
+    :return: Result of the SQL statement as a SQLAlchemy Result object that represents the returned rows.
+    """
+    return db.session.execute(statement, *args, **kwargs)
 
 
 def tim_main_execute(sql: str, params=None):

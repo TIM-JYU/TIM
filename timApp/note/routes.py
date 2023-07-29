@@ -33,7 +33,7 @@ from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
 from timApp.notification.pending_notification import PendingNotification
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
@@ -143,7 +143,7 @@ def get_notes(
         time_restriction = time_restriction & (UserNote.created < end)
     d_ids = [d.id for d in docs]
     ns = (
-        db.session.execute(
+        run_sql(
             select(UserNote)
             .filter(UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction)
             .options(selectinload(UserNote.usergroup))
@@ -159,7 +159,7 @@ def get_notes(
         deleted_notes = list(
             map(
                 DeletedNote,
-                db.session.execute(
+                run_sql(
                     select(PendingNotification)
                     .filter(
                         PendingNotification.doc_id.in_(d_ids)

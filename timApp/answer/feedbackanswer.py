@@ -14,7 +14,7 @@ from timApp.document.docentry import DocEntry, get_documents_in_folder
 from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin, find_task_ids
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.answerutil import get_answer_period, AnswerPeriodOptions
 from timApp.util.flask.requesthelper import get_option
@@ -65,7 +65,7 @@ def get_all_feedback_answers(
     q = q.with_only_columns(Answer, User)
 
     # Makes q query an iterable qq for for-loop.
-    qq: Iterable[tuple[Answer, User]] = db.session.execute(q)
+    qq: Iterable[tuple[Answer, User]] = run_sql(q)
 
     return compile_csv(qq, printname, hide_names, exp_answers, users, dec)
 

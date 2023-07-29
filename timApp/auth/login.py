@@ -29,7 +29,7 @@ from timApp.auth.sessioninfo import (
 )
 from timApp.notification.send_email import send_email
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.newuser import NewUser
 from timApp.user.personaluniquecode import PersonalUniqueCode
 from timApp.user.user import User, UserOrigin, UserInfo
@@ -267,11 +267,7 @@ def do_email_signup_or_password_reset(
     password_hash = create_password_hash(password)
     new_password = True
     if not is_simple_email_login_enabled():
-        nu = (
-            db.session.execute(select(NewUser).filter_by(email=email).limit(1))
-            .scalars()
-            .first()
-        )
+        nu = run_sql(select(NewUser).filter_by(email=email).limit(1)).scalars().first()
         if nu:
             nu.pass_ = password_hash
             new_password = False
@@ -318,9 +314,7 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
     else:
         name_filter = [email_or_username]
     valid_nu = None
-    for nu in db.session.execute(
-        select(NewUser).filter(NewUser.email.in_(name_filter))
-    ).scalars():
+    for nu in run_sql(select(NewUser).filter(NewUser.email.in_(name_filter))).scalars():
         if nu.check_password(oldpass):
             valid_nu = nu
     if not valid_nu:
@@ -402,7 +396,7 @@ def email_signup_finish(
         )
         db.session.flush()
 
-    db.session.execute(
+    run_sql(
         delete(NewUser)
         .where(NewUser.email.in_((user.name, user.email)))
         .execution_options(synchronize_session=False)
@@ -585,7 +579,7 @@ def quick_login(username: str) -> Response:
             )
         )
         if not (
-            db.session.execute(stmt.limit(1)).scalars().first()
+            run_sql(stmt.limit(1)).scalars().first()
             and not check_admin_access(user=user)
         ):
             raise AccessDenied("Sorry, you don't have permission to quickLogin.")

@@ -11,7 +11,7 @@ from timApp.admin.util import enum_docs, process_items, BasicArguments
 from timApp.document.docinfo import DocInfo
 from timApp.item.block import BlockType, Block
 from timApp.item.blockassociation import BlockAssociation
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.upload.uploadedfile import UploadedFile
 from timApp.user.usergroup import UserGroup
 
@@ -44,13 +44,16 @@ def associate_old_uploads() -> None:
                 SearchArgumentsBasic(format="", onlyfirst=False, regex=True, term=r),
                 del_anon,
             )
-    orphans = db.session.execute(
-        select(Block)
-        .filter(
-            Block.type_id.in_([BlockType.File.value, BlockType.Image.value])
-            & Block.id.notin_(select(BlockAssociation.child))
+    orphans = (
+        run_sql(
+            select(Block).filter(
+                Block.type_id.in_([BlockType.File.value, BlockType.Image.value])
+                & Block.id.notin_(select(BlockAssociation.child))
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     print(f"Deleting anon accesses from {len(orphans)} orphan uploads")
     for o in orphans:
         del_anon(UploadedFile(o))

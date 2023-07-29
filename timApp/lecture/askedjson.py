@@ -5,7 +5,7 @@ from typing import Any, TYPE_CHECKING
 from sqlalchemy import select
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.timdb.types import DbModel
 
 if TYPE_CHECKING:
@@ -33,11 +33,7 @@ class AskedJson(DbModel):
 
 
 def get_asked_json_by_hash(json_hash: str) -> AskedJson | None:
-    return (
-        db.session.execute(select(AskedJson).filter_by(hash=json_hash))
-        .scalars()
-        .first()
-    )
+    return run_sql(select(AskedJson).filter_by(hash=json_hash)).scalars().first()
 
 
 # NOTE: Do NOT add more fields here for new qst attributes. These are ONLY for backward compatibility.

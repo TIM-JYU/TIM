@@ -5,7 +5,7 @@ from sqlalchemy import select
 from timApp.admin.util import process_items, create_argparser, DryrunnableArguments
 from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 
 
 def fix_imagex_freehanddata(doc: DocInfo, args: DryrunnableArguments) -> int:
@@ -18,12 +18,11 @@ def fix_imagex_freehanddata(doc: DocInfo, args: DryrunnableArguments) -> int:
     :param args: The arguments.
     """
     errors = 0
-    answers: list[Answer] = db.session.scalars(
-        select(Answer)
-        .filter(
-            Answer.task_id.startswith(f"{doc.id}.")
-        )
-    ).all()
+    answers: list[Answer] = (
+        run_sql(select(Answer).filter(Answer.task_id.startswith(f"{doc.id}.")))
+        .scalars()
+        .all()
+    )
     for a in answers:
         data = a.content_as_json
         freehanddata = data.get("freeHandData")

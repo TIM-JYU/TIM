@@ -33,7 +33,7 @@ from timApp.peerreview.util.peerreview_utils import (
     get_all_reviews,
     get_reviews_related_to_user,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User, has_no_higher_right
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import (
@@ -226,7 +226,7 @@ def invalidate_annotation(id: int) -> Response:
 def get_annotation_or_abort(ann_id: int) -> Annotation:
     # Possibly bug: We need to create a new query object, otherwise raiseload() seems to pollute User's relations
     ann = (
-        db.session.execute(
+        run_sql(
             set_annotation_query_opts(select(Annotation).filter_by(id=ann_id)).limit(1)
         )
         .scalars()

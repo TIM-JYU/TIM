@@ -15,7 +15,7 @@ from timApp.item.blockassociation import BlockAssociation
 from timApp.item.item import ItemBase
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 
 DIR_MAPPING = {
@@ -56,7 +56,7 @@ class UploadedFile(ItemBase):
     @staticmethod
     def find_first_child(block: Block, name: str) -> Optional["UploadedFile"]:
         b = (
-            db.session.execute(
+            run_sql(
                 select(Block)
                 .join(BlockAssociation, BlockAssociation.child == Block.id)
                 .filter(

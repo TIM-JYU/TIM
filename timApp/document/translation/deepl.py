@@ -33,7 +33,7 @@ from timApp.document.translation.translator import (
     LanguagePairing,
     replace_md_aliases,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.usergroup import UserGroup
 from timApp.util import logger
 from timApp.util.flask.cache import cache
@@ -86,7 +86,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         """
         # One user group should match one service per one key.
         api_key = (
-            db.session.execute(
+            run_sql(
                 select(TranslationServiceKey).filter(
                     TranslationServiceKey.service_id == self.id,
                     TranslationServiceKey.group_id == user_group.id,

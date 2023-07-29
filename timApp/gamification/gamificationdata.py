@@ -10,7 +10,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.viewcontext import default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.plugin.plugin import find_task_ids
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 
 
 def gamify(initial_data: YamlBlock):
@@ -87,7 +87,9 @@ def get_sorted_lists(items, item_name: str):
             filtered_items.append(item)
         # Sort both so they can be looped simultaneusly without value mismatches.
     docs = sorted(
-        db.session.execute(select(DocEntry).filter(DocEntry.name.in_(item_path_list))).scalars().all(),
+        run_sql(select(DocEntry).filter(DocEntry.name.in_(item_path_list)))
+        .scalars()
+        .all(),
         key=attrgetter("path"),
     )
     items = sorted(filtered_items, key=itemgetter("path"))

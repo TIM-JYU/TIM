@@ -23,7 +23,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation import Annotation
@@ -366,34 +366,24 @@ class VelpGroupDeletionTest(TimRouteTest):
         self.assertEqual(f"roskis/{g['name']}", deleted.path)
 
         # database should not contain any references to the velp group
-        vg = (
-            db.session.execute(select(VelpGroup).filter_by(id=g["id"]).limit(1))
-            .scalars()
-            .first()
-        )
+        vg = run_sql(select(VelpGroup).filter_by(id=g["id"]).limit(1)).scalars().first()
         v_in_g = (
-            db.session.execute(select(VelpInGroup).filter_by(velp_group_id=g["id"]))
+            run_sql(select(VelpInGroup).filter_by(velp_group_id=g["id"]))
             .scalars()
             .all()
         )
         vg_sel = (
-            db.session.execute(
-                select(VelpGroupSelection).filter_by(velp_group_id=g["id"])
-            )
+            run_sql(select(VelpGroupSelection).filter_by(velp_group_id=g["id"]))
             .scalars()
             .all()
         )
         vg_def = (
-            db.session.execute(
-                select(VelpGroupDefaults).filter_by(velp_group_id=g["id"])
-            )
+            run_sql(select(VelpGroupDefaults).filter_by(velp_group_id=g["id"]))
             .scalars()
             .all()
         )
         vg_in_doc = (
-            db.session.execute(
-                select(VelpGroupsInDocument).filter_by(velp_group_id=g["id"])
-            )
+            run_sql(select(VelpGroupsInDocument).filter_by(velp_group_id=g["id"]))
             .scalars()
             .all()
         )
@@ -416,33 +406,25 @@ class VelpGroupDeletionTest(TimRouteTest):
 
         # database should not contain any references to the velp group
         vg2 = (
-            db.session.execute(select(VelpGroup).filter_by(id=g2["id"]).limit(1))
-            .scalars()
-            .first()
+            run_sql(select(VelpGroup).filter_by(id=g2["id"]).limit(1)).scalars().first()
         )
         v_in_g2 = (
-            db.session.execute(select(VelpInGroup).filter_by(velp_group_id=g2["id"]))
+            run_sql(select(VelpInGroup).filter_by(velp_group_id=g2["id"]))
             .scalars()
             .all()
         )
         vg_sel2 = (
-            db.session.execute(
-                select(VelpGroupSelection).filter_by(velp_group_id=g2["id"])
-            )
+            run_sql(select(VelpGroupSelection).filter_by(velp_group_id=g2["id"]))
             .scalars()
             .all()
         )
         vg_def2 = (
-            db.session.execute(
-                select(VelpGroupDefaults).filter_by(velp_group_id=g2["id"])
-            )
+            run_sql(select(VelpGroupDefaults).filter_by(velp_group_id=g2["id"]))
             .scalars()
             .all()
         )
         vg_in_doc2 = (
-            db.session.execute(
-                select(VelpGroupsInDocument).filter_by(velp_group_id=g2["id"])
-            )
+            run_sql(select(VelpGroupsInDocument).filter_by(velp_group_id=g2["id"]))
             .scalars()
             .all()
         )

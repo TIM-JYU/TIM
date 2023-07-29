@@ -14,7 +14,7 @@ from sqlalchemy import select
 
 from timApp.plugin.jsrunner.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
@@ -375,19 +375,19 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
             .filter_by(name=org)
             .with_only_columns(PersonalUniqueCode.code, User)
         )
-        users = {c: u for c, u in db.session.execute(stmt)}
+        users = {c: u for c, u in run_sql(stmt)}
     elif id_prop == "username":
         stmt = select(User).filter(User.name.in_(idents))
-        users = {u.name: u for u in db.session.execute(stmt).scalars()}
+        users = {u.name: u for u in run_sql(stmt).scalars()}
     elif id_prop == "id":
         try:
             stmt = select(User).filter(User.id.in_([int(i) for i in idents]))
         except ValueError as e:
             return args.make_answer_error(f"User ids must be ints ({e})")
-        users = {str(u.id): u for u in db.session.execute(stmt).scalars()}
+        users = {str(u.id): u for u in run_sql(stmt).scalars()}
     elif id_prop == "email":
         stmt = select(User).filter(User.email.in_(idents))
-        users = {u.email: u for u in db.session.execute(stmt).scalars()}
+        users = {u.email: u for u in run_sql(stmt).scalars()}
     else:
         return args.make_answer_error(
             f"Invalid joinProperty: {args.markup.joinProperty}"

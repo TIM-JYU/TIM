@@ -23,7 +23,7 @@ from timApp.sisu.parse_display_name import (
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
 from timApp.tim_app import csrf
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.scimentity import get_meta
 from timApp.user.user import (
     User,
@@ -219,7 +219,7 @@ def get_groups(args: GetGroupsModel) -> Response:
     if not m:
         raise SCIMException(422, "Unsupported filter")
     groups = (
-        db.session.execute(
+        run_sql(
             select(UserGroup)
             .select_from(ScimUserGroup)
             .filter(ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1))))
@@ -391,7 +391,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     added_users = set()
     scimuser = User.get_scimuser()
     existing_accounts: list[User] = (
-        db.session.execute(
+        run_sql(
             select(User).filter(
                 User.name.in_(current_usernames) | User.email.in_(emails)
             )
@@ -586,7 +586,7 @@ def group_scim(ug: UserGroup) -> dict:
 def try_get_group_by_scim(group_id: str) -> UserGroup | None:
     try:
         ug = (
-            db.session.execute(
+            run_sql(
                 select(UserGroup)
                 .select_from(ScimUserGroup)
                 .filter_by(external_id=scim_group_to_tim(group_id))

@@ -4,7 +4,7 @@ from sqlalchemy import select, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.item.block import Block, BlockType, insert_block
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup
 
@@ -17,18 +17,12 @@ class TaskBlock(DbModel):
 
     @staticmethod
     def get_by_task(task_id: str) -> TaskBlock | None:
-        return (
-            db.session.execute(select(TaskBlock).filter_by(task_id=task_id))
-            .scalars()
-            .first()
-        )
+        return run_sql(select(TaskBlock).filter_by(task_id=task_id)).scalars().first()
 
     @staticmethod
     def get_block_by_task(task_id: str) -> Block | None:
         task_block = (
-            db.session.execute(select(TaskBlock).filter_by(task_id=task_id))
-            .scalars()
-            .first()
+            run_sql(select(TaskBlock).filter_by(task_id=task_id)).scalars().first()
         )
         if task_block is not None:
             return task_block.block

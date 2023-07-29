@@ -5,7 +5,7 @@ from typing import Any, Optional, TYPE_CHECKING, List
 from sqlalchemy import func, select, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
@@ -137,7 +137,7 @@ class InternalMessageReadReceipt(DbModel):
         user: "User", message: InternalMessage
     ) -> Optional["InternalMessageReadReceipt"]:
         return (
-            db.session.execute(
+            run_sql(
                 select(InternalMessageReadReceipt).filter_by(user=user, message=message)
             )
             .scalars()

@@ -9,7 +9,7 @@ from timApp.document.translation.translation import Translation
 from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
 from timApp.timdb.dbaccess import get_files_path
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import UserGroup
 
 
@@ -18,13 +18,17 @@ def fix_orphans_without_docentry() -> None:
     creates a DocEntry for them under 'orphans' directory."""
     orphan_folder_title = "orphans"
     f = Folder.create("orphans", UserGroup.get_admin_group())
-    orphans: list[Block] = db.session.scalars(
-        select(Block).filter(
-            (Block.type_id == 0)
-            & Block.id.notin_(select(DocEntry.id))
-            & Block.id.notin_(select(Translation.doc_id))
+    orphans: list[Block] = (
+        run_sql(
+            select(Block).filter(
+                (Block.type_id == 0)
+                & Block.id.notin_(select(DocEntry.id))
+                & Block.id.notin_(select(Translation.doc_id))
+            )
         )
-    ).all()
+        .scalars()
+        .all()
+    )
 
     for o in orphans:
         print(f"Adding a DocEntry for document with id {o.id}")
@@ -43,9 +47,9 @@ def move_docs_without_block(dry_run: bool) -> None:
     doc_folders = [f for f in os.listdir(docs_folder) if not isfile(f)]
     existing_blocks = {
         str(i)
-        for i, in db.session.scalars(
-            select(Block.id).filter_by(type_id=BlockType.Document.value)
-        ).all()
+        for i in run_sql(select(Block.id).filter_by(type_id=BlockType.Document.value))
+        .scalars()
+        .all()
     }
     docs_orphans = os.path.join(files_root, "orphans", "docs")
     pars_orphans = os.path.join(files_root, "orphans", "pars")

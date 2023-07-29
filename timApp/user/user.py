@@ -40,7 +40,7 @@ from timApp.messaging.messagelist.listinfo import Channel
 from timApp.notification.notification import Notification, NotificationType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
+from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded, run_sql
 from timApp.timdb.types import DbModel
 from timApp.user.hakaorganization import HakaOrganization, get_home_organization_id
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
@@ -502,7 +502,7 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
         if prev_email != new_email:
             if create_contact:
                 new_primary = (
-                    db.session.execute(
+                    run_sql(
                         select(UserContact)
                         .filter_by(
                             user_id=self.id, channel=Channel.EMAIL, contact=new_email
@@ -562,7 +562,7 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
         )
         return {
             "emails": [
-                {"value": uc.contact} for uc in db.session.scalars(email_contacts_stmt)
+                {"value": uc.contact} for uc in run_sql(email_contacts_stmt).scalars()
             ]
         }
 
@@ -611,9 +611,11 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
         locked_groups = get_locked_active_groups()
         if locked_groups is None:
             return effective_real_groups()
-        return db.session.scalars(
-            select(UserGroup).filter(UserGroup.id.in_(locked_groups))
-        ).all()
+        return (
+            run_sql(select(UserGroup).filter(UserGroup.id.in_(locked_groups)))
+            .scalars()
+            .all()
+        )
 
     @property
     def effective_group_ids(self):
@@ -711,9 +713,11 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_by_name(name: str) -> Optional["User"]:
-        return db.session.scalars(
-            user_query_with_joined_groups().filter_by(name=name).limit(1)
-        ).first()
+        return (
+            run_sql(user_query_with_joined_groups().filter_by(name=name).limit(1))
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def get_by_id(uid: int) -> Optional["User"]:
@@ -724,18 +728,22 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
         if email is None:
             raise Exception("Tried to find an user by null email")
         return (
-            db.session.execute(
-                user_query_with_joined_groups().filter_by(email=email).limit(1)
-            )
+            run_sql(user_query_with_joined_groups().filter_by(email=email).limit(1))
             .scalars()
             .first()
         )
 
     @staticmethod
     def get_by_email_case_insensitive(email: str) -> list["User"]:
-        return db.session.scalars(
-            user_query_with_joined_groups().filter(func.lower(User.email).in_([email]))
-        ).all()
+        return (
+            run_sql(
+                user_query_with_joined_groups().filter(
+                    func.lower(User.email).in_([email])
+                )
+            )
+            .scalars()
+            .all()
+        )
 
     @staticmethod
     def get_by_email_case_insensitive_or_username(
@@ -753,11 +761,11 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
     def verified_email_name_parts(self) -> list[str]:
         email_parts = [
             uc.contact.split("@")
-            for uc in db.session.scalars(
+            for uc in run_sql(
                 select(UserContact).filter_by(
                     user=self, channel=Channel.EMAIL, verified=True
                 )
-            )
+            ).scalars()
         ]
         return [parts[0].lower() for parts in email_parts]
 
@@ -845,7 +853,7 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
             )
         )
 
-        return db.session.scalars(stmt).all()
+        return run_sql(stmt).scalars().all()
 
     @cached_property
     def personal_folder_prop(self) -> Folder:
@@ -956,7 +964,7 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
         )
         if options:
             stmt = stmt.options(*options)
-        return db.session.scalars(stmt).one_or_none()
+        return run_sql(stmt).scalars().one_or_none()
 
     @staticmethod
     def get_scimuser() -> "User":
@@ -1371,7 +1379,7 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
             & (BlockAccess.usergroup_id == self.get_personal_group().id)
             & (BlockAccess.type == get_access_type_id(access_type))
         )
-        db.session.execute(stmt)
+        run_sql(stmt)
 
     def get_notify_settings(self, item: DocInfo | Folder) -> dict:
         # TODO: Instead of conversion, expose all notification types in UI
@@ -1474,7 +1482,7 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
         if self.is_special:
             return False
         teacher_group_id = (
-            db.session.execute(
+            run_sql(
                 select(ScimUserGroup.group_id)
                 .join(UserGroup)
                 .join(UserGroupMember)
@@ -1521,11 +1529,13 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
         external_ids: dict[int, str] = (
             {
                 s.group_id: s.external_id
-                for s in db.session.scalars(
+                for s in run_sql(
                     select(ScimUserGroup).filter(
                         ScimUserGroup.group_id.in_([g.id for g in self.groups])
                     )
-                ).all()
+                )
+                .scalars()
+                .all()
             }
             if full
             else []

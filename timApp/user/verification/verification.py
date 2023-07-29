@@ -8,7 +8,7 @@ from sqlalchemy import select, ForeignKey
 from sqlalchemy.orm import load_only, mapped_column, Mapped, relationship
 
 from timApp.document.docentry import DocEntry
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz, DbModel
 from timApp.user.user import User
 from timApp.user.usercontact import UserContact, PrimaryContact
@@ -126,7 +126,7 @@ class SetPrimaryContactVerification(ContactAddVerification):
         if not self.contact:
             return
         current_primary = (
-            db.session.execute(
+            run_sql(
                 select(UserContact)
                 .filter_by(
                     user_id=self.user_id,
@@ -147,7 +147,7 @@ class SetPrimaryContactVerification(ContactAddVerification):
 
             # We update email directly since we already resolved the contact in previous steps
             u = (
-                db.session.execute(
+                run_sql(
                     select(User)
                     .filter_by(id=self.user_id)
                     .options(load_only(User.email, User.id))

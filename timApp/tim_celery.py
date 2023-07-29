@@ -26,7 +26,7 @@ from timApp.plugin.exportdata import WithOutData, WithOutDataSchema
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.verification.verification import Verification
 from timApp.util.flask.search import create_search_files
@@ -253,13 +253,13 @@ def cleanup_verifications():
     now = get_current_time()
     end_time_unreacted = now - timedelta(seconds=max_unreacted_interval)
     end_time_reacted = now - timedelta(seconds=max_reacted_interval)
-    db.session.execute(
+    run_sql(
         delete(Verification).where(
             (Verification.requested_at < end_time_unreacted)
             & (Verification.reacted_at == None)
         )
     )
-    db.session.execute(
+    run_sql(
         delete(Verification).where(
             (Verification.requested_at < end_time_reacted)
             & (Verification.reacted_at != None)

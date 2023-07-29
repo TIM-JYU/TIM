@@ -6,7 +6,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id
 from timApp.user.userutils import grant_access
@@ -44,7 +44,7 @@ class DurationTest(TimRouteTest):
         )
         self.get(d.url_relative)
         ba = (
-            db.session.execute(
+            run_sql(
                 select(BlockAccess).filter_by(
                     usergroup_id=self.get_test_user_2_group_id(),
                     block_id=doc_id,
@@ -79,7 +79,7 @@ class DurationTest(TimRouteTest):
         db.session.commit()
         self.get(d.url_relative, query_string={"unlock": "true"})
         ba = (
-            db.session.execute(
+            run_sql(
                 select(BlockAccess).filter_by(
                     usergroup_id=self.get_test_user_2_group_id(),
                     block_id=d.id,
@@ -177,7 +177,7 @@ class DurationTest(TimRouteTest):
         )
         self.get(d.url_relative)
         ba = (
-            db.session.execute(
+            run_sql(
                 select(BlockAccess).filter_by(
                     usergroup_id=self.get_test_user_2_group_id(),
                     block_id=doc_id,

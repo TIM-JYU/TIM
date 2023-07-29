@@ -17,7 +17,7 @@ from sqlalchemy import select, delete
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import get_rights_holders
@@ -200,7 +200,7 @@ def get_groups_from_document_table(doc_id: int, user_id: int | None) -> list[Vel
     """
     if not user_id:
         return (
-            db.session.execute(
+            run_sql(
                 select(VelpGroupsInDocument)
                 .filter_by(doc_id=doc_id)
                 .join(VelpGroup)
@@ -210,7 +210,7 @@ def get_groups_from_document_table(doc_id: int, user_id: int | None) -> list[Vel
             .all()
         )
     return (
-        db.session.execute(
+        run_sql(
             select(VelpGroupsInDocument)
             .filter_by(user_id=user_id, doc_id=doc_id)
             .join(VelpGroup)
@@ -257,9 +257,7 @@ def add_groups_to_document(
 ) -> None:
     """Adds velp groups to VelpGroupsInDocument table."""
     existing: list[VelpGroupsInDocument] = (
-        db.session.execute(
-            select(VelpGroupsInDocument).filter_by(user_id=user.id, doc_id=doc.id)
-        )
+        run_sql(select(VelpGroupsInDocument).filter_by(user_id=user.id, doc_id=doc.id))
         .scalars()
         .all()
     )
@@ -292,7 +290,7 @@ def change_selection(
 
     """
     vgs: VelpGroupSelection | None = (
-        db.session.execute(
+        run_sql(
             select(VelpGroupSelection)
             .filter_by(
                 user_id=user_id,
@@ -332,7 +330,7 @@ def change_all_target_area_default_selections(
     :param selected: True or False
 
     """
-    db.session.execute(
+    run_sql(
         delete(VelpGroupDefaults).where(
             (VelpGroupDefaults.doc_id == doc_id)
             & (VelpGroupDefaults.target_type == target_type)
@@ -340,9 +338,7 @@ def change_all_target_area_default_selections(
         )
     )
     vgids: list[VelpGroupsInDocument] = (
-        db.session.execute(
-            select(VelpGroupsInDocument).filter_by(doc_id=doc_id, user_id=user_id)
-        )
+        run_sql(select(VelpGroupsInDocument).filter_by(doc_id=doc_id, user_id=user_id))
         .scalars()
         .all()
     )
@@ -371,7 +367,7 @@ def change_all_target_area_selections(
     """
     if target_type == 0:
         for vgs in (
-            db.session.execute(
+            run_sql(
                 select(VelpGroupSelection).filter_by(
                     doc_id=doc_id, target_id=target_id, user_id=user_id
                 )
@@ -381,7 +377,7 @@ def change_all_target_area_selections(
         ):
             vgs.selected = selected
     elif target_type == 1:
-        db.session.execute(
+        run_sql(
             delete(VelpGroupSelection).where(
                 (VelpGroupSelection.doc_id == doc_id)
                 & (VelpGroupSelection.target_id == target_id)
@@ -392,7 +388,7 @@ def change_all_target_area_selections(
         # target_type is 0 because only 0 always contains all velp groups user has access to.
         # Other target types will get added to database only after they've been clicked once in interface.
         vgss: list[VelpGroupSelection] = (
-            db.session.execute(
+            run_sql(
                 select(VelpGroupSelection).filter_by(
                     doc_id=doc_id,
                     user_id=user_id,
@@ -427,7 +423,7 @@ def change_default_selection(
 
     """
     vgd: VelpGroupDefaults = (
-        db.session.execute(
+        run_sql(
             select(VelpGroupDefaults)
             .filter_by(
                 doc_id=doc_id,
@@ -462,7 +458,7 @@ def add_groups_to_selection_table(
 ) -> None:
     """Adds velp groups to VelpGroupSelection table."""
     vgs = (
-        db.session.execute(
+        run_sql(
             select(VelpGroupSelection)
             .filter_by(
                 user_id=user_id,
@@ -521,7 +517,7 @@ def get_personal_selections_for_velp_groups(
 
     """
     vgss = (
-        db.session.execute(
+        run_sql(
             select(VelpGroupSelection)
             .filter_by(doc_id=doc_id, user_id=user_id)
             .order_by(VelpGroupSelection.target_id)
@@ -542,7 +538,7 @@ def get_default_selections_for_velp_groups(
 
     """
     vgds = (
-        db.session.execute(
+        run_sql(
             select(VelpGroupDefaults)
             .filter_by(doc_id=doc_id)
             .order_by(VelpGroupDefaults.target_id)

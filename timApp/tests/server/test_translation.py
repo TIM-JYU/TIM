@@ -21,7 +21,7 @@ from timApp.document.yamlblock import YamlBlock
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.util.utils import static_tim_doc
 
 MAX_TEST_CHAR_QUOTA = 50
@@ -109,11 +109,7 @@ class QuotaLimitedTestTranslator(ReversingTranslationService):
 
 class TranslationTest(TimTranslationRouteTest):
     def get_deepl_service(self) -> DeeplTranslationService:
-        return (
-            db.session.execute(select(DeeplTranslationService).limit(1))
-            .scalars()
-            .first()
-        )
+        return run_sql(select(DeeplTranslationService).limit(1)).scalars().first()
 
     def test_translation_create(self):
         self.login_test1()

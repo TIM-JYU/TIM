@@ -16,7 +16,7 @@ from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
 from timApp.notification.notify import get_current_user_notifications
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
 from timApp.user.settings.style_utils import is_style_doc
@@ -58,7 +58,7 @@ def verify_new_styles(curr_prefs: Preferences, new_prefs: Preferences) -> None:
         return
 
     new_style_docs: list[DocEntry] = (
-        db.session.execute(select(DocEntry).filter(DocEntry.id.in_(new_style_doc_ids)))
+        run_sql(select(DocEntry).filter(DocEntry.id.in_(new_style_doc_ids)))
         .scalars()
         .all()
     )
@@ -122,17 +122,11 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
     """Returns all data associated with a user."""
     block_query = get_owned_objects_query(u)
     docs = (
-        db.session.execute(select(DocEntry).filter(DocEntry.id.in_(block_query)))
-        .scalars()
-        .all()
+        run_sql(select(DocEntry).filter(DocEntry.id.in_(block_query))).scalars().all()
     )
-    folders = (
-        db.session.execute(select(Folder).filter(Folder.id.in_(block_query)))
-        .scalars()
-        .all()
-    )
+    folders = run_sql(select(Folder).filter(Folder.id.in_(block_query))).scalars().all()
     images = (
-        db.session.execute(
+        run_sql(
             select(Block).filter(
                 Block.id.in_(block_query) & (Block.type_id == BlockType.Image.value)
             )
@@ -141,7 +135,7 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
         .all()
     )
     files = (
-        db.session.execute(
+        run_sql(
             select(Block).filter(
                 Block.id.in_(block_query) & (Block.type_id == BlockType.File.value)
             )
@@ -151,7 +145,7 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
     )
     answers = u.answers.all()
     answer_uploads = (
-        db.session.execute(
+        run_sql(
             select(AnswerUpload).filter(
                 AnswerUpload.answer_id.in_([a.id for a in answers])
             )

@@ -4,7 +4,7 @@ from timApp.messaging.messagelist.listinfo import Channel
 from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usercontact import UserContact
 from timApp.user.verification.verification import ContactAddVerification
 
@@ -31,7 +31,7 @@ class VerificationTest(TimRouteTest):
             self.assertIsNotNone(u.get_contact(Channel.EMAIL, email))
 
             verification = (
-                db.session.execute(
+                run_sql(
                     select(ContactAddVerification)
                     .join(UserContact)
                     .filter(
@@ -131,7 +131,7 @@ verify_url = {{ verify_url }}
         )
 
         verification = (
-            db.session.execute(
+            run_sql(
                 select(ContactAddVerification)
                 .join(UserContact)
                 .filter(

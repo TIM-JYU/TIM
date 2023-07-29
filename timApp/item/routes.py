@@ -109,7 +109,7 @@ from timApp.plugin.pluginControl import get_all_reqs
 from timApp.readmark.readings import mark_all_read
 from timApp.tim_app import app
 from timApp.timdb.exceptions import PreambleException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_view_access
 from timApp.user.settings.style_utils import resolve_themes
 from timApp.user.settings.styles import generate_style
@@ -378,14 +378,11 @@ def gen_cache(
         # Compute users from the current rights.
         accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
         group_ids = {a.usergroup_id for a in accesses if not a.expired}
-        users: list[tuple[User, UserGroup]] = (
-            db.session.execute(
-                select(User, UserGroup)
-                .join(UserGroup, User.groups)
-                .filter(UserGroup.id.in_(group_ids))
-            )
-            .all()
-        )
+        users: list[tuple[User, UserGroup]] = run_sql(
+            select(User, UserGroup)
+            .join(UserGroup, User.groups)
+            .filter(UserGroup.id.in_(group_ids))
+        ).all()
         groups_that_need_access_check = {
             g for u, g in users if u.get_personal_group() != g
         }
@@ -774,9 +771,7 @@ def render_doc_view(
         ugs_without_access = []
         if usergroups is not None:
             ugs = (
-                db.session.execute(
-                    select(UserGroup).filter(UserGroup.name.in_(usergroups))
-                )
+                run_sql(select(UserGroup).filter(UserGroup.name.in_(usergroups)))
                 .scalars()
                 .all()
             )
@@ -1183,7 +1178,7 @@ def get_linked_groups(i: Item) -> tuple[list[UserGroupWithSisuInfo], list[str]]:
             list(
                 map(
                     UserGroupWithSisuInfo,
-                    db.session.execute(
+                    run_sql(
                         get_usergroup_eager_query().filter(
                             UserGroup.name.in_(group_tags)
                         )

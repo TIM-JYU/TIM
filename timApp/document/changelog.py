@@ -6,7 +6,7 @@ from sqlalchemy import select
 import timApp
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -64,7 +64,7 @@ class Changelog:
                 par_entry_map[e.par_id][e.group_id].append(e)
         User = timApp.user.user.User
         UserGroup = timApp.user.usergroup.UserGroup
-        result = db.session.execute(
+        result = run_sql(
             select(UserGroup, User)
             .select_from(UserGroup)
             .filter(UserGroup.id.in_(usergroup_ids))

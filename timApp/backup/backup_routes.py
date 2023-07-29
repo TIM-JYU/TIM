@@ -4,7 +4,7 @@ from sqlalchemy import select
 from timApp.answer.backup import save_answer_backup
 from timApp.answer.exportedanswer import ExportedAnswer
 from timApp.tim_app import csrf
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember, membership_current
@@ -50,8 +50,9 @@ def receive_user_memberships(
         user.add_to_group(ug, None)
 
     if removed_memberships:
-        removed_memberships_objs: list[UserGroupMember] = db.session.execute(
-            select(UserGroupMember).join(UserGroup, UserGroupMember.group)
+        removed_memberships_objs: list[UserGroupMember] = run_sql(
+            select(UserGroupMember)
+            .join(UserGroup, UserGroupMember.group)
             .join(User, UserGroupMember.user)
             .filter(
                 (User.name == user.name)

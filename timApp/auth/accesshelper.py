@@ -43,7 +43,7 @@ from timApp.plugin.plugin import (
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
@@ -287,18 +287,22 @@ def abort_if_not_access_and_required(
     block_ids = [block.id, *get_inherited_right_blocks(block)]
 
     if check_duration:
-        ba = db.session.scalars(
-            select(BlockAccess)
-            .filter(BlockAccess.block_id.in_(block_ids))
-            .filter_by(
-                type=access_type.value,
-                usergroup_id=get_current_user_group(),
+        ba = (
+            run_sql(
+                select(BlockAccess)
+                .filter(BlockAccess.block_id.in_(block_ids))
+                .filter_by(
+                    type=access_type.value,
+                    usergroup_id=get_current_user_group(),
+                )
+                .limit(1)
             )
-            .limit(1)
-        ).first()
+            .scalars()
+            .first()
+        )
         if ba is None:
             ba_group: BlockAccess = (
-                db.session.execute(
+                run_sql(
                     select(BlockAccess)
                     .filter(BlockAccess.block_id.in_(block_ids))
                     .filter_by(type=access_type.value)

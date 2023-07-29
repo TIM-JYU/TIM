@@ -10,7 +10,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.bookmark.course import update_user_course_bookmarks
 from timApp.document.docentry import DocEntry
 from timApp.document.docsettings import GroupSelfJoinSettings
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -138,16 +138,14 @@ def _do_group_op(
 ) -> tuple[bool, bool, dict[str, str]]:
     user_groups: set[str] = set(
         g
-        for g, in db.session.execute(
+        for g, in run_sql(
             user.get_groups(include_expired=False).with_only_columns(UserGroup.name)
         )
     )
 
     result = dict.fromkeys(groups, "")
     ugs: list[UserGroup] = (
-        db.session.execute(select(UserGroup).filter(UserGroup.name.in_(groups)))
-        .scalars()
-        .all()
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(groups))).scalars().all()
     )
 
     all_ok = True

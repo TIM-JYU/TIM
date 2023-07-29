@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import select, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.timdb.types import DbModel
 from timApp.user.hakaorganization import HakaOrganization
 
@@ -52,7 +52,7 @@ class PersonalUniqueCode(DbModel):
         code: str, org: str, codetype: str
     ) -> Optional["PersonalUniqueCode"]:
         return (
-            db.session.execute(
+            run_sql(
                 select(PersonalUniqueCode)
                 .filter_by(code=code, type=codetype)
                 .join(HakaOrganization)

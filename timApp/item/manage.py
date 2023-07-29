@@ -53,7 +53,7 @@ from timApp.plugin.jsrunner.util import (
     FieldSaveRequest,
     FieldSaveUserEntry,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import (
@@ -129,7 +129,7 @@ def manage(path: str) -> Response | str:
         js=["angular-ui-grid"],
         jsMods=get_grid_modules(),
         orgs=UserGroup.get_organizations(),
-        access_types=db.session.execute(select(AccessTypeModel)).scalars().all(),
+        access_types=run_sql(select(AccessTypeModel)).scalars().all(),
     )
 
 
@@ -211,9 +211,7 @@ class PermissionEditModelBase:
     @cached_property
     def group_objects(self):
         return (
-            db.session.execute(
-                select(UserGroup).filter(UserGroup.name.in_(self.groups))
-            )
+            run_sql(select(UserGroup).filter(UserGroup.name.in_(self.groups)))
             .scalars()
             .all()
         )
@@ -428,7 +426,7 @@ def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
         if is_velp_group_in_document(vg, doc):
             # TODO Should this apply to ALL permissions, instead of just 'view'?
             acc: BlockAccess | None = (
-                db.session.execute(
+                run_sql(
                     select(BlockAccess).filter_by(
                         type=AccessType.view.value,
                         block_id=vg.id,
@@ -459,7 +457,7 @@ def expire_doc_translation_perms(doc_id: int, ug: UserGroup) -> None:
             continue
         # TODO Should this apply to ALL permissions, instead of just 'view'?
         acc: BlockAccess | None = (
-            db.session.execute(
+            run_sql(
                 select(BlockAccess).filter_by(
                     type=AccessType.view.value,
                     block_id=tr.id,
@@ -498,7 +496,7 @@ def do_confirm_permission(
     confirm_translations: bool = True,
 ):
     ba: BlockAccess | None = (
-        db.session.execute(
+        run_sql(
             select(BlockAccess).filter_by(
                 type=m.type.value,
                 block_id=m.id,
@@ -547,7 +545,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
     if nonexistent:
         raise RouteException(f"Non-existent groups: {nonexistent}")
     items: list[ItemOrBlock] = (
-        db.session.execute(
+        run_sql(
             select(Block)
             .filter(
                 Block.id.in_(m.ids)
@@ -922,7 +920,7 @@ def get_permissions(item_id: int) -> Response:
     return json_response(
         {
             "grouprights": grouprights,
-            "accesstypes": db.session.execute(select(AccessTypeModel)).scalars().all(),
+            "accesstypes": run_sql(select(AccessTypeModel)).scalars().all(),
             "orgs": UserGroup.get_organizations(),
         },
         date_conversion=True,

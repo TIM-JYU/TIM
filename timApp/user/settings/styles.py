@@ -19,7 +19,7 @@ from timApp.document.randutils import hashfunc
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.item.partitioning import get_doc_version_hash
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.settings.style_utils import (
     stylesheets_folder,
     get_default_scss_gen_dir,
@@ -369,9 +369,7 @@ def generate(
     verify_logged_in()
 
     doc_entries: list[DocEntry] = (
-        db.session.execute(select(DocEntry).filter(DocEntry.id.in_(docs)))
-        .scalars()
-        .all()
+        run_sql(select(DocEntry).filter(DocEntry.id.in_(docs))).scalars().all()
     )
 
     for doc in doc_entries:

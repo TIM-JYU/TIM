@@ -20,7 +20,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import Item
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.upload.uploadedfile import PluginUpload
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -39,7 +39,7 @@ answer_cli = AppGroup("answer")
 @click.option("--dry-run/--no-dry-run", default=True)
 def fix_double_c(dry_run: bool) -> None:
     answers = (
-        db.session.execute(
+        run_sql(
             select(Answer)
             .filter(
                 (Answer.answered_on > datetime(year=2020, month=2, day=9))
@@ -79,9 +79,11 @@ class AnswerDeleteResult:
 @click.argument("doc", type=TimDocumentType())
 @click.option("--dry-run/--no-dry-run", default=True)
 def clear_all(doc: DocInfo, dry_run: bool) -> None:
-    ids = db.session.scalars(
-        select(Answer.id).filter(Answer.task_id.startswith(f"{doc.id}."))
-    ).all()
+    ids = (
+        run_sql(select(Answer.id).filter(Answer.task_id.startswith(f"{doc.id}.")))
+        .scalars()
+        .all()
+    )
 
     cnt = len(ids)
     delete_answers_with_ids(ids)
@@ -110,7 +112,7 @@ def clear(
         stmt = stmt.filter(Answer.answered_on >= answer_from)
     if answer_to:
         stmt = stmt.filter(Answer.answered_on <= answer_to)
-    ids = db.session.scalars(stmt).all()
+    ids = run_sql(stmt).scalars().all()
     cnt = len(ids)
     result = delete_answers_with_ids(ids, verbose)
     click.echo(f"Total {cnt}")
@@ -123,7 +125,7 @@ def delete_answers_with_ids(
     if not isinstance(ids, list):
         raise TypeError("ids should be a list of answer ids")
     d_ua = len(
-        db.session.execute(
+        run_sql(
             delete(UserAnswer)
             .where(UserAnswer.answer_id.in_(ids))
             .returning(UserAnswer.id)
@@ -132,7 +134,7 @@ def delete_answers_with_ids(
     )
     d_as = len(
         (
-            db.session.execute(
+            run_sql(
                 delete(AnswerSaver)
                 .where(AnswerSaver.answer_id.in_(ids))
                 .returning(AnswerSaver.user_id, AnswerSaver.answer_id)
@@ -143,7 +145,7 @@ def delete_answers_with_ids(
     anns_stmt = select(Annotation.id).filter(Annotation.answer_id.in_(ids))
     d_acs = len(
         (
-            db.session.execute(
+            run_sql(
                 delete(AnnotationComment)
                 .where(
                     AnnotationComment.annotation_id.in_(
@@ -157,7 +159,7 @@ def delete_answers_with_ids(
     )
     d_anns = len(
         (
-            db.session.execute(
+            run_sql(
                 delete(Annotation)
                 .where(Annotation.id.in_(anns_stmt))
                 .returning(Annotation.id)
@@ -171,12 +173,12 @@ def delete_answers_with_ids(
             "\n".join(
                 [
                     f"taskid: {a.task_id}, points: {a.points}, answered_on: {a.answered_on}; saver: {a.saver}"
-                    for a in db.session.scalars(ans_items_stmt)
+                    for a in run_sql(ans_items_stmt).scalars()
                 ]
             )
         )
     d_ans = len(
-        db.session.execute(
+        run_sql(
             delete(Answer)
             .where(Answer.id.in_(ans_items_stmt.with_only_columns(Answer.id)))
             .returning(Answer.id)
@@ -201,13 +203,17 @@ def delete_answers_with_ids(
 def revalidate(
     doc: DocInfo, deadline: datetime, group: str, dry_run: bool, may_invalidate: bool
 ) -> None:
-    answers: list[tuple[Answer, str]] = db.session.scalars(
-        select(Answer, User.name)
-        .join(User, Answer.users)
-        .join(UserGroup, User.groups)
-        .filter(Answer.task_id.startswith(f"{doc.id}."))
-        .order_by(Answer.answered_on.desc())
-    ).all()
+    answers: list[tuple[Answer, str]] = (
+        run_sql(
+            select(Answer, User.name)
+            .join(User, Answer.users)
+            .join(UserGroup, User.groups)
+            .filter(Answer.task_id.startswith(f"{doc.id}."))
+            .order_by(Answer.answered_on.desc())
+        )
+        .scalars()
+        .all()
+    )
 
     changed_to_valid = 0
     changed_to_invalid = 0
@@ -244,7 +250,7 @@ def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
     stmt = select(Answer).filter(Answer.task_id.startswith(f"{doc.id}."))
     total = db.session.scalar(stmt.with_only_columns(func.count()))
     anss: list[Answer] = (
-        db.session.execute(
+        run_sql(
             stmt.filter(func.length(Answer.content) > limit).options(
                 selectinload(Answer.users_all)
             )
@@ -289,13 +295,17 @@ def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
 def compress_uploads(item: Item, dry_run: bool) -> None:
     docs = collect_docs(item)
     for d in docs:
-        uploads: list[Block] = db.session.scalars(
-            select(Block)
-            .select_from(Answer)
-            .filter(Answer.task_id.startswith(f"{d.id}."))
-            .join(AnswerUpload)
-            .join(Block)
-        ).all()
+        uploads: list[Block] = (
+            run_sql(
+                select(Block)
+                .select_from(Answer)
+                .filter(Answer.task_id.startswith(f"{d.id}."))
+                .join(AnswerUpload)
+                .join(Block)
+            )
+            .scalars()
+            .all()
+        )
         for u in uploads:
             path = u.description
             if path.lower().endswith(".pdf"):
@@ -371,7 +381,7 @@ def delete_old_answers(d: DocInfo, tasks: list[str]) -> DeleteResult:
     todelete = base_query.filter(Answer.id.notin_(latest)).with_only_columns(Answer.id)
     tot = db.session.scalar(base_query.with_only_columns(func.count()))
     del_tot = db.session.scalar(todelete.with_only_columns(func.count()))
-    adr = delete_answers_with_ids(db.session.execute(todelete).scalars().all())
+    adr = delete_answers_with_ids(run_sql(todelete).scalars().all())
     r = DeleteResult(total=tot, deleted=del_tot, adr=adr)
     return r
 

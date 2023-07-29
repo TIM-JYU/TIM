@@ -13,7 +13,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
 from timApp.item.item import ItemBase
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
@@ -65,7 +65,7 @@ def get_anon_user_id() -> int:
 
 def get_access_type_id(access_type: str) -> int:
     if not access_type_map:
-        result = db.session.execute(select(AccessTypeModel)).scalars().all()
+        result = run_sql(select(AccessTypeModel)).scalars().all()
         for row in result:
             access_type_map[row.name] = row.id
     return access_type_map[access_type]
@@ -90,7 +90,7 @@ def expire_access(
     :return: The BlockAccess object if there was previous access. Also returns whether the access was expired before.
     """
     ba: BlockAccess | None = (
-        db.session.execute(
+        run_sql(
             select(BlockAccess)
             .filter_by(
                 type=access_type.value,

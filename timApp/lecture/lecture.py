@@ -6,7 +6,7 @@ from sqlalchemy import select, func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped, relationship
 
 from timApp.lecture.lectureusers import LectureUsers
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz, DbModel
 from timApp.util.utils import get_current_time
 
@@ -56,9 +56,7 @@ class Lecture(DbModel):
     @staticmethod
     def find_by_code(lecture_code: str, doc_id: int) -> Optional["Lecture"]:
         return (
-            db.session.execute(
-                select(Lecture).filter_by(lecture_code=lecture_code, doc_id=doc_id)
-            )
+            run_sql(select(Lecture).filter_by(lecture_code=lecture_code, doc_id=doc_id))
             .scalars()
             .first()
         )
@@ -70,7 +68,7 @@ class Lecture(DbModel):
         if not time:
             time = datetime.min.replace(tzinfo=timezone.utc)
         return (
-            db.session.execute(
+            run_sql(
                 select(Lecture)
                 .filter_by(doc_id=doc_id)
                 .filter(Lecture.end_time > time)

@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
@@ -14,7 +14,7 @@ def change_email() -> None:
             # groupname = input("Input group to edit: ")
             groupname = "mallikurssinryhma1"
             group = (
-                db.session.execute(select(UserGroup).filter_by(name=groupname).limit(1))
+                run_sql(select(UserGroup).filter_by(name=groupname).limit(1))
                 .scalars()
                 .first()
             )

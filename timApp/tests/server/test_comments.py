@@ -11,7 +11,7 @@ from timApp.notification.notify import process_pending_notifications
 from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.test_notify import NotifyTestBase
 from timApp.tests.server.timroutetest import get_note_id_from_json
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 
 comment_selector = CSSSelector("div.notes > div.note")
@@ -303,7 +303,7 @@ c
         orig_par = d2.document.get_paragraphs()[0]
         r = self.post_comment(area_a_middle, public=True, text="test", orig=orig_par)
         note: UserNote = (
-            db.session.execute(select(UserNote).order_by(UserNote.id.desc()).limit(1))
+            run_sql(select(UserNote).order_by(UserNote.id.desc()).limit(1))
             .scalars()
             .first()
         )
@@ -346,7 +346,7 @@ c
         # start/end tags.
         r = self.post_comment(area_a_start, public=True, text="test", orig=orig_par)
         note: UserNote = (
-            db.session.execute(select(UserNote).order_by(UserNote.id.desc()).limit(1))
+            run_sql(select(UserNote).order_by(UserNote.id.desc()).limit(1))
             .scalars()
             .first()
         )

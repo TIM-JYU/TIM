@@ -28,7 +28,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.plugin.plugin import find_task_ids, CachedPluginFinder
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User, get_membership_end, get_membership_added
 from timApp.user.usergroup import UserGroup
@@ -132,9 +132,7 @@ class RequestedGroups:
     @staticmethod
     def from_name_list(group_names: list[str]) -> "RequestedGroups":
         return RequestedGroups(
-            groups=db.session.execute(
-                select(UserGroup).filter(UserGroup.name.in_(group_names))
-            )
+            groups=run_sql(select(UserGroup).filter(UserGroup.name.in_(group_names)))
             .scalars()
             .all(),
             include_all_answered=ALL_ANSWERED_WILDCARD in group_names,
@@ -358,7 +356,7 @@ def get_fields_and_users(
         elif user_filter is not None:
             # Ensure user filter gets applied even if group filter is skipped in include_all_answered
             q = q.filter(user_filter)
-        sub += db.session.execute(
+        sub += run_sql(
             q.group_by(Answer.task_id, User.id).with_only_columns(
                 func.max(Answer.id), User.id
             )
@@ -385,13 +383,13 @@ def get_fields_and_users(
     q = q.with_only_columns(User).order_by(User.id).options(lazyload(User.groups))
     if member_filter_type != MembershipFilter.Current:
         q = q.options(selectinload(User.memberships))
-    users: list[User] = db.session.execute(q).scalars().all()
+    users: list[User] = run_sql(q).scalars().all()
     user_map = {}
     for u in users:
         user_map[u.id] = u
     global_taskids = [t for t in task_ids if t.is_global]
     global_answer_ids = (
-        db.session.execute(
+        run_sql(
             valid_answers_query(global_taskids)
             .group_by(Answer.task_id)
             .with_only_columns(func.max(Answer.id))
@@ -400,7 +398,7 @@ def get_fields_and_users(
         .all()
     )
     answs = (
-        db.session.execute(
+        run_sql(
             select(Answer).filter(
                 Answer.id.in_(
                     itertools.chain((aid for aid, _ in sub), global_answer_ids)
@@ -429,7 +427,7 @@ def get_fields_and_users(
         for u in users:
             counts[u.id] = {}
         cnt = func.count(Answer.id).label("cnt")
-        answer_counts = db.session.execute(
+        answer_counts = run_sql(
             select(Answer)
             .filter(
                 Answer.task_id.in_([tid.doc_task for tid in tasks_with_count_field])
@@ -563,7 +561,7 @@ def get_tally_field_values(
         pts = get_points_by_rule(
             rule=psr,
             task_ids=tids,
-            user_ids=db.session.execute(
+            user_ids=run_sql(
                 select(User.id).join(UserGroup, join_relation).filter(group_filter)
             )
             .scalars()

@@ -17,7 +17,13 @@ from sqlalchemy.sql import Select
 
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
+from timApp.timdb.sqa import (
+    db,
+    TimeStampMixin,
+    include_if_exists,
+    is_attribute_loaded,
+    run_sql,
+)
 from timApp.timdb.types import DbModel
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import (
@@ -238,15 +244,13 @@ class UserGroup(DbModel, TimeStampMixin, SCIMEntity):
     @staticmethod
     def get_by_name(name) -> UserGroup:
         return (
-            db.session.execute(select(UserGroup).filter_by(name=name).limit(1))
-            .scalars()
-            .first()
+            run_sql(select(UserGroup).filter_by(name=name).limit(1)).scalars().first()
         )
 
     @staticmethod
     def get_anonymous_group() -> UserGroup:
         return (
-            db.session.execute(select(UserGroup).filter_by(name=ANONYMOUS_GROUPNAME))
+            run_sql(select(UserGroup).filter_by(name=ANONYMOUS_GROUPNAME))
             .scalars()
             .one()
         )
@@ -254,15 +258,13 @@ class UserGroup(DbModel, TimeStampMixin, SCIMEntity):
     @staticmethod
     def get_admin_group() -> UserGroup:
         return (
-            db.session.execute(select(UserGroup).filter_by(name=ADMIN_GROUPNAME))
-            .scalars()
-            .one()
+            run_sql(select(UserGroup).filter_by(name=ADMIN_GROUPNAME)).scalars().one()
         )
 
     @staticmethod
     def get_groupadmin_group() -> UserGroup:
         return (
-            db.session.execute(select(UserGroup).filter_by(name=GROUPADMIN_GROUPNAME))
+            run_sql(select(UserGroup).filter_by(name=GROUPADMIN_GROUPNAME))
             .scalars()
             .one()
         )
@@ -280,7 +282,7 @@ class UserGroup(DbModel, TimeStampMixin, SCIMEntity):
     @staticmethod
     def get_organizations() -> list[UserGroup]:
         return (
-            db.session.execute(
+            run_sql(
                 select(UserGroup).filter(
                     UserGroup.name.endswith(" users")
                     & UserGroup.name.notin_(SPECIAL_GROUPS)
@@ -293,7 +295,7 @@ class UserGroup(DbModel, TimeStampMixin, SCIMEntity):
     @staticmethod
     def get_teachers_group() -> UserGroup:
         return (
-            db.session.execute(select(UserGroup).filter_by(name=TEACHERS_GROUPNAME))
+            run_sql(select(UserGroup).filter_by(name=TEACHERS_GROUPNAME))
             .scalars()
             .one()
         )
@@ -318,7 +320,7 @@ class UserGroup(DbModel, TimeStampMixin, SCIMEntity):
     @staticmethod
     def get_logged_in_group() -> UserGroup:
         return (
-            db.session.execute(select(UserGroup).filter_by(name=LOGGED_IN_GROUPNAME))
+            run_sql(select(UserGroup).filter_by(name=LOGGED_IN_GROUPNAME))
             .scalars()
             .one()
         )
@@ -351,7 +353,7 @@ def get_usergroup_eager_query() -> Select:
 
 def get_sisu_groups_by_filter(f) -> list[UserGroup]:
     gs: list[UserGroup] = (
-        db.session.execute(get_usergroup_eager_query().join(ScimUserGroup).filter(f))
+        run_sql(get_usergroup_eager_query().join(ScimUserGroup).filter(f))
         .scalars()
         .all()
     )

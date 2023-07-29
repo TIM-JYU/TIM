@@ -22,7 +22,7 @@ from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
 from timApp.tim_app import app, csrf
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
@@ -259,7 +259,7 @@ class RightLog:
         if not emails:
             emails = [
                 e
-                for e in db.session.execute(
+                for e in run_sql(
                     select(User.email)
                     .join(User, UserGroup.users)
                     .filter(UserGroup.name == r.group)
@@ -438,7 +438,7 @@ def receive_right(
     secret: str,
 ) -> Response:
     check_secret(secret, "DIST_RIGHTS_RECEIVE_SECRET")
-    uges = db.session.execute(
+    uges = run_sql(
         select(UserGroup, User.email)
         .join(User, UserGroup.name == User.name)
         .filter(User.email.in_(re.email for re in rights))
@@ -543,7 +543,7 @@ def get_current_rights_route(
     except FileNotFoundError:
         raise RouteException(f"Unknown target: {target}")
     groups_list = groups.split(",")
-    emails = db.session.execute(
+    emails = run_sql(
         select(User.email)
         .join(UserGroup, User.groups)
         .filter(UserGroup.name.in_(groups_list))

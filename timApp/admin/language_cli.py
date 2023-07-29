@@ -19,7 +19,7 @@ from sqlalchemy import select
 
 from timApp.document.translation.language import Language
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.util.logger import log_error, log_info, log_debug
 
 language_cli = AppGroup("language")
@@ -35,9 +35,11 @@ def remove(lang_code: str) -> None:
     :return: None
     """
 
-    exists: Language | None = db.session.scalars(
-        select(Language).filter(lang_code == Language.lang_code).limit(1)
-    ).first()
+    exists: Language | None = (
+        run_sql(select(Language).filter(lang_code == Language.lang_code).limit(1))
+        .scalars()
+        .first()
+    )
     if exists:
         if click.confirm("This action cannot be reversed. Continue?"):
             click.echo(
@@ -67,9 +69,11 @@ def add(lang_name: str) -> None:
         click.echo(f"Failed to create language: {str(e)}")
         return
 
-    exists: Language | None = db.session.scalars(
-        select(Language).filter(lang.lang_code == Language.lang_code).limit(1)
-    ).first()
+    exists: Language | None = (
+        run_sql(select(Language).filter(lang.lang_code == Language.lang_code).limit(1))
+        .scalars()
+        .first()
+    )
     if exists:
         click.echo(f"Language code '{lang.lang_code}' already exists in the database.")
     else:
@@ -99,7 +103,7 @@ def add_all_supported_languages(log: bool = False) -> None:
     :return: None.
     """
     # Add to the database the languages found in config and skip existing ones.
-    langset = {x[0] for x in db.session.scalars(select(Language.lang_code))}
+    langset = {x[0] for x in run_sql(select(Language.lang_code)).scalars()}
     for l in app.config["LANGUAGES"]:
         if type(l) is dict:
             lang = Language(
@@ -161,9 +165,11 @@ def create(langcode: str, langname: str, autonym: str, flag_uri: str) -> None:
         click.echo(f"Failed to create new language: {str(e)}")
         return
 
-    exists = db.session.scalars(
-        select(Language).filter(standard_code == Language.lang_code).limit(1)
-    ).first()
+    exists = (
+        run_sql(select(Language).filter(standard_code == Language.lang_code).limit(1))
+        .scalars()
+        .first()
+    )
     if exists:
         click.echo(f"Language code '{standard_code}' already exists in the database.")
     else:

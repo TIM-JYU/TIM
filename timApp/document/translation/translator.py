@@ -33,7 +33,7 @@ from timApp.document.translation.translationparser import (
     Table,
     Translate,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup
 from timApp.util import logger
@@ -202,7 +202,7 @@ class TranslationServiceKey(DbModel):
         :return: The first matching TranslationServiceKey instance, if one is
          found.
         """
-        return db.session.execute(
+        return run_sql(
             select(TranslationServiceKey).filter(
                 TranslationServiceKey.group_id == user_group
             )
@@ -275,7 +275,7 @@ class TranslateProcessor:
         """
 
         translator = (
-            db.session.execute(
+            run_sql(
                 select(with_polymorphic(TranslationService, "*")).filter(
                     TranslationService.service_name == translator_code
                 )

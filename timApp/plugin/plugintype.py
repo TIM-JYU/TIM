@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import mapped_column, Mapped, Session
 
 import timApp
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import DbModel
 
 CONTENT_FIELD_NAME_MAP = {
@@ -42,11 +42,7 @@ class PluginType(DbModel, PluginTypeBase):
 
     @staticmethod
     def resolve(p_type: str) -> "PluginType":
-        pt = (
-            db.session.execute(select(PluginType).filter_by(type=p_type))
-            .scalars()
-            .first()
-        )
+        pt = run_sql(select(PluginType).filter_by(type=p_type)).scalars().first()
         if pt:
             return pt
 
@@ -66,11 +62,7 @@ class PluginType(DbModel, PluginTypeBase):
                     raise
 
         # We have to re-query the database since the other session was closed
-        return (
-            db.session.execute(select(PluginType).filter_by(type=p_type))
-            .scalars()
-            .one()
-        )
+        return run_sql(select(PluginType).filter_by(type=p_type)).scalars().one()
 
     def get_type(self) -> str:
         return self.type

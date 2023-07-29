@@ -9,7 +9,7 @@ from timApp.auth.session.model import UserSession
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.item.item import Item
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.userutils import get_anon_user_id
 from timApp.util.logger import log_info, log_warning
@@ -70,9 +70,7 @@ def expire_user_session(user: User, session_id: str | None) -> None:
     if not _save_sessions() or not session_id:
         return
     sess = (
-        db.session.execute(
-            select(UserSession).filter_by(user=user, session_id=session_id)
-        )
+        run_sql(select(UserSession).filter_by(user=user, session_id=session_id))
         .scalars()
         .first()
     )
@@ -159,7 +157,7 @@ def has_valid_session(user: User | None = None) -> bool:
         return False
 
     current_session = (
-        db.session.execute(
+        run_sql(
             select(UserSession.session_id)
             .filter(
                 (UserSession.user == user)
@@ -206,8 +204,8 @@ def verify_session_for(username: str, session_id: str | None = None) -> None:
     # Only expire active sessions
     stmt_expire = stmt_expire.where(UserSession.expired == False)
 
-    db.session.execute(stmt_expire.values({"expired_at": get_current_time()}))
-    db.session.execute(stmt_verify.values({"expired_at": None}))
+    run_sql(stmt_expire.values({"expired_at": get_current_time()}))
+    run_sql(stmt_verify.values({"expired_at": None}))
 
 
 def invalidate_sessions_for(username: str, session_id: str | None = None) -> None:
@@ -227,7 +225,7 @@ def invalidate_sessions_for(username: str, session_id: str | None = None) -> Non
     if session_id:
         stmt_invalidate = stmt_invalidate.filter(UserSession.session_id == session_id)
 
-    db.session.execute(stmt_invalidate)
+    run_sql(stmt_invalidate)
 
 
 def distribute_session_verification(

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from timApp.document.usercontext import UserContext
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import (
     User,
 )
@@ -83,7 +83,7 @@ def get_other_session_users_objs() -> list[User]:
 
 def get_users_objs(lis) -> list[User]:
     return (
-        db.session.execute(select(User).filter(User.id.in_([u["id"] for u in lis])))
+        run_sql(select(User).filter(User.id.in_([u["id"] for u in lis])))
         .scalars()
         .all()
     )

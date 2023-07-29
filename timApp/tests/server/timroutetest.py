@@ -55,7 +55,7 @@ from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import remove_prefix
@@ -1456,9 +1456,7 @@ class TimMessageListTest(TimRouteTest):
             },
         )
         message_list: MessageListModel = (
-            db.session.execute(select(MessageListModel).filter_by(name=name))
-            .scalars()
-            .one()
+            run_sql(select(MessageListModel).filter_by(name=name)).scalars().one()
         )
         return manage_doc, message_list
 

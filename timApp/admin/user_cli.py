@@ -18,7 +18,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document
 from timApp.tim_app import get_home_organization_group
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.user import User, UserInfo, deleted_user_suffix
 from timApp.user.usercontact import UserContact
@@ -93,9 +93,9 @@ def migrate_themes_to_styles(dry_run: bool, skip_warnings: bool) -> None:
 
         click.echo("Updating user styles")
 
-        for u in db.session.scalars(
+        for u in run_sql(
             select(User).filter(User.prefs != None)
-        ):  # type: User
+        ).scalars():  # type: User
             prefs_json: dict = json.loads(u.prefs)
             css_combined = prefs_json.pop("css_combined", None)
             css_files: dict[str, bool] = prefs_json.pop("css_files", {})
@@ -336,7 +336,7 @@ def create(
 ) -> None:
     """Creates or updates a user."""
 
-    user = db.session.scalars(select(User).filter_by(name=username).limit(1)).first()
+    user = run_sql(select(User).filter_by(name=username).limit(1)).scalars().first()
     info = UserInfo(
         username=username,
         email=email or None,
@@ -390,9 +390,11 @@ From {lowerlimit} to {higherlimit}.
         return
     for i in range(lowerlimit, higherlimit + 1):
         strnum = str(i)
-        user = db.session.scalars(
-            select(User).filter_by(name=username + strnum).limit(1)
-        ).first()
+        user = (
+            run_sql(select(User).filter_by(name=username + strnum).limit(1))
+            .scalars()
+            .first()
+        )
         # print(i)
         info = UserInfo(
             username=username + strnum,
@@ -413,12 +415,16 @@ From {lowerlimit} to {higherlimit}.
 
 @user_cli.command()
 def fix_aalto_student_ids() -> None:
-    users_to_fix: list[User] = db.session.scalars(
-        select(User)
-        .select_from(UserGroup)
-        .filter(UserGroup.name.in_(["aalto19test", "cs-a1141-2017-2018"]))
-        .join(User, UserGroup.users)
-    ).all()
+    users_to_fix: list[User] = (
+        run_sql(
+            select(User)
+            .select_from(UserGroup)
+            .filter(UserGroup.name.in_(["aalto19test", "cs-a1141-2017-2018"]))
+            .join(User, UserGroup.users)
+        )
+        .scalars()
+        .all()
+    )
     for u in users_to_fix:
         u.set_unique_codes(
             [
@@ -551,15 +557,19 @@ def find_duplicate_accounts() -> None:
 
 def find_duplicate_accounts_by_email() -> list[tuple[User, set[User]]]:
     email_lwr = func.lower(User.email)
-    dupes: list[User] = db.session.scalars(
-        select(User)
-        .filter(
-            email_lwr.in_(
-                select(email_lwr).group_by(email_lwr).having(func.count("*") > 1)
+    dupes: list[User] = (
+        run_sql(
+            select(User)
+            .filter(
+                email_lwr.in_(
+                    select(email_lwr).group_by(email_lwr).having(func.count("*") > 1)
+                )
             )
+            .order_by(User.email)
         )
-        .order_by(User.email)
-    ).all()
+        .scalars()
+        .all()
+    )
     result = []
     dupegroups = [
         list(g) for _, g in (itertools.groupby(dupes, lambda u: u.email.lower()))

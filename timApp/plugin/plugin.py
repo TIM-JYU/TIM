@@ -33,7 +33,7 @@ from timApp.plugin.plugintype import CONTENT_FIELD_NAME_MAP, PluginTypeLazy
 from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.rndutils import myhash, SeedClass
 from timApp.util.utils import try_load_json, get_current_time, Range
@@ -603,7 +603,7 @@ class Plugin:
                 if not b:
                     return
                 ba = (
-                    db.session.execute(
+                    run_sql(
                         select(BlockAccess).filter_by(
                             block_id=b.id,
                             type=AccessType.view.value,
@@ -640,7 +640,7 @@ class Plugin:
                 b = TaskBlock.get_by_task(tid.doc_task)
                 if b:
                     ba = (
-                        db.session.execute(
+                        run_sql(
                             select(BlockAccess).filter_by(
                                 block_id=b.id,
                                 type=AccessType.view.value,

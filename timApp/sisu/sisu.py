@@ -35,7 +35,7 @@ from timApp.sisu.parse_display_name import (
 )
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tim_app import app, csrf
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import (
     validate_groupname,
     update_group_doc_settings,
@@ -740,7 +740,7 @@ def get_sisu_assessments(
     else:
         usergroups = groups
     ugs = (
-        db.session.execute(select(UserGroup).filter(UserGroup.name.in_(usergroups)))
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(usergroups)))
         .scalars()
         .all()
     )

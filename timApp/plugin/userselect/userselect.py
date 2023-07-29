@@ -42,7 +42,7 @@ from timApp.plugin.userselect.dist_right_util import (
     apply_dist_right_actions,
 )
 from timApp.plugin.userselect.utils import group_expired_offset
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -518,19 +518,13 @@ def get_groups(
     cur_user: User, add: list[str], remove: list[str], change_all_groups: list[str]
 ) -> tuple[list[UserGroup], list[UserGroup], list[UserGroup]]:
     add_groups: list[UserGroup] = (
-        db.session.execute(select(UserGroup).filter(UserGroup.name.in_(add)))
-        .scalars()
-        .all()
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(add))).scalars().all()
     )
     remove_groups: list[UserGroup] = (
-        db.session.execute(select(UserGroup).filter(UserGroup.name.in_(remove)))
-        .scalars()
-        .all()
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(remove))).scalars().all()
     )
     change_all_groups_ugs: list[UserGroup] = (
-        db.session.execute(
-            select(UserGroup).filter(UserGroup.name.in_(change_all_groups))
-        )
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(change_all_groups)))
         .scalars()
         .all()
     )
@@ -730,7 +724,7 @@ def apply_permission_actions(
     for to_confirm in confirm:
         doc_entry = doc_entries[to_confirm.doc_path]
         ba_confirm: BlockAccess | None = (
-            db.session.execute(
+            run_sql(
                 select(BlockAccess)
                 .filter_by(
                     type=to_confirm.type.value,
@@ -751,7 +745,7 @@ def apply_permission_actions(
     for to_change in change_time:
         doc_entry = doc_entries[to_change.doc_path]
         ba_change: BlockAccess | None = (
-            db.session.execute(
+            run_sql(
                 select(BlockAccess)
                 .filter_by(
                     type=to_change.type.value,

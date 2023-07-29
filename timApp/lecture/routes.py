@@ -54,7 +54,7 @@ from timApp.lecture.runningquestion import RunningQuestion
 from timApp.lecture.showpoints import ShowPoints
 from timApp.lecture.useractivity import UserActivity
 from timApp.plugin.qst.qst import get_question_data_from_document
-from timApp.timdb.sqa import db, tim_main_execute
+from timApp.timdb.sqa import db, tim_main_execute, run_sql
 from timApp.user.user import User
 from timApp.util.error_handlers import suppress_wuff
 from timApp.util.flask.requesthelper import (
@@ -595,11 +595,7 @@ def get_lecture_users(lecture: Lecture):
     lecturers = []
     students = []
 
-    activity = (
-        db.session.execute(select(UserActivity).filter_by(lecture=lecture))
-        .scalars()
-        .all()
-    )
+    activity = run_sql(select(UserActivity).filter_by(lecture=lecture)).scalars().all()
     cur_time = get_current_time()
 
     for ac in activity:
@@ -722,7 +718,7 @@ def clean_dictionaries_by_lecture(lecture: Lecture):
     stop_showing_points(lecture)
     for a in lecture.useractivity:
         db.session.delete(a)
-    db.session.execute(
+    run_sql(
         delete(QuestionActivity)
         .where(
             (
@@ -755,7 +751,7 @@ def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
             QuestionActivityKind.Pointsshown,
         ],
     )
-    db.session.execute(
+    run_sql(
         delete(RunningQuestion).where(RunningQuestion.lecture_id == lecture.lecture_id)
     )
     stop_showing_points(lecture)
@@ -784,7 +780,7 @@ def delete_lecture(m: DeleteLectureModel):
     with db.session.no_autoflush:
         empty_lecture(lecture)
         for t in (Message, LectureAnswer, AskedQuestion):
-            db.session.execute(delete(t).where(t.lecture_id == lecture.lecture_id))
+            run_sql(delete(t).where(t.lecture_id == lecture.lecture_id))
         db.session.delete(lecture)
     db.session.commit()
 
@@ -999,7 +995,7 @@ def show_points(m: ShowAnswerPointsModel):
 
 
 def stop_showing_points(lecture: Lecture):
-    db.session.execute(
+    run_sql(
         delete(ShowPoints)
         .where(
             ShowPoints.asked_id.in_(
@@ -1034,7 +1030,7 @@ def update_question_points():
 
 
 def delete_activity(question: AskedQuestion, kinds):
-    db.session.execute(
+    run_sql(
         delete(QuestionActivity)
         .where(
             (QuestionActivity.asked_id == question.asked_id)

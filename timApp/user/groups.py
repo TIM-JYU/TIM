@@ -20,7 +20,7 @@ from timApp.auth.sessioninfo import (
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
 from timApp.item.validation import ItemValidationRule
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.special_group_names import (
     SPECIAL_GROUPS,
     PRIVILEGED_GROUPS,
@@ -64,7 +64,7 @@ def get_uid_gid(
     group_name: str, usernames_or_emails: list[str]
 ) -> tuple[UserGroup, list[User]]:
     users = (
-        db.session.execute(
+        run_sql(
             select(User).filter(
                 User.name.in_(usernames_or_emails) | User.email.in_(usernames_or_emails)
             )
@@ -73,9 +73,7 @@ def get_uid_gid(
         .all()
     )
     group = (
-        db.session.execute(select(UserGroup).filter_by(name=group_name).limit(1))
-        .scalars()
-        .first()
+        run_sql(select(UserGroup).filter_by(name=group_name).limit(1)).scalars().first()
     )
     raise_group_not_found_if_none(group_name, group)
     return group, users
@@ -139,7 +137,7 @@ def show_usergroups(username: str) -> Response:
     if not u:
         raise NotExist(USER_NOT_FOUND)
     return json_response(
-        db.session.execute(u.get_groups(include_special=False).order_by(UserGroup.name))
+        run_sql(u.get_groups(include_special=False).order_by(UserGroup.name))
         .scalars()
         .all()
     )

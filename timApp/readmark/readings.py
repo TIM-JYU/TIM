@@ -9,7 +9,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.util.utils import get_current_time
 
 
@@ -23,9 +23,7 @@ def get_readings(
     usergroup_id: int, doc: Document, filter_condition=None
 ) -> list[ReadParagraph]:
     return (
-        db.session.execute(
-            get_readings_filtered_query(usergroup_id, doc, filter_condition)
-        )
+        run_sql(get_readings_filtered_query(usergroup_id, doc, filter_condition))
         .scalars()
         .all()
     )
@@ -41,7 +39,7 @@ def has_anything_read(usergroup_ids: list[int], doc: Document) -> bool:
         & (ReadParagraph.type == ReadParagraphType.click_red)
     )
     # Normal query is generally faster than an "exists" subquery even if it causes extra data to be loaded
-    return db.session.execute(query).scalars().first() is not None
+    return run_sql(query).scalars().first() is not None
 
 
 def get_readings_filtered_query(
@@ -97,7 +95,7 @@ def mark_read(
 def mark_all_read(usergroup_id: int, doc: Document):
     existing = {
         (r.par_id, r.doc_id): r
-        for r in db.session.execute(
+        for r in run_sql(
             get_readings_query(usergroup_id, doc).filter(
                 ReadParagraph.type == ReadParagraphType.click_red
             )
@@ -115,7 +113,7 @@ def remove_all_read_marks(doc: Document):
     # usually you'd use get_referenced_document_ids to get all document IDs
     # Since we're deleting read marks here, it's better to be safe and only remove marks only
     # for paragraphs defined directly in the document
-    db.session.execute(
+    run_sql(
         delete(ReadParagraph)
         .where(
             ReadParagraph.id.in_(
@@ -144,7 +142,7 @@ def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
     src_par_stmt = select(ReadParagraph).filter_by(
         doc_id=src_par.doc.doc_id, par_id=src_par.get_id()
     )
-    db.session.execute(
+    run_sql(
         delete(ReadParagraph)
         .where(
             (ReadParagraph.doc_id == dest_par.doc.doc_id)
@@ -156,7 +154,7 @@ def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
         .execution_options(synchronize_session="fetch")
     )
 
-    for p in db.session.execute(src_par_stmt).scalars():  # type: ReadParagraph
+    for p in run_sql(src_par_stmt).scalars():  # type: ReadParagraph
         db.session.add(
             ReadParagraph(
                 usergroup_id=p.usergroup_id,

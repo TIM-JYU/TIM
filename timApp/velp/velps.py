@@ -12,7 +12,7 @@ from typing import Iterable
 from sqlalchemy import func, delete, select
 from sqlalchemy.orm import selectinload
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.velp.velp_models import (
     Velp,
     VelpVersion,
@@ -183,7 +183,7 @@ def update_velp_labels(velp_id: int, labels: Iterable[int]) -> None:
 
     """
     # First nuke existing labels.
-    db.session.execute(delete(LabelInVelp).where(LabelInVelp.velp_id == velp_id))
+    run_sql(delete(LabelInVelp).where(LabelInVelp.velp_id == velp_id))
     # Then add the new ones.
     add_labels_to_velp(velp_id, labels)
 
@@ -199,7 +199,7 @@ def get_latest_velp_version(
 
     """
     return (
-        db.session.execute(
+        run_sql(
             select(VelpContent)
             .filter_by(language_id=language_id)
             .join(VelpVersion)
@@ -254,7 +254,7 @@ def get_velp_content_for_document(
         .options(selectinload(Velp.groups).raiseload(VelpGroup.block))
         .options(selectinload(Velp.velp_versions).joinedload(VelpVersion.content))
     )
-    return db.session.execute(vq).scalars().all()
+    return run_sql(vq).scalars().all()
 
 
 def get_velp_label_content_for_document(
@@ -272,7 +272,7 @@ def get_velp_label_content_for_document(
 
     """
     vlcs = (
-        db.session.execute(
+        run_sql(
             select(VelpLabelContent)
             .filter_by(language_id=language_id)
             .join(LabelInVelp, VelpLabelContent.velplabel_id == LabelInVelp.label_id)

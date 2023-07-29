@@ -19,7 +19,7 @@ from timApp.auth.session.util import (
     invalidate_sessions_for,
 )
 from timApp.tim_app import csrf
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, csv_response, ok_response
@@ -111,12 +111,12 @@ def get_all_sessions(
 
     match export_format:
         case ExportFormatOptions.JSON:
-            return json_response(db.session.execute(stmt).scalars().all())
+            return json_response(run_sql(stmt).scalars().all())
         case ExportFormatOptions.CSV:
             data: list[list[Any]] = [
                 ["user", "session_id", "origin", "logged_in_at", "expired_at"]
             ]
-            for s in db.session.execute(stmt).scalars().all():  # type: UserSession
+            for s in run_sql(stmt).scalars().all():  # type: UserSession
                 data.append(
                     [
                         s.user.name,
@@ -204,9 +204,7 @@ def validate_all() -> Response:
     verify_admin()
 
     all_usersnames: list[tuple[str]] = (
-        db.session.execute(
-            select(User.name).join(UserSession).distinct(UserSession.user_id)
-        )
+        run_sql(select(User.name).join(UserSession).distinct(UserSession.user_id))
         .scalars()
         .all()
     )
@@ -224,7 +222,7 @@ def invalidate_all() -> Response:
     """
     verify_admin()
 
-    db.session.execute(
+    run_sql(
         update(UserSession)
         .where(~UserSession.expired)
         .values({"expired_at": get_current_time()})

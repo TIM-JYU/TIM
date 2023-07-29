@@ -31,7 +31,7 @@ from timApp.notification.pending_notification import (
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -93,7 +93,7 @@ def get_current_user_notifications(limit: int | None = None):
 
     if limit is not None:
         stmt = stmt.limit(limit)
-    nots = db.session.execute(stmt).scalars().all()
+    nots = run_sql(stmt).scalars().all()
     return nots
 
 

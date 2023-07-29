@@ -12,7 +12,7 @@ from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import include_if_loaded, db
+from timApp.timdb.sqa import include_if_loaded, db, run_sql
 from timApp.util.utils import split_location, date_to_relative, cached_property
 
 if TYPE_CHECKING:
@@ -133,7 +133,7 @@ class Item(ItemBase):
                 .selectinload(Block.accesses)
                 .joinedload(BlockAccess.usergroup)
             )
-        crumbs = db.session.execute(crumbs_stmt).scalars().all()
+        crumbs = run_sql(crumbs_stmt).scalars().all()
         if include_root:
             crumbs.append(Folder.get_root())
         return crumbs

@@ -24,7 +24,7 @@ from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import InvalidReferenceException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import (
     get_option,
@@ -67,7 +67,7 @@ def get_subfolders(m: GetFoldersModel):
     root_path = m.folder
     if root_path == "":
         return json_response([])
-    folders = db.session.execute(
+    folders = run_sql(
         select(Folder).filter(Folder.location.like(root_path + "%")).limit(50)
     ).scalars()
     folders_viewable = [root_path]
@@ -731,7 +731,7 @@ def fetch_search_items(search_items: dict, search_folder: str) -> list[DocInfo]:
     :return: list of DocInfo objects
     """
     doc_infos: list[DocInfo] = (
-        db.session.execute(
+        run_sql(
             select(DocEntry)
             .filter(
                 (DocEntry.id.in_(search_items.keys()))

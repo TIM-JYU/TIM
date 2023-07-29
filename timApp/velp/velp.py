@@ -38,7 +38,7 @@ from timApp.folder.folder import Folder
 from timApp.item.deleting import (
     soft_delete_document,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import get_rights_holders, remove_access
@@ -170,7 +170,7 @@ def get_default_velp_group(doc_id: int) -> Response:
         # if has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
         velp_groups.append(v.id)
     def_velp_groups: list[VelpGroup] = (
-        db.session.execute(
+        run_sql(
             select(VelpGroup).filter(
                 VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True
             )
@@ -212,7 +212,7 @@ def get_default_personal_velp_group() -> Response:
     for v in found_velp_groups:
         velp_groups.append(v.id)
     default_group = (
-        db.session.execute(
+        run_sql(
             select(VelpGroup)
             .filter(VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True)
             .limit(1)
@@ -376,9 +376,7 @@ def add_velp() -> Response:
     # Check where user has edit rights and only add new velp to those
     velp_groups: list[VelpGroup] = [
         vg
-        for vg in db.session.execute(
-            select(VelpGroup).filter(VelpGroup.id.in_(velp_group_ids))
-        )
+        for vg in run_sql(select(VelpGroup).filter(VelpGroup.id.in_(velp_group_ids)))
         .scalars()
         .all()
         if has_edit_access(vg.block)
@@ -471,9 +469,7 @@ def update_velp_route(doc_id: int) -> Response:
     # Check that user has edit access to velp groups in given velp group list and add them to an add list
     groups_to_add: list[VelpGroup] = [
         vg
-        for vg in db.session.execute(
-            select(VelpGroup).filter(VelpGroup.id.in_(velp_group_ids))
-        )
+        for vg in run_sql(select(VelpGroup).filter(VelpGroup.id.in_(velp_group_ids)))
         .scalars()
         .all()
         if has_edit_access(vg.block)
@@ -560,7 +556,7 @@ def update_velp_label_route() -> Response:
     language_id = "FI" if language_id is None else language_id
 
     vlc: VelpLabelContent | None = (
-        db.session.execute(
+        run_sql(
             select(VelpLabelContent)
             .filter_by(
                 language_id=language_id,
@@ -691,7 +687,7 @@ def reset_target_area_selections_to_defaults(doc_id: int) -> Response:
 
     user_id = get_current_user_id()
 
-    db.session.execute(
+    run_sql(
         delete(VelpGroupSelection).where(
             (VelpGroupSelection.doc_id == doc_id)
             & (VelpGroupSelection.user_id == user_id)
@@ -711,7 +707,7 @@ def reset_all_selections_to_defaults(doc_id: int) -> Response:
 
     user_id = get_current_user_id()
 
-    db.session.execute(
+    run_sql(
         delete(VelpGroupSelection).filter_by(
             (VelpGroupSelection.doc_id == doc_id)
             & (VelpGroupSelection.user_id == user_id)
@@ -917,27 +913,27 @@ def delete_velp_group(group_id: int) -> Response:
     remove_velp_group_perms(group_id)
 
     # Delete associated entries/rows from database
-    db.session.execute(
+    run_sql(
         delete(VelpInGroup)
         .where(VelpInGroup.velp_group_id == group_id)
         .execution_options(synchronize_session=False)
     )
-    db.session.execute(
+    run_sql(
         delete(VelpGroupSelection)
         .where(VelpGroupSelection.velp_group_id == group_id)
         .execution_options(synchronize_session=False)
     )
-    db.session.execute(
+    run_sql(
         delete(VelpGroupDefaults)
         .where(VelpGroupDefaults.velp_group_id == group_id)
         .execution_options(synchronize_session=False)
     )
-    db.session.execute(
+    run_sql(
         delete(VelpGroupsInDocument)
         .where(VelpGroupsInDocument.velp_group_id == group_id)
         .execution_options(synchronize_session=False)
     )
-    db.session.execute(
+    run_sql(
         delete(VelpGroup)
         .where(VelpGroup.id == group_id)
         .execution_options(synchronize_session=False)

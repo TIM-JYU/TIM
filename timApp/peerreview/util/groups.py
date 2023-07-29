@@ -10,7 +10,7 @@ from timApp.answer.answers import get_points_by_rule, get_latest_answers_query
 from timApp.document.docinfo import DocInfo
 from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember, membership_current
@@ -24,7 +24,7 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
     if user_groups:
         user_ids = [
             uid
-            for uid in db.session.execute(
+            for uid in run_sql(
                 select(UserGroupMember.user_id)
                 .join(UserGroup, UserGroupMember.group)
                 .filter(membership_current & (UserGroup.name.in_(user_groups)))
@@ -82,9 +82,9 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
     # PeerReview rows and pairings will be the same for every task, even if target did not answer to some of tasks
     # If target has an answer in a task, try to add it to PeerReview table. If not, just leave it empty
     for t in task_ids:
-        answers: list[Answer] = db.session.scalars(
-            get_latest_answers_query(t, users, valid_only)
-        ).all()
+        answers: list[Answer] = (
+            run_sql(get_latest_answers_query(t, users, valid_only)).scalars().all()
+        )
         excluded_users: list[User] = []
         filtered_answers = []
         for answer in answers:

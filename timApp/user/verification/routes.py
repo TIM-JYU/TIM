@@ -4,7 +4,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound  # type: igno
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_id
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.verification.verification import Verification, VerificationType
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response
@@ -24,7 +24,7 @@ def get_verification_data(
         error = "Invalid verification type"
 
     verification: Verification | None = (
-        db.session.execute(
+        run_sql(
             select(Verification)
             .filter_by(token=verify_token, type=verify_type_parsed)
             .limit(1)

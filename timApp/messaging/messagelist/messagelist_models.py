@@ -15,7 +15,7 @@ from timApp.messaging.messagelist.listinfo import (
     Distribution,
     MessageVerificationType,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz, DbModel
 from timApp.util.utils import get_current_time
 
@@ -121,7 +121,7 @@ class MessageListModel(DbModel):
     def get_by_email(email: str) -> Optional["MessageListModel"]:
         name, domain = email.split("@", 1)
         return (
-            db.session.execute(
+            run_sql(
                 select(MessageListModel).filter_by(name=name, email_list_domain=domain)
             )
             .scalars()
@@ -131,7 +131,7 @@ class MessageListModel(DbModel):
     @staticmethod
     def from_manage_doc_id(doc_id: int) -> "MessageListModel":
         return (
-            db.session.execute(select(MessageListModel).filter_by(manage_doc_id=doc_id))
+            run_sql(select(MessageListModel).filter_by(manage_doc_id=doc_id))
             .scalars()
             .one()
         )
@@ -158,7 +158,7 @@ class MessageListModel(DbModel):
         :return: Return the message list after query by name. Returns at most one result or None if no there are hits.
         """
         return (
-            db.session.execute(select(MessageListModel).filter_by(name=name_candidate))
+            run_sql(select(MessageListModel).filter_by(name=name_candidate))
             .scalars()
             .first()
         )
@@ -170,7 +170,7 @@ class MessageListModel(DbModel):
         :param name_candidate: The name we are checking if it already is already in use by another list.
         """
         return (
-            db.session.execute(
+            run_sql(
                 select(MessageListModel.name).filter_by(name=name_candidate).limit(1)
             )
             .scalars()

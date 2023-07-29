@@ -20,7 +20,7 @@ from timApp.plugin.userselect.dist_right_util import (
 from timApp.plugin.userselect.utils import group_expired_offset
 from timApp.tim_app import app
 from timApp.tim_celery import apply_pending_userselect_actions
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import membership_current, UserGroupMember
@@ -293,20 +293,18 @@ def apply_pending_actions_impl() -> None:
         # noinspection PyUnresolvedReferences
         group_cache: dict[str, UserGroup] = {
             ug.name: ug
-            for ug in db.session.execute(
+            for ug in run_sql(
                 select(UserGroup).filter(UserGroup.name.in_(group_names))
             ).scalars()
         }
         # noinspection PyUnresolvedReferences
         user_cache: dict[str, User] = {
             u.name: u
-            for u in db.session.execute(
-                select(User).filter(User.name.in_(user_names))
-            ).scalars()
+            for u in run_sql(select(User).filter(User.name.in_(user_names))).scalars()
         }
         memberships_cache: dict[tuple[int, int], UserGroupMember] = {
             (m.usergroup_id, m.user_id): m
-            for m in db.session.execute(
+            for m in run_sql(
                 select(UserGroupMember)
                 .join(UserGroup, UserGroupMember.group)
                 .join(User, UserGroupMember.user)

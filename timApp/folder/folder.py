@@ -13,7 +13,7 @@ from timApp.folder.createopts import FolderCreationOptions
 from timApp.item.block import Block, insert_block, copy_default_rights, BlockType
 from timApp.item.item import Item
 from timApp.timdb.exceptions import ItemAlreadyExistsException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location, join_location, relative_location
@@ -53,7 +53,7 @@ class Folder(DbModel, Item):
     @staticmethod
     def find_by_location(location, name) -> Folder | None:
         return (
-            db.session.execute(select(Folder).filter_by(name=name, location=location))
+            run_sql(select(Folder).filter_by(name=name, location=location))
             .scalars()
             .first()
         )
@@ -120,7 +120,7 @@ class Folder(DbModel, Item):
         stmt = select(Folder).filter(f_filter)
         if filter_ids:
             stmt = stmt.filter(Folder.id.in_(filter_ids))
-        return db.session.execute(stmt).scalars().all()
+        return run_sql(stmt).scalars().all()
 
     def is_root(self) -> bool:
         return self.id == -1
@@ -128,8 +128,8 @@ class Folder(DbModel, Item):
     def delete(self):
         assert self.is_empty
         db.session.delete(self)
-        db.session.execute(delete(BlockAccess).where(BlockAccess.block_id == self.id))
-        db.session.execute(
+        run_sql(delete(BlockAccess).where(BlockAccess.block_id == self.id))
+        run_sql(
             delete(Block).where(
                 (Block.type_id == BlockType.Folder.value) & (Block.id == self.id)
             )
@@ -155,9 +155,7 @@ class Folder(DbModel, Item):
     def rename_content(self, old_path: str, new_path: str):
         """Renames contents of the folder."""
         docs_in_folder: list[DocEntry] = (
-            db.session.execute(
-                select(DocEntry).filter(DocEntry.name.like(old_path + "/%"))
-            )
+            run_sql(select(DocEntry).filter(DocEntry.name.like(old_path + "/%")))
             .scalars()
             .all()
         )
@@ -165,7 +163,7 @@ class Folder(DbModel, Item):
             d.name = d.name.replace(old_path, new_path, 1)
 
         folders_in_folder = (
-            db.session.execute(
+            run_sql(
                 select(Folder).filter(
                     (Folder.location == old_path)
                     | (Folder.location.like(old_path + "/%"))
@@ -180,10 +178,10 @@ class Folder(DbModel, Item):
     @property
     def is_empty(self):
         stmt = select(Folder.id).filter_by(location=self.path)
-        if db.session.execute(stmt.limit()).first():
+        if run_sql(stmt.limit()).first():
             return False
         stmt = select(DocEntry.id).filter(DocEntry.name.like(self.path + "/%"))
-        return not db.session.execute(stmt.limit(1)).first()
+        return not run_sql(stmt.limit(1)).first()
 
     @property
     def parent(self) -> Folder | None:
@@ -224,7 +222,7 @@ class Folder(DbModel, Item):
         self, relative_path: str, create_if_not_exist=False, creator_group=None
     ) -> None | DocEntry:
         doc = (
-            db.session.execute(
+            run_sql(
                 select(DocEntry).filter_by(
                     name=join_location(self.get_full_path(), relative_path)
                 )
@@ -311,9 +309,7 @@ class Folder(DbModel, Item):
 
         rel_path, rel_name = split_location(path)
         folder = (
-            db.session.execute(
-                select(Folder).filter_by(name=rel_name, location=rel_path)
-            )
+            run_sql(select(Folder).filter_by(name=rel_name, location=rel_path))
             .scalars()
             .first()
         )

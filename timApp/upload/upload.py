@@ -41,7 +41,7 @@ from timApp.item.validation import (
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_files_path
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.upload.uploadedfile import (
     PluginUpload,
     PluginUploadInfo,
@@ -124,7 +124,7 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
 
     relfilename = check_and_format_filename(relfilename)
     block = (
-        db.session.execute(
+        run_sql(
             select(Block)
             .filter(
                 (Block.description.startswith(relfilename))
@@ -176,7 +176,7 @@ def get_multiple_pluginuploads(relfilenames: list[str]) -> list[PluginUpload]:
         value=Block.description,
     )
     blocks: list[Block] = (
-        db.session.execute(
+        run_sql(
             select(Block)
             .filter(
                 (Block.description.in_(filenames))

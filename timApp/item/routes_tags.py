@@ -20,7 +20,7 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_view_access
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
@@ -152,7 +152,7 @@ def edit_tag(doc: str, old_tag: TagInfo, new_tag: TagInfo) -> Response:
 
     new_tag_obj = Tag(name=new_tag_name, expires=new_tag.expires, type=new_tag.type)
     old_tag_obj = (
-        db.session.execute(
+        run_sql(
             select(Tag).filter_by(block_id=d.id, name=old_tag.name, type=old_tag.type)
         )
         .scalars()
@@ -187,9 +187,7 @@ def remove_tag(doc: str, tag: TagInfo) -> Response:
     verify_manage_access(d)
 
     tag_obj = (
-        db.session.execute(
-            select(Tag).filter_by(block_id=d.id, name=tag.name, type=tag.type)
-        )
+        run_sql(select(Tag).filter_by(block_id=d.id, name=tag.name, type=tag.type))
         .scalars()
         .first()
     )
@@ -228,7 +226,7 @@ def get_all_tags() -> Response:
     of expiration.
     :returns The list of all unique tag names as list of strings.
     """
-    tags = db.session.execute(select(Tag)).scalars().all()
+    tags = run_sql(select(Tag)).scalars().all()
 
     tags_unique = set()
     for tag in tags:

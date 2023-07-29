@@ -48,7 +48,7 @@ from timApp.plugin.calendar.models import (
     EnrollmentRight,
 )
 from timApp.plugin.calendar.models import ExportedCalendar
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_access
 from timApp.user.special_group_names import LOGGED_IN_GROUPNAME
 from timApp.user.user import User, edit_access_set, manage_access_set
@@ -365,9 +365,7 @@ def export_ical(user: User) -> Response:
     :return:
     """
     user_data: ExportedCalendar = (
-        db.session.execute(
-            select(ExportedCalendar).filter(ExportedCalendar.user_id == user.id)
-        )
+        run_sql(select(ExportedCalendar).filter(ExportedCalendar.user_id == user.id))
         .scalars()
         .one_or_none()
     )
@@ -414,7 +412,7 @@ def get_ical(opts: ICalFilterOptions) -> Response:
     :return: ICS file that can be exported otherwise 404 if user data does not exist.
     """
     user_data: ExportedCalendar = (
-        db.session.execute(select(ExportedCalendar).filter_by(calendar_hash=opts.key))
+        run_sql(select(ExportedCalendar).filter_by(calendar_hash=opts.key))
         .scalars()
         .one_or_none()
     )
@@ -568,7 +566,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         stmt = stmt.with_only_columns(Event)
     stmt = stmt.filter(timing_filter)
 
-    return db.session.execute(stmt).scalars().all()
+    return run_sql(stmt).scalars().all()
 
 
 @calendar_plugin.get("/events", model=FilterOptions)
@@ -706,7 +704,7 @@ def save_events(
 
     # noinspection PyUnresolvedReferences
     event_ugs = (
-        db.session.execute(select(UserGroup).filter(UserGroup.name.in_(event_ug_names)))
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(event_ug_names)))
         .scalars()
         .all()
     )
@@ -814,7 +812,7 @@ def save_events(
             if not modify_existing:
                 raise AccessDenied("Cannot modify existing events via this route")
             event: Event = (
-                db.session.execute(select(Event).filter_by(event_id=calendar_event.id))
+                run_sql(select(Event).filter_by(event_id=calendar_event.id))
                 .scalars()
                 .first()
             )
@@ -969,7 +967,7 @@ def send_email_to_enrolled_users(
     user_accounts = []
     for user_group in enrolled_users:
         user_account = (
-            db.session.execute(select(User).filter(User.name == user_group.name))
+            run_sql(select(User).filter(User.name == user_group.name))
             .scalars()
             .one_or_none()
         )
@@ -1018,7 +1016,7 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
     if not enrollment:
         raise NotExist()
 
-    db.session.execute(
+    run_sql(
         update(Enrollment)
         .where(Enrollment.event_id == enrollment.event_id)
         .values(

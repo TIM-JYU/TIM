@@ -17,7 +17,7 @@ from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import PendingNotification
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.timdb.dbaccess import get_files_path
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.velp.velp_models import VelpGroupsInDocument
 
@@ -26,19 +26,23 @@ item_cli = AppGroup("item")
 
 @item_cli.command("cleanup_default_rights_names")
 def cleanup_default_right_doc_names() -> None:
-    bs: list[Block] = db.session.scalars(
-        select(Block).filter(
-            Block.description.in_(
-                [
-                    "templates/DefaultDocumentRights",
-                    "templates/DefaultFolderRights",
-                    "$DefaultFolderRights",
-                    "$DefaultDocumentRights",
-                ]
+    bs: list[Block] = (
+        run_sql(
+            select(Block).filter(
+                Block.description.in_(
+                    [
+                        "templates/DefaultDocumentRights",
+                        "templates/DefaultFolderRights",
+                        "$DefaultFolderRights",
+                        "$DefaultDocumentRights",
+                    ]
+                )
+                & (Block.type_id == BlockType.Document.value)
             )
-            & (Block.type_id == BlockType.Document.value)
         )
-    ).all()
+        .scalars()
+        .all()
+    )
     num_changed = len(bs)
     for b in bs:
         b.description = b.description.replace("templates/", "").replace("$", "")
@@ -53,9 +57,11 @@ def cleanup_default_right_doc_names() -> None:
 def cleanup_bookmark_docs(
     dry_run: bool, prompt_before_commit: bool, max_docs: int | None
 ) -> None:
-    new_bookmark_users: list[User] = db.session.scalars(
-        select(User).filter(User.prefs.contains('"bookmarks":'))
-    ).all()
+    new_bookmark_users: list[User] = (
+        run_sql(select(User).filter(User.prefs.contains('"bookmarks":')))
+        .scalars()
+        .all()
+    )
     docs_to_delete = set()
     processed_users = 0
 
@@ -90,7 +96,7 @@ def cleanup_bookmark_docs(
                 VelpGroupsInDocument,
                 Notification,
             ):
-                db.session.execute(delete(t).where(t.doc_id == bm_doc.id))
+                run_sql(delete(t).where(t.doc_id == bm_doc.id))
             db.session.delete(bm_doc)
             db.session.delete(block)
     if dry_run:
