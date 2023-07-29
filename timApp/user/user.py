@@ -282,7 +282,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     real_name: Mapped[Optional[str]]
     """Real (full) name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
 
-    _email: Mapped[str] = mapped_column("email", unique=True)
+    _email: Mapped[Optional[str]] = mapped_column("email", unique=True)
     """Email address."""
 
     prefs: Mapped[Optional[str]]

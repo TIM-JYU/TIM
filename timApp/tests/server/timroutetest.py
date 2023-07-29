@@ -107,6 +107,23 @@ def get_cookie_value(resp: Response, key: str) -> str | None:
     return None
 
 
+def del_g():
+    """
+    Clean up global object.
+
+    For some reason, the g object is not cleared when running browser test.
+    This helper method cleans up all the TIM-related attributes in the g object.
+    """
+    if has_request_context() and app.config["TESTING"]:
+        g.pop("user", None)
+        g.pop("viewable", None)
+        g.pop("editable", None)
+        g.pop("teachable", None)
+        g.pop("manageable", None)
+        g.pop("see_answers", None)
+        g.pop("owned", None)
+
+
 class TimRouteTestBase(TimDbTest):
     """A base class for running tests for TIM routes."""
 
@@ -148,6 +165,7 @@ class TimRouteTestBase(TimDbTest):
         #   Instead, the client contex should be entered only in specific tests and explicitly
         self.client = self.client.__enter__()
         self.client.open("/")
+        del_g()
 
     @classmethod
     def add_language(cls, lang_name: str) -> Language:
@@ -315,10 +333,10 @@ class TimRouteTestBase(TimDbTest):
             try:
                 yield
             finally:
+                del_g()
                 if expire_session_after_request and has_app_context():
                     db.session.remove()
                     # Reattach the user object to the session so that it can be tracked for changes
-                    g.pop("user", None)
 
         with clean_db_after_request():
             if headers is None:
@@ -1024,7 +1042,13 @@ class TimRouteTestBase(TimDbTest):
             expect_status=expect_status,
             **kwargs,
         )
-        return db.session.get(Translation, j["id"], options=[joinedload(Translation.docentry)]) if expect_status == 200 else None
+        return (
+            db.session.get(
+                Translation, j["id"], options=[joinedload(Translation.docentry)]
+            )
+            if expect_status == 200
+            else None
+        )
 
     def assert_content(self, element: HtmlElement, expected: list[str]):
         pars = get_content(element)
@@ -1375,7 +1399,6 @@ class TimRouteTestBase(TimDbTest):
 
 
 class TimRouteTest(TimRouteTestBase):
-
     def _init_client(self) -> FlaskClient:
         return timApp.tim.app.test_client()
 

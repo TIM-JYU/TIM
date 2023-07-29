@@ -30,7 +30,6 @@ if os.environ.get("TIM_TESTING", None):
 db = SQLAlchemy(session_options=session_options, engine_options=engine_options)
 add_tim_types(db)
 
-# TODO: Finish up adding Mapping annotations to everywhere
 # TODO: Replace db.Model with custom DeclarativeBase class that also specifies __tablename__ and custom types.
 #   See https://docs.sqlalchemy.org/en/20/orm/declarative_mixins.html
 # TODO: Switch models to use dataclasses instead

@@ -273,6 +273,7 @@ def install_sql_hook():
     prev_exec_time = get_current_time()
 
     with app.app_context():
+
         @event.listens_for(db.engine, "before_execute")
         def receive_before_execute(conn, clauseelement, multiparams, params):
             nonlocal prev_exec_time
@@ -359,34 +360,6 @@ def log_request(response):
 
 
 @app.after_request
-def close_db(response):
-    if hasattr(g, "timdb"):
-        g.timdb.close()
-    return response
-
-
-@app.after_request
-def del_g(response):
-    """For some reason, the g object is not cleared when running browser test, so we do it here."""
-    if app.config["TESTING"]:
-        if hasattr(g, "user"):
-            del g.user
-        if hasattr(g, "viewable"):
-            del g.viewable
-        if hasattr(g, "editable"):
-            del g.editable
-        if hasattr(g, "teachable"):
-            del g.teachable
-        if hasattr(g, "manageable"):
-            del g.manageable
-        if hasattr(g, "see_answers"):
-            del g.see_answers
-        if hasattr(g, "owned"):
-            del g.owned
-    return response
-
-
-@app.after_request
 def after_request(resp: Response):
     token = generate_csrf()
     resp.set_cookie(
@@ -405,12 +378,6 @@ def after_request(resp: Response):
     # It always contains a specific valid language, never "UseWebBrowser"
     resp.set_cookie("script_lang", locale)
     return resp
-
-
-@app.teardown_appcontext
-def close_db_appcontext(_e):
-    if not app.config["TESTING"] and hasattr(g, "timdb"):
-        g.timdb.close()
 
 
 def init_app():
