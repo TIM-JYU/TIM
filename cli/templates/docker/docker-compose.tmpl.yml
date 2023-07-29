@@ -71,9 +71,9 @@ services:
   profiles:
    - prod
    - dev
-  image: postgres:11
+  image: postgres:15
   volumes:
-   - data11:/var/lib/postgresql/data
+   - db_data:/var/lib/postgresql/data
   command: [
     "postgres",
     "-c", "log_statement=mod",
@@ -88,7 +88,9 @@ services:
    - /run/postgresql
    - /tmp
   environment:
+   POSTGRES_USER: postgres
    POSTGRES_PASSWORD: postgresql
+   POSTGRES_HOST_AUTH_METHOD: "md5"
   ports: ${ jsonify(["5432:5432"] if tim.is_dev else []) }
   logging:
    # According to docs, "local" is more compact and performant than the default json-file driver.
@@ -97,7 +99,7 @@ services:
     max-size: "50m"
     max-file: "100"
  postgresql-test:
-  image: postgres:11
+  image: postgres:15
   profiles:
    - test
    - dev
@@ -106,7 +108,9 @@ services:
    - /var/lib/postgresql/data
   ports: ${ jsonify(["5433:5432"] if tim.is_dev else []) }
   environment:
+   POSTGRES_USER: postgres
    POSTGRES_PASSWORD: postgresql
+   POSTGRES_HOST_AUTH_METHOD: "md5"
  csplugin:
   image: ${compose.images_repository}/cs3:${csplugin.target}-${csplugin.image_tag}
   build:
@@ -427,7 +431,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   read_only: true
 ${ partial("docker", "mailman.tmpl.yml") if mailman.is_dev else "" }
 volumes:
- data11:
+ db_data:
  cache:
  caddy_data:
  caddy_config:

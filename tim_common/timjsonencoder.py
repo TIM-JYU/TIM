@@ -27,6 +27,15 @@ class TimJsonProvider(JSONProvider):
         return json.loads(s, **kwargs)
 
 
+SQA_DBMODEL_ATTRS = {
+    "metadata",
+    "query",
+    "query_class",
+    "registry",
+    "type_annotation_map",
+}
+
+
 class TimJsonEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
@@ -58,8 +67,7 @@ class TimJsonEncoder(json.JSONEncoder):
                 flds = [
                     f
                     for f in flds
-                    if not f.startswith("_")
-                    and f not in ["metadata", "query", "query_class", "registry"]
+                    if not f.startswith("_") and f not in SQA_DBMODEL_ATTRS
                 ]
             for field in flds:
                 value = o.__getattribute__(field)
