@@ -17,7 +17,10 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {QuantumGateMenuComponent} from "tim/plugin/quantumcircuit/quantum-gate-menu.component";
-import {QuantumToolboxComponent} from "tim/plugin/quantumcircuit/quantum-toolbox.component";
+import {
+    ActiveGateInfo,
+    QuantumToolboxComponent,
+} from "tim/plugin/quantumcircuit/quantum-toolbox.component";
 import type {
     GateDrop,
     GateMove,
@@ -46,64 +49,8 @@ import {FormsModule} from "@angular/forms";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {SvgCellComponent} from "tim/plugin/quantumcircuit/svg-cell.component";
-import type {Matrix, FormatOptions} from "mathjs";
-import {format, matrix} from "mathjs";
 import {PurifyModule} from "tim/util/purify.module";
-
-/**
- * Information about qubit.
- * Value is the qubit state presented as 0 or 1 (could be [a,b] where a,b are complex numbers).
- * Name is shows on screen.
- * text is used to represent the value of qubit e.g. |0> or 0.
- */
-export class Qubit {
-    value: number;
-    name: string;
-    text: string;
-    circuitStyleOptions: CircuitStyleOptions;
-
-    constructor(
-        value: number,
-        name: string,
-        circuitStyleOptions: CircuitStyleOptions
-    ) {
-        this.value = value;
-        this.name = name;
-        this.circuitStyleOptions = circuitStyleOptions;
-        this.text = this.getQubitText();
-    }
-
-    updateNotation(circuitStyleOptions: CircuitStyleOptions) {
-        this.circuitStyleOptions = circuitStyleOptions;
-        this.text = this.getQubitText();
-    }
-
-    /**
-     * Gets the text for qubit in correct format.
-     */
-    private getQubitText() {
-        const rightAngleChar = "\u27E9";
-        if (this.circuitStyleOptions.useBraket) {
-            return `|${this.value}${rightAngleChar}`;
-        }
-        return this.value.toString();
-    }
-
-    /**
-     * Transforms a bit into corresponding qubit state.
-     */
-    asVector() {
-        if (this.value === 0) {
-            return matrix([1, 0]);
-        }
-        return matrix([0, 1]);
-    }
-
-    toggled() {
-        const newValue = this.value === 0 ? 1 : 0;
-        return new Qubit(newValue, this.name, this.circuitStyleOptions);
-    }
-}
+import {Qubit} from "tim/plugin/quantumcircuit/qubit";
 
 export interface QubitOutput {
     value: number;
@@ -247,93 +194,6 @@ export interface TableCellData {
     rounded: string;
     long: string;
 }
-
-export class ActiveGateInfo {
-    matrix: Matrix;
-    name: string;
-    target: number;
-    time: number;
-    controls: number[];
-    qubits: Qubit[];
-    description: string;
-    swap?: [number, number];
-
-    /**
-     * @param target the index of qubit related to this gate
-     * @param time the time moment related to this gate
-     * @param name the name of gate
-     * @param mat actual matrix presentation of the gate
-     * @param controls indices of qubits that control this gate if any or just an empty array
-     * @param qubits qubit objects used to get names of qubits
-     * @param description more detailed info about gate than its name
-     * @param swap pair of qubit indices for swap gate
-     */
-    constructor(
-        target: number,
-        time: number,
-        name: string,
-        mat: Matrix,
-        controls: number[],
-        qubits: Qubit[],
-        description: string,
-        swap?: [number, number]
-    ) {
-        this.target = target;
-        this.time = time;
-        this.name = name;
-        this.matrix = mat;
-        this.qubits = qubits;
-        this.controls = controls;
-        this.description = description;
-        this.swap = swap;
-    }
-
-    /**
-     * Formats the matrix into an array with elements as strings
-     * to be used in html table.
-     */
-    formatMatrixAsTable() {
-        const arr = this.matrix.toArray();
-        const formatOptions: FormatOptions = {
-            precision: 2,
-        };
-        const res: TableCellData[][] = [];
-        arr.forEach((row) => {
-            if (Array.isArray(row)) {
-                const rowValues = row.map((v) => ({
-                    rounded: format(v, formatOptions).replace(/\s/g, ""),
-                    long: format(v).replace(/\s/g, ""),
-                }));
-                res.push(rowValues);
-            }
-        });
-        return res;
-    }
-
-    formatControlsAsString() {
-        return this.controls.map((ci) => this.qubits[ci].name).join(", ");
-    }
-
-    formatSwapAsString() {
-        if (!this.swap) {
-            return "";
-        }
-        return (
-            this.qubits[this.swap[0]].name +
-            ", " +
-            this.qubits[this.swap[1]].name
-        );
-    }
-
-    formatTimeAsString() {
-        return this.time.toString();
-    }
-
-    formatQubitAsString() {
-        return this.qubits[this.target].name;
-    }
-}
-
 @Component({
     selector: "tim-quantum-circuit",
     template: `
@@ -766,6 +626,10 @@ export class QuantumCircuitComponent
      * @param gate position of gate
      */
     updateActiveGate(gate: GatePos) {
+        if (this.board.get(gate.target, gate.time) === undefined) {
+            this.handleActiveGateHide();
+            return;
+        }
         const name = this.getGateName(gate);
         if (name === undefined) {
             return;
@@ -782,6 +646,10 @@ export class QuantumCircuitComponent
             }
         }
         const controls = this.board.getControls(gate);
+
+        const editable =
+            this.board.get(gate.target, gate.time)?.editable === true;
+
         this.activeGateInfo = new ActiveGateInfo(
             gate.target,
             gate.time,
@@ -790,6 +658,7 @@ export class QuantumCircuitComponent
             controls,
             this.qubits,
             gateInfo.description,
+            editable,
             swapInfo
         );
     }

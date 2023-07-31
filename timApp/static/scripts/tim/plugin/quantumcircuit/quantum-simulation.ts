@@ -1,7 +1,4 @@
-import type {
-    Measurement,
-    Qubit,
-} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import type {Measurement} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 import type {Matrix} from "mathjs";
 import {dotPow, abs, transpose, multiply, kron, identity, index} from "mathjs";
@@ -14,6 +11,7 @@ import {
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
 import type {GateService} from "tim/plugin/quantumcircuit/gate.service";
+import type {Qubit} from "tim/plugin/quantumcircuit/qubit";
 
 export class QuantumCircuitSimulator {
     board: QuantumBoard;

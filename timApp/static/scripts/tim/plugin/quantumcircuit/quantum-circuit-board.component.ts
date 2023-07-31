@@ -13,15 +13,13 @@ import {
     Pipe,
 } from "@angular/core";
 import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
-import type {
-    Qubit,
-    QubitOutput,
-} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import type {QubitOutput} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {
     Control,
     QuantumBoard,
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
+import type {Qubit} from "tim/plugin/quantumcircuit/qubit";
 
 /**
  * Position on circuit board.
@@ -176,8 +174,6 @@ export class RangePipe implements PipeTransform {
                         </g>
 
                     </g>
-
-
                 </svg>
             </div>
 
@@ -398,9 +394,11 @@ export class QuantumCircuitBoardComponent implements OnInit {
             return;
         }
         if (this.board.get(target, time) === undefined) {
+            this.gateSelect.emit({target: target, time: time});
             return;
         }
         if (this.board.get(target, time)?.editable === false) {
+            this.gateSelect.emit({target: target, time: time});
             return;
         }
         if (
