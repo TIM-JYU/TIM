@@ -85,6 +85,11 @@ export class QuantumToolboxComponent implements OnInit, OnChanges {
             this.qubitString = this.activeGateInfo.formatQubitAsString();
             this.timeString = this.activeGateInfo.formatTimeAsString();
             this.showEditableInfo = !this.activeGateInfo.editable;
+        } else {
+            this.controlsString = "";
+            this.swapString = "";
+            this.qubitString = "";
+            this.timeString = "";
         }
     }
 
