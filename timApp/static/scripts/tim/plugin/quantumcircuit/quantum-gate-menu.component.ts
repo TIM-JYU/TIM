@@ -1,5 +1,5 @@
 import type {OnDestroy, OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {Color} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {ServiceGate} from "tim/plugin/quantumcircuit/gate.service";
@@ -25,6 +25,7 @@ interface MenuGate {
                      [title]="gate.description"
                      [style.width.px]="circuitStyleOptions.gateSize"
                      [style.height.px]="circuitStyleOptions.gateSize"
+                     (click)="handleClick(gate.name)"
                      (dragstart)="handleDragStart($event, gate.name)">
                     <div [ngSwitch]="gate.name">
                         <svg *ngSwitchCase="'control'"
@@ -84,6 +85,9 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
     @Input()
     circuitStyleOptions!: CircuitStyleOptions;
 
+    @Output()
+    select = new EventEmitter<string>();
+
     constructor(private gateService: GateService) {}
 
     ngOnInit(): void {
@@ -122,5 +126,9 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.subscription.unsubscribe();
+    }
+
+    handleClick(name: string) {
+        this.select.emit(name);
     }
 }

@@ -17,10 +17,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {QuantumGateMenuComponent} from "tim/plugin/quantumcircuit/quantum-gate-menu.component";
-import {
-    ActiveGateInfo,
-    QuantumToolboxComponent,
-} from "tim/plugin/quantumcircuit/quantum-toolbox.component";
+import {QuantumToolboxComponent} from "tim/plugin/quantumcircuit/quantum-toolbox.component";
 import type {
     GateDrop,
     GateMove,
@@ -51,6 +48,10 @@ import {DomSanitizer} from "@angular/platform-browser";
 import {SvgCellComponent} from "tim/plugin/quantumcircuit/svg-cell.component";
 import {PurifyModule} from "tim/util/purify.module";
 import {Qubit} from "tim/plugin/quantumcircuit/qubit";
+import {
+    ActiveGateInfo,
+    CircuitActiveGateInfo,
+} from "tim/plugin/quantumcircuit/active-gate";
 
 export interface QubitOutput {
     value: number;
@@ -187,13 +188,6 @@ export interface CircuitStyleOptions {
     gateBorderRadius: number;
 }
 
-/**
- * Content to show in table cell as rounded and longer version
- */
-export interface TableCellData {
-    rounded: string;
-    long: string;
-}
 @Component({
     selector: "tim-quantum-circuit",
     template: `
@@ -205,7 +199,10 @@ export interface TableCellData {
             <ng-container body>
                 <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
                     <div class="top-menu">
-                        <tim-quantum-gate-menu [circuitStyleOptions]="circuitStyleOptions"></tim-quantum-gate-menu>
+                        <tim-quantum-gate-menu 
+                                [circuitStyleOptions]="circuitStyleOptions"
+                                (select)="handleMenuGateSelect($event)">
+                        </tim-quantum-gate-menu>
                         <tim-quantum-toolbox [activeGateInfo]="activeGateInfo" (close)="handleActiveGateHide()"></tim-quantum-toolbox>
                     </div>
 
@@ -650,7 +647,7 @@ export class QuantumCircuitComponent
         const editable =
             this.board.get(gate.target, gate.time)?.editable === true;
 
-        this.activeGateInfo = new ActiveGateInfo(
+        this.activeGateInfo = new CircuitActiveGateInfo(
             gate.target,
             gate.time,
             name,
@@ -665,6 +662,17 @@ export class QuantumCircuitComponent
 
     handleActiveGateHide() {
         this.activeGateInfo = undefined;
+    }
+
+    handleMenuGateSelect(gateName: string) {
+        const gateInfo = this.gateService.getGate(gateName);
+        if (gateInfo) {
+            this.activeGateInfo = new ActiveGateInfo(
+                gateInfo.name,
+                gateInfo.description,
+                gateInfo.matrix
+            );
+        }
     }
 
     /**
