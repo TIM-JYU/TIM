@@ -22,6 +22,7 @@ import {
     Component,
     ElementRef,
     NgModule,
+    NgZone,
     ViewChild,
 } from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
@@ -119,7 +120,12 @@ type MessageToFrame =
     | {msg: "getDataSave"}
     | {msg: "close"}
     | {msg: "toggleEditorOptions"}
-    | {msg: "start"};
+    | {msg: "start"}
+    | {
+          msg: "jsRunnerData";
+          output: string;
+          taskId: string;
+      };
 
 type MessageFromFrame =
     | {
@@ -138,7 +144,8 @@ type MessageFromFrame =
           msg: "frameInited" | "frameClosed";
           fullscreen: boolean;
       }
-    | {msg: "Inited"};
+    | {msg: "Inited"}
+    | {msg: "runJsRunner"; taskId: string};
 
 /**
  * Returns the given data (un)wrapped so that there is exactly one layer of "c".
@@ -242,7 +249,8 @@ export class JsframeComponent
         el: ElementRef<HTMLElement>,
         http: HttpClient,
         domSanitizer: DomSanitizer,
-        public cdr: ChangeDetectorRef
+        public cdr: ChangeDetectorRef,
+        private zone: NgZone
     ) {
         super(el, http, domSanitizer);
     }
@@ -754,6 +762,19 @@ export class JsframeComponent
             if (d.msg === "Inited" && this.isDrawio()) {
                 const data = this.getDataFromMarkup();
                 this.setData(data);
+            }
+            if (d.msg === "runJsRunner") {
+                this.zone.run(async () => {
+                    const runner = this.viewctrl.getJsRunner(d.taskId);
+                    if (runner) {
+                        await runner.runScript();
+                        void this.send({
+                            msg: "jsRunnerData",
+                            output: runner.output,
+                            taskId: d.taskId,
+                        });
+                    }
+                });
             }
         };
         const f = this.getFrame();

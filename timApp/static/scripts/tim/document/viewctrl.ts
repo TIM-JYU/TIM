@@ -143,6 +143,7 @@ export interface ISetAnswerResult {
 }
 
 export interface IJsRunner {
+    output: string;
     runScript: () => Promise<void>;
     runScriptWithUsers: (userNames: string[]) => Promise<void>;
     willAutoRefreshTables: () => boolean;

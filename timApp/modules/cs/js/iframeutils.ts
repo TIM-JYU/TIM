@@ -4,6 +4,9 @@ export const communicationJS = `
         if (e.data.msg === "init") {
             window.port2 = e.ports[0];
             window.port2.onmessage = onMessage;
+            if (window.onInit) {
+                window.onInit();
+            }
             window.port2.postMessage({msg: "Inited"});
         }
     });
