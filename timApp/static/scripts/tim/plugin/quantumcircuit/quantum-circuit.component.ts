@@ -55,6 +55,7 @@ import {
 
 export interface QubitOutput {
     value: number;
+    name?: string;
 }
 
 /**
@@ -125,6 +126,8 @@ const QuantumCircuitMarkup = t.intersection([
         gates: nullable(t.array(t.string)),
         modelCircuit: nullable(t.array(GateInfo)),
         modelInput: nullable(t.array(t.number)),
+        qubitNames: nullable(t.array(t.string)),
+        outputNames: nullable(t.array(t.string)),
     }),
     GenericPluginMarkup,
     t.type({
@@ -817,6 +820,12 @@ export class QuantumCircuitComponent
             }
         }
 
+        if (this.markup.qubitNames) {
+            for (let i = 0; i < this.qubits.length; i++) {
+                this.qubits[i].name = this.markup.qubitNames[i];
+            }
+        }
+
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
 
         this.gateService.registerUserDefinedGates(
@@ -838,6 +847,11 @@ export class QuantumCircuitComponent
                 value: 0,
             });
         }
+        if (this.markup.outputNames) {
+            for (let i = 0; i < this.qubitOutputs.length; i++) {
+                this.qubitOutputs[i].name = this.markup.outputNames[i];
+            }
+        }
     }
 
     /**
@@ -852,6 +866,12 @@ export class QuantumCircuitComponent
         this.qubitOutputs = Array.from(vals.output).map((bit) => ({
             value: parseInt(bit, 10),
         }));
+
+        if (this.markup.outputNames) {
+            for (let i = 0; i < this.qubitOutputs.length; i++) {
+                this.qubitOutputs[i].name = this.markup.outputNames[i];
+            }
+        }
     }
 
     initializeSimulator() {
@@ -868,9 +888,9 @@ export class QuantumCircuitComponent
      * Compute sizes for board cells based on available space and number of cells.
      */
     setSizes() {
-        // qubit name | qubit bit value | nMoments * space for gate | measure-logo | output bit
+        // qubit name | qubit bit value | nMoments * space for gate | measure-logo | output bit | output name
         let baseSize =
-            this.qcContainer.nativeElement.clientWidth / (this.nMoments + 4);
+            this.qcContainer.nativeElement.clientWidth / (this.nMoments + 5);
         // don't make gates excessively large
         baseSize = Math.min(50, baseSize);
         const gateSize = 0.8 * baseSize;

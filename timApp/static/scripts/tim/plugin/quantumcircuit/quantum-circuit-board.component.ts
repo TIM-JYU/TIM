@@ -97,7 +97,7 @@ export class RangePipe implements PipeTransform {
                      [style.width.%]="100"></div>
                 <div *ngFor="let qubit of qubits; let i=index" [style.height.px]="circuitStyleOptions.baseSize"
                      class="qubit">
-                    <div class="qubit-name">{{qubit.name}}</div>
+                    <input type="text" [attr.value]="qubit.name" readonly class="qubit-name">
                     <button class="qubit-toggle-button"
                             (click)="toggleQubit($event, i)">{{qubit.text}}</button>
                 </div>
@@ -177,7 +177,7 @@ export class RangePipe implements PipeTransform {
                 </svg>
             </div>
 
-            <div class="output-container" [style.width.px]="circuitStyleOptions.baseSize * 2">
+            <div class="output-container" [style.width.px]="circuitStyleOptions.baseSize * 3">
                 <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"></div>
                 <div class="output" *ngFor="let output of qubitOutputs"
                      [style.height.px]="circuitStyleOptions.baseSize">
@@ -185,6 +185,7 @@ export class RangePipe implements PipeTransform {
                          [style.height.px]="circuitStyleOptions.gateSize"
                          [style.width.px]="circuitStyleOptions.gateSize"/>
                     <button *ngIf="showOutputBits" class="output-value">{{output.value}}</button>
+                    <input *ngIf="output.name" type="text" [attr.value]="output.name" readonly class="output-name">
                 </div>
             </div>
 

@@ -46,11 +46,13 @@ svg text::selection {
 .qubit {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
 }
 
-.qubit-name {
-  overflow-x: auto;
+.qubit-name, .output-name {
+  width: 100%;
 }
+
 
 .qubit-toggle-button {
   background-color: white;
@@ -82,11 +84,14 @@ svg text::selection {
 .output {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   border-left: 1px solid black;
-  padding: 0 0.5em 0 0.5em;
-  gap: 0.5em;
+
+}
+
+img {
+  margin: 0;
 }
 
 
@@ -110,5 +115,10 @@ svg text::selection {
 
   .qubit {
     padding: 0 0.5em 0 0.5em;
+  }
+
+  .output {
+    padding: 0 0.5em 0 0.5em;
+    gap: 0.5em;
   }
 }

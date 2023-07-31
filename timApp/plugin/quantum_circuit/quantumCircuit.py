@@ -76,6 +76,8 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     nSamples: int | None = None
     modelCircuit: list[GateInfo] | None = None
     modelInput: list[int] | None = None
+    qubitNames: list[str] | None = None
+    outputNames: list[str] | None = None
 
     initialCircuit: list[GateInfo] | None = None
     customGates: list[CustomGateInfo] | None = None
