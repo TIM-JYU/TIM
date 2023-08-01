@@ -189,9 +189,9 @@ export interface CircuitStyleOptions {
     timeAxisHeight: number;
     // border radius value for gates (rounded corners)
     gateBorderRadius: number;
-    // width of the area on the left of circuit
+    // width of the input holding qubit name
     inputWidth: number;
-    // width of the area on the right of circuit
+    // width of the input holding output name
     outputWidth: number;
 }
 
@@ -206,40 +206,39 @@ export interface CircuitStyleOptions {
             <ng-container body>
                 <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
                     <div class="top-menu">
-                        <tim-quantum-gate-menu 
+                        <tim-quantum-gate-menu
                                 [circuitStyleOptions]="circuitStyleOptions"
                                 (select)="handleMenuGateSelect($event)">
                         </tim-quantum-gate-menu>
-                        <tim-quantum-toolbox [activeGateInfo]="activeGateInfo" (close)="handleActiveGateHide()"></tim-quantum-toolbox>
+                        <tim-quantum-toolbox [activeGateInfo]="activeGateInfo"
+                                             (close)="handleActiveGateHide()"></tim-quantum-toolbox>
                     </div>
 
-                    <div class="circuit">
-                        <tim-quantum-circuit-board
-                                [board]="board"
-                                [selectedGate]="selectedGate"
-                                [qubits]="qubits"
-                                [qubitOutputs]="qubitOutputs"
-                                [circuitStyleOptions]="circuitStyleOptions"
-                                [showOutputBits]="showOutputBits"
-                                (qubitChange)="handleQubitChange($event)"
-                                (gateDrop)="handleGateDrop($event)"
-                                (gateMove)="handleGateMove($event)"
-                                (gateRemove)="handleGateRemove($event)"
-                                (gateSelect)="handleGateSelect($event)"
-                        ></tim-quantum-circuit-board>
-                    </div>
+                    <tim-quantum-circuit-board
+                            class="circuit"
+                            [board]="board"
+                            [selectedGate]="selectedGate"
+                            [qubits]="qubits"
+                            [qubitOutputs]="qubitOutputs"
+                            [circuitStyleOptions]="circuitStyleOptions"
+                            [showOutputBits]="showOutputBits"
+                            (qubitChange)="handleQubitChange($event)"
+                            (gateDrop)="handleGateDrop($event)"
+                            (gateMove)="handleGateMove($event)"
+                            (gateRemove)="handleGateRemove($event)"
+                            (gateSelect)="handleGateSelect($event)"
+                    ></tim-quantum-circuit-board>
 
-                    <div class="stats">
-                        <tim-quantum-stats [measurements]="measurements"
-                                           [quantumChartData]="quantumChartData"
-                                           [showChart]="showChart"
-                                           [showPrintField]="showPrintField"
-                                           [samplingMode]="samplingMode"
-                                           [nSamples]="nSamples"
-                                           (clear)="handleClearMeasurements()"
-                                           (measure)="handleMeasure()">
-                        </tim-quantum-stats>
-                    </div>
+                    <tim-quantum-stats class="starts"
+                                       [measurements]="measurements"
+                                       [quantumChartData]="quantumChartData"
+                                       [showChart]="showChart"
+                                       [showPrintField]="showPrintField"
+                                       [samplingMode]="samplingMode"
+                                       [nSamples]="nSamples"
+                                       (clear)="handleClearMeasurements()"
+                                       (measure)="handleMeasure()">
+                    </tim-quantum-stats>
 
                     <div class="buttons">
                         <button class="timButton"
@@ -813,6 +812,7 @@ export class QuantumCircuitComponent
         this.qubits = [];
         const defaultValue = 0;
         const userInput = this.attrsall.state?.userInput;
+
         if (userInput && !reset) {
             for (let i = 0; i < this.nQubits; i++) {
                 const value = userInput[i];
@@ -893,22 +893,48 @@ export class QuantumCircuitComponent
     }
 
     /**
+     * Computes width of text.
+     * @param text text to get width for
+     */
+    textWidth(text: string) {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+            return text.length * 14;
+        }
+        ctx.font = "normal 14px Verdana";
+        return ctx.measureText(text).width;
+    }
+
+    /**
      * Compute sizes for board cells based on available space and number of cells.
      */
     setSizes() {
         // qubit name | qubit bit value | nMoments * space for gate | measure-logo | output bit | maybe output name
         const extraSpaces = this.markup.outputNames ? 5 : 4;
+        // try to fit everything on screen
         let baseSize =
             this.qcContainer.nativeElement.clientWidth /
             (this.nMoments + extraSpaces);
         // don't make gates excessively large
         baseSize = Math.min(50, baseSize);
+        // don't make gates too small
+        baseSize = Math.max(baseSize, 30);
 
-        const inputWidth = baseSize * 2;
-        let outputWidth = baseSize * 2;
-        if (this.markup.outputNames) {
-            outputWidth = baseSize * 3;
+        // set left hand side width as longest qubit text width
+        let inputWidth = 0;
+        for (const qubit of this.qubits) {
+            inputWidth = Math.max(inputWidth, this.textWidth(qubit.name));
         }
+        // a little bit of extra is needed for some reason
+        inputWidth += 14;
+
+        // set right hand side width as longest output text width
+        let outputWidth = 0;
+        for (const out of this.qubitOutputs) {
+            outputWidth = Math.max(outputWidth, this.textWidth(out.name ?? ""));
+        }
+        outputWidth += 14;
 
         const gateSize = 0.8 * baseSize;
 

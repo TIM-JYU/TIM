@@ -92,13 +92,20 @@ export class RangePipe implements PipeTransform {
         <!--suppress HtmlUnknownAttribute -->
 
         <div class="circuit-container">
-            <div class="qubits" [style.width.px]="circuitStyleOptions.inputWidth">
+            <div class="qubits" [style.width.px]="circuitStyleOptions.inputWidth + circuitStyleOptions.baseSize">
                 <div class="left-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"
                      [style.width.%]="100"></div>
-                <div *ngFor="let qubit of qubits; let i=index" [style.height.px]="circuitStyleOptions.baseSize"
+                <div *ngFor="let qubit of qubits; let i=index" 
+                     [style.height.px]="circuitStyleOptions.baseSize"
                      class="qubit">
-                    <input type="text" [attr.value]="qubit.name" readonly class="qubit-name">
+                    <input 
+                            type="text" 
+                            [attr.value]="qubit.name" 
+                            [style.width.px]="circuitStyleOptions.inputWidth"
+                            readonly 
+                            class="qubit-name">
                     <button class="qubit-toggle-button"
+                            [style.width.px]="circuitStyleOptions.gateSize"
                             (click)="toggleQubit($event, i)">{{qubit.text}}</button>
                 </div>
             </div>
@@ -177,15 +184,19 @@ export class RangePipe implements PipeTransform {
                 </svg>
             </div>
 
-            <div class="output-container" [style.width.px]="circuitStyleOptions.outputWidth">
+            <div class="output-container" 
+                 [style.width.px]="circuitStyleOptions.outputWidth + 2 * circuitStyleOptions.baseSize">
                 <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"></div>
                 <div class="output" *ngFor="let output of qubitOutputs"
+                     [style.width.px]="circuitStyleOptions.outputWidth + 2 * circuitStyleOptions.baseSize"
                      [style.height.px]="circuitStyleOptions.baseSize">
                     <img alt="measurement icon" src="/static/images/quantum-measurement.svg"
                          [style.height.px]="circuitStyleOptions.gateSize"
                          [style.width.px]="circuitStyleOptions.gateSize"/>
-                    <button *ngIf="showOutputBits" class="output-value">{{output.value}}</button>
-                    <input *ngIf="output.name" type="text" [attr.value]="output.name" readonly class="output-name">
+                    <button *ngIf="showOutputBits" 
+                            [style.width.px]="circuitStyleOptions.gateSize" 
+                            class="output-value">{{output.value}}</button>
+                    <input *ngIf="output.name" type="text" [style.width.px]="circuitStyleOptions.outputWidth" [attr.value]="output.name" readonly class="output-name">
                 </div>
             </div>
 

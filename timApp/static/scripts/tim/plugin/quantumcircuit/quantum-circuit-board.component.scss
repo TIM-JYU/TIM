@@ -52,12 +52,13 @@ svg text::selection {
 .qubit-name, .output-name {
   width: 100%;
   font-size: 14px;
-
 }
 
 
 .qubit-toggle-button {
   background-color: white;
+  margin-left: 0.1em;
+  margin-right: 0.1em;
 }
 
 .moments {
@@ -83,17 +84,20 @@ svg text::selection {
   border-right: 1px solid black;
 }
 
+.output-value {
+  margin-right: 0.1em;
+}
+
 .output {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
   border-left: 1px solid black;
-
 }
 
 img {
-  margin: 0;
+  margin: 0 0.1em 0 0.1em;
 }
 
 
@@ -108,19 +112,4 @@ img {
 .gate-drop:hover {
   stroke: grey;
   fill-opacity: 100;
-}
-
-@media (min-width: 500px) {
-  .qubit-toggle-button {
-    margin-left: 0.5em;
-  }
-
-  .qubit {
-    padding: 0 0.5em 0 0.5em;
-  }
-
-  .output {
-    padding: 0 0.5em 0 0.5em;
-    gap: 0.5em;
-  }
 }
