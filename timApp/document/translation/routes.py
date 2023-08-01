@@ -23,6 +23,7 @@ import requests
 from flask import request, Blueprint
 from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import with_polymorphic
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -155,9 +156,9 @@ def get_languages(source_languages: bool) -> Response:
         # TODO Maybe change to use an id instead?
         tr = (
             run_sql(
-                select(TranslationService)
-                .with_polymorphic("*")
-                .filter(TranslationService.service_name == translator)
+                select(with_polymorphic(TranslationService, "*")).filter(
+                    TranslationService.service_name == translator
+                )
             )
             .scalars()
             .one()
@@ -430,11 +431,10 @@ def get_translators() -> Response:
     translationservice_names = (
         run_sql(select(TranslationService.service_name)).scalars().all()
     )
-    # The SQLAlchemy query returns a list of tuples even when values of a
-    # single column were requested, so they must be unpacked.
+
     # TODO Add "Manual" to the TranslationService-table instead of hardcoding
     #  here (and elsewhere)?
-    sl = ["Manual"] + [x[0] for x in translationservice_names]
+    sl = ["Manual"] + [x for x in translationservice_names]
     return json_response(sl)
 
 
