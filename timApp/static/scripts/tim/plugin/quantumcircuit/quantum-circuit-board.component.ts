@@ -281,15 +281,13 @@ export class QuantumCircuitBoardComponent implements OnInit, OnChanges {
      * Sets css properties to draw a diagonal line.
      */
     updateAxisStyles() {
-        this.axisLineWidth =
+        const w =
             this.circuitStyleOptions.baseSize +
-            this.circuitStyleOptions.inputWidth +
-            5;
-
-        const angle = Math.asin(
-            this.circuitStyleOptions.timeAxisHeight / this.axisLineWidth
-        );
+            this.circuitStyleOptions.inputWidth;
+        const h = this.circuitStyleOptions.timeAxisHeight;
+        const angle = Math.atan(h / w);
         this.axisLineTransform = `rotate(${angle}rad)`;
+        this.axisLineWidth = Math.sqrt(Math.pow(w, 2) + Math.pow(h, 2));
     }
 
     /**
