@@ -380,10 +380,11 @@ def get_fields_and_users(
         q = select(User).filter(User.id.in_(q))
     else:
         q = q1
-    q = q.with_only_columns(User).order_by(User.id).options(lazyload(User.groups))
+    q = q.order_by(User.id).options(lazyload(User.groups))
     if member_filter_type != MembershipFilter.Current:
         q = q.options(selectinload(User.memberships))
-    users: list[User] = run_sql(q).scalars().all()
+    # Filter out duplicate rows because of the join
+    users: list[User] = run_sql(q).scalars().unique().all()
     user_map = {}
     for u in users:
         user_map[u.id] = u
@@ -465,7 +466,7 @@ def get_fields_and_users(
             user = users[user_index]
             assert user.id == uid
             obj = {"user": user, "fields": user_tasks, "styles": user_fieldstyles}
-            res.append(obj)
+            res.append(UserFieldObj(**obj))
             m_add = get_membership_added(user, group_id_set)
             m_end = (
                 get_membership_end(user, group_id_set)
