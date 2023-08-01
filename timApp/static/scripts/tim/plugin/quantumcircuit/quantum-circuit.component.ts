@@ -189,6 +189,10 @@ export interface CircuitStyleOptions {
     timeAxisHeight: number;
     // border radius value for gates (rounded corners)
     gateBorderRadius: number;
+    // width of the area on the left of circuit
+    inputWidth: number;
+    // width of the area on the right of circuit
+    outputWidth: number;
 }
 
 @Component({
@@ -331,6 +335,8 @@ export class QuantumCircuitComponent
         useBraket: false,
         timeAxisHeight: 30,
         gateBorderRadius: 2,
+        inputWidth: 120,
+        outputWidth: 120,
     };
 
     board!: QuantumBoard;
@@ -669,7 +675,9 @@ export class QuantumCircuitComponent
 
     handleMenuGateSelect(gateName: string) {
         const gateInfo = this.gateService.getGate(gateName);
-        if (gateInfo) {
+        if (gateInfo && gateInfo.name === "control") {
+            this.activeGateInfo = undefined;
+        } else if (gateInfo) {
             this.activeGateInfo = new ActiveGateInfo(
                 gateInfo.name,
                 gateInfo.description,
@@ -888,11 +896,20 @@ export class QuantumCircuitComponent
      * Compute sizes for board cells based on available space and number of cells.
      */
     setSizes() {
-        // qubit name | qubit bit value | nMoments * space for gate | measure-logo | output bit | output name
+        // qubit name | qubit bit value | nMoments * space for gate | measure-logo | output bit | maybe output name
+        const extraSpaces = this.markup.outputNames ? 5 : 4;
         let baseSize =
-            this.qcContainer.nativeElement.clientWidth / (this.nMoments + 5);
+            this.qcContainer.nativeElement.clientWidth /
+            (this.nMoments + extraSpaces);
         // don't make gates excessively large
         baseSize = Math.min(50, baseSize);
+
+        const inputWidth = baseSize * 2;
+        let outputWidth = baseSize * 2;
+        if (this.markup.outputNames) {
+            outputWidth = baseSize * 3;
+        }
+
         const gateSize = 0.8 * baseSize;
 
         const useBraket = this.markup.qubitNotation === "braket";
@@ -909,6 +926,8 @@ export class QuantumCircuitComponent
             useBraket: useBraket,
             timeAxisHeight: 30,
             gateBorderRadius: 2,
+            inputWidth: inputWidth,
+            outputWidth: outputWidth,
         };
     }
 

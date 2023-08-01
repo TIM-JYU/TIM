@@ -92,7 +92,7 @@ export class RangePipe implements PipeTransform {
         <!--suppress HtmlUnknownAttribute -->
 
         <div class="circuit-container">
-            <div class="qubits" [style.width.px]="circuitStyleOptions.baseSize * 2">
+            <div class="qubits" [style.width.px]="circuitStyleOptions.inputWidth">
                 <div class="left-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"
                      [style.width.%]="100"></div>
                 <div *ngFor="let qubit of qubits; let i=index" [style.height.px]="circuitStyleOptions.baseSize"
@@ -177,7 +177,7 @@ export class RangePipe implements PipeTransform {
                 </svg>
             </div>
 
-            <div class="output-container" [style.width.px]="circuitStyleOptions.baseSize * 3">
+            <div class="output-container" [style.width.px]="circuitStyleOptions.outputWidth">
                 <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"></div>
                 <div class="output" *ngFor="let output of qubitOutputs"
                      [style.height.px]="circuitStyleOptions.baseSize">
