@@ -139,7 +139,7 @@ def create_new_velp(
 
 
 def update_velp(
-    velp_id: int, default_points: str, color: str, visible_to: int, style: int
+    velp_id: int, default_points: float, color: str, visible_to: int, style: int
 ) -> None:
     """Changes the non-versioned properties of a velp. Does not update labels.
 
@@ -254,12 +254,12 @@ def get_velp_content_for_document(
         .options(selectinload(Velp.groups).raiseload(VelpGroup.block))
         .options(selectinload(Velp.velp_versions).joinedload(VelpVersion.content))
     )
-    return run_sql(vq).scalars().all()
+    return list(run_sql(vq).scalars().all())
 
 
 def get_velp_label_content_for_document(
     doc_id: int, user_id: int, language_id: str = "FI"
-) -> dict:
+) -> list[VelpLabelContent]:
     """Gets velp label content for document.
 
     Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable
@@ -271,7 +271,7 @@ def get_velp_label_content_for_document(
     :return: List of dicts containing velp label ids and content
 
     """
-    vlcs = (
+    vlcs = list(
         run_sql(
             select(VelpLabelContent)
             .filter_by(language_id=language_id)

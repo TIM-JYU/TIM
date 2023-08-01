@@ -100,7 +100,7 @@ class Language(DbModel):
 
         :return: All the languages found from database.
         """
-        return run_sql(select(cls)).scalars().all()
+        return run_sql(select(cls)).scalars().all()  # type: ignore
 
     def __str__(self) -> str:
         """

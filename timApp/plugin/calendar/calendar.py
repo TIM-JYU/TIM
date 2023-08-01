@@ -20,7 +20,7 @@ from datetime import datetime
 from enum import Enum
 from io import StringIO
 from textwrap import wrap
-from typing import Literal
+from typing import Literal, Any
 
 from flask import Response, render_template_string, url_for
 from marshmallow import missing
@@ -364,7 +364,7 @@ def export_ical(user: User) -> Response:
     :param user: User to generate ICS link for
     :return:
     """
-    user_data: ExportedCalendar = (
+    user_data: ExportedCalendar | None = (
         run_sql(select(ExportedCalendar).filter(ExportedCalendar.user_id == user.id))
         .scalars()
         .one_or_none()
@@ -411,7 +411,7 @@ def get_ical(opts: ICalFilterOptions) -> Response:
 
     :return: ICS file that can be exported otherwise 404 if user data does not exist.
     """
-    user_data: ExportedCalendar = (
+    user_data: ExportedCalendar | None = (
         run_sql(select(ExportedCalendar).filter_by(calendar_hash=opts.key))
         .scalars()
         .one_or_none()
@@ -478,7 +478,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
 
     stmt = select(Event.event_id)
     event_queries = []
-    event_filter = false()
+    event_filter: Any = false()
 
     # Events come from different places:
     # 1. Events that are created by the user
@@ -537,7 +537,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     if filter_opts.showBookedByMin is not None:
         booked_min_subquery = (
             select(Event)
-            .filter(Event.creator == u)
+            .filter(Event.creator_user_id == u.id)
             .outerjoin(Enrollment)
             .group_by(Event.event_id)
             .with_only_columns(
@@ -552,7 +552,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         )
         event_queries.append(booked_min_query)
 
-    timing_filter = true()
+    timing_filter: Any = true()
     # Apply date filter to all events
     if filter_opts.fromDate:
         timing_filter &= Event.start_time >= filter_opts.fromDate
@@ -560,13 +560,13 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         timing_filter &= Event.end_time <= filter_opts.toDate
 
     if event_queries:
-        stmt = stmt.union(*event_queries)
-        stmt = select(Event).filter(Event.event_id.in_(stmt))
+        tmp = stmt.union(*event_queries)
+        main_stmt = select(Event).filter(Event.event_id.in_(tmp))
     else:
-        stmt = stmt.with_only_columns(Event)
-    stmt = stmt.filter(timing_filter)
+        main_stmt = stmt.with_only_columns(Event)
+    main_stmt = main_stmt.filter(timing_filter)
 
-    return run_sql(stmt).scalars().all()
+    return run_sql(main_stmt).scalars().all()  # type: ignore
 
 
 @calendar_plugin.get("/events", model=FilterOptions)
@@ -811,8 +811,8 @@ def save_events(
         if calendar_event.id is not missing:
             if not modify_existing:
                 raise AccessDenied("Cannot modify existing events via this route")
-            event: Event = (
-                run_sql(select(Event).filter_by(event_id=calendar_event.id))
+            event: Event | None = (
+                run_sql(select(Event).filter_by(event_id=calendar_event.id).limit(1))
                 .scalars()
                 .first()
             )

@@ -2,7 +2,7 @@ import re
 import traceback
 from dataclasses import field, dataclass
 from functools import cached_property
-from typing import Any, Generator
+from typing import Any, Generator, Sequence
 
 from flask import Blueprint, request, current_app, Response
 from sqlalchemy import select
@@ -319,6 +319,7 @@ def put_group(group_id: str) -> Response:
 @scim.delete("/Groups/<group_id>")
 def delete_group(group_id: str) -> Response:
     ug = get_group_by_scim(group_id)
+    assert ug.external_id is not None
     ug.name = f"{DELETED_GROUP_PREFIX}{ug.external_id.external_id}"
     db.session.delete(ug.external_id)
     db.session.commit()
@@ -390,7 +391,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
 
     added_users = set()
     scimuser = User.get_scimuser()
-    existing_accounts: list[User] = (
+    existing_accounts: Sequence[User] = (
         run_sql(
             select(User).filter(
                 User.name.in_(current_usernames) | User.email.in_(emails)
@@ -534,7 +535,7 @@ def parse_sisu_group_display_name_or_error(args: SCIMGroupModel) -> SisuDisplayN
 
 
 def raise_conflict_error(args: SCIMGroupModel, e: IntegrityError) -> None:
-    msg = e.orig.diag.message_detail
+    msg = e.orig.diag.message_detail if e.orig else ""  # type: ignore
     m = email_error_re.fullmatch(msg)
     if m:
         em = m.group("email")

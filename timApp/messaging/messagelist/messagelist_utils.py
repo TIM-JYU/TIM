@@ -464,6 +464,8 @@ def check_archives_folder_exists(message_list: MessageListModel) -> Folder | Non
     """
     if message_list.archive_policy is ArchiveType.NONE:
         return None
+    if not message_list.name:
+        return None
     archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
     archive_folder = Folder.find_by_path(archive_folder_path)
     if archive_folder is None:
@@ -625,6 +627,8 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
                     )
                 )
 
+    assert msg_list.name is not None and msg_list.email_list_domain is not None
+
     message = BaseMessage(
         message_list_name=msg_list.name,
         domain=msg_list.email_list_domain,
@@ -741,8 +745,8 @@ def new_list(list_options: ListInfo, owner: User) -> tuple[DocInfo, MessageListM
     :return: The message list db model.
     """
     msg_list = MessageListModel(name=list_options.name, archive=list_options.archive)
-    db.session.add(msg_list)
     doc_info = create_management_doc(msg_list, list_options, owner)
+    db.session.add(msg_list)
     check_archives_folder_exists(msg_list)
     return doc_info, msg_list
 
@@ -766,7 +770,7 @@ def set_message_list_notify_owner_on_change(
 
     message_list.notify_owner_on_change = notify_owners_on_list_change_flag
 
-    if message_list.email_list_domain:
+    if message_list.email_list_domain and message_list.name:
         # Email lists have their own flag for notifying list owners for list changes.
         email_list = get_email_list_by_name(
             message_list.name, message_list.email_list_domain
@@ -1022,7 +1026,9 @@ def add_new_message_list_group(
     the email list.
     """
     # Check right to a group. Right checking is not required for personal groups, only user groups.
-    if not ug.is_personal_group and not has_manage_access(ug.admin_doc):
+    if not ug.is_personal_group and (
+        not ug.admin_doc or not has_manage_access(ug.admin_doc)
+    ):
         return
 
     # Check for membership duplicates.
@@ -1110,7 +1116,9 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
     #  locally.
 
     # Get all the message lists for the user group.
-    for group_tim_member in new_group.messagelist_membership:
+    for (
+        group_tim_member
+    ) in new_group.messagelist_membership:  # type: MessageListTimMember
         group_message_list: MessageListModel = group_tim_member.message_list
         # Propagate the adding on message list's message channels.
         if group_message_list.email_list_domain:
@@ -1123,8 +1131,8 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
                 user.email,
                 True,
                 user.real_name,
-                group_tim_member.member.send_right,
-                group_tim_member.member.delivery_right,
+                group_tim_member.member.send_right or True,
+                group_tim_member.member.delivery_right or False,
             )
 
 
@@ -1174,7 +1182,7 @@ def set_message_list_member_removed_status(
     member.remove(removed)
     # Remove members from email list or return them there.
     if email_list:
-        if member.is_group():
+        if member.tim_member and member.is_group():
             ug = member.tim_member.user_group
             ug_members = ug.users
             for ug_member in ug_members:
@@ -1183,10 +1191,14 @@ def set_message_list_member_removed_status(
                     remove_email_list_membership(mlist_member)
                 else:
                     # Re-set the member's send and delivery rights on the email list.
-                    set_email_list_member_send_status(mlist_member, member.send_right)
-                    set_email_list_member_delivery_status(
-                        mlist_member, member.delivery_right
-                    )
+                    if member.send_right:
+                        set_email_list_member_send_status(
+                            mlist_member, member.send_right
+                        )
+                    if member.delivery_right:
+                        set_email_list_member_delivery_status(
+                            mlist_member, member.delivery_right
+                        )
         elif member.is_personal_user():
             # Make changes to member's status on the email list.
             mlist_member = get_email_list_member(email_list, member.get_email())
@@ -1195,10 +1207,12 @@ def set_message_list_member_removed_status(
                 remove_email_list_membership(mlist_member)
             else:
                 # Re-set the member's send and delivery rights on the email list.
-                set_email_list_member_send_status(mlist_member, member.send_right)
-                set_email_list_member_delivery_status(
-                    mlist_member, member.delivery_right
-                )
+                if member.send_right:
+                    set_email_list_member_send_status(mlist_member, member.send_right)
+                if member.delivery_right:
+                    set_email_list_member_delivery_status(
+                        mlist_member, member.delivery_right
+                    )
 
 
 def set_member_send_delivery(
@@ -1223,7 +1237,7 @@ def set_member_send_delivery(
             if member.is_personal_user():
                 mlist_member = get_email_list_member(email_list, member.get_email())
                 set_email_list_member_send_status(mlist_member, send)
-            elif member.is_group():
+            elif member.tim_member and member.is_group():
                 # For group, set the delivery status for its members on the email list.
                 ug = member.tim_member.user_group
                 ug_members = ug.users  # ug.current_memberships
@@ -1242,7 +1256,7 @@ def set_member_send_delivery(
             if member.is_personal_user():
                 mlist_member = get_email_list_member(email_list, member.get_email())
                 set_email_list_member_delivery_status(mlist_member, delivery)
-            elif member.is_group():
+            elif member.tim_member and member.is_group():
                 # For group, set the delivery status for its members on the email list.
                 ug = member.tim_member.user_group
                 ug_members = ug.users  # ug.current_memberships

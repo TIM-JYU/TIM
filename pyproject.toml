@@ -122,7 +122,10 @@ exclude = [
     'timApp/tim_files',
     'mailman/',
     'tools/',
-    'certs/'
+    'certs/',
+    'timApp/auth/saml/dev',
+    'timApp/auth/saml/prod',
+    'timApp/auth/saml/test',
 ]
 
 # Some modules have their own internal type checking, so we will always need to follow their imports
@@ -134,11 +137,11 @@ module = [
     "werkzeug.*",
     "bcrypt",
     "langcodes",
-    "cli"
+    "cli",
+    "sqlalchemy.*",
 ]
 follow_imports = "normal"
 
-# Rewrite above comment using the TOML syntax
 [[tool.mypy.overrides]]
 module = [
     # Ignore errors in tests
@@ -169,10 +172,6 @@ module = [
     "lxml.*",
     "saml2",
     "saml2.*",
-    "sqlalchemy",
-    "sqlalchemy.dialects",
-    "sqlalchemy.exc",
-    "sqlalchemy.orm",
     "webargs.flaskparser",
     "flask_wtf",
     "isodate",

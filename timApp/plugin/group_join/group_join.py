@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Callable, Sequence
 
 from flask import render_template_string, Response
 from marshmallow import missing
@@ -105,8 +105,9 @@ def leave_groups(groups: list[str]) -> Response:
     current_user = get_current_user_object()
 
     def do_leave(user: User, group: UserGroup) -> None:
-        membership: UserGroupMember = user.active_memberships.get(group.id)
-        membership.set_expired()
+        membership: UserGroupMember | None = user.active_memberships.get(group.id)
+        if membership:
+            membership.set_expired()
 
     all_ok, _, result = _do_group_op(
         groups, current_user, "leave", True, lambda i: i.canLeave, do_leave
@@ -120,7 +121,9 @@ def leave_groups(groups: list[str]) -> Response:
 def _check_self_join(
     group: UserGroup, user: User, check: Callable[[GroupSelfJoinSettings], bool]
 ) -> bool:
-    admin_doc: DocEntry = group.admin_doc.docentries[0] if group.admin_doc else None
+    admin_doc: DocEntry | None = (
+        group.admin_doc.docentries[0] if group.admin_doc else None
+    )
     if admin_doc is None:
         return False
     self_join_info = admin_doc.document.get_settings().group_self_join_info()
@@ -144,7 +147,7 @@ def _do_group_op(
     )
 
     result = dict.fromkeys(groups, "")
-    ugs: list[UserGroup] = (
+    ugs: Sequence[UserGroup] = (
         run_sql(select(UserGroup).filter(UserGroup.name.in_(groups))).scalars().all()
     )
 

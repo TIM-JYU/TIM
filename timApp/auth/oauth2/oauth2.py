@@ -26,7 +26,7 @@ class RefreshTokenGrant(grants.RefreshTokenGrant):
     INCLUDE_NEW_REFRESH_TOKEN = True
 
     def authenticate_refresh_token(self, refresh_token: str) -> OAuth2Token | None:
-        token: OAuth2Token = (
+        token: OAuth2Token | None = (
             run_sql(select(OAuth2Token).filter_by(refresh_token=refresh_token).limit(1))
             .scalars()
             .first()

@@ -286,7 +286,7 @@ def create_new_email_list(list_options: ListInfo, owner: User) -> None:
         raise
 
 
-def get_list_ui_link(listname: str, domain: str | None) -> str | None:
+def get_list_ui_link(listname: str | None, domain: str | None) -> str | None:
     """Get a link for a list to use for advanced email list options and moderation.
 
     The function assumes that Mailman uses Postorius as its web-UI. There exists no guarantee that other web-UIs would
@@ -298,6 +298,8 @@ def get_list_ui_link(listname: str, domain: str | None) -> str | None:
     then return None. Return None if no connection to Mailman is configured.
     """
     try:
+        if listname is None:
+            return None
         if domain is None or not config.MAILMAN_UI_LINK_PREFIX:
             return None
         if _client is None:
@@ -729,7 +731,7 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
     try:
         mail_list_settings = mlist.settings
         mail_list_settings["default_member_action"] = "accept"
-        set_email_list_allow_nonmember(mlist, msg_list.non_member_message_pass)
+        set_email_list_allow_nonmember(mlist, msg_list.non_member_message_pass or False)
         mail_list_settings.save()
     except HTTPError as e:
         log_mailman(e, "In unfreeze_list()")

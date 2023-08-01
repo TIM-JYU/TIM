@@ -8,6 +8,7 @@ annotations as well as adding comments to the annotations. The module also retri
 """
 
 from enum import Enum, unique
+from typing import Any
 
 from sqlalchemy import func, true, select
 from sqlalchemy.orm import selectinload, joinedload
@@ -57,8 +58,8 @@ def get_annotations_with_comments_in_document(
         vis_filter = vis_filter | (
             Annotation.visible_to == AnnotationVisibility.owner.value
         )
-    answer_filter = true()
-    own_review_filter = true()
+    answer_filter: Any = true()
+    own_review_filter: Any = true()
     if not user.has_seeanswers_access(d) or only_own:
         answer_filter = (User.id == user.id) | (User.id == None)
         if is_peerreview_enabled(d):
@@ -97,7 +98,7 @@ def get_annotations_with_comments_in_document(
         .options(joinedload(Annotation.answer).selectinload(Answer.users_all))
         .with_only_columns(Annotation)
     )
-    anns = run_sql(q).scalars().all()
+    anns = list(run_sql(q).scalars().all())
     return anns
 
 

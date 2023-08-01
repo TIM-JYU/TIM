@@ -1,6 +1,6 @@
 from dataclasses import field, dataclass
 from datetime import datetime
-from typing import Any, Generator
+from typing import Any, Generator, Sequence
 
 from flask import current_app, Response
 from isodate import Duration
@@ -81,7 +81,7 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
     if not all_users:
         stmt = stmt.filter(BlockAccess.block_id.in_(get_owned_objects_query(u)))
 
-    scheduled_fns: list[PeriodicTask] = run_sql(stmt).scalars().all()
+    scheduled_fns: Sequence[PeriodicTask] = run_sql(stmt).scalars().all()
 
     docentries = (
         run_sql(
@@ -96,16 +96,26 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
 
     def gen() -> Generator[ScheduledFunctionItem, None, None]:
         for t in scheduled_fns:
+            block_id = t.block_id
+            expires = t.expires
+            interval = t.interval
+            block = t.block
+
+            assert block_id is not None
+            assert expires is not None
+            assert interval is not None
+            assert block is not None
+
             yield ScheduledFunctionItem(
-                block_id=t.block_id,
+                block_id=block_id,
                 name=t.task_id.task_name,
-                expires=t.expires,
+                expires=expires,
                 last_run_at=t.last_run_at,
                 total_run_count=t.total_run_count,
-                interval=Interval(every=t.interval.every, period=t.interval.period),
-                owners=t.block.owners,
+                interval=Interval(every=interval.every, period=interval.period or ""),
+                owners=block.owners,
                 doc_path=d_map[t.task_id.doc_id].path,
-                enabled=t.enabled,
+                enabled=t.enabled or False,
             )
 
     return json_response(list(gen()), date_conversion=True)
@@ -183,7 +193,7 @@ def add_scheduled_function(
 def delete_scheduled_plugin_run(
     function_id: int,
 ) -> Response:
-    pto: PeriodicTask = (
+    pto: PeriodicTask | None = (
         (
             run_sql(
                 select(PeriodicTask)
@@ -198,6 +208,7 @@ def delete_scheduled_plugin_run(
     )
     if not pto:
         raise NotExist("scheduled function not found")
+    assert pto.block is not None
     u = get_current_user_object()
     if not u.has_manage_access(pto.block) and not u.is_admin:
         raise AccessDenied()

@@ -43,10 +43,10 @@ class MessageListModel(DbModel):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    manage_doc_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
+    manage_doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
     """The document which manages a message list."""
 
-    name: Mapped[Optional[str]]
+    name: Mapped[str]
     """The name of a message list."""
 
     can_unsubscribe: Mapped[Optional[bool]]
@@ -179,12 +179,12 @@ class MessageListModel(DbModel):
         )
 
     @property
-    def archive_policy(self) -> ArchiveType:
+    def archive_policy(self) -> ArchiveType | None:
         return self.archive
 
     @hybrid_property
     def mailman_list_id(self) -> str:
-        return self.name + "." + self.email_list_domain
+        return f"{self.name}.{self.email_list_domain}"
 
     def get_individual_members(self) -> list["MessageListMember"]:
         """Get all the members that are not groups.
@@ -199,13 +199,13 @@ class MessageListModel(DbModel):
         return individuals
 
     def get_tim_members(self) -> list["MessageListTimMember"]:
-        """Get all members that have belong to a user group, i.e. TIM users and user groups.
+        """Get all members that belong to a user group, i.e. TIM users and user groups.
 
         :return: A list of MessageListTimMember objects.
         """
         tim_members = []
         for member in self.members:
-            if member.is_tim_member():
+            if member.tim_member is not None:
                 tim_members.append(member.tim_member)
         return tim_members
 
@@ -234,7 +234,8 @@ class MessageListModel(DbModel):
     @property
     def email_address(self) -> str | None:
         """Full email address of the messagelist, if the list has been assigned an active address.
-        Otherwise None."""
+        Otherwise None.
+        """
         return (
             f"{self.name}@{self.email_list_domain}" if self.email_list_domain else None
         )
@@ -243,10 +244,10 @@ class MessageListModel(DbModel):
         from timApp.messaging.messagelist.emaillist import get_list_ui_link
 
         return ListInfo(
-            name=self.name,
+            name=self.name or "unnamed_list",
             notify_owners_on_list_change=self.notify_owner_on_change,
             domain=self.email_list_domain,
-            archive=self.archive,
+            archive=self.archive or ArchiveType.NONE,
             default_reply_type=self.default_reply_type,
             verification_type=self.message_verification,
             tim_users_can_join=self.tim_user_can_join,
@@ -334,14 +335,16 @@ class MessageListMember(DbModel):
 
     def is_personal_user(self) -> bool:
         """If this member is an individual user, i.e. a personal user group or an external member."""
-        try:
-            gid = self.tim_member.group_id
-        except AttributeError:
-            # External members don't have a group_id attribute.
+        if self.tim_member is None:
             return self.is_external_member()
-        from timApp.user.usergroup import UserGroup
 
-        ug = db.session.exectute(select(UserGroup).filter_by(id=gid)).scalars().one()
+        ug = (
+            db.session.exectute(
+                select(UserGroup).filter_by(id=self.tim_member.group_id)
+            )
+            .scalars()
+            .one()
+        )
         return ug.is_personal_group
 
     def is_group(self) -> bool:
@@ -492,7 +495,7 @@ class MessageListExternalMember(MessageListMember):
 
         :return: The email address.
         """
-        return self.email_address
+        return self.email_address or f"member_{self.id}@noreply"
 
     def get_username(self) -> str:
         """External member's don't have usernames, but this is for consistency when using other methods."""

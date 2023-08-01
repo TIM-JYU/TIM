@@ -9,6 +9,8 @@ the document.
 :version: 1.0.0
 
 """
+from typing import Sequence
+
 from flask import Blueprint, Response
 from flask import request
 from sqlalchemy import select, delete
@@ -169,7 +171,7 @@ def get_default_velp_group(doc_id: int) -> Response:
     for v in found_velp_groups:
         # if has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
         velp_groups.append(v.id)
-    def_velp_groups: list[VelpGroup] = (
+    def_velp_groups: Sequence[VelpGroup] = (
         run_sql(
             select(VelpGroup).filter(
                 VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True
@@ -708,7 +710,7 @@ def reset_all_selections_to_defaults(doc_id: int) -> Response:
     user_id = get_current_user_id()
 
     run_sql(
-        delete(VelpGroupSelection).filter_by(
+        delete(VelpGroupSelection).where(
             (VelpGroupSelection.doc_id == doc_id)
             & (VelpGroupSelection.user_id == user_id)
         )

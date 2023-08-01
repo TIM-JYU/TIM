@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from flask import Response
 from sqlalchemy import select
 
@@ -50,16 +52,20 @@ def receive_user_memberships(
         user.add_to_group(ug, None)
 
     if removed_memberships:
-        removed_memberships_objs: list[UserGroupMember] = run_sql(
-            select(UserGroupMember)
-            .join(UserGroup, UserGroupMember.group)
-            .join(User, UserGroupMember.user)
-            .filter(
-                (User.name == user.name)
-                & UserGroup.name.in_(removed_memberships)
-                & membership_current
+        removed_memberships_objs: Sequence[UserGroupMember] = (
+            run_sql(
+                select(UserGroupMember)
+                .join(UserGroup, UserGroupMember.group)
+                .join(User, UserGroupMember.user)
+                .filter(
+                    (User.name == user.name)
+                    & UserGroup.name.in_(removed_memberships)
+                    & membership_current
+                )
             )
-        ).scalars()
+            .scalars()
+            .all()
+        )
 
         for ugm in removed_memberships_objs:
             ugm.set_expired()

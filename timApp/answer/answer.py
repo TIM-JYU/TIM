@@ -2,11 +2,11 @@ import json
 from typing import Any, Optional, List, TYPE_CHECKING
 
 from sqlalchemy import func, ForeignKey
-from sqlalchemy.orm import mapped_column, Mapped, relationship
+from sqlalchemy.orm import mapped_column, Mapped, relationship, DynamicMapped
 
 from timApp.answer.answer_models import UserAnswer, AnswerUpload
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import db, include_if_loaded
+from timApp.timdb.sqa import include_if_loaded
 from timApp.timdb.types import datetime_tz, DbModel
 
 if TYPE_CHECKING:
@@ -60,7 +60,7 @@ class Answer(DbModel):
     uploads: Mapped[List["AnswerUpload"]] = relationship(
         back_populates="answer", lazy="dynamic"
     )
-    users: Mapped[List["User"]] = relationship(
+    users: DynamicMapped["User"] = relationship(
         secondary=UserAnswer.__table__, back_populates="answers", lazy="dynamic"
     )
     users_all: Mapped[List["User"]] = relationship(
@@ -78,7 +78,7 @@ class Answer(DbModel):
         return json.loads(self.content)
 
     def get_answer_number(self) -> int:
-        u: User = self.users.first()
+        u: User | None = self.users.first()
         if not u:
             return 1
         return u.get_answers_for_task(self.task_id).filter(Answer.id <= self.id).count()

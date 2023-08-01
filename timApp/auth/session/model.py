@@ -56,16 +56,16 @@ class UserSession(DbModel):
     User that owns the session. Relationship to :attr:`user_id`.
     """
 
-    def _get_expired(self) -> bool:
+    @hybrid_property
+    def expired(self) -> bool:
         """
+        Whether the user session is expired.
+
         :return: Whether the user session is expired.
         """
         # == is needed because this is a hybrid property
         # noinspection PyComparisonWithNone
         return self.expired_at != None  # noqa: E712
-
-    expired = hybrid_property(_get_expired)
-    """Whether the user session is expired."""
 
     def expire(self) -> None:
         """

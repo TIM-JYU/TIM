@@ -517,13 +517,13 @@ def undo_field_actions(
 def get_groups(
     cur_user: User, add: list[str], remove: list[str], change_all_groups: list[str]
 ) -> tuple[list[UserGroup], list[UserGroup], list[UserGroup]]:
-    add_groups: list[UserGroup] = (
+    add_groups: list[UserGroup] = list(
         run_sql(select(UserGroup).filter(UserGroup.name.in_(add))).scalars().all()
     )
-    remove_groups: list[UserGroup] = (
+    remove_groups: list[UserGroup] = list(
         run_sql(select(UserGroup).filter(UserGroup.name.in_(remove))).scalars().all()
     )
-    change_all_groups_ugs: list[UserGroup] = (
+    change_all_groups_ugs: list[UserGroup] = list(
         run_sql(select(UserGroup).filter(UserGroup.name.in_(change_all_groups)))
         .scalars()
         .all()

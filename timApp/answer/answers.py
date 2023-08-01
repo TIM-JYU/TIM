@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import (
-    Iterable,
     Any,
     Generator,
     TypeVar,
@@ -14,16 +13,28 @@ from typing import (
     DefaultDict,
     TypedDict,
     ItemsView,
+    cast,
+    Sequence,
 )
 
 # This ref exits in bs4 but doesn't seem to be correctly exported
 # noinspection PyUnresolvedReferences
 from bs4 import UnicodeDammit
 from flask import current_app
-from sqlalchemy import func, Numeric, Float, true, case, select
+from sqlalchemy import (
+    func,
+    Numeric,
+    Float,
+    true,
+    case,
+    select,
+    Result,
+    Label,
+)
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.orm import defaultload, selectinload, contains_eager
 from sqlalchemy.sql import Select, Subquery
+from sqlalchemy.sql.elements import OperatorExpression
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -59,7 +70,7 @@ def get_answers_query(task_id: TaskId, users: list[User], only_valid: bool) -> S
             .filter(User.id.in_([u.id for u in users]))
             .group_by(Answer.id)
             .having(
-                (func.array_agg(aggregate_order_by(User.id, User.id)))
+                (func.array_agg(aggregate_order_by(User.id, User.id)))  # type: ignore[no-untyped-call]
                 == sorted(u.id for u in users)
             )
             .with_only_columns(Answer.id)
@@ -298,6 +309,7 @@ def get_all_answers(
     if options.consent is not None:
         stmt = stmt.filter_by(consent=options.consent)
 
+    counts: Label[bool] | Label[int]
     match options.age:
         case AgeOptions.MIN:
             minmax = func.min(Answer.id).label("minmax")
@@ -308,6 +320,8 @@ def get_all_answers(
         case AgeOptions.ALL:
             minmax = Answer.id.label("minmax")
             counts = Answer.valid.label("count")
+        case _:
+            raise ValueError(f"Invalid age option: {options.age}")
 
     # stmt = stmt.add_columns(minmax, counts)
     if options.age != AgeOptions.ALL:
@@ -333,7 +347,7 @@ def get_all_answers(
     if options.print == AnswerPrintOptions.ANSWERS_NO_LINE:
         lf = ""
 
-    qq: Iterable[tuple[Answer, User, int]] = run_sql(stmt)
+    qq: Result[tuple[Answer, User, int]] = run_sql(stmt)
     cnt = 0
     hidden_user_names: dict[str, str] = {}
 
@@ -525,8 +539,10 @@ def valid_answers_query(task_ids: list[TaskId], valid: bool | None = True) -> Se
     return select(Answer).filter(valid_taskid_filter(task_ids, valid))
 
 
-def valid_taskid_filter(task_ids: list[TaskId], valid: bool | None = True) -> Any:
-    res = Answer.task_id.in_(task_ids_to_strlist(task_ids))
+def valid_taskid_filter(
+    task_ids: list[TaskId], valid: bool | None = True
+) -> OperatorExpression[bool]:
+    res: OperatorExpression[bool] = Answer.task_id.in_(task_ids_to_strlist(task_ids))
     if valid is not None:
         res = res & (Answer.valid == valid)
     return res
@@ -588,7 +604,7 @@ def get_users_for_tasks(
         .with_only_columns(
             Answer.task_id,
             UserAnswer.user_id.label("uid"),
-            func.max(Answer.id).filter(Answer.valid == True).label("aid_valid"),
+            func.max(Answer.id).filter(Answer.valid == True).label("aid_valid"),  # type: ignore[no-untyped-call]
             func.max(Answer.id).label("aid_any"),
             *time_labels,
         )
@@ -702,6 +718,7 @@ def get_users_for_tasks(
 
     def g() -> Generator[UserTaskEntry, None, None]:
         for r in run_sql(main_stmt):
+            # noinspection PyProtectedMember
             d = r._asdict()
             d["user"] = d.pop("User")
             task = d["task_points"]
@@ -713,7 +730,7 @@ def get_users_for_tasks(
             else:
                 tot = velp
             d["total_points"] = tot
-            yield d
+            yield cast(UserTaskEntry, d)
 
     result = list(g())
     return result
@@ -1098,7 +1115,7 @@ def add_missing_users_from_groups(result: list, usergroups: list[UserGroup]) -> 
     return result
 
 
-def get_global_answers(parsed_task_ids: dict[str, TaskId]) -> list[Answer]:
+def get_global_answers(parsed_task_ids: dict[str, TaskId]) -> Sequence[Answer]:
     sq2 = (
         select(Answer)
         .filter(

@@ -2,10 +2,11 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Sequence
 
 from flask import Response
 from isodate import datetime_isoformat
-from sqlalchemy import tuple_, select
+from sqlalchemy import tuple_, select, false
 from sqlalchemy.orm import contains_eager
 
 from timApp.auth.accesshelper import (
@@ -111,7 +112,7 @@ class TimMessageData:
 class TimMessageReadReceipt:
     message_id: int
     user_id: int
-    marked_as_read_on: datetime
+    marked_as_read_on: datetime | None
     can_mark_as_read: bool
 
 
@@ -174,7 +175,7 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
     is_global = (InternalMessageDisplay.usergroup_id == None) & (
         InternalMessageDisplay.display_doc_id == None
     )
-    is_user_specific = False
+    is_user_specific: Any = false()
     can_see = (InternalMessageReadReceipt.marked_as_read_on == None) & (
         (InternalMessage.expires == None) | (InternalMessage.expires > now)
     )
@@ -215,7 +216,7 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
         .filter((is_global | is_user_specific) & can_see)
     )
 
-    messages: list[InternalMessage] = run_sql(stmt).scalars().all()
+    messages: Sequence[InternalMessage] = run_sql(stmt).scalars().all()
 
     full_messages = []
     for message in messages:
@@ -668,7 +669,7 @@ def get_recipient_users(recipients: list[str] | None) -> list[UserGroup]:
                 select(UserGroup)
                 .join(MessageListTimMember)
                 .filter(
-                    (MessageListTimMember.message_list == msg_list)
+                    (MessageListTimMember.message_list_id == msg_list.id)
                     & (MessageListTimMember.membership_ended == None)
                 )
             )

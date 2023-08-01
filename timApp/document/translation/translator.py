@@ -19,6 +19,7 @@ __license__ = "MIT"
 __date__ = "25.4.2022"
 
 from dataclasses import dataclass
+from typing import Optional
 
 import pypandoc
 from sqlalchemy import select, ForeignKey
@@ -194,7 +195,7 @@ class TranslationServiceKey(DbModel):
     @staticmethod
     def get_by_user_group(
         user_group: UserGroup | None,
-    ) -> "TranslationServiceKey":
+    ) -> Optional["TranslationServiceKey"]:
         """
         Query a key based on a group that could have access to it.
 
@@ -202,11 +203,15 @@ class TranslationServiceKey(DbModel):
         :return: The first matching TranslationServiceKey instance, if one is
          found.
         """
-        return run_sql(
-            select(TranslationServiceKey).filter(
-                TranslationServiceKey.group_id == user_group
+        return (
+            run_sql(
+                select(TranslationServiceKey)
+                .filter(TranslationServiceKey.group_id == user_group)
+                .limit(1)
             )
-        ).first()
+            .scalars()
+            .first()
+        )
 
     def to_json(self) -> dict:
         """

@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
-from typing import Optional, DefaultDict, TypedDict, Any, Union
+from typing import Optional, DefaultDict, TypedDict, Any, Union, NotRequired
 
 import attr
 import dateutil.parser
@@ -122,6 +122,7 @@ class UserFieldObj(TypedDict):
     user: User
     fields: UserFields
     styles: Any
+    groupinfo: NotRequired[Any]
 
 
 @dataclass
@@ -465,8 +466,12 @@ def get_fields_and_users(
             user_fieldstyles = {}
             user = users[user_index]
             assert user.id == uid
-            obj = {"user": user, "fields": user_tasks, "styles": user_fieldstyles}
-            res.append(UserFieldObj(**obj))
+            obj = UserFieldObj(
+                user=user,
+                fields=user_tasks,
+                styles=user_fieldstyles,
+            )
+            res.append(obj)
             m_add = get_membership_added(user, group_id_set)
             m_end = (
                 get_membership_end(user, group_id_set)

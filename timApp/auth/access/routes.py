@@ -3,6 +3,7 @@ Common routes for access management.
 """
 
 from dataclasses import field
+from typing import Sequence
 
 from flask import Response
 from sqlalchemy import select
@@ -71,7 +72,7 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
     }
 
     if not user.is_admin:
-        groups: list[UserGroup] = (
+        groups: Sequence[UserGroup] = (
             run_sql(select(UserGroup).filter(UserGroup.id.in_(group_ids_set)))
             .scalars()
             .all()

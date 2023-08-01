@@ -177,10 +177,10 @@ class Event(DbModel):
     event_id: Mapped[int] = mapped_column(primary_key=True)
     """Identification number of the event"""
 
-    location: Mapped[Optional[str]]
+    location: Mapped[str] = mapped_column(default="")
     """Location of the event"""
 
-    max_size: Mapped[Optional[int]]
+    max_size: Mapped[int]
     """How many people can attend the event"""
 
     start_time: Mapped[datetime_tz]
@@ -189,13 +189,13 @@ class Event(DbModel):
     end_time: Mapped[datetime_tz]
     """End time of the event"""
 
-    message: Mapped[Optional[str]]
+    message: Mapped[str] = mapped_column(default="")
     """Message visible to anyone who can see the event"""
 
     title: Mapped[str]
     """Title of the event"""
 
-    signup_before: Mapped[Optional[datetime_tz]]
+    signup_before: Mapped[datetime_tz]
     """Time until signup is closed"""
 
     creator_user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
@@ -294,7 +294,7 @@ class Event(DbModel):
             .all()
         )
         can_view_event_doc = False
-        if self.origin_doc_id:
+        if self.origin_doc:
             can_view_event_doc = verify_view_access(
                 self.origin_doc, require=False, user=user
             )

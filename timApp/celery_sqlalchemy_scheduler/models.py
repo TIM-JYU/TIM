@@ -232,7 +232,7 @@ class PeriodicTask(ModelBase, ModelMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     block_id: Mapped[Optional[int]] = mapped_column(sa.ForeignKey("block.id"))
-    block: Mapped[Optional[Block]] = relationship(Block)
+    block: Mapped[Optional[Block]] = relationship()
     # name
     name: Mapped[Optional[str]] = mapped_column(sa.String(255), unique=True)
     # task name

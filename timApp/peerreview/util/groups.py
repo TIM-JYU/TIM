@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 from random import shuffle
-from typing import DefaultDict
+from typing import DefaultDict, Sequence
 
 from sqlalchemy import select
 
@@ -82,7 +82,7 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
     # PeerReview rows and pairings will be the same for every task, even if target did not answer to some of tasks
     # If target has an answer in a task, try to add it to PeerReview table. If not, just leave it empty
     for t in task_ids:
-        answers: list[Answer] = (
+        answers: Sequence[Answer] = (
             run_sql(get_latest_answers_query(t, users, valid_only)).scalars().all()
         )
         excluded_users: list[User] = []

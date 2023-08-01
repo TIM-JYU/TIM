@@ -1,6 +1,6 @@
 """Routes for settings view."""
 from dataclasses import field
-from typing import Any
+from typing import Any, Sequence
 
 from flask import render_template, flash, Response
 from flask import request
@@ -57,7 +57,7 @@ def verify_new_styles(curr_prefs: Preferences, new_prefs: Preferences) -> None:
     if not new_style_doc_ids:
         return
 
-    new_style_docs: list[DocEntry] = (
+    new_style_docs: Sequence[DocEntry] = (
         run_sql(select(DocEntry).filter(DocEntry.id.in_(new_style_doc_ids)))
         .scalars()
         .all()

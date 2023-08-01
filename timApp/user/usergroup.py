@@ -168,6 +168,12 @@ class UserGroup(DbModel, TimeStampMixin, SCIMEntity):
         return self.external_id.external_id if self.external_id else None
 
     @property
+    def scim_user_group(self) -> "ScimUserGroup":
+        if not self.external_id:
+            raise Exception(f"UserGroup {self.name} has no SCIM user group associated")
+        return self.external_id
+
+    @property
     def scim_resource_type(self):
         return "Group"
 

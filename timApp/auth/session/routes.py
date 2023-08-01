@@ -5,7 +5,7 @@ Routes for managing user sessions.
 from _csv import QUOTE_ALL
 from dataclasses import field
 from enum import Enum
-from typing import Any
+from typing import Any, Sequence
 
 from flask import Response
 from sqlalchemy import update, select
@@ -203,12 +203,12 @@ def validate_all() -> Response:
     """
     verify_admin()
 
-    all_usersnames: list[tuple[str]] = (
+    all_usersnames: Sequence[str] = (
         run_sql(select(User.name).join(UserSession).distinct(UserSession.user_id))
         .scalars()
         .all()
     )
-    for (user,) in all_usersnames:
+    for user in all_usersnames:
         verify_session_for(user)
 
     db.session.commit()

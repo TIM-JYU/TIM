@@ -2,6 +2,7 @@ from dataclasses import field, dataclass
 from io import StringIO
 from os.path import getmtime
 from pathlib import Path
+from typing import Any
 
 import sass
 from flask import Response, current_app, flash
@@ -298,7 +299,7 @@ def get_styles(
     """
     cur_user = get_current_user_object()
     filter_user: User | None = cur_user
-    filter = DocEntry.name.like(f"{OFFICIAL_STYLES_PATH}%") | DocEntry.name.like(
+    filter: Any = DocEntry.name.like(f"{OFFICIAL_STYLES_PATH}%") | DocEntry.name.like(
         f"{USER_STYLES_PATH}%"
     )
 
@@ -368,7 +369,7 @@ def generate(
     """
     verify_logged_in()
 
-    doc_entries: list[DocEntry] = (
+    doc_entries: list[DocEntry] = list(
         run_sql(select(DocEntry).filter(DocEntry.id.in_(docs))).scalars().all()
     )
 

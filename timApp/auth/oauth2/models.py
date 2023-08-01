@@ -126,19 +126,19 @@ class OAuth2Token(DbModel, TokenMixin):
     refresh_token_revoked_at: Mapped[int] = mapped_column(default=0)
     expires_in: Mapped[int] = mapped_column(default=0)
 
-    def check_client(self, client):
+    def check_client(self, client: ClientMixin) -> bool:
         return self.client_id == client.get_client_id()
 
-    def get_scope(self):
+    def get_scope(self) -> str | None:
         return self.scope
 
-    def get_expires_in(self):
+    def get_expires_in(self) -> int:
         return self.expires_in
 
-    def is_revoked(self):
-        return self.access_token_revoked_at or self.refresh_token_revoked_at
+    def is_revoked(self) -> bool:
+        return bool(self.access_token_revoked_at) or bool(self.refresh_token_revoked_at)
 
-    def is_expired(self):
+    def is_expired(self) -> bool:
         if not self.expires_in:
             return False
 
@@ -164,17 +164,17 @@ class OAuth2AuthorizationCode(DbModel, AuthorizationCodeMixin):
     code_challenge: Mapped[Optional[str]]
     code_challenge_method: Mapped[Optional[str]] = mapped_column(String(48))
 
-    def is_expired(self):
+    def is_expired(self) -> bool:
         return self.auth_time + 300 < time.time()
 
-    def get_redirect_uri(self):
+    def get_redirect_uri(self) -> str | None:
         return self.redirect_uri
 
-    def get_scope(self):
+    def get_scope(self) -> str | None:
         return self.scope
 
-    def get_auth_time(self):
+    def get_auth_time(self) -> int:
         return self.auth_time
 
-    def get_nonce(self):
+    def get_nonce(self) -> str | None:
         return self.nonce

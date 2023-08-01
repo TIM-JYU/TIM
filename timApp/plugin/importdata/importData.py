@@ -377,17 +377,17 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
         )
         users = {c: u for c, u in run_sql(stmt)}
     elif id_prop == "username":
-        stmt = select(User).filter(User.name.in_(idents))
-        users = {u.name: u for u in run_sql(stmt).scalars()}
+        username_stmt = select(User).filter(User.name.in_(idents))
+        users = {u.name: u for u in run_sql(username_stmt).scalars()}
     elif id_prop == "id":
         try:
-            stmt = select(User).filter(User.id.in_([int(i) for i in idents]))
+            id_stmt = select(User).filter(User.id.in_([int(i) for i in idents]))
         except ValueError as e:
             return args.make_answer_error(f"User ids must be ints ({e})")
-        users = {str(u.id): u for u in run_sql(stmt).scalars()}
+        users = {str(u.id): u for u in run_sql(id_stmt).scalars()}
     elif id_prop == "email":
-        stmt = select(User).filter(User.email.in_(idents))
-        users = {u.email: u for u in run_sql(stmt).scalars()}
+        email_stmt = select(User).filter(User.email.in_(idents))
+        users = {u.email: u for u in run_sql(email_stmt).scalars()}
     else:
         return args.make_answer_error(
             f"Invalid joinProperty: {args.markup.joinProperty}"

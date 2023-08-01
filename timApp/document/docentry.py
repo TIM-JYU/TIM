@@ -35,7 +35,7 @@ class DocEntry(DbModel, DocInfo):
     TODO: Improve the name.
     """
 
-    id: Mapped[int] = mapped_column(ForeignKey("block.id"))
+    id: Mapped[int] = mapped_column(ForeignKey("block.id"))  # type: ignore
     """Document identifier."""
 
     public: Mapped[bool] = mapped_column(default=True)
@@ -93,11 +93,11 @@ class DocEntry(DbModel, DocInfo):
 
     @staticmethod
     def get_all() -> list[DocEntry]:
-        return run_sql(select(DocEntry)).scalars().all()
+        return run_sql(select(DocEntry)).scalars().all()  # type: ignore
 
     @staticmethod
     def find_all_by_id(doc_id: int) -> list[DocEntry]:
-        return run_sql(select(DocEntry).filter_by(id=doc_id)).scalars().all()
+        return run_sql(select(DocEntry).filter_by(id=doc_id)).scalars().all()  # type: ignore
 
     @staticmethod
     def find_by_id(doc_id: int, docentry_load_opts: Any = None) -> DocInfo | None:
@@ -270,7 +270,7 @@ def get_documents(
         stmt = stmt.options(query_options)
     result = run_sql(stmt).scalars().all()
     if not filter_user:
-        return result
+        return result  # type: ignore
     return [r for r in result if filter_user.has_view_access(r)]
 
 

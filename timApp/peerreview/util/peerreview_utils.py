@@ -25,7 +25,7 @@ def get_reviews_where_user_is_reviewer(d: DocInfo, user: User) -> list[PeerRevie
     stmt = get_reviews_where_user_is_reviewer_query(d, user).options(
         selectinload(PeerReview.reviewable)
     )
-    return run_sql(stmt).scalars().all()
+    return run_sql(stmt).scalars().all()  # type: ignore
 
 
 def get_reviews_where_user_is_reviewer_query(d: DocInfo, user: User) -> Select:
@@ -33,7 +33,7 @@ def get_reviews_where_user_is_reviewer_query(d: DocInfo, user: User) -> Select:
 
 
 def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
-    return run_sql(select(PeerReview).filter_by(block_id=doc.id)).scalars().all()
+    return run_sql(select(PeerReview).filter_by(block_id=doc.id)).scalars().all()  # type: ignore
 
 
 def get_reviews_targeting_user(d: DocInfo, user: User) -> list[PeerReview]:
@@ -41,7 +41,7 @@ def get_reviews_targeting_user(d: DocInfo, user: User) -> list[PeerReview]:
     stmt = get_reviews_targeting_user_query(d, user).options(
         selectinload(PeerReview.reviewable)
     )
-    return run_sql(stmt).scalars().all()
+    return run_sql(stmt).scalars().all()  # type: ignore
 
 
 def get_reviews_targeting_user_query(d: DocInfo, user: User) -> Select:
@@ -56,7 +56,7 @@ def get_reviews_related_to_user(d: DocInfo, user: User) -> list[PeerReview]:
             (PeerReview.reviewable_id == user.id) | (PeerReview.reviewer_id == user.id)
         )
     )
-    return run_sql(stmt).scalars().all()
+    return run_sql(stmt).scalars().all()  # type: ignore
 
 
 def has_review_access(
@@ -111,7 +111,7 @@ def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
             )
         )
         .scalars()
-        .all()
+        .all()  # type: ignore
     )
 
 
@@ -145,7 +145,8 @@ def change_peerreviewers_for_user(
             .scalars()
             .first()
         )
-        updated_user.reviewer_id = new_reviewers[i]
+        if updated_user:
+            updated_user.reviewer_id = new_reviewers[i]
     try:
         db.session.flush()
     except IntegrityError:

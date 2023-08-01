@@ -29,7 +29,7 @@ def _max_concurrent_sessions() -> int | None:
 def _get_active_session_count(user: User) -> int:
     return db.session.scalar(
         select(func.count(UserSession.session_id)).filter(
-            (UserSession.user == user) & ~UserSession.expired
+            (UserSession.user == user) & ~UserSession.expired  # type: ignore
         )
     )
 
@@ -160,7 +160,7 @@ def has_valid_session(user: User | None = None) -> bool:
         run_sql(
             select(UserSession.session_id)
             .filter(
-                (UserSession.user == user)
+                (UserSession.user_id == user.id)
                 & (UserSession.session_id == session_id)
                 & ~UserSession.expired
             )

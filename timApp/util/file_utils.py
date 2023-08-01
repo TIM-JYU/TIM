@@ -1,7 +1,7 @@
 from mimetypes import guess_extension
 from os import PathLike
 
-import magic
+import magic  # type: ignore
 
 
 def guess_image_type(p: PathLike | str | bytes) -> str | None:
@@ -23,4 +23,9 @@ def guess_image_type(p: PathLike | str | bytes) -> str | None:
     if not mime.startswith("image/"):
         return None
 
-    return guess_extension(mime).lstrip(".")
+    ext = guess_extension(mime)
+
+    if not ext:
+        return None
+
+    return ext.lstrip(".")

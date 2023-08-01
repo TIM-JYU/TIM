@@ -55,25 +55,17 @@ class DeeplTranslationService(RegisteredTranslationService):
         self.ignore_tag = values["ignore_tag"]
         self.service_url = values["service_url"]
 
-    # TODO Would be better as non-optional, but that prevents creating
+    # TODO: Would be better as non-optional, but that prevents creating
     #  non-DeeplTranslationService -subclasses of TranslationService.
     service_url: Mapped[Optional[str]]
     """The url base for the API calls."""
 
-    # TODO Would be better as non-optional, but that prevents creating
+    # TODO: Would be better as non-optional, but that prevents creating
     #  non-DeeplTranslationService -subclasses of TranslationService.
     ignore_tag: Mapped[Optional[str]]
     """The XML-tag name to use for ignoring pieces of text when XML-handling is
     used. Should be chosen to be some uncommon string not found in many texts.
     """
-
-    # headers: ClassVar[dict[str, str]]
-    # """Request-headers needed for authentication with the API-key."""
-    #
-    # source_Language_code: ClassVar[str]
-    # """The source language's code (helps handling regional variants that DeepL
-    # doesn't differentiate).
-    # """
 
     def register(self, user_group: UserGroup) -> None:
         """
@@ -106,6 +98,30 @@ class DeeplTranslationService(RegisteredTranslationService):
             )
         self.headers = {"Authorization": f"DeepL-Auth-Key {api_key[0].api_key}"}
 
+    @property
+    def headers(self) -> dict[str, str]:
+        """Request-headers needed for authentication with the API-key."""
+        return getattr(self, "_headers") if hasattr(self, "_headers") else {}
+
+    @headers.setter
+    def headers(self, value: dict[str, str]) -> None:
+        setattr(self, "_headers", value)
+
+    @property
+    def source_Language_code(self) -> str:
+        """The source language's code (helps handling regional variants that DeepL
+        doesn't differentiate).
+        """
+        return (
+            getattr(self, "_source_Language_code")
+            if hasattr(self, "_source_Language_code")
+            else None
+        )
+
+    @source_Language_code.setter
+    def source_Language_code(self, value: str) -> None:
+        setattr(self, "_source_Language_code", value)
+
     # TODO Change the dicts to DeepLTranslateParams and DeeplResponse or smth
     def _post(self, url_slug: str, data: dict | None = None) -> dict:
         """
@@ -116,7 +132,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         :param data: Data to be transmitted along the request.
         :return: The JSON-response returned by the API.
         """
-        resp = post(self.service_url + "/" + url_slug, data=data, headers=self.headers)
+        resp = post(f"{self.service_url}/{url_slug}", data=data, headers=self.headers)
 
         return self._handle_post_response(resp)
 
@@ -250,7 +266,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         }
 
         return session.post(
-            self.service_url + "/translate", data=data, headers=self.headers
+            f"{self.service_url}/translate", data=data, headers=self.headers
         )
 
     @cache.memoize(timeout=LANGUAGES_CACHE_TIMEOUT, args_to_ignore=["self"])
@@ -339,7 +355,7 @@ class DeeplTranslationService(RegisteredTranslationService):
                 session,
                 protected_texts[i : i + 50],
                 # Send uppercase, because it is used in DeepL documentation.
-                source_lang_code.upper(),
+                source_lang_code.upper() if source_lang_code else None,
                 target_lang.lang_code.upper(),
                 # "1" (for example) keeps original document's empty newlines.
                 split_sentences="1",
@@ -347,7 +363,7 @@ class DeeplTranslationService(RegisteredTranslationService):
                 # though DeepL should not make guesses of the content.
                 preserve_formatting="0",
                 tag_handling=tag_handling,
-                ignore_tags=[self.ignore_tag],
+                ignore_tags=[self.ignore_tag] if self.ignore_tag else [],
             )
             translate_calls.append(call)
 

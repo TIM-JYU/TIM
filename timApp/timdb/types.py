@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from flask_sqlalchemy.model import Model
+# flask_sqlalchemy stubs are not up-to-date to support mypy >1.0
+from flask_sqlalchemy.model import Model  # type: ignore
 from sqlalchemy import Text, DateTime
 from sqlalchemy.orm import DeclarativeBase, declared_attr, has_inherited_table
 from typing_extensions import Annotated
@@ -18,8 +20,11 @@ class DbModel(DeclarativeBase, Model):
         datetime_tz: DateTime(timezone=True),
     }
 
-    @declared_attr.directive
-    def __tablename__(cls) -> str | None:
-        if has_inherited_table(cls):
-            return None
-        return cls.__name__.lower()
+    # Add check for mypy to suppress __tablename__ error when it's overriden as a string and not a method
+    if not TYPE_CHECKING:
+
+        @declared_attr.directive
+        def __tablename__(cls) -> str | None:
+            if has_inherited_table(cls):
+                return None
+            return cls.__name__.lower()

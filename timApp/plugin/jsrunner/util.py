@@ -3,9 +3,9 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TypedDict, Any, DefaultDict, Literal
+from typing import TypedDict, Any, DefaultDict, Literal, Sequence
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, Row
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_global_answers
@@ -78,7 +78,7 @@ def handle_jsrunner_groups(groupdata: JsrunnerGroups | None, curr_user: User) ->
                 group_members_state[ug] = UserGroupMembersState(
                     before=current_state, after=set(current_state)
                 )
-            users: list[User] = (
+            users: Sequence[User] = (
                 run_sql(select(User).filter(User.id.in_(uids))).scalars().all()
             )
             found_user_ids = {u.id for u in users}
@@ -353,7 +353,7 @@ def save_fields(
         .with_only_columns(func.max(Answer.id).label("aid"), User.id.label("uid"))
         .subquery()
     )
-    datas: list[tuple[int, Answer]] = run_sql(
+    datas: Sequence[Row[tuple[int, Answer]]] = run_sql(
         select(Answer)
         .join(sq, Answer.id == sq.c.aid)
         .with_only_columns(sq.c.uid, Answer)

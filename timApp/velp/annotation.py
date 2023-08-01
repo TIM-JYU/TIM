@@ -130,7 +130,10 @@ def check_visibility_and_maybe_get_doc(
         return True, d
     if ann.visible_to == AnnotationVisibility.everyone.value:
         return True, d
-    d = get_doc_or_abort(ann.document_id)
+    doc_id = ann.document_id
+    if doc_id is None:
+        doc_id = -1
+    d = get_doc_or_abort(doc_id)
     if (
         ann.visible_to == AnnotationVisibility.teacher.value
         and user.has_teacher_access(d)
@@ -150,7 +153,10 @@ def check_annotation_edit_access_and_maybe_get_doc(
     if user.id == ann.annotator_id:
         return True, d
     if not d:
-        d = get_doc_or_abort(ann.document_id)
+        doc_id = ann.document_id
+        if doc_id is None:
+            doc_id = -1
+        d = get_doc_or_abort(doc_id)
     verify_teacher_access(d)
     return True, d
 
@@ -181,7 +187,10 @@ def update_annotation(
     ann.color = color
 
     if not d:
-        d = get_doc_or_abort(ann.document_id)
+        doc_id = ann.document_id
+        if doc_id is None:
+            doc_id = -1
+        d = get_doc_or_abort(doc_id)
     if has_teacher_access(d):
         ann.points = points
     if coord:
@@ -251,7 +260,10 @@ def add_comment_route(id: int, content: str) -> Response:
     if not content:
         raise RouteException("Comment must not be empty")
     if not d:
-        d = get_doc_or_abort(a.document_id)
+        doc_id = a.document_id
+        if doc_id is None:
+            doc_id = -1
+        d = get_doc_or_abort(doc_id)
     a.comments.append(AnnotationComment(content=content, commenter_id=commenter.id))
     # TODO: Send email to annotator if commenter is not the annotator.
     db.session.commit()

@@ -136,13 +136,13 @@ def get_notes(
     access_restriction = UserNote.access == "everyone"
     if private:
         access_restriction = true()
-    time_restriction = true()
+    time_restriction: Any = true()
     if start:
         time_restriction = time_restriction & (UserNote.created >= start)
     if end:
         time_restriction = time_restriction & (UserNote.created < end)
     d_ids = [d.id for d in docs]
-    ns = (
+    ns = list(
         run_sql(
             select(UserNote)
             .filter(UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction)
