@@ -38,10 +38,6 @@ svg text::selection {
   border-right: 1px solid black;
 }
 
-.left-block {
-  border-bottom: 1px solid black;
-}
-
 
 .qubit {
   display: flex;
@@ -59,6 +55,31 @@ svg text::selection {
   background-color: white;
   margin-left: 0.1em;
   margin-right: 0.1em;
+}
+
+.left-block {
+  border-bottom: 1px solid black;
+  position: relative;
+}
+
+.axis-text-qubit {
+  font-size: 12px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.axis-text-time {
+  font-size: 12px;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.axis-line {
+  height: 1px;
+  background-color: black;
+  transform-origin: top left;
 }
 
 .moments {
