@@ -262,7 +262,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    - redis_data:/data
  celery:
   image: ${compose.images_repository}/tim:${tim.image_tag}
-  command: celery worker -A timApp.tim_celery.celery --concurrency 4
+  command: celery -A timApp.tim_celery.celery worker --concurrency 4
   profiles:
    - prod
    - dev
@@ -295,8 +295,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    - prod
    - dev
   command: >-
-   celery beat
-   -A timApp.tim_celery.celery
+   celery -A timApp.tim_celery.celery
+   beat
    -S timApp.celery_sqlalchemy_scheduler.schedulers:DatabaseScheduler
    --pidfile /var/run/celery/celerybeat.pid
   volumes:
