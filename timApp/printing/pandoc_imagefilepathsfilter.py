@@ -270,7 +270,6 @@ def handle_images(key, value, fmt, meta):
 
 
 if __name__ == "__main__":
-
     # Needs to import different package based on python version, as the urlparse method
     # was moved from urlparse module to urllib.parse between python2.7 -> python3
     try:

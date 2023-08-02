@@ -36,7 +36,6 @@ def is_inside(type, size, angle, center, point):
 
 # Class for rectangles
 class Rectangle:
-
     # Create rectangle
     def __init__(self, size, angle, center):
         self.size = size
@@ -72,7 +71,6 @@ class Rectangle:
 
 # Class for ellipses
 class Ellipse:
-
     # Initialize object
     def __init__(self, size, angle, center):
         # height, width, center and angle of the ellipse

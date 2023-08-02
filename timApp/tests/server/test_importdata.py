@@ -58,14 +58,14 @@ class ImportDataTestBase(TimRouteTest):
     def imp(self, d, data, expect, status: int, task=None, aalto_return=None):
         if not task:
             task = "t"
-            
+
         def init_mock(m):
             m.add(
-                    "GET",
-                    "https://plus.cs.aalto.fi/api/v2/courses/1234/aggregatedata/?format=json",
-                    body=json.dumps(aalto_return),
-                    status=200,
-                )
+                "GET",
+                "https://plus.cs.aalto.fi/api/v2/courses/1234/aggregatedata/?format=json",
+                body=json.dumps(aalto_return),
+                status=200,
+            )
 
         self.post_answer(
             "importData",

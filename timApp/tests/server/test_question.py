@@ -126,7 +126,9 @@ points: '2:1'</code></pre>
                 "/getQuestionByParId",
                 query_string={"doc_id": d.id, "par_id": pars[2].get_id()},
                 expect_status=400,
-                expect_content={"error": f"Paragraph is not a plugin: {pars[2].get_id()}"},
+                expect_content={
+                    "error": f"Paragraph is not a plugin: {pars[2].get_id()}"
+                },
             )
 
             normal_par_id = pars[3].get_id()
@@ -172,11 +174,15 @@ rows:
 - def
 """
             )
-            d.document.set_settings({"global_plugin_attrs": {"qst": {"showPoints": False}}})
+            d.document.set_settings(
+                {"global_plugin_attrs": {"qst": {"showPoints": False}}}
+            )
             self.test_user_2.grant_access(d, AccessType.view)
             db.session.commit()
             db.session.refresh(d)
-            r = self.post_answer("qst", f"{d.id}.t", user_input={"answers": [["2"], ["1"]]})
+            r = self.post_answer(
+                "qst", f"{d.id}.t", user_input={"answers": [["2"], ["1"]]}
+            )
             self.assertEqual(
                 {
                     "markup": {
@@ -200,7 +206,9 @@ rows:
             answers = self.get_task_answers(f"{d.id}.t", self.current_user)
             self.assertEqual(0.5, answers[0]["points"])
             self.login_test2()
-            r = self.post_answer("qst", f"{d.id}.t", user_input={"answers": [["2"], ["1"]]})
+            r = self.post_answer(
+                "qst", f"{d.id}.t", user_input={"answers": [["2"], ["1"]]}
+            )
             self.assertEqual(
                 {
                     "markup": {

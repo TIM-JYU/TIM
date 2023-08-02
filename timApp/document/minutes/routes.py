@@ -85,7 +85,6 @@ def create_minute_extracts(doc: str) -> Response:
     end_markdown = ")%%"
 
     for par in paragraphs:
-
         if par.is_setting():
             continue
 

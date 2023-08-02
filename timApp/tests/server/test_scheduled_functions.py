@@ -307,20 +307,22 @@ nextRunner: runner
                 m.add(
                     "GET",
                     "https://plus.cs.aalto.fi/api/v2/courses/1234/aggregatedata/?format=json",
-                    body=json.dumps([
-                    {
-                        "UserID": 123,
-                        "StudentID": "12345X",
-                        "Email": "matti.meikalainen@aalto.fi",
-                        "Tags": "aalto",
-                        "1 Count": 2,
-                        "1 Total": 100,
-                        "1 Ratio": 0.125,
-                        "2 Count": 0,
-                        "2 Total": 0,
-                        "2 Ratio": 0.0,
-                    }
-                ]),
+                    body=json.dumps(
+                        [
+                            {
+                                "UserID": 123,
+                                "StudentID": "12345X",
+                                "Email": "matti.meikalainen@aalto.fi",
+                                "Tags": "aalto",
+                                "1 Count": 2,
+                                "1 Total": 100,
+                                "1 Ratio": 0.125,
+                                "2 Count": 0,
+                                "2 Total": 0,
+                                "2 Ratio": 0.0,
+                            }
+                        ]
+                    ),
                     status=200,
                 )
                 do_run_user_function(

@@ -29,7 +29,9 @@ class ShowfileTest(TimRouteTest):
 file: http://tests:8080/ping
 """
             )
-            self.assert_content(self.get(d.url, as_tree=True), ['{"status":"ok"}\nping'])
+            self.assert_content(
+                self.get(d.url, as_tree=True), ['{"status":"ok"}\nping']
+            )
         finally:
             server.shutdown()
             t.join()
@@ -46,5 +48,3 @@ file: file:///tmp/cache/something
             self.get(d.url, as_tree=True),
             ["URL scheme must be http or https, got 'file'something"],
         )
-
-

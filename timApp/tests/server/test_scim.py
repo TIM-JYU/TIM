@@ -888,7 +888,7 @@ class ScimTest(TimRouteTest):
                 ["ussg-s1", "ussg-s2"],
             ),
         ]
-        for (external_id, display_name, users) in entries:
+        for external_id, display_name, users in entries:
             self.json_post(
                 "/scim/Groups",
                 {
@@ -1180,7 +1180,7 @@ class ScimTest(TimRouteTest):
         )
 
         # Make sure there won't be duplicate mails for responsible teachers.
-        for (external_id, display_name, users) in [responsible_teachers]:
+        for external_id, display_name, users in [responsible_teachers]:
             self.json_put(
                 f"/scim/Groups/{external_id}",
                 {
