@@ -42,7 +42,40 @@ def add_reference_pars(
     doc: Document, original_doc: Document, r: str, translator: str | None = None
 ):
     for par in original_doc:
-        ref_par = par.create_reference(doc, translator, r, add_rd=False)
+        # If the paragraph is a citation, it should remain a citation in the translation
+        # instead of being converted into a 'regular' translated paragraph.
+        # Additionally, we want to check for a translated version of the citation that
+        # matches the language of the translation being created and use it if found.
+        # If one is not found, the original citation should be used.
+        citation_doc_id = par.get_attr("rd")
+        citation_par_hash = par.get_attr("rp")
+
+        if citation_doc_id:
+            matched_citation = None
+            original_citation_docinfo = DocEntry.find_by_id(int(citation_doc_id))
+
+            for tr in original_citation_docinfo.translations:
+                if tr.lang_id == doc.docinfo.lang_id:
+                    matched_citation = tr
+                    # Find matching paragraph hash for translated citation par
+                    for p in tr.document:
+                        if p.get_attr("rp") == citation_par_hash:
+                            citation_par_hash = p.id
+                            break
+                    break
+            if not matched_citation:
+                matched_citation = original_citation_docinfo.document
+
+            from timApp.document.docparagraph import create_reference
+
+            ref_par = create_reference(
+                doc=doc,
+                doc_id=matched_citation.doc_id,
+                par_id=citation_par_hash,
+                add_rd=True,
+            )
+        else:
+            ref_par = par.create_reference(doc, translator, r, add_rd=False)
         if par.is_setting():
             ref_par.set_attr("settings", "")
         doc.add_paragraph_obj(ref_par)
