@@ -47,6 +47,10 @@ form: false
         self.find_element_avoid_staleness("tim-dialog-frame button").click()
         model_answer = self.find_element_avoid_staleness("#lock .modelAnswerContent")
         self.assertEqual("Hello", model_answer.text)
+        self.test_user_2.remove_access(d.id, "view")
+        db.session.commit()
+        db.session.refresh(Block.query.get(d.block.id))
+        self.get(f"/getModelAnswer/{d.id}.lock", expect_status=403)
 
     def test_model_answer_formatting(self):
         self.login_test1()
