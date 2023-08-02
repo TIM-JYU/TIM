@@ -25,6 +25,9 @@ svg text::selection {
 .circuit-container {
   display: flex;
   flex-direction: row;
+  margin-bottom: 2em;
+  border-bottom: 1px solid black;
+  width: fit-content;
 }
 
 .circuit-right-container {
@@ -103,6 +106,7 @@ svg text::selection {
   display: flex;
   flex-direction: column;
   border-right: 1px solid black;
+  border-bottom: 1px solid black;
 }
 
 .output-value {
