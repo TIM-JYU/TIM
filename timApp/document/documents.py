@@ -42,6 +42,7 @@ def add_reference_pars(
     doc: Document, original_doc: Document, r: str, translator: str | None = None
 ):
     for par in original_doc:
+
         # If the paragraph is a citation, it should remain a citation in the translation
         # instead of being converted into a 'regular' translated paragraph.
         # Additionally, we want to check for a translated version of the citation that
