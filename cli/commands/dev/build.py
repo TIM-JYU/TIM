@@ -27,7 +27,9 @@ If no tag is specified, the task is built with all tags.
 # 2. Specify the task and valid tags in the BUILD_TASKS dictionary.
 
 
-def build_tim(tag: Optional[str], no_cache: bool, build_args: List[str]) -> Optional[List[str]]:
+def build_tim(
+    tag: Optional[str], no_cache: bool, build_args: List[str]
+) -> Optional[List[str]]:
     config = get_config()
     image_suffix = "-base" if tag == "base" else ""
     image_name = f"{config.images_repository}/tim{image_suffix}"
@@ -45,6 +47,8 @@ def build_tim(tag: Optional[str], no_cache: bool, build_args: List[str]) -> Opti
             "build",
             *(["--no-cache"] if no_cache else []),
             *build_args_cli,
+            "--target",
+            tag,
             "--tag",
             image_name_specific,
             "--tag",
@@ -57,7 +61,9 @@ def build_tim(tag: Optional[str], no_cache: bool, build_args: List[str]) -> Opti
     return [image_name_specific, image_name_latest]
 
 
-def build_csplugin(tag: Optional[str], no_cache: bool, build_args: List[str]) -> Optional[List[str]]:
+def build_csplugin(
+    tag: Optional[str], no_cache: bool, build_args: List[str]
+) -> Optional[List[str]]:
     assert tag is not None
     config = get_config()
     image_name = f"{config.images_repository}/cs3:{tag}-{csplugin_image_tag()}"
@@ -162,4 +168,3 @@ def init(parser: ArgumentParser) -> None:
         choices=choices,
         help="Tasks to build in format `task:tag`. If not specified, all tasks will be built.",
     )
-
