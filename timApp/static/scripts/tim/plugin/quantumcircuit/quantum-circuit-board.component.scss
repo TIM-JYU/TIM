@@ -63,6 +63,12 @@ svg text::selection {
 .left-block {
   border-bottom: 1px solid black;
   position: relative;
+  background: linear-gradient(to top right,
+          rgba(0, 0, 0, 0) 0%,
+          rgba(0, 0, 0, 0) calc(50% - 0.8px),
+          rgba(0, 0, 0, 1) 50%,
+          rgba(0, 0, 0, 0) calc(50% + 0.8px),
+          rgba(0, 0, 0, 0) 100%);
 }
 
 .axis-text-qubit {
@@ -79,10 +85,30 @@ svg text::selection {
   right: 0;
 }
 
-.axis-line {
-  height: 1px;
-  background-color: black;
-  transform-origin: top left;
+.right-block {
+  border-left: 1px solid black;
+  border-bottom: 1px solid black;
+  position: relative;
+  background: linear-gradient(to top left,
+          rgba(0, 0, 0, 0) 0%,
+          rgba(0, 0, 0, 0) calc(50% - 0.8px),
+          rgba(0, 0, 0, 1) 50%,
+          rgba(0, 0, 0, 0) calc(50% + 0.8px),
+          rgba(0, 0, 0, 0) 100%);
+}
+
+.out-axis-text {
+  font-size: 12px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.out-axis-time {
+  font-size: 12px;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .moments {
@@ -97,10 +123,6 @@ svg text::selection {
   border-bottom: 1px solid black;
 }
 
-.right-block {
-  border-left: 1px solid black;
-  border-bottom: 1px solid black;
-}
 
 .output-container {
   display: flex;

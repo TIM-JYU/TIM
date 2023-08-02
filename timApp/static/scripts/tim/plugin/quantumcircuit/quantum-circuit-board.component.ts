@@ -2,12 +2,7 @@
  * Quantum circuit board.
  */
 
-import type {
-    OnChanges,
-    OnInit,
-    PipeTransform,
-    SimpleChanges,
-} from "@angular/core";
+import type {OnInit, PipeTransform} from "@angular/core";
 import {
     Component,
     EventEmitter,
@@ -100,9 +95,6 @@ export class RangePipe implements PipeTransform {
             <div class="qubits" [style.width.px]="circuitStyleOptions.inputWidth + circuitStyleOptions.baseSize">
                 <div class="left-block" [style.height.px]="circuitStyleOptions.timeAxisHeight">
                     <div class="axis-text-time">Aika</div>
-                    <div class="axis-line" 
-                         [style.width.px]="axisLineWidth" 
-                         [style.transform]="axisLineTransform"></div>
                     <div class="axis-text-qubit">Kubitti</div>
                 </div>
                 <div *ngFor="let qubit of qubits; let i=index"
@@ -196,7 +188,10 @@ export class RangePipe implements PipeTransform {
 
             <div class="output-container"
                  [style.width.px]="circuitStyleOptions.outputWidth + 2 * circuitStyleOptions.baseSize">
-                <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight"></div>
+                <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight">
+                    <div class="out-axis-time">Aika</div>
+                    <div class="out-axis-text">Ulostulo</div>
+                </div>
                 <div class="output" *ngFor="let output of qubitOutputs"
                      [style.width.px]="circuitStyleOptions.outputWidth + 2 * circuitStyleOptions.baseSize"
                      [style.height.px]="circuitStyleOptions.baseSize">
@@ -216,7 +211,7 @@ export class RangePipe implements PipeTransform {
     `,
     styleUrls: ["./quantum-circuit-board.component.scss"],
 })
-export class QuantumCircuitBoardComponent implements OnInit, OnChanges {
+export class QuantumCircuitBoardComponent implements OnInit {
     protected readonly Control = Control;
     protected readonly Swap = Swap;
 
@@ -225,9 +220,6 @@ export class QuantumCircuitBoardComponent implements OnInit, OnChanges {
 
     // gate that is currently being dragged
     gateBeingDragged: GateBeingDragged | null = null;
-
-    axisLineWidth!: number;
-    axisLineTransform!: string;
 
     @ViewChild("svgElement")
     svgElement!: ElementRef<SVGSVGElement>;
@@ -267,28 +259,7 @@ export class QuantumCircuitBoardComponent implements OnInit, OnChanges {
 
     constructor() {}
 
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.circuitStyleOptions) {
-            this.updateAxisStyles();
-        }
-    }
-
-    ngOnInit(): void {
-        this.updateAxisStyles();
-    }
-
-    /**
-     * Sets css properties to draw a diagonal line.
-     */
-    updateAxisStyles() {
-        const w =
-            this.circuitStyleOptions.baseSize +
-            this.circuitStyleOptions.inputWidth;
-        const h = this.circuitStyleOptions.timeAxisHeight;
-        const angle = Math.atan(h / w);
-        this.axisLineTransform = `rotate(${angle}rad)`;
-        this.axisLineWidth = Math.sqrt(Math.pow(w, 2) + Math.pow(h, 2));
-    }
+    ngOnInit(): void {}
 
     /**
      * The value of qubit changed.
