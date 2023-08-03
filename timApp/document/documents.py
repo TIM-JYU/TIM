@@ -52,29 +52,31 @@ def add_reference_pars(
         citation_par_hash = par.get_attr("rp")
 
         if citation_doc_id:
-            matched_citation = None
-            original_citation_docinfo = DocEntry.find_by_id(int(citation_doc_id))
-            if not original_citation_docinfo:
-                break
-
-            for tr in original_citation_docinfo.translations:
-                # Documents might be missing a lang_id, or even a DocInfo
-                if tr.lang_id and doc.docinfo and tr.lang_id == doc.docinfo.lang_id:
-                    matched_citation = tr
-                    # Find matching paragraph hash for translated citation par
-                    for p in tr.document:
-                        if p.get_attr("rp") == citation_par_hash:
-                            citation_par_hash = p.id
-                            break
-                    break
-            if not matched_citation:
-                matched_citation = original_citation_docinfo.document
+            matched_doc = None
+            citation_source_docinfo = DocEntry.find_by_id(int(citation_doc_id))
+            if citation_source_docinfo:
+                for tr in citation_source_docinfo.translations:
+                    # Documents might be missing a lang_id, or even a DocInfo
+                    if tr.lang_id and doc.docinfo and tr.lang_id == doc.docinfo.lang_id:
+                        matched_doc = tr
+                        # Find matching paragraph hash for translated citation par
+                        for p in tr.document:
+                            if p.get_attr("rp") == citation_par_hash:
+                                citation_par_hash = p.id
+                                break
+                        break
+                if not matched_doc:
+                    matched_doc = citation_source_docinfo.document
+            else:
+                # cited document doesn't exist, so just use the original citation
+                matched_doc = original_doc
+                citation_par_hash = par.id
 
             from timApp.document.docparagraph import create_reference
 
             ref_par = create_reference(
                 doc=doc,
-                doc_id=matched_citation.doc_id,
+                doc_id=matched_doc.doc_id,
                 par_id=citation_par_hash,
                 add_rd=True,
             )
