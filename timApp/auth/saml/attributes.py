@@ -6,7 +6,6 @@ from timApp.auth.saml.identity_assurance import (
     IdentityAssuranceProofing,
     RefedsIapLevel,
     REFEDS_LOCAL_ENTRPRISE_ASSURANCE,
-    _T,
 )
 from timApp.tim_app import app
 from timApp.util.flask.requesthelper import RouteException
@@ -26,10 +25,10 @@ class SAMLUserAttributes:
     Raw attribute data
     """
 
-    def _get_attribute_safe(self, name: str) -> Optional[_T]:
+    def _get_attribute_safe(self, name: str) -> Optional[Any]:
         return self.response_attributes.get(name, [None])[0]
 
-    def _get_attribute(self, name: str) -> _T:
+    def _get_attribute(self, name: str) -> Any:
         value = self._get_attribute_safe(name)
         if value is None:
             raise RouteException(f"Missing required attribute {name}")
