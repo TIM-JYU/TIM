@@ -54,9 +54,12 @@ def add_reference_pars(
         if citation_doc_id:
             matched_citation = None
             original_citation_docinfo = DocEntry.find_by_id(int(citation_doc_id))
+            if not original_citation_docinfo:
+                break
 
             for tr in original_citation_docinfo.translations:
-                if tr.lang_id == doc.docinfo.lang_id:
+                # Documents might be missing a lang_id, or even a DocInfo
+                if tr.lang_id and doc.docinfo and tr.lang_id == doc.docinfo.lang_id:
                     matched_citation = tr
                     # Find matching paragraph hash for translated citation par
                     for p in tr.document:
