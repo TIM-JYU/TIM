@@ -252,6 +252,7 @@ export interface CircuitStyleOptions {
                 </div>
 
                 <div>{{result}}</div>
+                <div>{{error}}</div>
             </ng-container>
             <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
 
@@ -347,6 +348,7 @@ export class QuantumCircuitComponent
     measurements: Measurement[] = [];
 
     result: string = "";
+    error: string = "";
 
     constructor(
         private gateService: GateService,
@@ -451,11 +453,12 @@ export class QuantumCircuitComponent
             web: {result?: string; error?: string};
         }>(params);
         if (r.ok) {
-            const res = r.result.web.result;
-            this.result = res ?? "";
+            this.result = r.result.web.result ?? "";
+            this.error = r.result.web.error ?? "";
+            console.log(this.result, this.error);
         } else {
-            const error = r.result.error.error;
-            console.log(error);
+            this.result = "";
+            this.error = r.result.error.error;
         }
     }
 

@@ -3,8 +3,9 @@ from typing import Union
 
 from flask import render_template_string
 
-from qulacs import Observable, QuantumCircuit, QuantumState
-from qulacs.gate import Y, CNOT, merge
+from qulacs import QuantumCircuit, QuantumState, QuantumGateMatrix
+from qulacs.gate import H, X, Y, Z, S, T, to_matrix_gate
+import numpy as np
 
 from timApp.tim_app import csrf
 from tim_common.markupmodels import GenericMarkupModel
@@ -135,7 +136,7 @@ def render_static_quantum_circuit(m: QuantumCircuitHtmlModel) -> str:
             </div>
         </div>
     """.strip(),
-        **asdict(m.markup)
+        **asdict(m.markup),
     )
 
 
@@ -148,40 +149,116 @@ class QuantumCircuitAnswerModel(
     pass
 
 
-def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
-    # initial_circuit = args.markup.initialCircuit
+def get_gate_matrix(
+    name: str, target: int, custom_gate: dict[str, np.ndarray]
+) -> QuantumGateMatrix | None:
+    gate_mapping = {"H": H, "X": X, "Y": Y, "Z": Z, "S": S, "T": T}
+    f = gate_mapping[name]
+    if f:
+        return to_matrix_gate(f(target))
+    return None
 
-    state = QuantumState(3)
-    state.set_Haar_random_state()
 
-    circuit = QuantumCircuit(3)
-    circuit.add_X_gate(0)
-    merged_gate = merge(CNOT(0, 1), Y(1))
-    circuit.add_gate(merged_gate)
-    circuit.add_RX_gate(1, 0.5)
+def input_to_int(input_list: list[int]):
+    """
+    [0,0,1] -> "001" -> "100" -> 0b100 -> 4
+    :param input_list: list of 0 and 1
+    :return: input with bits interpreted as int
+    """
+    return int("".join(map(str, input_list))[::-1], 2)
+
+
+def add_gates_to_circuit(
+    gates: list[GateInfo] | None,
+    circuit: QuantumCircuit,
+    custom_gates: dict[str, np.ndarray],
+):
+    if gates is None:
+        return
+
+    # qulacs has implicit sense of time so gates need to added in correct order
+    for gate_def in sorted(gates, key=lambda x: x.time):
+        if isinstance(gate_def, SingleOrMultiQubitGateInfo):
+            gate = get_gate_matrix(gate_def.name, gate_def.target, custom_gates)
+            if gate:
+                circuit.add_gate(gate)
+        elif isinstance(gate_def, SwapGateInfo):
+            circuit.add_SWAP_gate(gate_def.swap1, gate_def.swap2)
+        elif isinstance(gate_def, ControlGateInfo):
+            mat = get_gate_matrix(gate_def.name, gate_def.target, custom_gates)
+            if mat:
+                for c in gate_def.controls:
+                    mat.add_control_qubit(c, 1)
+                circuit.add_gate(mat)
+        else:
+            print(f"undefined type {gate_def}")
+
+
+def parse_custom_gates(gates: list[CustomGateInfo]) -> dict[str, np.ndarray]:
+    return {}
+
+
+def run_simulation(
+    gates: list[GateInfo] | None,
+    input_list: list[int] | None,
+    n_qubits: int,
+    custom_gates: dict[str, np.ndarray],
+) -> np.ndarray:
+    state = QuantumState(n_qubits)
+    initial_state = input_to_int(input_list)
+    state.set_computational_basis(initial_state)
+
+    circuit = QuantumCircuit(n_qubits)
+
     circuit.update_quantum_state(state)
 
-    observable = Observable(3)
-    observable.add_operator(2.0, "X 2 Y 1 Z 0")
-    observable.add_operator(-3.0, "Z 2")
-    value = observable.get_expectation_value(state)
-    print(value)
+    add_gates_to_circuit(gates, circuit, custom_gates)
+
+    circuit.update_quantum_state(state)
+
+    return state.get_vector()
+
+
+def check_answer(user_result: np.ndarray, model_result: np.ndarray):
+    return np.allclose(user_result, model_result)
+
+
+def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
+    # initial_circuit = args.markup.initialCircuit
 
     model_circuit = args.markup.modelCircuit
     model_input = args.markup.modelInput
 
-    if model_circuit is None:
-        return args.make_answer_error("Missing modelCircuit")
-    if model_input is None:
-        return args.make_answer_error("Missing modelInput")
-
     user_circuit = args.input.userCircuit
     user_input = args.input.userInput
 
+    n_qubits = args.markup.nQubits
+
+    custom_gates = parse_custom_gates(args.markup.customGates)
+
+    points = 1.0
+    result = "tallennettu"
+    error = ""
+    if model_circuit and model_input:
+        user_result = run_simulation(user_circuit, user_input, n_qubits, custom_gates)
+        model_result = run_simulation(
+            model_circuit, model_input, n_qubits, custom_gates
+        )
+
+        correct = check_answer(user_result, model_result)
+        print(user_result, model_result)
+        if correct:
+            points = 1.0
+            result = "Oikein"
+        else:
+            points = 0.0
+            result = ""
+            error = "Väärä vastaus"
+
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},
-        "tim_info": {"points": 1.0},
-        "web": {"result": "oikein"},
+        "tim_info": {"points": points},
+        "web": {"result": result, "error": error},
     }
 
 
