@@ -1304,10 +1304,10 @@ export class AnswerBrowserComponent
         }
         this.loading++;
         const r = await to(
-            $http.get<{answer: string; points?: number}>(
+            $http.get<{answer: string; points_map?: Record<number, number>}>(
                 this.getModelAnswerLink(),
                 {
-                    params: {...parParams, answer_id: this.selectedAnswer?.id},
+                    params: {...parParams},
                 }
             )
         );
@@ -1320,12 +1320,8 @@ export class AnswerBrowserComponent
             this.modelAnswer.alreadyLocked = true;
             this.viewctrl.informAboutLock(this.taskId);
         }
-        if (this.selectedAnswer) {
-            this.points = r.result.data.points;
-            this.selectedAnswer.points = r.result.data.points;
-            if (this.taskInfo) {
-                this.taskInfo.showPoints = true;
-            }
+        if (r.result.data.points_map) {
+            this.setPointsToAnswers(r.result.data.points_map);
         }
         this.modelAnswerFetched = true;
         this.modelAnswerVisible = true;
@@ -1334,6 +1330,18 @@ export class AnswerBrowserComponent
             ParCompiler.processAllMathDelayed(
                 $(this.modelAnswerRef.nativeElement)
             );
+        }
+    }
+
+    setPointsToAnswers(pointsMap: Record<number, number>) {
+        for (const answer of this.answers) {
+            const points = pointsMap[answer.id];
+            if (points != undefined) {
+                answer.points = points;
+                if (answer.id == this.selectedAnswer?.id) {
+                    this.points = points;
+                }
+            }
         }
     }
 
