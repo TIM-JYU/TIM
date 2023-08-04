@@ -192,13 +192,20 @@ RUN /usr/local/bin/wrap_chrome_binary
 
 ARG CHROME_DRIVER_VERSION
 RUN bash -c "${APT_INSTALL} jq && ${APT_CLEANUP}"
-RUN if [ -z "$CHROME_DRIVER_VERSION" ]; \
-  then CHROME_MAJOR_VERSION=$(google-chrome --version | sed -E "s/.* ([0-9]+)(\.[0-9]+){3}.*/\1/") \
-    && CHROME_DRIVER_VERSION=$(wget -q -O - "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq --arg majorVersion "$CHROME_MAJOR_VERSION" -r '.channels.Stable | select(.version | startswith($majorVersion | tostring)).version'); \
+RUN if [ ! -z "$CHROME_DRIVER_VERSION" ]; \
+  then CHROME_DRIVER_URL=https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_DRIVER_VERSION/linux64/chromedriver-linux64.zip ; \
+  else echo "Geting ChromeDriver binary from https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" \
+    && CFT_URL=https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json \
+    && CFT_CHANNEL="Stable" \
+    && if [ "$(echo "$CHROME_VERSION" | grep -q "beta")" ]; then CFT_CHANNEL="Beta"; fi \
+    && if [ "$(echo "$CHROME_VERSION" | grep -q "unstable")" ]; then CFT_CHANNEL="Dev"; fi \
+    && CTF_VALUES=$(curl -sSL $CFT_URL | jq -r --arg CFT_CHANNEL "$CFT_CHANNEL" '.channels[] | select (.channel==$CFT_CHANNEL)') \
+    && CHROME_DRIVER_VERSION=$(echo $CTF_VALUES | jq -r '.version' ) \
+    && CHROME_DRIVER_URL=$(echo $CTF_VALUES | jq -r '.downloads.chromedriver[] | select(.platform=="linux64") | .url' ) ; \
   fi \
-  && echo "Using chromedriver version: "$CHROME_DRIVER_VERSION \
-  && CHROME_DRIVER_URL=$(wget -q -O - "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq --arg version "$CHROME_DRIVER_VERSION" -r '.channels.Stable | select(.version==$version).downloads.chromedriver[] | select(.platform == "linux64") | .url') \
-  && wget -q -O /tmp/chromedriver_linux64.zip "$CHROME_DRIVER_URL" \
+  && echo "Using ChromeDriver from: "$CHROME_DRIVER_URL \
+  && echo "Using ChromeDriver version: "$CHROME_DRIVER_VERSION \
+  && wget --no-verbose -O /tmp/chromedriver_linux64.zip $CHROME_DRIVER_URL \
   && rm -rf /opt/selenium/chromedriver \
   && unzip /tmp/chromedriver_linux64.zip -d /opt/selenium \
   && rm /tmp/chromedriver_linux64.zip \
