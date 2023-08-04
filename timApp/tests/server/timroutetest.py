@@ -162,7 +162,7 @@ class TimRouteTestBase(TimDbTest):
 
         # FIXME: It is a VERY bad idea to enter a client context for the duration of the entire test
         #   because the client is not multithreaded. See https://github.com/pallets/flask/issues/4734
-        #   Instead, the client contex should be entered only in specific tests and explicitly
+        #   Instead, the client context should be entered only in specific tests and explicitly
         self.client = self.client.__enter__()
         self.client.open("/")
         del_g()

@@ -20,7 +20,7 @@ class DbModel(DeclarativeBase, Model):
         datetime_tz: DateTime(timezone=True),
     }
 
-    # Add check for mypy to suppress __tablename__ error when it's overriden as a string and not a method
+    # Add check for mypy to suppress __tablename__ error when it's overridden as a string and not a method
     if not TYPE_CHECKING:
 
         @declared_attr.directive

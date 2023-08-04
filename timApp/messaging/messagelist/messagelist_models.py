@@ -339,9 +339,7 @@ class MessageListMember(DbModel):
             return self.is_external_member()
 
         ug = (
-            db.session.exectute(
-                select(UserGroup).filter_by(id=self.tim_member.group_id)
-            )
+            db.session.execute(select(UserGroup).filter_by(id=self.tim_member.group_id))
             .scalars()
             .one()
         )
