@@ -40,7 +40,7 @@ export interface QuantumChartData {
 
             <div class="output-container">
 
-                <p class="measurements-description">Tehdyt mittaukset</p>
+                <p *ngIf="showPrintField" class="measurements-description">Tehdyt mittaukset</p>
                 <div class="output-print" *ngIf="showPrintField">
                     <table #outputTable class="output-table">
                         <thead>
@@ -61,7 +61,7 @@ export interface QuantumChartData {
                     </table>
                 </div>
 
-                <div class="buttons" *ngIf="showPrintField">
+                <div class="buttons" *ngIf="showPrintField || samplingMode === 'sample'">
                     <button class="timButton" (click)="handleMeasure()">Mittaa</button>
                     <button class="timButton" (click)="handleClear()">Tyhjennä</button>
                 </div>
