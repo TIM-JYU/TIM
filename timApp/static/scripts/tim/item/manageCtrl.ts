@@ -273,6 +273,7 @@ export class PermCtrl implements IController {
                 this.syncTitle(tr.title);
                 // syncTitle does not update the current document path,
                 // force an alias update on the current document to fix this
+                // TODO: check that this works as expected!
                 this.getAliases();
             }
         } else {
