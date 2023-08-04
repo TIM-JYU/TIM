@@ -30,6 +30,7 @@ If no tag is specified, the task is built with all tags.
 def build_tim(
     tag: Optional[str], no_cache: bool, build_args: List[str]
 ) -> Optional[List[str]]:
+    assert tag is not None
     config = get_config()
     image_suffix = "-base" if tag == "base" else ""
     image_name = f"{config.images_repository}/tim{image_suffix}"
