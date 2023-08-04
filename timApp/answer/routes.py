@@ -448,7 +448,13 @@ def get_useranswers_for_task(
         .subquery()
     )
     answs: list[Answer] = (
-        run_sql(select(Answer).join(sub, Answer.id == sub.c.col).options(selectinload(Answer.users_all))).scalars().all()
+        run_sql(
+            select(Answer)
+            .join(sub, Answer.id == sub.c.col)
+            .options(selectinload(Answer.users_all))
+        )
+        .scalars()
+        .all()
     )
     for answer in answs:
         asd = answer.to_json()
