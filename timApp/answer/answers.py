@@ -52,6 +52,7 @@ from timApp.util.answerutil import (
 )
 from timApp.util.logger import log_warning
 from timApp.velp.annotation_model import Annotation
+from tim_common.utils import round_float_error
 
 
 @dataclass
@@ -161,6 +162,8 @@ def save_answer(
     :param answered_on: If specified, overrides the date when the answer was saved. If None, uses the current date.
 
     """
+    # Never save points with round-off errors (could be caused by any computation)
+    points = round_float_error(points)
     content_str = json.dumps(content)
     content_len = len(content_str)
     if max_content_len and content_len > max_content_len:

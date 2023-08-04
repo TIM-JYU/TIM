@@ -4,6 +4,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 
 class CsPluginTest(TimRouteTest):
     def test_csplugin_pointsrule(self):
+        # Ensure csplugin is fully available since it's used in the plugin
         self.wait_for_url("http://csplugin:5000/cs/reqs")
         self.login_test1()
         d = self.create_doc(
@@ -63,6 +64,7 @@ public class Main {{
         self.assertEqual(2, first_answer().points)
 
     def test_csplugin_csharp(self):
+        # Ensure csplugin is fully available since it's used in the plugin
         self.wait_for_url("http://csplugin:5000/cs/reqs")
         self.login_test1()
         d = self.create_doc(
