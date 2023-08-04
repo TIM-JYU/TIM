@@ -271,6 +271,9 @@ export class PermCtrl implements IController {
             await this.getTranslations();
             if (tr.id === this.item.id) {
                 this.syncTitle(tr.title);
+                // syncTitle does not update the current document path,
+                // force an alias update on the current document to fix this
+                this.getAliases();
             }
         } else {
             tr.lang_id = old_lang;
