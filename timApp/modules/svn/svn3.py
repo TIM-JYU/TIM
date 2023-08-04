@@ -396,8 +396,20 @@ def get_video_html(query: QueryClass):
         htmlfunc = small_video_html
     if video_type == "list":
         htmlfunc = list_video_html
+    if not check_video_minimum_visibility(query):
+        query.set_param("Open plugin", "stem")
     s = make_lazy(s, query, htmlfunc)
     return s
+
+
+def check_video_minimum_visibility(query: QueryClass) -> bool:
+    """
+    Check whether a lazy video plugin would contain at least some visible text
+    """
+    for attribute in ["header", "stem", "footer", "videoname"]:
+        if get_param(query, attribute, ""):
+            return True
+    return False
 
 
 def small_video_md(query):
