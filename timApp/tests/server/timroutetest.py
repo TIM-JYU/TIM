@@ -4,6 +4,7 @@ import io
 import json
 import re
 import socket
+import time
 import warnings
 from base64 import b64encode
 from contextlib import contextmanager
@@ -11,6 +12,7 @@ from datetime import datetime
 from functools import lru_cache
 from typing import Union, Any, Generator
 
+import requests
 import responses
 from flask import (
     Response,
@@ -1396,6 +1398,32 @@ class TimRouteTestBase(TimDbTest):
         finally:
             for k, v in old_settings.items():
                 app.config[k] = v
+
+    @staticmethod
+    def wait_for_url(url: str, wait_time: float = 1.0, timeout: float = 30.0) -> None:
+        """
+        Waits for a URL to become available. Useful for waiting for a container to start.
+
+        :param url: URL to wait for
+        :param wait_time: Time to wait between requests
+        :param timeout: Timeout in seconds. If None, uses default timeout.
+        """
+        start_time = time.time()
+        while True:
+            # noinspection PyBroadException
+            try:
+                res = requests.get(url)
+                ok = res.status_code == 200
+            except Exception:
+                ok = False
+
+            if not ok:
+                now = time.time()
+                if now - start_time > timeout:
+                    raise TimeoutError(f"Timeout waiting for {url}")
+                time.sleep(wait_time)
+            else:
+                break
 
 
 class TimRouteTest(TimRouteTestBase):
