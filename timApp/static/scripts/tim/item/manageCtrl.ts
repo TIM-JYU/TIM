@@ -273,7 +273,7 @@ export class PermCtrl implements IController {
                 this.syncTitle(tr.title);
                 // syncTitle does not update the current document path,
                 // force page reload manually with the new translation path
-                let new_path = tr.path
+                const new_path = tr.path
                     .substring(0, tr.path.lastIndexOf(tr.old_langid))
                     .concat(tr.lang_id);
                 window.location.replace("/manage/" + new_path);
