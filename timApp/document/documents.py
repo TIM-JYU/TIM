@@ -79,6 +79,7 @@ def add_reference_pars(
                 doc_id=matched_doc.doc_id,
                 par_id=citation_par_hash,
                 add_rd=True,
+                r=r,
             )
         else:
             ref_par = par.create_reference(doc, translator, r, add_rd=False)
