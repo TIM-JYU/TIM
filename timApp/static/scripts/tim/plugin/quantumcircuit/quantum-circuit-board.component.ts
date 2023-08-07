@@ -70,7 +70,7 @@ export class InstanceofPipe implements PipeTransform {
 }
 
 /**
- * Array of concurrent indices from 0,..,n-1
+ * Array of concurrent indices from 0,...,n-1
  */
 @Pipe({
     name: "range",
@@ -108,7 +108,7 @@ export class RangePipe implements PipeTransform {
                             class="qubit-name">
                     <button class="qubit-toggle-button"
                             [style.width.px]="circuitStyleOptions.gateSize"
-                            (click)="toggleQubit($event, i)">{{qubit.text}}</button>
+                            (click)="toggleQubit(i)">{{qubit.text}}</button>
                 </div>
             </div>
 
@@ -178,7 +178,7 @@ export class RangePipe implements PipeTransform {
                            [attr.data-time]="j"
                            [attr.data-target]="i"
                            class="gate-drop"
-                           [class.uneditable]="gate !== undefined && !gate.editable"
+                           [class.uneditable]="gate !== undefined && gate?.editable === false"
                            [class.chosen]="gateBeingDragged !== null && gateBeingDragged.gate.target === i && gateBeingDragged.gate.time === j">
                         </g>
 
@@ -263,10 +263,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
     /**
      * The value of qubit changed.
-     * @param event click on qubit
      * @param id identifier for qubit
      */
-    toggleQubit(event: MouseEvent, id: number) {
+    toggleQubit(id: number) {
         this.qubitChange.emit(id);
     }
 

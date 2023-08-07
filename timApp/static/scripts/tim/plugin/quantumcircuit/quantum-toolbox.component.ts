@@ -1,4 +1,4 @@
-import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
+import type {OnChanges, OnInit} from "@angular/core";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {TableCellData} from "tim/plugin/quantumcircuit/active-gate";
 import {
@@ -73,7 +73,7 @@ export class QuantumToolboxComponent implements OnInit, OnChanges {
 
     ngOnInit(): void {}
 
-    ngOnChanges(changes: SimpleChanges): void {
+    ngOnChanges(): void {
         if (!this.activeGateInfo) {
             return;
         }

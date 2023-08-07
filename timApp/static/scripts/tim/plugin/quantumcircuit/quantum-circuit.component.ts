@@ -1,10 +1,5 @@
 import * as t from "io-ts";
-import type {
-    AfterViewInit,
-    ApplicationRef,
-    DoBootstrap,
-    OnInit,
-} from "@angular/core";
+import type {AfterViewInit, DoBootstrap, OnInit} from "@angular/core";
 import {Component, NgModule, ViewChild, ElementRef} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
@@ -1020,7 +1015,7 @@ export class QuantumCircuitComponent
     ],
 })
 export class QuantumCircuitModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap() {}
 }
 
 registerPlugin(

@@ -159,7 +159,7 @@ def get_gate_matrix(
     return None
 
 
-def input_to_int(input_list: list[int]):
+def input_to_int(input_list: list[int]) -> int:
     """
     [0,0,1] -> "001" -> "100" -> 0b100 -> 4
     :param input_list: list of 0 and 1
@@ -169,13 +169,10 @@ def input_to_int(input_list: list[int]):
 
 
 def add_gates_to_circuit(
-    gates: list[GateInfo] | None,
+    gates: list[GateInfo],
     circuit: QuantumCircuit,
     custom_gates: dict[str, np.ndarray],
-):
-    if gates is None:
-        return
-
+) -> None:
     # qulacs has implicit sense of time so gates need to added in correct order
     for gate_def in sorted(gates, key=lambda x: x.time):
         if isinstance(gate_def, SingleOrMultiQubitGateInfo):
@@ -194,13 +191,13 @@ def add_gates_to_circuit(
             print(f"undefined type {gate_def}")
 
 
-def parse_custom_gates(gates: list[CustomGateInfo]) -> dict[str, np.ndarray]:
+def parse_custom_gates(gates: list[CustomGateInfo] | None) -> dict[str, np.ndarray]:
     return {}
 
 
 def run_simulation(
-    gates: list[GateInfo] | None,
-    input_list: list[int] | None,
+    gates: list[GateInfo],
+    input_list: list[int],
     n_qubits: int,
     custom_gates: dict[str, np.ndarray],
 ) -> np.ndarray:
@@ -219,7 +216,7 @@ def run_simulation(
     return state.get_vector()
 
 
-def check_answer(user_result: np.ndarray, model_result: np.ndarray):
+def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
     return np.allclose(user_result, model_result)
 
 
@@ -239,7 +236,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     points = 1.0
     result = "tallennettu"
     error = ""
-    if model_circuit and model_input:
+    if model_circuit and model_input and user_circuit and user_input and n_qubits:
         user_result = run_simulation(user_circuit, user_input, n_qubits, custom_gates)
         model_result = run_simulation(
             model_circuit, model_input, n_qubits, custom_gates
