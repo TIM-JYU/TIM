@@ -47,6 +47,7 @@ import {
     ActiveGateInfo,
     CircuitActiveGateInfo,
 } from "tim/plugin/quantumcircuit/active-gate";
+import {format} from "mathjs";
 
 export interface QubitOutput {
     value: number;
@@ -105,6 +106,13 @@ const CustomGateInfo = t.type({
 });
 
 export type ICustomGateInfo = t.TypeOf<typeof CustomGateInfo>;
+
+const AnswerCustomGateInfo = t.type({
+    name: t.string,
+    matrix: t.string,
+});
+
+export type IAnswerCustomGateInfo = t.TypeOf<typeof AnswerCustomGateInfo>;
 
 const CircuitType = nullable(t.array(GateInfo));
 
@@ -246,8 +254,8 @@ export interface CircuitStyleOptions {
                     </div>
                 </div>
 
-                <div>{{result}}</div>
-                <div>{{error}}</div>
+                <div *ngIf="error" [innerHTML]="error | purify"></div>
+                <div *ngIf="result" [innerHTML]="result | purify"></div>
             </ng-container>
             <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
 
@@ -431,6 +439,30 @@ export class QuantumCircuitComponent
     }
 
     /**
+     * Turns matrix into json format that can be loaded in Python.
+     * @param name name of matrix
+     */
+    customMatrixDefToPythonJsonStr(name: string) {
+        const m = this.gateService.getMatrix(name);
+        if (!m) {
+            return undefined;
+        }
+        const [n] = m.size();
+        const res: string[][] = [];
+        for (let i = 0; i < n; i++) {
+            const resRow: string[] = [];
+            for (let j = 0; j < n; j++) {
+                const d = m.get([i, j]);
+                // format number or complex number,
+                // remove whitespace and replace i with j as complex number marker.
+                resRow.push(format(d).replace(/\s/g, "").replace(/i/g, "j"));
+            }
+            res.push(resRow);
+        }
+        return JSON.stringify(res);
+    }
+
+    /**
      * Save answer.
      */
     async save() {
@@ -438,10 +470,26 @@ export class QuantumCircuitComponent
 
         const userInput: IUserInput = this.qubits.map((q) => q.value);
 
+        const customGates: IAnswerCustomGateInfo[] = [];
+        if (this.markup.customGates) {
+            for (const g of this.markup.customGates) {
+                const m = this.customMatrixDefToPythonJsonStr(g.name);
+                if (m) {
+                    customGates.push({
+                        name: g.name,
+                        matrix: m,
+                    });
+                } else {
+                    console.error("failed to serialize gate", g);
+                }
+            }
+        }
+
         const params = {
             input: {
                 userCircuit: userCircuit,
                 userInput: userInput,
+                customGates: customGates,
             },
         };
         const r = await this.postAnswer<{
@@ -450,7 +498,6 @@ export class QuantumCircuitComponent
         if (r.ok) {
             this.result = r.result.web.result ?? "";
             this.error = r.result.web.error ?? "";
-            console.log(this.result, this.error);
         } else {
             this.result = "";
             this.error = r.result.error.error;

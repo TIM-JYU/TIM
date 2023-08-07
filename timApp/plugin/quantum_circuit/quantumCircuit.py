@@ -1,10 +1,11 @@
 from dataclasses import dataclass, asdict
 from typing import Union
+import json
 
 from flask import render_template_string
 
 from qulacs import QuantumCircuit, QuantumState, QuantumGateMatrix
-from qulacs.gate import H, X, Y, Z, S, T, to_matrix_gate
+from qulacs.gate import H, X, Y, Z, S, T, to_matrix_gate, DenseMatrix
 import numpy as np
 
 from timApp.tim_app import csrf
@@ -67,6 +68,15 @@ class CustomGateInfo:
 
 
 @dataclass
+class AnswerCustomGateInfo:
+    name: str
+    matrix: str
+
+    def to_json(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
 class QuantumCircuitMarkup(GenericMarkupModel):
     """Class that defines plugin markup (the YAML settings and their types)"""
 
@@ -102,6 +112,7 @@ class QuantumCircuitInputModel:
 
     userCircuit: list[GateInfo] | None = None
     userInput: list[int] | None = None
+    customGates: list[AnswerCustomGateInfo] | None = None
 
 
 @dataclass
@@ -150,12 +161,15 @@ class QuantumCircuitAnswerModel(
 
 
 def get_gate_matrix(
-    name: str, target: int, custom_gate: dict[str, np.ndarray]
+    name: str, target: int, custom_gates: dict[str, np.ndarray]
 ) -> QuantumGateMatrix | None:
     gate_mapping = {"H": H, "X": X, "Y": Y, "Z": Z, "S": S, "T": T}
-    f = gate_mapping[name]
-    if f:
+    f = gate_mapping.get(name, None)
+    if f is not None:
         return to_matrix_gate(f(target))
+    f = custom_gates.get(name, None)
+    if f is not None:
+        return DenseMatrix(target, f)
     return None
 
 
@@ -191,8 +205,36 @@ def add_gates_to_circuit(
             print(f"undefined type {gate_def}")
 
 
-def parse_custom_gates(gates: list[CustomGateInfo] | None) -> dict[str, np.ndarray]:
-    return {}
+def parse_matrix(m_str: str) -> np.ndarray:
+    """
+    Parse n x n array from string. The values are formatted as complex numbers.
+    :param m_str:
+    :return:
+    """
+    arr = json.loads(m_str)
+    if isinstance(arr, list):
+        m = []
+        for row in arr:
+            m_row = []
+            if isinstance(row, list):
+                for cell in row:
+                    value = complex(cell)
+                    m_row.append(value)
+            m.append(m_row)
+        return np.array(m, dtype=complex)
+    raise ValueError("failed to parse matrix from input: " + m_str)
+
+
+def parse_custom_gates(
+    gates: list[AnswerCustomGateInfo] | None,
+) -> dict[str, np.ndarray]:
+    custom_gates = {}
+    if not gates:
+        return custom_gates
+    for gate in gates:
+        m = parse_matrix(gate.matrix)
+        custom_gates[gate.name] = m
+    return custom_gates
 
 
 def run_simulation(
@@ -201,6 +243,14 @@ def run_simulation(
     n_qubits: int,
     custom_gates: dict[str, np.ndarray],
 ) -> np.ndarray:
+    """
+    Runs simulator.
+    :param gates: gates that are in the circuit
+    :param input_list: input bits as a list of 0s and 1s [q0 value, q1 value,...]
+    :param n_qubits: how many qubits the circuit has
+    :param custom_gates: custom gates defined in YAML
+    :return: state vector after simulation
+    """
     state = QuantumState(n_qubits)
     initial_state = input_to_int(input_list)
     state.set_computational_basis(initial_state)
@@ -217,6 +267,12 @@ def run_simulation(
 
 
 def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
+    """
+    Checks whether the arrays have same values.
+    :param user_result: the state of user's circuit after simulation
+    :param model_result: the state after simulation of the model circuit
+    :return: whether the array are same up to some small error margin
+    """
     return np.allclose(user_result, model_result)
 
 
@@ -231,19 +287,23 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
 
     n_qubits = args.markup.nQubits
 
-    custom_gates = parse_custom_gates(args.markup.customGates)
-
     points = 1.0
     result = "tallennettu"
     error = ""
-    if model_circuit and model_input and user_circuit and user_input and n_qubits:
+    if (
+        model_circuit is not None
+        and model_input is not None
+        and user_circuit is not None
+        and user_input is not None
+        and n_qubits is not None
+    ):
+        custom_gates = parse_custom_gates(args.input.customGates)
         user_result = run_simulation(user_circuit, user_input, n_qubits, custom_gates)
         model_result = run_simulation(
             model_circuit, model_input, n_qubits, custom_gates
         )
 
         correct = check_answer(user_result, model_result)
-        print(user_result, model_result)
         if correct:
             points = 1.0
             result = "Oikein"
