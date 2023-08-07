@@ -1640,14 +1640,14 @@ def import_answers(
     for d in docs[1:]:
         filter_cond |= Answer.task_id.startswith(f"{d.id}.")
 
-    no_identifier_answers = {
+    no_identifier_answers = any(
         a for a in exported_answers if not a.email and not a.username
-    }
+    )
     if no_identifier_answers:
         raise RouteException(
             f"Some answer don't have email nor username specified, cannot import."
         )
-    mixed_answers = {a for a in exported_answers if a.email and a.username}
+    mixed_answers = any(a for a in exported_answers if a.email and a.username)
     if mixed_answers:
         raise RouteException(
             "Answers with both email and username are not allowed. "
