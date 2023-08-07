@@ -164,12 +164,12 @@ def get_gate_matrix(
     name: str, target: int, custom_gates: dict[str, np.ndarray]
 ) -> QuantumGateMatrix | None:
     gate_mapping = {"H": H, "X": X, "Y": Y, "Z": Z, "S": S, "T": T}
-    f = gate_mapping.get(name, None)
-    if f is not None:
-        return to_matrix_gate(f(target))
-    f = custom_gates.get(name, None)
-    if f is not None:
-        return DenseMatrix(target, f)
+    gate_constructor = gate_mapping.get(name, None)
+    if gate_constructor is not None:
+        return to_matrix_gate(gate_constructor(target))
+    gate_matrix = custom_gates.get(name, None)
+    if gate_matrix is not None:
+        return DenseMatrix(target, gate_matrix)
     return None
 
 
@@ -228,7 +228,7 @@ def parse_matrix(m_str: str) -> np.ndarray:
 def parse_custom_gates(
     gates: list[AnswerCustomGateInfo] | None,
 ) -> dict[str, np.ndarray]:
-    custom_gates = {}
+    custom_gates: dict[str, np.ndarray] = {}
     if not gates:
         return custom_gates
     for gate in gates:
