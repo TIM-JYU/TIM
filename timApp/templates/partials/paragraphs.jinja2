@@ -79,7 +79,11 @@
              ref-id="{{ t.target.id }}"
              ref-t="{{ t.target.hash }}"
              ref-attrs="{{ t.target.attrs_str }}"
-             ref-doc-id="{{ t.target.doc_id }}"
+             {% if t.attrs.rd and t.attrs.rp and t.attrs.r == 'tr' %}
+                 ref-doc-id="{{ t.attrs.rd }}"
+             {% else %}
+                 ref-doc-id="{{ t.target.doc_id }}"
+             {% endif %}
          {% endif %}>
         {% if attrs.float and not ai and not preview %}
             <div class="draggable-content">
