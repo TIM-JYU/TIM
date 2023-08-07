@@ -37,7 +37,7 @@ class PreviewTest(TimRouteTest):
         d = self.create_doc(initial_par="""#- {rd=9999 rp=xxxx}""")
         t = self.create_translation(d)
         p = t.document.get_paragraphs()[0]
-        md = f'#- {{rd="{p.get_attr("rd")}" rp="{p.get_attr("rp")}"}}\n'
+        md = f'#- {{r="tr" rd="{p.get_attr("rd")}" rp="{p.get_attr("rp")}"}}\n'
         self.get(f"/getBlock/{t.id}/{p.get_id()}", expect_content={"text": md})
         e = self.post_preview(t, text=md, json_key="texts", as_tree=True)
         self.assert_content(e, ["The referenced document does not exist."])
