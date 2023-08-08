@@ -72,19 +72,14 @@ def add_reference_pars(
                 matched_doc = original_doc
                 citation_par_hash = par.id
 
-                # can also be an area reference
-                # TODO: this is needed for translated area citations,
-                #       but we can't use this yet since area translations
-                #       do not contain the needed paragraph attributes.
-                #       Copying the area name tags ('area' and 'area_end')
-                #       to the area translation pars seems to work.
-                # area_citation = par.get_attr("ra")
-                #
-                # if area_citation:
-                #     ref_par = par.create_area_reference(
-                #         doc, area_citation, r="tr", rd=matched_doc.doc_id
-                #     )
-                # else:
+            # can also be an area reference
+            area_citation = par.get_attr("ra")
+
+            if area_citation:
+                ref_par = par.create_area_reference(
+                    doc, area_citation, r="tr", rd=matched_doc.doc_id
+                )
+            else:
                 from timApp.document.docparagraph import create_reference
 
                 ref_par = create_reference(
@@ -96,6 +91,18 @@ def add_reference_pars(
                 )
         else:
             ref_par = par.create_reference(doc, translator, r, add_rd=False)
+
+            # For area citations to work correctly in translations,
+            # we need to add explicit area/area_end tags to translated
+            # area paragraphs
+            is_translated_par = r == "tr"
+            area_start = par.get_attr("area")
+            area_end = par.get_attr("area_end")
+            if is_translated_par:
+                if area_start:
+                    ref_par.set_attr("area", area_start)
+                elif area_end:
+                    ref_par.set_attr("area_end", area_end)
         if par.is_setting():
             ref_par.set_attr("settings", "")
         doc.add_paragraph_obj(ref_par)
