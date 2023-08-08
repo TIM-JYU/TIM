@@ -72,15 +72,28 @@ def add_reference_pars(
                 matched_doc = original_doc
                 citation_par_hash = par.id
 
-            from timApp.document.docparagraph import create_reference
+                # can also be an area reference
+                # TODO: this is needed for translated area citations,
+                #       but we can't use this yet since area translations
+                #       do not contain the needed paragraph attributes.
+                #       Copying the area name tags ('area' and 'area_end')
+                #       to the area translation pars seems to work.
+                # area_citation = par.get_attr("ra")
+                #
+                # if area_citation:
+                #     ref_par = par.create_area_reference(
+                #         doc, area_citation, r="tr", rd=matched_doc.doc_id
+                #     )
+                # else:
+                from timApp.document.docparagraph import create_reference
 
-            ref_par = create_reference(
-                doc=doc,
-                doc_id=matched_doc.doc_id,
-                par_id=citation_par_hash,
-                add_rd=True,
-                r=r,
-            )
+                ref_par = create_reference(
+                    doc=doc,
+                    doc_id=matched_doc.doc_id,
+                    par_id=citation_par_hash,
+                    add_rd=True,
+                    r=r,
+                )
         else:
             ref_par = par.create_reference(doc, translator, r, add_rd=False)
         if par.is_setting():
