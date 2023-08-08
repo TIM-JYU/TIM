@@ -344,6 +344,6 @@ def quantum_circuit_circuit_to_yaml() -> Response:
     :return: YAML string
     """
     list_of_gates = request.get_json()
-    yaml_str = yaml.dump(list_of_gates, default_flow_style=False)
+    yaml_str = yaml.dump(list_of_gates, default_flow_style=False, allow_unicode=True)
 
     return jsonify({"web": yaml_str})
