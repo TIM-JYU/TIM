@@ -2,12 +2,13 @@ from dataclasses import dataclass, asdict
 from typing import Union
 import json
 
-from flask import render_template_string
+from flask import render_template_string, request, jsonify, Response
 
 from qulacs import QuantumCircuit, QuantumState, QuantumGateMatrix
 from qulacs.gate import H, X, Y, Z, S, T, to_matrix_gate, DenseMatrix
 import numpy as np
 
+from timApp.document.yamlblock import YamlBlock
 from timApp.tim_app import csrf
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
@@ -334,3 +335,15 @@ quantum_circuit_plugin = create_blueprint(
     reqs_handler,
     csrf,
 )
+
+
+@quantum_circuit_plugin.post("/circuitToYaml")
+def quantum_circuit_circuit_to_yaml() -> Response:
+    """
+    Formats circuit as YAML text.
+    :return: YAML string
+    """
+    data = request.get_json()
+
+    md = YamlBlock(data).to_markdown()
+    return jsonify({"web": md})

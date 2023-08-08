@@ -36,7 +36,7 @@ import {
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {timeout} from "tim/util/utils";
+import {copyToClipboard, timeout} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -48,6 +48,7 @@ import {
     CircuitActiveGateInfo,
 } from "tim/plugin/quantumcircuit/active-gate";
 import {format} from "mathjs";
+import {genericglobals} from "tim/util/globals";
 
 export interface QubitOutput {
     value: number;
@@ -251,6 +252,12 @@ export interface CircuitStyleOptions {
                         <button class="btn btn-default btn-xs"
                                 (click)="reset()">Palauta
                         </button>
+                        <button class="btn btn-default btn-xs"
+                                *ngIf="hasEditRights"
+                                (click)="copyCircuit()">
+                            Kopioi piiri leikepöydälle
+                        </button>
+                        <div *ngIf="notification">{{notification}}</div>
                     </div>
                 </div>
 
@@ -352,6 +359,9 @@ export class QuantumCircuitComponent
 
     result: string = "";
     error: string = "";
+    notification: string = "";
+
+    hasEditRights: boolean = false;
 
     constructor(
         private gateService: GateService,
@@ -510,6 +520,29 @@ export class QuantumCircuitComponent
     reset() {
         this.initializeBoard(true);
         this.runSimulation(true);
+    }
+
+    /**
+     * Copy current circuit to clipboard
+     */
+    async copyCircuit() {
+        const circuit = this.serializeUserCircuit();
+        if (!circuit) {
+            return;
+        }
+        const url = "/quantumCircuit/circuitToYaml";
+        const r = await this.httpPost<{web: string}>(url, circuit);
+        if (r.ok) {
+            const yaml = r.result.web;
+            copyToClipboard(yaml);
+            this.notification = "kopioitu";
+            setTimeout(() => {
+                this.notification = "";
+            }, 2000);
+        } else {
+            this.result = "";
+            this.error = r.result.error.error;
+        }
     }
 
     /**
@@ -1029,6 +1062,10 @@ export class QuantumCircuitComponent
         this.initializeBoard(false);
 
         this.initializeSimulator();
+
+        const item = genericglobals().curr_item;
+
+        this.hasEditRights = item?.rights.editable ?? false;
     }
 
     getAttributeType() {
