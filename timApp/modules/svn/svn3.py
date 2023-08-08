@@ -249,7 +249,10 @@ def replace_time_params(query, htmlstr):
 
 
 def small__and_list_html(query, duration_template):
-    s = replace_template_param(query, "{{stem}} ", "stem")
+    if not check_video_minimum_visibility(query):
+        s = "Open plugin"
+    else:
+        s = replace_template_param(query, "{{stem}} ", "stem")
     vidname = replace_template_param(query, " {{videoname}}", "videoname")
     if vidname:
         dur = replace_time_params(query, duration_template)
@@ -396,8 +399,6 @@ def get_video_html(query: QueryClass):
         htmlfunc = small_video_html
     if video_type == "list":
         htmlfunc = list_video_html
-    if not check_video_minimum_visibility(query):
-        query.set_param("Open plugin", "stem")
     s = make_lazy(s, query, htmlfunc)
     return s
 
