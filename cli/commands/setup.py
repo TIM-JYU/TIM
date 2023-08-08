@@ -326,7 +326,15 @@ def setup_dev() -> None:
     pip = verify_pip()
     python = verify_dev_python()
     log_info("Downloading Poetry")
-    run_cmd([*pip, "install", "--upgrade", f"poetry=={POETRY_MIN_VERSION}"])
+    run_cmd(
+        [
+            *pip,
+            "install",
+            "--break-system-packages",
+            "--upgrade",
+            f"poetry=={POETRY_MIN_VERSION}",
+        ]
+    )
     poetry = verify_poetry(python)
 
     log_info("Installing Python development dependencies")

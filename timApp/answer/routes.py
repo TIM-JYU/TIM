@@ -1957,7 +1957,7 @@ def get_jsframe_data(task_id: str, user_id: str) -> Response:
 
 
 @answers.get("/getModelAnswer/<task_id>")
-def get_model_answer(task_id: str, answer_id: int | None = None) -> Response:
+def get_model_answer(task_id: str) -> Response:
     tid = TaskId.parse(task_id)
     d = get_doc_or_abort(tid.doc_id)
     verify_view_access(d)
@@ -2040,19 +2040,16 @@ def get_model_answer(task_id: str, answer_id: int | None = None) -> Response:
     answer_html = md_to_html(
         model_answer_info.answer, dumbo_options=dumbo_opts, ignore_errors=True
     )
-    points = None
-    if answer_id and plug.known.show_points():
+    points_map: dict[int, float] | None = None
+    if plug.known.modelAnswer.hidePoints and plug.known.show_points():
         try:
-            answer, _ = verify_answer_access(
-                answer_id,
-                current_user.id,
-                view_ctx,
-                allow_grace_period=True,
-            )
+            user_answers = current_user.get_answers_for_task(tid.doc_task).all()
+            points_map = {}
+            for a in user_answers:
+                points_map[a.id] = a.points
         except PluginException as e:
             raise RouteException(str(e))
-        points = answer.points
-    return json_response({"answer": answer_html, "points": points})
+    return json_response({"answer": answer_html, "points_map": points_map})
 
 
 @answers.get("/getState")
