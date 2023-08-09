@@ -230,7 +230,8 @@ def get_image_html(query):
     header, footer = get_surrounding_headers2(query)
     result = header + "<img " + w + h + 'src="' + url + '">' + footer
     if is_user_lazy(query):
-        return add_lazy(f"<div>{result}</div>") + header + footer
+        placeholder = "<div>Open image</div>" if not header and not footer else ""
+        return add_lazy(f"<div>{result}</div>") + header + footer + placeholder
     return NOLAZY + result
 
 
