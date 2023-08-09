@@ -214,6 +214,7 @@ RUN if [ ! -z "$CHROME_DRIVER_VERSION" ]; \
   && ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver
 
 RUN bash -c "${APT_INSTALL} ripgrep && ${APT_CLEANUP}"
+RUN bash -c "${PIP_INSTALL} coverage && ${APT_CLEANUP}"
 
 WORKDIR /service
 

@@ -15,6 +15,7 @@ class Arguments:
     down: bool
     up: bool
     new_screenshots: bool
+    coverage: bool
 
 
 BROWSER_TEST_SCRIPT = """
@@ -72,7 +73,8 @@ def run(args: Arguments) -> None:
     else:
         test_parameters = ["discover", "-v", f"tests/{args.target}", "test_*.py", "."]
 
-    test_command = ["python3", "-m", "unittest", *test_parameters]
+    base_command = ["python3"] if not args.coverage else ["coverage", "run"]
+    test_command = [*base_command, "-m", "unittest", *test_parameters]
 
     # Browser tests can be flaky (in part of lackluster flask support for Selenium, in part of the tests).
     # It's better to retry it a few times
@@ -124,4 +126,10 @@ def init(parser: ArgumentParser) -> None:
         help="Run tests in the given group. "
         "Run a specific test module or test function. Format is <module>[.<function>]. "
         "Special value 'all' runs all tests.",
+    )
+    parser.add_argument(
+        "--coverage",
+        help="Run tests with coverage",
+        action="store_true",
+        dest="coverage",
     )
