@@ -26,7 +26,11 @@ import {
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {NgChartsModule} from "ng2-charts";
-import {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
+import type {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
+import {
+    BrowserQuantumCircuitSimulator,
+    ServerQuantumCircuitSimulator,
+} from "tim/plugin/quantumcircuit/quantum-simulation";
 import {
     Control,
     Gate,
@@ -47,8 +51,8 @@ import {
     ActiveGateInfo,
     CircuitActiveGateInfo,
 } from "tim/plugin/quantumcircuit/active-gate";
-import {format} from "mathjs";
 import {genericglobals} from "tim/util/globals";
+import {SerializerService} from "tim/plugin/quantumcircuit/serializer.service";
 
 export interface QubitOutput {
     value: number;
@@ -108,19 +112,26 @@ const CustomGateInfo = t.type({
 
 export type ICustomGateInfo = t.TypeOf<typeof CustomGateInfo>;
 
-const AnswerCustomGateInfo = t.type({
+const NumericCustomGateInfo = t.type({
     name: t.string,
     matrix: t.string,
 });
 
-export type IAnswerCustomGateInfo = t.TypeOf<typeof AnswerCustomGateInfo>;
+export type INumericCustomGateInfo = t.TypeOf<typeof NumericCustomGateInfo>;
 
 const CircuitType = nullable(t.array(GateInfo));
 
-type ICircuit = t.TypeOf<typeof CircuitType>;
+export type ICircuit = t.TypeOf<typeof CircuitType>;
 
 const InputBitsType = nullable(t.array(t.number));
 type IUserInput = t.TypeOf<typeof InputBitsType>;
+
+export interface SimulationArgs {
+    gates: ICircuit;
+    inputList: number[];
+    nQubits: number;
+    customGates: INumericCustomGateInfo[];
+}
 
 // All settings that are defined in the plugin markup YAML
 const QuantumCircuitMarkup = t.intersection([
@@ -146,6 +157,10 @@ const QuantumCircuitMarkup = t.intersection([
             "matrix"
         ),
         nSamples: withDefault(t.number, 100),
+        simulate: withDefault(
+            t.keyof({browser: null, server: null}),
+            "browser"
+        ),
     }),
 ]);
 
@@ -270,7 +285,7 @@ export interface CircuitStyleOptions {
 
     `,
     styleUrls: ["./quantum-circuit.component.scss"],
-    providers: [GateService],
+    providers: [GateService, SerializerService],
 })
 export class QuantumCircuitComponent
     extends AngularPluginBase<
@@ -280,8 +295,6 @@ export class QuantumCircuitComponent
     >
     implements OnInit, AfterViewInit
 {
-    timeoutId: number = -1;
-
     @ViewChild("qcContainer")
     qcContainer!: ElementRef<HTMLElement>;
 
@@ -365,6 +378,7 @@ export class QuantumCircuitComponent
 
     constructor(
         private gateService: GateService,
+        private serializerService: SerializerService,
         el: ElementRef,
         http: HttpClient,
         domSanitizer: DomSanitizer
@@ -400,99 +414,22 @@ export class QuantumCircuitComponent
         return this.markup.nSamples;
     }
 
-    serializeUserCircuit(): ICircuit {
-        const userCircuit: ICircuit = [];
-        const board = this.board.board;
-        for (let targetI = 0; targetI < board.length; targetI++) {
-            for (let timeI = 0; timeI < board[targetI].length; timeI++) {
-                const cell = board[targetI][timeI];
-                if (cell instanceof Gate) {
-                    const controls = this.board.getControls({
-                        target: targetI,
-                        time: timeI,
-                    });
-
-                    if (controls.length > 0) {
-                        userCircuit.push({
-                            name: cell.name,
-                            editable: cell.editable,
-                            target: targetI,
-                            time: timeI,
-                            controls: controls,
-                        });
-                    } else {
-                        userCircuit.push({
-                            name: cell.name,
-                            target: targetI,
-                            time: timeI,
-                            editable: cell.editable,
-                        });
-                    }
-                } else if (cell instanceof MultiQubitGate) {
-                    userCircuit.push({
-                        name: cell.name,
-                        time: timeI,
-                        target: targetI,
-                        editable: cell.editable,
-                    });
-                } else if (cell instanceof Swap && targetI < cell.target) {
-                    userCircuit.push({
-                        swap1: targetI,
-                        swap2: cell.target,
-                        time: timeI,
-                        editable: cell.editable,
-                    });
-                }
-            }
-        }
-        return userCircuit;
-    }
-
-    /**
-     * Turns matrix into json format that can be loaded in Python.
-     * @param name name of matrix
-     */
-    customMatrixDefToPythonJsonStr(name: string) {
-        const m = this.gateService.getMatrix(name);
-        if (!m) {
-            return undefined;
-        }
-        const [n] = m.size();
-        const res: string[][] = [];
-        for (let i = 0; i < n; i++) {
-            const resRow: string[] = [];
-            for (let j = 0; j < n; j++) {
-                const d = m.get([i, j]);
-                // format number or complex number,
-                // remove whitespace and replace i with j as complex number marker.
-                resRow.push(format(d).replace(/\s/g, "").replace(/i/g, "j"));
-            }
-            res.push(resRow);
-        }
-        return JSON.stringify(res);
-    }
-
     /**
      * Save answer.
      */
     async save() {
-        const userCircuit = this.serializeUserCircuit();
+        const userCircuit = this.serializerService.serializeUserCircuit(
+            this.board
+        );
 
         const userInput: IUserInput = this.qubits.map((q) => q.value);
 
-        const customGates: IAnswerCustomGateInfo[] = [];
+        let customGates: INumericCustomGateInfo[] = [];
         if (this.markup.customGates) {
-            for (const g of this.markup.customGates) {
-                const m = this.customMatrixDefToPythonJsonStr(g.name);
-                if (m) {
-                    customGates.push({
-                        name: g.name,
-                        matrix: m,
-                    });
-                } else {
-                    console.error("failed to serialize gate", g);
-                }
-            }
+            customGates = this.serializerService.serializeCustomGates(
+                this.markup.customGates,
+                this.gateService
+            );
         }
 
         const params = {
@@ -519,14 +456,14 @@ export class QuantumCircuitComponent
      */
     reset() {
         this.initializeBoard(true);
-        this.runSimulation(true);
+        void this.runSimulation();
     }
 
     /**
      * Copy current circuit to clipboard
      */
     async copyCircuit() {
-        const circuit = this.serializeUserCircuit();
+        const circuit = this.serializerService.serializeUserCircuit(this.board);
         if (!circuit) {
             return;
         }
@@ -568,31 +505,19 @@ export class QuantumCircuitComponent
 
     /**
      * Runs simulator and updates statistics.
-     * @param delay whether to run simulator instantly
      */
-    runSimulation(delay: boolean = true) {
-        if (this.timeoutId !== -1) {
-            window.clearTimeout(this.timeoutId);
-            this.timeoutId = -1;
-        }
-        if (delay) {
-            this.timeoutId = window.setTimeout(() => {
-                const startTime = new Date();
-                console.log("started simulating", startTime);
-                this.simulator.run();
-                const endTime = new Date();
+    async runSimulation() {
+        const startTime = new Date();
+        console.log(
+            `started simulating at: ${startTime.getHours()}:${startTime.getMinutes()}:${startTime.getSeconds()}`
+        );
+        await this.simulator.run();
+        const endTime = new Date();
 
-                const timeDiff = endTime.getTime() - startTime.getTime();
-                console.log(`simulation ended in: ${timeDiff}ms`);
+        const timeDiff = endTime.getTime() - startTime.getTime();
+        console.log(`simulation ended in: ${timeDiff}ms`);
 
-                this.collectStats();
-
-                this.timeoutId = -1;
-            }, 0);
-        } else {
-            this.simulator.run();
-            this.collectStats();
-        }
+        this.collectStats();
     }
 
     /**
@@ -606,7 +531,7 @@ export class QuantumCircuitComponent
         }
         this.qubits[qubitId] = this.qubits[qubitId].toggled();
 
-        this.runSimulation();
+        void this.runSimulation();
     }
 
     /**
@@ -648,7 +573,7 @@ export class QuantumCircuitComponent
 
         this.selectedGate = null;
 
-        this.runSimulation();
+        void this.runSimulation();
     }
 
     /**
@@ -660,7 +585,7 @@ export class QuantumCircuitComponent
         this.selectedGate = null;
         this.updateBoard();
         this.handleActiveGateHide();
-        this.runSimulation();
+        void this.runSimulation();
     }
 
     /**
@@ -674,7 +599,7 @@ export class QuantumCircuitComponent
         this.selectedGate = null;
         this.updateBoard();
         this.handleActiveGateHide();
-        this.runSimulation();
+        void this.runSimulation();
     }
 
     /**
@@ -965,13 +890,24 @@ export class QuantumCircuitComponent
     }
 
     initializeSimulator() {
-        this.simulator = new QuantumCircuitSimulator(
-            this.gateService,
-            this.board,
-            this.qubits
-        );
+        if (this.markup.simulate === "browser") {
+            this.simulator = new BrowserQuantumCircuitSimulator(
+                this.gateService,
+                this.board,
+                this.qubits
+            );
+        } else {
+            this.simulator = new ServerQuantumCircuitSimulator(
+                this.http,
+                this.gateService,
+                this.board,
+                this.qubits,
+                this.serializerService,
+                this.markup.customGates
+            );
+        }
 
-        this.runSimulation(false);
+        void this.runSimulation();
     }
 
     /**

@@ -10,6 +10,7 @@ from qulacs.gate import H, X, Y, Z, S, T, to_matrix_gate, DenseMatrix
 import numpy as np
 
 from timApp.tim_app import csrf
+from timApp.util.flask.requesthelper import use_model
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
@@ -69,7 +70,7 @@ class CustomGateInfo:
 
 
 @dataclass
-class AnswerCustomGateInfo:
+class NumericCustomGateInfo:
     name: str
     matrix: str
 
@@ -97,6 +98,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     initialCircuit: list[GateInfo] | None = None
     customGates: list[CustomGateInfo] | None = None
     gates: list[str] | None = None
+    simulate: str | None = None
 
 
 @dataclass
@@ -113,7 +115,7 @@ class QuantumCircuitInputModel:
 
     userCircuit: list[GateInfo] | None = None
     userInput: list[int] | None = None
-    customGates: list[AnswerCustomGateInfo] | None = None
+    customGates: list[NumericCustomGateInfo] | None = None
 
 
 @dataclass
@@ -227,7 +229,7 @@ def parse_matrix(m_str: str) -> np.ndarray:
 
 
 def parse_custom_gates(
-    gates: list[AnswerCustomGateInfo] | None,
+    gates: list[NumericCustomGateInfo] | None,
 ) -> dict[str, np.ndarray]:
     custom_gates: dict[str, np.ndarray] = {}
     if not gates:
@@ -338,7 +340,7 @@ quantum_circuit_plugin = create_blueprint(
 
 
 @quantum_circuit_plugin.post("/circuitToYaml")
-def quantum_circuit_circuit_to_yaml() -> Response:
+def quantum_circuit_to_yaml() -> Response:
     """
     Formats circuit as YAML text.
     :return: YAML string
@@ -347,3 +349,22 @@ def quantum_circuit_circuit_to_yaml() -> Response:
     yaml_str = yaml.dump(list_of_gates, default_flow_style=False, allow_unicode=True)
 
     return jsonify({"web": yaml_str})
+
+
+@dataclass
+class SimulationArgs:
+    gates: list[GateInfo]
+    inputList: list[int]
+    nQubits: int
+    customGates: list[NumericCustomGateInfo] | None = None
+
+
+@quantum_circuit_plugin.post("/simulate")
+@use_model(SimulationArgs)
+def quantum_circuit_simulate(args: SimulationArgs) -> Response:
+    custom_gates = parse_custom_gates(args.customGates)
+    state = run_simulation(args.gates, args.inputList, args.nQubits, custom_gates)
+
+    result = np.power(np.abs(state), 2)
+
+    return jsonify({"web": list(result)})

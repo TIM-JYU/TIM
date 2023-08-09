@@ -1,4 +1,9 @@
-import type {Measurement} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import type {
+    ICustomGateInfo,
+    INumericCustomGateInfo,
+    Measurement,
+    SimulationArgs,
+} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 import type {Matrix} from "mathjs";
 import {
@@ -21,19 +26,185 @@ import {
 } from "tim/plugin/quantumcircuit/quantum-board";
 import type {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import type {Qubit} from "tim/plugin/quantumcircuit/qubit";
+import type {SerializerService} from "tim/plugin/quantumcircuit/serializer.service";
+import {toPromise} from "tim/util/utils";
+import type {HttpClient} from "@angular/common/http";
 
-export class QuantumCircuitSimulator {
+export abstract class QuantumCircuitSimulator {
     board: QuantumBoard;
     qubits: Qubit[];
     result?: Matrix;
 
-    constructor(
-        private gateService: GateService,
+    protected constructor(
+        protected gateService: GateService,
         board: QuantumBoard,
         qubits: Qubit[]
     ) {
         this.board = board;
         this.qubits = qubits;
+    }
+
+    abstract run(): Promise<void>;
+
+    setBoard(board: QuantumBoard) {
+        this.board = board;
+    }
+
+    /**
+     * Returns a random integer in range [0, weights.length-1]
+     * Relative probability of each number is based on weights.
+     * @param weights probabilities associated to each choice
+     */
+    private randomChoice(weights: number[]) {
+        const randomNum = Math.random();
+
+        // choose one possible outcome based on probabilities
+        let cumulativeProbability = 0;
+        for (let i = 0; i < weights.length; i++) {
+            cumulativeProbability += weights[i];
+            if (randomNum < cumulativeProbability) {
+                return i;
+            }
+        }
+    }
+
+    protected indexToBitstring(i: number) {
+        return i.toString(2).padStart(this.qubits.length, "0");
+    }
+
+    /**
+     * Bits in result should be in reverse order in terms of qubits.
+     * probability(001) -> probability(100)
+     * @param result result with qubit order changed
+     */
+    protected reverseResultQubitOrder(result: number[]) {
+        const rev = [];
+        for (let i = 0; i < 2 ** this.board.length; i++) {
+            const bitString = this.indexToBitstring(i);
+            const bitStringReversed = bitString.split("").reverse().join("");
+            const j = parseInt(bitStringReversed, 2);
+            rev.push(result[j]);
+        }
+        return transpose(matrix(rev));
+    }
+
+    /**
+     * Get one measurement chosen randomly from possible outcomes and their relative probabilities.
+     */
+    sample(): Measurement | undefined {
+        const input = this.qubits
+            .map((q) => q.value)
+            .reverse()
+            .join("");
+        if (!this.result) {
+            console.error("run simulator before sampling");
+            return undefined;
+        }
+
+        const probabilities: number[] = [];
+        this.result.forEach((probability) => {
+            probabilities.push(probability);
+        });
+
+        const output = this.randomChoice(probabilities);
+        if (output !== undefined) {
+            return {
+                input: input,
+                output: this.indexToBitstring(output),
+                value: output,
+            };
+        }
+        return undefined;
+    }
+
+    private computeProbabilitiesFromMeasurements(
+        measurements: Measurement[],
+        n: number
+    ) {
+        // draw samples and keep track of how many times they occur
+        const counter = Array(n).fill(0);
+        for (const measurement of measurements) {
+            counter[measurement.value]++;
+        }
+
+        return counter.map((v) => (v / measurements.length) * 100.0);
+    }
+
+    private computeProbabilitiesBySampling(result: Matrix, sampleSize: number) {
+        const probabilities: number[] = [];
+        result.forEach((probability) => {
+            probabilities.push(probability);
+        });
+
+        // draw samples and keep track of how many times they occur
+        const counter = Array(probabilities.length).fill(0);
+        for (let i = 0; i < sampleSize; i++) {
+            const sample = this.randomChoice(probabilities);
+
+            if (sample !== undefined) {
+                counter[sample]++;
+            }
+        }
+        return counter.map((v) => (v / sampleSize) * 100.0);
+    }
+    /**
+     * Gets probabilities and labels for each output.
+     * @param sampleSize if given then use this many samples to compute probabilities for outputs
+     * @param measurements if give then use them to compute probabilities for outputs
+     */
+    getProbabilities(
+        sampleSize: number | undefined = undefined,
+        measurements: Measurement[] | undefined = undefined
+    ): QuantumChartData {
+        if (!this.result) {
+            console.error("run simulator before getting probabilities");
+            return {probabilities: [], labels: []};
+        }
+
+        let probabilities: number[] = [];
+        if (sampleSize !== undefined) {
+            probabilities = this.computeProbabilitiesBySampling(
+                this.result,
+                sampleSize
+            );
+        }
+        if (measurements !== undefined) {
+            probabilities = this.computeProbabilitiesFromMeasurements(
+                measurements,
+                this.result.size()[0]
+            );
+        }
+        const labels: string[] = [];
+        this.result.forEach((value, i) => {
+            if (sampleSize === undefined && measurements === undefined) {
+                probabilities.push(value * 100);
+            }
+            // index should be number[] but it seems to be typed incorrectly as number
+            const label: number = this.getNumber(i);
+            const bitString: string = this.indexToBitstring(label);
+            labels.push(bitString);
+        });
+        return {
+            probabilities: probabilities,
+            labels: labels,
+        };
+    }
+
+    private getNumber(i: number | number[]) {
+        if (i instanceof Array) {
+            return i[0];
+        }
+        return i;
+    }
+}
+
+export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
+    constructor(
+        gateService: GateService,
+        board: QuantumBoard,
+        qubits: Qubit[]
+    ) {
+        super(gateService, board, qubits);
     }
 
     private getCellMatrix(cell: Cell) {
@@ -153,7 +324,7 @@ export class QuantumCircuitSimulator {
      * @param input matrix to apply to
      * @param basis relative positions of qubits
      */
-    applyPositionChange(
+    private applyPositionChange(
         currI: number,
         destI: number,
         input: Matrix,
@@ -256,25 +427,9 @@ export class QuantumCircuitSimulator {
     }
 
     /**
-     * Bits in result should be in reverse order in terms of qubits.
-     * probability(001) -> probability(100)
-     * @param result result with qubit order changed
-     */
-    reverseResultQubitOrder(result: Matrix) {
-        const rev = [];
-        for (let i = 0; i < 2 ** this.board.length; i++) {
-            const bitString = this.indexToBitstring(i);
-            const bitStringReversed = bitString.split("").reverse().join("");
-            const j = parseInt(bitStringReversed, 2);
-            rev.push(result.get([j, 0]));
-        }
-        return transpose(matrix(rev));
-    }
-
-    /**
      * Run simulation on current circuit and qubits.
      */
-    run() {
+    async run() {
         const inputQubits = this.qubits.map((q) => q.asVector());
 
         let input = inputQubits[0];
@@ -295,139 +450,56 @@ export class QuantumCircuitSimulator {
 
         this.result = dotPow(abs(output), 2) as Matrix;
 
-        this.result = this.reverseResultQubitOrder(this.result);
-    }
-
-    private getNumber(i: number | number[]) {
-        if (i instanceof Array) {
-            return i[0];
+        const res = [];
+        for (let i = 0; i < 2 ** this.board.length; i++) {
+            res.push(this.result.get([i, 0]));
         }
-        return i;
+        this.result = this.reverseResultQubitOrder(res);
+
+        return Promise.resolve();
     }
+}
 
-    private indexToBitstring(i: number) {
-        return i.toString(2).padStart(this.qubits.length, "0");
-    }
+export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
+    serializerService: SerializerService;
+    customGates: ICustomGateInfo[] | null | undefined;
 
-    /**
-     * Returns a random integer in range [0, weights.length-1]
-     * Relative probability of each number is based on weights.
-     * @param weights probabilities associated to each choice
-     */
-    private randomChoice(weights: number[]) {
-        const randomNum = Math.random();
-
-        // choose one possible outcome based on probabilities
-        let cumulativeProbability = 0;
-        for (let i = 0; i < weights.length; i++) {
-            cumulativeProbability += weights[i];
-            if (randomNum < cumulativeProbability) {
-                return i;
-            }
-        }
-    }
-
-    /**
-     * Get one measurement chosen randomly from possible outcomes and their relative probabilities.
-     */
-    sample(): Measurement | undefined {
-        const input = this.qubits.map((q) => q.value).join("");
-
-        if (!this.result) {
-            return undefined;
-        }
-
-        const probabilities: number[] = [];
-        this.result.forEach((probability) => {
-            probabilities.push(probability);
-        });
-
-        const output = this.randomChoice(probabilities);
-        if (output !== undefined) {
-            return {
-                input: input,
-                output: this.indexToBitstring(output),
-                value: output,
-            };
-        }
-        return undefined;
-    }
-
-    private computeProbabilitiesBySampling(result: Matrix, sampleSize: number) {
-        const probabilities: number[] = [];
-        result.forEach((probability) => {
-            probabilities.push(probability);
-        });
-
-        // draw samples and keep track of how many times they occur
-        const counter = Array(probabilities.length).fill(0);
-        for (let i = 0; i < sampleSize; i++) {
-            const sample = this.randomChoice(probabilities);
-
-            if (sample !== undefined) {
-                counter[sample]++;
-            }
-        }
-        return counter.map((v) => (v / sampleSize) * 100.0);
-    }
-
-    computeProbabilitiesFromMeasurements(
-        measurements: Measurement[],
-        n: number
+    constructor(
+        private http: HttpClient,
+        gateService: GateService,
+        board: QuantumBoard,
+        qubits: Qubit[],
+        serializerService: SerializerService,
+        customGates: ICustomGateInfo[] | null | undefined
     ) {
-        // draw samples and keep track of how many times they occur
-        const counter = Array(n).fill(0);
-        for (const measurement of measurements) {
-            counter[measurement.value]++;
-        }
-
-        return counter.map((v) => (v / measurements.length) * 100.0);
+        super(gateService, board, qubits);
+        this.serializerService = serializerService;
+        this.customGates = customGates;
     }
-
-    /**
-     * Gets probabilities and labels for each output.
-     * @param sampleSize if given then use this many samples to compute probabilities for outputs
-     * @param measurements if give then use them to compute probabilities for outputs
-     */
-    getProbabilities(
-        sampleSize: number | undefined = undefined,
-        measurements: Measurement[] | undefined = undefined
-    ): QuantumChartData {
-        if (!this.result) {
-            console.log("run simulator first");
-            return {probabilities: [], labels: []};
-        }
-
-        let probabilities: number[] = [];
-        if (sampleSize !== undefined) {
-            probabilities = this.computeProbabilitiesBySampling(
-                this.result,
-                sampleSize
+    async run() {
+        const inputList = this.qubits.map((q) => q.value);
+        let customGates: INumericCustomGateInfo[] = [];
+        if (this.customGates) {
+            customGates = this.serializerService.serializeCustomGates(
+                this.customGates,
+                this.gateService
             );
         }
-        if (measurements !== undefined) {
-            probabilities = this.computeProbabilitiesFromMeasurements(
-                measurements,
-                this.result.size()[0]
-            );
-        }
-        const labels: string[] = [];
-        this.result.forEach((value, i) => {
-            if (sampleSize === undefined && measurements === undefined) {
-                probabilities.push(value * 100);
-            }
-            // index should be number[] but it seems to be typed incorrectly as number
-            const label: number = this.getNumber(i);
-            const bitString: string = this.indexToBitstring(label);
-            labels.push(bitString);
-        });
-        return {
-            probabilities: probabilities,
-            labels: labels,
+
+        const params: SimulationArgs = {
+            gates: this.serializerService.serializeUserCircuit(this.board),
+            nQubits: this.board.length,
+            inputList: inputList,
+            customGates: customGates,
         };
-    }
 
-    setBoard(board: QuantumBoard) {
-        this.board = board;
+        const url = "/quantumCircuit/simulate";
+        const r = await toPromise(this.http.post<{web: number[]}>(url, params));
+        if (r.ok) {
+            const res = r.result.web;
+            this.result = transpose(matrix(res));
+        } else {
+            console.error(r.result.error.error);
+        }
     }
 }

@@ -176,6 +176,9 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
      * Sets data of chart to current data.
      */
     updateChart() {
+        if (!this.quantumChartData) {
+            return;
+        }
         let labels = this.quantumChartData.labels;
         let probabilities = this.quantumChartData.probabilities;
 
@@ -216,7 +219,11 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
         }
         const charWidth = 12;
 
-        if (this.table && this.quantumChartData.labels.length > 0) {
+        if (
+            this.table &&
+            this.quantumChartData &&
+            this.quantumChartData.labels.length > 0
+        ) {
             const nQubits = this.quantumChartData.labels[0].length;
             // | "# " | nQubits chars | nQubits chars |
             const tableWidth = 2 * charWidth + 2 * charWidth * nQubits;
