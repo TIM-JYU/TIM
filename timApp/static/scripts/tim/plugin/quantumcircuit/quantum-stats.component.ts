@@ -178,6 +178,7 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     updateChart() {
         let labels = this.quantumChartData.labels;
         let probabilities = this.quantumChartData.probabilities;
+
         if (this.hideZeroRows) {
             labels = [];
             probabilities = [];

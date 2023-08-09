@@ -1,7 +1,16 @@
 import type {Measurement} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 import type {Matrix} from "mathjs";
-import {dotPow, abs, transpose, multiply, kron, identity, index} from "mathjs";
+import {
+    dotPow,
+    abs,
+    transpose,
+    multiply,
+    kron,
+    identity,
+    index,
+    matrix,
+} from "mathjs";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import type {Cell, QuantumBoard} from "tim/plugin/quantumcircuit/quantum-board";
 import {
@@ -247,6 +256,22 @@ export class QuantumCircuitSimulator {
     }
 
     /**
+     * Bits in result should be in reverse order in terms of qubits.
+     * probability(001) -> probability(100)
+     * @param result result with qubit order changed
+     */
+    reverseResultQubitOrder(result: Matrix) {
+        const rev = [];
+        for (let i = 0; i < 2 ** this.board.length; i++) {
+            const bitString = this.indexToBitstring(i);
+            const bitStringReversed = bitString.split("").reverse().join("");
+            const j = parseInt(bitStringReversed, 2);
+            rev.push(result.get([j, 0]));
+        }
+        return transpose(matrix(rev));
+    }
+
+    /**
      * Run simulation on current circuit and qubits.
      */
     run() {
@@ -269,6 +294,8 @@ export class QuantumCircuitSimulator {
         }
 
         this.result = dotPow(abs(output), 2) as Matrix;
+
+        this.result = this.reverseResultQubitOrder(this.result);
     }
 
     private getNumber(i: number | number[]) {
@@ -298,7 +325,6 @@ export class QuantumCircuitSimulator {
                 return i;
             }
         }
-        console.log("got here");
     }
 
     /**

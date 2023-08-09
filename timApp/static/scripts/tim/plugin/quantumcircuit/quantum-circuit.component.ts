@@ -949,9 +949,13 @@ export class QuantumCircuitComponent
         if (!vals) {
             return;
         }
-        this.qubitOutputs = Array.from(vals.output).map((bit) => ({
-            value: parseInt(bit, 10),
-        }));
+
+        this.qubitOutputs = vals.output
+            .split("")
+            .reverse()
+            .map((bit) => ({
+                value: parseInt(bit, 10),
+            }));
 
         if (this.markup.outputNames) {
             for (let i = 0; i < this.qubitOutputs.length; i++) {
