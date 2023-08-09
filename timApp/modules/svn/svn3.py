@@ -407,7 +407,7 @@ def check_video_minimum_visibility(query: QueryClass) -> bool:
     """
     Check whether a lazy video plugin would contain at least some visible text
     """
-    for attribute in ["header", "stem", "footer", "videoname"]:
+    for attribute in ["header", "stem", "footer", "videoname", "doctext"]:
         if get_param(query, attribute, ""):
             return True
     return False

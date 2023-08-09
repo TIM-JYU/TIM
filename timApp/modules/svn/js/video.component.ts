@@ -375,9 +375,8 @@ export class VideoComponent extends AngularPluginBase<
         this.getPrevZoom();
         if (this.markup.open) {
             this.toggleVideo();
-        } else {
-            this.videoName =
-                this.markup.videoname ?? $localize`Open embedded content`;
+        } else if (!this.markup.videoname && !this.doctext) {
+            this.videoName = $localize`Open embedded content`;
         }
     }
 
