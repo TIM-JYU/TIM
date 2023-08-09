@@ -452,7 +452,12 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
 
         const res = [];
         for (let i = 0; i < 2 ** this.board.length; i++) {
-            res.push(this.result.get([i, 0]));
+            // when nQubits === 1 then this.result is 1d array
+            if (this.result.size().length > 1) {
+                res.push(this.result.get([i, 0]));
+            } else {
+                res.push(this.result.get([i]));
+            }
         }
         this.result = this.reverseResultQubitOrder(res);
 
