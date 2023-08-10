@@ -190,8 +190,28 @@ export class RangePipe implements PipeTransform {
                     <img alt="measurement icon" src="/static/images/quantum-measurement.svg"
                          [style.height.px]="circuitStyleOptions.gateSize"
                          [style.width.px]="circuitStyleOptions.gateSize"/>
-                    <button *ngIf="showOutputBits"
-                            class="output-value">{{output.value}}</button>
+
+                    <svg *ngIf="showOutputBits" class="output-value"
+                         [attr.height]="circuitStyleOptions.gateSize"
+                         [attr.width]="circuitStyleOptions.gateSize">
+                        <rect [attr.height]="circuitStyleOptions.gateSize"
+                              [attr.width]="circuitStyleOptions.gateSize"
+                              [attr.stroke]="circuitStyleOptions.colors.dark"
+                              x = "0" y="0"
+                              fill="white"
+                        ></rect>
+                        <rect [attr.height]="circuitStyleOptions.gateSize"
+                              [attr.width]="circuitStyleOptions.gateSize * (output.probability/100)"
+                              x="0" y="0"
+                              fill="aqua"
+                        ></rect>
+                        <text dominant-baseline="middle"
+                              text-anchor="middle"
+                              x="50%"
+                              y="50%"
+                              [attr.stroke]="circuitStyleOptions.colors.dark">{{output.value}}</text>
+                        <title>{{output.probabilityText}}</title>
+                    </svg>
                     <div *ngIf="output.name" class="output-name">
                         {{output.name}}
                     </div>

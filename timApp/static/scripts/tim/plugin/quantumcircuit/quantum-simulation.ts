@@ -6,16 +6,7 @@ import type {
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 import type {Matrix} from "mathjs";
-import {
-    dotPow,
-    abs,
-    transpose,
-    multiply,
-    kron,
-    identity,
-    index,
-    matrix,
-} from "mathjs";
+import {dotPow, abs, transpose, multiply, kron, identity, index} from "mathjs";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import type {Cell, QuantumBoard} from "tim/plugin/quantumcircuit/quantum-board";
 import {
@@ -33,7 +24,7 @@ import type {HttpClient} from "@angular/common/http";
 export abstract class QuantumCircuitSimulator {
     board: QuantumBoard;
     qubits: Qubit[];
-    result?: Matrix;
+    result?: number[];
 
     protected constructor(
         protected gateService: GateService,
@@ -85,7 +76,7 @@ export abstract class QuantumCircuitSimulator {
             const j = parseInt(bitStringReversed, 2);
             rev.push(result[j]);
         }
-        return transpose(matrix(rev));
+        return rev;
     }
 
     /**
@@ -117,6 +108,29 @@ export abstract class QuantumCircuitSimulator {
         return undefined;
     }
 
+    /**
+     * Get probabilities of each output having value 1.
+     */
+    getOutputProbabilities() {
+        if (!this.result) {
+            console.error("run simulator before getting output probabilities");
+            return undefined;
+        }
+        const probabilities: number[] = Array(this.board.nQubits).fill(0);
+        const data = this.getProbabilities();
+
+        for (let i = 0; i < data.probabilities.length; i++) {
+            for (let j = data.labels.length - 1; j >= 0; j--) {
+                if (data.labels[i].charAt(j) === "1") {
+                    probabilities[j] += data.probabilities[i];
+                }
+            }
+        }
+        probabilities.reverse();
+
+        return probabilities;
+    }
+
     private computeProbabilitiesFromMeasurements(
         measurements: Measurement[],
         n: number
@@ -130,7 +144,10 @@ export abstract class QuantumCircuitSimulator {
         return counter.map((v) => (v / measurements.length) * 100.0);
     }
 
-    private computeProbabilitiesBySampling(result: Matrix, sampleSize: number) {
+    private computeProbabilitiesBySampling(
+        result: number[],
+        sampleSize: number
+    ) {
         const probabilities: number[] = [];
         result.forEach((probability) => {
             probabilities.push(probability);
@@ -171,7 +188,7 @@ export abstract class QuantumCircuitSimulator {
         if (measurements !== undefined) {
             probabilities = this.computeProbabilitiesFromMeasurements(
                 measurements,
-                this.result.size()[0]
+                this.result.length
             );
         }
         const labels: string[] = [];
@@ -442,21 +459,20 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
         for (let colI = 0; colI < this.board.nMoments; colI++) {
             const res = this.applyColumnMatrix(colI, output);
             if (!res) {
-                console.log("undefined column matrix");
+                console.error("undefined column matrix");
                 return;
             }
             output = res;
         }
 
-        this.result = dotPow(abs(output), 2) as Matrix;
-
+        const resMatrix = dotPow(abs(output), 2) as Matrix;
         const res = [];
         for (let i = 0; i < 2 ** this.board.length; i++) {
             // when nQubits === 1 then this.result is 1d array
-            if (this.result.size().length > 1) {
-                res.push(this.result.get([i, 0]));
+            if (resMatrix.size().length > 1) {
+                res.push(resMatrix.get([i, 0]));
             } else {
-                res.push(this.result.get([i]));
+                res.push(resMatrix.get([i]));
             }
         }
         this.result = this.reverseResultQubitOrder(res);
@@ -501,8 +517,7 @@ export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
         const url = "/quantumCircuit/simulate";
         const r = await toPromise(this.http.post<{web: number[]}>(url, params));
         if (r.ok) {
-            const res = r.result.web;
-            this.result = transpose(matrix(res));
+            this.result = r.result.web;
         } else {
             console.error(r.result.error.error);
         }

@@ -56,6 +56,8 @@ import {SerializerService} from "tim/plugin/quantumcircuit/serializer.service";
 
 export interface QubitOutput {
     value: number;
+    probability: number;
+    probabilityText: string;
     name?: string;
 }
 
@@ -518,7 +520,7 @@ export class QuantumCircuitComponent
      */
     handleQubitChange(qubitId: number) {
         if (qubitId < 0 || qubitId >= this.qubits.length) {
-            console.log("non-existing qubitId", qubitId);
+            console.error("non-existing qubitId", qubitId);
             return;
         }
         this.qubits[qubitId] = this.qubits[qubitId].toggled();
@@ -794,7 +796,7 @@ export class QuantumCircuitComponent
                     );
                 }
             } else {
-                console.log("missing type", gateData);
+                console.error("missing type", gateData);
             }
         }
     }
@@ -848,6 +850,8 @@ export class QuantumCircuitComponent
         for (let i = 0; i < this.nQubits; i++) {
             this.qubitOutputs.push({
                 value: 0,
+                probability: 0,
+                probabilityText: "0",
             });
         }
         if (this.markup.outputNames) {
@@ -872,7 +876,18 @@ export class QuantumCircuitComponent
             .reverse()
             .map((bit) => ({
                 value: parseInt(bit, 10),
+                probability: 0,
+                probabilityText: "0",
             }));
+
+        const outputProbabilities = this.simulator.getOutputProbabilities();
+        if (outputProbabilities) {
+            for (let i = 0; i < outputProbabilities.length; i++) {
+                this.qubitOutputs[i].probability = outputProbabilities[i];
+                this.qubitOutputs[i].probabilityText =
+                    outputProbabilities[i].toFixed(2);
+            }
+        }
 
         if (this.markup.outputNames) {
             for (let i = 0; i < this.qubitOutputs.length; i++) {
