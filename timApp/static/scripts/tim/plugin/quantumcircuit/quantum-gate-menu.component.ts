@@ -23,14 +23,14 @@ interface MenuGate {
             <div class="gate-list">
                 <div class="svg-container" *ngFor="let gate of gates" draggable="true"
                      [title]="gate.description"
-                     [style.width.px]="circuitOptions.gateSize"
+                     [style.width.px]="circuitOptions.gateWidth"
                      [style.height.px]="circuitOptions.gateSize"
                      (click)="handleClick(gate.name)"
                      (dragstart)="handleDragStart($event, gate.name)">
                     <div [ngSwitch]="gate.name">
                         <svg *ngSwitchCase="'control'"
-                             [style.width.px]="circuitOptions.gateSize"
                              [style.height.px]="circuitOptions.gateSize"
+                             [style.width.px]="circuitOptions.gateWidth"
                         >
                             <circle [attr.fill]="gate.color.fill"
                                     [attr.cx]="circuitOptions.gateSize/2"
@@ -38,8 +38,9 @@ interface MenuGate {
                                     [attr.r]="circuitOptions.gateSize/4"/>
                         </svg>
 
-                        <svg *ngSwitchCase="'swap'" [attr.width]="circuitOptions.gateSize"
+                        <svg *ngSwitchCase="'swap'"
                              [attr.height]="circuitOptions.gateSize"
+                             [style.width.px]="circuitOptions.gateWidth"
                              class="swap-gate">
                             <text x="50%" y="25%"
                                   [attr.fill]="gate.color.fill"
@@ -58,10 +59,12 @@ interface MenuGate {
                             </text>
                         </svg>
 
-                        <svg *ngSwitchDefault [attr.width]="circuitOptions.gateSize"
+                        <svg *ngSwitchDefault
+                             [style.width.px]="circuitOptions.gateWidth"
                              [attr.height]="circuitOptions.gateSize">
-                            <rect [attr.x]="0" [attr.y]="0" [attr.width]="circuitOptions.gateSize"
+                            <rect [attr.x]="0" [attr.y]="0"
                                   [attr.height]="circuitOptions.gateSize"
+                                  [style.width.px]="circuitOptions.gateWidth"
                                   [attr.fill]="gate.color.fill"
                                   [attr.stroke]="circuitOptions.colors.dark"
                                   rx="2"/>
