@@ -1,4 +1,4 @@
-import type {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import type {CircuitOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {matrix} from "mathjs";
 
 /**
@@ -11,21 +11,17 @@ export class Qubit {
     value: number;
     name: string;
     text: string;
-    circuitStyleOptions: CircuitStyleOptions;
+    circuitOptions: CircuitOptions;
 
-    constructor(
-        value: number,
-        name: string,
-        circuitStyleOptions: CircuitStyleOptions
-    ) {
+    constructor(value: number, name: string, circuitOptions: CircuitOptions) {
         this.value = value;
         this.name = name;
-        this.circuitStyleOptions = circuitStyleOptions;
+        this.circuitOptions = circuitOptions;
         this.text = this.getQubitText();
     }
 
-    updateNotation(circuitStyleOptions: CircuitStyleOptions) {
-        this.circuitStyleOptions = circuitStyleOptions;
+    updateNotation(circuitOptions: CircuitOptions) {
+        this.circuitOptions = circuitOptions;
         this.text = this.getQubitText();
     }
 
@@ -34,7 +30,7 @@ export class Qubit {
      */
     private getQubitText() {
         const rightAngleChar = "\u27E9";
-        if (this.circuitStyleOptions.useBraket) {
+        if (this.circuitOptions.useBraket) {
             return `|${this.value}${rightAngleChar}`;
         }
         return this.value.toString();
@@ -52,6 +48,6 @@ export class Qubit {
 
     toggled() {
         const newValue = this.value === 0 ? 1 : 0;
-        return new Qubit(newValue, this.name, this.circuitStyleOptions);
+        return new Qubit(newValue, this.name, this.circuitOptions);
     }
 }

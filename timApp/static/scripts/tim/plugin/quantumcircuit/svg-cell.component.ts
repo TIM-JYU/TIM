@@ -13,8 +13,8 @@ import {
     QuantumBoard,
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
+import {CircuitOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {Color} from "tim/plugin/quantumcircuit/quantum-circuit.component";
-import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 
 @Component({
@@ -27,9 +27,9 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [class.gate]="cell?.editable"
                   [attr.x]="x"
                   [attr.y]="y"
-                  [attr.width]="circuitStyleOptions.baseSize"
+                  [attr.width]="circuitOptions.baseWidth"
                   [attr.height]="backGroundHeight"
-                  [attr.fill]="circuitStyleOptions.colors.light" fill-opacity="0"
+                  [attr.fill]="circuitOptions.colors.light" fill-opacity="0"
         ></svg:rect>
 
         <!-- normal gate-->
@@ -42,7 +42,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [attr.y]="gy"
                   [attr.width]="gw"
                   [attr.height]="gh"
-                  [attr.rx]="circuitStyleOptions.gateBorderRadius"
+                  [attr.rx]="circuitOptions.gateBorderRadius"
                   [attr.fill]="color.fill"></svg:rect>
 
         <svg:text *ngIf="cell|instanceof: Gate as g"
@@ -59,9 +59,9 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                     [class.drag-over-element]="isBeingDraggedOver"
                     [attr.cx]="cx"
                     [attr.cy]="cy"
-                    [attr.r]="circuitStyleOptions.gateSize/4"
+                    [attr.r]="circuitOptions.gateSize/4"
                     [attr.fill]="color.fill"
-                    [attr.stroke]="circuitStyleOptions.colors.dark"></svg:circle>
+                    [attr.stroke]="circuitOptions.colors.dark"></svg:circle>
 
         <!-- Swap gate -->
         <svg:text *ngIf="cell|instanceof: Swap as s"
@@ -69,8 +69,8 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [class.drag-over-element]="isBeingDraggedOver"
                   [attr.x]="cx"
                   [attr.y]="cy"
-                  [attr.stroke]="circuitStyleOptions.colors.dark"
-                  [attr.font-size]="circuitStyleOptions.gateSize / 2"
+                  [attr.stroke]="circuitOptions.colors.dark"
+                  [attr.font-size]="circuitOptions.gateSize / 2"
                   dominant-baseline="central" text-anchor="middle">X
         </svg:text>
 
@@ -82,16 +82,16 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [attr.y]="gy"
                   [attr.width]="gw"
                   [attr.height]="gh"
-                  [attr.rx]="circuitStyleOptions.gateBorderRadius"
+                  [attr.rx]="circuitOptions.gateBorderRadius"
                   [attr.fill]="color.fill"
-                  [attr.stroke]="circuitStyleOptions.colors.medium"></svg:rect>
+                  [attr.stroke]="circuitOptions.colors.medium"></svg:rect>
         <svg:text *ngIf="cell|instanceof: MultiQubitGate as g"
                   class="gate-text"
                   [attr.x]="cx"
                   [attr.y]="cy"
                   dominant-baseline="middle"
                   text-anchor="middle"
-                  [attr.stroke]="circuitStyleOptions.colors.dark">{{g.name}}</svg:text>
+                  [attr.stroke]="circuitOptions.colors.dark">{{g.name}}</svg:text>
 
 
     `,
@@ -110,7 +110,7 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
     board!: QuantumBoard;
 
     @Input()
-    circuitStyleOptions!: CircuitStyleOptions;
+    circuitOptions!: CircuitOptions;
 
     @Input()
     target!: number;
@@ -142,17 +142,19 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
     constructor(private gateService: GateService) {}
 
     updateSizes() {
-        const baseSize = this.circuitStyleOptions.baseSize;
-        const gateSize = this.circuitStyleOptions.gateSize;
-        const x = this.time * baseSize;
+        const baseSize = this.circuitOptions.baseSize;
+        const gateSize = this.circuitOptions.gateSize;
+        const baseWidth = this.circuitOptions.baseWidth;
+        const gateWidth = this.circuitOptions.gateWidth;
+        const x = this.time * baseWidth;
         const y = this.target * baseSize;
         this.x = x;
         this.y = y;
 
-        this.gx = x + (baseSize - gateSize) / 2;
+        this.gx = x + (baseWidth - gateWidth) / 2;
         this.gy = y + (baseSize - gateSize) / 2;
 
-        this.gw = gateSize;
+        this.gw = gateWidth;
         this.gh = gateSize;
 
         if (this.cell instanceof MultiQubitGate) {
@@ -162,7 +164,7 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
             this.backGroundHeight = baseSize;
         }
 
-        this.cx = this.x + baseSize / 2;
+        this.cx = this.x + baseWidth / 2;
         this.cy = this.y + baseSize / 2;
     }
 
@@ -174,7 +176,7 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
         let color;
         if (this.cell instanceof Gate || this.cell instanceof MultiQubitGate) {
             const group = this.gateService.getGateGroup(this.cell.name);
-            color = this.circuitStyleOptions.gateColors.get(group ?? "");
+            color = this.circuitOptions.gateColors.get(group ?? "");
         } else if (this.cell instanceof Control) {
             const group = this.gateService.getGateGroup("control");
             const target = this.cell.target;
@@ -184,15 +186,13 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
                 const targetGroup = this.gateService.getGateGroup(
                     targetCell.name
                 );
-                color = this.circuitStyleOptions.gateColors.get(
-                    targetGroup ?? ""
-                );
+                color = this.circuitOptions.gateColors.get(targetGroup ?? "");
             } else {
-                color = this.circuitStyleOptions.gateColors.get(group ?? "");
+                color = this.circuitOptions.gateColors.get(group ?? "");
             }
         } else if (this.cell instanceof Swap) {
             const group = this.gateService.getGateGroup("swap");
-            color = this.circuitStyleOptions.gateColors.get(group ?? "");
+            color = this.circuitOptions.gateColors.get(group ?? "");
         }
         if (!color) {
             this.color = {

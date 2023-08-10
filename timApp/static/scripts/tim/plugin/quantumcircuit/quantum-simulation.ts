@@ -35,6 +35,9 @@ export abstract class QuantumCircuitSimulator {
         this.qubits = qubits;
     }
 
+    /**
+     * Runs simulator. The implementations should put the result in this.result
+     */
     abstract run(): Promise<void>;
 
     setBoard(board: QuantumBoard) {
@@ -196,22 +199,13 @@ export abstract class QuantumCircuitSimulator {
             if (sampleSize === undefined && measurements === undefined) {
                 probabilities.push(value * 100);
             }
-            // index should be number[] but it seems to be typed incorrectly as number
-            const label: number = this.getNumber(i);
-            const bitString: string = this.indexToBitstring(label);
+            const bitString: string = this.indexToBitstring(i);
             labels.push(bitString);
         });
         return {
             probabilities: probabilities,
             labels: labels,
         };
-    }
-
-    private getNumber(i: number | number[]) {
-        if (i instanceof Array) {
-            return i[0];
-        }
-        return i;
     }
 }
 

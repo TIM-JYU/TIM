@@ -197,11 +197,13 @@ export interface Color {
 /**
  * Styling related options for circuit.
  */
-export interface CircuitStyleOptions {
+export interface CircuitOptions {
     colors: Colors;
     gateColors: Map<string, Color>;
     // relative size of circuit cells (side length) and other elements
     baseSize: number;
+    gateWidth: number;
+    baseWidth: number;
     // size of gates (side length)
     gateSize: number;
     // whether to use braket notation for input qubits or just (0,1)
@@ -224,7 +226,7 @@ export interface CircuitStyleOptions {
                 <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
                     <div class="top-menu">
                         <tim-quantum-gate-menu
-                                [circuitStyleOptions]="circuitStyleOptions"
+                                [circuitOptions]="circuitOptions"
                                 (select)="handleMenuGateSelect($event)">
                         </tim-quantum-gate-menu>
                         <tim-quantum-toolbox [activeGateInfo]="activeGateInfo"
@@ -237,7 +239,7 @@ export interface CircuitStyleOptions {
                             [selectedGate]="selectedGate"
                             [qubits]="qubits"
                             [qubitOutputs]="qubitOutputs"
-                            [circuitStyleOptions]="circuitStyleOptions"
+                            [circuitOptions]="circuitOptions"
                             [showOutputBits]="showOutputBits"
                             (qubitChange)="handleQubitChange($event)"
                             (gateDrop)="handleGateDrop($event)"
@@ -303,9 +305,11 @@ export class QuantumCircuitComponent
 
     quantumChartData!: QuantumChartData;
 
-    circuitStyleOptions: CircuitStyleOptions = {
+    circuitOptions: CircuitOptions = {
         baseSize: 60,
+        baseWidth: 60,
         gateSize: 40,
+        gateWidth: 40,
         colors: {
             dark: "black",
             medium: "grey",
@@ -814,13 +818,13 @@ export class QuantumCircuitComponent
             for (let i = 0; i < this.nQubits; i++) {
                 const value = userInput[i];
                 this.qubits.push(
-                    new Qubit(value, `q[${i}]`, this.circuitStyleOptions)
+                    new Qubit(value, `q[${i}]`, this.circuitOptions)
                 );
             }
         } else {
             for (let i = 0; i < this.nQubits; i++) {
                 this.qubits.push(
-                    new Qubit(defaultValue, `q[${i}]`, this.circuitStyleOptions)
+                    new Qubit(defaultValue, `q[${i}]`, this.circuitOptions)
                 );
             }
         }
@@ -918,17 +922,23 @@ export class QuantumCircuitComponent
     }
 
     /**
-     * Computes width of text.
-     * @param text text to get width for
+     * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
+     *
+     * @param {String} text The text to be rendered.
+     * @param {String} font The css font descriptor that text is to be rendered with (e.g. "bold 14px verdana").
+     *
+     * @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
      */
-    textWidth(text: string) {
+    getTextWidth(text: string, font: string) {
+        // re-use canvas object for better performance
         const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-            return text.length * 14;
+        const context = canvas.getContext("2d");
+        if (!context) {
+            return text.length * 16;
         }
-        ctx.font = "normal 14px Verdana";
-        return ctx.measureText(text).width;
+        context.font = font;
+        const metrics = context.measureText(text);
+        return metrics.width;
     }
 
     /**
@@ -946,22 +956,29 @@ export class QuantumCircuitComponent
         // don't make gates too small
         baseSize = Math.max(baseSize, 30);
 
-        const gateSize = 0.8 * baseSize;
-
         const useBraket = this.markup.qubitNotation === "braket";
 
-        this.circuitStyleOptions = {
+        const maxGateNameWidth = this.gateService
+            .getGateNames()
+            .map((name) =>
+                this.getTextWidth(name, "normal 16px Verdana,Arial,sans-serif")
+            )
+            .reduce((p, c) => Math.max(p, c), baseSize);
+
+        this.circuitOptions = {
             baseSize: baseSize,
-            gateSize: gateSize,
+            baseWidth: maxGateNameWidth * 1.25,
+            gateSize: 0.8 * baseSize,
+            gateWidth: maxGateNameWidth,
             colors: {
                 dark: "black",
                 medium: "grey",
                 light: "#fca534",
             },
-            gateColors: this.circuitStyleOptions.gateColors,
+            gateColors: this.circuitOptions.gateColors,
             useBraket: useBraket,
-            timeAxisHeight: this.circuitStyleOptions.timeAxisHeight,
-            gateBorderRadius: this.circuitStyleOptions.gateBorderRadius,
+            timeAxisHeight: this.circuitOptions.timeAxisHeight,
+            gateBorderRadius: this.circuitOptions.gateBorderRadius,
         };
     }
 
@@ -982,7 +999,7 @@ export class QuantumCircuitComponent
         this.setSizes();
 
         for (const qubit of this.qubits) {
-            qubit.updateNotation(this.circuitStyleOptions);
+            qubit.updateNotation(this.circuitOptions);
         }
     }
 

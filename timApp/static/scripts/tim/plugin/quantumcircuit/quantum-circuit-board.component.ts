@@ -12,7 +12,7 @@ import {
     ElementRef,
     Pipe,
 } from "@angular/core";
-import {CircuitStyleOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import {CircuitOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {QubitOutput} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {
     Control,
@@ -93,12 +93,12 @@ export class RangePipe implements PipeTransform {
 
         <div class="circuit-container">
             <div class="qubits">
-                <div class="left-block" [style.height.px]="circuitStyleOptions.timeAxisHeight">
+                <div class="left-block" [style.height.px]="circuitOptions.timeAxisHeight">
                     <div class="axis-text-time">Aika</div>
                     <div class="axis-text-qubit">Kubitti</div>
                 </div>
                 <div *ngFor="let qubit of qubits; let i=index"
-                     [style.height.px]="circuitStyleOptions.baseSize"
+                     [style.height.px]="circuitOptions.baseSize"
                      class="qubit">
                     <div class="qubit-name">{{qubit.name}}</div>
                     <button class="qubit-toggle-button"
@@ -109,14 +109,14 @@ export class RangePipe implements PipeTransform {
             <div class="circuit-right-container">
                 <div class="moments">
                     <div class="moment" *ngFor="let i of board.nMoments | range"
-                         [style.width.px]="circuitStyleOptions.baseSize"
-                         [style.height.px]="circuitStyleOptions.timeAxisHeight">
+                         [style.width.px]="circuitOptions.baseWidth"
+                         [style.height.px]="circuitOptions.timeAxisHeight">
                         <div>{{i}}</div>
                     </div>
                 </div>
 
-                <svg #svgElement [attr.width]="board.nMoments * circuitStyleOptions.baseSize"
-                     [attr.height]="board.nQubits * circuitStyleOptions.baseSize"
+                <svg #svgElement [attr.width]="board.nMoments * circuitOptions.baseWidth"
+                     [attr.height]="board.nQubits * circuitOptions.baseSize"
                      (mousemove)="handleDrag($event)"
                      (mouseup)="handleDragEnd($event)"
                      (mouseleave)="handleDragEnd($event)"
@@ -125,29 +125,29 @@ export class RangePipe implements PipeTransform {
                      (touchcancel)="handleDragEnd($event)"
                 >
                     <!-- horizontal lines -->
-                    <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="circuitStyleOptions.colors.dark"
-                          [attr.x1]="0" [attr.y1]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"
-                          [attr.x2]="board.nMoments * circuitStyleOptions.baseSize"
-                          [attr.y2]="circuitStyleOptions.baseSize * i + circuitStyleOptions.baseSize / 2"></line>
+                    <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="circuitOptions.colors.dark"
+                          [attr.x1]="0" [attr.y1]="circuitOptions.baseSize * i + circuitOptions.baseSize / 2"
+                          [attr.x2]="board.nMoments * circuitOptions.baseWidth"
+                          [attr.y2]="circuitOptions.baseSize * i + circuitOptions.baseSize / 2"></line>
 
                     <!-- wires -->
                     <g *ngFor="let gates of board.board; let i=index">
                         <g *ngFor="let gate of gates; let j=index">
                             <line *ngIf="gate|instanceof: Control as c"
-                                  [attr.stroke]="circuitStyleOptions.colors.dark"
-                                  [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                  [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                  [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                  [attr.y2]="c.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2 + circuitStyleOptions.gateSize / 2"
+                                  [attr.stroke]="circuitOptions.colors.dark"
+                                  [attr.x1]="j * circuitOptions.baseWidth + circuitOptions.baseWidth / 2"
+                                  [attr.y1]="i * circuitOptions.baseSize + circuitOptions.baseSize / 2"
+                                  [attr.x2]="j * circuitOptions.baseWidth + circuitOptions.baseWidth / 2"
+                                  [attr.y2]="c.target * circuitOptions.baseSize + circuitOptions.baseSize / 2 + circuitOptions.gateSize / 2"
                             ></line>
 
                             <g *ngIf="gate|instanceof: Swap as s">
                                 <line *ngIf="s.target > i"
-                                      [attr.stroke]="circuitStyleOptions.colors.dark"
-                                      [attr.x1]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                      [attr.y1]="i * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                      [attr.x2]="j * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
-                                      [attr.y2]="s.target * circuitStyleOptions.baseSize + circuitStyleOptions.baseSize / 2"
+                                      [attr.stroke]="circuitOptions.colors.dark"
+                                      [attr.x1]="j * circuitOptions.baseWidth + circuitOptions.baseWidth / 2"
+                                      [attr.y1]="i * circuitOptions.baseSize + circuitOptions.baseSize / 2"
+                                      [attr.x2]="j * circuitOptions.baseWidth + circuitOptions.baseWidth / 2"
+                                      [attr.y2]="s.target * circuitOptions.baseSize + circuitOptions.baseSize / 2"
                                 ></line>
                             </g>
                         </g>
@@ -155,7 +155,7 @@ export class RangePipe implements PipeTransform {
 
                     <g *ngFor="let gates of board.board; let i = index">
                         <g *ngFor="let gate of gates; let j=index" tim-svg-cell
-                           [circuitStyleOptions]="circuitStyleOptions"
+                           [circuitOptions]="circuitOptions"
                            [cell]="gate"
                            [board]="board"
                            [isSelected]="selectedGate !== null && i === selectedGate.target && j ===
@@ -181,27 +181,27 @@ export class RangePipe implements PipeTransform {
             </div>
 
             <div class="output-container">
-                <div class="right-block" [style.height.px]="circuitStyleOptions.timeAxisHeight">
+                <div class="right-block" [style.height.px]="circuitOptions.timeAxisHeight">
                     <div class="out-axis-time">Aika</div>
                     <div class="out-axis-text">Ulostulo</div>
                 </div>
                 <div class="output" *ngFor="let output of qubitOutputs"
-                     [style.height.px]="circuitStyleOptions.baseSize">
+                     [style.height.px]="circuitOptions.baseSize">
                     <img alt="measurement icon" src="/static/images/quantum-measurement.svg"
-                         [style.height.px]="circuitStyleOptions.gateSize"
-                         [style.width.px]="circuitStyleOptions.gateSize"/>
+                         [style.height.px]="circuitOptions.gateSize"
+                         [style.width.px]="circuitOptions.gateSize"/>
 
                     <svg *ngIf="showOutputBits" class="output-value"
-                         [attr.height]="circuitStyleOptions.gateSize"
-                         [attr.width]="circuitStyleOptions.gateSize">
-                        <rect [attr.height]="circuitStyleOptions.gateSize"
-                              [attr.width]="circuitStyleOptions.gateSize"
-                              [attr.stroke]="circuitStyleOptions.colors.dark"
+                         [attr.height]="circuitOptions.gateSize"
+                         [attr.width]="circuitOptions.gateSize">
+                        <rect [attr.height]="circuitOptions.gateSize"
+                              [attr.width]="circuitOptions.gateSize"
+                              [attr.stroke]="circuitOptions.colors.dark"
                               x = "0" y="0"
                               fill="white"
                         ></rect>
-                        <rect [attr.height]="circuitStyleOptions.gateSize"
-                              [attr.width]="circuitStyleOptions.gateSize * (output.probability/100)"
+                        <rect [attr.height]="circuitOptions.gateSize"
+                              [attr.width]="circuitOptions.gateSize * (output.probability/100)"
                               x="0" y="0"
                               fill="aqua"
                         ></rect>
@@ -209,7 +209,7 @@ export class RangePipe implements PipeTransform {
                               text-anchor="middle"
                               x="50%"
                               y="50%"
-                              [attr.stroke]="circuitStyleOptions.colors.dark">{{output.value}}</text>
+                              [attr.stroke]="circuitOptions.colors.dark">{{output.value}}</text>
                         <title>{{output.probabilityText}}</title>
                     </svg>
                     <div *ngIf="output.name" class="output-name">
@@ -237,7 +237,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
     svgElement!: ElementRef<SVGSVGElement>;
 
     @Input()
-    circuitStyleOptions!: CircuitStyleOptions;
+    circuitOptions!: CircuitOptions;
 
     @Input()
     board!: QuantumBoard;

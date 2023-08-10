@@ -181,6 +181,10 @@ export class GateService {
         return Math.floor(Math.log2(sideLength));
     }
 
+    getGateNames() {
+        return this.gates.map((g) => g.name);
+    }
+
     private registerCustomGates(customGates: ICustomGateInfo[]) {
         for (const customGate of customGates) {
             const parsedCustomGate = this.parseCustomGate(
