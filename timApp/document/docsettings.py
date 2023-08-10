@@ -98,6 +98,7 @@ class DocSettingTypes:
     manageKey: str
     anonymous_login: bool
     basicChangeNotifications: bool
+    extraPreambles: list[str]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -659,6 +660,9 @@ class DocSettings:
 
     def send_basic_change_notifications(self) -> bool:
         return self.get_setting_or_default("basicChangeNotifications", False)
+
+    def extra_preambles(self) -> list[str]:
+        return self.get_setting_or_default("extraPreambles", [])
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
