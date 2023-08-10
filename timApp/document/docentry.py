@@ -142,10 +142,12 @@ class DocEntry(DbModel, DocInfo):
                 # This is a simple way to allow mapping /en to newer /en-US or /en-GB.
                 tr = (
                     run_sql(
-                        select(Translation).filter(
+                        select(Translation)
+                        .filter(
                             (Translation.src_docid == entry.id)
                             & (Translation.lang_id.like(f"{lang}%"))
                         )
+                        .limit(1)
                     )
                     .scalars()
                     .first()

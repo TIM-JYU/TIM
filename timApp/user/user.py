@@ -305,7 +305,7 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
     """Personal unique codes used to identify the user via Haka Identity Provider."""
 
     internalmessage_readreceipt: Mapped[
-        Optional["InternalMessageReadReceipt"]
+        List["InternalMessageReadReceipt"]
     ] = relationship(back_populates="user")
     """User's read receipts for internal messages."""
 

@@ -216,7 +216,8 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
         .filter((is_global | is_user_specific) & can_see)
     )
 
-    messages: Sequence[InternalMessage] = run_sql(stmt).scalars().all()
+    # Make unique because each message contains multiple readreceipts
+    messages: Sequence[InternalMessage] = run_sql(stmt).unique().scalars().all()
 
     full_messages = []
     for message in messages:
@@ -250,11 +251,10 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
             for read_receipt in message.readreceipts:
                 read_receipt.last_seen = now
         else:
-            db.session.add(
-                InternalMessageReadReceipt(
-                    message=message, user=cur_user, last_seen=now
-                )
+            receipt = InternalMessageReadReceipt(
+                message=message, user=cur_user, last_seen=now
             )
+            db.session.add(receipt)
 
     db.session.commit()
 
@@ -570,7 +570,7 @@ def get_read_receipts(
         )
         .join(InternalMessage)
         .filter(InternalMessage.doc_id == doc.id)
-    )
+    ).all()
 
     read_user_map: dict[int, datetime] = {
         user_id: read_time for user_id, read_time, _ in read_users if read_time

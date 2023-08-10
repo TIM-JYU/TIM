@@ -15,13 +15,13 @@ from timApp.messaging.messagelist.listinfo import (
     Distribution,
     MessageVerificationType,
 )
-from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.sqa import run_sql
 from timApp.timdb.types import datetime_tz, DbModel
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
-    from timApp.user.usergroup import UserGroup
 
 
 class MemberJoinMethod(Enum):
@@ -339,7 +339,7 @@ class MessageListMember(DbModel):
             return self.is_external_member()
 
         ug = (
-            db.session.execute(select(UserGroup).filter_by(id=self.tim_member.group_id))
+            run_sql(select(UserGroup).filter_by(id=self.tim_member.group_id))
             .scalars()
             .one()
         )

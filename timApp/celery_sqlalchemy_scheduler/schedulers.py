@@ -193,6 +193,8 @@ class ModelEntry(ScheduleEntry):
             # Object may not be synchronized, so only
             # change the fields we care about.
             obj = session.get(PeriodicTask, self.model.id)
+            if not obj:
+                return
 
             for field in self.save_fields:
                 setattr(obj, field, getattr(self.model, field))

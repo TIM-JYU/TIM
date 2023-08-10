@@ -452,9 +452,9 @@ def add_api_key() -> Response:
 
     tr = (
         run_sql(
-            select(TranslationService).filter(
-                translator == TranslationService.service_name
-            )
+            select(TranslationService)
+            .filter(translator == TranslationService.service_name)
+            .limit(1)
         )
         .scalars()
         .first()
@@ -535,9 +535,9 @@ def get_quota():
     # TODO Maybe change to use id instead?
     tr = (
         run_sql(
-            select(TranslationService).filter(
-                translator == TranslationService.service_name
-            )
+            select(TranslationService)
+            .filter(translator == TranslationService.service_name)
+            .limit(1)
         )
         .scalars()
         .first()
@@ -564,9 +564,11 @@ def get_valid_status() -> Response:
     # Get the translation service by the provided service name.
     tr = (
         run_sql(
-            select(TranslationService).filter(
+            select(TranslationService)
+            .filter(
                 translator == TranslationService.service_name,
             )
+            .limit(1)
         )
         .scalars()
         .first()

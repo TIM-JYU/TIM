@@ -427,11 +427,13 @@ def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
             # TODO Should this apply to ALL permissions, instead of just 'view'?
             acc: BlockAccess | None = (
                 run_sql(
-                    select(BlockAccess).filter_by(
+                    select(BlockAccess)
+                    .filter_by(
                         type=AccessType.view.value,
                         block_id=vg.id,
                         usergroup_id=ug.id,
                     )
+                    .limit(1)
                 )
                 .scalars()
                 .first()

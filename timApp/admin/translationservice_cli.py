@@ -52,7 +52,7 @@ def add_all_tr_services_to_session(log: bool = False) -> None:
     :return: None.
     """
     existing_services = {
-        x[0] for x in run_sql(select(TranslationService.service_name)).scalars()
+        x for x in run_sql(select(TranslationService.service_name)).scalars()
     }
     for translator, init_data in app.config["MACHINE_TRANSLATORS"]:
         service_name = translator.__mapper_args__["polymorphic_identity"]

@@ -53,7 +53,7 @@ class Folder(DbModel, Item):
     @staticmethod
     def find_by_location(location, name) -> Folder | None:
         return (
-            run_sql(select(Folder).filter_by(name=name, location=location))
+            run_sql(select(Folder).filter_by(name=name, location=location).limit(1))
             .scalars()
             .first()
         )
@@ -178,7 +178,7 @@ class Folder(DbModel, Item):
     @property
     def is_empty(self):
         stmt = select(Folder.id).filter_by(location=self.path)
-        if run_sql(stmt.limit()).first():
+        if run_sql(stmt.limit(1)).first():
             return False
         stmt = select(DocEntry.id).filter(DocEntry.name.like(self.path + "/%"))
         return not run_sql(stmt.limit(1)).first()
@@ -223,9 +223,9 @@ class Folder(DbModel, Item):
     ) -> None | DocEntry:
         doc = (
             run_sql(
-                select(DocEntry).filter_by(
-                    name=join_location(self.get_full_path(), relative_path)
-                )
+                select(DocEntry)
+                .filter_by(name=join_location(self.get_full_path(), relative_path))
+                .limit(1)
             )
             .scalars()
             .first()
@@ -309,7 +309,7 @@ class Folder(DbModel, Item):
 
         rel_path, rel_name = split_location(path)
         folder = (
-            run_sql(select(Folder).filter_by(name=rel_name, location=rel_path))
+            run_sql(select(Folder).filter_by(name=rel_name, location=rel_path).limit(1))
             .scalars()
             .first()
         )

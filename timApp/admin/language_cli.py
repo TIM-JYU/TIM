@@ -103,7 +103,7 @@ def add_all_supported_languages(log: bool = False) -> None:
     :return: None.
     """
     # Add to the database the languages found in config and skip existing ones.
-    langset = {x[0] for x in run_sql(select(Language.lang_code)).scalars()}
+    langset = {x for x in run_sql(select(Language.lang_code)).scalars()}
     for l in app.config["LANGUAGES"]:
         if type(l) is dict:
             lang = Language(
