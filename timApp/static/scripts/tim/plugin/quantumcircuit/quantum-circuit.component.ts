@@ -208,10 +208,6 @@ export interface CircuitStyleOptions {
     timeAxisHeight: number;
     // border radius value for gates (rounded corners)
     gateBorderRadius: number;
-    // width of the input holding qubit name
-    inputWidth: number;
-    // width of the input holding output name
-    outputWidth: number;
 }
 
 @Component({
@@ -358,8 +354,6 @@ export class QuantumCircuitComponent
         useBraket: false,
         timeAxisHeight: 40,
         gateBorderRadius: 2,
-        inputWidth: 120,
-        outputWidth: 120,
     };
 
     board!: QuantumBoard;
@@ -508,9 +502,7 @@ export class QuantumCircuitComponent
      */
     async runSimulation() {
         const startTime = new Date();
-        console.log(
-            `started simulating at: ${startTime.getHours()}:${startTime.getMinutes()}:${startTime.getSeconds()}`
-        );
+        console.log(`started simulating at: ${startTime.toLocaleTimeString()}`);
         await this.simulator.run();
         const endTime = new Date();
 
@@ -939,21 +931,6 @@ export class QuantumCircuitComponent
         // don't make gates too small
         baseSize = Math.max(baseSize, 30);
 
-        // set left hand side width as longest qubit text width
-        let inputWidth = 0;
-        for (const qubit of this.qubits) {
-            inputWidth = Math.max(inputWidth, this.textWidth(qubit.name));
-        }
-        // a little bit of extra is needed for some reason
-        inputWidth += 14;
-
-        // set right hand side width as longest output text width
-        let outputWidth = 0;
-        for (const out of this.qubitOutputs) {
-            outputWidth = Math.max(outputWidth, this.textWidth(out.name ?? ""));
-        }
-        outputWidth += 14;
-
         const gateSize = 0.8 * baseSize;
 
         const useBraket = this.markup.qubitNotation === "braket";
@@ -970,8 +947,6 @@ export class QuantumCircuitComponent
             useBraket: useBraket,
             timeAxisHeight: this.circuitStyleOptions.timeAxisHeight,
             gateBorderRadius: this.circuitStyleOptions.gateBorderRadius,
-            inputWidth: inputWidth,
-            outputWidth: outputWidth,
         };
     }
 
