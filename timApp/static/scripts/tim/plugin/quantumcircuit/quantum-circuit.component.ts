@@ -885,7 +885,7 @@ export class QuantumCircuitComponent
             for (let i = 0; i < outputProbabilities.length; i++) {
                 this.qubitOutputs[i].probability = outputProbabilities[i];
                 this.qubitOutputs[i].probabilityText =
-                    outputProbabilities[i].toFixed(2);
+                    outputProbabilities[i].toFixed(2) + "%";
             }
         }
 
