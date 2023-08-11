@@ -253,7 +253,7 @@ def run_simulation(
     :param input_list: input bits as a list of 0s and 1s [q0 value, q1 value,...]
     :param n_qubits: how many qubits the circuit has
     :param custom_gates: custom gates defined in YAML
-    :return: state vector after simulation
+    :return: probabilities of each state after simulation
     """
     state = QuantumState(n_qubits)
     initial_state = input_to_int(input_list)
@@ -267,14 +267,14 @@ def run_simulation(
 
     circuit.update_quantum_state(state)
 
-    return state.get_vector()
+    return np.power(np.abs(state.get_vector()), 2)
 
 
 def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
     """
     Checks whether the arrays have same values.
-    :param user_result: the state of user's circuit after simulation
-    :param model_result: the state after simulation of the model circuit
+    :param user_result: the probabilities of states of user's circuit after simulation
+    :param model_result: the probabilities of states of the model circuit after simulation
     :return: whether the array are same up to some small error margin
     """
     return np.allclose(user_result, model_result)
@@ -284,8 +284,6 @@ def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
 class CheckResult:
     ok: bool
     message: str = ""
-    expected: np.ndarray | None = None
-    actual: np.ndarray | None = None
 
 
 def run_all_simulations(
@@ -302,17 +300,15 @@ def run_all_simulations(
 
         if not check_answer(actual, expected):
             bitstring = "".join(map(str, input_list[::-1]))
-            expected_probabilities = np.power(np.abs(expected), 2)
-            actual_probabilities = np.power(np.abs(actual), 2)
 
             with np.printoptions(threshold=sys.maxsize):
                 message = f"""
                   Piiri antaa väärän todennäköisyyden syöteellä:
                   {bitstring}
                   Ulostulojen todennäköisyyksien pitäisi olla: 
-                  {expected_probabilities}
+                  {expected}
                   mutta oli:
-                  {actual_probabilities}"""
+                  {actual}"""
             return CheckResult(False, message)
 
     return CheckResult(True)
@@ -401,8 +397,6 @@ class SimulationArgs:
 @use_model(SimulationArgs)
 def quantum_circuit_simulate(args: SimulationArgs) -> Response:
     custom_gates = parse_custom_gates(args.customGates)
-    state = run_simulation(args.gates, args.inputList, args.nQubits, custom_gates)
-
-    result = np.power(np.abs(state), 2)
+    result = run_simulation(args.gates, args.inputList, args.nQubits, custom_gates)
 
     return jsonify({"web": list(result)})
