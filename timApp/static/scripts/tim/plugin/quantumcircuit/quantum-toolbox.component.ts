@@ -31,7 +31,7 @@ import {
                     </tr>
                     </tbody>
                 </table>
-                <p *ngIf="qubitString">Qubitti: {{qubitString}}</p>
+                <p *ngIf="qubitString">Kubitti: {{qubitString}}</p>
                 <p *ngIf="timeString">Aika: {{timeString}}</p>
                 <p *ngIf="controlsString" class="controls">
                     Kontrollit:
