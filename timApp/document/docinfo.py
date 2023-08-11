@@ -199,10 +199,16 @@ class DocInfo(Item):
                 macro_info = settings.get_macroinfo(
                     default_view_ctx, user_context_with_logged_in(None)
                 )
-                extra_preamble_doc_paths = [
-                    expand_macros_info(ep, macro_info, ignore_errors=True)
-                    for ep in extra_preambles
-                ]
+
+                if isinstance(extra_preambles, str):
+                    extra_preamble_doc_paths = expand_macros_info(
+                        extra_preambles, macro_info, ignore_errors=True
+                    ).split()
+                else:
+                    extra_preamble_doc_paths = [
+                        expand_macros_info(ep, macro_info, ignore_errors=True)
+                        for ep in extra_preambles
+                    ]
                 # Strip any extra spaces and remove any falsy values (empty strings) if they get evaluated as such
                 extra_preamble_doc_paths = list(
                     {
