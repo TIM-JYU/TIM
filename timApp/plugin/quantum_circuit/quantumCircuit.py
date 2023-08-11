@@ -1,6 +1,7 @@
 from dataclasses import dataclass, asdict
 from typing import Union
 import json
+import sys
 
 from flask import render_template_string, request, jsonify, Response
 import yaml
@@ -279,6 +280,44 @@ def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
     return np.allclose(user_result, model_result)
 
 
+@dataclass
+class CheckResult:
+    ok: bool
+    message: str = ""
+    expected: np.ndarray | None = None
+    actual: np.ndarray | None = None
+
+
+def run_all_simulations(
+    model_circuit: list[GateInfo],
+    user_circuit: list[GateInfo],
+    n_qubits: int,
+    custom_gates: dict[str, np.ndarray],
+) -> CheckResult:
+    for i in range(2**n_qubits):
+        bitstring = "{0:b}".format(i).rjust(n_qubits, "0")
+        input_list = [int(d) for d in bitstring]
+        expected = run_simulation(model_circuit, input_list, n_qubits, custom_gates)
+        actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)
+
+        if not check_answer(actual, expected):
+            bitstring = "".join(map(str, input_list[::-1]))
+            expected_probabilities = np.power(np.abs(expected), 2)
+            actual_probabilities = np.power(np.abs(actual), 2)
+
+            with np.printoptions(threshold=sys.maxsize):
+                message = f"""
+                  Piiri antaa väärän todennäköisyyden syöteellä:
+                  {bitstring}
+                  Ulostulojen todennäköisyyksien pitäisi olla: 
+                  {expected_probabilities}
+                  mutta oli:
+                  {actual_probabilities}"""
+            return CheckResult(False, message)
+
+    return CheckResult(True)
+
+
 def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     # initial_circuit = args.markup.initialCircuit
 
@@ -301,19 +340,18 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         and n_qubits is not None
     ):
         custom_gates = parse_custom_gates(args.input.customGates)
-        user_result = run_simulation(user_circuit, user_input, n_qubits, custom_gates)
-        model_result = run_simulation(
-            model_circuit, model_input, n_qubits, custom_gates
+
+        check_result = run_all_simulations(
+            model_circuit, user_circuit, n_qubits, custom_gates
         )
 
-        correct = check_answer(user_result, model_result)
-        if correct:
+        if check_result.ok:
             points = 1.0
             result = "Oikein"
         else:
             points = 0.0
             result = ""
-            error = "Väärä vastaus"
+            error = check_result.message
 
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},

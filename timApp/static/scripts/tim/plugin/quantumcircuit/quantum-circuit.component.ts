@@ -281,8 +281,8 @@ export interface CircuitOptions {
                     </div>
                 </div>
 
-                <div *ngIf="error" [innerHTML]="error | purify"></div>
-                <div *ngIf="result" [innerHTML]="result | purify"></div>
+                <pre *ngIf="error" [innerHTML]="error | purify"></pre>
+                <pre *ngIf="result" [innerHTML]="result | purify"></pre>
             </ng-container>
             <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
 
@@ -450,6 +450,7 @@ export class QuantumCircuitComponent
         if (r.ok) {
             this.result = r.result.web.result ?? "";
             this.error = r.result.web.error ?? "";
+            console.log(r.result);
         } else {
             this.result = "";
             this.error = r.result.error.error;
