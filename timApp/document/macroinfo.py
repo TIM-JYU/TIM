@@ -53,6 +53,7 @@ class MacroInfo:
                     "docid": doc.doc_id,
                     "docpath": docinfo.path,
                     "docdir": docinfo.location,
+                    "doclang": docinfo.lang_id,
                     "doctitle": docinfo.title,
                     "docname": docinfo.short_name,
                 }
