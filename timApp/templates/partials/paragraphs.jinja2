@@ -80,7 +80,6 @@
              ref-t="{{ t.target.hash }}"
              ref-attrs="{{ t.target.attrs_str }}"
              {% if t.attrs.rd and t.attrs.rp and t.attrs.r == 'tr' %}
-                 {# Needed for referencing translated citations #}
                  ref-doc-id="{{ t.attrs.rd }}"
              {% else %}
                  ref-doc-id="{{ t.target.doc_id }}"
@@ -122,7 +121,6 @@
                    parid="{{ t.target.id }}">
                 </tim-par-ref>
             {%- endif  -%}
-
         {%- endif -%}
 
         {{ editline|safe }}
@@ -156,7 +154,6 @@
              ref-id="{{ t.target.id }}"
              ref-t="{{ t.target.hash }}"
              ref-attrs="{{ t.target.attrs_str }}"
-             {#  Needed for referencing translated area pars #}
              {% if t.attrs.rd and t.attrs.rp and t.attrs.r == 'tr' %}
                  ref-doc-id="{{ t.attrs.rd }}"
              {% else %}
