@@ -21,7 +21,6 @@ import type {
 import {
     InstanceofPipe,
     QuantumCircuitBoardComponent,
-    RangePipe,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
@@ -212,6 +211,9 @@ export interface CircuitOptions {
     timeAxisHeight: number;
     // border radius value for gates (rounded corners)
     gateBorderRadius: number;
+    columnWidths?: number[];
+    columnWidthsSum?: number;
+    columnWidthSums?: number[];
 }
 
 @Component({
@@ -457,6 +459,7 @@ export class QuantumCircuitComponent
     reset() {
         this.initializeBoard(true);
         void this.runSimulation();
+        this.setSizes();
     }
 
     /**
@@ -530,6 +533,7 @@ export class QuantumCircuitComponent
         this.qubits[qubitId] = this.qubits[qubitId].toggled();
 
         void this.runSimulation();
+        this.setSizes();
     }
 
     /**
@@ -572,6 +576,7 @@ export class QuantumCircuitComponent
         this.selectedGate = null;
 
         void this.runSimulation();
+        this.setSizes();
     }
 
     /**
@@ -584,6 +589,7 @@ export class QuantumCircuitComponent
         this.updateBoard();
         this.handleActiveGateHide();
         void this.runSimulation();
+        this.setSizes();
     }
 
     /**
@@ -598,6 +604,7 @@ export class QuantumCircuitComponent
         this.updateBoard();
         this.handleActiveGateHide();
         void this.runSimulation();
+        this.setSizes();
     }
 
     /**
@@ -922,26 +929,6 @@ export class QuantumCircuitComponent
     }
 
     /**
-     * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
-     *
-     * @param {String} text The text to be rendered.
-     * @param {String} font The css font descriptor that text is to be rendered with (e.g. "bold 14px verdana").
-     *
-     * @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
-     */
-    getTextWidth(text: string, font: string) {
-        // re-use canvas object for better performance
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        if (!context) {
-            return text.length * 16;
-        }
-        context.font = font;
-        const metrics = context.measureText(text);
-        return metrics.width;
-    }
-
-    /**
      * Compute sizes for board cells based on available space and number of cells.
      */
     setSizes() {
@@ -958,11 +945,30 @@ export class QuantumCircuitComponent
 
         const useBraket = this.markup.qubitNotation === "braket";
 
+        const colWidths = [];
+        for (let momentI = 0; momentI < this.nMoments; momentI++) {
+            let maxColWidth = baseSize;
+            for (let qubitI = 0; qubitI < this.nQubits; qubitI++) {
+                const cell = this.board.board[qubitI][momentI];
+                if (cell instanceof Gate || cell instanceof MultiQubitGate) {
+                    const w = this.gateService.getTextWidth(cell.name);
+                    maxColWidth = Math.max(w * 1.25, maxColWidth);
+                }
+            }
+            colWidths.push(maxColWidth);
+        }
+        const colWidthSums: number[] = [];
+        if (colWidths.length > 0) {
+            colWidthSums.push(colWidths[0]);
+            for (let i = 1; i < colWidths.length; i++) {
+                colWidthSums.push(colWidthSums[i - 1] + colWidths[i]);
+            }
+        }
+        const colWidthsSum = colWidths.reduce((a, b) => a + b, 0);
+
         const maxGateNameWidth = this.gateService
             .getGateNames()
-            .map((name) =>
-                this.getTextWidth(name, "normal 16px Verdana,Arial,sans-serif")
-            )
+            .map((name) => this.gateService.getTextWidth(name))
             .reduce((p, c) => Math.max(p, c), baseSize);
 
         this.circuitOptions = {
@@ -979,6 +985,9 @@ export class QuantumCircuitComponent
             useBraket: useBraket,
             timeAxisHeight: this.circuitOptions.timeAxisHeight,
             gateBorderRadius: this.circuitOptions.gateBorderRadius,
+            columnWidths: colWidths,
+            columnWidthsSum: colWidthsSum,
+            columnWidthSums: colWidthSums,
         };
     }
 
@@ -1033,7 +1042,6 @@ export class QuantumCircuitComponent
         SvgCellComponent,
         QuantumStatsComponent,
         InstanceofPipe,
-        RangePipe,
     ],
     exports: [QuantumCircuitComponent],
     imports: [

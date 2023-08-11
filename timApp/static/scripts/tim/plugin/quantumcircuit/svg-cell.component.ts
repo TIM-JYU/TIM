@@ -27,7 +27,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [class.gate]="cell?.editable"
                   [attr.x]="x"
                   [attr.y]="y"
-                  [attr.width]="circuitOptions.baseWidth"
+                  [attr.width]="cellWidth"
                   [attr.height]="backGroundHeight"
                   [attr.fill]="circuitOptions.colors.light" fill-opacity="0"
         ></svg:rect>
@@ -129,6 +129,8 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
     gx!: number;
     gy!: number;
 
+    cellWidth!: number;
+
     x!: number;
     y!: number;
 
@@ -144,10 +146,19 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
     updateSizes() {
         const baseSize = this.circuitOptions.baseSize;
         const gateSize = this.circuitOptions.gateSize;
-        const baseWidth = this.circuitOptions.baseWidth;
-        const gateWidth = this.circuitOptions.gateWidth;
-        const x = this.time * baseWidth;
+        let baseWidth = this.circuitOptions.baseWidth;
+        let gateWidth = this.circuitOptions.gateWidth;
+        let x = this.time * baseWidth;
         const y = this.target * baseSize;
+        if (this.circuitOptions.columnWidths) {
+            const w = this.circuitOptions.columnWidths[this.time];
+            baseWidth = w;
+            gateWidth = 0.8 * w;
+            x = 0;
+            for (let i = 0; i < this.time; i++) {
+                x += this.circuitOptions.columnWidths[i];
+            }
+        }
         this.x = x;
         this.y = y;
 
@@ -166,6 +177,8 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
 
         this.cx = this.x + baseWidth / 2;
         this.cy = this.y + baseSize / 2;
+
+        this.cellWidth = baseWidth;
     }
 
     ngAfterViewInit(): void {

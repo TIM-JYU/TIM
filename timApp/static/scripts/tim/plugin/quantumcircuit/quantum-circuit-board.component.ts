@@ -69,23 +69,6 @@ export class InstanceofPipe implements PipeTransform {
     }
 }
 
-/**
- * Array of concurrent indices from 0,...,n-1
- */
-@Pipe({
-    name: "range",
-    pure: true,
-})
-export class RangePipe implements PipeTransform {
-    public transform(n: number): number[] {
-        const arr = Array(n);
-        for (let i = 0; i < n; i++) {
-            arr[i] = i;
-        }
-        return arr;
-    }
-}
-
 @Component({
     selector: "tim-quantum-circuit-board",
     template: `
@@ -108,14 +91,14 @@ export class RangePipe implements PipeTransform {
 
             <div class="circuit-right-container">
                 <div class="moments">
-                    <div class="moment" *ngFor="let i of board.nMoments | range"
-                         [style.width.px]="circuitOptions.baseWidth"
+                    <div class="moment" *ngFor="let w of circuitOptions.columnWidths; let i = index"
+                         [style.width.px]="w"
                          [style.height.px]="circuitOptions.timeAxisHeight">
                         <div>{{i}}</div>
                     </div>
                 </div>
 
-                <svg #svgElement [attr.width]="board.nMoments * circuitOptions.baseWidth"
+                <svg #svgElement [attr.width]="circuitOptions.columnWidthsSum"
                      [attr.height]="board.nQubits * circuitOptions.baseSize"
                      (mousemove)="handleDrag($event)"
                      (mouseup)="handleDragEnd($event)"
@@ -127,7 +110,7 @@ export class RangePipe implements PipeTransform {
                     <!-- horizontal lines -->
                     <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="circuitOptions.colors.dark"
                           [attr.x1]="0" [attr.y1]="circuitOptions.baseSize * i + circuitOptions.baseSize / 2"
-                          [attr.x2]="board.nMoments * circuitOptions.baseWidth"
+                          [attr.x2]="circuitOptions.columnWidthsSum"
                           [attr.y2]="circuitOptions.baseSize * i + circuitOptions.baseSize / 2"></line>
 
                     <!-- wires -->
@@ -135,18 +118,18 @@ export class RangePipe implements PipeTransform {
                         <g *ngFor="let gate of gates; let j=index">
                             <line *ngIf="gate|instanceof: Control as c"
                                   [attr.stroke]="circuitOptions.colors.dark"
-                                  [attr.x1]="j * circuitOptions.baseWidth + circuitOptions.baseWidth / 2"
+                                  [attr.x1]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
                                   [attr.y1]="i * circuitOptions.baseSize + circuitOptions.baseSize / 2"
-                                  [attr.x2]="j * circuitOptions.baseWidth + circuitOptions.baseWidth / 2"
+                                  [attr.x2]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
                                   [attr.y2]="c.target * circuitOptions.baseSize + circuitOptions.baseSize / 2 + circuitOptions.gateSize / 2"
                             ></line>
 
                             <g *ngIf="gate|instanceof: Swap as s">
                                 <line *ngIf="s.target > i"
                                       [attr.stroke]="circuitOptions.colors.dark"
-                                      [attr.x1]="j * circuitOptions.baseWidth + circuitOptions.baseWidth / 2"
+                                      [attr.x1]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
                                       [attr.y1]="i * circuitOptions.baseSize + circuitOptions.baseSize / 2"
-                                      [attr.x2]="j * circuitOptions.baseWidth + circuitOptions.baseWidth / 2"
+                                      [attr.x2]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
                                       [attr.y2]="s.target * circuitOptions.baseSize + circuitOptions.baseSize / 2"
                                 ></line>
                             </g>

@@ -10,6 +10,7 @@ interface MenuGate {
     color: Color;
     name: string;
     description: string;
+    width: number;
 }
 
 @Component({
@@ -23,14 +24,14 @@ interface MenuGate {
             <div class="gate-list">
                 <div class="svg-container" *ngFor="let gate of gates" draggable="true"
                      [title]="gate.description"
-                     [style.width.px]="circuitOptions.gateWidth"
+                     [style.width.px]="gate.name === 'control' || gate.name === 'swap' ? circuitOptions.gateSize : gate.width"
                      [style.height.px]="circuitOptions.gateSize"
                      (click)="handleClick(gate.name)"
                      (dragstart)="handleDragStart($event, gate.name)">
                     <div [ngSwitch]="gate.name">
                         <svg *ngSwitchCase="'control'"
                              [style.height.px]="circuitOptions.gateSize"
-                             [style.width.px]="circuitOptions.gateWidth"
+                             [style.width.px]="circuitOptions.gateSize"
                         >
                             <circle [attr.fill]="gate.color.fill"
                                     [attr.cx]="circuitOptions.gateSize/2"
@@ -39,8 +40,8 @@ interface MenuGate {
                         </svg>
 
                         <svg *ngSwitchCase="'swap'"
-                             [attr.height]="circuitOptions.gateSize"
-                             [style.width.px]="circuitOptions.gateWidth"
+                             [style.height.px]="circuitOptions.gateSize"
+                             [style.width.px]="circuitOptions.gateSize"
                              class="swap-gate">
                             <text x="50%" y="25%"
                                   [attr.fill]="gate.color.fill"
@@ -60,11 +61,11 @@ interface MenuGate {
                         </svg>
 
                         <svg *ngSwitchDefault
-                             [style.width.px]="circuitOptions.gateWidth"
+                             [style.width.px]="gate.width"
                              [attr.height]="circuitOptions.gateSize">
                             <rect [attr.x]="0" [attr.y]="0"
                                   [attr.height]="circuitOptions.gateSize"
-                                  [style.width.px]="circuitOptions.gateWidth"
+                                  [style.width.px]="gate.width"
                                   [attr.fill]="gate.color.fill"
                                   [attr.stroke]="circuitOptions.colors.dark"
                                   rx="2"/>
@@ -101,6 +102,10 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
                     name: g.name,
                     color: this.getColor(g),
                     description: g.description,
+                    width: Math.max(
+                        this.gateService.getTextWidth(g.name),
+                        this.circuitOptions.gateSize
+                    ),
                 }));
             });
     }
