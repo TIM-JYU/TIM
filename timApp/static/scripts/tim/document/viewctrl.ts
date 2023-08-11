@@ -1406,7 +1406,8 @@ export class ViewCtrl implements IController {
         for (const [k, v] of pars) {
             this.pendingUpdates.set(k, v);
         }
-        if (this.pendingUpdatesCount() < 10) {
+        // TODO: Figure out why the message is triggered so many times for small documents
+        if (this.pendingUpdatesCount() < 50) {
             this.updatePending();
         } else {
             await to2(
