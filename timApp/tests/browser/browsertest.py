@@ -419,6 +419,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             except (
                 StaleElementReferenceException,
                 ElementNotInteractableException,
+                NoSuchElementException,
             ):
                 tries -= 1
                 sleep(poll_rate)
