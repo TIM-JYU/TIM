@@ -211,8 +211,11 @@ export interface CircuitOptions {
     timeAxisHeight: number;
     // border radius value for gates (rounded corners)
     gateBorderRadius: number;
+    // width of each column, should be wide enough to fit the longest gate name
     columnWidths?: number[];
+    // total width of circuit area
     columnWidthsSum?: number;
+    // prefix sum of columnWidths, these are used to calculate where each column is located in x-direction
     columnWidthSums?: number[];
 }
 
