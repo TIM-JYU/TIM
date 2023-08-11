@@ -18,6 +18,7 @@ from timApp.markdown.markdownconverter import expand_macros_info
 from timApp.notification.notification import Notification
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time, partition
+from tim_common.utils import safe_parse_item_list
 
 if TYPE_CHECKING:
     from timApp.document.translation.translation import Translation
@@ -201,9 +202,11 @@ class DocInfo(Item):
                 )
 
                 if isinstance(extra_preambles, str):
-                    extra_preamble_doc_paths = expand_macros_info(
-                        extra_preambles, macro_info, ignore_errors=True
-                    ).split()
+                    extra_preamble_doc_paths = safe_parse_item_list(
+                        expand_macros_info(
+                            extra_preambles, macro_info, ignore_errors=True
+                        )
+                    )
                 else:
                     extra_preamble_doc_paths = [
                         expand_macros_info(ep, macro_info, ignore_errors=True)
