@@ -870,7 +870,10 @@ def get_surrounding_md_headers2(query: QueryClass, header_style, footer_style):
 
 def get_tiny_surrounding_headers(query: QueryClass, inside):
     result = get_heading(query, "header", "h4")
+    header = get_param(query, "header", None)
     stem = tim_sanitize(get_param(query, "stem", None))
+    if not stem and not header and not inside:
+        stem = "Open plugin"
     if stem:
         result += '<span class="stem" >' + stem + "</span>"
     result += '<span class="csTinyText" >' + inside + "</span>\n"
