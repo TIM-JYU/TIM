@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import accumulate
-from typing import List, Iterable, Generator, Tuple, Optional, TYPE_CHECKING
+from typing import Iterable, Generator, TYPE_CHECKING
 
 from sqlalchemy.orm import joinedload
 
@@ -12,10 +12,13 @@ from timApp.document.specialnames import (
     PREAMBLE_FOLDER_NAME,
     DEFAULT_PREAMBLE_DOC,
 )
+from timApp.document.viewcontext import default_view_ctx
 from timApp.item.item import Item
+from timApp.markdown.markdownconverter import expand_macros_info
 from timApp.notification.notification import Notification
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time, partition
+from tim_common.utils import safe_parse_item_list
 
 if TYPE_CHECKING:
     from timApp.document.translation.translation import Translation
@@ -160,29 +163,70 @@ class DocInfo(Item):
 
         path_index_map = {path: i for i, path in enumerate(paths)}
 
-        # Templates don't have preambles.
-        if any(p == TEMPLATE_FOLDER_NAME for p in path_parts):
+        # Templates don't have preambles. Other preambles don't have preambles (for now).
+        if any(
+            p == TEMPLATE_FOLDER_NAME or p == PREAMBLE_FOLDER_NAME for p in path_parts
+        ):
             return []
 
         from timApp.document.docentry import DocEntry
         from timApp.document.translation.translation import Translation
 
-        result = (
-            db.session.query(DocEntry, Translation)
-            .filter(DocEntry.name.in_(paths))
-            .outerjoin(
-                Translation,
-                (Translation.src_docid == DocEntry.id)
-                & (Translation.lang_id == self.lang_id),
+        def get_docs(doc_paths: list[str]) -> list[tuple[DocEntry, Translation | None]]:
+            return (
+                db.session.query(DocEntry, Translation)
+                .filter(DocEntry.name.in_(doc_paths))
+                .outerjoin(
+                    Translation,
+                    (Translation.src_docid == DocEntry.id)
+                    & (Translation.lang_id == self.lang_id),
+                )
+                .all()
             )
-            .all()
-        )  # type: List[Tuple[DocEntry, Optional[Translation]]]
+
+        result = get_docs(paths)
         result.sort(key=lambda x: path_index_map[x[0].path])
         preamble_docs = []
         for de, tr in result:
             d = tr or de  # preamble either has the corresponding translation or not
             preamble_docs.append(d)
             d.document.ref_doc_cache = self.document.ref_doc_cache
+
+            settings = d.document.get_settings()
+            extra_preambles = settings.extra_preambles()
+            if extra_preambles:
+                from timApp.auth.sessioninfo import user_context_with_logged_in
+
+                macro_info = settings.get_macroinfo(
+                    default_view_ctx, user_context_with_logged_in(None)
+                )
+
+                if isinstance(extra_preambles, str):
+                    extra_preamble_doc_paths = safe_parse_item_list(
+                        expand_macros_info(
+                            extra_preambles, macro_info, ignore_errors=True
+                        )
+                    )
+                else:
+                    extra_preamble_doc_paths = [
+                        expand_macros_info(ep, macro_info, ignore_errors=True)
+                        for ep in extra_preambles
+                    ]
+                # Strip any extra spaces and remove any falsy values (empty strings) if they get evaluated as such
+                extra_preamble_doc_paths = list(
+                    {
+                        edp_t
+                        for edp in extra_preamble_doc_paths
+                        if (edp_t := edp.strip())
+                    }
+                )
+                # TODO: Should extraPreambles be recursive?
+                extra_docs = get_docs(extra_preamble_doc_paths)
+                for edr, etr in extra_docs:
+                    ed = etr or edr
+                    preamble_docs.append(ed)
+                    ed.document.ref_doc_cache = self.document.ref_doc_cache
+
         return preamble_docs
 
     def get_changelog_with_names(self, length=None):

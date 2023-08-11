@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph
     from timApp.document.docsettings import DocSettings
     from timApp.document.document import Document
+    from timApp.document.macroinfo import MacroInfo
 
 
 def has_macros(text: str, env: TimSandboxedEnvironment):
@@ -371,6 +372,16 @@ def expand_macros(
             # traceback.print_exc()
             return get_error_html(f"Error in expanding macros: {e}")
         return text
+
+
+def expand_macros_info(text: str, macro_info: "MacroInfo", ignore_errors: bool = False):
+    return expand_macros(
+        text,
+        macro_info.get_macros(),
+        macro_info.doc.get_settings(),
+        macro_info.jinja_env,
+        ignore_errors,
+    )
 
 
 def belongs_placeholder(_s):

@@ -1467,11 +1467,18 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         result = self.basic_info_dict
 
         if full:
+            groups = self.groups
+            if (
+                self.logged_in
+                and self.is_current_user
+                and get_locked_active_groups() is not None
+            ):
+                groups = self.effective_groups
             result |= {
                 "group": self.get_personal_group(),
                 "groups": [
                     {**g.to_json(), "external_id": external_ids.get(g.id, None)}
-                    for g in self.groups
+                    for g in groups
                 ],
                 "folder": self.get_personal_folder() if self.logged_in else None,
                 "consent": self.consent,
