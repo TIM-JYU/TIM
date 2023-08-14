@@ -260,20 +260,20 @@ export class GateService {
      * https://mathjs.org/docs/expressions/syntax.html
      * @param name name of gate. Should be unique
      * @param matrixStr string to parse matrix from
+     * @throws Error if matrix can't be parsed
      */
     private parseCustomGate(name: string, matrixStr: string) {
         try {
             const customMatrix = evaluate(matrixStr);
-            if (!(customMatrix instanceof Matrix)) {
-                console.error("invalid custom matrix value", name, matrixStr);
-                return undefined;
+            if (customMatrix instanceof Matrix) {
+                return {
+                    name: name,
+                    matrix: customMatrix,
+                };
             }
-            return {
-                name: name,
-                matrix: customMatrix,
-            };
         } catch (error) {
-            console.error("invalid custom matrix value", name, matrixStr);
+            throw new Error(`Invalid custom matrix value ${name} ${matrixStr}`);
         }
+        throw new Error(`Invalid custom matrix value ${name} ${matrixStr}`);
     }
 }

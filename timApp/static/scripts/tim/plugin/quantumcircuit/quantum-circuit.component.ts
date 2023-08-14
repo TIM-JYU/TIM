@@ -898,10 +898,14 @@ export class QuantumCircuitComponent
 
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
 
-        this.gateService.registerUserDefinedGates(
-            this.markup.gates,
-            this.markup.customGates
-        );
+        try {
+            this.gateService.registerUserDefinedGates(
+                this.markup.gates,
+                this.markup.customGates
+            );
+        } catch (error) {
+            this.showErrorMessage((error as Error).message);
+        }
 
         const userCircuit = this.attrsall.state?.userCircuit;
 
