@@ -180,7 +180,7 @@ export class InstanceofPipe implements PipeTransform {
                         <rect [attr.height]="circuitOptions.gateSize"
                               [attr.width]="circuitOptions.gateSize"
                               [attr.stroke]="circuitOptions.colors.dark"
-                              x = "0" y="0"
+                              x="0" y="0"
                               fill="white"
                         ></rect>
                         <rect [attr.height]="circuitOptions.gateSize"

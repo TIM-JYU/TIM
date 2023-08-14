@@ -521,7 +521,7 @@ export class QuantumCircuitComponent
     async runSimulation() {
         const startTime = new Date();
         console.log(`started simulating at: ${startTime.toLocaleTimeString()}`);
-        await this.simulator.run();
+        await this.simulator.run(this.qubits);
         const endTime = new Date();
 
         const timeDiff = endTime.getTime() - startTime.getTime();
@@ -733,7 +733,7 @@ export class QuantumCircuitComponent
      * Sample and add a new measurement to beginning of measurements.
      */
     handleMeasure() {
-        const measurement = this.simulator.sample();
+        const measurement = this.simulator.sample(this.qubits);
         if (!measurement) {
             return;
         }
@@ -787,6 +787,12 @@ export class QuantumCircuitComponent
                     gateData.editable
                 );
             } else if (this.isControl(gateData)) {
+                if (!this.gateService.getGate(gateData.name)) {
+                    this.showErrorMessage(
+                        `Tried to add gate to circuit that is not part of known gates: ${gateData.name}`
+                    );
+                    continue;
+                }
                 const gate = new Gate(gateData.name, gateData.editable);
                 this.board.set(gateData.target, gateData.time, gate);
                 for (const controlTarget of gateData.controls) {
@@ -800,6 +806,12 @@ export class QuantumCircuitComponent
                     this.board.set(controlTarget, gateData.time, control);
                 }
             } else if (this.isSingleOrMultiQubit(gateData)) {
+                if (!this.gateService.getGate(gateData.name)) {
+                    this.showErrorMessage(
+                        `Tried to add gate to circuit that is not part of known gates: ${gateData.name}`
+                    );
+                    continue;
+                }
                 const size = this.gateService.getGateSize(gateData.name);
                 if (size > 1) {
                     const gate = new MultiQubitGate(
@@ -919,7 +931,7 @@ export class QuantumCircuitComponent
      */
     setQubitOutputs() {
         this.qubitOutputs = [];
-        const vals = this.simulator.sample();
+        const vals = this.simulator.sample(this.qubits);
         if (!vals) {
             return;
         }
@@ -953,15 +965,13 @@ export class QuantumCircuitComponent
         if (this.markup.simulate === "browser") {
             this.simulator = new BrowserQuantumCircuitSimulator(
                 this.gateService,
-                this.board,
-                this.qubits
+                this.board
             );
         } else {
             this.simulator = new ServerQuantumCircuitSimulator(
                 this.http,
                 this.gateService,
                 this.board,
-                this.qubits,
                 this.serializerService,
                 this.markup.customGates
             );

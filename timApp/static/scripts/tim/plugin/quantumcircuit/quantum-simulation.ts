@@ -23,22 +23,20 @@ import type {HttpClient} from "@angular/common/http";
 
 export abstract class QuantumCircuitSimulator {
     board: QuantumBoard;
-    qubits: Qubit[];
     result?: number[];
 
     protected constructor(
         protected gateService: GateService,
-        board: QuantumBoard,
-        qubits: Qubit[]
+        board: QuantumBoard
     ) {
         this.board = board;
-        this.qubits = qubits;
     }
 
     /**
      * Runs simulator. The implementations should put the result in this.result
+     * @param qubits initial state to use for simulation. [q[0], q[1],...]
      */
-    abstract run(): Promise<void>;
+    abstract run(qubits: Qubit[]): Promise<void>;
 
     setBoard(board: QuantumBoard) {
         this.board = board;
@@ -63,7 +61,7 @@ export abstract class QuantumCircuitSimulator {
     }
 
     protected indexToBitstring(i: number) {
-        return i.toString(2).padStart(this.qubits.length, "0");
+        return i.toString(2).padStart(this.board.nQubits, "0");
     }
 
     /**
@@ -85,8 +83,8 @@ export abstract class QuantumCircuitSimulator {
     /**
      * Get one measurement chosen randomly from possible outcomes and their relative probabilities.
      */
-    sample(): Measurement | undefined {
-        const input = this.qubits
+    sample(qubits: Qubit[]): Measurement | undefined {
+        const input = qubits
             .map((q) => q.value)
             .reverse()
             .join("");
@@ -210,12 +208,8 @@ export abstract class QuantumCircuitSimulator {
 }
 
 export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
-    constructor(
-        gateService: GateService,
-        board: QuantumBoard,
-        qubits: Qubit[]
-    ) {
-        super(gateService, board, qubits);
+    constructor(gateService: GateService, board: QuantumBoard) {
+        super(gateService, board);
     }
 
     private getCellMatrix(cell: Cell) {
@@ -440,8 +434,8 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
     /**
      * Run simulation on current circuit and qubits.
      */
-    async run() {
-        const inputQubits = this.qubits.map((q) => q.asVector());
+    async run(qubits: Qubit[]) {
+        const inputQubits = qubits.map((q) => q.asVector());
 
         let input = inputQubits[0];
         for (let i = 1; i < inputQubits.length; i++) {
@@ -483,16 +477,16 @@ export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
         private http: HttpClient,
         gateService: GateService,
         board: QuantumBoard,
-        qubits: Qubit[],
         serializerService: SerializerService,
         customGates: ICustomGateInfo[] | null | undefined
     ) {
-        super(gateService, board, qubits);
+        super(gateService, board);
         this.serializerService = serializerService;
         this.customGates = customGates;
     }
-    async run() {
-        const inputList = this.qubits.map((q) => q.value);
+
+    async run(qubits: Qubit[]) {
+        const inputList = qubits.map((q) => q.value);
         let customGates: INumericCustomGateInfo[] = [];
         if (this.customGates) {
             customGates = this.serializerService.serializeCustomGates(
