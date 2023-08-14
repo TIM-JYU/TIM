@@ -126,7 +126,8 @@ class DocInfo(Item):
 
     def _get_preamble_docs_impl(self, preamble_setting: str) -> list[DocInfo]:
         preamble_names = preamble_setting.split(",")
-        path_parts = self.path_without_lang.split("/")
+        doc_path = self.path_without_lang
+        path_parts = doc_path.split("/")
 
         # An absolute path begins with "/" and "/preambles/" appears in it.
         # If the conditions are met, then proceed as in the relative preamble.
@@ -155,8 +156,8 @@ class DocInfo(Item):
 
         # Remove duplicates and then self-reference
         paths = list(dict.fromkeys(paths))
-        if self.path_without_lang in paths:
-            paths.remove(self.path_without_lang)
+        if doc_path in paths:
+            paths.remove(doc_path)
 
         if not paths:
             return []
@@ -213,11 +214,12 @@ class DocInfo(Item):
                         for ep in extra_preambles
                     ]
                 # Strip any extra spaces and remove any falsy values (empty strings) if they get evaluated as such
+                # Also remove any self-references
                 extra_preamble_doc_paths = list(
                     {
                         edp_t
                         for edp in extra_preamble_doc_paths
-                        if (edp_t := edp.strip())
+                        if (edp_t := edp.strip()) and edp_t != doc_path
                     }
                 )
                 # TODO: Should extraPreambles be recursive?

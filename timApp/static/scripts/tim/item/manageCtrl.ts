@@ -270,7 +270,15 @@ export class PermCtrl implements IController {
         if (r.ok) {
             await this.getTranslations();
             if (tr.id === this.item.id) {
-                this.syncTitle(tr.title);
+                // syncTitle does not update the current document path,
+                // force page reload manually with the new translation path
+                const sep = tr.old_langid == "" ? "/" : "";
+                const idx = tr.path.lastIndexOf(tr.old_langid);
+                const new_path = tr.path
+                    .substring(0, idx)
+                    .concat(sep)
+                    .concat(tr.lang_id);
+                window.location.replace("/manage/" + new_path);
             }
         } else {
             tr.lang_id = old_lang;
