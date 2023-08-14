@@ -80,6 +80,16 @@ class NumericCustomGateInfo:
 
 
 @dataclass
+class QubitInfo:
+    name: str | None = None
+    value: int | None = None
+    editable: bool | None = None
+
+    def to_json(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
 class QuantumCircuitMarkup(GenericMarkupModel):
     """Class that defines plugin markup (the YAML settings and their types)"""
 
@@ -93,7 +103,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     nSamples: int | None = None
     modelCircuit: list[GateInfo] | None = None
     modelInput: list[int] | None = None
-    qubitNames: list[str] | None = None
+    qubits: list[QubitInfo] | None = None
     outputNames: list[str] | None = None
 
     initialCircuit: list[GateInfo] | None = None
@@ -318,7 +328,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     # initial_circuit = args.markup.initialCircuit
 
     model_circuit = args.markup.modelCircuit
-    model_input = args.markup.modelInput
+    # model_input = args.markup.modelInput
 
     user_circuit = args.input.userCircuit
     user_input = args.input.userInput
@@ -328,13 +338,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     points = 1.0
     result = "tallennettu"
     error = ""
-    if (
-        model_circuit is not None
-        and model_input is not None
-        and user_circuit is not None
-        and user_input is not None
-        and n_qubits is not None
-    ):
+    if model_circuit is not None and user_circuit is not None and n_qubits is not None:
         custom_gates = parse_custom_gates(args.input.customGates)
 
         check_result = run_all_simulations(

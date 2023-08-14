@@ -134,6 +134,12 @@ export interface SimulationArgs {
     customGates: INumericCustomGateInfo[];
 }
 
+const QubitInfo = t.partial({
+    name: nullable(t.string),
+    value: nullable(t.number),
+    editable: nullable(t.boolean),
+});
+
 // All settings that are defined in the plugin markup YAML
 const QuantumCircuitMarkup = t.intersection([
     t.partial({
@@ -142,7 +148,7 @@ const QuantumCircuitMarkup = t.intersection([
         gates: nullable(t.array(t.string)),
         modelCircuit: nullable(t.array(GateInfo)),
         modelInput: nullable(t.array(t.number)),
-        qubitNames: nullable(t.array(t.string)),
+        qubits: nullable(t.array(QubitInfo)),
         outputNames: nullable(t.array(t.string)),
     }),
     GenericPluginMarkup,
@@ -450,7 +456,6 @@ export class QuantumCircuitComponent
         if (r.ok) {
             this.result = r.result.web.result ?? "";
             this.error = r.result.web.error ?? "";
-            console.log(r.result);
         } else {
             this.result = "";
             this.error = r.result.error.error;
@@ -536,8 +541,11 @@ export class QuantumCircuitComponent
         }
         this.qubits[qubitId] = this.qubits[qubitId].toggled();
 
-        void this.runSimulation();
-        this.setSizes();
+        // don't update anything if nothing changed
+        if (this.qubits[qubitId].editable) {
+            void this.runSimulation();
+            this.setSizes();
+        }
     }
 
     /**
@@ -760,7 +768,7 @@ export class QuantumCircuitComponent
     }
 
     /**
-     * Add gates from initialCircuit to board.
+     * Add gates to board.
      * @param circuit gates to add to board
      */
     addInitialGates(circuit: ICircuit) {
@@ -816,6 +824,10 @@ export class QuantumCircuitComponent
         }
     }
 
+    showErrorMessage(message: string) {
+        this.error = message;
+    }
+
     /**
      * Initializes board, qubits and outputs.
      * @param reset whether this call is to reset board to initial state
@@ -829,20 +841,46 @@ export class QuantumCircuitComponent
             for (let i = 0; i < this.nQubits; i++) {
                 const value = userInput[i];
                 this.qubits.push(
-                    new Qubit(value, `q[${i}]`, this.circuitOptions)
+                    new Qubit(value, `q[${i}]`, true, this.circuitOptions)
                 );
             }
         } else {
             for (let i = 0; i < this.nQubits; i++) {
                 this.qubits.push(
-                    new Qubit(defaultValue, `q[${i}]`, this.circuitOptions)
+                    new Qubit(
+                        defaultValue,
+                        `q[${i}]`,
+                        true,
+                        this.circuitOptions
+                    )
                 );
             }
         }
 
-        if (this.markup.qubitNames) {
-            for (let i = 0; i < this.qubits.length; i++) {
-                this.qubits[i].name = this.markup.qubitNames[i];
+        if (this.markup.qubits) {
+            if (this.markup.qubits.length !== this.qubits.length) {
+                this.showErrorMessage(
+                    `Got incorrect amount of qubits ${this.markup.qubits.length}. There needs to be ${this.qubits.length} qubits.`
+                );
+            } else {
+                for (let i = 0; i < this.qubits.length; i++) {
+                    const q = this.markup.qubits[i];
+                    if (q.name !== undefined && q.name !== null) {
+                        this.qubits[i].name = q.name;
+                    }
+                    if (q.value !== undefined && q.value !== null) {
+                        if (q.value === 1 || q.value === 0) {
+                            this.qubits[i].value = q.value;
+                        } else {
+                            this.showErrorMessage(
+                                `Got incorrect value for qubit: ${q.value}. Value needs to be either 0 or 1.`
+                            );
+                        }
+                    }
+                    if (q.editable === false) {
+                        this.qubits[i].editable = false;
+                    }
+                }
             }
         }
 
