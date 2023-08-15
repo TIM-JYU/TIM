@@ -290,7 +290,7 @@ export interface CircuitOptions {
                     </div>
                 </div>
 
-                <pre *ngIf="error" [innerHTML]="error | purify"></pre>
+                <pre class="circuit-error" *ngIf="error" [innerHTML]="error | purify"></pre>
                 <pre *ngIf="result" [innerHTML]="result | purify"></pre>
             </ng-container>
             <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
