@@ -470,6 +470,7 @@ export class QuantumCircuitComponent
      */
     reset() {
         this.initializeBoard(true);
+        this.simulator.setBoard(this.board);
         void this.runSimulation();
         this.setSizes();
     }
