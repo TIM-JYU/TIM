@@ -105,11 +105,14 @@ type ISingleOrMultiQubitGateInfo = t.TypeOf<typeof SingleOrMultiQubitGateInfo>;
 type ISwapGateInfo = t.TypeOf<typeof SwapGateInfo>;
 type IControlGateInfo = t.TypeOf<typeof ControlGateInfo>;
 
-const CustomGateInfo = t.type({
-    name: t.string,
-    matrix: t.string,
-    description: t.string,
-});
+const CustomGateInfo = t.intersection([
+    t.type({
+        name: t.string,
+        matrix: t.string,
+        info: t.string,
+    }),
+    t.partial({color: nullable(t.string), textColor: nullable(t.string)}),
+]);
 
 export type ICustomGateInfo = t.TypeOf<typeof CustomGateInfo>;
 
@@ -682,7 +685,7 @@ export class QuantumCircuitComponent
             gateInfo.matrix,
             controls,
             this.qubits,
-            gateInfo.description,
+            gateInfo.info,
             editable,
             swapInfo
         );
@@ -699,7 +702,7 @@ export class QuantumCircuitComponent
         } else if (gateInfo) {
             this.activeGateInfo = new ActiveGateInfo(
                 gateInfo.name,
-                gateInfo.description,
+                gateInfo.info,
                 gateInfo.matrix
             );
         }

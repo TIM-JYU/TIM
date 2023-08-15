@@ -19,7 +19,9 @@ export interface ServiceGate {
     matrix: Matrix;
     hidden: boolean;
     group: "basic" | "phase" | "swap" | "control" | "custom";
-    description: string;
+    info: string;
+    color?: string;
+    textColor?: string;
 }
 
 @Injectable()
@@ -78,56 +80,56 @@ export class GateService {
                 matrix: H,
                 hidden: false,
                 group: "basic",
-                description: "Hadamard",
+                info: "Hadamard",
             },
             {
                 name: "X",
                 matrix: X,
                 hidden: false,
                 group: "basic",
-                description: "Pauli-X",
+                info: "Pauli-X",
             },
             {
                 name: "Y",
                 matrix: Y,
                 hidden: false,
                 group: "basic",
-                description: "Pauli-Y",
+                info: "Pauli-Y",
             },
             {
                 name: "Z",
                 matrix: Z,
                 hidden: false,
                 group: "basic",
-                description: "Pauli-Z",
+                info: "Pauli-Z",
             },
             {
                 name: "S",
                 matrix: S,
                 hidden: false,
                 group: "phase",
-                description: "Phase S",
+                info: "Phase S",
             },
             {
                 name: "T",
                 matrix: T,
                 hidden: false,
                 group: "phase",
-                description: "Phase T",
+                info: "Phase T",
             },
             {
                 name: "swap",
                 matrix: this.swapMatrix,
                 hidden: false,
                 group: "swap",
-                description: "Swap",
+                info: "Swap",
             },
             {
                 name: "control",
                 matrix: this.identityMatrix,
                 hidden: false,
                 group: "control",
-                description: "Control",
+                info: "Control",
             },
         ];
 
@@ -220,7 +222,9 @@ export class GateService {
                     matrix: parsedCustomGate.matrix,
                     hidden: false,
                     group: "custom",
-                    description: customGate.description,
+                    info: customGate.info,
+                    color: customGate.color ?? undefined,
+                    textColor: customGate.textColor ?? undefined,
                 });
                 this.gateNameToMatrix.set(
                     parsedCustomGate.name,

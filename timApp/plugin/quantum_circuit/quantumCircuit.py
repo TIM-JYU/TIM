@@ -64,7 +64,9 @@ GateInfo = Union[SingleOrMultiQubitGateInfo, SwapGateInfo, ControlGateInfo]
 class CustomGateInfo:
     name: str
     matrix: str
-    description: str
+    info: str
+    color: str | None = None
+    textColor: str | None = None
 
     def to_json(self) -> dict:
         return asdict(self)

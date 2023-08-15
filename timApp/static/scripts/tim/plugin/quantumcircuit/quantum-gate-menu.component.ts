@@ -9,7 +9,7 @@ import type {Subscription} from "rxjs";
 interface MenuGate {
     color: Color;
     name: string;
-    description: string;
+    info: string;
     width: number;
 }
 
@@ -23,7 +23,7 @@ interface MenuGate {
 
             <div class="gate-list">
                 <div class="svg-container" *ngFor="let gate of gates" draggable="true"
-                     [title]="gate.description"
+                     [title]="gate.info"
                      [style.width.px]="gate.name === 'control' || gate.name === 'swap' ? circuitOptions.gateSize : gate.width"
                      [style.height.px]="circuitOptions.gateSize"
                      (click)="handleClick(gate.name)"
@@ -71,6 +71,7 @@ interface MenuGate {
                                   rx="2"/>
                             <text x="50%" y="50%"
                                   [attr.stroke]="gate.color.text"
+                                  [attr.fill]="gate.color.text"
                                   dominant-baseline="middle"
                                   text-anchor="middle">{{gate.name}}</text>
                         </svg>
@@ -101,7 +102,7 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
                 this.gates = gates.map((g) => ({
                     name: g.name,
                     color: this.getColor(g),
-                    description: g.description,
+                    info: g.info,
                     width: Math.max(
                         this.gateService.getTextWidth(g.name),
                         this.circuitOptions.gateSize
@@ -110,17 +111,18 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
             });
     }
 
+    /**
+     * Select colors for gate. Custom gates have their own colors that are prioritizes
+     * else group color is used.
+     * @param gate gate to the colors for
+     */
     getColor(gate: ServiceGate): Color {
         const color = this.circuitOptions.gateColors.get(gate.group);
-        if (color) {
-            return color;
-        } else {
-            return {
-                fill: "white",
-                text: "black",
-                selection: "00ff00",
-            };
-        }
+        return {
+            fill: gate.color ?? color?.fill ?? "white",
+            text: gate.textColor ?? color?.text ?? "black",
+            selection: color?.selection ?? "yellow",
+        };
     }
 
     /**

@@ -51,6 +51,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [attr.y]="cy"
                   dominant-baseline="middle"
                   text-anchor="middle"
+                  [attr.fill]="color.text"
                   [attr.stroke]="color.text">{{g.name}}</svg:text>
 
         <!-- control gate -->
@@ -91,6 +92,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [attr.y]="cy"
                   dominant-baseline="middle"
                   text-anchor="middle"
+                  [attr.fill]="color.text"
                   [attr.stroke]="circuitOptions.colors.dark">{{g.name}}</svg:text>
 
 
@@ -186,36 +188,33 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
     }
 
     assignColor() {
-        let color;
+        let groupColor;
+        let serviceGate;
         if (this.cell instanceof Gate || this.cell instanceof MultiQubitGate) {
             const group = this.gateService.getGateGroup(this.cell.name);
-            color = this.circuitOptions.gateColors.get(group ?? "");
+            serviceGate = this.gateService.getGate(this.cell.name);
+            groupColor = this.circuitOptions.gateColors.get(group ?? "");
         } else if (this.cell instanceof Control) {
-            const group = this.gateService.getGateGroup("control");
-            const target = this.cell.target;
-            const targetCell = this.board.get(target, this.time);
+            const targetCell = this.board.get(this.cell.target, this.time);
             // use same color for control as its target
             if (targetCell instanceof Gate) {
                 const targetGroup = this.gateService.getGateGroup(
                     targetCell.name
                 );
-                color = this.circuitOptions.gateColors.get(targetGroup ?? "");
-            } else {
-                color = this.circuitOptions.gateColors.get(group ?? "");
+                groupColor = this.circuitOptions.gateColors.get(
+                    targetGroup ?? ""
+                );
+                serviceGate = this.gateService.getGate(targetCell.name);
             }
         } else if (this.cell instanceof Swap) {
             const group = this.gateService.getGateGroup("swap");
-            color = this.circuitOptions.gateColors.get(group ?? "");
+            groupColor = this.circuitOptions.gateColors.get(group ?? "");
         }
-        if (!color) {
-            this.color = {
-                fill: "white",
-                text: "black",
-                selection: "yellow",
-            };
-        } else {
-            this.color = color;
-        }
+        this.color = {
+            fill: serviceGate?.color ?? groupColor?.fill ?? "white",
+            text: serviceGate?.textColor ?? groupColor?.text ?? "black",
+            selection: groupColor?.selection ?? "yellow",
+        };
     }
 
     ngOnInit(): void {
