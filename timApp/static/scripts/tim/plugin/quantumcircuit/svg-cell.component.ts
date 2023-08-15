@@ -42,7 +42,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [attr.y]="gy"
                   [attr.width]="gw"
                   [attr.height]="gh"
-                  [attr.rx]="circuitOptions.gateBorderRadius"
+                  [attr.rx]="rx"
                   [attr.fill]="color.fill"></svg:rect>
 
         <svg:text *ngIf="cell|instanceof: Gate as g"
@@ -83,7 +83,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [attr.y]="gy"
                   [attr.width]="gw"
                   [attr.height]="gh"
-                  [attr.rx]="circuitOptions.gateBorderRadius"
+                  [attr.rx]="rx"
                   [attr.fill]="color.fill"
                   [attr.stroke]="circuitOptions.colors.medium"></svg:rect>
         <svg:text *ngIf="cell|instanceof: MultiQubitGate as g"
@@ -143,6 +143,8 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
 
     backGroundHeight!: number;
 
+    rx!: number;
+
     constructor(private gateService: GateService) {}
 
     updateSizes() {
@@ -181,6 +183,12 @@ export class SvgCellComponent implements OnInit, AfterViewInit, OnChanges {
         this.cy = this.y + baseSize / 2;
 
         this.cellWidth = baseWidth;
+
+        if (this.cell?.editable === false) {
+            this.rx = 0;
+        } else {
+            this.rx = this.circuitOptions.gateBorderRadius;
+        }
     }
 
     ngAfterViewInit(): void {

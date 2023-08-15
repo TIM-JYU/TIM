@@ -373,7 +373,7 @@ export class QuantumCircuitComponent
         ]),
         useBraket: false,
         timeAxisHeight: 40,
-        gateBorderRadius: 2,
+        gateBorderRadius: 3,
     };
 
     board!: QuantumBoard;
