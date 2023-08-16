@@ -150,7 +150,7 @@ const QuantumCircuitMarkup = t.intersection([
         customGates: nullable(t.array(CustomGateInfo)),
         gates: nullable(t.array(t.string)),
         modelCircuit: nullable(t.array(GateInfo)),
-        modelInput: nullable(t.array(t.number)),
+        modelInput: nullable(t.array(t.string)),
         qubits: nullable(t.array(QubitInfo)),
         outputNames: nullable(t.array(t.string)),
     }),

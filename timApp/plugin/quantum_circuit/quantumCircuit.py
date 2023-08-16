@@ -2,6 +2,7 @@ from dataclasses import dataclass, asdict
 from typing import Union
 import json
 import sys
+import re
 
 from flask import render_template_string, request, jsonify, Response
 import yaml
@@ -104,7 +105,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     samplingMode: str | None = None
     nSamples: int | None = None
     modelCircuit: list[GateInfo] | None = None
-    modelInput: list[int] | None = None
+    modelInput: list[str] | None = None
     qubits: list[QubitInfo] | None = None
     outputNames: list[str] | None = None
 
@@ -298,25 +299,44 @@ class CheckResult:
     message: str = ""
 
 
+def check_input(bitstring: str, patterns: list[str] | None):
+    """
+    Check if simulator should be run with given bitstring input.
+    :param bitstring: input qubit values
+    :param patterns: regex like bitstring patterns to match bitstring against
+    :return: True if bitstring matches any pattern else False
+    """
+    if patterns is None:
+        return True
+
+    for pattern in patterns:
+        if re.fullmatch(pattern, bitstring):
+            return True
+    return False
+
+
 def run_all_simulations(
     model_circuit: list[GateInfo],
     user_circuit: list[GateInfo],
     n_qubits: int,
     custom_gates: dict[str, np.ndarray],
+    model_input: list[str] | None,
 ) -> CheckResult:
     for i in range(2**n_qubits):
         bitstring = "{0:b}".format(i).rjust(n_qubits, "0")
+        bitstring_reversed = "".join(reversed(bitstring))
+        if not check_input(bitstring_reversed, model_input):
+            continue
+
         input_list = [int(d) for d in bitstring]
         expected = run_simulation(model_circuit, input_list, n_qubits, custom_gates)
         actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)
 
         if not check_answer(actual, expected):
-            bitstring = "".join(map(str, input_list[::-1]))
-
             with np.printoptions(threshold=sys.maxsize):
                 message = f"""
                   Piiri antaa väärän todennäköisyyden syöteellä:
-                  {bitstring}
+                  {bitstring_reversed}
                   Ulostulojen todennäköisyyksien pitäisi olla: 
                   {expected}
                   mutta oli:
@@ -327,10 +347,8 @@ def run_all_simulations(
 
 
 def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
-    # initial_circuit = args.markup.initialCircuit
-
     model_circuit = args.markup.modelCircuit
-    # model_input = args.markup.modelInput
+    model_input = args.markup.modelInput
 
     user_circuit = args.input.userCircuit
     user_input = args.input.userInput
@@ -344,7 +362,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         custom_gates = parse_custom_gates(args.input.customGates)
 
         check_result = run_all_simulations(
-            model_circuit, user_circuit, n_qubits, custom_gates
+            model_circuit, user_circuit, n_qubits, custom_gates, model_input
         )
 
         if check_result.ok:
