@@ -299,7 +299,7 @@ class CheckResult:
     message: str = ""
 
 
-def check_input(bitstring: str, patterns: list[str] | None):
+def check_input(bitstring: str, patterns: list[str] | None) -> bool:
     """
     Check if simulator should be run with given bitstring input.
     :param bitstring: input qubit values
