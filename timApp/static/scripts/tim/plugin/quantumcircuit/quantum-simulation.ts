@@ -18,7 +18,7 @@ import {
 import type {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import type {Qubit} from "tim/plugin/quantumcircuit/qubit";
 import type {SerializerService} from "tim/plugin/quantumcircuit/serializer.service";
-import {toPromise} from "tim/util/utils";
+import {timeout, toPromise} from "tim/util/utils";
 import type {HttpClient} from "@angular/common/http";
 
 export abstract class QuantumCircuitSimulator {
@@ -451,6 +451,7 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
                 return;
             }
             output = res;
+            await timeout(0);
         }
 
         const resMatrix = dotPow(abs(output), 2) as Matrix;

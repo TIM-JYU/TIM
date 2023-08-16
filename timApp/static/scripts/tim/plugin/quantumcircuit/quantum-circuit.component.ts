@@ -269,6 +269,7 @@ export interface CircuitOptions {
                                        [showPrintField]="showPrintField"
                                        [samplingMode]="samplingMode"
                                        [nSamples]="nSamples"
+                                       [isSimulatorRunning]="isSimulatorRunning"
                                        (clear)="handleClearMeasurements()"
                                        (measure)="handleMeasure()">
                     </tim-quantum-stats>
@@ -390,6 +391,7 @@ export class QuantumCircuitComponent
 
     hasEditRights: boolean = false;
 
+    isSimulatorRunning: boolean = false;
     constructor(
         private gateService: GateService,
         private serializerService: SerializerService,
@@ -525,6 +527,7 @@ export class QuantumCircuitComponent
     async runSimulation() {
         const startTime = new Date();
         console.log(`started simulating at: ${startTime.toLocaleTimeString()}`);
+        this.isSimulatorRunning = true;
         await this.simulator.run(this.qubits);
         const endTime = new Date();
 
@@ -532,6 +535,7 @@ export class QuantumCircuitComponent
         console.log(`simulation ended in: ${timeDiff}ms`);
 
         this.collectStats();
+        this.isSimulatorRunning = false;
     }
 
     /**

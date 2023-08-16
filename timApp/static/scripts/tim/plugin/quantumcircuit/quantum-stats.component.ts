@@ -29,7 +29,10 @@ export interface QuantumChartData {
     template: `
         <div class="stats-container" [hidden]="!showChart && !showPrintField">
             <div>
-                <p class="stats-description">{{statsDescription}}</p>
+                <div class="stats-description">{{statsDescription}}
+                    <tim-loading *ngIf="isSimulatorRunning"></tim-loading>
+                </div>
+
                 <div class="chart" *ngIf="showChart">
                     <div class="chart-inner" #chartInnerElement>
                         <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions"
@@ -109,6 +112,9 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     };
 
     statsDescription: string = "";
+
+    @Input()
+    isSimulatorRunning: boolean = false;
 
     @Input()
     measurements!: Measurement[];
