@@ -12,7 +12,8 @@
 
 .circuit {
   border: 1px solid black;
-  overflow-x: auto
+  overflow: auto;
+  max-height: 80vh;
 }
 
 table {
