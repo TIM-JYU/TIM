@@ -98,6 +98,12 @@ a title
 #-
 2
 
+#- {area=b collapse=true nocache=true}
+b title
+#-
+2.5
+#- {area_end=b}
+
 #- {area_end=a}
 
 #-
@@ -108,13 +114,7 @@ a title
         db.session.commit()
         self.assert_content(
             self.get(d.url, as_tree=True),
-            [
-                "1",
-                "a title",
-                "2",
-                "",
-                "3",
-            ],
+            ["1", "a title", "2", "2.5", "", "", "3"],
         )
         self.login_test2()
         self.assert_content(

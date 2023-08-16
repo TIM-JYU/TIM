@@ -290,6 +290,19 @@ def process_areas(
         cur_area = None
         area_start = p.get_attr("area")
         area_end = p.get_attr("area_end")
+        if len(current_areas) > 0:
+            if area_end != current_areas[-1].name:
+                assert current_areas[-1].visible is not None
+                if not current_areas[-1].visible:
+                    continue
+                # Timed paragraph, is there time limitation in area where par is included
+                st = current_areas[-1].attrs.get("starttime")
+                et = current_areas[-1].attrs.get("endtime")
+                if st or et:
+                    starttime = getdatetime(st, default_val=min_time)
+                    endtime = getdatetime(et, default_val=max_time)
+                    if starttime > now or endtime <= now:
+                        continue
         if area_start is not None:
             cur_area = Area(area_start, p.get_attrs())
             current_areas.append(cur_area)
@@ -392,21 +405,6 @@ def process_areas(
                 vis = get_boolean(vis, True)
                 if not vis:  #  TODO: if in preview, put this always True
                     access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode
-                # Timed paragraph
-            if access:  # par itself is visible, is it in some area that is not visible
-                for a in current_areas:
-                    assert a.visible is not None
-                    if not a.visible:
-                        access = False
-                        break
-                    if access:  # is there time limitation in area where par is included
-                        st = a.attrs.get("starttime")
-                        et = a.attrs.get("endtime")
-                        if st or et:
-                            starttime = getdatetime(st, default_val=min_time)
-                            endtime = getdatetime(et, default_val=max_time)
-                            access &= starttime <= now < endtime
-
             if access:
                 new_pars.append(html_par)
 
