@@ -853,6 +853,11 @@ export class QuantumCircuitComponent
         const defaultValue = 0;
         const userInput = this.attrsall.state?.userInput;
 
+        if (this.nQubits < 1) {
+            this.showErrorMessage(`invalid nQubits value ${this.nQubits}`);
+            return;
+        }
+
         if (userInput && !reset) {
             for (let i = 0; i < this.nQubits; i++) {
                 const value = userInput[i];
@@ -899,7 +904,6 @@ export class QuantumCircuitComponent
                 }
             }
         }
-
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
 
         try {
