@@ -3,6 +3,7 @@ from typing import Union
 import json
 import sys
 import re
+from collections import defaultdict
 
 from flask import render_template_string, request, jsonify, Response
 import yaml
@@ -107,6 +108,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     nSamples: int | None = None
     modelCircuit: list[GateInfo] | None = None
     modelInput: list[str] | None = None
+    modelConditions: list[str] | None = None
     qubits: list[QubitInfo] | None = None
     outputNames: list[str] | None = None
 
@@ -122,6 +124,7 @@ class QuantumCircuitStateModel:
 
     userCircuit: list[GateInfo] | None = None
     userInput: list[int] | None = None
+    measurements: int | None = None
 
 
 @dataclass
@@ -131,6 +134,7 @@ class QuantumCircuitInputModel:
     userCircuit: list[GateInfo] | None = None
     userInput: list[int] | None = None
     customGates: list[NumericCustomGateInfo] | None = None
+    measurements: int | None = None
 
 
 @dataclass
@@ -347,19 +351,101 @@ def run_all_simulations(
     return CheckResult(True)
 
 
+def get_gate_counts(circuit: list[GateInfo]) -> defaultdict:
+    counts: defaultdict[str, int] = defaultdict(int)
+    for gate_def in circuit:
+        if isinstance(gate_def, SingleOrMultiQubitGateInfo):
+            counts[gate_def.name] += 1
+        elif isinstance(gate_def, SwapGateInfo):
+            counts["swap"] += 1
+        elif isinstance(gate_def, ControlGateInfo):
+            counts[gate_def.name] += 1
+        else:
+            print(f"undefined type {gate_def}")
+
+    return counts
+
+
+def check_valid_characters(condition: str) -> bool:
+    valid_chars = r"(and|or|\d|[=<>() ])+"
+    return re.fullmatch(valid_chars, condition) is not None
+
+
+def evaluate_condition(
+    condition: str, var_counts: defaultdict[str, int]
+) -> tuple[bool, str]:
+    eval_condition = condition
+    for name, count in sorted(var_counts.items(), reverse=True):
+        eval_condition = eval_condition.replace(name, str(count))
+
+    eval_condition = eval_condition.replace("&&", " and ")
+    eval_condition = eval_condition.replace("||", " or ")
+
+    if not check_valid_characters(eval_condition):
+        return False, f"ehdossa on kiellettyjä merkkejä {condition}"
+
+    result = eval(eval_condition, {"__builtins__": None})
+    if not result:
+        values = "\n".join(map(lambda kv: f"{kv[0]}={kv[1]}", var_counts.items()))
+        message = f"""
+Vastaus rikkoo ehtoa: 
+{condition}
+Arvoilla:
+{values}
+        """.strip()
+        return False, message
+
+    return result, ""
+
+
+def check_conditions(
+    conditions: list[str] | None, circuit: list[GateInfo] | None, n_measurements: int
+) -> tuple[bool, str]:
+    if conditions is None or circuit is None:
+        return True, ""
+    counts = get_gate_counts(circuit)
+    counts["measurements"] = n_measurements
+
+    for condition in conditions:
+        is_valid, message = evaluate_condition(condition, counts)
+        if not is_valid:
+            return is_valid, message
+
+    return True, ""
+
+
 def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     model_circuit = args.markup.modelCircuit
     model_input = args.markup.modelInput
+    model_conditions = args.markup.modelConditions
 
     user_circuit = args.input.userCircuit
     user_input = args.input.userInput
 
     n_qubits = args.markup.nQubits
 
+    n_measurements = args.input.measurements
+
     points = 1.0
     result = "tallennettu"
     error = ""
-    if model_circuit is not None and user_circuit is not None and n_qubits is not None:
+
+    valid_conditions = True
+    if model_conditions is not None:
+        is_valid, message = check_conditions(
+            model_conditions, user_circuit, n_measurements
+        )
+        if not is_valid:
+            valid_conditions = False
+            error = message
+            points = 0.0
+            result = ""
+    if (
+        valid_conditions
+        and model_circuit is not None
+        and user_circuit is not None
+        and n_qubits is not None
+    ):
         custom_gates = parse_custom_gates(args.input.customGates)
 
         check_result = run_all_simulations(

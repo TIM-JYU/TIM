@@ -151,6 +151,7 @@ const QuantumCircuitMarkup = t.intersection([
         gates: nullable(t.array(t.string)),
         modelCircuit: nullable(t.array(GateInfo)),
         modelInput: nullable(t.array(t.string)),
+        modelConditions: nullable(t.array(t.string)),
         qubits: nullable(t.array(QubitInfo)),
         outputNames: nullable(t.array(t.string)),
     }),
@@ -453,6 +454,7 @@ export class QuantumCircuitComponent
                 userCircuit: userCircuit,
                 userInput: userInput,
                 customGates: customGates,
+                measurements: this.measurements.length,
             },
         };
         const r = await this.postAnswer<{
