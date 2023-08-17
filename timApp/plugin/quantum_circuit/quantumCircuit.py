@@ -415,9 +415,13 @@ def evaluate_condition(
     eval_condition = eval_condition.replace("||", " or ")
 
     if not check_valid_characters(eval_condition):
-        return False, f"ehdossa on kiellettyjä merkkejä {condition}"
+        return False, f"Ehdossa on kiellettyjä merkkejä {condition}"
 
-    result = eval(eval_condition, {"__builtins__": None})
+    try:
+        result = eval(eval_condition, {"__builtins__": None})
+    except SyntaxError:
+        return False, f"Ei pystytty tulkitsemaan ehtoa {condition}"
+
     if not result:
         values = "\n".join(map(lambda kv: f"{kv[0]}={kv[1]}", var_counts.items()))
         message = f"""
