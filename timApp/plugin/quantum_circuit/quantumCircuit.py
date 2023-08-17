@@ -20,6 +20,7 @@ from tim_common.pluginserver_flask import (
     create_blueprint,
     GenericAnswerModel,
     PluginAnswerResp,
+    EditorTab,
 )
 from tim_common.utils import Missing
 
@@ -383,7 +384,80 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
 def reqs_handler() -> PluginReqs:
     """Return plugins' dependencies and info on how to render it"""
 
-    return {"js": ["quantumCircuit"], "multihtml": True}
+    template_full = """
+    ``` {#tehtava1 plugin="quantumCircuit"}
+header: "Kvanttipiirisimulaattori"
+stem: "Testaa piiriä"
+# footer: "alateksti"
+# starttime: '2023-07-25 15:00:00'
+# deadline: '2023-07-28 23:59:00'
+nQubits: 4
+nMoments: 8
+lazy: false
+# gates: ["H", "X", "Y", "Z", "S", "T", "swap", "control", "SX"]
+qubitNotation: "bit"
+showChart: true
+showOutputBits: true
+showPrintField: true
+samplingMode: matrix
+nSamples: 100
+initialCircuit:
+  -
+    name: H
+    target: 0
+    time: 0
+  - 
+    name: X
+    target: 1
+    time: 1
+    controls: [0]
+  -
+    swap1: 2
+    swap2: 3
+    time: 2
+  -
+    name: I2
+    target: 1
+    time: 3
+customGates:
+  -
+    name: Id
+    matrix: "[[1,0],[0,1]]"
+    info: identiteettiportti
+    color: "#484848"
+    textColor: white
+  -
+    name: I2
+    matrix: "[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]"
+    info: "identiteetti portti"
+    color: "rgb(100, 100, 100)"
+  -
+    name: SX
+    matrix: "(0.5)*[[1+i,1-i],[1-i,1+i]]"
+    info: "X:n neliöjuuri"
+```
+
+    """
+
+    editor_tabs: list[EditorTab] = [
+        {
+            "text": "plugins",
+            "items": [
+                {
+                    "text": "QuantumCircuit",
+                    "items": [
+                        {
+                            "data": template_full.strip(),
+                            "text": "Quantum Circuit",
+                            "expl": "A full example of the quantum circuit plugin",
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+
+    return {"js": ["quantumCircuit"], "multihtml": True, "editor_tabs": editor_tabs}
 
 
 quantum_circuit_plugin = create_blueprint(
