@@ -165,10 +165,10 @@ const ShowFileAll = t.type({
 
             <div *ngIf="!isNormalSize" class="videoInfo">
                 <span [innerHtml]="stem | purify"></span>&ngsp;
-                <a *ngIf="videoname" class="videoname"
+                <a *ngIf="videoName" class="videoname"
                    (click)="toggleVideo()">
                     <i *ngIf="markup.videoicon" class="glyphicon glyphicon-facetime-video"></i>
-                    {{videoname}}
+                    {{videoName}}
                     <ng-container *ngIf="markup.type === 'list'">
                         &ndash;
                         {{startt}}
@@ -314,10 +314,6 @@ export class VideoComponent extends AngularPluginBase<
         }
     }
 
-    get videoname() {
-        return this.markup.videoname;
-    }
-
     get hidetext() {
         return valueDefu(this.markup.hidetext, "Hide file");
     }
@@ -343,6 +339,7 @@ export class VideoComponent extends AngularPluginBase<
     startt!: string | null;
     width?: number;
     height?: number;
+    videoName?: string;
 
     iframesettings?: Iframesettings;
     isPdf = false;
@@ -378,6 +375,8 @@ export class VideoComponent extends AngularPluginBase<
         this.getPrevZoom();
         if (this.markup.open) {
             this.toggleVideo();
+        } else if (!this.markup.videoname && !this.doctext) {
+            this.videoName = $localize`Open embedded content`;
         }
     }
 
