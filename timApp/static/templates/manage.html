@@ -2,7 +2,7 @@
     Using manage view requires you to be logged in.
 </div>
 <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-    <div class="panel-heading">{{ $ctrl.objName }} rights
+    <div class="panel-heading" id="rights">{{ $ctrl.objName }} rights
         <span class="headerlink">
             <a href="#rights" title="Permanent link to paragraph" class="">
                 <span class="header-anchor">#</span>
@@ -49,7 +49,7 @@
     </div>
 </div>
 <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">
-    <div class="panel-heading">{{ $ctrl.objName }} title
+    <div class="panel-heading" id="title">{{ $ctrl.objName }} title
         <span class="headerlink">
             <a href="#title" title="Permanent link to paragraph" class="">
                 <span class="header-anchor">#</span>
@@ -74,7 +74,7 @@
 </div>
 
 <div class="panel panel-default" ng-if="$ctrl.loggedIn()">
-    <div class="panel-heading">Notifications
+    <div class="panel-heading" id="notifications">Notifications
         <span class="headerlink">
             <a href="#notifications" title="Permanent link to paragraph" class="">
                 <span class="header-anchor">#</span>
@@ -96,12 +96,12 @@
 
 <div ng-if="!$ctrl.item.isFolder">
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-        <div class="panel-heading">Short names
+        <div class="panel-heading" id="location">Short names
             <span class="headerlink">
             <a href="#location" title="Permanent link to paragraph" class="">
                 <span class="header-anchor">#</span>
             </a>
-        </span>
+            </span>
         </div>
         <div class="panel-body">
             <form class="form-horizontal" name="aliasForm">
@@ -120,14 +120,14 @@
                         </div>
                         <div class="col-md-5">
                             <div class="input-group input-group-sm" tim-error-state data-for="innerForm.aliasLoc">
-                        <span ng-click="$ctrl.aliasPublicClicked(alias)" class="input-group-addon">
-                       <input type="checkbox" ng-checked="alias.public">
-                       </span>
+                                <span ng-click="$ctrl.aliasPublicClicked(alias)" class="input-group-addon">
+                                    <input type="checkbox" ng-checked="alias.public">
+                                </span>
                                 <input class="form-control" name="aliasLoc" tim-location type="text"
                                        ng-model="alias.location"/>
                                 <span class="input-group-btn">
-                    <a class="timButton" href="/view/{{alias.location | escape}}">View</a>
-                    </span>
+                                    <a class="timButton" href="/view/{{alias.location | escape}}">View</a>
+                                </span>
                             </div>
                             <tim-error-message for="innerForm.aliasLoc"></tim-error-message>
                         </div>
@@ -137,16 +137,16 @@
                                        ng-model="alias.name"
                                        placeholder="Short name"/>
                                 <span class="input-group-btn">
-                    <a class="timButton" href="/view/{{alias.path | escape}}">View</a>
-                            </span>
+                                    <a class="timButton" href="/view/{{alias.path | escape}}">View</a>
+                                </span>
                             </div>
                             <tim-error-message for="innerForm.aliasName"></tim-error-message>
                         </div>
                         <div class="col-md-1">
                             <button type="button" class="timButton btn-sm"
                                     ng-click="$ctrl.updateAlias(alias, $first)"
-                                    ng-disabled="!$ctrl.aliasChanged(alias) || innerForm.$invalid"><span
-                                    class="glyphicon glyphicon-ok"></span>
+                                    ng-disabled="!$ctrl.aliasChanged(alias) || innerForm.$invalid">
+                                <span class="glyphicon glyphicon-ok"></span>
                             </button>
                         </div>
                     </ng-form>
@@ -156,14 +156,14 @@
                         <div class="col-md-1"></div>
                         <div class="col-md-5">
                             <div class="input-group input-group-sm" tim-error-state data-for="$ctrl.newAliasForm.newAliasLoc">
-                        <span ng-click="$ctrl.aliasPublicClicked($ctrl.newAlias)" class="input-group-addon">
-                       <input type="checkbox" ng-checked="$ctrl.newAlias.public">
-                       </span>
+                                <span ng-click="$ctrl.aliasPublicClicked($ctrl.newAlias)" class="input-group-addon">
+                                    <input type="checkbox" ng-checked="$ctrl.newAlias.public">
+                                </span>
                                 <input class="form-control" name="newAliasLoc" tim-location type="text"
                                        ng-model="$ctrl.newAlias.location"/>
                                 <span class="input-group-btn">
-                    <a class="timButton" href="/view/{{$ctrl.newAlias.location | escape}}">View</a>
-                    </span>
+                                    <a class="timButton" href="/view/{{$ctrl.newAlias.location | escape}}">View</a>
+                                </span>
                             </div>
                             <tim-error-message for="$ctrl.newAliasForm.newAliasLoc"></tim-error-message>
                         </div>
@@ -189,14 +189,14 @@
         </div>
     </div>
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-        <div class="panel-heading">
+        <div class="panel-heading" id="translations">
             Translations (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in
             Finnish</a>)
             <span class="headerlink">
-            <a href="#translations" title="Permanent link to paragraph" class="">
-                <span class="header-anchor">#</span>
-            </a>
-        </span>
+                <a href="#translations" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
         </div>
         <div class="panel-body">
             <table class="table">
@@ -236,8 +236,7 @@
                     </td>
                 </tr>
             </table>
-            <span>
-    </span>
+            <span></span>
 
             <uib-tabset active="-1">
                 <uib-tab heading="Create a translation">
@@ -247,21 +246,23 @@
                     </div>
                     <div class="languageLists">
                         <div>
-                        <label for="documentLanguage">Target language:</label>
-                        <select id="document-language" name="document-language-select" class="form-control"
-                               ng-model="$ctrl.newTranslation.language" ng-change="$ctrl.checkTranslatability()">
+                            <label for="documentLanguage">Target language:</label>
+                            <select id="document-language" name="document-language-select" class="form-control"
+                                   ng-model="$ctrl.newTranslation.language" ng-change="$ctrl.checkTranslatability()">
                                 <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
-                        </select></div>
+                            </select>
+                        </div>
                         <div>
-                        <label for="translator">Translator:
-                             <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB">
-                                <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;" title="Help with machine translation" i18n-title></span>
-                            </a>
-                        </label>
-                        <select id="translator" name="translator-select" class="form-control"
-                               ng-model="$ctrl.newTranslation.translator" ng-change="$ctrl.updateManageTranslatorLanguages()">
+                            <label for="translator">Translator:
+                                 <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB">
+                                    <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;" title="Help with machine translation" i18n-title></span>
+                                </a>
+                            </label>
+                            <select id="translator" name="translator-select" class="form-control"
+                                   ng-model="$ctrl.newTranslation.translator" ng-change="$ctrl.updateManageTranslatorLanguages()">
                                 <option ng-repeat="option in $ctrl.translators" ng-disabled="!option.available" value="{{option.name}}">{{option.name}}</option>
-                        </select></div>
+                            </select>
+                        </div>
                     </div>
                     <div ng-show="$ctrl.mayTranslate && $ctrl.newTranslation.title">
                         <p>This document will be automatically translated on creation. Note: A human should check the translation for any errors and fix them!</p>
@@ -272,9 +273,8 @@
                         <p>This document will not be automatically translated on creation{{$ctrl.notManual ? "" : " because you have not chosen a machine translator"}}.</p>
                     </div>
                     <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||
-                    $ctrl.translationInProgress || (!$ctrl.mayTranslate && $ctrl.notManual) || !$ctrl.translatorAvailable"
-                            class="timButton"
-                            ng-click="$ctrl.createTranslation()" id="createbutton">Create
+                        $ctrl.translationInProgress || (!$ctrl.mayTranslate && $ctrl.notManual) || !$ctrl.translatorAvailable"
+                        class="timButton" ng-click="$ctrl.createTranslation()" id="createbutton">Create
                     </button>
                     <p ng-show="$ctrl.translationInProgress"><tim-loading></tim-loading> Translating... This may take a while.</p>
                 </uib-tab>
@@ -293,12 +293,12 @@
     </bootstrap-panel>
 
     <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">
-        <div class="panel-heading">Edit the full document
+        <div class="panel-heading" id="edit">Edit the full document
             <span class="headerlink">
-            <a href="#edit" title="Permanent link to paragraph" class="">
-                <span class="header-anchor">#</span>
-            </a>
-        </span>
+                <a href="#edit" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
         </div>
         <div class="panel-body">
             <form id="fullDocumentEditor">
@@ -317,13 +317,16 @@
                             TracWiki page below and then press "Convert TracWiki" button to get the text converted
                             above as MarkDown. Then you can edit the MarkDown before pressing Save.
                             You may need to add extra empty lines before lists.</p>
-                        <div class="form-group"><label for="wikiRoot">Wiki root: </label>
+                        <div class="form-group">
+                            <label for="wikiRoot">Wiki root: </label>
                             <input id="wikiRoot" class="form-control" ng-model="$ctrl.wikiRoot" size="50"
-                                   value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/></div>
-                        <div class="form-group"><label for="tracWikiText">
-                            TracWiki content:</label>
+                                   value="https://trac.cc.jyu.fi/projects/ohj2/wiki/"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="tracWikiText">TracWiki content:</label>
                             <textarea rows="50" id="tracWikiText" class="form-control"
-                                      ng-model="$ctrl.tracWikiText"></textarea></div>
+                                      ng-model="$ctrl.tracWikiText"></textarea>
+                        </div>
 
                         <button class="timButton" ng-click="$ctrl.convertDocument($ctrl.item)">Convert
                             TracWiki
@@ -335,12 +338,12 @@
     </div>
 
     <div class="panel panel-default">
-        <div class="panel-heading">Other actions
+        <div class="panel-heading" id="misc">Other actions
             <span class="headerlink">
-            <a href="#misc" title="Permanent link to paragraph" class="">
-                <span class="header-anchor">#</span>
-            </a>
-        </span>
+                <a href="#misc" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
         </div>
         <div class="panel-body">
             <a ng-show="$ctrl.item.rights.copy" class="timButton"
@@ -357,12 +360,12 @@
         </div>
     </div>
     <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">
-        <div class="panel-heading">Document version history
+        <div class="panel-heading" id="history">Document version history
             <span class="headerlink">
-            <a href="#history" title="Permanent link to paragraph" class="">
-                <span class="header-anchor">#</span>
-            </a>
-        </span>
+                <a href="#history" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
         </div>
         <div class="panel-body">
             <table class="table table-condensed">
@@ -402,12 +405,12 @@
 
 <div ng-if="$ctrl.item.isFolder">
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-        <div class="panel-heading">Short name and location
+        <div class="panel-heading" id="location">Short name and location
             <span class="headerlink">
-            <a href="#location" title="Permanent link to paragraph" class="">
-                <span class="header-anchor">#</span>
-            </a>
-        </span>
+                <a href="#location" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
         </div>
         <div class="panel-body">
             <form name="folderForm">
@@ -445,12 +448,12 @@
         <tim-copy-folder [item]="$ctrl.item"></tim-copy-folder>
     </bootstrap-panel>
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
-        <div class="panel-heading">Other actions
+        <div class="panel-heading" id="misc">Other actions
             <span class="headerlink">
-            <a href="#misc" title="Permanent link to paragraph" class="">
-                <span class="header-anchor">#</span>
-            </a>
-        </span>
+                <a href="#misc" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
         </div>
         <div class="panel-body">
             <button class="btn btn-danger" ng-click="$ctrl.deleteFolder()">Delete folder
