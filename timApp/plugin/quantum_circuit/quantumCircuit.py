@@ -4,6 +4,7 @@ import json
 import sys
 import re
 from collections import defaultdict
+import math
 
 from flask import render_template_string, request, jsonify, Response
 import yaml
@@ -191,6 +192,10 @@ def get_gate_matrix(
         return to_matrix_gate(gate_constructor(target))
     gate_matrix = custom_gates.get(name, None)
     if gate_matrix is not None:
+        matrix_size = math.floor(math.log2(gate_matrix.shape[0]))
+        if matrix_size > 1:
+            # all concurrent indices of target are qubits it affects
+            return DenseMatrix([target + i for i in range(matrix_size)], gate_matrix)
         return DenseMatrix(target, gate_matrix)
     return None
 
