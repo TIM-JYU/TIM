@@ -195,6 +195,23 @@ def get_gate_matrix(
     return None
 
 
+def get_all_gate_names(custom_gates: dict[str, np.ndarray]) -> set[str]:
+    """
+    Get all available names of gates including some default gate names and
+    names from custom gate definitions.
+    :param custom_gates:
+    :return:
+    """
+    custom_names = custom_gates.keys()
+    def_names = ["H", "X", "Y", "Z", "S", "T"]
+
+    all_names: set[str] = set()
+    all_names.update(custom_names)
+    all_names.update(def_names)
+
+    return all_names
+
+
 def input_to_int(input_list: list[int]) -> int:
     """
     [0,0,1] -> "001" -> "100" -> 0b100 -> 4
@@ -351,17 +368,28 @@ def run_all_simulations(
     return CheckResult(True)
 
 
-def get_gate_counts(circuit: list[GateInfo]) -> defaultdict:
+def get_gate_counts(
+    circuit: list[GateInfo], custom_gates: dict[str, np.ndarray]
+) -> defaultdict:
     counts: defaultdict[str, int] = defaultdict(int)
+    circuit_names: set[str] = set()
     for gate_def in circuit:
         if isinstance(gate_def, SingleOrMultiQubitGateInfo):
             counts[gate_def.name] += 1
+            circuit_names.add(gate_def.name)
         elif isinstance(gate_def, SwapGateInfo):
             counts["swap"] += 1
+            circuit_names.add("swap")
         elif isinstance(gate_def, ControlGateInfo):
             counts[gate_def.name] += 1
+            circuit_names.add(gate_def.name)
         else:
             print(f"undefined type {gate_def}")
+
+    # also add names that are not in circuit but could be in conditions
+    for name in get_all_gate_names(custom_gates):
+        if name not in circuit_names:
+            counts[name] = 0
 
     return counts
 
@@ -402,10 +430,11 @@ def check_conditions(
     conditions: list[str] | None,
     circuit: list[GateInfo] | None,
     n_measurements: int | None,
+    custom_gates: dict[str, np.ndarray],
 ) -> tuple[bool, str]:
     if conditions is None or circuit is None:
         return True, ""
-    counts = get_gate_counts(circuit)
+    counts = get_gate_counts(circuit, custom_gates)
     if n_measurements is not None:
         counts["measurements"] = n_measurements
     else:
@@ -435,10 +464,12 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     result = "tallennettu"
     error = ""
 
+    custom_gates = parse_custom_gates(args.input.customGates)
+
     valid_conditions = True
     if model_conditions is not None:
         is_valid, message = check_conditions(
-            model_conditions, user_circuit, n_measurements
+            model_conditions, user_circuit, n_measurements, custom_gates
         )
         if not is_valid:
             valid_conditions = False
@@ -451,8 +482,6 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         and user_circuit is not None
         and n_qubits is not None
     ):
-        custom_gates = parse_custom_gates(args.input.customGates)
-
         check_result = run_all_simulations(
             model_circuit, user_circuit, n_qubits, custom_gates, model_input
         )
