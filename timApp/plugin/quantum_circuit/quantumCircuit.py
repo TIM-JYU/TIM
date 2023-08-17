@@ -399,12 +399,17 @@ Arvoilla:
 
 
 def check_conditions(
-    conditions: list[str] | None, circuit: list[GateInfo] | None, n_measurements: int
+    conditions: list[str] | None,
+    circuit: list[GateInfo] | None,
+    n_measurements: int | None,
 ) -> tuple[bool, str]:
     if conditions is None or circuit is None:
         return True, ""
     counts = get_gate_counts(circuit)
-    counts["measurements"] = n_measurements
+    if n_measurements is not None:
+        counts["measurements"] = n_measurements
+    else:
+        counts["measurements"] = 0
 
     for condition in conditions:
         is_valid, message = evaluate_condition(condition, counts)
