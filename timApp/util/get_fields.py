@@ -26,12 +26,12 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.plugin.plugin import find_task_ids, CachedPluginFinder
-from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User, get_membership_end, get_membership_added
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
+from timApp.util.plugininfofield import PluginInfoField, get_plugininfo_field_values
 from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
 
 ALL_ANSWERED_WILDCARD = "*"
@@ -149,6 +149,37 @@ class GetFieldsAccess(Enum):
         )
 
 
+def _parse_field(
+    field_text: str, doc: DocInfo
+) -> TaskId | TallyField | PluginInfoField:
+    task_id, err = TaskId.try_parse(
+        field_text,
+        require_doc_id=False,
+        allow_block_hint=False,
+        allow_type=False,
+        allow_custom_field=True,
+    )
+
+    if task_id:
+        task_id.doc_id = task_id.doc_id or doc.id
+        return task_id
+
+    tally_field = TallyField.try_parse(field_text, doc)
+    if tally_field:
+        return tally_field
+    if field_text.startswith("tally:"):
+        raise RouteException(f"Invalid tally field format: {field_text}")
+
+    plugin_info_field = PluginInfoField.try_parse(field_text, doc)
+    if plugin_info_field:
+        return plugin_info_field
+    if field_text.startswith("plugininfo:"):
+        raise RouteException(f"Invalid plugininfo field format: {field_text}")
+
+    if err:
+        raise RouteException(f"Invalid field format: {field_text}: {err}")
+
+
 def get_fields_and_users(
     u_fields: list[str],
     requested_groups: RequestedGroups,
@@ -210,6 +241,8 @@ def get_fields_and_users(
     tasks_without_fields = []
     tally_fields: list[tuple[TallyField, str | None]] = []
     tasks_with_count_field = []
+    plugin_info_fields: list[tuple[PluginInfoField, str | None]] = []
+
     for field in u_fields:
         try:
             t, a, *rest = field.split("=")
@@ -225,37 +258,30 @@ def get_fields_and_users(
             raise RouteException(f"Invalid alias: {field}")
         if a == "":
             raise RouteException(f"Alias cannot be empty: {field}")
-        try:
-            task_id = TaskId.parse(
-                t,
-                require_doc_id=False,
-                allow_block_hint=False,
-                allow_type=False,
-                allow_custom_field=True,
-            )
-        except PluginException as e:
-            tally_field = TallyField.try_parse(t, d)
-            if not tally_field:
-                if t.startswith("tally:"):
-                    raise RouteException(f"Invalid tally field format: {t}")
-                else:
-                    raise RouteException(str(e))
-            else:
-                did = tally_field.effective_doc_id
-                tally_fields.append((tally_field, a))
-                alias_map_value = tally_field.doc_and_field
-        else:
-            if task_id.field is None:
-                tasks_without_fields.append(task_id)
-            elif task_id.field == "count":
-                tasks_with_count_field.append(task_id)
-            task_ids.append(task_id)
 
-            if not task_id.doc_id:
-                task_id.doc_id = d.id
-            task_id_map[task_id.doc_task].append(task_id)
-            did = task_id.doc_id
-            alias_map_value = task_id.extended_or_doc_task
+        field_obj = _parse_field(t, d)
+
+        if isinstance(field_obj, TaskId):
+            if field_obj.field is None:
+                tasks_without_fields.append(field_obj)
+            elif field_obj.field == "count":
+                tasks_with_count_field.append(field_obj)
+            task_ids.append(field_obj)
+
+            task_id_map[field_obj.doc_task].append(field_obj)
+            did = field_obj.doc_id
+            alias_map_value = field_obj.extended_or_doc_task
+        elif isinstance(field_obj, TallyField):
+            did = field_obj.effective_doc_id
+            alias_map_value = field_obj.doc_and_field
+            tally_fields.append((field_obj, a))
+        elif isinstance(field_obj, PluginInfoField):
+            did = field_obj.doc_id
+            alias_map_value = field_obj.doc_and_field
+            plugin_info_fields.append((field_obj, a))
+        else:
+            raise Exception(f"Unhandled field type: {field_obj}")
+
         if a:
             alias_map[alias_map_value] = a
             if a in jsrunner_alias_map:
@@ -297,6 +323,8 @@ def get_fields_and_users(
     if user_filter is not None:
         group_filter = group_filter & user_filter
     join_relation = member_filter_relation_map[member_filter_type]
+
+    user_ctx = UserContext.from_one_user(current_user)
     tally_field_values = get_tally_field_values(
         d,
         doc_map,
@@ -304,8 +332,13 @@ def get_fields_and_users(
         join_relation,
         tally_fields,
         view_ctx,
-        UserContext.from_one_user(current_user),
+        user_ctx,
     )
+
+    plugininfo_field_values = get_plugininfo_field_values(
+        plugin_info_fields, d, doc_map, view_ctx, user_ctx
+    )
+
     sub = []
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
     # That's why we split the list of task ids in chunks of size 6 and merge the results.
@@ -389,6 +422,7 @@ def get_fields_and_users(
         )
         for uid, taskid, count in answer_counts:
             counts[uid][taskid] = count
+
     last_user = None
     user_tasks = None
     user_fieldstyles = None
@@ -401,6 +435,8 @@ def get_fields_and_users(
             user_tasks = {}
             if tally_values:
                 user_tasks = user_tasks | {a: v for v, a in tally_values}
+            if plugininfo_field_values:
+                user_tasks = user_tasks | plugininfo_field_values
             if tasks_with_count_field:
                 user_tasks = user_tasks | {
                     alias_map.get(
