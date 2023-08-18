@@ -730,6 +730,68 @@ tools.print(tools.getDouble("otherdoc"));
             },
         )
 
+    def test_plugininfo_fields(self):
+        fd = self.create_doc(
+            initial_par="""
+#- {#foo1 plugin=textfield}
+
+#- {#foo2 plugin=textfield}
+
+#- {#bar1 plugin=textfield}
+
+#- {#bar2 plugin=textfield}
+
+#- {#bar3 plugin=textfield}
+"""
+        )
+        fd.document.set_settings(
+            {
+                "point_sum_rule": {
+                    "groups": {
+                        "foos": "foo.*",
+                        "bars": "bar.*",
+                    },
+                }
+            },
+        )
+        db.session.commit()
+
+        d = self.create_jsrun(
+            f"""
+        fields:
+         - plugininfo:{fd.id}.foos.count=foocount
+         - plugininfo:{fd.id}.bars.count=barcount
+         - plugininfo:count=thiscount
+         - plugininfo:{fd.id}.count=fdcount
+        group: testuser1
+        program: |!!
+        tools.print(tools.getInt("foocount"));
+        tools.print(tools.getInt("barcount"));
+        tools.print(tools.getInt("thiscount"));
+        tools.print(tools.getInt("fdcount"));
+        !!"""
+        )
+        d.document.add_text(
+            """
+#- {defaultplugin=textfield}
+{#a01#} {#a02#} {#a03#}
+{#b01#} {#b02#} {#b03#}
+{#c01#} {#c02#} {#c03#}
+        """
+        )
+        db.session.commit()
+
+        self.do_jsrun(
+            d,
+            expect_content={
+                "web": {
+                    "errors": [],
+                    "outdata": {},
+                    "output": "2\n3\n10\n5\n",
+                }
+            },
+        )
+
     def test_mix_tally_and_normal_fields(self):
         c = json.dumps({"c": ""})
         f1 = self.create_doc(initial_par="#- {#t1 plugin=textfield}")

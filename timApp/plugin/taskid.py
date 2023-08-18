@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import is_valid_id
@@ -87,6 +87,15 @@ class TaskId:
             plugin_type=plugin_type,
             access_specifier=TaskIdAccess(access) if access else None,
         )
+
+    @staticmethod
+    def try_parse(
+        s: str, *args: Any, **kwargs: Any
+    ) -> tuple[Optional["TaskId"], Optional[str]]:
+        try:
+            return TaskId.parse(s, *args, **kwargs), None
+        except PluginException as e:
+            return None, str(e)
 
     @property
     def doc_task(self):

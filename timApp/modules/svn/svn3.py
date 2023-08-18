@@ -230,7 +230,8 @@ def get_image_html(query):
     header, footer = get_surrounding_headers2(query)
     result = header + "<img " + w + h + 'src="' + url + '">' + footer
     if is_user_lazy(query):
-        return add_lazy(f"<div>{result}</div>") + header + footer
+        placeholder = "<div>Open image</div>" if not header and not footer else ""
+        return add_lazy(f"<div>{result}</div>") + header + footer + placeholder
     return NOLAZY + result
 
 
@@ -249,7 +250,10 @@ def replace_time_params(query, htmlstr):
 
 
 def small__and_list_html(query, duration_template):
-    s = replace_template_param(query, "{{stem}} ", "stem")
+    if not check_video_minimum_visibility(query):
+        s = "Open plugin"
+    else:
+        s = replace_template_param(query, "{{stem}} ", "stem")
     vidname = replace_template_param(query, " {{videoname}}", "videoname")
     if vidname:
         dur = replace_time_params(query, duration_template)
@@ -398,6 +402,16 @@ def get_video_html(query: QueryClass):
         htmlfunc = list_video_html
     s = make_lazy(s, query, htmlfunc)
     return s
+
+
+def check_video_minimum_visibility(query: QueryClass) -> bool:
+    """
+    Check whether a lazy video plugin would contain at least some visible text
+    """
+    for attribute in ["header", "stem", "footer", "videoname", "doctext"]:
+        if get_param(query, attribute, ""):
+            return True
+    return False
 
 
 def small_video_md(query):

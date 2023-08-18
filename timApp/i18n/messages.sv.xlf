@@ -8136,6 +8136,14 @@
           <context context-type="linenumber">3799</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7652926328132712954" datatype="html">
+        <source>Open embedded content</source>
+        <target state="translated">Öppna inbäddat innehåll</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/svn/js/video.component.ts</context>
+          <context context-type="linenumber">380</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

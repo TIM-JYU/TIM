@@ -43,7 +43,10 @@ def get_lazy_imagex_html(query: QueryClass) -> str:
         + '">'
     )
     s += replace_template_params(query, "<h4>{{header}}</h4>", "header")
-    s += replace_template_params(query, '<p class="stem">{{stem}}</p>', "stem")
+    if not get_param(query, "stem", None) and not get_param(query, "header", None):
+        s += '<p class="stem">Open plugin</p>'
+    else:
+        s += replace_template_params(query, '<p class="stem">{{stem}}</p>', "stem")
     s += "</div>"
     return s
 
