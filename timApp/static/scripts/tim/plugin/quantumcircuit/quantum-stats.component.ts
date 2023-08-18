@@ -43,7 +43,7 @@ export interface QuantumChartData {
 
             <div class="output-container">
 
-                <p *ngIf="showPrintField" class="measurements-description">Tehdyt mittaukset</p>
+                <p *ngIf="showPrintField" class="measurements-description"><ng-container i18n>Measurements</ng-container></p>
                 <div class="output-print" *ngIf="showPrintField">
                     <table #outputTable class="output-table">
                         <thead>
@@ -65,13 +65,13 @@ export interface QuantumChartData {
                 </div>
 
                 <div class="buttons" *ngIf="showPrintField || samplingMode === 'sample'">
-                    <button class="timButton" (click)="handleMeasure()">Mittaa</button>
-                    <button class="timButton" (click)="handleClear()">Tyhjennä</button>
+                    <button class="timButton" (click)="handleMeasure()"><ng-container i18n>Measure</ng-container></button>
+                    <button class="timButton" (click)="handleClear()"><ng-container i18n>Clear</ng-container></button>
                 </div>
 
                 <label class="font-weight-normal" *ngIf="showChart">
                     <input type="checkbox" [(ngModel)]="hideZeroRows" (ngModelChange)="updateChart()"/>
-                    Piilota 0% rivit
+                    <ng-container i18n>Hide 0% rows</ng-container>
                 </label>
 
             </div>
@@ -148,14 +148,13 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     updateStatsDescription() {
         switch (this.samplingMode) {
             case "autoSample":
-                this.statsDescription = `Ulostulojen todennäköisyydet ${this.nSamples} otoksen perusteella`;
+                this.statsDescription = $localize`Output probabilities based on ${this.nSamples} measurements`;
                 break;
             case "sample":
-                this.statsDescription = `Ulostulojen todennäköisyydet tehtyjen ${this.measurements.length} mittauksen perusteella`;
+                this.statsDescription = $localize`Output probabilities based on ${this.measurements.length} measurements`;
                 break;
             case "matrix":
-                this.statsDescription =
-                    "Ulostulojen todennäköisyydet matriisilaskun perusteella";
+                this.statsDescription = $localize`Output probabilities based on matrix computation`;
                 break;
         }
     }

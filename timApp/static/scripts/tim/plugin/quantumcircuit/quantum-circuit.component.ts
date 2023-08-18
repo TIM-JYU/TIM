@@ -278,15 +278,16 @@ export interface CircuitOptions {
                     <div class="buttons">
                         <button class="timButton"
                                 (click)="save()">
-                            Tallenna
+                            <ng-container i18n>Save</ng-container>
                         </button>
                         <button class="btn btn-default btn-xs"
-                                (click)="reset()">Palauta
+                                (click)="reset()">
+                            <ng-container i18n>Reset</ng-container>
                         </button>
                         <button class="btn btn-default btn-xs"
                                 *ngIf="hasEditRights"
                                 (click)="copyCircuit()">
-                            Kopioi piiri leikepöydälle
+                            <ng-container i18n>Copy circuit to clipboard</ng-container>
                         </button>
                         <div *ngIf="notification">{{notification}}</div>
                     </div>

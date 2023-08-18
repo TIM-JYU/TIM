@@ -8144,6 +8144,62 @@
           <context context-type="linenumber">380</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7304210041509653538" datatype="html">
+        <source>Copy circuit to clipboard</source>
+        <target state="new">Copy circuit to clipboard</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">290</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="770492681595827297" datatype="html">
+        <source>Measure</source>
+        <target state="new">Measure</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">68</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8525218912995413707" datatype="html">
+        <source>Hide 0% rows</source>
+        <target state="new">Hide 0% rows</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4878852784108374726" datatype="html">
+        <source>Output probabilities based on <x id="PH" equiv-text="this.nSamples"/> measurements</source>
+        <target state="new">Output probabilities based on <x id="PH" equiv-text="this.nSamples"/> measurements</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">151</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8294913404467240099" datatype="html">
+        <source>Output probabilities based on matrix computation</source>
+        <target state="new">Output probabilities based on matrix computation</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">157</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5361585538695040272" datatype="html">
+        <source>Measurements</source>
+        <target state="new">Measurements</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8700121026680200191" datatype="html">
+        <source>Clear</source>
+        <target state="new">Clear</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
