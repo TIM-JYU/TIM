@@ -19,7 +19,7 @@ import {
                         
                     </div>
 
-                    <button title="piilota" type="button" class="btn btn-default btn-sm" (click)="handleClose()">
+                    <button i18n-title title="hide" type="button" class="btn btn-default btn-sm" (click)="handleClose()">
                         <span class="glyphicon glyphicon-remove"></span>
                     </button>
                 </div>

@@ -492,6 +492,7 @@ export class QuantumCircuitComponent
         const r = await this.postAnswer<{
             web: {result?: string; error?: IServerError};
         }>(params);
+
         if (r.ok) {
             this.result = r.result.web.result ?? "";
             this.error = r.result.web.error;
@@ -524,7 +525,7 @@ export class QuantumCircuitComponent
         if (r.ok) {
             const yaml = r.result.web;
             copyToClipboard(yaml);
-            this.notification = "kopioitu";
+            this.notification = $localize`copied`;
             setTimeout(() => {
                 this.notification = "";
             }, 2000);

@@ -8420,10 +8420,26 @@
       </trans-unit>
       <trans-unit id="804086259088523340" datatype="html">
         <source>Circuit gives wrong probabilities with input:</source>
-        <target state="new">Piiri antaa väärät todennäköisyydet syötteellä:</target>
+        <target state="translated">Piiri antaa väärät todennäköisyydet syötteellä:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
           <context context-type="linenumber">31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="862375343902268300" datatype="html">
+        <source>copied</source>
+        <target state="translated">Kopioitu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">527</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5633144232269377096" datatype="html">
+        <source>hide</source>
+        <target state="translated">piilota</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">22</context>
         </context-group>
       </trans-unit>
     </body>
