@@ -8298,6 +8298,134 @@
           <context context-type="linenumber">69</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8497528947328199741" datatype="html">
+        <source>Time</source>
+        <target state="translated">Aika</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
+          <context context-type="linenumber">80</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
+          <context context-type="linenumber">168</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2282740286795786266" datatype="html">
+        <source>Qubit</source>
+        <target state="translated">Kubitti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8968030053137661433" datatype="html">
+        <source>Output</source>
+        <target state="translated">Ulostulo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
+          <context context-type="linenumber">169</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="370189395688019936" datatype="html">
+        <source>Drag gate to circuit</source>
+        <target state="translated">Raahaa portti piiriin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-gate-menu.component.ts</context>
+          <context context-type="linenumber">22</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4215858884470188361" datatype="html">
+        <source>This gate can&apos;t be edited</source>
+        <target state="translated">Tätä porttia ei pysty muokkaamaan</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3156133562193660103" datatype="html">
+        <source>Matrix</source>
+        <target state="translated">Matriisi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2348040847528975404" datatype="html">
+        <source>Controls</source>
+        <target state="translated">Kontrollit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3583886527803327688" datatype="html">
+        <source>Answer doesn&apos;t satisfy condition:</source>
+        <target state="translated">Vastaus ei toteuta ehtoa:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">9</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1151624068238912535" datatype="html">
+        <source>With values:</source>
+        <target state="translated">Arvoilla:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5819666844474822775" datatype="html">
+        <source>Unable to interpret condition:</source>
+        <target state="translated">Ei pystytty tulkitsemaan ehtoa:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2468017285640072870" datatype="html">
+        <source>Condition has invalid characters:</source>
+        <target state="translated">Ehdossa on kiellettyjä merkkejä:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4328859015715796236" datatype="html">
+        <source>Failed to parse matrix from input:</source>
+        <target state="translated">Matriisia ei pystytty jäsentämään syötteestä:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="879466655958951799" datatype="html">
+        <source>Probabilities should&apos;ve been:</source>
+        <target state="translated">Todennäköisyyksien olisi pitänyt olla:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2051822553824421989" datatype="html">
+        <source>But were:</source>
+        <target state="translated">Mutta olivat:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="804086259088523340" datatype="html">
+        <source>Circuit gives wrong probabilities with input:</source>
+        <target state="new">Piiri antaa väärät todennäköisyydet syötteellä:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">31</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

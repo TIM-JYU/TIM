@@ -52,6 +52,7 @@ import {
 } from "tim/plugin/quantumcircuit/active-gate";
 import {genericglobals} from "tim/util/globals";
 import {SerializerService} from "tim/plugin/quantumcircuit/serializer.service";
+import {ErrorDisplayComponent} from "tim/plugin/quantumcircuit/error-display.component";
 
 export interface QubitOutput {
     value: number;
@@ -189,6 +190,34 @@ const QuantumCircuitFields = t.intersection([
 ]);
 
 /**
+ * Different types of errors that can be received from server.
+ */
+const ServerError = t.union([
+    t.type({
+        condition: t.string,
+        values: t.string,
+        kind: t.literal("condition-not-satisfied"),
+    }),
+    t.type({
+        condition: t.string,
+        kind: t.literal("condition-not-interpretable"),
+    }),
+    t.type({condition: t.string, kind: t.literal("condition-invalid")}),
+    t.type({
+        bitstring: t.string,
+        expected: t.string,
+        actual: t.string,
+        kind: t.literal("answer-incorrect"),
+    }),
+    t.type({
+        matrix: t.string,
+        kind: t.literal("matrix-incorrect"),
+    }),
+]);
+
+export type IServerError = t.TypeOf<typeof ServerError>;
+
+/**
  * Colors to use for UI elements.
  */
 export interface Colors {
@@ -293,7 +322,8 @@ export interface CircuitOptions {
                     </div>
                 </div>
 
-                <pre class="circuit-error" *ngIf="error" [innerHTML]="error | purify"></pre>
+                <tim-error-display *ngIf="error" [error]="error"></tim-error-display>
+                <pre class="circuit-error" *ngIf="errorString" [innerHTML]="errorString | purify"></pre>
                 <pre *ngIf="result" [innerHTML]="result | purify"></pre>
             </ng-container>
             <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
@@ -388,7 +418,8 @@ export class QuantumCircuitComponent
     measurements: Measurement[] = [];
 
     result: string = "";
-    error: string = "";
+    error?: IServerError;
+    errorString: string = "";
     notification: string = "";
 
     hasEditRights: boolean = false;
@@ -459,14 +490,14 @@ export class QuantumCircuitComponent
             },
         };
         const r = await this.postAnswer<{
-            web: {result?: string; error?: string};
+            web: {result?: string; error?: IServerError};
         }>(params);
         if (r.ok) {
             this.result = r.result.web.result ?? "";
-            this.error = r.result.web.error ?? "";
+            this.error = r.result.web.error;
         } else {
             this.result = "";
-            this.error = r.result.error.error;
+            this.errorString = r.result.error.error;
         }
     }
 
@@ -499,7 +530,7 @@ export class QuantumCircuitComponent
             }, 2000);
         } else {
             this.result = "";
-            this.error = r.result.error.error;
+            this.errorString = r.result.error.error;
         }
     }
 
@@ -848,7 +879,7 @@ export class QuantumCircuitComponent
     }
 
     showErrorMessage(message: string) {
-        this.error = message;
+        this.errorString = message;
     }
 
     /**
@@ -1113,6 +1144,7 @@ export class QuantumCircuitComponent
         SvgCellComponent,
         QuantumStatsComponent,
         InstanceofPipe,
+        ErrorDisplayComponent,
     ],
     exports: [QuantumCircuitComponent],
     imports: [

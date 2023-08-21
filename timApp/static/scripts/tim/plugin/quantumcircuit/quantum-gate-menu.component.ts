@@ -19,7 +19,7 @@ interface MenuGate {
         <!--suppress HtmlUnknownAttribute -->
 
         <div class="gate-container" *ngIf="gates.length > 0">
-            <p class="gate-container-heading">Raahaa portti piiriin tästä</p>
+            <p class="gate-container-heading"><ng-container i18n>Drag gate to circuit</ng-container></p>
 
             <div class="gate-list">
                 <div class="svg-container" *ngFor="let gate of gates" draggable="true"

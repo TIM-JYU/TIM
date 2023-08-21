@@ -15,7 +15,8 @@ import {
                     <div>{{activeGateInfo.description}}</div>
                     <div *ngIf="showEditableInfo" class="text-info gate-editable-message">
                         <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                        Tätä porttia ei pysty muokkaamaan
+                        <ng-container i18n>This gate can't be edited</ng-container>
+                        
                     </div>
 
                     <button title="piilota" type="button" class="btn btn-default btn-sm" (click)="handleClose()">
@@ -23,7 +24,7 @@ import {
                     </button>
                 </div>
                 <hr>
-                Matriisi:
+                <ng-container i18n>Matrix</ng-container>:
                 <table>
                     <tbody>
                     <tr *ngFor="let row of matrixTable">
@@ -31,10 +32,10 @@ import {
                     </tr>
                     </tbody>
                 </table>
-                <p *ngIf="qubitString">Kubitti: {{qubitString}}</p>
-                <p *ngIf="timeString">Aika: {{timeString}}</p>
+                <p *ngIf="qubitString"><ng-container>Qubit</ng-container>: {{qubitString}}</p>
+                <p *ngIf="timeString"><ng-container i18n>Time</ng-container>: {{timeString}}</p>
                 <p *ngIf="controlsString" class="controls">
-                    Kontrollit:
+                    <ng-container i18n>Controls</ng-container>:
                     {{controlsString}}
                 </p>
 
@@ -46,7 +47,7 @@ import {
 
             <a href="https://tim.jyu.fi/view/tim/TIMin-kehitys/pluginien-suunnittelu/kvantti"
                target="_blank">
-                <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions"></span>
+                <span class="glyphicon glyphicon-question-sign help-icon" i18n-title title="Instructions"></span>
             </a>
 
         </div>

@@ -96,6 +96,48 @@ class QubitInfo:
 
 
 @dataclass
+class ConditionsNotSatisfiedError:
+    condition: str
+    values: str
+    kind = "condition-not-satisfied"
+
+
+@dataclass
+class ConditionNotInterpretableError:
+    condition: str
+    kind = "condition-not-interpretable"
+
+
+@dataclass
+class ConditionInvalidError:
+    condition: str
+    kind = "condition-invalid"
+
+
+@dataclass
+class AnswerIncorrectError:
+    bitstring: str
+    expected: str
+    actual: str
+    kind = "answer-incorrect"
+
+
+@dataclass
+class MatrixIncorrectError:
+    matrix: str
+    kind = "matrix-incorrect"
+
+
+ErrorType = Union[
+    ConditionsNotSatisfiedError,
+    ConditionNotInterpretableError,
+    ConditionInvalidError,
+    AnswerIncorrectError,
+    MatrixIncorrectError,
+]
+
+
+@dataclass
 class QuantumCircuitMarkup(GenericMarkupModel):
     """Class that defines plugin markup (the YAML settings and their types)"""
 
@@ -320,12 +362,6 @@ def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
     return np.allclose(user_result, model_result)
 
 
-@dataclass
-class CheckResult:
-    ok: bool
-    message: str = ""
-
-
 def check_input(bitstring: str, patterns: list[str] | None) -> bool:
     """
     Check if simulator should be run with given bitstring input.
@@ -348,7 +384,7 @@ def run_all_simulations(
     n_qubits: int,
     custom_gates: dict[str, np.ndarray],
     model_input: list[str] | None,
-) -> CheckResult:
+) -> tuple[bool, ErrorType | None]:
     for i in range(2**n_qubits):
         bitstring = "{0:b}".format(i).rjust(n_qubits, "0")
         bitstring_reversed = "".join(reversed(bitstring))
@@ -360,17 +396,13 @@ def run_all_simulations(
         actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)
 
         if not check_answer(actual, expected):
-            with np.printoptions(threshold=sys.maxsize):
-                message = f"""
-                  Piiri antaa väärän todennäköisyyden syöteellä:
-                  {bitstring_reversed}
-                  Ulostulojen todennäköisyyksien pitäisi olla: 
-                  {expected}
-                  mutta oli:
-                  {actual}"""
-            return CheckResult(False, message)
+            expected_str = np.array2string(expected, threshold=sys.maxsize, precision=2)
+            actual_str = np.array2string(actual, threshold=sys.maxsize, precision=2)
+            return False, AnswerIncorrectError(
+                bitstring_reversed, expected_str, actual_str
+            )
 
-    return CheckResult(True)
+    return True, None
 
 
 def get_gate_counts(
@@ -406,7 +438,7 @@ def check_valid_characters(condition: str) -> bool:
 
 def evaluate_condition(
     condition: str, var_counts: defaultdict[str, int]
-) -> tuple[bool, str]:
+) -> tuple[bool, ErrorType | None]:
     eval_condition = condition
     for name, count in sorted(var_counts.items(), reverse=True):
         eval_condition = eval_condition.replace(name, str(count))
@@ -415,24 +447,18 @@ def evaluate_condition(
     eval_condition = eval_condition.replace("||", " or ")
 
     if not check_valid_characters(eval_condition):
-        return False, f"Ehdossa on kiellettyjä merkkejä {condition}"
+        return False, ConditionInvalidError(condition)
 
     try:
         result = eval(eval_condition, {"__builtins__": None})
     except SyntaxError:
-        return False, f"Ei pystytty tulkitsemaan ehtoa {condition}"
+        return False, ConditionNotInterpretableError(condition)
 
     if not result:
         values = "\n".join(map(lambda kv: f"{kv[0]}={kv[1]}", var_counts.items()))
-        message = f"""
-Vastaus rikkoo ehtoa: 
-{condition}
-Arvoilla:
-{values}
-        """.strip()
-        return False, message
+        return False, ConditionsNotSatisfiedError(condition, values)
 
-    return result, ""
+    return result, None
 
 
 def check_conditions(
@@ -440,9 +466,9 @@ def check_conditions(
     circuit: list[GateInfo] | None,
     n_measurements: int | None,
     custom_gates: dict[str, np.ndarray],
-) -> tuple[bool, str]:
+) -> tuple[bool, ErrorType | None]:
     if conditions is None or circuit is None:
-        return True, ""
+        return True, None
     counts = get_gate_counts(circuit, custom_gates)
     if n_measurements is not None:
         counts["measurements"] = n_measurements
@@ -450,11 +476,11 @@ def check_conditions(
         counts["measurements"] = 0
 
     for condition in conditions:
-        is_valid, message = evaluate_condition(condition, counts)
+        is_valid, error = evaluate_condition(condition, counts)
         if not is_valid:
-            return is_valid, message
+            return is_valid, error
 
-    return True, ""
+    return True, None
 
 
 def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
@@ -471,7 +497,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
 
     points = 1.0
     result = "tallennettu"
-    error = ""
+    error = None
 
     custom_gates = parse_custom_gates(args.input.customGates)
 
@@ -491,17 +517,17 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         and user_circuit is not None
         and n_qubits is not None
     ):
-        check_result = run_all_simulations(
+        ok, sim_error = run_all_simulations(
             model_circuit, user_circuit, n_qubits, custom_gates, model_input
         )
 
-        if check_result.ok:
+        if ok:
             points = 1.0
             result = "Oikein"
         else:
             points = 0.0
             result = ""
-            error = check_result.message
+            error = sim_error
 
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},

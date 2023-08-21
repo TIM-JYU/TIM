@@ -77,8 +77,8 @@ export class InstanceofPipe implements PipeTransform {
         <div class="circuit-container">
             <div class="qubits">
                 <div class="left-block" [style.height.px]="circuitOptions.timeAxisHeight">
-                    <div class="axis-text-time">Aika</div>
-                    <div class="axis-text-qubit">Kubitti</div>
+                    <div class="axis-text-time"><ng-container i18n>Time</ng-container></div>
+                    <div class="axis-text-qubit"><ng-container i18n>Qubit</ng-container></div>
                 </div>
                 <div *ngFor="let qubit of qubits; let i=index"
                      [style.height.px]="circuitOptions.baseSize"
@@ -165,8 +165,8 @@ export class InstanceofPipe implements PipeTransform {
 
             <div class="output-container">
                 <div class="right-block" [style.height.px]="circuitOptions.timeAxisHeight">
-                    <div class="out-axis-time">Aika</div>
-                    <div class="out-axis-text">Ulostulo</div>
+                    <div class="out-axis-time"><ng-container i18n>Time</ng-container></div>
+                    <div class="out-axis-text"><ng-container i18n>Output</ng-container></div>
                 </div>
                 <div class="output" *ngFor="let output of qubitOutputs"
                      [style.height.px]="circuitOptions.baseSize">
