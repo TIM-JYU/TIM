@@ -99,19 +99,19 @@ class QubitInfo:
 class ConditionsNotSatisfiedError:
     condition: str
     values: str
-    kind = "condition-not-satisfied"
+    errorType: str = "condition-not-satisfied"
 
 
 @dataclass
 class ConditionNotInterpretableError:
     condition: str
-    kind = "condition-not-interpretable"
+    errorType: str = "condition-not-interpretable"
 
 
 @dataclass
 class ConditionInvalidError:
     condition: str
-    kind = "condition-invalid"
+    errorType: str = "condition-invalid"
 
 
 @dataclass
@@ -119,13 +119,13 @@ class AnswerIncorrectError:
     bitstring: str
     expected: str
     actual: str
-    kind = "answer-incorrect"
+    errorType: str = "answer-incorrect"
 
 
 @dataclass
 class MatrixIncorrectError:
     matrix: str
-    kind = "matrix-incorrect"
+    errorType: str = "matrix-incorrect"
 
 
 ErrorType = Union[
@@ -455,7 +455,7 @@ def evaluate_condition(
         return False, ConditionNotInterpretableError(condition)
 
     if not result:
-        values = "\n".join(map(lambda kv: f"{kv[0]}={kv[1]}", var_counts.items()))
+        values = ", ".join(map(lambda kv: f"{kv[0]}={kv[1]}", var_counts.items()))
         return False, ConditionsNotSatisfiedError(condition, values)
 
     return result, None
@@ -508,7 +508,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         )
         if not is_valid:
             valid_conditions = False
-            error = message
+            error = asdict(message)
             points = 0.0
             result = ""
     if (
@@ -527,12 +527,12 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         else:
             points = 0.0
             result = ""
-            error = sim_error
+            error = asdict(sim_error)
 
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},
         "tim_info": {"points": points},
-        "web": {"result": result, "error": error},
+        "web": {"result": result, "error": json.dumps(error)},
     }
 
 

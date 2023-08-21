@@ -196,22 +196,22 @@ const ServerError = t.union([
     t.type({
         condition: t.string,
         values: t.string,
-        kind: t.literal("condition-not-satisfied"),
+        errorType: t.literal("condition-not-satisfied"),
     }),
     t.type({
         condition: t.string,
-        kind: t.literal("condition-not-interpretable"),
+        errorType: t.literal("condition-not-interpretable"),
     }),
-    t.type({condition: t.string, kind: t.literal("condition-invalid")}),
+    t.type({condition: t.string, errorType: t.literal("condition-invalid")}),
     t.type({
         bitstring: t.string,
         expected: t.string,
         actual: t.string,
-        kind: t.literal("answer-incorrect"),
+        errorType: t.literal("answer-incorrect"),
     }),
     t.type({
         matrix: t.string,
-        kind: t.literal("matrix-incorrect"),
+        errorType: t.literal("matrix-incorrect"),
     }),
 ]);
 
@@ -490,12 +490,16 @@ export class QuantumCircuitComponent
             },
         };
         const r = await this.postAnswer<{
-            web: {result?: string; error?: IServerError};
+            web: {result?: string; error?: string};
         }>(params);
 
         if (r.ok) {
             this.result = r.result.web.result ?? "";
-            this.error = r.result.web.error;
+            const e = r.result.web.error;
+            if (e) {
+                this.error = JSON.parse(e);
+                console.log(e);
+            }
         } else {
             this.result = "";
             this.errorString = r.result.error.error;
