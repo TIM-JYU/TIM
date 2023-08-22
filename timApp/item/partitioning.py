@@ -152,6 +152,9 @@ def partition_texts(
         return texts
     started = False
     for text in texts:
+        if text.is_setting:
+            partitioned.append(text)
+            continue
         present = text.id in requested_pars
         if not present and started:
             break
