@@ -498,7 +498,6 @@ export class QuantumCircuitComponent
             const e = r.result.web.error;
             if (e) {
                 this.error = JSON.parse(e);
-                console.log(e);
             }
         } else {
             this.result = "";
