@@ -672,15 +672,21 @@ class Document:
         insert_after_id: str | None = None,
     ) -> DocParagraph:
 
-        if not insert_before_id and not insert_after_id:
+        is_setting = p.is_setting()
+
+        if not is_setting and not insert_before_id and not insert_after_id:
             return self.add_paragraph_obj(p)
 
         if "HELP_PAR" in (insert_after_id, insert_before_id):
             return self.add_paragraph_obj(p)
 
+        old_ver = self.get_version()
+        old_path = self.get_version_path(old_ver)
+        if is_setting:
+            if not old_path.exists():
+                return self.add_paragraph_obj(p)
         p.store()
         p.set_latest()
-        old_ver = self.get_version()
         new_ver = self.__increment_version(
             "Inserted",
             p.get_id(),
@@ -691,19 +697,22 @@ class Document:
         )
 
         new_line = p.get_id() + "/" + p.get_hash() + "\n"
-        with self.get_version_path(old_ver).open("r") as f_src, self.get_version_path(
-            new_ver
-        ).open("w") as f:
-            while True:
-                line = f_src.readline()
-                if not line:
-                    break
+        with old_path.open("r") as f_src, self.get_version_path(new_ver).open("w") as f:
+            if is_setting:
+                f.write(new_line)
+                rest = f_src.readlines()
+                f.writelines(rest)
+            else:
+                while True:
+                    line = f_src.readline()
+                    if not line:
+                        break
 
-                if insert_before_id and line.startswith(insert_before_id):
-                    f.write(new_line)
-                f.write(line)
-                if insert_after_id and line.startswith(insert_after_id):
-                    f.write(new_line)
+                    if insert_before_id and line.startswith(insert_before_id):
+                        f.write(new_line)
+                    f.write(line)
+                    if insert_after_id and line.startswith(insert_after_id):
+                        f.write(new_line)
         self.__update_metadata([p], old_ver, new_ver)
         return p
 
