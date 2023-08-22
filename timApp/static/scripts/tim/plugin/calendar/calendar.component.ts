@@ -194,6 +194,7 @@ export type TIMEventMeta = {
     signup_before: Date;
     location: string;
     description: string;
+    description_html?: string;
     enrollments: number;
     extraEnrollments?: number | null;
     maxSize: number;
@@ -223,6 +224,7 @@ export function postProcessCalendarEvent(
     }
     event.meta = {
         description: event.meta!.description,
+        description_html: event.meta!.description_html,
         tmpEvent: false,
         enrollments: event.meta!.enrollments,
         extraEnrollments: event.meta!.extraEnrollments,
