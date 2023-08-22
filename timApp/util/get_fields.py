@@ -20,6 +20,7 @@ from timApp.answer.answers import (
     get_points_by_rule,
     basic_tally_fields,
     valid_answers_query,
+    user_field_to_point_sum_field,
 )
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.document.docinfo import DocInfo
@@ -574,9 +575,13 @@ def get_tally_field_values(
                         field.field
                     ]  # The group should exist because the field was validated above.
                     value = (
-                        value.get(field.subfield, None)
+                        value.get(normalize_tally_subfield(field.subfield), None)
                         if field.subfield
                         else value["total_sum"]
                     )
                 tally_field_values[u.id].append((value, alias or field.doc_and_field))
     return tally_field_values
+
+
+def normalize_tally_subfield(subfield: str) -> str:
+    return user_field_to_point_sum_field.get(subfield, subfield)

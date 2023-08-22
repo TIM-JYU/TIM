@@ -509,6 +509,10 @@ basic_tally_fields = [
     "last_answer_on",
     "answer_duration",
 ]
+user_field_to_point_sum_field = {
+    "total_points": "total_sum",
+    "velp_points": "velp_sum",
+}
 
 
 def valid_answers_query(task_ids: list[TaskId], valid: bool | None = True) -> Query:

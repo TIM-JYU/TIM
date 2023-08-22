@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from flask import session, g, request
+from flask import session, g, request, has_request_context
 from sqlalchemy.orm import joinedload
 
 from timApp.document.usercontext import UserContext
@@ -48,6 +48,13 @@ def get_current_user_object() -> User:
 def user_context_with_logged_in(u: User | None) -> UserContext:
     curr = get_current_user_object()
     return UserContext(user=u or curr, logged_user=curr)
+
+
+def user_context_with_logged_in_or_anon() -> UserContext:
+    if not has_request_context():
+        anon_user = User.get_anon()
+        return UserContext(user=anon_user, logged_user=anon_user)
+    return user_context_with_logged_in(None)
 
 
 def get_other_users() -> dict[str, dict[str, str]]:

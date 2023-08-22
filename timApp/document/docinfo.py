@@ -196,10 +196,10 @@ class DocInfo(Item):
             settings = d.document.get_settings()
             extra_preambles = settings.extra_preambles()
             if extra_preambles:
-                from timApp.auth.sessioninfo import user_context_with_logged_in
+                from timApp.auth.sessioninfo import user_context_with_logged_in_or_anon
 
                 macro_info = settings.get_macroinfo(
-                    default_view_ctx, user_context_with_logged_in(None)
+                    default_view_ctx, user_context_with_logged_in_or_anon()
                 )
 
                 if isinstance(extra_preambles, str):
