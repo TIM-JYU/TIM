@@ -258,6 +258,29 @@ export class GateService {
     }
 
     /**
+     * Check that number is of form x = 2^n, for some n.
+     * https://stackoverflow.com/questions/30924280/what-is-the-best-way-to-determine-if-a-given-number-is-a-power-of-two
+     * @param x number
+     */
+    private isPowerOfTwo(x: number) {
+        return Math.log2(x) % 1 === 0;
+    }
+
+    private checkIsValidGateMatrix(m: Matrix) {
+        const size = m.size();
+        // too many dimensions
+        if (size.length !== 2) {
+            return false;
+        }
+        // non square matrix
+        if (size[0] !== size[1]) {
+            return false;
+        }
+        // has to be power of two
+        return this.isPowerOfTwo(size[0]);
+    }
+
+    /**
      * Parses a new gate with given name and parses
      * its matrix from string.
      * Matrix is parsed using syntax specified in
@@ -269,15 +292,22 @@ export class GateService {
     private parseCustomGate(name: string, matrixStr: string) {
         try {
             const customMatrix = evaluate(matrixStr);
-            if (customMatrix instanceof Matrix) {
+            if (
+                customMatrix instanceof Matrix &&
+                this.checkIsValidGateMatrix(customMatrix)
+            ) {
                 return {
                     name: name,
                     matrix: customMatrix,
                 };
             }
         } catch (error) {
-            throw new Error(`Invalid custom matrix value ${name} ${matrixStr}`);
+            throw new Error(
+                $localize`Invalid custom matrix value ${name} ${matrixStr}`
+            );
         }
-        throw new Error(`Invalid custom matrix value ${name} ${matrixStr}`);
+        throw new Error(
+            $localize`Invalid custom matrix value ${name} ${matrixStr}`
+        );
     }
 }

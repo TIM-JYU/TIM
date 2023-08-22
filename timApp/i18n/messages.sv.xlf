@@ -8344,6 +8344,54 @@
           <context context-type="linenumber">22</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1070803942963424190" datatype="html">
+        <source>Invalid custom matrix value <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></source>
+        <target state="new">Invalid custom matrix value <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/gate.service.ts</context>
+          <context context-type="linenumber">280</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/gate.service.ts</context>
+          <context context-type="linenumber">284</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7921559387951706176" datatype="html">
+        <source>Tried to add gate to circuit that is not part of known gates: <x id="PH" equiv-text="gateData.name"/></source>
+        <target state="new">Tried to add gate to circuit that is not part of known gates: <x id="PH" equiv-text="gateData.name"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">838,837</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">857,856</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4232283552912303724" datatype="html">
+        <source>invalid nQubits value <x id="PH" equiv-text="this.nQubits"/></source>
+        <target state="new">invalid nQubits value <x id="PH" equiv-text="this.nQubits"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">900,899</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7163187511874522313" datatype="html">
+        <source>Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.qubits.length"/> qubits.</source>
+        <target state="new">Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.qubits.length"/> qubits.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">928,927</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5235137580040427813" datatype="html">
+        <source>Got incorrect value for qubit: <x id="PH" equiv-text="q.value"/>. Value needs to be either 0 or 1.</source>
+        <target state="new">Got incorrect value for qubit: <x id="PH" equiv-text="q.value"/>. Value needs to be either 0 or 1.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">941,940</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

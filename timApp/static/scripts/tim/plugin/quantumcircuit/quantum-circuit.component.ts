@@ -835,7 +835,7 @@ export class QuantumCircuitComponent
             } else if (this.isControl(gateData)) {
                 if (!this.gateService.getGate(gateData.name)) {
                     this.showErrorMessage(
-                        `Tried to add gate to circuit that is not part of known gates: ${gateData.name}`
+                        $localize`Tried to add gate to circuit that is not part of known gates: ${gateData.name}`
                     );
                     continue;
                 }
@@ -854,7 +854,7 @@ export class QuantumCircuitComponent
             } else if (this.isSingleOrMultiQubit(gateData)) {
                 if (!this.gateService.getGate(gateData.name)) {
                     this.showErrorMessage(
-                        `Tried to add gate to circuit that is not part of known gates: ${gateData.name}`
+                        $localize`Tried to add gate to circuit that is not part of known gates: ${gateData.name}`
                     );
                     continue;
                 }
@@ -896,7 +896,9 @@ export class QuantumCircuitComponent
         const userInput = this.attrsall.state?.userInput;
 
         if (this.nQubits < 1) {
-            this.showErrorMessage(`invalid nQubits value ${this.nQubits}`);
+            this.showErrorMessage(
+                $localize`invalid nQubits value ${this.nQubits}`
+            );
             return;
         }
 
@@ -923,7 +925,7 @@ export class QuantumCircuitComponent
         if (this.markup.qubits) {
             if (this.markup.qubits.length !== this.qubits.length) {
                 this.showErrorMessage(
-                    `Got incorrect amount of qubits ${this.markup.qubits.length}. There needs to be ${this.qubits.length} qubits.`
+                    $localize`Got incorrect amount of qubits ${this.markup.qubits.length}. There needs to be ${this.qubits.length} qubits.`
                 );
             } else {
                 for (let i = 0; i < this.qubits.length; i++) {
@@ -936,7 +938,7 @@ export class QuantumCircuitComponent
                             this.qubits[i].value = q.value;
                         } else {
                             this.showErrorMessage(
-                                `Got incorrect value for qubit: ${q.value}. Value needs to be either 0 or 1.`
+                                $localize`Got incorrect value for qubit: ${q.value}. Value needs to be either 0 or 1.`
                             );
                         }
                     }
