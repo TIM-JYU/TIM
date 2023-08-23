@@ -32,7 +32,7 @@ import {
                     </tr>
                     </tbody>
                 </table>
-                <p *ngIf="qubitString"><ng-container>Qubit</ng-container>: {{qubitString}}</p>
+                <p *ngIf="qubitString"><ng-container i18n>Qubit</ng-container>: {{qubitString}}</p>
                 <p *ngIf="timeString"><ng-container i18n>Time</ng-container>: {{timeString}}</p>
                 <p *ngIf="controlsString" class="controls">
                     <ng-container i18n>Controls</ng-container>:
