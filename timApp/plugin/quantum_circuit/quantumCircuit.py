@@ -496,7 +496,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     n_measurements = args.input.measurements
 
     points = 1.0
-    result = "tallennettu"
+    result = "saved"
     error = None
 
     custom_gates = parse_custom_gates(args.input.customGates)
@@ -523,7 +523,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
 
         if ok:
             points = 1.0
-            result = "Oikein"
+            result = "correct"
         else:
             points = 0.0
             result = ""
@@ -532,7 +532,10 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},
         "tim_info": {"points": points},
-        "web": {"result": result, "error": json.dumps(error)},
+        "web": {
+            "result": result,
+            "error": json.dumps(error, ensure_ascii=False, indent=4),
+        },
     }
 
 
@@ -540,9 +543,9 @@ def reqs_handler() -> PluginReqs:
     """Return plugins' dependencies and info on how to render it"""
 
     template_full = """
-    ``` {#tehtava1 plugin="quantumCircuit"}
-header: "Kvanttipiirisimulaattori"
-stem: "Testaa piiriä"
+``` {#tehtava1 plugin="quantumCircuit"}
+header: "Tehtävän otsikko"
+stem: "Tehtävänanto"
 # footer: "alateksti"
 # starttime: '2023-07-25 15:00:00'
 # deadline: '2023-07-28 23:59:00'
@@ -556,6 +559,7 @@ showOutputBits: true
 showPrintField: true
 samplingMode: matrix
 nSamples: 100
+# simulate: server
 initialCircuit:
   -
     name: H
@@ -574,6 +578,7 @@ initialCircuit:
     name: I2
     target: 1
     time: 3
+    editable: false
 customGates:
   -
     name: Id

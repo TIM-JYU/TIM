@@ -53,6 +53,7 @@ import {
 import {genericglobals} from "tim/util/globals";
 import {SerializerService} from "tim/plugin/quantumcircuit/serializer.service";
 import {ErrorDisplayComponent} from "tim/plugin/quantumcircuit/error-display.component";
+import {isRight} from "fp-ts/Either";
 
 export interface QubitOutput {
     value: number;
@@ -463,6 +464,15 @@ export class QuantumCircuitComponent
         return this.markup.nSamples;
     }
 
+    parseError(e: string) {
+        const errInfo = ServerError.decode(JSON.parse(e));
+        if (isRight(errInfo)) {
+            return errInfo.right;
+        } else {
+            throw errInfo;
+        }
+    }
+
     /**
      * Save answer.
      */
@@ -494,10 +504,25 @@ export class QuantumCircuitComponent
         }>(params);
 
         if (r.ok) {
-            this.result = r.result.web.result ?? "";
+            const resText = r.result.web.result ?? "";
+            if (resText === "saved") {
+                this.result = $localize`saved`;
+            } else if (resText === "correct") {
+                this.result = $localize`correct`;
+            } else {
+                this.result = resText;
+            }
             const e = r.result.web.error;
-            if (e) {
-                this.error = JSON.parse(e);
+            if (e && e !== "null") {
+                try {
+                    this.error = this.parseError(e);
+                } catch (err) {
+                    // We got an error, but it either was not valid JSON or it was not a valid ServerError instance
+                    // This could happen e.g. if user sets a custom error via `postprogram` attribute.
+                    this.showErrorMessage((err as Error).message);
+                }
+            } else {
+                this.error = undefined;
             }
         } else {
             this.result = "";
@@ -927,6 +952,7 @@ export class QuantumCircuitComponent
                 this.showErrorMessage(
                     $localize`Got incorrect amount of qubits ${this.markup.qubits.length}. There needs to be ${this.qubits.length} qubits.`
                 );
+                return;
             } else {
                 for (let i = 0; i < this.qubits.length; i++) {
                     const q = this.markup.qubits[i];
@@ -940,6 +966,7 @@ export class QuantumCircuitComponent
                             this.showErrorMessage(
                                 $localize`Got incorrect value for qubit: ${q.value}. Value needs to be either 0 or 1.`
                             );
+                            return;
                         }
                     }
                     if (q.editable === false) {
@@ -957,6 +984,7 @@ export class QuantumCircuitComponent
             );
         } catch (error) {
             this.showErrorMessage((error as Error).message);
+            return;
         }
 
         const userCircuit = this.attrsall.state?.userCircuit;

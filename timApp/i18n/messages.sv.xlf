@@ -8392,6 +8392,22 @@
           <context context-type="linenumber">941,940</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8574400202974552045" datatype="html">
+        <source>saved</source>
+        <target state="new">saved</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">500</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="845184340669679902" datatype="html">
+        <source>correct</source>
+        <target state="new">correct</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">502</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

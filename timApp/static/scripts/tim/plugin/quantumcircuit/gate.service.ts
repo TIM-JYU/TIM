@@ -268,7 +268,7 @@ export class GateService {
 
     private checkIsValidGateMatrix(m: Matrix) {
         const size = m.size();
-        // too many dimensions
+        // incorrect shape
         if (size.length !== 2) {
             return false;
         }
