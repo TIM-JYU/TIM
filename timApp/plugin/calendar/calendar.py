@@ -573,7 +573,10 @@ def get_events(opts: FilterOptions) -> Response:
     # TODO: This needs further optimization
     return json_response(
         [
-            e.to_json(with_users=user_is_event_manager(e.event_id), for_user=cur_user)
+            e.to_json(
+                with_users=user_is_event_manager(e.event_id),
+                for_user=cur_user,
+            )
             for e in events
         ]
     )
@@ -597,7 +600,11 @@ def get_event(event_id: int) -> Response:
         raise AccessDenied("No permission to see event")
 
     return json_response(
-        event.to_json(with_users=right.can_manage_event, for_user=cur_user)
+        event.to_json(
+            with_users=right.can_manage_event,
+            for_user=cur_user,
+            desc_as_md=True,
+        )
     )
 
 

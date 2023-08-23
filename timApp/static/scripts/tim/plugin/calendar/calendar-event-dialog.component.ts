@@ -26,6 +26,7 @@ import {
     TimCalendarModule,
 } from "tim/plugin/calendar/calendar.component";
 import {CommonModule} from "@angular/common";
+import {PurifyModule} from "tim/util/purify.module";
 
 @Component({
     selector: "tim-calendar-event-dialog",
@@ -213,16 +214,20 @@ import {CommonModule} from "@angular/common";
                         </div>
                         <div class="form-group">
                             <div class="input-group">
-                                <div class="col-sm-12">
+                                <div class="col-sm-12" *ngIf="description.length > 0 || description_html.length > 0 || isEditEnabled()">
                                     <label i18n class="col-sm-12 control-label" for="description">Event
                                         description</label>
-                                    <textarea maxlength="1020" id="description"
+                                    <ng-container *ngIf="isEditEnabled(); else viewMode">
+                                        <textarea  maxlength="1020" id="description"
                                               [(ngModel)]="description" #ngModelDescription="ngModel"
                                               (ngModelChange)="setMessage()"
                                               name="description"
                                               class="form-control"
-                                              [disabled]="!isEditEnabled()">
-                            </textarea>
+                                              [disabled]="!isEditEnabled()"></textarea>
+                                    </ng-container>
+                                    <ng-template #viewMode>
+                                        <div [innerHTML]="description_html | purify"></div>
+                                    </ng-template>
                                 </div>
                                 <div class="col-sm-12" [hidden]="hideBookerMessage()">
                                     <label i18n for="bookerMessage" class="col-sm-12 control-label">Message
@@ -347,6 +352,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     bookerEmail: string | null = "";
     bookerMessage = "";
     description = "";
+    description_html = "";
     userBooked = false;
     eventBookState: {canBook: boolean; reason?: string} = {
         canBook: true,
@@ -486,6 +492,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         this.title = this.data.title;
         this.location = this.data.meta!.location;
         this.description = this.data.meta!.description;
+        this.description_html = this.data.meta!.description_html ?? "";
         this.sendNotifications = this.data.meta!.send_notifications;
         this.important = this.data.meta!.important;
         this.ownerName = this.data.meta!.owner?.name ?? "";
@@ -885,6 +892,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         HttpClientModule,
         TimCalendarModule,
         TooltipModule.forRoot(),
+        PurifyModule,
     ],
     exports: [CalendarEventDialogComponent],
 })

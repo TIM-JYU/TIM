@@ -20,6 +20,7 @@ from sqlalchemy import func
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from tim_common.dumboclient import call_dumbo
 
 
 class EventGroup(db.Model):
@@ -297,7 +298,12 @@ class Event(db.Model):
     def get_by_id(event_id: int) -> Optional["Event"]:
         return Event.query.filter_by(event_id=event_id).one_or_none()
 
-    def to_json(self, with_users: bool = False, for_user: User | None = None) -> dict:
+    def to_json(
+        self,
+        with_users: bool = False,
+        for_user: User | None = None,
+        desc_as_md: bool = False,
+    ) -> dict:
         e_cnt = self.enrollments_count
         meta = {
             "signup_before": self.signup_before,
@@ -313,6 +319,13 @@ class Event(db.Model):
                 "email": self.creator.email,
             },
         }
+
+        if desc_as_md:
+            # noinspection PyBroadException
+            try:
+                meta["description_html"] = call_dumbo([self.message])[0]
+            except:
+                meta["description_html"] = self.message
 
         user_group_ids = []
         if for_user:
