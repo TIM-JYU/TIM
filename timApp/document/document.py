@@ -665,6 +665,29 @@ class Document:
             p, insert_before_id=insert_before_id, insert_after_id=insert_after_id
         )
 
+    def insert_setting_paragraph_obj(
+        self,
+        p: DocParagraph,
+        insert_before_id: str | None = None,
+    ):
+        first_par = None
+        self.ensure_par_ids_loaded()
+        if self.par_ids:
+            first_par = self.get_paragraph(self.par_ids[0])
+        last_settings_par = None
+        settings_pars = list(self.get_settings_pars())
+        if settings_pars:
+            last_settings_par = settings_pars[-1]
+        if first_par is None:
+            return self.add_paragraph_obj(p)
+        for par in settings_pars:
+            if par.id == insert_before_id:
+                return self.insert_paragraph_obj(p, insert_before_id)
+        if last_settings_par:
+            return self.insert_paragraph_obj(p, insert_after_id=last_settings_par.id)
+        else:
+            return self.insert_paragraph_obj(p, insert_before_id=first_par.id)
+
     def insert_paragraph_obj(
         self,
         p: DocParagraph,
@@ -672,9 +695,7 @@ class Document:
         insert_after_id: str | None = None,
     ) -> DocParagraph:
 
-        is_setting = p.is_setting()
-
-        if not is_setting and not insert_before_id and not insert_after_id:
+        if not insert_before_id and not insert_after_id:
             return self.add_paragraph_obj(p)
 
         if "HELP_PAR" in (insert_after_id, insert_before_id):
@@ -682,9 +703,6 @@ class Document:
 
         old_ver = self.get_version()
         old_path = self.get_version_path(old_ver)
-        if is_setting:
-            if not old_path.exists():
-                return self.add_paragraph_obj(p)
         p.store()
         p.set_latest()
         new_ver = self.__increment_version(
@@ -698,21 +716,16 @@ class Document:
 
         new_line = p.get_id() + "/" + p.get_hash() + "\n"
         with old_path.open("r") as f_src, self.get_version_path(new_ver).open("w") as f:
-            if is_setting:
-                f.write(new_line)
-                rest = f_src.readlines()
-                f.writelines(rest)
-            else:
-                while True:
-                    line = f_src.readline()
-                    if not line:
-                        break
+            while True:
+                line = f_src.readline()
+                if not line:
+                    break
 
-                    if insert_before_id and line.startswith(insert_before_id):
-                        f.write(new_line)
-                    f.write(line)
-                    if insert_after_id and line.startswith(insert_after_id):
-                        f.write(new_line)
+                if insert_before_id and line.startswith(insert_before_id):
+                    f.write(new_line)
+                f.write(line)
+                if insert_after_id and line.startswith(insert_after_id):
+                    f.write(new_line)
         self.__update_metadata([p], old_ver, new_ver)
         return p
 
