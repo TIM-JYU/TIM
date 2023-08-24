@@ -118,7 +118,7 @@ def partition_texts_with_index(
     for text in texts:
         if i >= e:
             break
-        if i < preamble_count or i >= b:
+        if i < preamble_count or i >= b or text.is_setting:
             partitioned.append(text)
         i += 1
     return partitioned
