@@ -8408,6 +8408,38 @@
           <context context-type="linenumber">502</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="151222451665123813" datatype="html">
+        <source>Couldn&apos;t simulate circuit because there were too many qubits</source>
+        <target state="new">Couldn&apos;t simulate circuit because there were too many qubits</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3774433155539269558" datatype="html">
+        <source>Circuit contains <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</source>
+        <target state="new">Circuit contains <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="661376449876462534" datatype="html">
+        <source>But max is <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></source>
+        <target state="new">But max is <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9063698038582773958" datatype="html">
+        <source>Too many qubits for browser simulator. Try changing simulate attribute to &quot;server&quot;.</source>
+        <target state="new">Too many qubits for browser simulator. Try changing simulate attribute to &quot;server&quot;.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-simulation.ts</context>
+          <context context-type="linenumber">451</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

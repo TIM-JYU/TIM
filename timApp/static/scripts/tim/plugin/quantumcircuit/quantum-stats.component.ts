@@ -29,7 +29,8 @@ export interface QuantumChartData {
     template: `
         <div class="stats-container" [hidden]="!showChart && !showPrintField">
             <div>
-                <div class="stats-description">{{statsDescription}}
+                <div class="stats-description">
+                    <span *ngIf="showChart">{{statsDescription}}</span>
                     <tim-loading *ngIf="isSimulatorRunning"></tim-loading>
                 </div>
 
