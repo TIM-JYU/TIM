@@ -128,12 +128,20 @@ class MatrixIncorrectError:
     errorType: str = "matrix-incorrect"
 
 
+@dataclass
+class TooManyQubitsError:
+    qubits: int
+    maxQubits: int
+    errorType: str = "too-many-qubits"
+
+
 ErrorType = Union[
     ConditionsNotSatisfiedError,
     ConditionNotInterpretableError,
     ConditionInvalidError,
     AnswerIncorrectError,
     MatrixIncorrectError,
+    TooManyQubitsError,
 ]
 
 
@@ -385,6 +393,9 @@ def run_all_simulations(
     custom_gates: dict[str, np.ndarray],
     model_input: list[str] | None,
 ) -> tuple[bool, ErrorType | None]:
+    if n_qubits > 20:
+        return False, TooManyQubitsError(n_qubits, 20)
+
     for i in range(2**n_qubits):
         bitstring = "{0:b}".format(i).rjust(n_qubits, "0")
         bitstring_reversed = "".join(reversed(bitstring))
@@ -655,6 +666,12 @@ class SimulationArgs:
 @use_model(SimulationArgs)
 def quantum_circuit_simulate(args: SimulationArgs) -> Response:
     custom_gates = parse_custom_gates(args.customGates)
+    if args.nQubits > 20:
+        err_str = json.dumps(
+            asdict(TooManyQubitsError(args.nQubits, 20)), ensure_ascii=False, indent=4
+        )
+        return jsonify({"web": {"result": "", "error": err_str}})
+
     result = run_simulation(args.gates, args.inputList, args.nQubits, custom_gates)
 
-    return jsonify({"web": list(result)})
+    return jsonify({"web": {"result": list(result), "error": ""}})

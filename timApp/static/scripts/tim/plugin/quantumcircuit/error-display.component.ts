@@ -33,7 +33,12 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
             <p>{{error.expected}}</p>
             <p i18n>But were:</p>
             <p>{{error.actual}}</p>
-
+        </div>
+        
+        <div *ngIf="error.errorType === 'too-many-qubits'">
+            <p i18n>Couldn't simulate circuit because there were too many qubits</p>
+            <p i18n>Circuit contains {{error.qubits}} qubits</p>
+            <p i18n>But max is {{error.maxQubits}}</p>
         </div>
     `,
 })

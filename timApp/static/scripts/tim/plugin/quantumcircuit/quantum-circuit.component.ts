@@ -193,7 +193,7 @@ const QuantumCircuitFields = t.intersection([
 /**
  * Different types of errors that can be received from server.
  */
-const ServerError = t.union([
+export const ServerError = t.union([
     t.type({
         condition: t.string,
         values: t.string,
@@ -213,6 +213,11 @@ const ServerError = t.union([
     t.type({
         matrix: t.string,
         errorType: t.literal("matrix-incorrect"),
+    }),
+    t.type({
+        qubits: t.number,
+        maxQubits: t.number,
+        errorType: t.literal("too-many-qubits"),
     }),
 ]);
 
@@ -591,7 +596,23 @@ export class QuantumCircuitComponent
         const startTime = new Date();
         console.log(`started simulating at: ${startTime.toLocaleTimeString()}`);
         this.isSimulatorRunning = true;
-        await this.simulator.run(this.qubits);
+        const res = await this.simulator.run(this.qubits);
+        if (!res.ok) {
+            const error = res.result;
+            if (typeof error === "string") {
+                this.showErrorMessage(error);
+            } else if (error.errorType === "too-many-qubits") {
+                this.error = error;
+            }
+            this.isSimulatorRunning = false;
+            const endTime = new Date();
+
+            const timeDiff = endTime.getTime() - startTime.getTime();
+            console.log(`simulation ended in error at: ${timeDiff}ms`);
+
+            return;
+        }
+
         const endTime = new Date();
 
         const timeDiff = endTime.getTime() - startTime.getTime();

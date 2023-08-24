@@ -1,9 +1,11 @@
 import type {
     ICustomGateInfo,
     INumericCustomGateInfo,
+    IServerError,
     Measurement,
     SimulationArgs,
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import {ServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 import type {Matrix} from "mathjs";
 import {dotPow, abs, transpose, multiply, kron, identity, index} from "mathjs";
@@ -18,8 +20,10 @@ import {
 import type {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import type {Qubit} from "tim/plugin/quantumcircuit/qubit";
 import type {SerializerService} from "tim/plugin/quantumcircuit/serializer.service";
+import type {Result} from "tim/util/utils";
 import {timeout, toPromise} from "tim/util/utils";
 import type {HttpClient} from "@angular/common/http";
+import {isRight} from "fp-ts/Either";
 
 export abstract class QuantumCircuitSimulator {
     board: QuantumBoard;
@@ -36,7 +40,9 @@ export abstract class QuantumCircuitSimulator {
      * Runs simulator. The implementations should put the result in this.result
      * @param qubits initial state to use for simulation. [q[0], q[1],...]
      */
-    abstract run(qubits: Qubit[]): Promise<void>;
+    abstract run(
+        qubits: Qubit[]
+    ): Promise<Result<string, string | IServerError>>;
 
     setBoard(board: QuantumBoard) {
         this.board = board;
@@ -165,6 +171,7 @@ export abstract class QuantumCircuitSimulator {
         }
         return counter.map((v) => (v / sampleSize) * 100.0);
     }
+
     /**
      * Gets probabilities and labels for each output.
      * @param sampleSize if given then use this many samples to compute probabilities for outputs
@@ -207,6 +214,9 @@ export abstract class QuantumCircuitSimulator {
     }
 }
 
+/**
+ * Quantum circuit simulator where the computation in done in the browser.
+ */
 export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
     constructor(gateService: GateService, board: QuantumBoard) {
         super(gateService, board);
@@ -434,7 +444,14 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
     /**
      * Run simulation on current circuit and qubits.
      */
-    async run(qubits: Qubit[]) {
+    async run(qubits: Qubit[]): Promise<Result<string, string | IServerError>> {
+        if (qubits.length > 10) {
+            return Promise.resolve({
+                ok: false,
+                result: $localize`Too many qubits for browser simulator. Try changing simulate attribute to "server".`,
+            });
+        }
+
         const inputQubits = qubits.map((q) => q.asVector());
 
         let input = inputQubits[0];
@@ -447,8 +464,10 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
         for (let colI = 0; colI < this.board.nMoments; colI++) {
             const res = this.applyColumnMatrix(colI, output);
             if (!res) {
-                console.error("undefined column matrix");
-                return;
+                return Promise.resolve({
+                    ok: false,
+                    result: "undefined column matrix",
+                });
             }
             output = res;
             await timeout(0);
@@ -466,10 +485,16 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
         }
         this.result = this.reverseResultQubitOrder(res);
 
-        return Promise.resolve();
+        return Promise.resolve({
+            ok: true,
+            result: "",
+        });
     }
 }
 
+/**
+ * Quantum circuit simulator where the computation is done on the server.
+ */
 export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
     serializerService: SerializerService;
     customGates: ICustomGateInfo[] | null | undefined;
@@ -486,7 +511,15 @@ export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
         this.customGates = customGates;
     }
 
-    async run(qubits: Qubit[]) {
+    parseError(e: string) {
+        const errInfo = ServerError.decode(JSON.parse(e));
+        if (isRight(errInfo)) {
+            return errInfo.right;
+        }
+        return "";
+    }
+
+    async run(qubits: Qubit[]): Promise<Result<string, string | IServerError>> {
         const inputList = qubits.map((q) => q.value);
         let customGates: INumericCustomGateInfo[] = [];
         if (this.customGates) {
@@ -504,11 +537,22 @@ export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
         };
 
         const url = "/quantumCircuit/simulate";
-        const r = await toPromise(this.http.post<{web: number[]}>(url, params));
+        const r = await toPromise(
+            this.http.post<{web: {result?: number[]; error?: string}}>(
+                url,
+                params
+            )
+        );
         if (r.ok) {
-            this.result = r.result.web;
+            const e = r.result.web.error;
+            if (e) {
+                const err = this.parseError(e);
+                return Promise.resolve({ok: false, result: err});
+            }
+            this.result = r.result.web.result;
         } else {
-            console.error(r.result.error.error);
+            return Promise.resolve({ok: false, result: r.result.error.error});
         }
+        return Promise.resolve({ok: true, result: ""});
     }
 }
