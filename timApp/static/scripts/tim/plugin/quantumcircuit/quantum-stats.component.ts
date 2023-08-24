@@ -110,6 +110,7 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
             },
         },
         backgroundColor: "#004494",
+        animation: false,
     };
 
     statsDescription: string = "";
