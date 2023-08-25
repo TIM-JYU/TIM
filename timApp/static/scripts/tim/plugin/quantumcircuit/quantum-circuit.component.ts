@@ -219,6 +219,10 @@ export const ServerError = t.union([
         maxQubits: t.number,
         errorType: t.literal("too-many-qubits"),
     }),
+    t.type({
+        regex: t.string,
+        errorType: t.literal("regex-invalid"),
+    }),
 ]);
 
 export type IServerError = t.TypeOf<typeof ServerError>;

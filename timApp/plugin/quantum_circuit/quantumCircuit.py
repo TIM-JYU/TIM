@@ -135,6 +135,12 @@ class TooManyQubitsError:
     errorType: str = "too-many-qubits"
 
 
+@dataclass
+class RegexInvalidError:
+    regex: str
+    errorType: str = "regex-invalid"
+
+
 ErrorType = Union[
     ConditionsNotSatisfiedError,
     ConditionNotInterpretableError,
@@ -142,6 +148,7 @@ ErrorType = Union[
     AnswerIncorrectError,
     MatrixIncorrectError,
     TooManyQubitsError,
+    RegexInvalidError,
 ]
 
 
@@ -370,7 +377,9 @@ def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
     return np.allclose(user_result, model_result)
 
 
-def check_input(bitstring: str, patterns: list[str] | None) -> bool:
+def check_input(
+    bitstring: str, patterns: list[str] | None
+) -> tuple[bool, ErrorType | None]:
     """
     Check if simulator should be run with given bitstring input.
     :param bitstring: input qubit values
@@ -378,12 +387,16 @@ def check_input(bitstring: str, patterns: list[str] | None) -> bool:
     :return: True if bitstring matches any pattern else False
     """
     if patterns is None:
-        return True
+        return True, None
 
     for pattern in patterns:
-        if re.fullmatch(pattern, bitstring):
-            return True
-    return False
+        try:
+            if re.fullmatch(pattern, bitstring):
+                return True, None
+        except re.error:
+            return False, RegexInvalidError(pattern)
+
+    return False, None
 
 
 def run_all_simulations(
@@ -399,9 +412,13 @@ def run_all_simulations(
     for i in range(2**n_qubits):
         bitstring = "{0:b}".format(i).rjust(n_qubits, "0")
         bitstring_reversed = "".join(reversed(bitstring))
-        if not check_input(bitstring_reversed, model_input):
+        check_input_valid, check_input_error = check_input(
+            bitstring_reversed, model_input
+        )
+        if not check_input_valid and check_input_error is not None:
+            return False, check_input_error
+        if not check_input_valid:
             continue
-
         input_list = [int(d) for d in bitstring]
         expected = run_simulation(model_circuit, input_list, n_qubits, custom_gates)
         actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)

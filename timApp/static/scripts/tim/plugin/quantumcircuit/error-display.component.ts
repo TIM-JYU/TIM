@@ -40,6 +40,11 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
             <p i18n>Circuit contains {{error.qubits}} qubits</p>
             <p i18n>But max is {{error.maxQubits}}</p>
         </div>
+        
+        <div *ngIf="error.errorType === 'regex-invalid'">
+            <p i18n>modelInput contains invalid regex pattern</p>
+            <p>{{error.regex}}</p>
+        </div>
     `,
 })
 export class ErrorDisplayComponent {
