@@ -45,7 +45,7 @@ import {
                 </p>
             </div>
 
-            <a href="https://tim.jyu.fi/view/tim/TIMin-kehitys/pluginien-suunnittelu/kvantti"
+            <a href="https://tim.jyu.fi/view/tim/ohjeita/kvanttisimulaattori"
                target="_blank">
                 <span class="glyphicon glyphicon-question-sign help-icon" i18n-title title="Instructions"></span>
             </a>
