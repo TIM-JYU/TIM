@@ -516,7 +516,7 @@ export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
         if (isRight(errInfo)) {
             return errInfo.right;
         }
-        return "";
+        return e;
     }
 
     async run(qubits: Qubit[]): Promise<Result<string, string | IServerError>> {
