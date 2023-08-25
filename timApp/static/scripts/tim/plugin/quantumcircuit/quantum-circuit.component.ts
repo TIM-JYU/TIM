@@ -948,7 +948,7 @@ export class QuantumCircuitComponent
             return;
         }
 
-        if (userInput && !reset) {
+        if (userInput && !reset && userInput.length === this.nQubits) {
             for (let i = 0; i < this.nQubits; i++) {
                 const value = userInput[i];
                 this.qubits.push(
