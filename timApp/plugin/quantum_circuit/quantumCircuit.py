@@ -451,7 +451,10 @@ def evaluate_condition(
     condition: str, var_counts: defaultdict[str, int]
 ) -> tuple[bool, ErrorType | None]:
     eval_condition = condition
-    for name, count in sorted(var_counts.items(), reverse=True):
+    # sort by name length descending so that e.g. X in SX doesn't get replaced by the count of X
+    for name, count in sorted(
+        var_counts.items(), key=lambda x: len(x[0]), reverse=True
+    ):
         eval_condition = eval_condition.replace(name, str(count))
 
     eval_condition = eval_condition.replace("&&", " and ")
