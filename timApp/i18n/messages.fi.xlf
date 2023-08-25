@@ -8538,6 +8538,14 @@
           <context context-type="linenumber">451</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="642381033692235501" datatype="html">
+        <source>modelInput contains invalid regex pattern</source>
+        <target state="new">modelInput sisältää virheellisen regexin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
