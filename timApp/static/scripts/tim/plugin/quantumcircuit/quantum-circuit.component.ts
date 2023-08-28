@@ -936,15 +936,7 @@ export class QuantumCircuitComponent
         this.errorString = message;
     }
 
-    /**
-     * Initializes board, qubits and outputs.
-     * @param reset whether this call is to reset board to initial state
-     */
-    initializeBoard(reset: boolean) {
-        this.qubits = [];
-        const defaultValue = 0;
-        const userInput = this.attrsall.state?.userInput;
-
+    initializeQubits(reset: boolean) {
         if (this.nQubits < 1) {
             this.showErrorMessage(
                 $localize`invalid nQubits value ${this.nQubits}`
@@ -952,54 +944,61 @@ export class QuantumCircuitComponent
             return;
         }
 
-        if (userInput && !reset && userInput.length === this.nQubits) {
-            for (let i = 0; i < this.nQubits; i++) {
-                const value = userInput[i];
-                this.qubits.push(
-                    new Qubit(value, `q[${i}]`, true, this.circuitOptions)
-                );
-            }
-        } else {
-            for (let i = 0; i < this.nQubits; i++) {
-                this.qubits.push(
-                    new Qubit(
-                        defaultValue,
-                        `q[${i}]`,
-                        true,
-                        this.circuitOptions
-                    )
-                );
-            }
+        if (this.markup.qubits && this.markup.qubits.length !== this.nQubits) {
+            this.showErrorMessage(
+                $localize`Got incorrect amount of qubits ${this.markup.qubits.length}. There needs to be ${this.nQubits} qubits.`
+            );
+            return;
         }
 
-        if (this.markup.qubits) {
-            if (this.markup.qubits.length !== this.qubits.length) {
-                this.showErrorMessage(
-                    $localize`Got incorrect amount of qubits ${this.markup.qubits.length}. There needs to be ${this.qubits.length} qubits.`
-                );
-                return;
-            } else {
-                for (let i = 0; i < this.qubits.length; i++) {
-                    const q = this.markup.qubits[i];
-                    if (q.name !== undefined && q.name !== null) {
-                        this.qubits[i].name = q.name;
-                    }
-                    if (q.value !== undefined && q.value !== null) {
-                        if (q.value === 1 || q.value === 0) {
-                            this.qubits[i].value = q.value;
-                        } else {
-                            this.showErrorMessage(
-                                $localize`Got incorrect value for qubit: ${q.value}. Value needs to be either 0 or 1.`
-                            );
-                            return;
-                        }
-                    }
-                    if (q.editable === false) {
-                        this.qubits[i].editable = false;
+        this.qubits = [];
+        const userInput = this.attrsall.state?.userInput;
+
+        for (let i = 0; i < this.nQubits; i++) {
+            let value = 0;
+            let name = `q[${i}]`;
+            let editable = true;
+
+            if (this.markup.qubits) {
+                const q = this.markup.qubits[i];
+                if (q.name !== undefined && q.name !== null) {
+                    name = q.name;
+                }
+                if (q.value !== undefined && q.value !== null) {
+                    if (q.value === 1 || q.value === 0) {
+                        value = q.value;
+                    } else {
+                        this.showErrorMessage(
+                            $localize`Got incorrect value for qubit: ${q.value}. Value needs to be either 0 or 1.`
+                        );
+                        return;
                     }
                 }
+                if (q.editable === false) {
+                    editable = false;
+                }
             }
+
+            // when resetting, use original value.
+            // if userInput isn't the same length as nQubits then yaml was edited and
+            // existing answers with different nQubits value wouldn't work
+            if (userInput && userInput.length === this.nQubits && !reset) {
+                value = userInput[i];
+            }
+
+            this.qubits.push(
+                new Qubit(value, name, editable, this.circuitOptions)
+            );
         }
+    }
+
+    /**
+     * Initializes board, qubits and outputs.
+     * @param reset whether this call is to reset board to initial state
+     */
+    initializeBoard(reset: boolean) {
+        this.initializeQubits(reset);
+
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
 
         try {
@@ -1022,15 +1021,19 @@ export class QuantumCircuitComponent
 
         this.qubitOutputs = [];
         for (let i = 0; i < this.nQubits; i++) {
-            this.qubitOutputs.push({
-                value: 0,
-                probability: 0,
-                probabilityText: "0",
-            });
-        }
-        if (this.markup.outputNames) {
-            for (let i = 0; i < this.qubitOutputs.length; i++) {
-                this.qubitOutputs[i].name = this.markup.outputNames[i];
+            if (this.markup.outputNames) {
+                this.qubitOutputs.push({
+                    value: 0,
+                    probability: 0,
+                    probabilityText: "0",
+                    name: this.markup.outputNames[i],
+                });
+            } else {
+                this.qubitOutputs.push({
+                    value: 0,
+                    probability: 0,
+                    probabilityText: "0",
+                });
             }
         }
     }
