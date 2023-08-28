@@ -40,14 +40,34 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
                 opcode for opcode in opcodes if opcode[0] in ["delete", "replace"]
             ]:
                 for par_id in tr_ids[i1:i2]:
+                    # if tr_doc.get_paragraph(par_id).is_citation_par():
+                    #
                     tr_doc.delete_paragraph(par_id)
             for tag, i1, i2, j1, j2 in opcodes:
                 if tag == "replace":
                     for par_id in orig_ids[j1:j2]:
                         before_i = tr_doc.find_insert_index(i2, tr_ids)
+
+                        # Preserve citations if they exist and follow cite references
+                        # to source.
+                        # TODO: find translated source par if it exists in the same language
+                        #       as the current citing doc/translation.
+                        ref_par = orig.get_paragraph(par_id)
+                        rd = ref_par.get_attr("rd", None)
+                        rp = ref_par.get_attr("rp", None)
                         tr_par = create_reference(
-                            tr_doc, orig.doc_id, par_id, r="tr", add_rd=False
+                            tr_doc,
+                            doc_id=rd if rd else orig.doc_id,
+                            par_id=rp if rp else par_id,
+                            r="tr",
+                            add_rd=ref_par.is_citation_par(),
                         )
+
+                        # if ref_par.is_citation_par():
+                        # else:
+                        #     tr_par = create_reference(
+                        #         tr_doc, orig.doc_id, par_id, r="tr", add_rd=False
+                        #     )
                         if orig.get_paragraph(par_id).is_setting():
                             tr_par.set_attr("settings", "")
                         tr_doc.insert_paragraph_obj(

@@ -1039,6 +1039,10 @@ class DocParagraph:
         """Returns whether this paragraph is a reference to an area."""
         return self.get_attr("ra") is not None
 
+    def is_citation_par(self) -> bool:
+        """Return bool value indicating whether this paragraph is a citation or not."""
+        return self.get_attr("rd") is not None and self.is_par_reference()
+
     def is_translation(self) -> bool:
         """Returns whether this paragraph is a translated paragraph."""
         return self.get_attr("r") == "tr" and self.get_attr("rp") is not None
