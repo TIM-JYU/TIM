@@ -38,6 +38,43 @@ def apply_citation(new_doc: DocInfo, src_doc: Document):
         doc.set_settings(settings)
 
 
+def find_lang_matching_cite_source(
+    rd: str, rp: str, tr_doc: Document
+) -> tuple[Document, str] | tuple[None, None]:
+    """
+    Find document and paragraph id from cited source Translation whose language matches
+    the Translation we are currently creating.
+    Note that the return value may be (None, None).
+    :param rd: source document id
+    :param rp: source document paragraph id
+    :param tr_doc: Translation that is citing the source document
+    :return: the matched source Translation and paragraph id as a tuple, or (None, None).
+    """
+    matched_doc = None
+    par_id = None
+    source_docinfo = DocEntry.find_by_id(int(rd)) if rd else None
+
+    if source_docinfo:
+        for source_tr in source_docinfo.translations:
+            # Documents might be missing a lang_id, or even a DocInfo
+            if (
+                source_tr.lang_id
+                and tr_doc.docinfo
+                and source_tr.lang_id == tr_doc.docinfo.lang_id
+            ):
+                matched_doc = source_tr
+                # Find matching paragraph hash for translated citation par
+                for p in source_tr.document:
+                    if p.get_attr("rp") == rp:
+                        par_id = p.id
+                        break
+                break
+        if not matched_doc:
+            matched_doc = source_docinfo.document
+            par_id = rp
+    return matched_doc, par_id
+
+
 def add_reference_pars(
     doc: Document, original_doc: Document, r: str, translator: str | None = None
 ):
@@ -49,28 +86,16 @@ def add_reference_pars(
         # matches the language of the translation being created and use it if found.
         # If one is not found, the original citation should be used.
         citation_doc_id = par.get_attr("rd")
-        citation_par_hash = par.get_attr("rp")
+        citation_par_id = par.get_attr("rp")
 
         if citation_doc_id:
-            matched_doc = None
-            citation_source_docinfo = DocEntry.find_by_id(int(citation_doc_id))
-            if citation_source_docinfo:
-                for tr in citation_source_docinfo.translations:
-                    # Documents might be missing a lang_id, or even a DocInfo
-                    if tr.lang_id and doc.docinfo and tr.lang_id == doc.docinfo.lang_id:
-                        matched_doc = tr
-                        # Find matching paragraph hash for translated citation par
-                        for p in tr.document:
-                            if p.get_attr("rp") == citation_par_hash:
-                                citation_par_hash = p.id
-                                break
-                        break
-                if not matched_doc:
-                    matched_doc = citation_source_docinfo.document
-            else:
-                # cited document doesn't exist, so just use the original citation
+            matched_doc, citation_par_id = find_lang_matching_cite_source(
+                citation_doc_id, citation_par_id, doc
+            )
+            if not matched_doc or not citation_par_id:
+                # cited document or paragraph doesn't exist, so just use the original citation
                 matched_doc = original_doc
-                citation_par_hash = par.id
+                citation_par_id = par.id
 
             # can also be an area reference
             area_citation = par.get_attr("ra")
@@ -85,7 +110,7 @@ def add_reference_pars(
                 ref_par = create_reference(
                     doc=doc,
                     doc_id=matched_doc.doc_id,
-                    par_id=citation_par_hash,
+                    par_id=citation_par_id,
                     add_rd=True,
                     r=r,
                 )
