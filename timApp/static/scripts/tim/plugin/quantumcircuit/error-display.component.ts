@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {equal} from "mathjs";
 import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component";
@@ -43,12 +43,14 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
                             <th i18n>Actual</th>
                         </tr>
                         </thead>
-                        
+
                         <tbody>
                         <tr *ngFor="let output of outputs; let i = index;">
                             <td class="answer-table-td">{{output}}</td>
-                            <td class="answer-table-td" [title]="error.expected[i]">{{error.expected[i] | number: '1.1-3'}}</td>
-                            <td class="answer-table-td" [title]="error.actual[i]" [class.incorrect]="!answersCorrect[i]">{{error.actual[i] | number: '1.1-3'}}</td>
+                            <td class="answer-table-td"
+                                [title]="error.expected[i]">{{error.expected[i] | number: '1.1-3'}}</td>
+                            <td class="answer-table-td" [title]="error.actual[i]"
+                                [class.incorrect]="!answersCorrect[i]">{{error.actual[i] | number: '1.1-3'}}</td>
                         </tr>
                         </tbody>
 
@@ -71,7 +73,7 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
     `,
     styleUrls: ["error-display.component.scss"],
 })
-export class ErrorDisplayComponent implements OnInit {
+export class ErrorDisplayComponent implements OnChanges {
     @Input()
     error!: IServerError;
 
@@ -82,7 +84,10 @@ export class ErrorDisplayComponent implements OnInit {
         return i.toString(2).padStart(nQubits, "0");
     }
 
-    ngOnInit() {
+    /**
+     * Create fields necessary to display answer error
+     */
+    createAnswerDisplayData() {
         if (this.error.errorType === "answer-incorrect") {
             const nQubits = Math.floor(Math.log2(this.error.actual.length));
 
@@ -101,5 +106,9 @@ export class ErrorDisplayComponent implements OnInit {
                 }
             }
         }
+    }
+
+    ngOnChanges(changes: SimpleChanges): void {
+        this.createAnswerDisplayData();
     }
 }
