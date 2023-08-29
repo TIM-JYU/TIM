@@ -8304,22 +8304,6 @@
           <context context-type="linenumber">26</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="879466655958951799" datatype="html">
-        <source>Probabilities should&apos;ve been:</source>
-        <target state="new">Probabilities should&apos;ve been:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
-          <context context-type="linenumber">33</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2051822553824421989" datatype="html">
-        <source>But were:</source>
-        <target state="new">But were:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
-          <context context-type="linenumber">35</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="804086259088523340" datatype="html">
         <source>Circuit gives wrong probabilities with input:</source>
         <target state="new">Circuit gives wrong probabilities with input:</target>
@@ -8377,11 +8361,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7163187511874522313" datatype="html">
-        <source>Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.qubits.length"/> qubits.</source>
-        <target state="new">Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.qubits.length"/> qubits.</target>
+        <source>Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.nQubits"/> qubits.</source>
+        <target state="new">Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.nQubits"/> qubits.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
-          <context context-type="linenumber">928,927</context>
+          <context context-type="linenumber">949,948</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5235137580040427813" datatype="html">
@@ -8446,6 +8430,30 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
           <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7989584202803202902" datatype="html">
+        <source>Expected</source>
+        <target state="new">Expected</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2628961601867476622" datatype="html">
+        <source>Actual</source>
+        <target state="new">Actual</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9205109434477920315" datatype="html">
+        <source>Output probabilities were:</source>
+        <target state="new">Output probabilities were:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="linenumber">36</context>
         </context-group>
       </trans-unit>
     </body>

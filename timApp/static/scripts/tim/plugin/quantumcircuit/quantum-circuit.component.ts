@@ -206,8 +206,8 @@ export const ServerError = t.union([
     t.type({condition: t.string, errorType: t.literal("condition-invalid")}),
     t.type({
         bitstring: t.string,
-        expected: t.string,
-        actual: t.string,
+        expected: t.array(t.number),
+        actual: t.array(t.number),
         errorType: t.literal("answer-incorrect"),
     }),
     t.type({
