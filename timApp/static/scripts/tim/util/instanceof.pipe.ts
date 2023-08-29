@@ -1,5 +1,6 @@
 // https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242
-import {Pipe, PipeTransform} from "@angular/core";
+import type {PipeTransform} from "@angular/core";
+import {Pipe} from "@angular/core";
 
 type AbstractType<T> = abstract new (...args: never[]) => T;
 

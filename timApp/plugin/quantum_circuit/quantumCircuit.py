@@ -425,11 +425,6 @@ def run_all_simulations(
         actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)
 
         if not check_answer(actual, expected):
-            # expected_str = np.array2string(expected, threshold=sys.maxsize, precision=2)
-            # actual_str = np.array2string(actual, threshold=sys.maxsize, precision=2)
-            # return False, AnswerIncorrectError(
-            #    bitstring_reversed, expected_str, actual_str
-            # )
             return False, AnswerIncorrectError(
                 bitstring_reversed, list(expected), list(actual)
             )
