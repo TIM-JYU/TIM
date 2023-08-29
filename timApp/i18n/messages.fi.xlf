@@ -8244,7 +8244,7 @@
       </trans-unit>
       <trans-unit id="7304210041509653538" datatype="html">
         <source>Copy circuit to clipboard</source>
-        <target state="translated">Kopio piiri leikepöydälle</target>
+        <target state="translated">Kopioi piiri leikepöydälle</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">290</context>
@@ -8366,7 +8366,7 @@
         <source>Answer doesn&apos;t satisfy condition:</source>
         <target state="translated">Vastaus ei toteuta ehtoa:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">9</context>
         </context-group>
       </trans-unit>
@@ -8374,7 +8374,7 @@
         <source>With values:</source>
         <target state="translated">Arvoilla:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">11</context>
         </context-group>
       </trans-unit>
@@ -8382,7 +8382,7 @@
         <source>Unable to interpret condition:</source>
         <target state="translated">Ei pystytty tulkitsemaan ehtoa:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">16</context>
         </context-group>
       </trans-unit>
@@ -8390,7 +8390,7 @@
         <source>Condition has invalid characters:</source>
         <target state="translated">Ehdossa on kiellettyjä merkkejä:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">21</context>
         </context-group>
       </trans-unit>
@@ -8398,7 +8398,7 @@
         <source>Failed to parse matrix from input:</source>
         <target state="translated">Matriisia ei pystytty jäsentämään syötteestä:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">26</context>
         </context-group>
       </trans-unit>
@@ -8406,7 +8406,7 @@
         <source>Circuit gives wrong probabilities with input:</source>
         <target state="translated">Piiri antaa väärät todennäköisyydet syötteellä:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">31</context>
         </context-group>
       </trans-unit>
@@ -8428,7 +8428,7 @@
       </trans-unit>
       <trans-unit id="1070803942963424190" datatype="html">
         <source>Invalid custom matrix value <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></source>
-        <target state="translated">custom matriisin arvo on virheellinen <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></target>
+        <target state="translated">Oman matriisin arvo on virheellinen <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/gate.service.ts</context>
           <context context-type="linenumber">280</context>
@@ -8494,7 +8494,7 @@
         <source>Couldn&apos;t simulate circuit because there were too many qubits</source>
         <target state="translated">Ei pystytty simuloimaan piiriä, koska siinä oli liikaa kubitteja</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">39</context>
         </context-group>
       </trans-unit>
@@ -8502,7 +8502,7 @@
         <source>Circuit contains <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</source>
         <target state="translated">Piiri sisältää <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> kubittia</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">40</context>
         </context-group>
       </trans-unit>
@@ -8510,7 +8510,7 @@
         <source>But max is <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></source>
         <target state="translated">Mutta maksimi on <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
@@ -8524,9 +8524,9 @@
       </trans-unit>
       <trans-unit id="642381033692235501" datatype="html">
         <source>modelInput contains invalid regex pattern</source>
-        <target state="translated">modelInput sisältää virheellisen regexin</target>
+        <target state="translated">modelInput sisältää virheellisen regex-lausekkeen</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
@@ -8534,7 +8534,7 @@
         <source>Expected</source>
         <target state="translated">Malli</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
@@ -8542,7 +8542,7 @@
         <source>Actual</source>
         <target state="translated">Sinun</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
@@ -8550,8 +8550,16 @@
         <source>Output probabilities were:</source>
         <target state="translated">Ulostulojen todennäköisyydet olivat:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6193475728133614712" datatype="html">
+        <source>Using browser simulator because user isn&apos;t logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></source>
+        <target state="translated">Käytetään selainsimulaattoria, koska käyttäjä ei ole kirjautunut sisään: <x id="PH" equiv-text="Users.getCurrent().name"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">1089,1088</context>
         </context-group>
       </trans-unit>
     </body>

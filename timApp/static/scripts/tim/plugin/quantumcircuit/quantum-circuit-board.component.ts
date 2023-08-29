@@ -2,7 +2,7 @@
  * Quantum circuit board.
  */
 
-import type {OnInit, PipeTransform} from "@angular/core";
+import type {OnInit} from "@angular/core";
 import {
     Component,
     EventEmitter,
@@ -10,7 +10,6 @@ import {
     Output,
     ViewChild,
     ElementRef,
-    Pipe,
 } from "@angular/core";
 import {CircuitOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {QubitOutput} from "tim/plugin/quantumcircuit/quantum-circuit.component";
@@ -51,22 +50,6 @@ export interface GateBeingDragged {
     gate: GatePos;
     offset: [number, number];
     originalBounds: DOMRect;
-}
-
-// https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242
-type AbstractType<T> = abstract new (...args: never[]) => T;
-
-/**
- * Check that type is of correct type.
- */
-@Pipe({
-    name: "instanceof",
-    pure: true,
-})
-export class InstanceofPipe implements PipeTransform {
-    public transform<V, R>(value: V, type: AbstractType<R>): R | undefined {
-        return value instanceof type ? value : undefined;
-    }
 }
 
 @Component({

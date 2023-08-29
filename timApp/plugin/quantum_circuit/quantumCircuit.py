@@ -1,7 +1,6 @@
 from dataclasses import dataclass, asdict
 from typing import Union
 import json
-import sys
 import re
 from collections import defaultdict
 import math
@@ -13,6 +12,7 @@ from qulacs import QuantumCircuit, QuantumState, QuantumGateMatrix
 from qulacs.gate import H, X, Y, Z, S, T, to_matrix_gate, DenseMatrix
 import numpy as np
 
+from timApp.auth.accesshelper import verify_logged_in
 from timApp.tim_app import csrf
 from timApp.util.flask.requesthelper import use_model
 from tim_common.markupmodels import GenericMarkupModel
@@ -25,6 +25,7 @@ from tim_common.pluginserver_flask import (
     EditorTab,
 )
 from tim_common.utils import Missing
+from timApp.util.logger import log_warning
 
 
 @dataclass
@@ -303,7 +304,7 @@ def add_gates_to_circuit(
                     mat.add_control_qubit(c, 1)
                 circuit.add_gate(mat)
         else:
-            print(f"undefined type {gate_def}")
+            log_warning(f"quantum: undefined gate type {gate_def}")
 
 
 def parse_matrix(m_str: str) -> np.ndarray:
@@ -452,7 +453,7 @@ def get_gate_counts(
             counts[gate_def.name] += 1
             circuit_names.add(gate_def.name)
         else:
-            print(f"undefined type {gate_def}")
+            log_warning(f"quantum: undefined gate type {gate_def}")
 
     # also add names that are not in circuit but could be in conditions
     for name in get_all_gate_names(custom_gates):
@@ -688,6 +689,7 @@ class SimulationArgs:
 @quantum_circuit_plugin.post("/simulate")
 @use_model(SimulationArgs)
 def quantum_circuit_simulate(args: SimulationArgs) -> Response:
+    verify_logged_in()
     custom_gates = parse_custom_gates(args.customGates)
     if args.nQubits > 20:
         err_str = json.dumps(

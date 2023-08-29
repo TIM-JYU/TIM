@@ -4,7 +4,7 @@ import {equal} from "mathjs";
 import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 @Component({
-    selector: "tim-error-display",
+    selector: "tim-quantum-error",
     template: `
         <div class="error-container">
             <div *ngIf="error.errorType === 'condition-not-satisfied'">
@@ -71,9 +71,9 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
             </div>
         </div>
     `,
-    styleUrls: ["error-display.component.scss"],
+    styleUrls: ["quantum-error.component.scss"],
 })
-export class ErrorDisplayComponent implements OnChanges {
+export class QuantumErrorComponent implements OnChanges {
     @Input()
     error!: IServerError;
 

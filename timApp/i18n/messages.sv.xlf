@@ -8268,7 +8268,7 @@
         <source>Answer doesn&apos;t satisfy condition:</source>
         <target state="new">Answer doesn&apos;t satisfy condition:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">9</context>
         </context-group>
       </trans-unit>
@@ -8276,7 +8276,7 @@
         <source>With values:</source>
         <target state="new">With values:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">11</context>
         </context-group>
       </trans-unit>
@@ -8284,7 +8284,7 @@
         <source>Unable to interpret condition:</source>
         <target state="new">Unable to interpret condition:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">16</context>
         </context-group>
       </trans-unit>
@@ -8292,7 +8292,7 @@
         <source>Condition has invalid characters:</source>
         <target state="new">Condition has invalid characters:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">21</context>
         </context-group>
       </trans-unit>
@@ -8300,7 +8300,7 @@
         <source>Failed to parse matrix from input:</source>
         <target state="new">Failed to parse matrix from input:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">26</context>
         </context-group>
       </trans-unit>
@@ -8308,7 +8308,7 @@
         <source>Circuit gives wrong probabilities with input:</source>
         <target state="new">Circuit gives wrong probabilities with input:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">31</context>
         </context-group>
       </trans-unit>
@@ -8396,7 +8396,7 @@
         <source>Couldn&apos;t simulate circuit because there were too many qubits</source>
         <target state="new">Couldn&apos;t simulate circuit because there were too many qubits</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">39</context>
         </context-group>
       </trans-unit>
@@ -8404,7 +8404,7 @@
         <source>Circuit contains <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</source>
         <target state="new">Circuit contains <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">40</context>
         </context-group>
       </trans-unit>
@@ -8412,7 +8412,7 @@
         <source>But max is <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></source>
         <target state="new">But max is <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
@@ -8428,7 +8428,7 @@
         <source>modelInput contains invalid regex pattern</source>
         <target state="new">modelInput contains invalid regex pattern</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
@@ -8436,7 +8436,7 @@
         <source>Expected</source>
         <target state="new">Expected</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
@@ -8444,7 +8444,7 @@
         <source>Actual</source>
         <target state="new">Actual</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
@@ -8452,8 +8452,16 @@
         <source>Output probabilities were:</source>
         <target state="new">Output probabilities were:</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/error-display.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6193475728133614712" datatype="html">
+        <source>Using browser simulator because user isn&apos;t logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></source>
+        <target state="new">Using browser simulator because user isn&apos;t logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">1089,1088</context>
         </context-group>
       </trans-unit>
     </body>

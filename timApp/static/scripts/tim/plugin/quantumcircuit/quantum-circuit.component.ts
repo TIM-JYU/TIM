@@ -18,10 +18,7 @@ import type {
     GateMove,
     GatePos,
 } from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
-import {
-    InstanceofPipe,
-    QuantumCircuitBoardComponent,
-} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
+import {QuantumCircuitBoardComponent} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {NgChartsModule} from "ng2-charts";
@@ -43,7 +40,7 @@ import {copyToClipboard, timeout} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import {DomSanitizer} from "@angular/platform-browser";
-import {SvgCellComponent} from "tim/plugin/quantumcircuit/svg-cell.component";
+import {QuantumCellComponent} from "tim/plugin/quantumcircuit/quantum-cell.component";
 import {PurifyModule} from "tim/util/purify.module";
 import {Qubit} from "tim/plugin/quantumcircuit/qubit";
 import {
@@ -52,8 +49,10 @@ import {
 } from "tim/plugin/quantumcircuit/active-gate";
 import {genericglobals} from "tim/util/globals";
 import {SerializerService} from "tim/plugin/quantumcircuit/serializer.service";
-import {ErrorDisplayComponent} from "tim/plugin/quantumcircuit/error-display.component";
+import {QuantumErrorComponent} from "tim/plugin/quantumcircuit/quantum-error.component";
 import {isRight} from "fp-ts/Either";
+import {Users} from "tim/user/userService";
+import {InstanceofModule} from "tim/util/instanceof.module";
 
 export interface QubitOutput {
     value: number;
@@ -332,7 +331,7 @@ export interface CircuitOptions {
                     </div>
                 </div>
 
-                <tim-error-display *ngIf="error" [error]="error"></tim-error-display>
+                <tim-quantum-error *ngIf="error" [error]="error"></tim-quantum-error>
                 <pre class="circuit-error" *ngIf="errorString" [innerHTML]="errorString | purify"></pre>
                 <pre *ngIf="result" [innerHTML]="result | purify"></pre>
             </ng-container>
@@ -1079,6 +1078,16 @@ export class QuantumCircuitComponent
                 this.gateService,
                 this.board
             );
+        } else if (this.markup.simulate === "server" && !Users.isLoggedIn()) {
+            this.simulator = new BrowserQuantumCircuitSimulator(
+                this.gateService,
+                this.board
+            );
+            this.showErrorMessage(
+                $localize`Using browser simulator because user isn't logged in: ${
+                    Users.getCurrent().name
+                }`
+            );
         } else {
             this.simulator = new ServerQuantumCircuitSimulator(
                 this.http,
@@ -1203,10 +1212,9 @@ export class QuantumCircuitComponent
         QuantumGateMenuComponent,
         QuantumToolboxComponent,
         QuantumCircuitBoardComponent,
-        SvgCellComponent,
+        QuantumCellComponent,
         QuantumStatsComponent,
-        InstanceofPipe,
-        ErrorDisplayComponent,
+        QuantumErrorComponent,
     ],
     exports: [QuantumCircuitComponent],
     imports: [
@@ -1216,6 +1224,7 @@ export class QuantumCircuitComponent
         TimUtilityModule,
         FormsModule,
         PurifyModule,
+        InstanceofModule,
     ],
 })
 export class QuantumCircuitModule implements DoBootstrap {
