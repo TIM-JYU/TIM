@@ -404,7 +404,10 @@ def parse_yaml(text: str) -> tuple[dict, YamlMergeInfo]:
     text, hints = correct_yaml(text)
     verify_anchor_depth(text)
 
-    values = yaml.load(text, yaml_loader)
+    try:
+        values = yaml.load(text, yaml_loader)
+    except ValueError as e:
+        raise YAMLError("Invalid YAML: " + str(e)) from e
     if isinstance(values, str):
         raise YAMLError("Markup must not be a mere string.")
     # empty YAML is equal to null, so we avoid that by returning {} in that case
