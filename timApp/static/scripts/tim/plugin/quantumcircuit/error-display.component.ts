@@ -1,4 +1,4 @@
-import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
+import type {OnChanges, SimpleChanges} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {equal} from "mathjs";
 import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component";
