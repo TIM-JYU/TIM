@@ -854,7 +854,10 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
 
     pars = []
     for p in editor_pars:
-        par = doc.insert_paragraph_obj(p, insert_before_id=par_next_id)
+        if p.is_setting():
+            par = doc.insert_setting_paragraph_obj(p, insert_before_id=par_next_id)
+        else:
+            par = doc.insert_paragraph_obj(p, insert_before_id=par_next_id)
         pars.append(par)
         edit_result.added.append(par)
     if not edit_result.empty:

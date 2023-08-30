@@ -192,6 +192,19 @@ def get_partial_document(doc: Document, view_range: ViewRange) -> DocumentSlice:
             else actual_start_index + view_range.size
         )
     pars = all_pars[actual_start_index:actual_end_index]
+    # Ensure the settings are always included despite requested range not starting from 0
+    if actual_start_index > 0 and len(all_pars) > 0:
+        setting_pars = []
+        for i, p in enumerate(all_pars):
+            if i == actual_start_index:
+                break
+            if p.is_setting():
+                setting_pars.append(p)
+            # TODO: multiple setting pars seem to work if they're all in the start of the document,
+            #   but any non-setting par in between them breaks the rest
+            else:
+                break
+        pars = setting_pars + pars
     return pars, IndexedViewRange(
         b=actual_start_index, e=actual_end_index, par_count=len(all_pars)
     )
@@ -939,7 +952,7 @@ def render_doc_view(
     # If index was in cache, partitioning will be done earlier.
     if view_range.is_restricted and contents_have_changed:
         post_process_result.texts = partition_texts(
-            post_process_result.texts, view_range, preamble_count
+            xs, post_process_result.texts, view_range, preamble_count
         )
 
     if force_hide_names(current_user, doc_info) or view_ctx.hide_names_requested:

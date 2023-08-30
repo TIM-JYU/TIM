@@ -665,6 +665,29 @@ class Document:
             p, insert_before_id=insert_before_id, insert_after_id=insert_after_id
         )
 
+    def insert_setting_paragraph_obj(
+        self,
+        p: DocParagraph,
+        insert_before_id: str | None = None,
+    ):
+        first_par = None
+        self.ensure_par_ids_loaded()
+        if self.par_ids:
+            first_par = self.get_paragraph(self.par_ids[0])
+        last_settings_par = None
+        settings_pars = list(self.get_settings_pars())
+        if settings_pars:
+            last_settings_par = settings_pars[-1]
+        if first_par is None:
+            return self.add_paragraph_obj(p)
+        for par in settings_pars:
+            if par.id == insert_before_id:
+                return self.insert_paragraph_obj(p, insert_before_id)
+        if last_settings_par:
+            return self.insert_paragraph_obj(p, insert_after_id=last_settings_par.id)
+        else:
+            return self.insert_paragraph_obj(p, insert_before_id=first_par.id)
+
     def insert_paragraph_obj(
         self,
         p: DocParagraph,
@@ -678,9 +701,10 @@ class Document:
         if "HELP_PAR" in (insert_after_id, insert_before_id):
             return self.add_paragraph_obj(p)
 
+        old_ver = self.get_version()
+        old_path = self.get_version_path(old_ver)
         p.store()
         p.set_latest()
-        old_ver = self.get_version()
         new_ver = self.__increment_version(
             "Inserted",
             p.get_id(),
@@ -691,9 +715,7 @@ class Document:
         )
 
         new_line = p.get_id() + "/" + p.get_hash() + "\n"
-        with self.get_version_path(old_ver).open("r") as f_src, self.get_version_path(
-            new_ver
-        ).open("w") as f:
+        with old_path.open("r") as f_src, self.get_version_path(new_ver).open("w") as f:
             while True:
                 line = f_src.readline()
                 if not line:

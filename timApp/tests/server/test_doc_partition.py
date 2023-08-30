@@ -1,3 +1,4 @@
+from timApp.document.caching import clear_doc_cache
 from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
 
@@ -519,3 +520,39 @@ Koira
         self.assert_content(tree, [])
         tree = self.get(d.url, query_string={"b": par_ids[1], "size": 10}, as_tree=True)
         self.assert_content(tree, ["2", "3", "4"])
+
+    def test_settings_with_area(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+#-
+1
+
+#- {area="24"}
+
+#-
+2
+
+#- {visible="%% (False | isview) %%" nocache="true"}
+3
+
+#-
+4
+
+#- {area_end="24"}
+
+#-
+5
+        """
+        )
+        tree = self.get(d.url, query_string={"area": "24"}, as_tree=True)
+        # partitioning works normally right after document generation
+        self.assert_content(tree, ["", "2", "4", ""])
+        d.document.set_settings({"cache": "true"})
+        clear_doc_cache(d, None)
+        tree = self.get(d.url, query_string={"area": "24"}, as_tree=True)
+        # partitioning works normally right after document settings are edited
+        self.assert_content(tree, ["", "", "2", "4", ""])
+        # partitioning works normally when loading document from cache
+        tree = self.get(d.url, query_string={"area": "24"}, as_tree=True)
+        self.assert_content(tree, ["", "", "2", "4", ""])
