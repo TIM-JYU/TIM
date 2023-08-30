@@ -18,7 +18,7 @@ import type {Color} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 
 @Component({
-    selector: "[tim-svg-cell]",
+    selector: "[tim-quantum-cell]",
     template: `
         <!--suppress HtmlUnknownAttribute -->
         <!-- Empty gate placeholder or backdrop for any other element -->

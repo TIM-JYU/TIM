@@ -191,6 +191,7 @@ const QuantumCircuitFields = t.intersection([
 
 /**
  * Different types of errors that can be received from server.
+ * errorType values need to match the ones in quantumCircuit.py.
  */
 export const ServerError = t.union([
     t.type({
@@ -221,6 +222,9 @@ export const ServerError = t.union([
     t.type({
         regex: t.string,
         errorType: t.literal("regex-invalid"),
+    }),
+    t.type({
+        errorType: t.literal("simulation-timed-out"),
     }),
 ]);
 
@@ -333,6 +337,7 @@ export interface CircuitOptions {
 
                 <tim-quantum-error *ngIf="error" [error]="error"></tim-quantum-error>
                 <pre class="circuit-error" *ngIf="errorString" [innerHTML]="errorString | purify"></pre>
+                <tim-loading *ngIf="isResultCheckingRunning"></tim-loading>
                 <pre *ngIf="result" [innerHTML]="result | purify"></pre>
             </ng-container>
             <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
@@ -434,6 +439,9 @@ export class QuantumCircuitComponent
     hasEditRights: boolean = false;
 
     isSimulatorRunning: boolean = false;
+
+    isResultCheckingRunning: boolean = false;
+
     constructor(
         private gateService: GateService,
         private serializerService: SerializerService,
@@ -507,10 +515,12 @@ export class QuantumCircuitComponent
                 measurements: this.measurements.length,
             },
         };
+        this.isResultCheckingRunning = true;
         const r = await this.postAnswer<{
             web: {result?: string; error?: string};
         }>(params);
 
+        this.isResultCheckingRunning = false;
         if (r.ok) {
             const resText = r.result.web.result ?? "";
             if (resText === "saved") {
@@ -940,14 +950,14 @@ export class QuantumCircuitComponent
             this.showErrorMessage(
                 $localize`invalid nQubits value ${this.nQubits}`
             );
-            return;
+            return false;
         }
 
         if (this.markup.qubits && this.markup.qubits.length !== this.nQubits) {
             this.showErrorMessage(
                 $localize`Got incorrect amount of qubits ${this.markup.qubits.length}. There needs to be ${this.nQubits} qubits.`
             );
-            return;
+            return false;
         }
 
         this.qubits = [];
@@ -970,7 +980,7 @@ export class QuantumCircuitComponent
                         this.showErrorMessage(
                             $localize`Got incorrect value for qubit: ${q.value}. Value needs to be either 0 or 1.`
                         );
-                        return;
+                        return false;
                     }
                 }
                 if (q.editable === false) {
@@ -989,6 +999,7 @@ export class QuantumCircuitComponent
                 new Qubit(value, name, editable, this.circuitOptions)
             );
         }
+        return true;
     }
 
     /**
@@ -996,7 +1007,10 @@ export class QuantumCircuitComponent
      * @param reset whether this call is to reset board to initial state
      */
     initializeBoard(reset: boolean) {
-        this.initializeQubits(reset);
+        const qubitInitSuccess = this.initializeQubits(reset);
+        if (!qubitInitSuccess) {
+            return;
+        }
 
         this.board = new QuantumBoard(this.nQubits, this.nMoments);
 

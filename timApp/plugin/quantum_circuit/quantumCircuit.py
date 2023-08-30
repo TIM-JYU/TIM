@@ -4,6 +4,7 @@ import json
 import re
 from collections import defaultdict
 import math
+from threading import Thread
 
 from flask import render_template_string, request, jsonify, Response
 import yaml
@@ -142,6 +143,11 @@ class RegexInvalidError:
     errorType: str = "regex-invalid"
 
 
+@dataclass
+class SimulationTimedOutError:
+    errorType: str = "simulation-timed-out"
+
+
 ErrorType = Union[
     ConditionsNotSatisfiedError,
     ConditionNotInterpretableError,
@@ -150,6 +156,7 @@ ErrorType = Union[
     MatrixIncorrectError,
     TooManyQubitsError,
     RegexInvalidError,
+    SimulationTimedOutError,
 ]
 
 
@@ -432,6 +439,56 @@ def run_all_simulations(
     return True, None
 
 
+@dataclass
+class ParameterizedSimParams:
+    model_circuit: list[GateInfo]
+    user_circuit: list[GateInfo]
+    n_qubits: int
+    custom_gates: dict[str, np.ndarray]
+    model_input: list[str] | None
+    needs_to_be_stopped: bool
+    result: tuple[bool, ErrorType | None]
+
+
+def run_all_simulations_threaded(
+    model_circuit: list[GateInfo],
+    user_circuit: list[GateInfo],
+    n_qubits: int,
+    custom_gates: dict[str, np.ndarray],
+    model_input: list[str] | None,
+) -> tuple[bool, ErrorType | None]:
+    def parameter_wrapper(params: ParameterizedSimParams) -> None:
+        res = run_all_simulations(
+            params.model_circuit,
+            params.user_circuit,
+            params.n_qubits,
+            params.custom_gates,
+            params.model_input,
+        )
+        params.result = res
+
+    sim_params = ParameterizedSimParams(
+        model_circuit,
+        user_circuit,
+        n_qubits,
+        custom_gates,
+        model_input,
+        False,
+        (True, None),
+    )
+
+    # Wait at max 28 seconds. After 30 seconds read timeout is thrown, so we need to return before that.
+    max_run_time = 28
+    t = Thread(target=parameter_wrapper, args=(sim_params,))
+    t.start()
+    t.join(max_run_time)
+    if not t.is_alive():
+        return sim_params.result
+
+    sim_params.needs_to_be_stopped = True
+    return False, SimulationTimedOutError()
+
+
 def get_gate_counts(
     circuit: list[GateInfo], custom_gates: dict[str, np.ndarray]
 ) -> defaultdict:
@@ -547,7 +604,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         and user_circuit is not None
         and n_qubits is not None
     ):
-        ok, sim_error = run_all_simulations(
+        ok, sim_error = run_all_simulations_threaded(
             model_circuit, user_circuit, n_qubits, custom_gates, model_input
         )
 

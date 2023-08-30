@@ -120,7 +120,7 @@ export interface GateBeingDragged {
                     </g>
 
                     <g *ngFor="let gates of board.board; let i = index">
-                        <g *ngFor="let gate of gates; let j=index" tim-svg-cell
+                        <g *ngFor="let gate of gates; let j=index" tim-quantum-cell
                            [circuitOptions]="circuitOptions"
                            [cell]="gate"
                            [board]="board"

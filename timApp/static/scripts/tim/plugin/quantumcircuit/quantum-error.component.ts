@@ -69,6 +69,10 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
                 <p i18n>modelInput contains invalid regex pattern</p>
                 <p>{{error.regex}}</p>
             </div>
+            
+            <div *ngIf="error.errorType === 'simulation-timed-out'">
+                <p i18n>Simulator timed out</p>
+            </div>
         </div>
     `,
     styleUrls: ["quantum-error.component.scss"],

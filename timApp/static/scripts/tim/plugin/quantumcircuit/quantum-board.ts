@@ -491,6 +491,7 @@ export class QuantumBoard {
     set(target: number, time: number, value: Cell) {
         if (this.isInvalidPosition(target, time)) {
             console.log("invalid indices", target, time);
+            return;
         }
         this.remove(target, time);
 
@@ -505,6 +506,7 @@ export class QuantumBoard {
     get(target: number, time: number) {
         if (this.isInvalidPosition(target, time)) {
             console.log("Invalid indices", target, time);
+            return undefined;
         }
         return this.board[target][time];
     }
