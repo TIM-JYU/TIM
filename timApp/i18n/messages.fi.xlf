@@ -8339,7 +8339,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4215858884470188361" datatype="html">
-        <source>This gate can&apos;t be edited</source>
+        <source>This gate can't be edited</source>
         <target state="translated">Tätä porttia ei pysty muokkaamaan</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
@@ -8363,7 +8363,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3583886527803327688" datatype="html">
-        <source>Answer doesn&apos;t satisfy condition:</source>
+        <source>Answer doesn't satisfy condition:</source>
         <target state="translated">Vastaus ei toteuta ehtoa:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
@@ -8491,7 +8491,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="151222451665123813" datatype="html">
-        <source>Couldn&apos;t simulate circuit because there were too many qubits</source>
+        <source>Couldn't simulate circuit because there were too many qubits</source>
         <target state="translated">Ei pystytty simuloimaan piiriä, koska siinä oli liikaa kubitteja</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
@@ -8515,8 +8515,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="9063698038582773958" datatype="html">
-        <source>Too many qubits for browser simulator. Try changing simulate attribute to &quot;server&quot;.</source>
-        <target state="translated">Liian monta kubittia selainsimulaattorille. Kokeile vaihtaa simulate attribuutin arvoksi &quot;server&quot;.</target>
+        <source>Too many qubits for browser simulator. Try changing simulate attribute to "server".</source>
+        <target state="translated">Liian monta kubittia selainsimulaattorille. Kokeile vaihtaa simulate attribuutin arvoksi "server".</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-simulation.ts</context>
           <context context-type="linenumber">451</context>
@@ -8555,7 +8555,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6193475728133614712" datatype="html">
-        <source>Using browser simulator because user isn&apos;t logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></source>
+        <source>Using browser simulator because user isn't logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></source>
         <target state="translated">Käytetään selainsimulaattoria, koska käyttäjä ei ole kirjautunut sisään: <x id="PH" equiv-text="Users.getCurrent().name"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
@@ -8568,6 +8568,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2503761822693065589" datatype="html">
+        <source>Couldn't interpret circuits</source>
+        <target state="translated">Piiriä ei voitu tulkita</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">78</context>
         </context-group>
       </trans-unit>
     </body>

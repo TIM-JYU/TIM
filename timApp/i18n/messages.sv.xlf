@@ -8472,6 +8472,14 @@
           <context context-type="linenumber">74</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2503761822693065589" datatype="html">
+        <source>Couldn&apos;t interpret circuits</source>
+        <target state="new">Couldn&apos;t interpret circuits</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">78</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
