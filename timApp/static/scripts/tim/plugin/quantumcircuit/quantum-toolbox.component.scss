@@ -1,0 +1,46 @@
+a {
+  font-size: 3rem;
+  height: 1.25em;
+}
+
+.toolbox {
+  display: flex;
+  gap: 0.25em;
+  margin-left: 0.5em;
+  height: 120px;
+}
+
+.gate-info {
+  border: 1px solid black;
+  padding: 0.25em;
+  overflow-y: auto;
+}
+
+table {
+  font-family: "courier new", courier, monospace;
+  font-size: small;
+  margin-bottom: 0.25em;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.gate-editable-message {
+  text-align: end;
+}
+
+p {
+  margin-bottom: 0;
+}
+
+
+hr {
+  margin: 0.25em 0 0.25em 0;
+  border-top: 1px solid lightgrey;
+}
+
+.gate-info-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25em;
+}
+

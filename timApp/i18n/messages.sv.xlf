@@ -8144,6 +8144,342 @@
           <context context-type="linenumber">380</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7304210041509653538" datatype="html">
+        <source>Copy circuit to clipboard</source>
+        <target state="new">Copy circuit to clipboard</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">290</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="770492681595827297" datatype="html">
+        <source>Measure</source>
+        <target state="new">Measure</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">68</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8525218912995413707" datatype="html">
+        <source>Hide 0% rows</source>
+        <target state="new">Hide 0% rows</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4878852784108374726" datatype="html">
+        <source>Output probabilities based on <x id="PH" equiv-text="this.nSamples"/> measurements</source>
+        <target state="new">Output probabilities based on <x id="PH" equiv-text="this.nSamples"/> measurements</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">151</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8294913404467240099" datatype="html">
+        <source>Output probabilities based on matrix computation</source>
+        <target state="new">Output probabilities based on matrix computation</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">157</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5361585538695040272" datatype="html">
+        <source>Measurements</source>
+        <target state="new">Measurements</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8700121026680200191" datatype="html">
+        <source>Clear</source>
+        <target state="new">Clear</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8497528947328199741" datatype="html">
+        <source>Time</source>
+        <target state="new">Time</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
+          <context context-type="linenumber">80</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
+          <context context-type="linenumber">168</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2282740286795786266" datatype="html">
+        <source>Qubit</source>
+        <target state="new">Qubit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8968030053137661433" datatype="html">
+        <source>Output</source>
+        <target state="new">Output</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
+          <context context-type="linenumber">169</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="370189395688019936" datatype="html">
+        <source>Drag gate to circuit</source>
+        <target state="new">Drag gate to circuit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-gate-menu.component.ts</context>
+          <context context-type="linenumber">22</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4215858884470188361" datatype="html">
+        <source>This gate can&apos;t be edited</source>
+        <target state="new">This gate can&apos;t be edited</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3156133562193660103" datatype="html">
+        <source>Matrix</source>
+        <target state="new">Matrix</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2348040847528975404" datatype="html">
+        <source>Controls</source>
+        <target state="new">Controls</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3583886527803327688" datatype="html">
+        <source>Answer doesn&apos;t satisfy condition:</source>
+        <target state="new">Answer doesn&apos;t satisfy condition:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">9</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1151624068238912535" datatype="html">
+        <source>With values:</source>
+        <target state="new">With values:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5819666844474822775" datatype="html">
+        <source>Unable to interpret condition:</source>
+        <target state="new">Unable to interpret condition:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2468017285640072870" datatype="html">
+        <source>Condition has invalid characters:</source>
+        <target state="new">Condition has invalid characters:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4328859015715796236" datatype="html">
+        <source>Failed to parse matrix from input:</source>
+        <target state="new">Failed to parse matrix from input:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="804086259088523340" datatype="html">
+        <source>Circuit gives wrong probabilities with input:</source>
+        <target state="new">Circuit gives wrong probabilities with input:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="862375343902268300" datatype="html">
+        <source>copied</source>
+        <target state="new">copied</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">527</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5633144232269377096" datatype="html">
+        <source>hide</source>
+        <target state="new">hide</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">22</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1070803942963424190" datatype="html">
+        <source>Invalid custom matrix value <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></source>
+        <target state="new">Invalid custom matrix value <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/gate.service.ts</context>
+          <context context-type="linenumber">280</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/gate.service.ts</context>
+          <context context-type="linenumber">284</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7921559387951706176" datatype="html">
+        <source>Tried to add gate to circuit that is not part of known gates: <x id="PH" equiv-text="gateData.name"/></source>
+        <target state="new">Tried to add gate to circuit that is not part of known gates: <x id="PH" equiv-text="gateData.name"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">838,837</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">857,856</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4232283552912303724" datatype="html">
+        <source>invalid nQubits value <x id="PH" equiv-text="this.nQubits"/></source>
+        <target state="new">invalid nQubits value <x id="PH" equiv-text="this.nQubits"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">900,899</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7163187511874522313" datatype="html">
+        <source>Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.nQubits"/> qubits.</source>
+        <target state="new">Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.nQubits"/> qubits.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">949,948</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5235137580040427813" datatype="html">
+        <source>Got incorrect value for qubit: <x id="PH" equiv-text="q.value"/>. Value needs to be either 0 or 1.</source>
+        <target state="new">Got incorrect value for qubit: <x id="PH" equiv-text="q.value"/>. Value needs to be either 0 or 1.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">941,940</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8574400202974552045" datatype="html">
+        <source>saved</source>
+        <target state="new">saved</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">500</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="845184340669679902" datatype="html">
+        <source>correct</source>
+        <target state="new">correct</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">502</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="151222451665123813" datatype="html">
+        <source>Couldn&apos;t simulate circuit because there were too many qubits</source>
+        <target state="new">Couldn&apos;t simulate circuit because there were too many qubits</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3774433155539269558" datatype="html">
+        <source>Circuit contains <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</source>
+        <target state="new">Circuit contains <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="661376449876462534" datatype="html">
+        <source>But max is <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></source>
+        <target state="new">But max is <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9063698038582773958" datatype="html">
+        <source>Too many qubits for browser simulator. Try changing simulate attribute to &quot;server&quot;.</source>
+        <target state="new">Too many qubits for browser simulator. Try changing simulate attribute to &quot;server&quot;.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-simulation.ts</context>
+          <context context-type="linenumber">451</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="642381033692235501" datatype="html">
+        <source>modelInput contains invalid regex pattern</source>
+        <target state="new">modelInput contains invalid regex pattern</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7989584202803202902" datatype="html">
+        <source>Expected</source>
+        <target state="new">Expected</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2628961601867476622" datatype="html">
+        <source>Actual</source>
+        <target state="new">Actual</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9205109434477920315" datatype="html">
+        <source>Output probabilities were:</source>
+        <target state="new">Output probabilities were:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6193475728133614712" datatype="html">
+        <source>Using browser simulator because user isn&apos;t logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></source>
+        <target state="new">Using browser simulator because user isn&apos;t logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">1089,1088</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5374601724902713429" datatype="html">
+        <source>Simulator timed out</source>
+        <target state="new">Simulator timed out</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2503761822693065589" datatype="html">
+        <source>Couldn&apos;t interpret circuits</source>
+        <target state="new">Couldn&apos;t interpret circuits</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">78</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

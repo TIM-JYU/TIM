@@ -127,7 +127,7 @@ RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm 
 RUN bash -c "${APT_INSTALL} xmlsec1 && ${APT_CLEANUP}"
 
 ENV PIP_INSTALL="python3.10 -m pip install"
-RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.2.1 requests && ${APT_CLEANUP}"
+RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.3.1 requests && ${APT_CLEANUP}"
 
 COPY pyproject.toml poetry.lock ./
 RUN bash -c " \
@@ -170,7 +170,7 @@ RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloa
 # Fix newest Werkzeug incompatibility
 RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import cached_property/" /usr/local/lib/python3.10/dist-packages/flask_testing/utils.py
 
-RUN wget -q http://mirrors.ctan.org/support/latexmk/latexmk.pl -O /usr/bin/latexmk
+RUN wget -q https://www.texlive.info/CTAN/support/latexmk/latexmk.pl -O /usr/bin/latexmk
 
 # Chromedriver (for running tests)
 # Taken from https://github.com/SeleniumHQ/docker-selenium/blob/trunk/NodeChrome/Dockerfile
@@ -187,16 +187,18 @@ RUN wget -q https://raw.githubusercontent.com/SeleniumHQ/docker-selenium/trunk/N
 RUN /usr/local/bin/wrap_chrome_binary
 
 ARG CHROME_DRIVER_VERSION
+RUN bash -c "${APT_INSTALL} jq && ${APT_CLEANUP}"
 RUN if [ -z "$CHROME_DRIVER_VERSION" ]; \
   then CHROME_MAJOR_VERSION=$(google-chrome --version | sed -E "s/.* ([0-9]+)(\.[0-9]+){3}.*/\1/") \
-    && CHROME_DRIVER_VERSION=$(wget --no-verbose -O - "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION}"); \
+    && CHROME_DRIVER_VERSION=$(wget -q -O - "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq --arg majorVersion "$CHROME_MAJOR_VERSION" -r '.channels.Stable | select(.version | startswith($majorVersion | tostring)).version'); \
   fi \
   && echo "Using chromedriver version: "$CHROME_DRIVER_VERSION \
-  && wget --no-verbose -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip \
+  && CHROME_DRIVER_URL=$(wget -q -O - "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq --arg version "$CHROME_DRIVER_VERSION" -r '.channels.Stable | select(.version==$version).downloads.chromedriver[] | select(.platform == "linux64") | .url') \
+  && wget -q -O /tmp/chromedriver_linux64.zip "$CHROME_DRIVER_URL" \
   && rm -rf /opt/selenium/chromedriver \
   && unzip /tmp/chromedriver_linux64.zip -d /opt/selenium \
   && rm /tmp/chromedriver_linux64.zip \
-  && mv /opt/selenium/chromedriver /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
+  && mv /opt/selenium/chromedriver-linux64/chromedriver /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && chmod 755 /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver
 

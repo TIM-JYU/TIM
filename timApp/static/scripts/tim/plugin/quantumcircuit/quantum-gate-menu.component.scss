@@ -1,0 +1,39 @@
+svg text {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+svg text::selection {
+  background: none;
+}
+
+.swap-gate text {
+  font-stretch: ultra-expanded;
+}
+
+.gate-container {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid black;
+  max-width: 50vw;
+  height: 120px;
+}
+
+.gate-container-heading {
+  padding-left: 0.5em;
+  border-bottom: 1px solid black;
+}
+
+.gate-list {
+  padding: 0.25em;
+  height: 120px;
+  overflow-y: auto;
+}
+
+.svg-container {
+  cursor: move;
+  display: inline-block;
+  margin-right: 0.25em;
+}

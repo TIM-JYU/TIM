@@ -1,0 +1,30 @@
+.top-menu {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.circuit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.circuit {
+  border: 1px solid black;
+  overflow: auto;
+  max-height: 70vh;
+}
+
+table {
+  font-family: "courier new", courier, monospace;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.25em;
+}
+
+.circuit-error {
+  white-space: pre-wrap;
+}

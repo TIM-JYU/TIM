@@ -1,0 +1,162 @@
+.drag-over-element {
+  fill: grey;
+  fill-opacity: 0.5;
+}
+
+svg text, .moment, .qubit, .output {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+svg text::selection {
+  background: none;
+}
+
+.uneditable {
+  cursor: not-allowed;
+}
+
+.gate {
+  cursor: move;
+}
+
+.circuit-container {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 2em;
+  border-bottom: 1px solid black;
+  width: fit-content;
+}
+
+.circuit-right-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.qubits {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid black;
+}
+
+
+.qubit {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.qubit-name, .output-name {
+  font-size: 14px;
+}
+
+
+.qubit-toggle-button {
+  background-color: white;
+  margin-left: 0.1em;
+  margin-right: 0.1em;
+}
+
+.left-block {
+  border-bottom: 1px solid black;
+  position: relative;
+  background: linear-gradient(to top right,
+          rgba(0, 0, 0, 0) 0%,
+          rgba(0, 0, 0, 0) calc(50% - 0.8px),
+          rgba(0, 0, 0, 1) 50%,
+          rgba(0, 0, 0, 0) calc(50% + 0.8px),
+          rgba(0, 0, 0, 0) 100%);
+}
+
+.axis-text-qubit {
+  font-size: 12px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.axis-text-time {
+  font-size: 12px;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.right-block {
+  border-left: 1px solid black;
+  border-bottom: 1px solid black;
+  position: relative;
+  background: linear-gradient(to top left,
+          rgba(0, 0, 0, 0) 0%,
+          rgba(0, 0, 0, 0) calc(50% - 0.8px),
+          rgba(0, 0, 0, 1) 50%,
+          rgba(0, 0, 0, 0) calc(50% + 0.8px),
+          rgba(0, 0, 0, 0) 100%);
+}
+
+.out-axis-text {
+  font-size: 12px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.out-axis-time {
+  font-size: 12px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.moments {
+  display: flex;
+  flex-direction: row;
+}
+
+.moment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid black;
+}
+
+
+.output-container {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+.output-value {
+  margin-right: 0.1em;
+}
+
+.output {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  border-left: 1px solid black;
+}
+
+img {
+  margin: 0 0.1em 0 0.1em;
+}
+
+
+.output button {
+  background-color: white;
+}
+
+.gate-text {
+  pointer-events: none;
+}
+
+
+.gate-drop:hover {
+  stroke: grey;
+  fill-opacity: 100;
+}
