@@ -110,10 +110,13 @@
         {%- endif -%}
 
         {%- if t.attrs.rl == 'force' or not (not t.attrs.rd or t.attrs.rl == 'no') -%}
-            {%- if t.attrs.rd and t.attrs.rp and t.attrs.r == 'tr' -%}
-                <tim-par-ref
-                   docid="{{ t.attrs.rd }}"
-                   parid="{{ t.attrs.rp }}">
+            {%- if t.attrs.rd and t.attrs.r == 'tr' and (t.attrs.rp or t.attrs.ra) -%}
+                <tim-par-ref docid="{{ t.attrs.rd }}"
+                   {% if not t.attrs.ra -%}
+                    parid="{{ t.attrs.rp }}">
+                   {% else -%}
+                    parid="{{ t.target.id }}">
+                   {%- endif %}
                 </tim-par-ref>
             {%- else  -%}
                 <tim-par-ref
