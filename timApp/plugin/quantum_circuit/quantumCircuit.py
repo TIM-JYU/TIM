@@ -407,24 +407,36 @@ def check_input(
     return False, None
 
 
+@dataclass
+class ThreadedSimParams:
+    needs_to_be_stopped: bool
+    result: tuple[bool, ErrorType | None]
+
+
 def run_all_simulations(
     model_circuit: list[GateInfo],
     user_circuit: list[GateInfo],
     n_qubits: int,
     custom_gates: dict[str, np.ndarray],
     model_input: list[str] | None,
-) -> tuple[bool, ErrorType | None]:
+    threaded_sim_params: ThreadedSimParams,
+) -> None:
     if n_qubits > 20:
-        return False, TooManyQubitsError(n_qubits, 20)
+        threaded_sim_params.result = False, TooManyQubitsError(n_qubits, 20)
+        return
 
     for i in range(2**n_qubits):
+        if threaded_sim_params.needs_to_be_stopped:
+            threaded_sim_params.result = False, None
+            return
         bitstring = "{0:b}".format(i).rjust(n_qubits, "0")
         bitstring_reversed = "".join(reversed(bitstring))
         check_input_valid, check_input_error = check_input(
             bitstring_reversed, model_input
         )
         if not check_input_valid and check_input_error is not None:
-            return False, check_input_error
+            threaded_sim_params.result = False, check_input_error
+            return
         if not check_input_valid:
             continue
         input_list = [int(d) for d in bitstring]
@@ -432,22 +444,12 @@ def run_all_simulations(
         actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)
 
         if not check_answer(actual, expected):
-            return False, AnswerIncorrectError(
+            threaded_sim_params.result = False, AnswerIncorrectError(
                 bitstring_reversed, list(expected), list(actual)
             )
+            return
 
-    return True, None
-
-
-@dataclass
-class ParameterizedSimParams:
-    model_circuit: list[GateInfo]
-    user_circuit: list[GateInfo]
-    n_qubits: int
-    custom_gates: dict[str, np.ndarray]
-    model_input: list[str] | None
-    needs_to_be_stopped: bool
-    result: tuple[bool, ErrorType | None]
+    threaded_sim_params.result = True, None
 
 
 def run_all_simulations_threaded(
@@ -457,29 +459,22 @@ def run_all_simulations_threaded(
     custom_gates: dict[str, np.ndarray],
     model_input: list[str] | None,
 ) -> tuple[bool, ErrorType | None]:
-    def parameter_wrapper(params: ParameterizedSimParams) -> None:
-        res = run_all_simulations(
-            params.model_circuit,
-            params.user_circuit,
-            params.n_qubits,
-            params.custom_gates,
-            params.model_input,
-        )
-        params.result = res
 
-    sim_params = ParameterizedSimParams(
-        model_circuit,
-        user_circuit,
-        n_qubits,
-        custom_gates,
-        model_input,
-        False,
-        (True, None),
-    )
+    sim_params = ThreadedSimParams(False, (True, None))
 
     # Wait at max 28 seconds. After 30 seconds read timeout is thrown, so we need to return before that.
     max_run_time = 28
-    t = Thread(target=parameter_wrapper, args=(sim_params,))
+    t = Thread(
+        target=run_all_simulations,
+        args=(
+            model_circuit,
+            user_circuit,
+            n_qubits,
+            custom_gates,
+            model_input,
+            sim_params,
+        ),
+    )
     t.start()
     t.join(max_run_time)
     if not t.is_alive():
