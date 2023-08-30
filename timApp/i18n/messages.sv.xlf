@@ -8464,6 +8464,14 @@
           <context context-type="linenumber">1089,1088</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5374601724902713429" datatype="html">
+        <source>Simulator timed out</source>
+        <target state="new">Simulator timed out</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">74</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
