@@ -73,6 +73,11 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
             <div *ngIf="error.errorType === 'simulation-timed-out'">
                 <p i18n>Simulator timed out</p>
             </div>
+            
+            <div *ngIf="error.errorType === 'circuit-uninterpretable'">
+                <p i18n>Couldn't interpret circuits</p>
+                <p>{{error.message}}</p>
+            </div>
         </div>
     `,
     styleUrls: ["quantum-error.component.scss"],

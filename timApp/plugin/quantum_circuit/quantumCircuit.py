@@ -148,6 +148,12 @@ class SimulationTimedOutError:
     errorType: str = "simulation-timed-out"
 
 
+@dataclass
+class CircuitUnInterpretableError:
+    message: str
+    errorType: str = "circuit-uninterpretable"
+
+
 ErrorType = Union[
     ConditionsNotSatisfiedError,
     ConditionNotInterpretableError,
@@ -157,6 +163,7 @@ ErrorType = Union[
     TooManyQubitsError,
     RegexInvalidError,
     SimulationTimedOutError,
+    CircuitUnInterpretableError,
 ]
 
 
@@ -440,9 +447,12 @@ def run_all_simulations(
         if not check_input_valid:
             continue
         input_list = [int(d) for d in bitstring]
-        expected = run_simulation(model_circuit, input_list, n_qubits, custom_gates)
-        actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)
-
+        try:
+            expected = run_simulation(model_circuit, input_list, n_qubits, custom_gates)
+            actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)
+        except (TypeError, RuntimeError) as e:
+            threaded_sim_params.result = False, CircuitUnInterpretableError(str(e))
+            return
         if not check_answer(actual, expected):
             threaded_sim_params.result = False, AnswerIncorrectError(
                 bitstring_reversed, list(expected), list(actual)
@@ -480,7 +490,11 @@ def run_all_simulations_threaded(
     if not t.is_alive():
         return sim_params.result
 
+    # signal thread to stop and wait at max 5 seconds before throwing exception
     sim_params.needs_to_be_stopped = True
+    t.join(5)
+    if t.is_alive():
+        raise Exception("Quantum simulator didn't exit properly")
     return False, SimulationTimedOutError()
 
 

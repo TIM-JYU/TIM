@@ -226,6 +226,10 @@ export const ServerError = t.union([
     t.type({
         errorType: t.literal("simulation-timed-out"),
     }),
+    t.type({
+        message: t.string,
+        errorType: t.literal("circuit-uninterpretable"),
+    }),
 ]);
 
 export type IServerError = t.TypeOf<typeof ServerError>;
