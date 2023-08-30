@@ -39,16 +39,17 @@ def apply_citation(new_doc: DocInfo, src_doc: Document):
 
 
 def find_lang_matching_cite_source(
-    rd: str, rp: str, tr_doc: Document
-) -> tuple[Document, str] | tuple[None, None]:
+    tr_doc: Document, rd: str, rp: str | None = None, ra: str | None = None
+) -> tuple[Document | None, str | None]:
     """
     Find document and paragraph id from cited source Translation whose language matches
     the Translation we are currently creating.
-    Note that the return value may be (None, None).
+    Note some elements of the return value may be None.
     :param rd: source document id
     :param rp: source document paragraph id
+    :param ra: source document paragraph area name
     :param tr_doc: Translation that is citing the source document
-    :return: the matched source Translation and paragraph id as a tuple, or (None, None).
+    :return: the matched source Translation and paragraph id as a tuple.
     """
     matched_doc = None
     par_id = None
@@ -65,7 +66,9 @@ def find_lang_matching_cite_source(
                 matched_doc = source_tr
                 # Find matching paragraph hash for translated citation par
                 for p in source_tr.document:
-                    if p.get_attr("rp") == rp:
+                    if (rp and p.get_attr("rp") == rp) or (
+                        ra and p.get_attr("area") == ra
+                    ):
                         par_id = p.id
                         break
                 break
@@ -87,24 +90,23 @@ def add_reference_pars(
         # If one is not found, the original citation should be used.
         citation_doc_id = par.get_attr("rd")
         citation_par_id = par.get_attr("rp")
+        area_citation = par.get_attr("ra")
 
         if citation_doc_id:
             matched_doc, citation_par_id = find_lang_matching_cite_source(
-                citation_doc_id, citation_par_id, doc
+                doc, citation_doc_id, citation_par_id
             )
-            if not matched_doc or not citation_par_id:
-                # cited document or paragraph doesn't exist, so just use the original citation
-                matched_doc = original_doc
-                citation_par_id = par.id
 
-            # can also be an area reference
-            area_citation = par.get_attr("ra")
-
-            if area_citation:
+            if area_citation and matched_doc:
                 ref_par = par.create_area_reference(
                     doc, area_citation, r="tr", rd=matched_doc.doc_id
                 )
             else:
+                if not matched_doc or not citation_par_id:
+                    # cited document or paragraph doesn't exist, so just use the original citation
+                    matched_doc = original_doc
+                    citation_par_id = par.id
+
                 from timApp.document.docparagraph import create_reference
 
                 ref_par = create_reference(
@@ -120,10 +122,9 @@ def add_reference_pars(
             # For area citations to work correctly in translations,
             # we need to add explicit area/area_end tags to translated
             # area paragraphs
-            is_translated_par = r == "tr"
-            area_start = par.get_attr("area")
-            area_end = par.get_attr("area_end")
-            if is_translated_par:
+            if r == "tr":
+                area_start = par.get_attr("area")
+                area_end = par.get_attr("area_end")
                 if area_start:
                     ref_par.set_attr("area", area_start)
                 elif area_end:

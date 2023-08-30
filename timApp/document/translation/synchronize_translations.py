@@ -1,7 +1,7 @@
 from difflib import SequenceMatcher
 
 from timApp.document.document import Document
-from timApp.document.docparagraph import create_reference
+from timApp.document.docparagraph import create_reference, DocParagraph
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import find_lang_matching_cite_source
@@ -30,34 +30,57 @@ def update_par_content(
     #  behaviour be controllable to end user via a document setting? Current behaviour
     #  might not be desirable, eg. if a citation should actually be in the original
     #  source language (one _can_ avoid this by creating another document which has no translations).
-    # TODO: Fix area reference citations: area citations do not currently
-    #  have the correct 'rd' attr. Perhaps fix in 'find_lang_matching_cite_source'?
     ref_par = orig.get_paragraph(par_id)
     rd = ref_par.get_attr("rd", None)
     rp = ref_par.get_attr("rp", None)
+    ra = ref_par.get_attr("ra", None)
 
-    matched_doc, rp = find_lang_matching_cite_source(rd, rp, tr_doc)
+    matched_doc, rp = find_lang_matching_cite_source(tr_doc, rd, rp, ra)
     rd = matched_doc.id if matched_doc else None
 
-    tr_par = create_reference(
-        tr_doc,
-        doc_id=rd if rd else orig.doc_id,
-        par_id=rp if rp else par_id,
-        r="tr",
-        add_rd=ref_par.is_citation_par(),
-    )
+    if ra:
+        # Only add the area citation if it doesn't already exist,
+        # or replace it with a translated area citation if it was
+        # from the original but a corresponding translated one exists.
+        # TODO: in order to keep the (translated) citation up-to-date,
+        #  we may eventually want to replace the existing area
+        #  with the one re-created here
+        area_par = None
+        for p in tr_doc.get_paragraphs():
+            area_par = p if p.get_attr("ra") == ra else None
+        if area_par and not area_par.get_attr("rd") == rd:
+            # the citation points to the original, delete it
+            tr_doc.delete_paragraph(area_par.id)
 
-    if orig.get_paragraph(par_id).is_setting():
-        tr_par.set_attr("settings", "")
-    tr_doc.insert_paragraph_obj(
-        tr_par,
-        insert_before_id=tr_ids[before_i] if before_i < len(tr_ids) else None,
-    )
+            tr_par = DocParagraph.create_area_reference(
+                tr_doc,
+                area_name=ra,
+                r="tr",
+                rd=matched_doc.id,
+            )
+        else:
+            tr_par = None
+    else:
+        tr_par = create_reference(
+            tr_doc,
+            doc_id=rd if rd else orig.doc_id,
+            par_id=rp if rp else par_id,
+            r="tr",
+            add_rd=ref_par.is_citation_par(),
+        )
+
+    if tr_par:
+        if orig.get_paragraph(par_id).is_setting():
+            tr_par.set_attr("settings", "")
+        tr_doc.insert_paragraph_obj(
+            tr_par,
+            insert_before_id=tr_ids[before_i] if before_i < len(tr_ids) else None,
+        )
 
 
 def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
-    """Synchronizes the translations of a document by adding missing paragraphs to the translations and deleting non-existing
-    paragraphs.
+    """Synchronizes the translations of a document by adding missing paragraphs to the translations
+    and deleting non-existing paragraphs.
 
     :param edit_result: The changes that were made to the document.
     :param doc: The document that was edited and whose translations need to be synchronized.
