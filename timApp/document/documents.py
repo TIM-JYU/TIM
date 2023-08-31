@@ -6,6 +6,7 @@ from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.documentparser import DocumentParser
 from timApp.document.translation.translation import Translation
 from timApp.document.yamlblock import YamlBlock
@@ -78,6 +79,22 @@ def find_lang_matching_cite_source(
     return matched_doc, par_id
 
 
+def add_explicit_area_ids(orig_par: DocParagraph, tr_par: DocParagraph) -> None:
+    """
+    Add explicit area ids to translated area paragraphs so that they can be synced
+    when referenced in other documents.
+    :param orig_par: paragraph in the original document
+    :param tr_par: translated paragraph
+    :return: None.
+    """
+    area_start = orig_par.get_attr("area")
+    area_end = orig_par.get_attr("area_end")
+    if area_start:
+        tr_par.set_attr("area", area_start)
+    elif area_end:
+        tr_par.set_attr("area_end", area_end)
+
+
 def add_reference_pars(
     doc: Document, original_doc: Document, r: str, translator: str | None = None
 ):
@@ -123,12 +140,7 @@ def add_reference_pars(
             # we need to add explicit area/area_end tags to translated
             # area paragraphs
             if r == "tr":
-                area_start = par.get_attr("area")
-                area_end = par.get_attr("area_end")
-                if area_start:
-                    ref_par.set_attr("area", area_start)
-                elif area_end:
-                    ref_par.set_attr("area_end", area_end)
+                add_explicit_area_ids(par, ref_par)
         if par.is_setting():
             ref_par.set_attr("settings", "")
         doc.add_paragraph_obj(ref_par)

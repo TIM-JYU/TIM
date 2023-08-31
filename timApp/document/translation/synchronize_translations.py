@@ -4,7 +4,10 @@ from timApp.document.document import Document
 from timApp.document.docparagraph import create_reference, DocParagraph
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.docinfo import DocInfo
-from timApp.document.documents import find_lang_matching_cite_source
+from timApp.document.documents import (
+    find_lang_matching_cite_source,
+    add_explicit_area_ids,
+)
 
 
 def update_par_content(
@@ -68,6 +71,7 @@ def update_par_content(
             r="tr",
             add_rd=ref_par.is_citation_par(),
         )
+        add_explicit_area_ids(ref_par, tr_par)
 
     if tr_par:
         if orig.get_paragraph(par_id).is_setting():
