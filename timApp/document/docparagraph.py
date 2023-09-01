@@ -1487,3 +1487,19 @@ def add_headings_to_counters(
                 counters.add_counter("chap", jump_name, "", line)
         curr = curr.nxt
     return s
+
+
+def add_explicit_area_ids(orig_par: DocParagraph, tr_par: DocParagraph) -> None:
+    """
+    Add explicit area ids to translated area paragraphs so that they can be synced
+    when referenced in other documents.
+    :param orig_par: paragraph in the original document
+    :param tr_par: translated paragraph
+    :return: None.
+    """
+    area_start = orig_par.get_attr("area")
+    area_end = orig_par.get_attr("area_end")
+    if area_start:
+        tr_par.set_attr("area", area_start)
+    elif area_end:
+        tr_par.set_attr("area_end", area_end)

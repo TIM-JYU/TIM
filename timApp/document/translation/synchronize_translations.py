@@ -1,13 +1,14 @@
 from difflib import SequenceMatcher
 
 from timApp.document.document import Document
-from timApp.document.docparagraph import create_reference, DocParagraph
+from timApp.document.docparagraph import (
+    create_reference,
+    add_explicit_area_ids,
+    DocParagraph,
+)
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.docinfo import DocInfo
-from timApp.document.documents import (
-    find_lang_matching_cite_source,
-    add_explicit_area_ids,
-)
+from timApp.document.documents import find_lang_matching_cite_source
 
 
 def update_par_content(
