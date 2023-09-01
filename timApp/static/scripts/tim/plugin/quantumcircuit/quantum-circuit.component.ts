@@ -1074,12 +1074,14 @@ export class QuantumCircuitComponent
                 probabilityText: "0",
             }));
 
-        const outputProbabilities = this.simulator.getOutputProbabilities();
-        if (outputProbabilities) {
-            for (let i = 0; i < outputProbabilities.length; i++) {
-                this.qubitOutputs[i].probability = outputProbabilities[i];
-                this.qubitOutputs[i].probabilityText =
-                    outputProbabilities[i].toFixed(2) + "%";
+        if (this.showOutputBits) {
+            const outputProbabilities = this.simulator.getOutputProbabilities();
+            if (outputProbabilities) {
+                for (let i = 0; i < outputProbabilities.length; i++) {
+                    this.qubitOutputs[i].probability = outputProbabilities[i];
+                    this.qubitOutputs[i].probabilityText =
+                        outputProbabilities[i].toFixed(2) + "%";
+                }
             }
         }
 

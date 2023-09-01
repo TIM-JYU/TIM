@@ -82,6 +82,8 @@ export interface QuantumChartData {
 })
 export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     hideZeroRows: boolean = false;
+    hideZeroRowsLimit: number = 2000;
+    hideZeroRowsHasChanged: boolean = false;
 
     @ViewChild("chartInnerElement")
     chartInner?: ElementRef<HTMLDivElement>;
@@ -188,6 +190,15 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
         }
         let labels = this.quantumChartData.labels;
         let probabilities = this.quantumChartData.probabilities;
+
+        // hide zero rows by default when there is a lot of data
+        if (
+            !this.hideZeroRowsHasChanged &&
+            labels.length > this.hideZeroRowsLimit
+        ) {
+            this.hideZeroRows = true;
+            this.hideZeroRowsHasChanged = true;
+        }
 
         if (this.hideZeroRows) {
             labels = [];
