@@ -99,12 +99,7 @@ export abstract class QuantumCircuitSimulator {
             return undefined;
         }
 
-        const probabilities: number[] = [];
-        this.result.forEach((probability) => {
-            probabilities.push(probability);
-        });
-
-        const output = this.randomChoice(probabilities);
+        const output = this.randomChoice(this.result);
         if (output !== undefined) {
             return {
                 input: input,
@@ -126,10 +121,13 @@ export abstract class QuantumCircuitSimulator {
         const probabilities: number[] = Array(this.board.nQubits).fill(0);
         const data = this.getProbabilities();
 
+        // see where there are 1's and increase the respective probabilities
         for (let i = 0; i < data.probabilities.length; i++) {
-            for (let j = data.labels.length - 1; j >= 0; j--) {
-                if (data.labels[i].charAt(j) === "1") {
-                    probabilities[j] += data.probabilities[i];
+            const label = data.labels[i];
+            const probability = data.probabilities[i];
+            for (let j = 0; j < label.length; j++) {
+                if (label.charAt(j) === "1") {
+                    probabilities[j] += probability;
                 }
             }
         }
@@ -155,15 +153,10 @@ export abstract class QuantumCircuitSimulator {
         result: number[],
         sampleSize: number
     ) {
-        const probabilities: number[] = [];
-        result.forEach((probability) => {
-            probabilities.push(probability);
-        });
-
         // draw samples and keep track of how many times they occur
-        const counter = Array(probabilities.length).fill(0);
+        const counter = Array(result.length).fill(0);
         for (let i = 0; i < sampleSize; i++) {
-            const sample = this.randomChoice(probabilities);
+            const sample = this.randomChoice(result);
 
             if (sample !== undefined) {
                 counter[sample]++;
@@ -186,7 +179,9 @@ export abstract class QuantumCircuitSimulator {
             return {probabilities: [], labels: []};
         }
 
+        const N = this.result.length;
         let probabilities: number[] = [];
+        let dataIndex = 0;
         if (sampleSize !== undefined) {
             probabilities = this.computeProbabilitiesBySampling(
                 this.result,
@@ -199,13 +194,16 @@ export abstract class QuantumCircuitSimulator {
                 this.result.length
             );
         }
-        const labels: string[] = [];
+        if (probabilities.length === 0) {
+            probabilities = Array(N);
+        }
+        const labels: string[] = Array(N);
         this.result.forEach((value, i) => {
             if (sampleSize === undefined && measurements === undefined) {
-                probabilities.push(value * 100);
+                probabilities[dataIndex] = value * 100;
             }
-            const bitString: string = this.indexToBitstring(i);
-            labels.push(bitString);
+            labels[dataIndex] = this.indexToBitstring(i);
+            dataIndex++;
         });
         return {
             probabilities: probabilities,

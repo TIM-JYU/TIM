@@ -428,6 +428,16 @@ def run_all_simulations(
     model_input: list[str] | None,
     threaded_sim_params: ThreadedSimParams,
 ) -> None:
+    """
+    Runs simulator with all inputs comparing model_circuit to user_circuit.
+    :param model_circuit: correct circuit that user_circuit is compared to
+    :param user_circuit: circuit that was created by user
+    :param n_qubits: how many qubits are in circuit
+    :param custom_gates: custom gates available to simulator
+    :param model_input: pattern defining which inputs are used out of all permutations
+    :param threaded_sim_params: Used to pass info to and from thread
+    :return: Nothing. return value is passed through threaded_sim_params
+    """
     if n_qubits > 20:
         threaded_sim_params.result = False, TooManyQubitsError(n_qubits, 20)
         return
@@ -451,7 +461,11 @@ def run_all_simulations(
             expected = run_simulation(model_circuit, input_list, n_qubits, custom_gates)
             actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)
         except (TypeError, RuntimeError) as e:
-            threaded_sim_params.result = False, CircuitUnInterpretableError(str(e))
+            # remove function name from error message. These come from qulacs.
+            error_message = re.sub(r"Error:.+:", "", str(e))
+            threaded_sim_params.result = False, CircuitUnInterpretableError(
+                error_message
+            )
             return
         if not check_answer(actual, expected):
             threaded_sim_params.result = False, AnswerIncorrectError(
