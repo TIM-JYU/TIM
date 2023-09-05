@@ -671,9 +671,12 @@ class Document:
         insert_before_id: str | None = None,
     ):
         first_par = None
-        self.ensure_par_ids_loaded()
-        if self.par_ids:
-            first_par = self.get_paragraph(self.par_ids[0])
+        # There may be preamble pars in the loaded par_ids list,
+        # so we need to load the original par list to find the first par in the original document
+        # TODO: It may be better to load paragraphs in an iterator and filter out preamble pars
+        par_ids, _ = self._get_par_ids_impl()
+        if par_ids:
+            first_par = self.get_paragraph(par_ids[0])
         last_settings_par = None
         settings_pars = list(self.get_settings_pars())
         if settings_pars:
@@ -694,7 +697,6 @@ class Document:
         insert_before_id: str | None = None,
         insert_after_id: str | None = None,
     ) -> DocParagraph:
-
         if not insert_before_id and not insert_after_id:
             return self.add_paragraph_obj(p)
 
@@ -1183,10 +1185,15 @@ class Document:
             self._load_par_ids()
 
     def _load_par_ids(self):
-        self.par_ids = []
-        self.par_hashes = []
+        ids, hashes = self._get_par_ids_impl()
+        self.par_ids = ids
+        self.par_hashes = hashes
+
+    def _get_par_ids_impl(self) -> tuple[list[str], list[str]]:
+        par_ids = []
+        par_hashes = []
         if not self.get_version_path().exists():
-            return
+            return [], []
         with self.get_version_path().open("r", encoding="UTF-8") as f:
             while True:
                 line = f.readline()
@@ -1197,8 +1204,9 @@ class Document:
                     par_id, t = line.replace("\n", "").split("/")
                 else:
                     par_id, t = line.replace("\n", ""), None
-                self.par_ids.append(par_id)
-                self.par_hashes.append(t)
+                par_ids.append(par_id)
+                par_hashes.append(t)
+        return par_ids, par_hashes
 
     def insert_preamble_pars(self, class_names: list[str] | None = None):
         """
