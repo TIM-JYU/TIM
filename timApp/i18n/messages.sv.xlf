@@ -8480,6 +8480,22 @@
           <context context-type="linenumber">78</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6585102904443570717" datatype="html">
+        <source>Couldn&apos;t simulate circuit because there were too many moments</source>
+        <target state="new">Couldn&apos;t simulate circuit because there were too many moments</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4633281565605788402" datatype="html">
+        <source>Circuit contains <x id="INTERPOLATION" equiv-text="{{error.moments}}"/> moments</source>
+        <target state="new">Circuit contains <x id="INTERPOLATION" equiv-text="{{error.moments}}"/> moments</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

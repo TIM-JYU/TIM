@@ -220,6 +220,11 @@ export const ServerError = t.union([
         errorType: t.literal("too-many-qubits"),
     }),
     t.type({
+        moments: t.number,
+        maxMoments: t.number,
+        errorType: t.literal("too-many-moments"),
+    }),
+    t.type({
         regex: t.string,
         errorType: t.literal("regex-invalid"),
     }),
@@ -618,14 +623,14 @@ export class QuantumCircuitComponent
             const error = res.result;
             if (typeof error === "string") {
                 this.showErrorMessage(error);
-            } else if (error.errorType === "too-many-qubits") {
+            } else {
                 this.error = error;
             }
             this.isSimulatorRunning = false;
             const endTime = new Date();
 
             const timeDiff = endTime.getTime() - startTime.getTime();
-            console.log(`simulation ended in error at: ${timeDiff}ms`);
+            console.error(`simulation ended in error at: ${timeDiff}ms`);
 
             return;
         }
