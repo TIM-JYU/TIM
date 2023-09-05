@@ -8578,6 +8578,22 @@
           <context context-type="linenumber">78</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6585102904443570717" datatype="html">
+        <source>Couldn't simulate circuit because there were too many moments</source>
+        <target state="translated">Ei pystytty simuloimaan piiriä, koska siinä oli liikaa ajanhetkiä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4633281565605788402" datatype="html">
+        <source>Circuit contains <x id="INTERPOLATION" equiv-text="{{error.moments}}"/> moments</source>
+        <target state="translated">Piiri sisältää <x id="INTERPOLATION" equiv-text="{{error.moments}}"/> ajanhetkeä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -64,6 +64,12 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
                 <p i18n>Circuit contains {{error.qubits}} qubits</p>
                 <p i18n>But max is {{error.maxQubits}}</p>
             </div>
+            
+            <div *ngIf="error.errorType === 'too-many-moments'">
+                <p i18n>Couldn't simulate circuit because there were too many moments</p>
+                <p i18n>Circuit contains {{error.moments}} moments</p>
+                <p i18n>But max is {{error.maxMoments}}</p>
+            </div>
 
             <div *ngIf="error.errorType === 'regex-invalid'">
                 <p i18n>modelInput contains invalid regex pattern</p>

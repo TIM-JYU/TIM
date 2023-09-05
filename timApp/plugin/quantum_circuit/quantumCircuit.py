@@ -138,6 +138,13 @@ class TooManyQubitsError:
 
 
 @dataclass
+class TooManyMomentsError:
+    moments: int
+    maxMoments: int
+    errorType: str = "too-many-moments"
+
+
+@dataclass
 class RegexInvalidError:
     regex: str
     errorType: str = "regex-invalid"
@@ -161,6 +168,7 @@ ErrorType = Union[
     AnswerIncorrectError,
     MatrixIncorrectError,
     TooManyQubitsError,
+    TooManyMomentsError,
     RegexInvalidError,
     SimulationTimedOutError,
     CircuitUnInterpretableError,
@@ -302,9 +310,13 @@ def add_gates_to_circuit(
     gates: list[GateInfo],
     circuit: QuantumCircuit,
     custom_gates: dict[str, np.ndarray],
-) -> None:
+) -> None | ErrorType:
     # qulacs has implicit sense of time so gates need to added in correct order
     for gate_def in sorted(gates, key=lambda x: x.time):
+        # check nMoments limit here. nQubits limit doesn't need to be checked because
+        # circuit knows it and throws error if gate_def.target violates it
+        if gate_def.time >= 50:
+            return TooManyMomentsError(gate_def.time, 50)
         if isinstance(gate_def, SingleOrMultiQubitGateInfo):
             gate = get_gate_matrix(gate_def.name, gate_def.target, custom_gates)
             if gate:
@@ -319,6 +331,8 @@ def add_gates_to_circuit(
                 circuit.add_gate(mat)
         else:
             log_warning(f"quantum: undefined gate type {gate_def}")
+
+    return None
 
 
 def parse_matrix(m_str: str) -> np.ndarray:
@@ -358,14 +372,14 @@ def run_simulation(
     input_list: list[int],
     n_qubits: int,
     custom_gates: dict[str, np.ndarray],
-) -> np.ndarray:
+) -> tuple[bool, ErrorType | np.ndarray]:
     """
     Runs simulator.
     :param gates: gates that are in the circuit
     :param input_list: input bits as a list of 0s and 1s [q0 value, q1 value,...]
     :param n_qubits: how many qubits the circuit has
     :param custom_gates: custom gates defined in YAML
-    :return: probabilities of each state after simulation
+    :return: tuple of success status, error or array of probabilities of each state after simulation
     """
     state = QuantumState(n_qubits)
     initial_state = input_to_int(input_list)
@@ -375,11 +389,13 @@ def run_simulation(
 
     circuit.update_quantum_state(state)
 
-    add_gates_to_circuit(gates, circuit, custom_gates)
+    add_err = add_gates_to_circuit(gates, circuit, custom_gates)
+    if add_err is not None:
+        return False, add_err
 
     circuit.update_quantum_state(state)
 
-    return np.power(np.abs(state.get_vector()), 2)
+    return True, np.power(np.abs(state.get_vector()), 2)
 
 
 def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
@@ -458,8 +474,18 @@ def run_all_simulations(
             continue
         input_list = [int(d) for d in bitstring]
         try:
-            expected = run_simulation(model_circuit, input_list, n_qubits, custom_gates)
-            actual = run_simulation(user_circuit, input_list, n_qubits, custom_gates)
+            success1, expected = run_simulation(
+                model_circuit, input_list, n_qubits, custom_gates
+            )
+            if not success1 and not isinstance(expected, np.ndarray):
+                threaded_sim_params.result = False, expected
+                return
+            success2, actual = run_simulation(
+                user_circuit, input_list, n_qubits, custom_gates
+            )
+            if not success2 and not isinstance(actual, np.ndarray):
+                threaded_sim_params.result = False, actual
+                return
         except (TypeError, RuntimeError) as e:
             # remove function name from error message. These come from qulacs.
             error_message = re.sub(r"Error:.+:", "", str(e))
@@ -467,7 +493,12 @@ def run_all_simulations(
                 error_message
             )
             return
-        if not check_answer(actual, expected):
+
+        if (
+            isinstance(actual, np.ndarray)
+            and isinstance(expected, np.ndarray)
+            and not check_answer(actual, expected)
+        ):
             threaded_sim_params.result = False, AnswerIncorrectError(
                 bitstring_reversed, list(expected), list(actual)
             )
@@ -772,6 +803,17 @@ def quantum_circuit_simulate(args: SimulationArgs) -> Response:
         )
         return jsonify({"web": {"result": "", "error": err_str}})
 
-    result = run_simulation(args.gates, args.inputList, args.nQubits, custom_gates)
+    success, result = run_simulation(
+        args.gates, args.inputList, args.nQubits, custom_gates
+    )
+    if success and isinstance(result, np.ndarray):
+        return jsonify({"web": {"result": list(result), "error": ""}})
 
-    return jsonify({"web": {"result": list(result), "error": ""}})
+    return jsonify(
+        {
+            "web": {
+                "result": [],
+                "error": json.dumps(asdict(result), ensure_ascii=False, indent=4),
+            }
+        }
+    )
