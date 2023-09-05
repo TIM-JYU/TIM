@@ -121,8 +121,9 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
                     ).document.get_paragraphs():
                         if refpar.get_attr("area") == tr_ra:
                             tr_rp = refpar.id
-                tr_rps.append(tr_rp)
-                tr_ids.append(tr_id)
+                if tr_rp:
+                    tr_rps.append(tr_rp)
+                    tr_ids.append(tr_id)
 
             s = SequenceMatcher(None, tr_rps, orig_ids)
             opcodes = s.get_opcodes()
