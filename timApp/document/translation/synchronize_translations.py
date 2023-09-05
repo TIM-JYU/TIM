@@ -1,5 +1,6 @@
 from difflib import SequenceMatcher
 
+from timApp.document.docentry import DocEntry
 from timApp.document.document import Document
 from timApp.document.docparagraph import (
     create_reference,
@@ -9,6 +10,7 @@ from timApp.document.docparagraph import (
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import find_lang_matching_cite_source
+from timApp.document.translation.translation import Translation
 
 
 def update_par_content(
@@ -42,7 +44,7 @@ def update_par_content(
     matched_doc, rp = find_lang_matching_cite_source(tr_doc, rd, rp, ra)
     rd = matched_doc.id if matched_doc else None
 
-    if ra:
+    if matched_doc and ra:
         # Only add the area citation if it doesn't already exist,
         # or replace it with a translated area citation if it was
         # from the original but a corresponding translated one exists.
@@ -52,18 +54,20 @@ def update_par_content(
         area_par = None
         for p in tr_doc.get_paragraphs():
             area_par = p if p.get_attr("ra") == ra else None
-        if area_par and not area_par.get_attr("rd") == rd:
+
+        if area_par and (
+            isinstance(matched_doc, Translation) and matched_doc.is_original_translation
+        ):
             # the citation points to the original, delete it
             tr_doc.delete_paragraph(area_par.id)
 
-            tr_par = DocParagraph.create_area_reference(
-                tr_doc,
-                area_name=ra,
-                r="tr",
-                rd=matched_doc.id,
-            )
-        else:
-            tr_par = None
+        tr_par = DocParagraph.create_area_reference(
+            tr_doc,
+            area_name=ra,
+            r="tr",
+            rd=matched_doc.id,
+        )
+
     else:
         tr_par = create_reference(
             tr_doc,
@@ -105,15 +109,24 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
             tr_doc = tr.document_as_current_user
             tr_pars = tr_doc.get_paragraphs()
             tr_rps, tr_ids = [], []
-            for tr_rp, tr_id in (
-                (p.get_attr("rp"), p.get_id())
-                for p in tr_pars
-                if p.get_attr("rp") is not None
-            ):
+            for p in tr_pars:
+                tr_rp = p.get_attr("rp", None)
+                tr_id = p.get_id()
+                # since area citations do not have rp attributes, we need to account for them
+                # by finding the id of the referenced area
+                tr_ra = p.get_attr("ra")
+                if tr_ra:
+                    for refpar in DocEntry.find_by_id(
+                        int(p.get_attr("rd"))
+                    ).document.get_paragraphs():
+                        if refpar.get_attr("area") == tr_ra:
+                            tr_rp = refpar.id
                 tr_rps.append(tr_rp)
                 tr_ids.append(tr_id)
+
             s = SequenceMatcher(None, tr_rps, orig_ids)
             opcodes = s.get_opcodes()
+
             for tag, i1, i2, j1, j2 in [
                 opcode for opcode in opcodes if opcode[0] in ["delete", "replace"]
             ]:
