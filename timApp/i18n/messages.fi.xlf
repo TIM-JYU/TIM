@@ -8594,6 +8594,14 @@
           <context context-type="linenumber">70</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7408991640539151057" datatype="html">
+        <source>Show all rows</source>
+        <target state="translated">Näytä kaikki rivit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
