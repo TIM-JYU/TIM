@@ -344,9 +344,9 @@ export interface CircuitOptions {
                     </div>
                 </div>
 
+                <tim-loading *ngIf="isResultCheckingRunning"></tim-loading>
                 <tim-quantum-error *ngIf="error" [error]="error"></tim-quantum-error>
                 <pre class="circuit-error" *ngIf="errorString" [innerHTML]="errorString | purify"></pre>
-                <tim-loading *ngIf="isResultCheckingRunning"></tim-loading>
                 <pre *ngIf="result" [innerHTML]="result | purify"></pre>
             </ng-container>
             <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>

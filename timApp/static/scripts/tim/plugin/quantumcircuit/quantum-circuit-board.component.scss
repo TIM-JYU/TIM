@@ -140,6 +140,7 @@ svg text::selection {
   justify-content: flex-start;
   align-items: center;
   border-left: 1px solid black;
+  width: max-content;
 }
 
 img {

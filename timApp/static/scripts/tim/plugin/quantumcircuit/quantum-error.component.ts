@@ -3,6 +3,13 @@ import {Component, Input} from "@angular/core";
 import {equal} from "mathjs";
 import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
+interface AnswerIncorrectRow {
+    output: string;
+    expected: number;
+    actual: number;
+    correct: boolean;
+}
+
 @Component({
     selector: "tim-quantum-error",
     template: `
@@ -31,8 +38,14 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
 
 
             <div *ngIf="error.errorType === 'answer-incorrect'">
+                <label>
+                    <ng-container i18n>Show all</ng-container>
+                    <input type="checkbox" [(ngModel)]="answerIncorrectShowAll" (ngModelChange)="createAnswerDisplayData()">
+                </label>
+                
                 <p i18n>Circuit gives wrong probabilities with input:</p>
                 <div>{{error.bitstring}}</div>
+
                 <p i18n>Output probabilities were:</p>
                 <div class="table-container">
                     <table class="answer-table">
@@ -45,15 +58,14 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
                         </thead>
 
                         <tbody>
-                        <tr *ngFor="let output of outputs; let i = index;">
-                            <td class="answer-table-td">{{output}}</td>
+                        <tr *ngFor="let row of answerIncorrectRows">
+                            <td class="answer-table-td">{{row.output}}</td>
                             <td class="answer-table-td"
-                                [title]="error.expected[i]">{{error.expected[i] | number: '1.1-3'}}</td>
-                            <td class="answer-table-td" [title]="error.actual[i]"
-                                [class.incorrect]="!answersCorrect[i]">{{error.actual[i] | number: '1.1-3'}}</td>
+                                [title]="row.expected">{{row.expected | number: '1.1-3'}}</td>
+                            <td class="answer-table-td" [title]="row.actual"
+                                [class.incorrect]="!row.correct">{{row.actual | number: '1.1-3'}}</td>
                         </tr>
                         </tbody>
-
                     </table>
                 </div>
 
@@ -64,7 +76,7 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
                 <p i18n>Circuit contains {{error.qubits}} qubits</p>
                 <p i18n>But max is {{error.maxQubits}}</p>
             </div>
-            
+
             <div *ngIf="error.errorType === 'too-many-moments'">
                 <p i18n>Couldn't simulate circuit because there were too many moments</p>
                 <p i18n>Circuit contains {{error.moments}} moments</p>
@@ -75,11 +87,11 @@ import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component"
                 <p i18n>modelInput contains invalid regex pattern</p>
                 <p>{{error.regex}}</p>
             </div>
-            
+
             <div *ngIf="error.errorType === 'simulation-timed-out'">
                 <p i18n>Simulator timed out</p>
             </div>
-            
+
             <div *ngIf="error.errorType === 'circuit-uninterpretable'">
                 <p i18n>Couldn't interpret circuits</p>
                 <p>{{error.message}}</p>
@@ -92,8 +104,8 @@ export class QuantumErrorComponent implements OnChanges {
     @Input()
     error!: IServerError;
 
-    answersCorrect!: boolean[];
-    outputs!: string[];
+    answerIncorrectShowAll: boolean = false;
+    answerIncorrectRows!: AnswerIncorrectRow[];
 
     indexToBitstring(i: number, nQubits: number) {
         return i.toString(2).padStart(nQubits, "0");
@@ -106,18 +118,23 @@ export class QuantumErrorComponent implements OnChanges {
         if (this.error.errorType === "answer-incorrect") {
             const nQubits = Math.floor(Math.log2(this.error.actual.length));
 
-            this.answersCorrect = [];
-            this.outputs = [];
+            this.answerIncorrectRows = [];
             for (let i = 0; i < this.error.actual.length; i++) {
-                this.outputs.push(this.indexToBitstring(i, nQubits));
-
                 const actual = this.error.actual[i];
                 const expected = this.error.expected[i];
+                let correct = true;
                 const res = equal(actual, expected);
                 if (typeof res === "boolean") {
-                    this.answersCorrect.push(res);
-                } else {
-                    this.answersCorrect.push(true);
+                    correct = res;
+                }
+
+                if (this.answerIncorrectShowAll || !correct) {
+                    this.answerIncorrectRows.push({
+                        output: this.indexToBitstring(i, nQubits),
+                        expected: this.error.expected[i],
+                        actual: this.error.actual[i],
+                        correct: correct,
+                    });
                 }
             }
         }
