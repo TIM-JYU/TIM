@@ -725,7 +725,7 @@ const CsMarkupOptional = t.partial({
     mode: t.string,
     noeditor: t.boolean,
     normal: nullable(t.string),
-    parsons: withDefault(CsParsonsOptions, {}),
+    parsons: CsParsonsOptions,
     formulaEditor: t.boolean,
     path: t.string,
     placeholder: nullable(t.string),
