@@ -39,7 +39,7 @@ interface AnswerIncorrectRow {
 
             <div *ngIf="error.errorType === 'answer-incorrect'">
                 <label>
-                    <ng-container i18n>Show all</ng-container>
+                    <ng-container i18n>Show all rows</ng-container>
                     <input type="checkbox" [(ngModel)]="answerIncorrectShowAll" (ngModelChange)="createAnswerDisplayData()">
                 </label>
                 
