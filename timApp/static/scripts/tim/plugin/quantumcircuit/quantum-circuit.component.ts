@@ -155,6 +155,7 @@ const QuantumCircuitMarkup = t.intersection([
         modelConditions: nullable(t.array(t.string)),
         qubits: nullable(t.array(QubitInfo)),
         outputNames: nullable(t.array(t.string)),
+        maxRunTimeout: nullable(t.number),
     }),
     GenericPluginMarkup,
     t.type({
@@ -230,6 +231,11 @@ export const ServerError = t.union([
     }),
     t.type({
         errorType: t.literal("simulation-timed-out"),
+    }),
+    t.type({
+        timeout: t.number,
+        maxTimeout: t.number,
+        errorType: t.literal("too-long-timeout"),
     }),
     t.type({
         message: t.string,

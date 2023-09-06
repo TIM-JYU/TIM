@@ -90,6 +90,13 @@ interface AnswerIncorrectRow {
 
             <div *ngIf="error.errorType === 'simulation-timed-out'">
                 <p i18n>Simulator timed out</p>
+                <p i18n>Simulation time can be extended up to 25 seconds using maxRunTimeout attribute.</p>
+            </div>
+            
+            <div *ngIf="error.errorType === 'too-long-timeout'">
+                <p i18n>The value of maxRunTimeout is too large</p>
+                <p i18n>maxRunTimeout has value: {{error.timeout}}</p>
+                <p i18n>But maximum is: {{error.maxTimeout}}</p>
             </div>
 
             <div *ngIf="error.errorType === 'circuit-uninterpretable'">
