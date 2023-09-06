@@ -8602,6 +8602,38 @@
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1505321340021272471" datatype="html">
+        <source>Simulation time can be extended up to 25 seconds using maxRunTimeout attribute.</source>
+        <target state="translated">Simulointiaikaa pystyy pidentämään 25 sekuntiin asti käyttäen maxRunTimeout attribuuttia.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">93</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3834816620880979274" datatype="html">
+        <source>The value of maxRunTimeout is too large</source>
+        <target state="translated">maxRunTimeout:in arvo on liian suuri</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">97</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7385899603772624470" datatype="html">
+        <source>maxRunTimeout has value: <x id="INTERPOLATION" equiv-text="{{error.timeout}}"/></source>
+        <target state="translated">maxRunTimeout:lla on arvo: <x id="INTERPOLATION" equiv-text="{{error.timeout}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="562104592773648088" datatype="html">
+        <source>But maximum is: <x id="INTERPOLATION" equiv-text="{{error.maxTimeout}}"/></source>
+        <target state="translated">Mutta maksimi on: <x id="INTERPOLATION" equiv-text="{{error.maxTimeout}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">99</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

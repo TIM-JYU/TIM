@@ -156,6 +156,13 @@ class SimulationTimedOutError:
 
 
 @dataclass
+class TooLongTimeoutError:
+    timeout: int
+    maxTimeout: int
+    errorType: str = "too-long-timeout"
+
+
+@dataclass
 class CircuitUnInterpretableError:
     message: str
     errorType: str = "circuit-uninterpretable"
@@ -171,6 +178,7 @@ ErrorType = Union[
     TooManyMomentsError,
     RegexInvalidError,
     SimulationTimedOutError,
+    TooLongTimeoutError,
     CircuitUnInterpretableError,
 ]
 
@@ -192,6 +200,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     modelConditions: list[str] | None = None
     qubits: list[QubitInfo] | None = None
     outputNames: list[str] | None = None
+    maxRunTimeout: int | None = None
 
     initialCircuit: list[GateInfo] | None = None
     customGates: list[CustomGateInfo] | None = None
@@ -513,12 +522,20 @@ def run_all_simulations_threaded(
     n_qubits: int,
     custom_gates: dict[str, np.ndarray],
     model_input: list[str] | None,
+    max_run_timeout: int | None,
 ) -> tuple[bool, ErrorType | None]:
 
     sim_params = ThreadedSimParams(False, (True, None))
 
-    # Wait at max 28 seconds. After 30 seconds read timeout is thrown, so we need to return before that.
-    max_run_time = 28
+    # allow at max 25 seconds of simulation time
+    if max_run_timeout is not None and max_run_timeout > 25:
+        return False, TooLongTimeoutError(max_run_timeout, 25)
+
+    if max_run_timeout:
+        max_run_time = max_run_timeout
+    else:
+        max_run_time = 10
+
     t = Thread(
         target=run_all_simulations,
         args=(
@@ -636,6 +653,8 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
 
     n_measurements = args.input.measurements
 
+    max_run_timeout = args.markup.maxRunTimeout
+
     points = 1.0
     result = "saved"
     error = None
@@ -659,7 +678,12 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         and n_qubits is not None
     ):
         ok, sim_error = run_all_simulations_threaded(
-            model_circuit, user_circuit, n_qubits, custom_gates, model_input
+            model_circuit,
+            user_circuit,
+            n_qubits,
+            custom_gates,
+            model_input,
+            max_run_timeout,
         )
 
         if ok:
