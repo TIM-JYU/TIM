@@ -45,12 +45,10 @@ def update_par_content(
     rd = matched_doc.id if matched_doc else None
 
     if matched_doc and ra:
-        # Only add the area citation if it doesn't already exist,
-        # or replace it with a translated area citation if it was
-        # from the original but a corresponding translated one exists.
-        # TODO: in order to keep the (translated) citation up-to-date,
-        #  we may eventually want to replace the existing area
-        #  with the one re-created here
+        # Replace area citation with the translated one if it was
+        # from the original and a corresponding translation exists.
+        # FIXME: Currently only considers the last area matching the requested ra-attribute in the document!
+        #  Breaking on first match is not sufficient, since area names are not guaranteed to be unique.
         area_par = None
         for p in tr_doc.get_paragraphs():
             area_par = p if p.get_attr("ra") == ra else None
@@ -112,8 +110,8 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
             for p in tr_pars:
                 tr_rp = p.get_attr("rp", None)
                 tr_id = p.get_id()
-                # since area citations do not have rp attributes, we need to account for them
-                # by finding the id of the referenced area
+                # Since area citations do not have rp attributes, we need to account for them
+                # by finding the id of the referenced area and use those for the diff
                 tr_ra = p.get_attr("ra")
                 if tr_ra:
                     for refpar in DocEntry.find_by_id(

@@ -65,7 +65,7 @@ choices:
 
     def test_referenced_plugin_in_preamble(self):
         # TODO: re-enable this test case when the issue with cited plugins in translated preambles
-        #       has been fixed (see https://github.com/TIM-JYU/TIM/pull/3448)
+        #       has been fixed (see https://github.com/TIM-JYU/TIM/pull/3464)
         # self.run_referenced_plugin_in_preamble("c/c", create_preamble_translation=True)
         self.run_referenced_plugin_in_preamble("d/d", create_preamble_translation=False)
 
