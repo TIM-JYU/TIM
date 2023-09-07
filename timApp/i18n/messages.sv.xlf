@@ -8480,6 +8480,62 @@
           <context context-type="linenumber">78</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6585102904443570717" datatype="html">
+        <source>Couldn&apos;t simulate circuit because there were too many moments</source>
+        <target state="new">Couldn&apos;t simulate circuit because there were too many moments</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4633281565605788402" datatype="html">
+        <source>Circuit contains <x id="INTERPOLATION" equiv-text="{{error.moments}}"/> moments</source>
+        <target state="new">Circuit contains <x id="INTERPOLATION" equiv-text="{{error.moments}}"/> moments</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7408991640539151057" datatype="html">
+        <source>Show all rows</source>
+        <target state="new">Show all rows</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1505321340021272471" datatype="html">
+        <source>Simulation time can be extended up to 25 seconds using maxRunTimeout attribute.</source>
+        <target state="new">Simulation time can be extended up to 25 seconds using maxRunTimeout attribute.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">93</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3834816620880979274" datatype="html">
+        <source>The value of maxRunTimeout is too large</source>
+        <target state="new">The value of maxRunTimeout is too large</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">97</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7385899603772624470" datatype="html">
+        <source>maxRunTimeout has value: <x id="INTERPOLATION" equiv-text="{{error.timeout}}"/></source>
+        <target state="new">maxRunTimeout has value: <x id="INTERPOLATION" equiv-text="{{error.timeout}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="562104592773648088" datatype="html">
+        <source>But maximum is: <x id="INTERPOLATION" equiv-text="{{error.maxTimeout}}"/></source>
+        <target state="new">But maximum is: <x id="INTERPOLATION" equiv-text="{{error.maxTimeout}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">99</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

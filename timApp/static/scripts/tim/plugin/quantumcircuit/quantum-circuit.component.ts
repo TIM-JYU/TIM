@@ -155,6 +155,7 @@ const QuantumCircuitMarkup = t.intersection([
         modelConditions: nullable(t.array(t.string)),
         qubits: nullable(t.array(QubitInfo)),
         outputNames: nullable(t.array(t.string)),
+        maxRunTimeout: nullable(t.number),
     }),
     GenericPluginMarkup,
     t.type({
@@ -220,11 +221,21 @@ export const ServerError = t.union([
         errorType: t.literal("too-many-qubits"),
     }),
     t.type({
+        moments: t.number,
+        maxMoments: t.number,
+        errorType: t.literal("too-many-moments"),
+    }),
+    t.type({
         regex: t.string,
         errorType: t.literal("regex-invalid"),
     }),
     t.type({
         errorType: t.literal("simulation-timed-out"),
+    }),
+    t.type({
+        timeout: t.number,
+        maxTimeout: t.number,
+        errorType: t.literal("too-long-timeout"),
     }),
     t.type({
         message: t.string,
@@ -339,9 +350,9 @@ export interface CircuitOptions {
                     </div>
                 </div>
 
+                <tim-loading *ngIf="isResultCheckingRunning"></tim-loading>
                 <tim-quantum-error *ngIf="error" [error]="error"></tim-quantum-error>
                 <pre class="circuit-error" *ngIf="errorString" [innerHTML]="errorString | purify"></pre>
-                <tim-loading *ngIf="isResultCheckingRunning"></tim-loading>
                 <pre *ngIf="result" [innerHTML]="result | purify"></pre>
             </ng-container>
             <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
@@ -618,14 +629,14 @@ export class QuantumCircuitComponent
             const error = res.result;
             if (typeof error === "string") {
                 this.showErrorMessage(error);
-            } else if (error.errorType === "too-many-qubits") {
+            } else {
                 this.error = error;
             }
             this.isSimulatorRunning = false;
             const endTime = new Date();
 
             const timeDiff = endTime.getTime() - startTime.getTime();
-            console.log(`simulation ended in error at: ${timeDiff}ms`);
+            console.error(`simulation ended in error at: ${timeDiff}ms`);
 
             return;
         }
@@ -1074,12 +1085,14 @@ export class QuantumCircuitComponent
                 probabilityText: "0",
             }));
 
-        const outputProbabilities = this.simulator.getOutputProbabilities();
-        if (outputProbabilities) {
-            for (let i = 0; i < outputProbabilities.length; i++) {
-                this.qubitOutputs[i].probability = outputProbabilities[i];
-                this.qubitOutputs[i].probabilityText =
-                    outputProbabilities[i].toFixed(2) + "%";
+        if (this.showOutputBits) {
+            const outputProbabilities = this.simulator.getOutputProbabilities();
+            if (outputProbabilities) {
+                for (let i = 0; i < outputProbabilities.length; i++) {
+                    this.qubitOutputs[i].probability = outputProbabilities[i];
+                    this.qubitOutputs[i].probabilityText =
+                        outputProbabilities[i].toFixed(2) + "%";
+                }
             }
         }
 
