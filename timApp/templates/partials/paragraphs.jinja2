@@ -75,7 +75,12 @@
              slide-pars="true"
              {% endif %}
          {% endif %}
-         {% if t.target %}
+         {% if t.attrs.rd and t.attrs.r == 'tr' and t.attrs.rp %}
+             ref-doc-id="{{ t.attrs.rd }}"
+             ref-id="{{ t.attrs.rp }}"
+             ref-t="{{ t.target.hash }}"
+             ref-attrs="{{ t.target.attrs_str }}"
+         {% elif t.target %}
              ref-id="{{ t.target.id }}"
              ref-t="{{ t.target.hash }}"
              ref-attrs="{{ t.target.attrs_str }}"
@@ -153,7 +158,12 @@
         {% if t.from_preamble %}
              data-from-preamble="{{ t.from_preamble|safe }}"
         {% endif %}
-        {% if t.target %}
+        {% if t.attrs.rd and t.attrs.r == 'tr' and t.attrs.rp %}
+             ref-doc-id="{{ t.attrs.rd }}"
+             ref-id="{{ t.attrs.rp }}"
+             ref-t="{{ t.target.hash }}"
+             ref-attrs="{{ t.target.attrs_str }}"
+        {% elif t.target %}
              ref-id="{{ t.target.id }}"
              ref-t="{{ t.target.hash }}"
              ref-attrs="{{ t.target.attrs_str }}"
