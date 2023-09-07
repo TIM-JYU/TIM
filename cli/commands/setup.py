@@ -32,7 +32,7 @@ This command is intended to be run once, but can be re-run to re-initialize the 
 }
 
 # Version of Poetry to install
-POETRY_MIN_VERSION = "1.2.1"
+POETRY_MIN_VERSION = "1.3.1"
 
 # Minimal Python version needed for development
 PYTHON_MIN_DEV_VERSION = [3, 7]
