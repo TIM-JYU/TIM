@@ -8813,12 +8813,45 @@
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1720</context>
         </context-group>
-      </trans-unit>      <trans-unit id="1691418146394662141" datatype="html">
+      </trans-unit>
+      <trans-unit id="1691418146394662141" datatype="html">
         <source>Answer number <x id="PH" equiv-text="answerNumber"/> is out of range for task <x id="PH_1" equiv-text="this.taskId.docTask()"/> for user <x id="PH_2" equiv-text="this.user?.name"/>.</source>
         <target state="translated">Svaret nummer <x id="PH" equiv-text="answerNumber"/> är utom räckhåll för uppgift <x id="PH_1" equiv-text="this.taskId.docTask()"/> för användare <x id="PH_2" equiv-text="this.user?.name"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1375,1374</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2859819736874880280" datatype="html">
+        <source>Logging in, please wait...</source>
+        <target state="new">Logging in, please wait...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2298247937024475895" datatype="html">
+        <source>Login code not yet active. Make sure you use the correct code or ask the code to be activated.</source>
+        <target state="new">Login code not yet active. Make sure you use the correct code or ask the code to be activated.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">10,8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="563854068285277269" datatype="html">
+        <source>Login code expired. Make sure you use the correct code or ask for a new code.</source>
+        <target state="new">Login code expired. Make sure you use the correct code or ask for a new code.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5533111384851624507" datatype="html">
+        <source>Invalid login code. Check that you entered it correctly.</source>
+        <target state="new">Invalid login code. Check that you entered it correctly.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">9,8</context>
         </context-group>
       </trans-unit>
     </body>
