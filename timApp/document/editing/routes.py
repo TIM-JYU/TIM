@@ -354,13 +354,15 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
     mark_pars_as_read_if_chosen(pars, doc)
 
     synchronize_translations(docinfo, edit_result)
-    notify_doc_watchers(
-        docinfo,
-        md,
-        NotificationType.ParModified,
-        par=pars[0] if pars else None,
-        old_version=edit_request.old_doc_version,
-    )
+
+    if not edit_result.empty:
+        notify_doc_watchers(
+            docinfo,
+            md,
+            NotificationType.ParModified,
+            par=pars[0] if pars else None,
+            old_version=edit_request.old_doc_version,
+        )
     return par_response(
         pars,
         docinfo,
