@@ -328,6 +328,14 @@ class Plugin:
 
     def validate_points(self, points: str | float | None):
         try:
+            if isinstance(points, str) and points.rfind(",") >= 0:
+                # Convert decimal comma to decimal point since float conversion doesn't handle commas.
+                # If there are more than one comma, treat them as thousands separators and remove all
+                # of them before conversion.
+                ipart, sep, dpart = points.rpartition(",")
+                if ipart.rfind(","):
+                    ipart = ipart.replace(",", "")
+                points = f"{ipart}.{dpart}"
             points = float(points)
         except (ValueError, TypeError):
             raise PluginException("Invalid points format.")
