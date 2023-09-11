@@ -1975,7 +1975,8 @@ def get_model_answer(task_id: str) -> Response:
     model_answer_info = plug.known.modelAnswer
     if not model_answer_info or not model_answer_info.answer:
         raise RouteException(f"No model answer for task {task_id}")
-    if not has_teacher_access(d):
+    is_teacher = has_teacher_access(d)
+    if not is_teacher:
         answer_count: int | None = None
         if model_answer_info.disabled:
             raise AccessDenied("This model answer has been disabled")
@@ -2049,7 +2050,10 @@ def get_model_answer(task_id: str) -> Response:
                 points_map[a.id] = a.points
         except PluginException as e:
             raise RouteException(str(e))
-    return json_response({"answer": answer_html, "points_map": points_map})
+    res = {"answer": answer_html, "points_map": points_map}
+    if is_teacher:
+        res["md"] = model_answer_info.answer
+    return json_response(res)
 
 
 @answers.get("/getState")
