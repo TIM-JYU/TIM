@@ -1,8 +1,6 @@
-import logging
 import os
 from dataclasses import dataclass
 
-import requests
 from flask import flash, url_for, Blueprint, Response, request
 
 from timApp.auth.accesshelper import verify_admin
@@ -11,7 +9,6 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import safe_redirect, json_response
-from cli.util.logging import log_info
 
 admin_bp = Blueprint("admin", __name__, url_prefix="")
 
