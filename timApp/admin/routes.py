@@ -62,7 +62,7 @@ def search_users(term: str) -> Response:
         .all()
     )
     show_groups = request.args.get("show_groups")
-    if not show_groups == "True" or show_groups == "true":
+    if not (show_groups == "True" or show_groups == "true"):
         show_groups = False
     return json_response(
         [u.to_json(contacts=True, show_groups=show_groups) for u in result]
