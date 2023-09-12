@@ -813,6 +813,13 @@ def render_doc_view(
                 usergroups = doc_settings.groups()
             except ValueError as e:
                 flash(str(e))
+        # TODO: Remove; this allows admins to bypass the groups: [] option and view all answers
+        if (
+            usergroups is not None
+            and len(usergroups) == 0
+            and verify_admin(require=False, user=current_user)
+        ):
+            usergroups = None
         ugs_without_access = []
         if usergroups is not None:
             ugs = (

@@ -188,7 +188,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
         self.personal_user = User.get_by_name(self.name)
 
-    def to_json(self):
+    def to_json(self) -> dict:
         r = {
             "id": self.id,
             "name": self.name,
@@ -253,6 +253,10 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         )
 
     @staticmethod
+    def get_by_id(group_id: int) -> UserGroup | None:
+        return db.session.get(UserGroup, group_id)
+
+    @staticmethod
     def get_anonymous_group() -> UserGroup:
         return (
             run_sql(select(UserGroup).filter_by(name=ANONYMOUS_GROUPNAME))
@@ -286,7 +290,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_organizations() -> list[UserGroup]:
-        return (
+        return list(
             run_sql(
                 select(UserGroup).filter(
                     UserGroup.name.endswith(" users")
@@ -357,7 +361,7 @@ def get_usergroup_eager_query() -> Select:
 
 
 def get_sisu_groups_by_filter(f) -> list[UserGroup]:
-    gs: list[UserGroup] = (
+    gs: list[UserGroup] = list(
         run_sql(get_usergroup_eager_query().join(ScimUserGroup).filter(f))
         .scalars()
         .all()
@@ -367,6 +371,24 @@ def get_sisu_groups_by_filter(f) -> list[UserGroup]:
 
 # When a SCIM group is deleted, the group name gets this prefix.
 DELETED_GROUP_PREFIX = "deleted:"
+
+
+def get_groups_by_names(names: list[str]) -> list[UserGroup]:
+    groups: list[UserGroup] = list(
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(names))).scalars().all()
+    )
+    return groups
+
+
+def get_groups_by_ids(group_ids: list[int]) -> list[UserGroup]:
+    """
+    Retrieves a UserGroup based on its ID number.
+    :param group_ids: ID numbers
+    :return: UserGroup
+    """
+    return list(
+        run_sql(select(UserGroup).filter(UserGroup.id.in_(group_ids))).scalars().all()
+    )
 
 
 @attr.s(auto_attribs=True)
