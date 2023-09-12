@@ -1452,7 +1452,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         return info_dict
 
-    def to_json(self, full: bool = False, contacts: bool = False) -> dict:
+    def to_json(
+        self, full: bool = False, contacts: bool = False, show_groups: bool = False
+    ) -> dict:
         external_ids: dict[int, str] = (
             {
                 s.group_id: s.external_id
@@ -1460,7 +1462,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                     ScimUserGroup.group_id.in_([g.id for g in self.groups])
                 ).all()
             }
-            if full
+            if full or show_groups
             else []
         )
 
@@ -1487,6 +1489,21 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         if contacts:
             result |= {"contacts": self.contacts}
+
+        if show_groups:
+            groups = self.groups
+            if (
+                self.logged_in
+                and self.is_current_user
+                and get_locked_active_groups() is not None
+            ):
+                groups = self.effective_groups
+            result |= {
+                "groups": [
+                    {**g.to_json(), "external_id": external_ids.get(g.id, None)}
+                    for g in groups
+                ]
+            }
 
         if self.logged_in and self.is_current_user:
             if locked_access := get_locked_access_type():

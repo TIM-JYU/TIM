@@ -1,7 +1,9 @@
+import logging
 import os
 from dataclasses import dataclass
 
-from flask import flash, url_for, Blueprint, Response
+import requests
+from flask import flash, url_for, Blueprint, Response, request
 
 from timApp.auth.accesshelper import verify_admin
 from timApp.timdb.sqa import db
@@ -9,6 +11,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import safe_redirect, json_response
+from cli.util.logging import log_info
 
 admin_bp = Blueprint("admin", __name__, url_prefix="")
 
@@ -61,4 +64,9 @@ def search_users(term: str) -> Response:
         .order_by(User.id)
         .all()
     )
-    return json_response([u.to_json(contacts=True) for u in result])
+    show_groups = request.args.get("show_groups")
+    if not show_groups == "True" or show_groups == "true":
+        show_groups = False
+    return json_response(
+        [u.to_json(contacts=True, show_groups=show_groups) for u in result]
+    )
