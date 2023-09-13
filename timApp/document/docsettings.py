@@ -99,6 +99,7 @@ class DocSettingTypes:
     anonymous_login: bool
     basicChangeNotifications: bool
     extraPreambles: list[str] | str | None
+    lazyAnswers: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -663,6 +664,9 @@ class DocSettings:
 
     def extra_preambles(self) -> list[str] | str | None:
         return self.get_setting_or_default("extraPreambles", None)
+
+    def lazy_answers(self) -> bool:
+        return self.get_setting_or_default("lazyAnswers", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

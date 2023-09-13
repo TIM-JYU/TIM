@@ -50,6 +50,7 @@ export interface IDocSettings {
     loginMessage?: string;
     buttons?: string;
     mdButtons?: ITemplateButton[];
+    lazyAnswers?: boolean;
 }
 
 export interface ISlideDocSettings extends IDocSettings {

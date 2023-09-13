@@ -41,6 +41,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import type {IRegisteredPlugin} from "tim/plugin/pluginRegistry";
 import {getPlugin} from "tim/plugin/pluginRegistry";
 import {BrowserModule} from "@angular/platform-browser";
+import {genericglobals, isDocumentGlobals} from "tim/util/globals";
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
@@ -103,13 +104,17 @@ function isElement(n: Node): n is Element {
         </div>
 
     `,
-    styles: [],
+    host: {
+        "[class.lazy-answer-inactive]": "lazyActivated && !activated",
+    },
 })
 export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild("pluginPlacement", {read: ViewContainerRef, static: false})
     pluginPlacement!: ViewContainerRef;
     @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
     private compiled = false;
+    activated = false;
+    lazyActivated = false;
     private viewctrl?: ViewCtrl;
     @Input() public taskId!: string;
     public nonPluginHtml?: string;
@@ -160,6 +165,11 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         public vcr: ViewContainerRef
     ) {
         timLogTime("timPluginLoader constructor", "answ", 1);
+        const globals = genericglobals();
+        if (isDocumentGlobals(globals)) {
+            this.lazyActivated = globals.docSettings.lazyAnswers ?? false;
+            console.log(this.lazyActivated);
+        }
     }
 
     get loaderElement(): HTMLElement {
@@ -246,12 +256,14 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
             return;
         }
 
-        this.elementRef.nativeElement.addEventListener("mouseenter", () =>
-            this.loadPlugin()
-        );
-        this.elementRef.nativeElement.addEventListener("touchstart", () =>
-            this.loadPlugin()
-        );
+        this.elementRef.nativeElement.addEventListener("mouseenter", () => {
+            this.activated = true;
+            this.loadPlugin();
+        });
+        this.elementRef.nativeElement.addEventListener("touchstart", () => {
+            this.activated = true;
+            this.loadPlugin();
+        });
         const pluginhtml = this.pluginWrapper.nativeElement.innerHTML;
         if (!pluginhtml.startsWith(LAZY_COMMENT_MARKER)) {
             const component = this.pluginWrapper.nativeElement
