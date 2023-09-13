@@ -8,11 +8,13 @@ import {createDowngradedModule, doDowngrade} from "../downgrade";
 // import {TimTableModule} from "tim/plugin/timTable/tim-table.component";
 import {BrowserModule} from "@angular/platform-browser";
 import {GroupManagementComponent} from "./group-management.component";
+import {HttpClientModule} from "@angular/common/http";
 
 @NgModule({
     declarations: [GroupManagementComponent],
     exports: [GroupManagementComponent],
     imports: [
+        HttpClientModule,
         BrowserModule,
         FormsModule,
         TimUtilityModule,

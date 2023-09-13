@@ -107,6 +107,7 @@ TIM_SAFE_TAGS = [
     "tim-variables",
     "tim-message-list-admin",
     "tim-message-view",
+    "tim-group-management-console",
     "manage-read-receipt",
     "tim-archive-header",
     "tim-archive-footer",
