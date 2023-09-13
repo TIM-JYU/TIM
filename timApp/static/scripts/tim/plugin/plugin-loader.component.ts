@@ -205,7 +205,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         if (this.lockedByPrerequisite) {
             this.hidePlugin();
         }
-        if (this.type == "none") {
+        if (this.type == "none" || this.type == "lazyonly") {
             // Light plugin loader doesn't have AB => mark as resolved
             this.abLoad.resolve(null);
         }
