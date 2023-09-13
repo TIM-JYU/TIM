@@ -168,7 +168,6 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         const globals = genericglobals();
         if (isDocumentGlobals(globals)) {
             this.lazyActivated = globals.docSettings.lazyAnswers ?? false;
-            console.log(this.lazyActivated);
         }
     }
 
@@ -181,6 +180,10 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     async ngOnInit() {
+        // Don't activate if it isn't supposed to have a browser in the first place
+        if (this.type == "none") {
+            this.lazyActivated = false;
+        }
         this.viewctrl = vctrlInstance;
         if (this.viewctrl && !this.preview && this.taskId) {
             this.viewctrl.registerPluginLoader(this);
