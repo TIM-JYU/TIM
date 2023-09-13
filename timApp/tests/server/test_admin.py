@@ -12,7 +12,7 @@ from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_USERNAMES
 from timApp.user.user import User, UserInfo
 from timApp.user.usercontact import ContactOrigin
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, get_admin_group_id
 from timApp.util.flask.requesthelper import RouteException, NotExist
 
 
@@ -68,6 +68,185 @@ class SearchTest(TimRouteTest):
                             "verified": True,
                         }
                     ],
+                },
+            ],
+        )
+
+        self.get(
+            "/users/search/test?full=true",
+            expect_content=[
+                {
+                    "consent": None,
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test1@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": True,
+                        }
+                    ],
+                    "email": "test1@example.com",
+                    "folder": {
+                        "id": self.test_user_1.get_personal_folder().id,
+                        "isFolder": True,
+                        "location": "users",
+                        "modified": "just now",
+                        "name": "test-user-1",
+                        "owners": [
+                            {
+                                "id": self.test_user_1.get_personal_group().id,
+                                "name": "testuser1",
+                            }
+                        ],
+                        "path": "users/test-user-1",
+                        "public": True,
+                        "rights": {
+                            "browse_own_answers": True,
+                            "can_comment": True,
+                            "can_mark_as_read": True,
+                            "copy": True,
+                            "editable": True,
+                            "manage": True,
+                            "owner": True,
+                            "see_answers": True,
+                            "teacher": True,
+                        },
+                        "title": "Test user 1",
+                        "unpublished": True,
+                    },
+                    "group": {
+                        "id": self.test_user_1.get_personal_group().id,
+                        "name": "testuser1",
+                    },
+                    "groups": [
+                        {
+                            "external_id": None,
+                            "id": self.test_user_1.get_personal_group().id,
+                            "name": "testuser1",
+                        },
+                        {
+                            "external_id": None,
+                            "id": get_admin_group_id(),
+                            "name": "Administrators",
+                        },
+                    ],
+                    "id": TEST_USER_1_ID,
+                    "last_name": None,
+                    "name": "testuser1",
+                    "real_name": "Test user 1",
+                },
+                {
+                    "consent": None,
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test2@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": True,
+                        }
+                    ],
+                    "email": "test2@example.com",
+                    "folder": {
+                        "id": self.test_user_2.get_personal_folder().id,
+                        "isFolder": True,
+                        "location": "users",
+                        "modified": "just now",
+                        "name": "test-user-2",
+                        "owners": [
+                            {
+                                "id": self.test_user_2.get_personal_group().id,
+                                "name": "testuser2",
+                            }
+                        ],
+                        "path": "users/test-user-2",
+                        "public": True,
+                        "rights": {
+                            "browse_own_answers": True,
+                            "can_comment": True,
+                            "can_mark_as_read": True,
+                            "copy": True,
+                            "editable": True,
+                            "manage": True,
+                            "owner": True,
+                            "see_answers": True,
+                            "teacher": True,
+                        },
+                        "title": "Test user 2",
+                        "unpublished": True,
+                    },
+                    "group": {
+                        "id": self.test_user_2.get_personal_group().id,
+                        "name": "testuser2",
+                    },
+                    "groups": [
+                        {
+                            "external_id": None,
+                            "id": self.test_user_2.get_personal_group().id,
+                            "name": "testuser2",
+                        }
+                    ],
+                    "id": TEST_USER_2_ID,
+                    "last_name": None,
+                    "name": "testuser2",
+                    "real_name": "Test user 2",
+                },
+                {
+                    "consent": None,
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test3@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": True,
+                        }
+                    ],
+                    "email": "test3@example.com",
+                    "folder": {
+                        "id": self.test_user_3.get_personal_folder().id,
+                        "isFolder": True,
+                        "location": "users",
+                        "modified": "just now",
+                        "name": "test-user-3",
+                        "owners": [
+                            {
+                                "id": self.test_user_3.get_personal_group().id,
+                                "name": "testuser3",
+                            }
+                        ],
+                        "path": "users/test-user-3",
+                        "public": True,
+                        "rights": {
+                            "browse_own_answers": True,
+                            "can_comment": True,
+                            "can_mark_as_read": True,
+                            "copy": True,
+                            "editable": True,
+                            "manage": True,
+                            "owner": True,
+                            "see_answers": True,
+                            "teacher": True,
+                        },
+                        "title": "Test user 3",
+                        "unpublished": True,
+                    },
+                    "group": {
+                        "id": self.test_user_3.get_personal_group().id,
+                        "name": "testuser3",
+                    },
+                    "groups": [
+                        {
+                            "external_id": None,
+                            "id": self.test_user_3.get_personal_group().id,
+                            "name": "testuser3",
+                        }
+                    ],
+                    "id": TEST_USER_3_ID,
+                    "last_name": None,
+                    "name": "testuser3",
+                    "real_name": "Test user 3",
                 },
             ],
         )
