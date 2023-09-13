@@ -181,7 +181,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
 
     async ngOnInit() {
         // Don't activate if it isn't supposed to have a browser in the first place
-        if (this.type == "none") {
+        if (this.type == "none" || this.type == "lazyonly") {
             this.lazyActivated = false;
         }
         this.viewctrl = vctrlInstance;
@@ -205,7 +205,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         if (this.lockedByPrerequisite) {
             this.hidePlugin();
         }
-        if (this.type == "none" || this.type == "lazyonly") {
+        if (this.type == "none") {
             // Light plugin loader doesn't have AB => mark as resolved
             this.abLoad.resolve(null);
         }
