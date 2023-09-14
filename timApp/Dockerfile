@@ -176,6 +176,10 @@ RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import ca
 
 RUN wget -q https://www.texlive.info/CTAN/support/latexmk/latexmk.pl -O /usr/bin/latexmk
 
+RUN bash -c "${APT_INSTALL} jq && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} ripgrep && ${APT_CLEANUP}"
+RUN bash -c "${PIP_INSTALL} coverage && ${APT_CLEANUP}"
+
 # Chromedriver (for running tests)
 # Taken from https://github.com/SeleniumHQ/docker-selenium/blob/trunk/NodeChrome/Dockerfile
 ARG CHROME_VERSION="google-chrome-stable"
@@ -191,14 +195,14 @@ RUN wget -q https://raw.githubusercontent.com/SeleniumHQ/docker-selenium/trunk/N
 RUN /usr/local/bin/wrap_chrome_binary
 
 ARG CHROME_DRIVER_VERSION
-RUN bash -c "${APT_INSTALL} jq && ${APT_CLEANUP}"
 RUN if [ ! -z "$CHROME_DRIVER_VERSION" ]; \
   then CHROME_DRIVER_URL=https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_DRIVER_VERSION/linux64/chromedriver-linux64.zip ; \
-  else echo "Getting ChromeDriver binary from https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" \
+  else echo "Geting ChromeDriver binary from https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" \
     && CFT_URL=https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json \
     && CFT_CHANNEL="Stable" \
-    && if [ "$(echo "$CHROME_VERSION" | grep -q "beta")" ]; then CFT_CHANNEL="Beta"; fi \
-    && if [ "$(echo "$CHROME_VERSION" | grep -q "unstable")" ]; then CFT_CHANNEL="Dev"; fi \
+    && if [ "$CHROME_VERSION" = "google-chrome-beta" ]; then CFT_CHANNEL="Beta" ; fi \
+    && if [ "$CHROME_VERSION" = "google-chrome-unstable" ]; then CFT_CHANNEL="Dev" ; fi \
+    && echo $CFT_CHANNEL \
     && CTF_VALUES=$(curl -sSL $CFT_URL | jq -r --arg CFT_CHANNEL "$CFT_CHANNEL" '.channels[] | select (.channel==$CFT_CHANNEL)') \
     && CHROME_DRIVER_VERSION=$(echo $CTF_VALUES | jq -r '.version' ) \
     && CHROME_DRIVER_URL=$(echo $CTF_VALUES | jq -r '.downloads.chromedriver[] | select(.platform=="linux64") | .url' ) ; \
@@ -212,9 +216,6 @@ RUN if [ ! -z "$CHROME_DRIVER_VERSION" ]; \
   && mv /opt/selenium/chromedriver-linux64/chromedriver /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && chmod 755 /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver
-
-RUN bash -c "${APT_INSTALL} ripgrep && ${APT_CLEANUP}"
-RUN bash -c "${PIP_INSTALL} coverage && ${APT_CLEANUP}"
 
 WORKDIR /service
 
