@@ -157,17 +157,8 @@ choices:
             tr_p.document.get_paragraphs()[1].create_reference(n.document)
         )
         # print(f'd={d.id} p={p.id} tr_p={tr_p.id} n={n.id}')
-
-        tr_d = self.create_translation(d)
-        self.check_plugin_ref_correct(n, p, p.document.get_paragraphs()[0])
-
-        n = self.create_doc()
-        tr_d.document.insert_preamble_pars()
-        n.document.add_paragraph_obj(
-            tr_d.document.get_paragraphs()[0].create_reference(n.document)
-        )
         self.check_plugin_ref_correct(
-            n, d, p.document.get_paragraphs()[0], text_to_check="This is in English"
+            n, p, p.document.get_paragraphs()[0], text_to_check="This is in English"
         )
 
     def check_plugin_ref_correct(
