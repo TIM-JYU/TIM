@@ -1289,8 +1289,11 @@ class Document:
                 raise InvalidReferenceException(
                     "The referenced document does not exist."
                 )
-            # It is allowed to reference things in preamble.
-            cached.insert_preamble_pars()
+            # PERF: Enabling this is REALLY slow! It essentially causes all paragraph reference lookups be O(k*n)
+            #       where k = number of preambles and n = number of paragraphs in the document.
+            # Enabling this allows to reference paragraphs inserted via preamble documents.
+            # This is currently disabled in UI, so it's not needed generally.
+            # cached.insert_preamble_pars()
             self.ref_doc_cache[ref_docid] = cached
         return cached
 
