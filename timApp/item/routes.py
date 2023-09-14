@@ -868,7 +868,7 @@ def render_doc_view(
         view_ctx,
         sanitize=False,
         do_lazy=do_lazy,
-        load_plugin_states=not hide_answers,
+        load_plugin_states=not (hide_answers or doc_settings.lazy_answers()),
     )
 
     if view_ctx.route.is_review and is_peerreview_enabled(doc_info):

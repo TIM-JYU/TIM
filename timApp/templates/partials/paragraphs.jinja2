@@ -75,11 +75,20 @@
              slide-pars="true"
              {% endif %}
          {% endif %}
-         {% if t.target %}
+         {% if t.attrs.rd and t.attrs.r == 'tr' and t.attrs.rp %}
+             ref-doc-id="{{ t.attrs.rd }}"
+             ref-id="{{ t.attrs.rp }}"
+             ref-t="{{ t.target.hash }}"
+             ref-attrs="{{ t.target.attrs_str }}"
+         {% elif t.target %}
              ref-id="{{ t.target.id }}"
              ref-t="{{ t.target.hash }}"
              ref-attrs="{{ t.target.attrs_str }}"
-             ref-doc-id="{{ t.target.doc_id }}"
+             {% if t.attrs.rd and t.attrs.rp and t.attrs.r == 'tr' %}
+                 ref-doc-id="{{ t.attrs.rd }}"
+             {% else %}
+                 ref-doc-id="{{ t.target.doc_id }}"
+             {% endif %}
          {% endif %}>
         {% if attrs.float and not ai and not preview %}
             <div class="draggable-content">
@@ -106,10 +115,20 @@
         {%- endif -%}
 
         {%- if t.attrs.rl == 'force' or not (not t.attrs.rd or t.attrs.rl == 'no') -%}
-            <tim-par-ref
-               docid="{{ t.target.doc_id }}"
-               parid="{{ t.target.id }}">
-            </tim-par-ref>
+            {%- if t.attrs.rd and t.attrs.r == 'tr' and (t.attrs.rp or t.attrs.ra) -%}
+                <tim-par-ref docid="{{ t.attrs.rd }}"
+                   {% if not t.attrs.ra -%}
+                    parid="{{ t.attrs.rp }}">
+                   {% else -%}
+                    parid="{{ t.target.id }}">
+                   {%- endif %}
+                </tim-par-ref>
+            {%- else  -%}
+                <tim-par-ref
+                   docid="{{ t.target.doc_id }}"
+                   parid="{{ t.target.id }}">
+                </tim-par-ref>
+            {%- endif  -%}
         {%- endif -%}
 
         {{ editline|safe }}
@@ -139,11 +158,20 @@
         {% if t.from_preamble %}
              data-from-preamble="{{ t.from_preamble|safe }}"
         {% endif %}
-        {% if t.target %}
+        {% if t.attrs.rd and t.attrs.r == 'tr' and t.attrs.rp %}
+             ref-doc-id="{{ t.attrs.rd }}"
+             ref-id="{{ t.attrs.rp }}"
+             ref-t="{{ t.target.hash }}"
+             ref-attrs="{{ t.target.attrs_str }}"
+        {% elif t.target %}
              ref-id="{{ t.target.id }}"
              ref-t="{{ t.target.hash }}"
              ref-attrs="{{ t.target.attrs_str }}"
-             ref-doc-id="{{ t.target.doc_id }}"
+             {% if t.attrs.rd and t.attrs.rp and t.attrs.r == 'tr' %}
+                 ref-doc-id="{{ t.attrs.rd }}"
+             {% else %}
+                 ref-doc-id="{{ t.target.doc_id }}"
+             {% endif %}
          {% endif %}
         >
             {% if ai.is_collapsed %}

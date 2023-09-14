@@ -122,7 +122,7 @@ class DocInfo(Item):
         return get_pars_with_class_from_docs(self.get_preamble_docs(), class_names)
 
     def get_preamble_pars(self) -> Generator[DocParagraph, None, None]:
-        return get_non_settings_pars_from_docs(self.get_preamble_docs())
+        return get_original_text_pars_from_docs(self.get_preamble_docs())
 
     def _get_preamble_docs_impl(self, preamble_setting: str) -> list[DocInfo]:
         preamble_names = preamble_setting.split(",")
@@ -276,11 +276,24 @@ class DocInfo(Item):
         }
 
 
-def get_non_settings_pars_from_docs(
+def get_original_text_pars_from_docs(
     docs: Iterable[DocInfo],
 ) -> Generator[DocParagraph, None, None]:
+    """
+    Get all non-settings original content paragraphs from the documents.
+
+    The following paragraphs are excluded:
+    - Any setting paragraphs => not visible
+    - Any area paragraphs => not visible
+    - Any paragraphs that were copied from another preamble => not part of the original document
+
+    :param docs: Document from which to get the paragraphs.
+    :return: Original text paragraphs.
+    """
     for d in docs:
         for p in d.document:
+            if p.from_preamble():
+                continue
             if not p.is_setting() or p.is_area():
                 yield p
 
@@ -289,13 +302,13 @@ def get_pars_with_class_from_docs(
     docs: Iterable[DocInfo], class_names: list[str]
 ) -> Generator[DocParagraph, None, None]:
     """
-    Loads all non-settings pars that have the given class.
+    Get all non-settings original content paragraphs that have the given class.
 
     :param docs: Document.
     :param class_names: Class name list.
     :return: Pars that have any of the filtering class names.
     """
-    for p in get_non_settings_pars_from_docs(docs):
+    for p in get_original_text_pars_from_docs(docs):
         classes = p.classes
         if classes:
             for class_name in class_names:

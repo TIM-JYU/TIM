@@ -351,7 +351,7 @@ export class LectureController {
         } else if (!answer.correctPassword) {
             showMessageDialog("Wrong access code!");
             return false;
-        } else if (!Users.isLoggedIn()) {
+        } else if (Users.isLoggedIn() && !Users.isRealUser()) {
             // if the user was logged in as a temporary user, we must refresh
             // to update the plugins (they may require login)
             window.location.reload();

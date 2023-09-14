@@ -1,28 +1,21 @@
 import os
-from dataclasses import dataclass
 
-from flask import flash, url_for, Blueprint, Response
+from flask import flash, url_for, Response
 
 from timApp.auth.accesshelper import verify_admin
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import safe_redirect, json_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 
-admin_bp = Blueprint("admin", __name__, url_prefix="")
-
-
-@dataclass
-class ExceptionRouteModel:
-    db_error: bool = False
+admin_bp = TypedBlueprint("admin", __name__, url_prefix="")
 
 
 @admin_bp.route("/exception", methods=["GET", "POST", "PUT", "DELETE"])
-@use_model(ExceptionRouteModel)
-def throw_ex(m: ExceptionRouteModel) -> Response:
+def throw_ex(db_error: bool = False) -> Response:
     verify_admin()
-    if m.db_error:
+    if db_error:
         db.session.add(UserGroup(name="test"))
         db.session.add(UserGroup(name="test"))
         db.session.flush()
@@ -50,7 +43,7 @@ def restart_server() -> Response:
 
 
 @admin_bp.get("/users/search/<term>")
-def search_users(term: str) -> Response:
+def search_users(term: str, full: bool = False) -> Response:
     verify_admin()
     result = (
         User.query.filter(
@@ -61,4 +54,4 @@ def search_users(term: str) -> Response:
         .order_by(User.id)
         .all()
     )
-    return json_response([u.to_json(contacts=True) for u in result])
+    return json_response([u.to_json(contacts=True, full=full) for u in result])
