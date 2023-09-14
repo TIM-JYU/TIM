@@ -207,6 +207,10 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     gates: list[str] | None = None
     simulate: str | None = None
 
+    leftAxisLabel: str | None = None
+    rightAxisLabel: str | None = None
+    timeAxisLabel: str | None = None
+
 
 @dataclass
 class QuantumCircuitStateModel:
