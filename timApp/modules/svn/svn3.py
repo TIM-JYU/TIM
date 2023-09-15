@@ -778,6 +778,7 @@ if __name__ == '__main__':
 # Jos ajaa Linuxissa ThreadingMixIn, niin chdir vaihtaa kaikkien hakemistoa?
 # Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
 
+
 # if __debug__:
 # if True:
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):

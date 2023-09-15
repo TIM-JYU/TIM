@@ -1,10 +1,9 @@
 """Server tests for cbcountfield."""
 from timApp.auth.accesstype import AccessType
-from timApp.tests.browser.browsertest import BrowserTest
-from timApp.timdb.sqa import db
+from timApp.tests.server.timroutetest import TimRouteTest
 
 
-class CbCountFieldTest(BrowserTest):
+class CbCountFieldTest(TimRouteTest):
     def expect_count(self, r, count):
         self.assertEqual(count, r["web"]["count"])
 
@@ -17,8 +16,7 @@ class CbCountFieldTest(BrowserTest):
         )
         self.test_user_2.grant_access(d, AccessType.view)
         self.test_user_3.grant_access(d, AccessType.view)
-        db.session.commit()
-        db.session.refresh(d)
+        self.commit_db()
         r = self.post_answer(
             "cbcountfield",
             f"{d.id}.t",
@@ -63,20 +61,21 @@ class CbCountFieldTest(BrowserTest):
         )
         self.expect_count(r, 1)
         self.login_test3()
-        r = self.get(d.url, as_tree=True)
-        par_id = d.document.get_paragraphs()[0].get_id()
-        self.assert_plugin_json(
-            r.cssselect(".parContent cbcountfield-runner")[0],
-            self.create_plugin_json(
-                d,
-                "t",
-                state=None,
-                info=None,
-                par_id=par_id,
-                toplevel={"count": 1},
-                markup={"autoUpdateTables": True},
-            ),
-        )
+        with self.internal_container_ctx():
+            r = self.get(d.url, as_tree=True)
+            par_id = d.document.get_paragraphs()[0].get_id()
+            self.assert_plugin_json(
+                r.cssselect(".parContent cbcountfield-runner")[0],
+                self.create_plugin_json(
+                    d,
+                    "t",
+                    state=None,
+                    info=None,
+                    par_id=par_id,
+                    toplevel={"count": 1},
+                    markup={"autoUpdateTables": True},
+                ),
+            )
 
     def test_cbcountfield_grouplogin(self):
         self.login_test1()

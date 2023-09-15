@@ -1,7 +1,9 @@
 FROM ubuntu:22.04 as base
+LABEL org.opencontainers.image.authors="tim@jyu.fi"
+LABEL org.opencontainers.image.source="https://github.com/TIM-JYU/TIM"
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
-    APT_CLEANUP="rm -rf /var/lib/apt/lists /dvisvgm-2.4 /usr/share/doc ~/.cache"
+    APT_CLEANUP="rm -rf /var/lib/apt/lists /usr/share/doc ~/.cache"
 
 # Configure timezone and locale
 RUN bash -c "${APT_INSTALL} locales tzdata && ${APT_CLEANUP}"
@@ -95,10 +97,12 @@ FROM base as complete
 
 # Install Python, pip and other necessary packages
 
+ENV PY_VERSION=3.11
+ENV PYTHON=python$PY_VERSION
 RUN bash -c "add-apt-repository -y ppa:deadsnakes/ppa && ${APT_CLEANUP}"
-RUN bash -c "${APT_INSTALL} python3.10 python3.10-distutils && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} ${PYTHON} ${PYTHON}-distutils && ${APT_CLEANUP}"
 
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 20
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/${PYTHON} 20
 
 # lxml dependencies
 # C-parser for PyYAML
@@ -116,18 +120,18 @@ RUN bash -c "${APT_INSTALL} \
  libxmlsec1-openssl \
  libxslt-dev \
  libyaml-dev \
- python3.10-dev \
+${PYTHON}-dev \
  voikko-fi \
  zlib1g-dev \
  && ${APT_CLEANUP}"
 
-RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py
+RUN wget -q https://bootstrap.pypa.io/get-pip.py && ${PYTHON} get-pip.py && rm get-pip.py
 
 # Install xmlsec binary which is needed for PySAML2
 RUN bash -c "${APT_INSTALL} xmlsec1 && ${APT_CLEANUP}"
 
-ENV PIP_INSTALL="python3.10 -m pip install"
-RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.3.1 requests && ${APT_CLEANUP}"
+ENV PIP_INSTALL="${PYTHON} -m pip install"
+RUN bash -c "${PIP_INSTALL} --upgrade --ignore-installed poetry==1.5.1 requests blinker && ${APT_CLEANUP}"
 
 COPY pyproject.toml poetry.lock ./
 RUN bash -c " \
@@ -166,11 +170,14 @@ RUN (curl -sL https://deb.nodesource.com/setup_16.x | bash -) && bash -c "${APT_
 RUN npm i npm@6 -g && bash -c "${APT_CLEANUP}"
 
 # Flask-Testing does not let us configure host, so we do it here.
-RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.10/dist-packages/flask_testing/utils.py
+RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/${PYTHON}/dist-packages/flask_testing/utils.py
 # Fix newest Werkzeug incompatibility
-RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import cached_property/" /usr/local/lib/python3.10/dist-packages/flask_testing/utils.py
+RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import cached_property/" /usr/local/lib/${PYTHON}/dist-packages/flask_testing/utils.py
 
 RUN wget -q https://www.texlive.info/CTAN/support/latexmk/latexmk.pl -O /usr/bin/latexmk
+
+RUN bash -c "${APT_INSTALL} jq ripgrep unzip && ${APT_CLEANUP}"
+RUN bash -c "${PIP_INSTALL} coverage && ${APT_CLEANUP}"
 
 # Chromedriver (for running tests)
 # Taken from https://github.com/SeleniumHQ/docker-selenium/blob/trunk/NodeChrome/Dockerfile
@@ -178,7 +185,7 @@ ARG CHROME_VERSION="google-chrome-stable"
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
   && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
   && apt-get update -qqy \
-  && apt-get -qqy install unzip \
+  && apt-get -qqy install \
     ${CHROME_VERSION:-google-chrome-stable} \
   && rm /etc/apt/sources.list.d/google-chrome.list \
   && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
@@ -187,22 +194,27 @@ RUN wget -q https://raw.githubusercontent.com/SeleniumHQ/docker-selenium/trunk/N
 RUN /usr/local/bin/wrap_chrome_binary
 
 ARG CHROME_DRIVER_VERSION
-RUN bash -c "${APT_INSTALL} jq && ${APT_CLEANUP}"
-RUN if [ -z "$CHROME_DRIVER_VERSION" ]; \
-  then CHROME_MAJOR_VERSION=$(google-chrome --version | sed -E "s/.* ([0-9]+)(\.[0-9]+){3}.*/\1/") \
-    && CHROME_DRIVER_VERSION=$(wget -q -O - "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq --arg majorVersion "$CHROME_MAJOR_VERSION" -r '.channels.Stable | select(.version | startswith($majorVersion | tostring)).version'); \
+RUN if [ ! -z "$CHROME_DRIVER_VERSION" ]; \
+  then CHROME_DRIVER_URL=https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_DRIVER_VERSION/linux64/chromedriver-linux64.zip ; \
+  else echo "Getting ChromeDriver binary from https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" \
+    && CFT_URL=https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json \
+    && CFT_CHANNEL="Stable" \
+    && if [ "$CHROME_VERSION" = "google-chrome-beta" ]; then CFT_CHANNEL="Beta" ; fi \
+    && if [ "$CHROME_VERSION" = "google-chrome-unstable" ]; then CFT_CHANNEL="Dev" ; fi \
+    && echo $CFT_CHANNEL \
+    && CTF_VALUES=$(curl -sSL $CFT_URL | jq -r --arg CFT_CHANNEL "$CFT_CHANNEL" '.channels[] | select (.channel==$CFT_CHANNEL)') \
+    && CHROME_DRIVER_VERSION=$(echo $CTF_VALUES | jq -r '.version' ) \
+    && CHROME_DRIVER_URL=$(echo $CTF_VALUES | jq -r '.downloads.chromedriver[] | select(.platform=="linux64") | .url' ) ; \
   fi \
-  && echo "Using chromedriver version: "$CHROME_DRIVER_VERSION \
-  && CHROME_DRIVER_URL=$(wget -q -O - "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | jq --arg version "$CHROME_DRIVER_VERSION" -r '.channels.Stable | select(.version==$version).downloads.chromedriver[] | select(.platform == "linux64") | .url') \
-  && wget -q -O /tmp/chromedriver_linux64.zip "$CHROME_DRIVER_URL" \
+  && echo "Using ChromeDriver from: "$CHROME_DRIVER_URL \
+  && echo "Using ChromeDriver version: "$CHROME_DRIVER_VERSION \
+  && wget --no-verbose -O /tmp/chromedriver_linux64.zip $CHROME_DRIVER_URL \
   && rm -rf /opt/selenium/chromedriver \
   && unzip /tmp/chromedriver_linux64.zip -d /opt/selenium \
   && rm /tmp/chromedriver_linux64.zip \
   && mv /opt/selenium/chromedriver-linux64/chromedriver /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && chmod 755 /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver
-
-RUN bash -c "${APT_INSTALL} ripgrep && ${APT_CLEANUP}"
 
 WORKDIR /service
 

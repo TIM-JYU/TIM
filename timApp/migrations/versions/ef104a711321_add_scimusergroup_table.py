@@ -8,7 +8,7 @@ Create Date: 2019-08-19 15:14:05.991302
 
 # revision identifiers, used by Alembic.
 
-from sqlalchemy import orm, any_
+from sqlalchemy import orm, any_, select
 
 from timApp.sisu.scim import derive_scim_group_name
 from timApp.sisu.scimusergroup import ScimUserGroup
@@ -37,7 +37,9 @@ def upgrade():
     s = orm.Session(bind=bind)
 
     ugs: list[UserGroup] = (
-        s.query(UserGroup).filter(UserGroup.name.startswith("sisu:")).all()
+        s.execute(select(UserGroup).filter(UserGroup.name.startswith("sisu:")))
+        .scalars()
+        .all()
     )
     used_names = set()
     for ug in ugs:
@@ -50,8 +52,12 @@ def upgrade():
         ug.name = default_name
 
     ugs: list[UserGroup] = (
-        s.query(UserGroup)
-        .filter(UserGroup.name.like(any_(["deleted:sisu:%", "cumulative:sisu:%"])))
+        s.execute(
+            select(UserGroup).filter(
+                UserGroup.name.like(any_(["deleted:sisu:%", "cumulative:sisu:%"]))
+            )
+        )
+        .scalars()
         .all()
     )
     for ug in ugs:

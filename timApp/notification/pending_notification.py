@@ -1,28 +1,33 @@
-from sqlalchemy import func
+from typing import Optional, TYPE_CHECKING
+
+from sqlalchemy import func, select, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.document.version import Version
 from timApp.notification.notification import NotificationType
-from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.timdb.sqa import run_sql, db
+from timApp.timdb.types import datetime_tz
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
+    from timApp.item.block import Block
 
 GroupingKey = tuple[int, str]
 
 
 class PendingNotification(db.Model):
-    __tablename__ = "pendingnotification"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
+    doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
+    discriminant: Mapped[str]
+    par_id: Mapped[Optional[str]]
+    text: Mapped[Optional[str]]
+    created: Mapped[datetime_tz] = mapped_column(default=func.now())
+    processed: Mapped[Optional[datetime_tz]] = mapped_column(index=True)
+    kind: Mapped[NotificationType]
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
-    discriminant = db.Column(db.Text, nullable=False)
-    par_id = db.Column(db.Text, nullable=True)
-    text = db.Column(db.Text, nullable=True)
-    created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
-    processed = db.Column(db.DateTime(timezone=True), nullable=True, index=True)
-    kind = db.Column(db.Enum(NotificationType), nullable=False)
-
-    user: User = db.relationship("User", lazy="joined")
-    block = db.relationship("Block")
+    user: Mapped["User"] = relationship(lazy="selectin")
+    block: Mapped["Block"] = relationship()
 
     @property
     def grouping_key(self) -> GroupingKey:
@@ -32,13 +37,13 @@ class PendingNotification(db.Model):
     def notify_type(self) -> NotificationType:
         return self.kind
 
-    __mapper_args__ = {"polymorphic_on": discriminant}
+    __mapper_args__ = {"polymorphic_on": "discriminant"}
 
 
 class DocumentNotification(PendingNotification):
     """A notification that a document has changed."""
 
-    version_change: str = db.Column(db.Text)  # like "1,2/1,3"
+    version_change: Mapped[Optional[str]]  # : str  # like "1,2/1,3"
 
     @property
     def version_before(self) -> Version:
@@ -74,8 +79,8 @@ class CommentNotification(PendingNotification):
 class AnswerNotification(PendingNotification):
     """A notification that an answer has been added, changed or deleted."""
 
-    answer_number = db.Column(db.Integer)
-    task_id = db.Column(db.Text)
+    answer_number: Mapped[Optional[int]]
+    task_id: Mapped[Optional[str]]
 
     @property
     def grouping_key(self) -> GroupingKey:
@@ -88,7 +93,11 @@ class AnswerNotification(PendingNotification):
 
 def get_pending_notifications() -> list[PendingNotification]:
     return (
-        PendingNotification.query.filter(PendingNotification.processed == None)
-        .order_by(PendingNotification.created.asc())
+        run_sql(
+            select(PendingNotification)
+            .filter(PendingNotification.processed == None)
+            .order_by(PendingNotification.created.asc())
+        )
+        .scalars()
         .all()
     )

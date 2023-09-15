@@ -272,24 +272,26 @@ def start_page():
 def install_sql_hook():
     prev_exec_time = get_current_time()
 
-    @event.listens_for(db.engine, "before_execute")
-    def receive_before_execute(conn, clauseelement, multiparams, params):
-        nonlocal prev_exec_time
-        curr = get_current_time()
-        print(
-            f"--------------------------------------TIMING: {curr} ({curr - prev_exec_time})"
-        )
-        prev_exec_time = curr
-        for r in traceback.format_stack():
-            if (
-                r.startswith('  File "/service/')
-                and not receive_before_execute.__name__ in r
-            ):
-                print(r, end="")
-        try:
-            print(clauseelement)
-        except Exception as e:
-            print(f"<unprintable clauseelement>: {e}")
+    with app.app_context():
+
+        @event.listens_for(db.engine, "before_execute")
+        def receive_before_execute(conn, clauseelement, multiparams, params):
+            nonlocal prev_exec_time
+            curr = get_current_time()
+            print(
+                f"--------------------------------------TIMING: {curr} ({curr - prev_exec_time})"
+            )
+            prev_exec_time = curr
+            for r in traceback.format_stack():
+                if (
+                    r.startswith('  File "/service/')
+                    and not receive_before_execute.__name__ in r
+                ):
+                    print(r, end="")
+            try:
+                print(clauseelement, multiparams, params)
+            except Exception as e:
+                print(f"<unprintable clauseelement>: {e}")
 
 
 if app.config["TESTING"]:
@@ -353,35 +355,7 @@ def log_request(response):
         status_code = response.status_code
         log_info(get_request_message(status_code))
         if request.method in ("PUT", "POST", "DELETE"):
-            log_debug(request.get_json(silent=True))
-    return response
-
-
-@app.after_request
-def close_db(response):
-    if hasattr(g, "timdb"):
-        g.timdb.close()
-    return response
-
-
-@app.after_request
-def del_g(response):
-    """For some reason, the g object is not cleared when running browser test, so we do it here."""
-    if app.config["TESTING"]:
-        if hasattr(g, "user"):
-            del g.user
-        if hasattr(g, "viewable"):
-            del g.viewable
-        if hasattr(g, "editable"):
-            del g.editable
-        if hasattr(g, "teachable"):
-            del g.teachable
-        if hasattr(g, "manageable"):
-            del g.manageable
-        if hasattr(g, "see_answers"):
-            del g.see_answers
-        if hasattr(g, "owned"):
-            del g.owned
+            log_debug(str(request.get_json(silent=True)))
     return response
 
 
@@ -404,12 +378,6 @@ def after_request(resp: Response):
     # It always contains a specific valid language, never "UseWebBrowser"
     resp.set_cookie("script_lang", locale)
     return resp
-
-
-@app.teardown_appcontext
-def close_db_appcontext(_e):
-    if not app.config["TESTING"] and hasattr(g, "timdb"):
-        g.timdb.close()
 
 
 def init_app():

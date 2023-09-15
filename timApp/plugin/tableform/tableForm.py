@@ -8,7 +8,8 @@ from typing import Any, TypedDict, Sequence
 
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
-from sqlalchemy.orm import joinedload
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
@@ -28,8 +29,10 @@ from timApp.plugin.plugin import (
 from timApp.plugin.tableform.comparatorFilter import RegexOrComparator
 from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
+from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User, get_membership_end, get_membership_added
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import (
@@ -168,6 +171,7 @@ class TableFormInputModel:
 def get_sisu_group_desc_for_table(g: UserGroup) -> str:
     p = parse_sisu_group_display_name(g.display_name)
     assert p is not None
+    assert g.external_id is not None
     if g.external_id.is_studysubgroup:
         return p.desc
     # We want the most important groups to be at the top of the table.
@@ -177,19 +181,20 @@ def get_sisu_group_desc_for_table(g: UserGroup) -> str:
 
 def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
     gs = get_potential_groups(user, sisu_id)
-    docs_with_course_tag = (
-        Tag.query.filter_by(type=TagType.CourseCode)
-        .with_entities(Tag.block_id)
-        .subquery()
-    )
+    docs_with_course_tag = select(Tag.block_id).filter_by(type=TagType.CourseCode)
     tags = (
-        Tag.query.filter(
-            Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs])
-            & Tag.block_id.in_(docs_with_course_tag)
+        run_sql(
+            select(Tag)
+            .filter(
+                Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs])
+                & Tag.block_id.in_(docs_with_course_tag)
+            )
+            .options(selectinload(Tag.block).selectinload(Block.docentries))
         )
-        .options(joinedload(Tag.block).joinedload(Block.docentries))
+        .scalars()
         .all()
     )
+
     tag_map = {t.name[len(GROUP_TAG_PREFIX) :]: t for t in tags}
 
     def get_course_page(ug: UserGroup) -> str | None:
@@ -199,9 +204,17 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
         else:
             return None
 
+    def get_ext_id(g: UserGroup) -> ScimUserGroup:
+        assert g.external_id is not None
+        return g.external_id
+
+    def get_display_name(g: UserGroup) -> str:
+        assert g.display_name is not None
+        return g.display_name
+
     return TableFormObj(
         rows={
-            g.external_id.external_id: {
+            get_ext_id(g).external_id: {
                 "TIM-nimi": g.name,
                 "URL": f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>'
                 if g.admin_doc
@@ -212,10 +225,10 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
             for g in gs
         },
         users={
-            g.external_id.external_id: TableFormUserInfo(
+            get_ext_id(g).external_id: TableFormUserInfo(
                 real_name=get_sisu_group_desc_for_table(g)
                 if sisu_id
-                else g.display_name,
+                else get_display_name(g),
                 # The rows are not supposed to match any real user when handling sisu groups,
                 # so we try to use an id value that does not match anyone.
                 id=-100000,
@@ -230,7 +243,7 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
             "Jäseniä": "Jäseniä",
             "Kurssisivu": "Kurssisivu",
         },
-        styles={g.external_id.external_id: {} for g in gs},
+        styles={get_ext_id(g).external_id: {} for g in gs},
         membership_add={},
         membership_end={},
     )
@@ -779,7 +792,7 @@ def tableform_get_fields(
     membership_end_map: dict[str, str | None] = {}
     for f in fielddata:
         u: User = f["user"]
-        u.hide_name = anonymize_names
+        u.is_name_hidden = anonymize_names
         user_info = u.to_json()
         username = user_info["name"]
         rn = user_info["real_name"]

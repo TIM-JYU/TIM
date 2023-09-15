@@ -1,7 +1,9 @@
+from sqlalchemy import select
+
 from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User, UserInfo
 
 
@@ -45,9 +47,11 @@ class PersonalFolderTest(TimRouteTest):
         """Make sure personal folders aren't created for each anonymous request."""
         self.logout()
         self.get("/")
-        folders = Folder.query.filter_by(location="users").all()
+        folders = run_sql(select(Folder).filter_by(location="users")).scalars().all()
         self.get("/")
-        folders_after = Folder.query.filter_by(location="users").all()
+        folders_after = (
+            run_sql(select(Folder).filter_by(location="users")).scalars().all()
+        )
         self.assertEqual(len(folders), len(folders_after))
 
     def test_no_multiple_personal_folders(self):

@@ -3,13 +3,16 @@ Common routes for access management.
 """
 
 from dataclasses import field
+from typing import Sequence
 
 from flask import Response
+from sqlalchemy import select
 
 from timApp.auth.access.util import set_locked_access_type, set_locked_active_groups
 from timApp.auth.accesshelper import verify_logged_in, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.timdb.sqa import run_sql
 from timApp.user.groups import (
     verify_group_edit_access,
     get_group_or_abort,
@@ -59,7 +62,7 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
         return ok_response()
 
     user = get_current_user_object()
-    user.bypass_access_lock = True
+    user.skip_access_lock = True
 
     group_ids_set = set(group_ids)
     group_ids_set -= set(ug.id for ug in user.groups)
@@ -69,9 +72,11 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
     }
 
     if not user.is_admin:
-        groups: list[UserGroup] = UserGroup.query.filter(
-            UserGroup.id.in_(group_ids_set)
-        ).all()
+        groups: Sequence[UserGroup] = (
+            run_sql(select(UserGroup).filter(UserGroup.id.in_(group_ids_set)))
+            .scalars()
+            .all()
+        )
         for ug in groups:
             if not verify_group_edit_access(ug, user, require=False):
                 raise AccessDenied(
@@ -96,7 +101,7 @@ def show_edit_info(group_name: str) -> Response:
     """
     verify_logged_in()
     user = get_current_user_object()
-    user.bypass_access_lock = True
+    user.skip_access_lock = True
     ug = get_group_or_abort(group_name)
     if not user.is_admin:
         verify_group_edit_access(ug)
@@ -119,8 +124,8 @@ def find_editable_groups(
     """
     verify_logged_in()
     user = get_current_user_object()
-    user.bypass_access_lock = True
-    ugs = UserGroup.query.filter(UserGroup.id.in_(group_ids)).all()
+    user.skip_access_lock = True
+    ugs = run_sql(select(UserGroup).filter(UserGroup.id.in_(group_ids))).scalars().all()
     visible_ugs = [
         ug for ug in ugs if user.is_admin or verify_group_edit_access(ug, require=False)
     ]

@@ -57,7 +57,9 @@ class SisuDisplayName:
         return desc
 
 
-def parse_sisu_group_display_name(s: str) -> SisuDisplayName | None:
+def parse_sisu_group_display_name(s: str | None) -> SisuDisplayName | None:
+    if not s:
+        return None
     m = display_name_re.fullmatch(s)
     if not m:
         return None

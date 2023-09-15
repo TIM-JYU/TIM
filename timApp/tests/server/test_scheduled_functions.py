@@ -1,3 +1,4 @@
+import json
 from contextlib import contextmanager
 from datetime import timedelta
 
@@ -104,6 +105,7 @@ class ScheduledFunctionRunTest(TimRouteTest):
         with app.app_context():
             yield
         self.client.__enter__()
+        self.get("/")
 
     def test_scheduled_function(self):
         self.login_test1()
@@ -301,22 +303,28 @@ nextRunner: runner
         u.groups.append(UserGroup.get_user_creator_group())
         db.session.commit()
         with self.no_request_context():
-            with self.importdata_ctx(
-                [
-                    {
-                        "UserID": 123,
-                        "StudentID": "12345X",
-                        "Email": "matti.meikalainen@aalto.fi",
-                        "Tags": "aalto",
-                        "1 Count": 2,
-                        "1 Total": 100,
-                        "1 Ratio": 0.125,
-                        "2 Count": 0,
-                        "2 Total": 0,
-                        "2 Ratio": 0.0,
-                    }
-                ]
-            ):
+            with self.internal_container_ctx() as m:
+                m.add(
+                    "GET",
+                    "https://plus.cs.aalto.fi/api/v2/courses/1234/aggregatedata/?format=json",
+                    body=json.dumps(
+                        [
+                            {
+                                "UserID": 123,
+                                "StudentID": "12345X",
+                                "Email": "matti.meikalainen@aalto.fi",
+                                "Tags": "aalto",
+                                "1 Count": 2,
+                                "1 Total": 100,
+                                "1 Ratio": 0.125,
+                                "2 Count": 0,
+                                "2 Total": 0,
+                                "2 Ratio": 0.0,
+                            }
+                        ]
+                    ),
+                    status=200,
+                )
                 do_run_user_function(
                     self.test_user_2.id, f"{d.id}.import", {"token": "abc"}
                 )

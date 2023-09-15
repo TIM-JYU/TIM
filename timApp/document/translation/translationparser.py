@@ -88,6 +88,7 @@ NOTRANSLATE_STYLE_LONG = "notranslate"
 NOTRANSLATE_STYLE_SHORT = "nt"
 """Shorter string used for marking non-translatable text in TIM's Markdown"""
 
+
 # TODO This name is kinda bad. Better would be along the lines of
 #  translate-flag or a whole new list-type data structure, that describes
 #  alternating between Yes's and No's
@@ -115,7 +116,8 @@ class NoTranslate(TranslateApproval):
 @dataclass
 class Table(TranslateApproval):
     """
-    Hacky way to translate tables by identifying them at translation and setting html-tag handling on."""
+    Hacky way to translate tables by identifying them at translation and setting html-tag handling on.
+    """
 
     ...
 

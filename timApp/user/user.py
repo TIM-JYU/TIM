@@ -3,17 +3,25 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Optional, Union, MutableMapping
+from typing import Optional, Union, Dict, Tuple, TYPE_CHECKING, List
 
 import filelock
 from flask import current_app, has_request_context
-from sqlalchemy import func
+from sqlalchemy import func, select, delete
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Query, joinedload, defaultload
-from sqlalchemy.orm.collections import (
-    attribute_mapped_collection,
+from sqlalchemy.orm import (
+    mapped_column,
+    Mapped,
+    attribute_keyed_dict,
+    relationship,
+    DynamicMapped,
 )
-from sqlalchemy.orm.strategy_options import loader_option
+from sqlalchemy.orm import (
+    selectinload,
+    defaultload,
+)
+from sqlalchemy.orm.interfaces import LoaderOption
+from sqlalchemy.sql import Select
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
@@ -29,13 +37,10 @@ from timApp.item.block import Block
 from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.messaging.messagelist.listinfo import Channel
-from timApp.messaging.timMessage.internalmessage_models import (
-    InternalMessageReadReceipt,
-)
 from timApp.notification.notification import Notification, NotificationType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
+from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded, run_sql
 from timApp.user.hakaorganization import HakaOrganization, get_home_organization_id
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.preferences import Preferences
@@ -77,6 +82,20 @@ from timApp.util.utils import (
     get_current_time,
 )
 from tim_common.timjsonencoder import TimJsonEncoder
+
+if TYPE_CHECKING:
+    from timApp.messaging.timMessage.internalmessage_models import (
+        InternalMessageReadReceipt,
+    )
+    from timApp.user.consentchange import ConsentChange
+    from timApp.lecture.lecture import Lecture
+    from timApp.lecture.lectureanswer import LectureAnswer
+    from timApp.lecture.message import Message
+    from timApp.lecture.questionactivity import QuestionActivity
+    from timApp.lecture.useractivity import UserActivity
+    from timApp.velp.annotation_model import Annotation
+    from timApp.velp.velp_models import Velp
+
 
 ItemOrBlock = Union[ItemBase, Block]
 maxdate = datetime.max.replace(tzinfo=timezone.utc)
@@ -234,8 +253,8 @@ deleted_user_suffix = "_deleted"
 deleted_user_pattern = re.compile(rf".*{deleted_user_suffix}(_\d+)?$")
 
 
-def user_query_with_joined_groups() -> Query:
-    return User.query.options(joinedload(User.groups))
+def user_query_with_joined_groups() -> Select:
+    return select(User).options(selectinload(User.groups))
 
 
 class User(db.Model, TimeStampMixin, SCIMEntity):
@@ -247,55 +266,53 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """
 
     __tablename__ = "useraccount"
-    id = db.Column(db.Integer, primary_key=True)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
     """User identifier."""
 
-    name = db.Column(db.Text, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(unique=True)
     """User name (not full name). Used to identify the user and during log-in."""
 
-    given_name = db.Column(db.Text)
+    given_name: Mapped[Optional[str]]
     """User's given name."""
 
-    last_name = db.Column(db.Text)
+    last_name: Mapped[Optional[str]]
     """User's last name."""
 
-    real_name = db.Column(db.Text)
+    real_name: Mapped[Optional[str]]
     """Real (full) name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
 
-    _email = db.Column("email", db.Text, unique=True)
+    _email: Mapped[Optional[str]] = mapped_column("email", unique=True)
     """Email address."""
 
-    prefs = db.Column(db.Text)
+    prefs: Mapped[Optional[str]]
     """Preferences as a JSON string."""
 
-    pass_ = db.Column("pass", db.Text)
+    pass_: Mapped[Optional[str]] = mapped_column("pass")
     """Password hashed with bcrypt."""
 
-    consent = db.Column(db.Enum(Consent), nullable=True)
+    consent: Mapped[Optional[Consent]]
     """Current consent for cookie/data collection."""
 
-    origin = db.Column(db.Enum(UserOrigin), nullable=True)
+    origin: Mapped[Optional[UserOrigin]]
     """How the user registered to TIM."""
 
-    uniquecodes = db.relationship(
-        "PersonalUniqueCode",
+    uniquecodes: Mapped[Dict[Tuple[int, str], "PersonalUniqueCode"]] = relationship(
         back_populates="user",
-        collection_class=attribute_mapped_collection("user_collection_key"),
+        collection_class=attribute_keyed_dict("user_collection_key"),
     )
     """Personal unique codes used to identify the user via Haka Identity Provider."""
 
-    internalmessage_readreceipt: InternalMessageReadReceipt | None = db.relationship(
-        "InternalMessageReadReceipt", back_populates="user"
-    )
+    internalmessage_readreceipt: Mapped[
+        List["InternalMessageReadReceipt"]
+    ] = relationship(back_populates="user")
     """User's read receipts for internal messages."""
 
-    primary_email_contact = db.relationship(
-        UserContact,
+    primary_email_contact: Mapped["UserContact"] = relationship(
         primaryjoin=(id == UserContact.user_id)
         & (UserContact.primary == PrimaryContact.true)
         & (UserContact.channel == Channel.EMAIL),
-        lazy="select",
-        uselist=False,
+        overlaps="user, contacts",
     )
     """
     The primary email contact for the user.
@@ -303,140 +320,157 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     The primary contact is the preferred email address that the user wants to receive notifications from TIM.
     """
 
-    def _get_email(self) -> str:
+    @hybrid_property
+    def email(self) -> str:
+        """
+        User's primary email address.
+
+        This is the address the user can log in with and receive notifications from TIM.
+        """
         return self._email
 
+    @email.inplace.setter
     def _set_email(self, value: str) -> None:
         self.update_email(value)
 
-    # Decorators don't work with mypy yet
-    # See https://github.com/dropbox/sqlalchemy-stubs/issues/98
-    email = hybrid_property(_get_email, _set_email)
-    """
-    User's primary email address.
-    
-    This is the address the user can log in with and receive notifications from TIM.
-    """
-
-    consents = db.relationship("ConsentChange", back_populates="user", lazy="select")
+    consents: Mapped[List["ConsentChange"]] = relationship(back_populates="user")
     """User's consent changes."""
 
-    contacts: list[UserContact] = db.relationship(
-        "UserContact", back_populates="user", lazy="select"
+    contacts: Mapped[List["UserContact"]] = relationship(
+        back_populates="user",
+        overlaps="primary_email_contact",
+        cascade_backrefs=False,
     )
     """User's contacts."""
 
-    notifications = db.relationship(
-        "Notification", back_populates="user", lazy="dynamic"
+    notifications: DynamicMapped["Notification"] = relationship(
+        "Notification",
+        back_populates="user",
+        lazy="dynamic",
+        cascade_backrefs=False,
     )
     """Notification settings for the user. Represents what notifications the user wants to receive."""
 
-    groups: list[UserGroup] = db.relationship(
-        UserGroup,
-        UserGroupMember.__table__,
+    groups: Mapped[List["UserGroup"]] = relationship(
+        secondary=UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
         back_populates="users",
-        lazy="select",
+        overlaps="user, current_memberships, group, memberships, memberships_sel",
     )
     """Current groups of the user is a member of."""
 
-    groups_dyn = db.relationship(
-        UserGroup,
-        UserGroupMember.__table__,
+    groups_dyn: DynamicMapped["UserGroup"] = relationship(
+        secondary=UserGroupMember.__table__,
         primaryjoin=id == UserGroupMember.user_id,
         lazy="dynamic",
+        overlaps="group, groups, user, users, current_memberships, memberships, memberships_sel",
     )
     """All groups of the user as a dynamic query."""
 
-    groups_inactive = db.relationship(
-        UserGroup,
-        UserGroupMember.__table__,
+    groups_inactive: DynamicMapped["UserGroup"] = relationship(
+        secondary=UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_deleted,
         lazy="dynamic",
+        overlaps="group, groups, groups_dyn, user, users, current_memberships, memberships, memberships_sel",
     )
     """All groups the user is no longer a member of as a dynamic query."""
 
-    memberships_dyn = db.relationship(
-        UserGroupMember,
+    memberships_dyn: DynamicMapped["UserGroupMember"] = relationship(
         foreign_keys="UserGroupMember.user_id",
         lazy="dynamic",
+        overlaps="groups, groups_dyn, groups_inactive, user, users",
     )
     """User's group memberships as a dynamic query."""
 
-    memberships: list[UserGroupMember] = db.relationship(
-        UserGroupMember,
+    memberships: Mapped[List["UserGroupMember"]] = relationship(
         foreign_keys="UserGroupMember.user_id",
+        overlaps="groups_inactive, memberships_dyn, user, users",
     )
     """All user's group memberships."""
 
-    active_memberships = db.relationship(
-        UserGroupMember,
+    active_memberships: Mapped[Dict[int, "UserGroupMember"]] = relationship(
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
-        collection_class=attribute_mapped_collection("usergroup_id"),
-        # back_populates="group",
+        collection_class=attribute_keyed_dict("usergroup_id"),
+        overlaps="groups, groups_dyn, groups_inactive, memberships, memberships_dyn, user, users",
     )
     """Active group memberships mapped by user group ID."""
 
-    lectures = db.relationship(
-        "Lecture",
+    lectures: Mapped[List["Lecture"]] = relationship(
         secondary=LectureUsers.__table__,
         back_populates="users",
-        lazy="select",
     )
     """Lectures that the user is attending at the moment."""
 
-    owned_lectures = db.relationship("Lecture", back_populates="owner", lazy="dynamic")
+    owned_lectures: DynamicMapped["Lecture"] = relationship(
+        back_populates="owner", lazy="dynamic"
+    )
     """Lectures that the user has created."""
 
-    lectureanswers = db.relationship(
-        "LectureAnswer", back_populates="user", lazy="dynamic"
+    lectureanswers: DynamicMapped["LectureAnswer"] = relationship(
+        back_populates="user", lazy="dynamic"
     )
     """Lecture answers that the user sent to lectures as a dynamic query."""
 
-    messages = db.relationship("Message", back_populates="user", lazy="dynamic")
+    messages: DynamicMapped["Message"] = relationship(
+        back_populates="user", lazy="dynamic"
+    )
     """Lecture messages that the user sent to lectures as a dynamic query."""
 
-    questionactivity = db.relationship(
-        "QuestionActivity", back_populates="user", lazy="select"
+    questionactivity: Mapped[List["QuestionActivity"]] = relationship(
+        back_populates="user"
     )
     """User's activity on lecture questions."""
 
-    useractivity = db.relationship("Useractivity", back_populates="user", lazy="select")
+    useractivity: Mapped[List["UserActivity"]] = relationship(back_populates="user")
     """User's activity during lectures."""
 
-    answers = db.relationship(
-        "Answer", secondary=UserAnswer.__table__, back_populates="users", lazy="dynamic"
+    answers: DynamicMapped["Answer"] = relationship(
+        secondary=UserAnswer.__table__,
+        back_populates="users",
+        lazy="dynamic",
+        overlaps="users_all",
     )
     """User's answers to tasks as a dynamic query."""
 
-    annotations = db.relationship(
-        "Annotation", back_populates="annotator", lazy="dynamic"
+    annotations: DynamicMapped["Annotation"] = relationship(
+        back_populates="annotator", lazy="dynamic"
     )
     """User's task annotations as a dynamic query."""
 
-    velps = db.relationship("Velp", back_populates="creator", lazy="dynamic")
+    velps: DynamicMapped["Velp"] = relationship(
+        back_populates="creator", lazy="dynamic"
+    )
     """Velps created by the user as a dynamic query."""
 
-    sessions: list[UserSession] = db.relationship(
-        "UserSession", back_populates="user", lazy="select"
-    )
+    sessions: Mapped[List["UserSession"]] = relationship(back_populates="user")
     """All user's sessions as a dynamic query."""
 
-    active_sessions: MutableMapping[str, UserSession] = db.relationship(
-        "UserSession",
+    active_sessions: Mapped[Dict[str, "UserSession"]] = relationship(
         primaryjoin=(id == UserSession.user_id) & ~UserSession.expired,
-        collection_class=attribute_mapped_collection("session_id"),
+        collection_class=attribute_keyed_dict("session_id"),
+        overlaps="sessions, user",
     )
     """Active sessions mapped by the session ID."""
 
     # Used for copying
-    notifications_alt = db.relationship("Notification")
-    owned_lectures_alt = db.relationship("Lecture")
-    lectureanswers_alt = db.relationship("LectureAnswer")
-    messages_alt = db.relationship("Message")
-    answers_alt = db.relationship("Answer", secondary=UserAnswer.__table__)
-    annotations_alt = db.relationship("Annotation")
-    velps_alt = db.relationship("Velp")
+    notifications_alt: Mapped[List["Notification"]] = relationship(
+        overlaps="notifications, user"
+    )
+    owned_lectures_alt: Mapped[List["Lecture"]] = relationship(
+        overlaps="owned_lectures, owner"
+    )
+    lectureanswers_alt: Mapped[List["LectureAnswer"]] = relationship(
+        overlaps="lectureanswers, user"
+    )
+    messages_alt: Mapped[List["Message"]] = relationship(overlaps="messages, user")
+    answers_alt: Mapped[List["Answer"]] = relationship(
+        secondary=UserAnswer.__table__,
+        overlaps="answers, users",
+    )
+    annotations_alt: Mapped[List["Annotation"]] = relationship(
+        overlaps="annotations, annotator"
+    )
+    velps_alt: Mapped[List["Velp"]] = relationship(overlaps="velps, creator")
 
     def update_email(
         self,
@@ -466,9 +500,17 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         self._email = new_email
         if prev_email != new_email:
             if create_contact:
-                new_primary = UserContact.query.filter_by(
-                    user_id=self.id, channel=Channel.EMAIL, contact=new_email
-                ).first()
+                new_primary = (
+                    run_sql(
+                        select(UserContact)
+                        .filter_by(
+                            user_id=self.id, channel=Channel.EMAIL, contact=new_email
+                        )
+                        .limit(1)
+                    )
+                    .scalars()
+                    .first()
+                )
                 if not new_primary:
                     # If new primary contact does not exist for the email, create it
                     # This is used mainly for CLI operations where email of the user is changed directly
@@ -514,10 +556,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     @property
     def scim_extra_data(self):
         """Any extra data that should be returned in the SCIM API response."""
-        email_contacts = UserContact.query.filter_by(
-            user=self, channel=Channel.EMAIL, verified=True
+        email_contacts_stmt = select(UserContact).filter_by(
+            user_id=self.id, channel=Channel.EMAIL, verified=True
         )
-        return {"emails": [{"value": uc.contact} for uc in email_contacts]}
+        return {
+            "emails": [
+                {"value": uc.contact} for uc in run_sql(email_contacts_stmt).scalars()
+            ]
+        }
 
     def __repr__(self):
         return f"<User(id={self.id}, name={self.name}, email={self.email}, real_name={self.real_name})>"
@@ -564,7 +610,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         locked_groups = get_locked_active_groups()
         if locked_groups is None:
             return effective_real_groups()
-        return UserGroup.query.filter(UserGroup.id.in_(locked_groups)).all()
+        return (
+            run_sql(select(UserGroup).filter(UserGroup.id.in_(locked_groups)))
+            .scalars()
+            .all()
+        )
 
     @property
     def effective_group_ids(self):
@@ -588,7 +638,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         locked_groups = get_locked_active_groups()
         return locked_groups if locked_groups is not None else effective_real_groups()
 
-    @cached_property
+    @property
     def is_admin(self):
         return get_admin_group_id() in self.effective_group_ids
 
@@ -605,7 +655,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return has_request_context() and get_current_user_id() == self.id
 
     @property
-    def pretty_full_name(self):
+    def pretty_full_name(self) -> str:
         """Returns the user's full name."""
         if self.is_name_hidden:
             return f"User {self.id}"
@@ -662,23 +712,35 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_by_name(name: str) -> Optional["User"]:
-        return user_query_with_joined_groups().filter_by(name=name).first()
+        return (
+            run_sql(user_query_with_joined_groups().filter_by(name=name).limit(1))
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def get_by_id(uid: int) -> Optional["User"]:
-        return user_query_with_joined_groups().get(uid)
+        return db.session.get(User, uid, options=[selectinload(User.groups)])
 
     @staticmethod
     def get_by_email(email: str) -> Optional["User"]:
         if email is None:
             raise Exception("Tried to find an user by null email")
-        return user_query_with_joined_groups().filter_by(email=email).first()
+        return (
+            run_sql(user_query_with_joined_groups().filter_by(email=email).limit(1))
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def get_by_email_case_insensitive(email: str) -> list["User"]:
         return (
-            user_query_with_joined_groups()
-            .filter(func.lower(User.email).in_([email]))
+            run_sql(
+                user_query_with_joined_groups().filter(
+                    func.lower(User.email).in_([email])
+                )
+            )
+            .scalars()
             .all()
         )
 
@@ -698,9 +760,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def verified_email_name_parts(self) -> list[str]:
         email_parts = [
             uc.contact.split("@")
-            for uc in UserContact.query.filter_by(
-                user=self, channel=Channel.EMAIL, verified=True
-            )
+            for uc in run_sql(
+                select(UserContact).filter_by(
+                    user=self, channel=Channel.EMAIL, verified=True
+                )
+            ).scalars()
         ]
         return [parts[0].lower() for parts in email_parts]
 
@@ -770,22 +834,25 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             group_condition = UserGroup.name == self.name
         else:
             group_condition = UserGroup.name == ANONYMOUS_GROUPNAME
-        return (
-            Folder.query.join(BlockAccess, BlockAccess.block_id == Folder.id)
+
+        stmt = (
+            select(Folder)
+            .join(BlockAccess, BlockAccess.block_id == Folder.id)
             .join(UserGroup, UserGroup.id == BlockAccess.usergroup_id)
             .filter(
                 (Folder.location == "users")
                 & group_condition
                 & (BlockAccess.type == AccessType.owner.value)
             )
-            .with_entities(Folder)
+            .with_only_columns(Folder)
             .options(
                 defaultload(Folder._block)
-                .joinedload(Block.accesses)
+                .selectinload(Block.accesses)
                 .joinedload(BlockAccess.usergroup)
             )
-            .all()
         )
+
+        return run_sql(stmt).scalars().all()
 
     @cached_property
     def personal_folder_prop(self) -> Folder:
@@ -823,21 +890,19 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     def get_groups(
         self, include_special: bool = True, include_expired: bool = True
-    ) -> Query:
+    ) -> Select:
         special_groups = [ANONYMOUS_GROUPNAME]
         if self.logged_in:
             special_groups.append(LOGGED_IN_GROUPNAME)
-        filter_expr = UserGroupMember.user_id == self.id
+        member_condition = UserGroupMember.user_id == self.id
         if not include_expired:
-            filter_expr = filter_expr & membership_current
-        q = UserGroup.query.filter(
-            UserGroup.id.in_(
-                db.session.query(UserGroupMember.usergroup_id).filter(filter_expr)
-            )
+            member_condition = member_condition & membership_current
+        group_condition = UserGroup.id.in_(
+            select(UserGroupMember.usergroup_id).filter(member_condition)
         )
         if include_special:
-            q = q.union(UserGroup.query.filter(UserGroup.name.in_(special_groups)))
-        return q
+            group_condition = group_condition | UserGroup.name.in_(special_groups)
+        return select(UserGroup).filter(group_condition)
 
     def add_to_group(
         self,
@@ -868,7 +933,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             existing.membership_end = None
             new_add = False
         else:
-            self.memberships.append(UserGroupMember(group=ug, adder=added_by))
+            ugm = UserGroupMember(group=ug, adder=added_by)
+            self.memberships.append(ugm)
+            db.session.add(ugm)
             new_add = True
         # On changing of group, sync this person to the user group's message lists.
         if sync_mailing_lists:
@@ -879,7 +946,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         self,
         channel: Channel,
         contact: str,
-        options: list[loader_option] | None = None,
+        options: list[LoaderOption] | None = None,
     ) -> UserContact | None:
         """Find user's contact by channel and contact contents.
 
@@ -888,14 +955,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :param options: Additional DB load options.
         :return: UserContact if found, otherwise None.
         """
-        q = UserContact.query.filter(
+
+        stmt = select(UserContact).filter(
             (UserContact.user == self)
             & (UserContact.channel == channel)
             & (UserContact.contact == contact)
         )
         if options:
-            q = q.options(*options)
-        return q.first()
+            stmt = stmt.options(*options)
+        return run_sql(stmt).scalars().one_or_none()
 
     @staticmethod
     def get_scimuser() -> "User":
@@ -1107,6 +1175,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         """If set, access any access locking is skipped when checking for permissions."""
         return getattr(self, "bypass_access_lock", False)
 
+    @skip_access_lock.setter
+    def skip_access_lock(self, value):
+        setattr(self, "bypass_access_lock", value)
+
     def _downgrade_access(
         self, access_vals: set[int], access: BlockAccess | None
     ) -> BlockAccess | None:
@@ -1305,11 +1377,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         """Remove user's permissions to the specified item (block)"""
         if isinstance(access_type, AccessType):
             access_type = access_type.value
-        BlockAccess.query.filter_by(
-            block_id=block_id,
-            usergroup_id=self.get_personal_group().id,
-            type=get_access_type_id(access_type),
-        ).delete()
+        stmt = delete(BlockAccess).where(
+            (BlockAccess.block_id == block_id)
+            & (BlockAccess.usergroup_id == self.get_personal_group().id)
+            & (BlockAccess.type == get_access_type_id(access_type))
+        )
+        run_sql(stmt)
 
     def get_notify_settings(self, item: DocInfo | Folder) -> dict:
         # TODO: Instead of conversion, expose all notification types in UI
@@ -1387,7 +1460,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     def get_answers_for_task(self, task_id: str):
         return (
-            self.answers.options(joinedload(Answer.users_all))
+            self.answers.options(selectinload(Answer.users_all))
             .order_by(Answer.id.desc())
             .filter_by(task_id=task_id)
         )
@@ -1397,10 +1470,18 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         """Hides names and email of the user, but not user ID"""
         return getattr(self, "hide_name", False)
 
+    @is_name_hidden.setter
+    def is_name_hidden(self, value):
+        setattr(self, "hide_name", value)
+
     @property
     def is_anonymized(self):
         """Hides names, email and ID of the user"""
         return getattr(self, "anonymize", False)
+
+    @is_anonymized.setter
+    def is_anonymized(self, value):
+        setattr(self, "anonymize", value)
 
     @property
     def is_anonymous_guest_user(self):
@@ -1412,13 +1493,16 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if self.is_special:
             return False
         teacher_group_id = (
-            db.session.query(ScimUserGroup.group_id)
-            .join(UserGroup)
-            .join(UserGroupMember)
-            .filter(
-                (UserGroupMember.user_id == self.id)
-                & ScimUserGroup.external_id.like("%-teachers")
+            run_sql(
+                select(ScimUserGroup.group_id)
+                .join(UserGroup)
+                .join(UserGroupMember)
+                .filter(
+                    (UserGroupMember.user_id == self.id)
+                    & ScimUserGroup.external_id.like("%-teachers")
+                )
             )
+            .scalars()
             .first()
         )
         return teacher_group_id is not None
@@ -1456,9 +1540,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         external_ids: dict[int, str] = (
             {
                 s.group_id: s.external_id
-                for s in ScimUserGroup.query.filter(
-                    ScimUserGroup.group_id.in_([g.id for g in self.groups])
-                ).all()
+                for s in run_sql(
+                    select(ScimUserGroup).filter(
+                        ScimUserGroup.group_id.in_([g.id for g in self.groups])
+                    )
+                )
+                .scalars()
+                .all()
             }
             if full
             else []

@@ -4,11 +4,13 @@ from timApp.timdb.sqa import db
 
 class BrokenDbTest(TimRouteTest):
     def test_broken_db(self):
-        db.drop_all()
-        db.create_all()
-
         # Expire all because otherwise User.query.get(0) would still return anonymous user.
         db.session.expire_all()
+        # Also close any pending sessions since drop_all might wait for active sessions to close.
+        db.session.remove()
+
+        db.drop_all()
+        db.create_all()
 
         with self.assertRaises(Exception) as e:
             self.get("/")

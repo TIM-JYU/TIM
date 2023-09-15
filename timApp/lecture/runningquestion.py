@@ -1,24 +1,30 @@
 from datetime import datetime
+from typing import Optional, TYPE_CHECKING
 
-from timApp.lecture.askedquestion import AskedQuestion
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
+
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
+
+if TYPE_CHECKING:
+    from timApp.lecture.askedquestion import AskedQuestion
+    from timApp.lecture.lecture import Lecture
 
 
-class Runningquestion(db.Model):
-    asked_id = db.Column(
-        db.Integer, db.ForeignKey("askedquestion.asked_id"), primary_key=True
+class RunningQuestion(db.Model):
+    asked_id: Mapped[int] = mapped_column(
+        ForeignKey("askedquestion.asked_id"), primary_key=True
     )
-    lecture_id = db.Column(
-        db.Integer, db.ForeignKey("lecture.lecture_id"), primary_key=True
+    lecture_id: Mapped[int] = mapped_column(
+        ForeignKey("lecture.lecture_id"), primary_key=True
     )  # TODO should not be part of primary key (asked_id is enough)
-    ask_time = db.Column(
-        db.DateTime(timezone=True), nullable=False, default=datetime.utcnow
-    )
-    end_time = db.Column(db.DateTime(timezone=True))
+    ask_time: Mapped[datetime_tz] = mapped_column(default=datetime.utcnow)
+    end_time: Mapped[Optional[datetime_tz]]
 
-    asked_question: AskedQuestion = db.relationship(
-        "AskedQuestion", back_populates="running_question", lazy="select"
+    asked_question: Mapped["AskedQuestion"] = relationship(
+        back_populates="running_question", lazy="select"
     )
-    lecture = db.relationship(
-        "Lecture", back_populates="running_questions", lazy="select"
+    lecture: Mapped["Lecture"] = relationship(
+        back_populates="running_questions", lazy="select"
     )

@@ -10,12 +10,14 @@ selections from the database.
 
 """
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Union, Sequence
+
+from sqlalchemy import select, delete
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import get_rights_holders
@@ -197,16 +199,24 @@ def get_groups_from_document_table(doc_id: int, user_id: int | None) -> list[Vel
 
     """
     if not user_id:
-        return (
-            VelpGroupsInDocument.query.filter_by(doc_id=doc_id)
-            .join(VelpGroup)
-            .with_entities(VelpGroup)
+        return list(
+            run_sql(
+                select(VelpGroupsInDocument)
+                .filter_by(doc_id=doc_id)
+                .join(VelpGroup)
+                .with_only_columns(VelpGroup)
+            )
+            .scalars()
             .all()
         )
-    return (
-        VelpGroupsInDocument.query.filter_by(user_id=user_id, doc_id=doc_id)
-        .join(VelpGroup)
-        .with_entities(VelpGroup)
+    return list(
+        run_sql(
+            select(VelpGroupsInDocument)
+            .filter_by(user_id=user_id, doc_id=doc_id)
+            .join(VelpGroup)
+            .with_only_columns(VelpGroup)
+        )
+        .scalars()
         .all()
     )
 
@@ -226,7 +236,7 @@ def make_document_a_velp_group(
     :return: velp group ID
 
     """
-    vg = VelpGroup.query.get(velp_group_id)
+    vg = db.session.get(VelpGroup, velp_group_id)
     if vg:
         return vg
     vg = VelpGroup(
@@ -243,12 +253,14 @@ VelpGroupOrDocInfo = Union[VelpGroup, DocInfo]
 
 
 def add_groups_to_document(
-    velp_groups: list[VelpGroupOrDocInfo], doc: DocInfo, user: User
+    velp_groups: Sequence[VelpGroupOrDocInfo], doc: DocInfo, user: User
 ) -> None:
     """Adds velp groups to VelpGroupsInDocument table."""
-    existing: list[VelpGroupsInDocument] = VelpGroupsInDocument.query.filter_by(
-        user_id=user.id, doc_id=doc.id
-    ).all()
+    existing: Sequence[VelpGroupsInDocument] = (
+        run_sql(select(VelpGroupsInDocument).filter_by(user_id=user.id, doc_id=doc.id))
+        .scalars()
+        .all()
+    )
     existing_ids = {vgd.velp_group_id for vgd in existing}
     for velp_group in velp_groups:
         velp_group_id = velp_group.id
@@ -277,12 +289,20 @@ def change_selection(
     :param selected: Boolean whether group is selected or not
 
     """
-    vgs: VelpGroupSelection | None = VelpGroupSelection.query.filter_by(
-        user_id=user_id,
-        doc_id=doc_id,
-        velp_group_id=velp_group_id,
-        target_id=target_id,
-    ).first()
+    vgs: VelpGroupSelection | None = (
+        run_sql(
+            select(VelpGroupSelection)
+            .filter_by(
+                user_id=user_id,
+                doc_id=doc_id,
+                velp_group_id=velp_group_id,
+                target_id=target_id,
+            )
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if vgs:
         vgs.target_type = target_type
         vgs.selected = selected
@@ -310,12 +330,18 @@ def change_all_target_area_default_selections(
     :param selected: True or False
 
     """
-    VelpGroupDefaults.query.filter_by(
-        doc_id=doc_id, target_type=target_type, target_id=target_id
-    ).delete()
-    vgids: list[VelpGroupsInDocument] = VelpGroupsInDocument.query.filter_by(
-        doc_id=doc_id, user_id=user_id
-    ).all()
+    run_sql(
+        delete(VelpGroupDefaults).where(
+            (VelpGroupDefaults.doc_id == doc_id)
+            & (VelpGroupDefaults.target_type == target_type)
+            & (VelpGroupDefaults.target_id == target_id)
+        )
+    )
+    vgids: Sequence[VelpGroupsInDocument] = (
+        run_sql(select(VelpGroupsInDocument).filter_by(doc_id=doc_id, user_id=user_id))
+        .scalars()
+        .all()
+    )
     for vgid in vgids:
         vgd = VelpGroupDefaults(
             doc_id=doc_id,
@@ -340,21 +366,38 @@ def change_all_target_area_selections(
 
     """
     if target_type == 0:
-        for vgs in VelpGroupSelection.query.filter_by(
-            doc_id=doc_id, target_id=target_id, user_id=user_id
-        ).all():
+        for vgs in (
+            run_sql(
+                select(VelpGroupSelection).filter_by(
+                    doc_id=doc_id, target_id=target_id, user_id=user_id
+                )
+            )
+            .scalars()
+            .all()
+        ):
             vgs.selected = selected
     elif target_type == 1:
-        VelpGroupSelection.query.filter_by(
-            doc_id=doc_id, target_id=target_id, user_id=user_id, target_type=target_type
-        ).delete()
+        run_sql(
+            delete(VelpGroupSelection).where(
+                (VelpGroupSelection.doc_id == doc_id)
+                & (VelpGroupSelection.target_id == target_id)
+                & (VelpGroupSelection.user_id == user_id)
+                & (VelpGroupSelection.target_type == target_type)
+            )
+        )
         # target_type is 0 because only 0 always contains all velp groups user has access to.
         # Other target types will get added to database only after they've been clicked once in interface.
-        vgss: list[VelpGroupSelection] = VelpGroupSelection.query.filter_by(
-            doc_id=doc_id,
-            user_id=user_id,
-            target_type=0,
-        ).all()
+        vgss: Sequence[VelpGroupSelection] = (
+            run_sql(
+                select(VelpGroupSelection).filter_by(
+                    doc_id=doc_id,
+                    user_id=user_id,
+                    target_type=0,
+                )
+            )
+            .scalars()
+            .all()
+        )
         for vgs in vgss:
             nvgs = VelpGroupSelection(
                 user_id=user_id,
@@ -379,11 +422,19 @@ def change_default_selection(
     :param selected: Boolean whether group is selected or not
 
     """
-    vgd: VelpGroupDefaults = VelpGroupDefaults.query.filter_by(
-        doc_id=doc_id,
-        velp_group_id=velp_group_id,
-        target_id=target_id,
-    ).first()
+    vgd: VelpGroupDefaults | None = (
+        run_sql(
+            select(VelpGroupDefaults)
+            .filter_by(
+                doc_id=doc_id,
+                velp_group_id=velp_group_id,
+                target_id=target_id,
+            )
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if vgd:
         vgd.selected = selected
         vgd.target_type = target_type
@@ -406,12 +457,20 @@ def add_groups_to_selection_table(
     target_id: str,
 ) -> None:
     """Adds velp groups to VelpGroupSelection table."""
-    vgs = VelpGroupSelection.query.filter_by(
-        user_id=user_id,
-        doc_id=doc_id,
-        velp_group_id=velp_group.id,
-        target_id=target_id,
-    ).first()
+    vgs = (
+        run_sql(
+            select(VelpGroupSelection)
+            .filter_by(
+                user_id=user_id,
+                doc_id=doc_id,
+                velp_group_id=velp_group.id,
+                target_id=target_id,
+            )
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if vgs:
         vgs.selected = True
         vgs.target_type = target_type
@@ -430,16 +489,14 @@ def add_groups_to_selection_table(
 def process_selection_info(
     vgss: list[VelpGroupSelection] | list[VelpGroupDefaults],
 ) -> VelpGroupSelectionInfo:
-
     groups = VelpGroupSelectionInfo()
     if vgss:
-
         target_id: str = "0"
         i: int = 0
         while i < len(vgss):
             if target_id == vgss[i].target_id:
                 selection = GroupSelection(
-                    id=vgss[i].velp_group_id, selected=vgss[i].selected
+                    id=vgss[i].velp_group_id, selected=vgss[i].selected or False
                 )
                 groups.append(target_id, selection)
                 i += 1
@@ -459,9 +516,13 @@ def get_personal_selections_for_velp_groups(
     :return: Dict with following info { target_id: [{velp_group_id, selected}, etc], etc }
 
     """
-    vgss = (
-        VelpGroupSelection.query.filter_by(doc_id=doc_id, user_id=user_id)
-        .order_by(VelpGroupSelection.target_id)
+    vgss = list(
+        run_sql(
+            select(VelpGroupSelection)
+            .filter_by(doc_id=doc_id, user_id=user_id)
+            .order_by(VelpGroupSelection.target_id)
+        )
+        .scalars()
         .all()
     )
     return process_selection_info(vgss)
@@ -476,9 +537,13 @@ def get_default_selections_for_velp_groups(
     :return: Dict with following info { target_id: [{velp_group_id, selected}, etc], etc }
 
     """
-    vgds = (
-        VelpGroupDefaults.query.filter_by(doc_id=doc_id)
-        .order_by(VelpGroupDefaults.target_id)
+    vgds = list(
+        run_sql(
+            select(VelpGroupDefaults)
+            .filter_by(doc_id=doc_id)
+            .order_by(VelpGroupDefaults.target_id)
+        )
+        .scalars()
         .all()
     )
     return process_selection_info(vgds)

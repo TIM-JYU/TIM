@@ -16,7 +16,8 @@ from flask import request
 from flask import session
 from markupsafe import Markup
 from marshmallow import EXCLUDE
-from sqlalchemy.orm import joinedload, defaultload
+from sqlalchemy import select
+from sqlalchemy.orm import defaultload, joinedload
 
 from timApp.answer.answers import add_missing_users_from_groups, get_points_by_rule
 from timApp.auth.accesshelper import (
@@ -108,7 +109,7 @@ from timApp.plugin.pluginControl import get_all_reqs
 from timApp.readmark.readings import mark_all_read
 from timApp.tim_app import app
 from timApp.timdb.exceptions import PreambleException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_view_access
 from timApp.user.settings.style_utils import resolve_themes
 from timApp.user.settings.styles import generate_style
@@ -377,12 +378,11 @@ def gen_cache(
         # Compute users from the current rights.
         accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
         group_ids = {a.usergroup_id for a in accesses if not a.expired}
-        users: list[tuple[User, UserGroup]] = (
-            User.query.join(UserGroup, User.groups)
+        users: list[tuple[User, UserGroup]] = run_sql(
+            select(User, UserGroup)
+            .join(UserGroup, User.groups)
             .filter(UserGroup.id.in_(group_ids))
-            .with_entities(User, UserGroup)
-            .all()
-        )
+        ).all()
         groups_that_need_access_check = {
             g for u, g in users if u.get_personal_group() != g
         }
@@ -518,16 +518,16 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     doc_info = DocEntry.find_by_path(
         item_path,
         fallback_to_id=True,
-        docentry_load_opts=(
+        docentry_load_opts=[
             defaultload(DocEntry._block)
             .defaultload(Block.accesses)
             .joinedload(BlockAccess.usergroup),
             joinedload(DocEntry.trs)
-            # TODO: These joinedloads are for some reason very inefficient at least for certain documents.
+            # TODO: These selectinloads are for some reason very inefficient at least for certain documents.
             #  See https://github.com/TIM-JYU/TIM/issues/2201. Needs more investigation.
-            # .joinedload(Translation.docentry),
-            # joinedload(DocEntry.trs).joinedload(Translation._block)
-        ),
+            # .selectinload(Translation.docentry),
+            # selectinload(DocEntry.trs).selectinload(Translation._block)
+        ],
     )
     if doc_info is None:
         return try_return_folder(item_path)
@@ -770,7 +770,11 @@ def render_doc_view(
                 flash(str(e))
         ugs_without_access = []
         if usergroups is not None:
-            ugs = UserGroup.query.filter(UserGroup.name.in_(usergroups)).all()
+            ugs = (
+                run_sql(select(UserGroup).filter(UserGroup.name.in_(usergroups)))
+                .scalars()
+                .all()
+            )
             if len(ugs) != len(usergroups):
                 not_found_ugs = set(usergroups) - set(ug.name for ug in ugs)
                 flash(f"Following groups were not found: {not_found_ugs}")
@@ -1174,8 +1178,12 @@ def get_linked_groups(i: Item) -> tuple[list[UserGroupWithSisuInfo], list[str]]:
             list(
                 map(
                     UserGroupWithSisuInfo,
-                    get_usergroup_eager_query()
-                    .filter(UserGroup.name.in_(group_tags))
+                    run_sql(
+                        get_usergroup_eager_query().filter(
+                            UserGroup.name.in_(group_tags)
+                        )
+                    )
+                    .scalars()
                     .all(),
                 )
             ),

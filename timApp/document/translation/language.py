@@ -13,16 +13,15 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
-
-from dataclasses import dataclass
 from typing import Optional
 
 import langcodes
+from sqlalchemy import select
+from sqlalchemy.orm import mapped_column, Mapped
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 
 
-@dataclass
 class Language(db.Model):
     """Represents a standardized language code used for example with
     translation documents.
@@ -31,21 +30,20 @@ class Language(db.Model):
     instances!
     """
 
-    __tablename__ = "language"
-
-    lang_code = db.Column(db.Text, nullable=False, primary_key=True)
+    lang_code: Mapped[str] = mapped_column(primary_key=True)
     """Standardized code of the language."""
 
     # TODO should this be unique?
-    lang_name = db.Column(db.Text, nullable=False)
+    lang_name: Mapped[str]
     """IANA's name for the language."""
 
-    flag_uri = db.Column(db.Text)
+    flag_uri: Mapped[Optional[str]]
     """Path to a picture representing the language."""
 
-    autonym = db.Column(db.Text, nullable=False)
+    autonym: Mapped[str]
     """Native name for the language."""
 
+    # FIXME: Turn into postinit
     def __init__(
         self, lang_code: str, lang_name: str, autonym: str, flag_uri: str | None = None
     ):
@@ -92,7 +90,7 @@ class Language(db.Model):
         """
         # TODO Instead of the code -parameter being str-type, could
         #  langcodes.Language type be more convenient to caller?
-        return cls.query.get(code)
+        return db.session.get(cls, code)
 
     @classmethod
     def query_all(cls) -> list["Language"]:
@@ -101,7 +99,7 @@ class Language(db.Model):
 
         :return: All the languages found from database.
         """
-        return cls.query.all()
+        return run_sql(select(cls)).scalars().all()  # type: ignore
 
     def __str__(self) -> str:
         """

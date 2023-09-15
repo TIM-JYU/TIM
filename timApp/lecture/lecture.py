@@ -1,48 +1,65 @@
 import json
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, TYPE_CHECKING, List
+
+from sqlalchemy import select, func, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped, relationship
 
 from timApp.lecture.lectureusers import LectureUsers
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.types import datetime_tz
 from timApp.util.utils import get_current_time
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
+    from timApp.lecture.askedquestion import AskedQuestion
+    from timApp.lecture.message import Message
+    from timApp.lecture.runningquestion import RunningQuestion
+    from timApp.lecture.useractivity import UserActivity
 
 
 class Lecture(db.Model):
-    __tablename__ = "lecture"
-    lecture_id = db.Column(db.Integer, primary_key=True)
-    lecture_code = db.Column(db.Text)
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
-    lecturer = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
-    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
-    end_time = db.Column(db.DateTime(timezone=True))
-    password = db.Column(db.Text)
-    options = db.Column(db.Text)
+    lecture_id: Mapped[int] = mapped_column(primary_key=True)
+    lecture_code: Mapped[Optional[str]]
+    doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
+    lecturer: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
+    start_time: Mapped[datetime_tz]
+    end_time: Mapped[Optional[datetime_tz]]
+    password: Mapped[Optional[str]]
+    options: Mapped[Optional[str]]
 
-    users = db.relationship(
-        "User",
+    users: DynamicMapped["User"] = relationship(
         secondary=LectureUsers.__table__,
         back_populates="lectures",
         lazy="dynamic",
     )
-    asked_questions = db.relationship(
-        "AskedQuestion", back_populates="lecture", lazy="dynamic"
+    asked_questions: DynamicMapped["AskedQuestion"] = relationship(
+        back_populates="lecture",
+        lazy="dynamic",
     )
-    messages = db.relationship("Message", back_populates="lecture", lazy="dynamic")
-    running_questions = db.relationship(
-        "Runningquestion", back_populates="lecture", lazy="select"
+    messages: DynamicMapped["Message"] = relationship(
+        back_populates="lecture", lazy="dynamic"
     )
-    useractivity = db.relationship(
-        "Useractivity", back_populates="lecture", lazy="select"
+    running_questions: Mapped[List["RunningQuestion"]] = relationship(
+        back_populates="lecture",
+        lazy="select",
     )
-    owner = db.relationship("User", back_populates="owned_lectures")
+    useractivity: Mapped[List["UserActivity"]] = relationship(
+        back_populates="lecture", lazy="select"
+    )
+    owner: Mapped["User"] = relationship(back_populates="owned_lectures")
 
     @staticmethod
     def find_by_id(lecture_id: int) -> Optional["Lecture"]:
-        return Lecture.query.get(lecture_id)
+        return db.session.get(Lecture, lecture_id)
 
     @staticmethod
     def find_by_code(lecture_code: str, doc_id: int) -> Optional["Lecture"]:
-        return Lecture.query.filter_by(lecture_code=lecture_code, doc_id=doc_id).first()
+        return (
+            run_sql(select(Lecture).filter_by(lecture_code=lecture_code, doc_id=doc_id))
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def get_all_in_document(
@@ -51,9 +68,13 @@ class Lecture(db.Model):
         if not time:
             time = datetime.min.replace(tzinfo=timezone.utc)
         return (
-            Lecture.query.filter_by(doc_id=doc_id)
-            .filter(Lecture.end_time > time)
-            .order_by(Lecture.lecture_code.asc())
+            run_sql(
+                select(Lecture)
+                .filter_by(doc_id=doc_id)
+                .filter(Lecture.end_time > time)
+                .order_by(Lecture.lecture_code.asc())
+            )
+            .scalars()
             .all()
         )
 
@@ -78,7 +99,11 @@ class Lecture(db.Model):
         max_students = self.max_students
         if max_students is None:
             return False
-        cnt = LectureUsers.query.filter_by(lecture_id=self.lecture_id).count()
+        cnt = db.session.scalar(
+            select(func.count())
+            .select_from(LectureUsers)
+            .filter_by(lecture_id=self.lecture_id)
+        )
         return cnt >= max_students
 
     @property

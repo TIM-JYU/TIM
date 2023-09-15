@@ -1,18 +1,23 @@
 import json
 from copy import deepcopy
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from timApp.timdb.sqa import db
+from sqlalchemy import select
+from sqlalchemy.orm import mapped_column, Mapped, relationship
+
+from timApp.timdb.sqa import run_sql, db
+
+if TYPE_CHECKING:
+    from timApp.lecture.askedquestion import AskedQuestion
 
 
 class AskedJson(db.Model):
-    __tablename__ = "askedjson"
-    asked_json_id = db.Column(db.Integer, primary_key=True)
-    json = db.Column(db.Text, nullable=False)
-    hash = db.Column(db.Text, nullable=False)
+    asked_json_id: Mapped[int] = mapped_column(primary_key=True)
+    json: Mapped[str]
+    hash: Mapped[str]
 
-    asked_questions = db.relationship(
-        "AskedQuestion", back_populates="asked_json", lazy="joined"
+    asked_questions: Mapped["AskedQuestion"] = relationship(
+        back_populates="asked_json", lazy="selectin"
     )
 
     def to_json(self, hide_points=False):
@@ -27,7 +32,7 @@ class AskedJson(db.Model):
 
 
 def get_asked_json_by_hash(json_hash: str) -> AskedJson | None:
-    return AskedJson.query.filter_by(hash=json_hash).first()
+    return run_sql(select(AskedJson).filter_by(hash=json_hash)).scalars().first()
 
 
 # NOTE: Do NOT add more fields here for new qst attributes. These are ONLY for backward compatibility.

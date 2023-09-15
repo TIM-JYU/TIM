@@ -1,4 +1,3 @@
-import imghdr
 import io
 import json
 import os
@@ -13,7 +12,7 @@ from PIL import UnidentifiedImageError
 from PIL.Image import DecompressionBombError, registered_extensions
 from flask import Blueprint, request, send_file, Response, url_for
 from img2pdf import convert
-from sqlalchemy import case
+from sqlalchemy import case, select
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import (
@@ -42,7 +41,7 @@ from timApp.item.validation import (
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_files_path
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.upload.uploadedfile import (
     PluginUpload,
     PluginUploadInfo,
@@ -51,6 +50,7 @@ from timApp.upload.uploadedfile import (
     is_script_safe_mimetype,
 )
 from timApp.user.user import User
+from timApp.util.file_utils import guess_image_type
 from timApp.util.flask.requesthelper import (
     use_model,
     RouteException,
@@ -124,11 +124,16 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
 
     relfilename = check_and_format_filename(relfilename)
     block = (
-        Block.query.filter(
-            (Block.description.startswith(relfilename))
-            & (Block.type_id == BlockType.Upload.value)
+        run_sql(
+            select(Block)
+            .filter(
+                (Block.description.startswith(relfilename))
+                & (Block.type_id == BlockType.Upload.value)
+            )
+            .order_by(Block.description.desc())
+            .limit(1)
         )
-        .order_by(Block.description.desc())
+        .scalars()
         .first()
     )
     if not block or (
@@ -171,11 +176,15 @@ def get_multiple_pluginuploads(relfilenames: list[str]) -> list[PluginUpload]:
         value=Block.description,
     )
     blocks: list[Block] = (
-        Block.query.filter(
-            (Block.description.in_(filenames))
-            & (Block.type_id == BlockType.Upload.value)
+        run_sql(
+            select(Block)
+            .filter(
+                (Block.description.in_(filenames))
+                & (Block.type_id == BlockType.Upload.value)
+            )
+            .order_by(ordering)
         )
-        .order_by(ordering)
+        .scalars()
         .all()
     )
     if len(blocks) < len(
@@ -585,7 +594,7 @@ def upload_image_or_file(d: DocInfo, file):
 
 def upload_image_or_file_impl(d: DocInfo, file):
     content = file.read()
-    imgtype = imghdr.what(None, h=content)
+    imgtype = guess_image_type(content)
     type_str = "image" if imgtype else "file"
     f = save_file_and_grant_access(d, content, file, BlockType.from_str(type_str))
     return f, type_str
@@ -641,7 +650,7 @@ def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: i
             "Some images could no longer be found, please delete the broken images first"
         )
     byte_images = []
-    for (block, file) in zip(blocks, files):
+    for block, file in zip(blocks, files):
         img = Image.open(io.BytesIO(block.data))
         try:
             rotation = file["rotation"]
@@ -679,12 +688,11 @@ def get_image(image_id: str, image_filename: str) -> Response:
     verify_view_access(f, check_parents=True)
     if image_filename != f.filename:
         raise NotExist("Image not found")
-    img_data = f.data
-    imgtype = imghdr.what(None, h=img_data)
+    imgtype = guess_image_type(f.filesystem_path)
     # Redirect if we can't deduce the image type
     if not imgtype:
         return safe_redirect(
             url_for("upload.get_file", file_id=image_id, file_filename=image_filename)
         )
-    f = io.BytesIO(img_data)
+    f = io.BytesIO(f.data)
     return send_file(f, mimetype="image/" + imgtype)

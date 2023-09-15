@@ -2,6 +2,8 @@ import base64
 from dataclasses import dataclass
 from unittest import mock
 
+from sqlalchemy import select, delete
+
 from timApp.auth.login import (
     test_pws,
     create_or_update_user,
@@ -10,7 +12,7 @@ from timApp.auth.login import (
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import get_home_organization_group, app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.newuser import NewUser
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import User, UserOrigin, UserInfo
@@ -111,7 +113,11 @@ class TestSignUp(TimRouteTest):
             },
         )
         self.get("/")  # refresh session
-        self.assertIsNone(NewUser.query.filter_by(email=bot_email).first())
+        self.assertIsNone(
+            run_sql(select(NewUser).filter_by(email=bot_email).limit(1))
+            .scalars()
+            .first()
+        )
 
         for allowed_email in ("test@jyu.fi", "test@gmail.com"):
             self.json_post(
@@ -122,16 +128,20 @@ class TestSignUp(TimRouteTest):
                 },
             )
             self.get("/")  # refresh session
-            self.assertIsNotNone(NewUser.query.filter_by(email=allowed_email).first())
-        NewUser.query.delete()
+            self.assertIsNotNone(
+                run_sql(select(NewUser).filter_by(email=allowed_email).limit(1))
+                .scalars()
+                .first()
+            )
+        run_sql(delete(NewUser))
         db.session.commit()
 
     def test_signup_case_insensitive(self):
         email = "SomeOneCase@example.com"
         self.json_post("/emailSignup", {"email": email})
         self.assertEqual(
-            NewUser.query.with_entities(NewUser.email).all(),
-            [("someonecase@example.com",)],
+            run_sql(select(NewUser.email)).scalars().all(),
+            ["someonecase@example.com"],
         )
         self.json_post(
             "/checkTempPass",
@@ -156,8 +166,8 @@ class TestSignUp(TimRouteTest):
         email = "whitespace@example.com "
         self.json_post("/emailSignup", {"email": email})
         self.assertEqual(
-            NewUser.query.with_entities(NewUser.email).all(),
-            [("whitespace@example.com",)],
+            run_sql(select(NewUser.email)).scalars().all(),
+            ["whitespace@example.com"],
         )
         self.json_post(
             "/checkTempPass",
@@ -206,9 +216,9 @@ class TestSignUp(TimRouteTest):
     def test_signup(self):
         email = "testingsignup@example.com"
         self.json_post("/emailSignup", {"email": email})
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
+        self.assertEqual(run_sql(select(NewUser.email)).scalars().all(), [email])
         self.json_post("/emailSignup", {"email": email})
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
+        self.assertEqual(run_sql(select(NewUser.email)).scalars().all(), [email])
         self.json_post(
             "/emailSignupFinish",
             {
@@ -221,7 +231,7 @@ class TestSignUp(TimRouteTest):
             expect_contains="registered",
             json_key="status",
         )
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [])
+        self.assertEqual(run_sql(select(NewUser.email)).scalars().all(), [])
         self.assertEqual("Testing Signup", self.current_user.real_name)
         self.assertEqual(UserOrigin.Email, self.current_user.origin)
         self.assertEqual(email, self.current_user.email)

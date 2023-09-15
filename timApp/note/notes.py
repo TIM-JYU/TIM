@@ -1,11 +1,13 @@
 from typing import NamedTuple
 
+from sqlalchemy import select
 from sqlalchemy.orm import lazyload
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.usernote import UserNote
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 
@@ -56,16 +58,16 @@ def get_notes(
     f = UserGroup.id == usergroup_id
     if include_public:
         f = f | (UserNote.access == "everyone")
-    q = (
-        UserNote.query.filter(UserNote.doc_id.in_(ids))
+    stmt = (
+        select(UserNote, User)
+        .filter(UserNote.doc_id.in_(ids))
         .join(UserGroup)
         .join(User, User.name == UserGroup.name)
         .options(lazyload("*"))
         .filter(f)
         .order_by(UserNote.id)
-        .with_entities(UserNote, User)
     )
-    return process_notes(q.all())
+    return process_notes(run_sql(stmt).all())
 
 
 def move_notes(src_par: DocParagraph, dest_par: DocParagraph):
@@ -78,8 +80,8 @@ def move_notes(src_par: DocParagraph, dest_par: DocParagraph):
     ) == str(dest_par.get_id()):
         return
 
-    for u in UserNote.query.filter_by(
-        doc_id=src_par.doc.doc_id, par_id=src_par.get_id()
-    ):
+    for u in run_sql(
+        select(UserNote).filter_by(doc_id=src_par.doc.doc_id, par_id=src_par.get_id())
+    ).scalars():
         u.doc_id = dest_par.doc.doc_id
         u.par_id = dest_par.get_id()

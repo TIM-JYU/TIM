@@ -1,3 +1,5 @@
+from sqlalchemy import select
+
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
@@ -6,6 +8,7 @@ from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessage,
 )
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import run_sql
 
 
 class UrlTest(TimRouteTest):
@@ -126,11 +129,25 @@ class SendMessageTest(TimRouteTest):
             "/view/messages/tim-messages", expect_status=200
         )  # tim-messages folder created successfully
 
-        display = InternalMessageDisplay.query.filter_by(
-            usergroup_id=self.get_test_user_1_group_id()
-        ).first()
-        msg = InternalMessage.query.filter_by(id=display.message_id).first()
-        msg_doc = DocEntry.query.filter_by(id=msg.doc_id).first()
+        display = (
+            run_sql(
+                select(InternalMessageDisplay)
+                .filter_by(usergroup_id=self.get_test_user_1_group_id())
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
+        msg = (
+            run_sql(select(InternalMessage).filter_by(id=display.message_id).limit(1))
+            .scalars()
+            .first()
+        )
+        msg_doc = (
+            run_sql(select(DocEntry).filter_by(id=msg.doc_id).limit(1))
+            .scalars()
+            .first()
+        )
         self.get(
             f"/view/{msg_doc.name}", expect_status=200
         )  # document for message created successfully

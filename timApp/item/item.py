@@ -4,7 +4,7 @@ from itertools import accumulate
 from typing import TYPE_CHECKING
 
 from flask import current_app
-from sqlalchemy import tuple_, func
+from sqlalchemy import tuple_, func, select
 from sqlalchemy.orm import defaultload
 
 from timApp.auth.auth_models import BlockAccess
@@ -12,7 +12,7 @@ from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import include_if_loaded
+from timApp.timdb.sqa import include_if_loaded, db, run_sql
 from timApp.util.utils import split_location, date_to_relative, cached_property
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ class ItemBase:
     def block(self) -> Block:
         # Relationships are not loaded when constructing an object with __init__.
         if not hasattr(self, "_block") or self._block is None:
-            self._block = Block.query.get(self.id)
+            self._block = db.session.get(Block, self.id, populate_existing=True)
         return self._block
 
     @property
@@ -121,18 +121,19 @@ class Item(ItemBase):
         # TODO: Add an option whether to load relevance eagerly or not;
         #  currently eager by default is better to speed up search cache processing
         #  and it doesn't slow down other code much.
-        crumbs_q = (
-            Folder.query.filter(tuple_(Folder.location, Folder.name).in_(path_tuples))
+        crumbs_stmt = (
+            select(Folder)
+            .filter(tuple_(Folder.location, Folder.name).in_(path_tuples))
             .order_by(func.length(Folder.location).desc())
             .options(defaultload(Folder._block).joinedload(Block.relevance))
         )
         if eager_load_groups:
-            crumbs_q = crumbs_q.options(
+            crumbs_stmt = crumbs_stmt.options(
                 defaultload(Folder._block)
-                .joinedload(Block.accesses)
+                .selectinload(Block.accesses)
                 .joinedload(BlockAccess.usergroup)
             )
-        crumbs = crumbs_q.all()
+        crumbs = run_sql(crumbs_stmt).scalars().all()
         if include_root:
             crumbs.append(Folder.get_root())
         return crumbs
@@ -149,7 +150,9 @@ class Item(ItemBase):
     @property
     def parent(
         self,
-    ) -> Folder:  # TODO rename this to parent_folder to distinguish better from "parents" attribute
+    ) -> (
+        Folder
+    ):  # TODO rename this to parent_folder to distinguish better from "parents" attribute
         folder = self.location
         from timApp.folder.folder import Folder
 
@@ -193,7 +196,7 @@ class Item(ItemBase):
 
     @staticmethod
     def find_by_id(item_id):
-        b = Block.query.get(item_id)
+        b = db.session.get(Block, item_id)
         if b:
             if b.type_id == BlockType.Document.value:
                 from timApp.document.docentry import DocEntry

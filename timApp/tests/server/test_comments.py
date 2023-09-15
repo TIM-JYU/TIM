@@ -1,6 +1,7 @@
 from lxml import html
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement
+from sqlalchemy import select
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
@@ -10,7 +11,7 @@ from timApp.notification.notify import process_pending_notifications
 from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.test_notify import NotifyTestBase
 from timApp.tests.server.timroutetest import get_note_id_from_json
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 
 comment_selector = CSSSelector("div.notes > div.note")
@@ -301,7 +302,11 @@ c
         area_a_middle = d.document.get_paragraphs()[2]
         orig_par = d2.document.get_paragraphs()[0]
         r = self.post_comment(area_a_middle, public=True, text="test", orig=orig_par)
-        note: UserNote = UserNote.query.order_by(UserNote.id.desc()).first()
+        note: UserNote = (
+            run_sql(select(UserNote).order_by(UserNote.id.desc()).limit(1))
+            .scalars()
+            .first()
+        )
         self.assert_same_html(
             html.fromstring(r["texts"]),
             f"""
@@ -340,7 +345,11 @@ c
         # Posting a comment to an area boundary paragraph should return just the paragraph element and no stray area
         # start/end tags.
         r = self.post_comment(area_a_start, public=True, text="test", orig=orig_par)
-        note: UserNote = UserNote.query.order_by(UserNote.id.desc()).first()
+        note: UserNote = (
+            run_sql(select(UserNote).order_by(UserNote.id.desc()).limit(1))
+            .scalars()
+            .first()
+        )
         self.assert_same_html(
             html.fromstring(r["texts"]),
             f"""

@@ -1,54 +1,60 @@
-from typing import Any
+from typing import Any, Optional, TYPE_CHECKING
+
+from sqlalchemy import UniqueConstraint, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
 
 
 class PeerReview(db.Model):
     """A peer review to a task."""
 
     __tablename__ = "peer_review"
-    id = db.Column(db.Integer, primary_key=True)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Review identifier."""
 
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=True)
+    answer_id: Mapped[Optional[int]] = mapped_column(ForeignKey("answer.id"))
     """Answer id."""
 
-    task_name = db.Column(db.Text, nullable=True)
+    task_name: Mapped[Optional[str]]
     """Task name"""
 
-    block_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    block_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
     """Doc id"""
 
-    reviewer_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    reviewer_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """Reviewer id"""
 
-    reviewable_id = db.Column(
-        db.Integer, db.ForeignKey("useraccount.id"), nullable=False
-    )
+    reviewable_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """Reviewable id"""
 
-    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    start_time: Mapped[datetime_tz]
     """Review start time"""
 
-    end_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    end_time: Mapped[datetime_tz]
     """Review end time"""
 
-    reviewed = db.Column(db.Boolean, default=False)
+    reviewed: Mapped[Optional[bool]] = mapped_column(default=False)
     """Review status"""
 
-    points = db.Column(db.Float)
+    points: Mapped[Optional[float]]
     """Points given by the reviewer"""
 
-    comment = db.Column(db.Text)
+    comment: Mapped[Optional[str]]
     """Review comment"""
 
     __table_args__ = (
-        db.UniqueConstraint("answer_id", "block_id", "reviewer_id", "reviewable_id"),
-        db.UniqueConstraint("task_name", "block_id", "reviewer_id", "reviewable_id"),
+        UniqueConstraint("answer_id", "block_id", "reviewer_id", "reviewable_id"),
+        UniqueConstraint("task_name", "block_id", "reviewer_id", "reviewable_id"),
     )
 
-    reviewer = db.relationship("User", foreign_keys=[reviewer_id])
-    reviewable = db.relationship("User", foreign_keys=[reviewable_id])
+    reviewer: Mapped["User"] = relationship(foreign_keys=[reviewer_id])
+    reviewable: Mapped["User"] = relationship(foreign_keys=[reviewable_id])
 
     def to_json(self) -> dict[str, Any]:
         return {

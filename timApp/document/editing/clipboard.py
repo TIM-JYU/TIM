@@ -70,7 +70,6 @@ class Clipboard:
         def read(
             self, as_ref: bool | None = False, force_parrefs: bool | None = False
         ) -> list[dict[str, str]] | None:
-
             if as_ref:
                 clipfilename = (
                     self.get_parreffilename()
@@ -129,7 +128,6 @@ class Clipboard:
             par_end: str,
             area_name: str | None = None,
         ) -> list[DocParagraph]:
-
             pars = self.copy_pars(doc, par_start, par_end, area_name, disable_ref=True)
             doc.delete_section(par_start, par_end)
             self.update_metadata(last_action="cut")
@@ -143,7 +141,6 @@ class Clipboard:
             area_name: str | None = None,
             disable_ref: bool = False,
         ) -> list[DocParagraph]:
-
             par_objs = doc.get_section(par_start, par_end)
             pars = [p.dict() for p in par_objs]
             cannot_see_source = any(

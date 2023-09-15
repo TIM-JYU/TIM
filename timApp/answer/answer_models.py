@@ -1,4 +1,13 @@
+from typing import TYPE_CHECKING, Optional
+
+from sqlalchemy import UniqueConstraint, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
+
 from timApp.timdb.sqa import db
+
+if TYPE_CHECKING:
+    from timApp.item.block import Block
+    from timApp.answer.answer import Answer
 
 
 class AnswerTag(db.Model):
@@ -7,21 +16,21 @@ class AnswerTag(db.Model):
     TODO: Answer should be a Block and the tags would then come from the tag table.
     """
 
-    __tablename__ = "answertag"
-    id = db.Column(db.Integer, primary_key=True)
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
-    tag = db.Column(db.Text, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    answer_id: Mapped[int] = mapped_column(ForeignKey("answer.id"))
+    tag: Mapped[str]
 
 
 class AnswerUpload(db.Model):
     """Associates uploaded files (Block with type BlockType.AnswerUpload) with Answers."""
 
-    __tablename__ = "answerupload"
-    upload_block_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"))
+    upload_block_id: Mapped[int] = mapped_column(
+        ForeignKey("block.id"), primary_key=True
+    )
+    answer_id: Mapped[Optional[int]] = mapped_column(ForeignKey("answer.id"))
 
-    block = db.relationship("Block", back_populates="answerupload")
-    answer = db.relationship("Answer", back_populates="uploads")
+    block: Mapped["Block"] = relationship(back_populates="answerupload")
+    answer: Mapped[Optional["Answer"]] = relationship(back_populates="uploads")
 
     def __init__(self, block, answer=None):
         self.block = block
@@ -31,8 +40,8 @@ class AnswerUpload(db.Model):
 class UserAnswer(db.Model):
     """Associates Users with Answers."""
 
-    __tablename__ = "useranswer"
-    id = db.Column(db.Integer, primary_key=True)
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
-    __table_args__ = (db.UniqueConstraint("answer_id", "user_id"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    answer_id: Mapped[int] = mapped_column(ForeignKey("answer.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
+
+    __table_args__ = (UniqueConstraint("answer_id", "user_id"),)

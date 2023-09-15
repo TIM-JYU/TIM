@@ -8,7 +8,6 @@ from timApp.document.docentry import DocEntry
 from timApp.item import routes
 from timApp.item.routes import render_doc_view
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
-from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
 
@@ -19,7 +18,7 @@ class CachingTest(TimRouteTest):
         d = self.create_doc(initial_par="#- {plugin=textfield #t}")
         self.test_user_2.grant_access(d, AccessType.view)
         self.test_user_3.grant_access(d, AccessType.view)
-        db.session.commit()
+        self.commit_db()
         clear_doc_cache(d, None)
         self.login_test3()
         self.check_not_cached(d)
@@ -96,7 +95,7 @@ class CachingTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(initial_par="test")
         self.test_user_2.grant_access(d, AccessType.view)
-        db.session.commit()
+        self.commit_db()
         clear_doc_cache(d, None)
         self.get(
             f"/generateCache/{d.path}",
@@ -137,9 +136,8 @@ class CachingTest(TimRouteTest):
         ug = UserGroup.create("testgroup1")
         self.test_user_3.add_to_group(ug, added_by=None)
         grant_access(ug, d, AccessType.view)
-        db.session.commit()
+        self.commit_db()
         d = DocEntry.find_by_id(d.id)
-        db.session.refresh(d)
         self.get(
             f"/generateCache/{d.path}",
             expect_status=403,
@@ -160,7 +158,7 @@ class CachingTest(TimRouteTest):
         self.get(d.url, query_string={"nocache": True})
 
         self.test_user_2.grant_access(d, AccessType.view)
-        db.session.commit()
+        self.commit_db()
         self.get(
             f"/generateCache/{d.path}",
         )

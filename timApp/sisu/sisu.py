@@ -8,9 +8,9 @@ import requests
 from flask import Blueprint, current_app, request, Response
 from marshmallow import validates, ValidationError
 from marshmallow.utils import _Missing, missing
-from sqlalchemy import any_, true
+from sqlalchemy import any_, true, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
@@ -35,7 +35,7 @@ from timApp.sisu.parse_display_name import (
 )
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tim_app import app, csrf
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import (
     validate_groupname,
     update_group_doc_settings,
@@ -74,12 +74,17 @@ sisu = Blueprint("sisu", __name__, url_prefix="/sisu")
 def get_potential_groups_route() -> Response:
     u = get_current_user_object()
     result = get_potential_groups(u)
+
+    def get_external_id(g: UserGroup) -> ScimUserGroup:
+        assert g.external_id is not None
+        return g.external_id
+
     return json_response(
         [
             {
                 "id": g.id,
                 "name": g.name,
-                "external_id": g.external_id.external_id,
+                "external_id": get_external_id(g).external_id,
                 "display_name": g.display_name,
                 "doc": g.admin_doc.docentries[0] if g.admin_doc else None,
             }
@@ -99,7 +104,7 @@ role_suffixes = [
 
 def get_group_prefix(g: UserGroup) -> str | None:
     """Returns the prefix indicating which Sisu groups the users in this Sisu group shall have access to."""
-    eid = g.external_id.external_id
+    eid = g.scim_user_group.external_id
     for s in role_suffixes:
         if eid.endswith(f"-{s}"):
             return eid[: -len(s)] + "%"
@@ -111,11 +116,11 @@ def get_potential_groups(u: User, course_filter: str | None = None) -> list[User
     sisu_group_memberships = (
         u.groups_dyn.join(UserGroup).join(ScimUserGroup).with_entities(UserGroup).all()
     )
-    ug_filter = true()
+    ug_filter: Any = true()
     if not u.is_admin:
         accessible_prefixes = [get_group_prefix(g) for g in sisu_group_memberships]
         ug_filter = ug_filter & ScimUserGroup.external_id.like(
-            any_(accessible_prefixes)
+            any_(accessible_prefixes)  # type: ignore
         )
     if course_filter:
         ug_filter = ug_filter & ScimUserGroup.external_id.startswith(
@@ -136,9 +141,10 @@ GroupCreateSchema = class_schema(GroupCreateModel)
 
 def get_sisu_group_rights(g: UserGroup) -> list[UserGroup]:
     group_names = []
-    if g.external_id.is_studysubgroup:
-        group_names.append(g.external_id.without_role + "teachers")
-    course_code = g.external_id.course_id
+    external_id = g.scim_user_group
+    if external_id.is_studysubgroup:
+        group_names.append(external_id.without_role + "teachers")
+    course_code = external_id.course_id
     for r in role_suffixes:
         group_names.append(course_code + "-" + r)
     return get_sisu_groups_by_filter(ScimUserGroup.external_id.in_(group_names))
@@ -151,7 +157,7 @@ def create_groups_route(args: list[GroupCreateModel]) -> Response:
 
     # First, make sure user is eligible for access to all the requested groups.
     allowed_groups = get_potential_groups(u)
-    allowed_external_ids = {g.external_id.external_id for g in allowed_groups}
+    allowed_external_ids = {g.scim_user_group.external_id for g in allowed_groups}
     requested_external_ids = {a.externalId for a in args}
     not_allowed = requested_external_ids - allowed_external_ids
     if not_allowed:
@@ -163,7 +169,7 @@ def create_groups_route(args: list[GroupCreateModel]) -> Response:
     # Rights to already existing documents need to be updated too.
     name_map: dict[str, str | Missing] = {a.externalId: a.name for a in args}
     group_map: dict[str, UserGroup] = {
-        g.external_id.external_id: g for g in allowed_groups
+        g.scim_user_group.external_id: g for g in allowed_groups
     }
     created = []
     updated = []
@@ -171,7 +177,7 @@ def create_groups_route(args: list[GroupCreateModel]) -> Response:
     for r in requested_external_ids:
         g = group_map[r]
         name_m = name_map[r]
-        if not name_m:
+        if not isinstance(name_m, str):
             name = g.name
         else:
             name = name_m
@@ -186,7 +192,7 @@ def create_groups_route(args: list[GroupCreateModel]) -> Response:
             )
         expected_location = p.group_doc_root
         if g.admin_doc:
-            doc = g.admin_doc.docentries[0]
+            doc: DocInfo = g.admin_doc.docentries[0]
             doc.title = name
             # In theory, the admin doc can have multiple aliases, so we'll only update the one in the official location.
             for d in g.admin_doc.docentries:
@@ -248,7 +254,8 @@ def create_sisu_document(
 
 
 def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
-    if not ug.external_id.is_student and not ug.external_id.is_studysubgroup:
+    external_id = ug.scim_user_group
+    if not external_id.is_student and not external_id.is_studysubgroup:
         gn = parse_sisu_group_display_name(ug.display_name)
         assert gn is not None
         sp = gn.sisugroups_doc_path
@@ -256,7 +263,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
         settings_to_set = {
             "global_plugin_attrs": {
                 "all": {
-                    "sisugroups": ug.external_id.course_id,
+                    "sisugroups": external_id.course_id,
                 }
             },
             "macros": {
@@ -281,9 +288,9 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
 
             # Update rights for already existing activated groups.
             docs = d.parent.get_all_documents(
-                query_options=joinedload(DocEntry._block)
-                .joinedload(Block.managed_usergroup)
-                .joinedload(UserGroup.external_id),
+                query_options=selectinload(DocEntry._block)
+                .selectinload(Block.managed_usergroup)
+                .selectinload(UserGroup.external_id),
             )
             for doc in docs:
                 if doc == d:
@@ -295,7 +302,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
                     continue
                 if not group.external_id:
                     continue
-                if group.external_id.course_id != ug.external_id.course_id:
+                if group.external_id.course_id != external_id.course_id:
                     continue
                 doc.block.add_rights([ug], AccessType.owner)
 
@@ -307,7 +314,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
                 a = g_attrs.get("all")
                 if isinstance(a, dict):
                     sisugroups = a.get("sisugroups")
-                    if sisugroups == ug.external_id.course_id:
+                    if sisugroups == external_id.course_id:
                         has_sisu_attr = True
                     valid_settings = isinstance(sisugroups, str)
             if has_sisu_attr:
@@ -322,7 +329,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
                         plug = Plugin.from_paragraph(p, default_view_ctx)
                     except PluginException:
                         continue
-                    if plug.values.get("sisugroups") == ug.external_id.course_id:
+                    if plug.values.get("sisugroups") == external_id.course_id:
                         return
                 d.document.modifier_group_id = get_admin_group_id()
                 d.document.add_text(
@@ -330,7 +337,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
 # Sisu groups for course {gn.coursecode_and_time}
 
 ``` {{#table_extra plugin="tableForm"}}
-sisugroups: {ug.external_id.course_id}
+sisugroups: {external_id.course_id}
 table: true
 showInView: true
 report: false
@@ -714,10 +721,10 @@ def get_sisu_assessments(
         raise AccessDenied("You are not a TIM teacher.")
     pot_groups = get_potential_groups(teacher, course_filter=sisu_id)
     if not any(
-        g.external_id.course_id == sisu_id
+        g.scim_user_group.course_id == sisu_id
         and (
-            g.external_id.is_responsible_teacher
-            or g.external_id.is_administrative_person
+            g.scim_user_group.is_responsible_teacher
+            or g.scim_user_group.is_administrative_person
         )
         for g in pot_groups
     ):
@@ -739,7 +746,11 @@ def get_sisu_assessments(
         usergroups = groups_setting
     else:
         usergroups = groups
-    ugs = UserGroup.query.filter(UserGroup.name.in_(usergroups)).all()
+    ugs = list(
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(usergroups)))
+        .scalars()
+        .all()
+    )
     requested = set(usergroups)
     found = {ug.name for ug in ugs}
     not_found_gs = requested - found

@@ -1,20 +1,29 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, List, Dict, Tuple
 
 import attr
-from sqlalchemy.orm import joinedload
-from sqlalchemy.orm.collections import attribute_mapped_collection
-
-from timApp.auth.auth_models import BlockAccess
-from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
-from timApp.messaging.timMessage.internalmessage_models import (
-    InternalMessageDisplay,
+from sqlalchemy import select
+from sqlalchemy.orm import (
+    selectinload,
+    mapped_column,
+    Mapped,
+    DynamicMapped,
+    relationship,
+    attribute_keyed_dict,
 )
+from sqlalchemy.sql import Select
+
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
+from timApp.timdb.sqa import (
+    db,
+    TimeStampMixin,
+    include_if_exists,
+    is_attribute_loaded,
+    run_sql,
+)
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import (
     ANONYMOUS_GROUPNAME,
@@ -31,6 +40,15 @@ from timApp.user.usergroupmember import UserGroupMember, membership_current
 if TYPE_CHECKING:
     from timApp.item.block import Block
     from timApp.document.docentry import DocEntry
+    from timApp.user.user import User
+    from timApp.auth.auth_models import BlockAccess
+    from timApp.readmark.readparagraph import ReadParagraph
+    from timApp.note.usernote import UserNote
+    from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
+    from timApp.messaging.timMessage.internalmessage_models import (
+        InternalMessageDisplay,
+    )
+
 
 # Prefix is no longer needed because scimusergroup determines the Sisu (SCIM) groups.
 SISU_GROUP_PREFIX = ""
@@ -58,14 +76,13 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     the two groups are empty from the database's point of view.
     """
 
-    __tablename__ = "usergroup"
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Usergroup identifier."""
 
-    name = db.Column(db.Text, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(unique=True)
     """Usergroup name (textual identifier)."""
 
-    display_name = db.Column(db.Text, nullable=True)
+    display_name: Mapped[Optional[str]]
     """Usergroup display name. Currently only used for storing certain Sisu course properties:
      - course code
      - period (P1...P5)
@@ -77,64 +94,61 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def scim_display_name(self):
         return self.display_name
 
-    users = db.relationship(
-        "User",
-        UserGroupMember.__table__,
+    users: Mapped[List["User"]] = relationship(
+        secondary=UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
         secondaryjoin="UserGroupMember.user_id == User.id",
         back_populates="groups",
+        overlaps="group, user",
     )
-    memberships = db.relationship(
-        UserGroupMember,
+    memberships: DynamicMapped["UserGroupMember"] = relationship(
         back_populates="group",
         lazy="dynamic",
+        overlaps="users",
     )
-    memberships_sel = db.relationship(
-        UserGroupMember,
+    memberships_sel: Mapped[List["UserGroupMember"]] = relationship(
         back_populates="group",
         cascade="all, delete-orphan",
+        overlaps="memberships, users",
     )
-    current_memberships: dict[int, UserGroupMember] = db.relationship(
-        UserGroupMember,
+    current_memberships: Mapped[Dict[int, "UserGroupMember"]] = relationship(
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
-        collection_class=attribute_mapped_collection("user_id"),
+        collection_class=attribute_keyed_dict("user_id"),
         back_populates="group",
+        overlaps="memberships, memberships_sel, users",
     )
-    accesses = db.relationship(
-        "BlockAccess",
-        back_populates="usergroup",
-        lazy="dynamic",
+    accesses: DynamicMapped["BlockAccess"] = relationship(
+        back_populates="usergroup", lazy="dynamic"
     )
-    accesses_alt: dict[tuple[int, int], BlockAccess] = db.relationship(
-        "BlockAccess",
-        collection_class=attribute_mapped_collection("group_collection_key"),
+    accesses_alt: Mapped[Dict[Tuple[int, int], "BlockAccess"]] = relationship(
+        collection_class=attribute_keyed_dict("group_collection_key"),
         cascade="all, delete-orphan",
+        overlaps="accesses, usergroup",
     )
-    readparagraphs = db.relationship(
-        "ReadParagraph", back_populates="usergroup", lazy="dynamic"
+    readparagraphs: DynamicMapped["ReadParagraph"] = relationship(
+        back_populates="usergroup", lazy="dynamic"
     )
-    readparagraphs_alt = db.relationship("ReadParagraph")
-    notes = db.relationship("UserNote", back_populates="usergroup", lazy="dynamic")
-    notes_alt = db.relationship("UserNote")
+    readparagraphs_alt: Mapped[List["ReadParagraph"]] = relationship(
+        overlaps="readparagraphs, usergroup"
+    )
+    notes: DynamicMapped["UserNote"] = relationship(
+        back_populates="usergroup", lazy="dynamic"
+    )
+    notes_alt: Mapped[List["UserNote"]] = relationship(overlaps="notes, usergroup")
 
-    admin_doc: Block = db.relationship(
-        "Block",
-        secondary=UserGroupDoc.__table__,
-        lazy="select",
-        uselist=False,
+    admin_doc: Mapped[Optional["Block"]] = relationship(
+        secondary=UserGroupDoc.__table__
     )
 
     # For groups created from SCIM API
-    external_id: ScimUserGroup = db.relationship(
-        "ScimUserGroup", lazy="select", uselist=False
+    external_id: Mapped[Optional["ScimUserGroup"]] = relationship()
+
+    messagelist_membership: Mapped[List["MessageListTimMember"]] = relationship(
+        back_populates="user_group"
     )
 
-    messagelist_membership: list[MessageListTimMember] = db.relationship(
-        "MessageListTimMember", back_populates="user_group"
-    )
-
-    internalmessage_display: InternalMessageDisplay | None = db.relationship(
-        "InternalMessageDisplay", back_populates="usergroup"
+    internalmessage_display: Mapped[Optional["InternalMessageDisplay"]] = relationship(
+        back_populates="usergroup"
     )
 
     def __repr__(self):
@@ -151,6 +165,12 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     @property
     def scim_id(self):
         return self.external_id.external_id if self.external_id else None
+
+    @property
+    def scim_user_group(self) -> "ScimUserGroup":
+        if not self.external_id:
+            raise Exception(f"UserGroup {self.name} has no SCIM user group associated")
+        return self.external_id
 
     @property
     def scim_resource_type(self):
@@ -228,19 +248,31 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_by_name(name) -> UserGroup:
-        return UserGroup.query.filter_by(name=name).first()
+        return (
+            run_sql(select(UserGroup).filter_by(name=name).limit(1)).scalars().first()
+        )
 
     @staticmethod
     def get_anonymous_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=ANONYMOUS_GROUPNAME).one()
+        return (
+            run_sql(select(UserGroup).filter_by(name=ANONYMOUS_GROUPNAME))
+            .scalars()
+            .one()
+        )
 
     @staticmethod
     def get_admin_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=ADMIN_GROUPNAME).one()
+        return (
+            run_sql(select(UserGroup).filter_by(name=ADMIN_GROUPNAME)).scalars().one()
+        )
 
     @staticmethod
     def get_groupadmin_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=GROUPADMIN_GROUPNAME).one()
+        return (
+            run_sql(select(UserGroup).filter_by(name=GROUPADMIN_GROUPNAME))
+            .scalars()
+            .one()
+        )
 
     @staticmethod
     def get_organization_group(org: str) -> UserGroup:
@@ -254,13 +286,24 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_organizations() -> list[UserGroup]:
-        return UserGroup.query.filter(
-            UserGroup.name.endswith(" users") & UserGroup.name.notin_(SPECIAL_GROUPS)
-        ).all()
+        return (
+            run_sql(
+                select(UserGroup).filter(
+                    UserGroup.name.endswith(" users")
+                    & UserGroup.name.notin_(SPECIAL_GROUPS)
+                )
+            )
+            .scalars()
+            .all()
+        )
 
     @staticmethod
     def get_teachers_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=TEACHERS_GROUPNAME).one()
+        return (
+            run_sql(select(UserGroup).filter_by(name=TEACHERS_GROUPNAME))
+            .scalars()
+            .one()
+        )
 
     @staticmethod
     def get_user_creator_group() -> UserGroup:
@@ -281,7 +324,11 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_logged_in_group() -> UserGroup:
-        return UserGroup.query.filter_by(name=LOGGED_IN_GROUPNAME).one()
+        return (
+            run_sql(select(UserGroup).filter_by(name=LOGGED_IN_GROUPNAME))
+            .scalars()
+            .one()
+        )
 
 
 @lru_cache
@@ -299,17 +346,21 @@ def get_admin_group_id() -> int:
     return UserGroup.get_admin_group().id
 
 
-def get_usergroup_eager_query():
+def get_usergroup_eager_query() -> Select:
     from timApp.item.block import Block
 
-    return UserGroup.query.options(
-        joinedload(UserGroup.admin_doc).joinedload(Block.docentries)
-    ).options(joinedload(UserGroup.current_memberships))
+    return (
+        select(UserGroup)
+        .options(selectinload(UserGroup.admin_doc).selectinload(Block.docentries))
+        .options(selectinload(UserGroup.current_memberships))
+    )
 
 
 def get_sisu_groups_by_filter(f) -> list[UserGroup]:
     gs: list[UserGroup] = (
-        get_usergroup_eager_query().join(ScimUserGroup).filter(f).all()
+        run_sql(get_usergroup_eager_query().join(ScimUserGroup).filter(f))
+        .scalars()
+        .all()
     )
     return gs
 

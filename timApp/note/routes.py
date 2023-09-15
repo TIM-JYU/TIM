@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Any
 
 from flask import Response
-from sqlalchemy import true
-from sqlalchemy.orm import joinedload
+from sqlalchemy import true, select
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesshelper import (
     verify_comment_right,
@@ -33,7 +33,7 @@ from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
 from timApp.notification.pending_notification import PendingNotification
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
@@ -136,18 +136,20 @@ def get_notes(
     access_restriction = UserNote.access == "everyone"
     if private:
         access_restriction = true()
-    time_restriction = true()
+    time_restriction: Any = true()
     if start:
         time_restriction = time_restriction & (UserNote.created >= start)
     if end:
         time_restriction = time_restriction & (UserNote.created < end)
     d_ids = [d.id for d in docs]
-    ns = (
-        UserNote.query.filter(
-            UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction
+    ns = list(
+        run_sql(
+            select(UserNote)
+            .filter(UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction)
+            .options(selectinload(UserNote.usergroup))
+            .options(selectinload(UserNote.block).selectinload(Block.docentries))
         )
-        .options(joinedload(UserNote.usergroup))
-        .options(joinedload(UserNote.block).joinedload(Block.docentries))
+        .scalars()
         .all()
     )
     all_count = len(ns)
@@ -157,13 +159,19 @@ def get_notes(
         deleted_notes = list(
             map(
                 DeletedNote,
-                PendingNotification.query.filter(
-                    PendingNotification.doc_id.in_(d_ids)
-                    & (PendingNotification.kind == NotificationType.CommentDeleted)
+                run_sql(
+                    select(PendingNotification)
+                    .filter(
+                        PendingNotification.doc_id.in_(d_ids)
+                        & (PendingNotification.kind == NotificationType.CommentDeleted)
+                    )
+                    .options(
+                        selectinload(PendingNotification.block).selectinload(
+                            Block.docentries
+                        )
+                    )
                 )
-                .options(
-                    joinedload(PendingNotification.block).joinedload(Block.docentries)
-                )
+                .scalars()
                 .all(),
             )
         )

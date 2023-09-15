@@ -33,6 +33,9 @@ svg_html = f"""
 
 class MathTest(TimRouteTest):
     def test_svg_math(self):
+        self.impl_test_svg_math()
+
+    def impl_test_svg_math(self):
         self.login_test1()
         d = self.create_doc(initial_par="$a+b$")
         d.document.set_settings({"math_type": "svg"})
@@ -64,7 +67,7 @@ class MathTest(TimRouteTest):
         )
 
     def test_mathtype_change(self):
-        d = self.test_svg_math()
+        d = self.impl_test_svg_math()
         d.document.set_settings({"math_type": "mathjax"})
         self.assert_same_html(
             self.get(d.url, as_tree=True).cssselect(".parContent")[1], mathjax_html

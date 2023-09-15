@@ -5,6 +5,7 @@ import dateutil
 import dateutil.parser
 
 from timApp.document.version import Version
+from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
 
@@ -86,7 +87,7 @@ class ChangelogEntry:
             "ver": self.version,
             "time": self.time,
             "op": self.op.op.value,
-            "group": UserGroup.query.get(self.group_id).name,
+            "group": db.session.get(UserGroup, self.group_id).name,
             "par_id": self.par_id,
             "op_params": self.op.to_json(),
         }

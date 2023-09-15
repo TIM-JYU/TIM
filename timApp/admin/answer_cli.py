@@ -2,12 +2,12 @@ import json
 import sys
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Sequence, Optional
+from typing import Sequence
 
 import click
 from flask.cli import AppGroup
-from sqlalchemy import func
-from sqlalchemy.orm import joinedload
+from sqlalchemy import func, select, delete
+from sqlalchemy.orm import selectinload
 
 from timApp.admin.datetimetype import DateTimeType
 from timApp.admin.timitemtype import TimDocumentType, TimItemType
@@ -20,6 +20,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import Item
 from timApp.plugin.taskid import TaskId
+from timApp.timdb.sqa import db, run_sql
 from timApp.upload.uploadedfile import PluginUpload
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -37,12 +38,16 @@ answer_cli = AppGroup("answer")
 @answer_cli.command()
 @click.option("--dry-run/--no-dry-run", default=True)
 def fix_double_c(dry_run: bool) -> None:
-    answers: list[Answer] = (
-        Answer.query.filter(
-            (Answer.answered_on > datetime(year=2020, month=2, day=9))
-            & Answer.content.startswith('{"c": {"c":')
+    answers = (
+        run_sql(
+            select(Answer)
+            .filter(
+                (Answer.answered_on > datetime(year=2020, month=2, day=9))
+                & Answer.content.startswith('{"c": {"c":')
+            )
+            .order_by(Answer.id)
         )
-        .order_by(Answer.id)
+        .scalars()
         .all()
     )
     count = 0
@@ -75,10 +80,11 @@ class AnswerDeleteResult:
 @click.option("--dry-run/--no-dry-run", default=True)
 def clear_all(doc: DocInfo, dry_run: bool) -> None:
     ids = (
-        Answer.query.filter(Answer.task_id.startswith(f"{doc.id}."))
-        .with_entities(Answer.id)
+        run_sql(select(Answer.id).filter(Answer.task_id.startswith(f"{doc.id}.")))
+        .scalars()
         .all()
     )
+
     cnt = len(ids)
     delete_answers_with_ids(ids)
     click.echo(f"Total {cnt}")
@@ -101,12 +107,12 @@ def clear(
     verbose: bool,
 ) -> None:
     tasks_to_delete = [f"{doc.id}.{t}" for t in task]
-    q = Answer.query.filter(Answer.task_id.in_(tasks_to_delete))
+    stmt = select(Answer.id).filter(Answer.task_id.in_(tasks_to_delete))
     if answer_from:
-        q = q.filter(Answer.answered_on >= answer_from)
+        stmt = stmt.filter(Answer.answered_on >= answer_from)
     if answer_to:
-        q = q.filter(Answer.answered_on <= answer_to)
-    ids = q.with_entities(Answer.id).all()
+        stmt = stmt.filter(Answer.answered_on <= answer_to)
+    ids = run_sql(stmt).scalars().all()
     cnt = len(ids)
     result = delete_answers_with_ids(ids, verbose)
     click.echo(f"Total {cnt}")
@@ -118,28 +124,67 @@ def delete_answers_with_ids(
 ) -> AnswerDeleteResult:
     if not isinstance(ids, list):
         raise TypeError("ids should be a list of answer ids")
-    d_ua = UserAnswer.query.filter(UserAnswer.answer_id.in_(ids)).delete(
-        synchronize_session=False
+    d_ua = len(
+        run_sql(
+            delete(UserAnswer)
+            .where(UserAnswer.answer_id.in_(ids))
+            .returning(UserAnswer.id)
+            .execution_options(synchronize_session=False)
+        ).all()
     )
-    d_as = AnswerSaver.query.filter(AnswerSaver.answer_id.in_(ids)).delete(
-        synchronize_session=False
+    d_as = len(
+        (
+            run_sql(
+                delete(AnswerSaver)
+                .where(AnswerSaver.answer_id.in_(ids))
+                .returning(AnswerSaver.user_id, AnswerSaver.answer_id)
+                .execution_options(synchronize_session=False)
+            ).all()
+        )
     )
-    anns = Annotation.query.filter(Annotation.answer_id.in_(ids))
-    d_acs = AnnotationComment.query.filter(
-        AnnotationComment.annotation_id.in_(anns.with_entities(Annotation.id))
-    ).delete(synchronize_session=False)
-    d_anns = anns.delete(synchronize_session=False)
-    ans_items = Answer.query.filter(Answer.id.in_(ids))
+    anns_stmt = select(Annotation.id).filter(Annotation.answer_id.in_(ids))
+    d_acs = len(
+        (
+            run_sql(
+                delete(AnnotationComment)
+                .where(
+                    AnnotationComment.annotation_id.in_(
+                        anns_stmt.with_only_columns(Annotation.id)
+                    )
+                )
+                .returning(AnnotationComment.id)
+                .execution_options(synchronize_session=False)
+            ).all()
+        )
+    )
+    d_anns = len(
+        (
+            run_sql(
+                delete(Annotation)
+                .where(Annotation.id.in_(anns_stmt))
+                .returning(Annotation.id)
+                .execution_options(synchronize_session=False)
+            ).all()
+        )
+    )
+    ans_items_stmt = select(Answer).filter(Answer.id.in_(ids))
     if verbose:
         click.echo(
             "\n".join(
                 [
                     f"taskid: {a.task_id}, points: {a.points}, answered_on: {a.answered_on}; saver: {a.saver}"
-                    for a in ans_items
+                    for a in run_sql(ans_items_stmt).scalars()
                 ]
             )
         )
-    d_ans = ans_items.delete(synchronize_session=False)
+    d_ans = len(
+        run_sql(
+            delete(Answer)
+            .where(Answer.id.in_(ans_items_stmt.with_only_columns(Answer.id)))
+            .returning(Answer.id)
+            .execution_options(synchronize_session=False)
+        ).all()
+    )
     return AnswerDeleteResult(
         useranswer=d_ua,
         answersaver=d_as,
@@ -159,14 +204,17 @@ def revalidate(
     doc: DocInfo, deadline: datetime, group: str, dry_run: bool, may_invalidate: bool
 ) -> None:
     answers: list[tuple[Answer, str]] = (
-        Answer.query.filter(Answer.task_id.startswith(f"{doc.id}."))
-        .join(User, Answer.users)
-        .join(UserGroup, User.groups)
-        .filter(UserGroup.name == group)
-        .order_by(Answer.answered_on.desc())
-        .with_entities(Answer, User.name)
+        run_sql(
+            select(Answer, User.name)
+            .join(User, Answer.users)
+            .join(UserGroup, User.groups)
+            .filter(Answer.task_id.startswith(f"{doc.id}."))
+            .order_by(Answer.answered_on.desc())
+        )
+        .scalars()
         .all()
     )
+
     changed_to_valid = 0
     changed_to_invalid = 0
     for a, name in answers:
@@ -199,11 +247,15 @@ def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
     if limit < to:
         click.echo("limit must be >= to")
         sys.exit(1)
-    q = Answer.query.filter(Answer.task_id.startswith(f"{doc.id}."))
-    total = q.count()
+    stmt = select(Answer).filter(Answer.task_id.startswith(f"{doc.id}."))
+    total = db.session.scalar(stmt.with_only_columns(func.count()))
     anss: list[Answer] = (
-        q.filter(func.length(Answer.content) > limit)
-        .options(joinedload(Answer.users_all))
+        run_sql(
+            stmt.filter(func.length(Answer.content) > limit).options(
+                selectinload(Answer.users_all)
+            )
+        )
+        .scalars()
         .all()
     )
     note = " (answer truncated)"
@@ -244,10 +296,14 @@ def compress_uploads(item: Item, dry_run: bool) -> None:
     docs = collect_docs(item)
     for d in docs:
         uploads: list[Block] = (
-            Answer.query.filter(Answer.task_id.startswith(f"{d.id}."))
-            .join(AnswerUpload)
-            .join(Block)
-            .with_entities(Block)
+            run_sql(
+                select(Block)
+                .select_from(Answer)
+                .filter(Answer.task_id.startswith(f"{d.id}."))
+                .join(AnswerUpload)
+                .join(Block)
+            )
+            .scalars()
             .all()
         )
         for u in uploads:
@@ -319,13 +375,13 @@ def delete_old_answers(d: DocInfo, tasks: list[str]) -> DeleteResult:
     base_query = valid_answers_query(
         [TaskId(doc_id=d.id, task_name=t) for t in tasks]
     ).join(User, Answer.users)
-    latest = base_query.group_by(Answer.task_id, User.id).with_entities(
+    latest = base_query.group_by(Answer.task_id, User.id).with_only_columns(
         func.max(Answer.id)
     )
-    todelete = base_query.filter(Answer.id.notin_(latest)).with_entities(Answer.id)
-    tot = base_query.count()
-    del_tot = todelete.count()
-    adr = delete_answers_with_ids(todelete.all())
+    todelete = base_query.filter(Answer.id.notin_(latest)).with_only_columns(Answer.id)
+    tot = db.session.scalar(base_query.with_only_columns(func.count()))
+    del_tot = db.session.scalar(todelete.with_only_columns(func.count()))
+    adr = delete_answers_with_ids(run_sql(todelete).scalars().all())
     r = DeleteResult(total=tot, deleted=del_tot, adr=adr)
     return r
 

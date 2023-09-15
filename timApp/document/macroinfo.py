@@ -15,7 +15,7 @@ from timApp.markdown.markdownconverter import (
     create_environment,
     TimSandboxedEnvironment,
 )
-from timApp.util.rndutils import get_rands_as_dict
+from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import cached_property
 
 if TYPE_CHECKING:
@@ -154,7 +154,7 @@ def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
 def get_rnd_macros(
     rndmacros_setting: dict[str, str], user: User | None
 ) -> dict[str, str]:
-    rnd_seed = user.name if user else None
+    rnd_seed: SeedType | None = user.name if user else None
     state = None
     ret = {}
     rndm = rndmacros_setting

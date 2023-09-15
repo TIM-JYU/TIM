@@ -19,11 +19,12 @@ __license__ = "MIT"
 __date__ = "25.4.2022"
 
 from dataclasses import dataclass
+from typing import Optional
 
 import pypandoc
+from sqlalchemy import select, ForeignKey
+from sqlalchemy.orm import with_polymorphic, mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
-from timApp.user.usergroup import UserGroup
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import (
@@ -33,9 +34,10 @@ from timApp.document.translation.translationparser import (
     Table,
     Translate,
 )
+from timApp.timdb.sqa import run_sql, db
+from timApp.user.usergroup import UserGroup
 from timApp.util import logger
 from timApp.util.flask.requesthelper import RouteException
-
 
 TranslateBlock = list[TranslateApproval]
 """Typedef to represent logically connected parts of non- and translatable text.
@@ -73,12 +75,10 @@ class TranslationService(db.Model):
     possible machine translators.
     """
 
-    __tablename__ = "translationservice"
-
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Translation service identifier."""
 
-    service_name = db.Column(db.Text, unique=True, nullable=False)
+    service_name: Mapped[str] = mapped_column(unique=True)
     """Human-readable name of the machine translator. Also used as an
     identifier."""
 
@@ -168,7 +168,7 @@ class TranslationService(db.Model):
 
     # Polymorphism allows querying multiple objects by their class e.g.
     # `TranslationService.query`.
-    __mapper_args__ = {"polymorphic_on": service_name}
+    __mapper_args__ = {"polymorphic_on": "service_name"}
 
 
 class TranslationServiceKey(db.Model):
@@ -176,31 +176,25 @@ class TranslationServiceKey(db.Model):
     machine translator and that one or more users are in possession of.
     """
 
-    __tablename__ = "translationservicekey"
-
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Key identifier."""
 
     # TODO Come up with a better name?
-    api_key = db.Column(db.Text, nullable=False)
+    api_key: Mapped[str]
     """The key needed for using related service."""
 
-    group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"), nullable=False)
-    group: UserGroup = db.relationship("UserGroup", uselist=False)
+    group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"))
+    group: Mapped[UserGroup] = relationship()
     """The group that can use this key."""
 
-    service_id = db.Column(
-        db.Integer,
-        db.ForeignKey("translationservice.id"),
-        nullable=False,
-    )
-    service: TranslationService = db.relationship("TranslationService", uselist=False)
+    service_id: Mapped[int] = mapped_column(ForeignKey("translationservice.id"))
+    service: Mapped[TranslationService] = relationship()
     """The service that this key is used in."""
 
     @staticmethod
     def get_by_user_group(
         user_group: UserGroup | None,
-    ) -> "TranslationServiceKey":
+    ) -> Optional["TranslationServiceKey"]:
         """
         Query a key based on a group that could have access to it.
 
@@ -208,8 +202,14 @@ class TranslationServiceKey(db.Model):
         :return: The first matching TranslationServiceKey instance, if one is
          found.
         """
-        return TranslationServiceKey.query.get(
-            TranslationServiceKey.group_id == user_group
+        return (
+            run_sql(
+                select(TranslationServiceKey)
+                .filter(TranslationServiceKey.group_id == user_group)
+                .limit(1)
+            )
+            .scalars()
+            .first()
         )
 
     def to_json(self) -> dict:
@@ -229,6 +229,8 @@ class TranslationServiceKey(db.Model):
 # noinspection PyAbstractClass
 class RegisteredTranslationService(TranslationService):
     """A translation service whose use is constrained by user group."""
+
+    __abstract__ = True
 
     def register(self, user_group: UserGroup) -> None:
         """
@@ -277,8 +279,12 @@ class TranslateProcessor:
         """
 
         translator = (
-            TranslationService.query.with_polymorphic("*")
-            .filter(TranslationService.service_name == translator_code)
+            run_sql(
+                select(with_polymorphic(TranslationService, "*")).filter(
+                    TranslationService.service_name == translator_code
+                )
+            )
+            .scalars()
             .one()
         )
 

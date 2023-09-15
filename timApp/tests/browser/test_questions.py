@@ -5,6 +5,7 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
+from sqlalchemy import select
 
 from timApp.answer.answer import Answer
 from timApp.document.yamlblock import YamlBlock
@@ -13,6 +14,7 @@ from timApp.tests.browser.browsertest import (
     find_button_by_text,
     find_by_attr_name,
 )
+from timApp.timdb.sqa import run_sql
 
 ChoiceList = list[tuple[str, str]]
 ElementList = list[WebElement]
@@ -386,6 +388,12 @@ class QuestionTest(BrowserTest):
                 continue
 
         # check answer format is correct
-        a = Answer.query.filter_by(task_id=f'{d.id}.{qst_par.get_attr("taskId")}').one()
+        a = (
+            run_sql(
+                select(Answer).filter_by(task_id=f'{d.id}.{qst_par.get_attr("taskId")}')
+            )
+            .scalars()
+            .one()
+        )
         self.assertEqual(expected_answer, a.content)
         self.assertEqual(expected_points, a.points)

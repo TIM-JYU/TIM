@@ -10,7 +10,10 @@ from typing import Any
 from urllib.parse import urlencode
 
 import requests
+from flask.testing import FlaskClient
+from flask_testing import LiveServerTestCase
 from selenium import webdriver
+from selenium.common import WebDriverException
 from selenium.common.exceptions import (
     NoSuchElementException,
     StaleElementReferenceException,
@@ -31,8 +34,7 @@ from timApp.tests.db.timdbtest import (
     TEST_USER_2_NAME,
     TEST_USER_3_NAME,
 )
-from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.tests.timliveserver import TimLiveServer
+from timApp.tests.server.timroutetest import TimRouteTestBase
 from timApp.timdb.sqa import db
 from timApp.user.user import Consent
 
@@ -50,7 +52,7 @@ options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
 
-class BrowserTest(TimLiveServer, TimRouteTest):
+class BrowserTest(LiveServerTestCase, TimRouteTestBase):
     login_dropdown_path = "//tim-login-menu/tim-user-menu/div/button"
     screenshot_dir = "/service/screenshots"
 
@@ -60,8 +62,16 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def get_screenshot_tolerance(self) -> float:
         return 5
 
+    def create_app(self):
+        from timApp.tim_app import app
+
+        return app
+
+    def _init_client(self) -> FlaskClient:
+        return self.app.test_client()
+
     def setUp(self):
-        TimLiveServer.setUp(self)
+        TimRouteTestBase.setUp(self)
         self.drv = webdriver.Chrome(options=options)
         # Some CI browser tests run slower and can cause render timeouts without a longer script timeout
         self.drv.implicitly_wait(10)
@@ -76,7 +86,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         :param password: User password
         :param name: User's full name. Used to test that the user is logged in properly.
         """
-        self.client.__exit__(None, None, None)
+        # self.client.__exit__(None, None, None)
         self.goto("")
         elem = self.drv.find_element(By.XPATH, "//tim-login-menu/button")
         elem.click()
@@ -94,7 +104,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.wait.until(
             ec.text_to_be_present_in_element((By.XPATH, self.login_dropdown_path), name)
         )
-        self.client.__enter__()
+        # self.client.__enter__()
 
     @contextmanager
     def temp_config(self, settings: dict[str, Any]):
@@ -333,7 +343,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             self.save_screenshot(scn_path)
         except Exception as e:
             warnings.warn(f"Failed to save screenshot to {scn_path}: {e}")
-        TimLiveServer.tearDown(self)
+        TimRouteTestBase.tearDown(self)
         self.drv.quit()
 
     def goto_document(self, d: DocInfo, view="view", query=None):
@@ -472,10 +482,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         :return: Response as a JSON dict.
 
         """
-        if self.client.application.got_first_request:
-            with self.client.session_transaction() as s:
-                s.pop("last_doc", None)
-                s.pop("came_from", None)
+        with self.client.session_transaction() as s:
+            s.pop("last_doc", None)
+            s.pop("came_from", None)
         return self.post(
             "/emailLogin",
             data={"email": email, "password": passw, "add_user": add},

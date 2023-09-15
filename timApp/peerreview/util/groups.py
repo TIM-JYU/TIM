@@ -1,15 +1,16 @@
 from collections import defaultdict
 from datetime import datetime
 from random import shuffle
-from typing import DefaultDict
+from typing import DefaultDict, Sequence
+
+from sqlalchemy import select
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, get_latest_answers_query
 from timApp.document.docinfo import DocInfo
 from timApp.peerreview.peerreview import PeerReview
-from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember, membership_current
@@ -23,12 +24,11 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
     if user_groups:
         user_ids = [
             uid
-            for uid, in (
-                UserGroupMember.query.join(UserGroup, UserGroupMember.group)
+            for uid in run_sql(
+                select(UserGroupMember.user_id)
+                .join(UserGroup, UserGroupMember.group)
                 .filter(membership_current & (UserGroup.name.in_(user_groups)))
-                .with_entities(UserGroupMember.user_id)
-                .all()
-            )
+            ).scalars()
         ]
     valid_only = not settings.peer_review_allow_invalid()
     points = get_points_by_rule(None, task_ids, user_ids, show_valid_only=valid_only)
@@ -62,7 +62,7 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
             f"(set to {review_count} but {len(users)} users have answered so far)"
         )
 
-    for idx, user in enumerate(users):
+    for idx, _ in enumerate(users):
         pairings_left = review_count + 1
         start = idx + 1
         end = idx + pairings_left
@@ -82,7 +82,9 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
     # PeerReview rows and pairings will be the same for every task, even if target did not answer to some of tasks
     # If target has an answer in a task, try to add it to PeerReview table. If not, just leave it empty
     for t in task_ids:
-        answers: list[Answer] = get_latest_answers_query(t, users, valid_only).all()
+        answers: Sequence[Answer] = (
+            run_sql(get_latest_answers_query(t, users, valid_only)).scalars().all()
+        )
         excluded_users: list[User] = []
         filtered_answers = []
         for answer in answers:

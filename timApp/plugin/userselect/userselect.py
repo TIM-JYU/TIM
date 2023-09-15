@@ -4,6 +4,7 @@ from enum import Enum
 
 import filelock
 from flask import render_template_string, Response, current_app
+from sqlalchemy import select
 
 from timApp.answer.backup import sync_user_group_memberships_if_enabled
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access, verify_admin
@@ -41,7 +42,7 @@ from timApp.plugin.userselect.dist_right_util import (
     apply_dist_right_actions,
 )
 from timApp.plugin.userselect.utils import group_expired_offset
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -516,13 +517,17 @@ def undo_field_actions(
 def get_groups(
     cur_user: User, add: list[str], remove: list[str], change_all_groups: list[str]
 ) -> tuple[list[UserGroup], list[UserGroup], list[UserGroup]]:
-    add_groups: list[UserGroup] = UserGroup.query.filter(UserGroup.name.in_(add)).all()
-    remove_groups: list[UserGroup] = UserGroup.query.filter(
-        UserGroup.name.in_(remove)
-    ).all()
-    change_all_groups_ugs: list[UserGroup] = UserGroup.query.filter(
-        UserGroup.name.in_(change_all_groups)
-    ).all()
+    add_groups: list[UserGroup] = list(
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(add))).scalars().all()
+    )
+    remove_groups: list[UserGroup] = list(
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(remove))).scalars().all()
+    )
+    change_all_groups_ugs: list[UserGroup] = list(
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(change_all_groups)))
+        .scalars()
+        .all()
+    )
     all_groups: dict[str, UserGroup] = {
         ug.name: ug for ug in (add_groups + remove_groups + change_all_groups_ugs)
     }
@@ -718,11 +723,19 @@ def apply_permission_actions(
 
     for to_confirm in confirm:
         doc_entry = doc_entries[to_confirm.doc_path]
-        ba_confirm: BlockAccess | None = BlockAccess.query.filter_by(
-            type=to_confirm.type.value,
-            block_id=doc_entry.block.id,
-            usergroup_id=user_group.id,
-        ).first()
+        ba_confirm: BlockAccess | None = (
+            run_sql(
+                select(BlockAccess)
+                .filter_by(
+                    type=to_confirm.type.value,
+                    block_id=doc_entry.block.id,
+                    usergroup_id=user_group.id,
+                )
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
         if ba_confirm and ba_confirm.require_confirm:
             ba_confirm.do_confirm()
             update_messages.append(
@@ -731,11 +744,19 @@ def apply_permission_actions(
 
     for to_change in change_time:
         doc_entry = doc_entries[to_change.doc_path]
-        ba_change: BlockAccess | None = BlockAccess.query.filter_by(
-            type=to_change.type.value,
-            block_id=doc_entry.block.id,
-            usergroup_id=user_group.id,
-        ).first()
+        ba_change: BlockAccess | None = (
+            run_sql(
+                select(BlockAccess)
+                .filter_by(
+                    type=to_change.type.value,
+                    block_id=doc_entry.block.id,
+                    usergroup_id=user_group.id,
+                )
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
         if ba_change and ba_change.accessible_to is not None:
             ba_change.accessible_to += timedelta(minutes=to_change.minutes)
             update_messages.append(

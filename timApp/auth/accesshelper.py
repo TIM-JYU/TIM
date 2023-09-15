@@ -7,7 +7,7 @@ from pathlib import Path
 from flask import flash, current_app
 from flask import request, g
 from marshmallow import missing
-from sqlalchemy import inspect
+from sqlalchemy import inspect, select
 
 from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
@@ -43,7 +43,7 @@ from timApp.plugin.plugin import (
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
@@ -288,24 +288,34 @@ def abort_if_not_access_and_required(
 
     if check_duration:
         ba = (
-            BlockAccess.query.filter(BlockAccess.block_id.in_(block_ids))
-            .filter_by(
-                type=access_type.value,
-                usergroup_id=get_current_user_group(),
+            run_sql(
+                select(BlockAccess)
+                .filter(BlockAccess.block_id.in_(block_ids))
+                .filter_by(
+                    type=access_type.value,
+                    usergroup_id=get_current_user_group(),
+                )
+                .limit(1)
             )
+            .scalars()
             .first()
         )
         if ba is None:
             ba_group: BlockAccess = (
-                BlockAccess.query.filter(BlockAccess.block_id.in_(block_ids))
-                .filter_by(type=access_type.value)
-                .filter(
-                    BlockAccess.usergroup_id.in_(
-                        get_current_user_object()
-                        .get_groups(include_expired=False)
-                        .with_entities(UserGroup.id)
+                run_sql(
+                    select(BlockAccess)
+                    .filter(BlockAccess.block_id.in_(block_ids))
+                    .filter_by(type=access_type.value)
+                    .filter(
+                        BlockAccess.usergroup_id.in_(
+                            get_current_user_object()
+                            .get_groups(include_expired=False)
+                            .with_only_columns(UserGroup.id)
+                        )
                     )
+                    .limit(1)
                 )
+                .scalars()
                 .first()
             )
             if ba_group is not None:
@@ -664,7 +674,7 @@ def verify_answer_access(
     required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
     allow_grace_period: bool = False,
 ) -> tuple[Answer, int]:
-    answer: Answer = Answer.query.get(answer_id)
+    answer: Answer = db.session.get(Answer, answer_id)
     if answer is None:
         raise RouteException("Non-existent answer")
     tid = TaskId.parse(answer.task_id)

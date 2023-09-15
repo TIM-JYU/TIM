@@ -11,6 +11,7 @@ from pathlib import Path
 from flask import current_app
 from pypandoc import _as_unicode, _validate_formats
 from pypandoc.py3compat import string_types, cast_bytes
+from sqlalchemy import select
 
 from timApp.auth.accesshelper import has_view_access
 from timApp.auth.sessioninfo import get_current_user_object
@@ -49,6 +50,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.dbaccess import get_files_path
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.utils import cache_folder_path
 from tim_common.html_sanitize import sanitize_html
@@ -269,7 +271,6 @@ class DocumentPrinter:
             ]
         ] = []
         for par in pars:
-
             # do not print document settings pars
             if par.is_setting():
                 continue
@@ -577,7 +578,6 @@ class DocumentPrinter:
         """
 
         with tempfile.NamedTemporaryFile(suffix=".latex", delete=True) as template_file:
-
             if self._template_to_use:
                 template_content = DocumentPrinter.parse_template_content(
                     doc_to_print=self._doc_entry, template_doc=self._template_to_use
@@ -651,7 +651,6 @@ class DocumentPrinter:
 
             # TODO: add also variables from texpandocvariables document setting, but this may lead to security hole?
             try:
-
                 tim_convert_text(
                     source=src,
                     from_format=from_format,
@@ -741,7 +740,6 @@ class DocumentPrinter:
 
         current_folder = doc_entry.parent
         while current_folder is not None:
-
             path = os.path.join(current_folder.get_full_path(), TEMPLATES_FOLDER)
 
             templates_folder = Folder.find_by_path(path)
@@ -866,17 +864,21 @@ class DocumentPrinter:
         plugins_user_print: bool = False,
         url_macros: dict[str, str] | None = None,
     ) -> str | None:
-        # noinspection PyUnresolvedReferences
         existing_print: PrintedDoc | None = (
-            PrintedDoc.query.filter_by(
-                doc_id=self._doc_entry.id,
-                template_doc_id=self.get_template_id(),
-                file_type=file_type.value,
-                version=self.hash_doc_print(
-                    plugins_user_print=plugins_user_print, url_macros=url_macros
-                ),
+            run_sql(
+                select(PrintedDoc)
+                .filter_by(
+                    doc_id=self._doc_entry.id,
+                    template_doc_id=self.get_template_id(),
+                    file_type=file_type.value,
+                    version=self.hash_doc_print(
+                        plugins_user_print=plugins_user_print, url_macros=url_macros
+                    ),
+                )
+                .order_by(PrintedDoc.id.desc())
+                .limit(1)
             )
-            .order_by(PrintedDoc.id.desc())
+            .scalars()
             .first()
         )
         if existing_print is None or not os.path.exists(existing_print.path_to_file):
@@ -999,7 +1001,6 @@ def tim_convert_input(
             else:
                 f.write(source)
     else:
-
         input_file = [source] if not string_input else []
         args = [pandoc_path, "--from=" + from_format, "--to=" + to]
 
@@ -1053,8 +1054,7 @@ def tim_convert_input(
         stderr = _decode_result(stderr)
         if stdout or stderr:
             raise RuntimeError(
-                'Pandoc died with exitcode "%s" during conversion. \nSource=\n%s'
-                % (stdout + stderr, number_lines(source))
+                f'Pandoc died with error "{stderr}" during conversion.\nOutput: {stdout}.\nSource=\n{number_lines(source)}'
             )
 
         with open(latex_file, encoding="utf-8") as r:

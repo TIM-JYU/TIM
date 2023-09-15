@@ -10,6 +10,7 @@ import re
 from dataclasses import field
 
 from flask import Response
+from sqlalchemy import select
 
 from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import (
@@ -32,7 +33,7 @@ from timApp.peerreview.util.peerreview_utils import (
     get_all_reviews,
     get_reviews_related_to_user,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User, has_no_higher_right
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import (
@@ -88,7 +89,7 @@ def add_annotation(
                 require_teacher_if_not_own=True,
             )
         except AccessDenied:
-            a: Answer = Answer.query.get(answer_id)
+            a: Answer = db.session.get(Answer, answer_id)
             if a.has_many_collaborators:
                 raise RouteException(
                     "Reviewing answers with multiple collaborators not supported yet"
@@ -129,7 +130,10 @@ def check_visibility_and_maybe_get_doc(
         return True, d
     if ann.visible_to == AnnotationVisibility.everyone.value:
         return True, d
-    d = get_doc_or_abort(ann.document_id)
+    doc_id = ann.document_id
+    if doc_id is None:
+        doc_id = -1
+    d = get_doc_or_abort(doc_id)
     if (
         ann.visible_to == AnnotationVisibility.teacher.value
         and user.has_teacher_access(d)
@@ -149,7 +153,10 @@ def check_annotation_edit_access_and_maybe_get_doc(
     if user.id == ann.annotator_id:
         return True, d
     if not d:
-        d = get_doc_or_abort(ann.document_id)
+        doc_id = ann.document_id
+        if doc_id is None:
+            doc_id = -1
+        d = get_doc_or_abort(doc_id)
     verify_teacher_access(d)
     return True, d
 
@@ -180,7 +187,10 @@ def update_annotation(
     ann.color = color
 
     if not d:
-        d = get_doc_or_abort(ann.document_id)
+        doc_id = ann.document_id
+        if doc_id is None:
+            doc_id = -1
+        d = get_doc_or_abort(doc_id)
     if has_teacher_access(d):
         ann.points = points
     if coord:
@@ -224,7 +234,13 @@ def invalidate_annotation(id: int) -> Response:
 
 def get_annotation_or_abort(ann_id: int) -> Annotation:
     # Possibly bug: We need to create a new query object, otherwise raiseload() seems to pollute User's relations
-    ann = set_annotation_query_opts(db.session.query(Annotation)).get(ann_id)
+    ann = (
+        run_sql(
+            set_annotation_query_opts(select(Annotation).filter_by(id=ann_id)).limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if not ann:
         raise RouteException(f"Annotation with id {ann_id} not found")
     return ann
@@ -244,7 +260,10 @@ def add_comment_route(id: int, content: str) -> Response:
     if not content:
         raise RouteException("Comment must not be empty")
     if not d:
-        d = get_doc_or_abort(a.document_id)
+        doc_id = a.document_id
+        if doc_id is None:
+            doc_id = -1
+        d = get_doc_or_abort(doc_id)
     a.comments.append(AnnotationComment(content=content, commenter_id=commenter.id))
     # TODO: Send email to annotator if commenter is not the annotator.
     db.session.commit()
@@ -267,10 +286,10 @@ def anonymize_annotations(anns: list[Annotation], current_user_id: int) -> None:
     """
     for ann in anns:
         if ann.annotator.id != current_user_id:
-            ann.annotator.anonymize = True
+            ann.annotator.is_anonymized = True
         for c in ann.comments:
             if c.commenter.id != current_user_id:
-                c.commenter.anonymize = True
+                c.commenter.is_anonymized = True
 
 
 @annotations.get("/<int:doc_id>/get_annotations")
@@ -317,12 +336,12 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
         revset = {r.reviewer_id for r in peer_reviews}
         for ann in results:
             if ann.annotator.id != current_user.id and ann.annotator_id in revset:
-                ann.annotator.hide_name = True
+                ann.annotator.is_name_hidden = True
         for p in peer_reviews:
             if p.reviewer_id != current_user.id:
-                p.reviewer.hide_name = True
+                p.reviewer.is_name_hidden = True
             if p.reviewable_id != current_user:
-                p.reviewable.hide_name = True
+                p.reviewable.is_name_hidden = True
 
     return no_cache_json_response(
         {"annotations": results, "peer_reviews": peer_reviews}, date_conversion=True

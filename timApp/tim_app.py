@@ -55,9 +55,9 @@ from timApp.lecture.lectureusers import LectureUsers
 from timApp.lecture.message import Message
 from timApp.lecture.question import Question
 from timApp.lecture.questionactivity import QuestionActivity
-from timApp.lecture.runningquestion import Runningquestion
-from timApp.lecture.showpoints import Showpoints
-from timApp.lecture.useractivity import Useractivity
+from timApp.lecture.runningquestion import RunningQuestion
+from timApp.lecture.showpoints import ShowPoints
+from timApp.lecture.useractivity import UserActivity
 from timApp.messaging.messagelist.messagelist_models import (
     MessageListModel,
     MessageListMember,
@@ -134,7 +134,7 @@ from timApp.velp.velp_models import (
     LabelInVelp,
     AnnotationComment,
 )
-from tim_common.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonProvider
 
 # All SQLAlchemy models must be imported in this module.
 all_models = (
@@ -198,9 +198,9 @@ all_models = (
     RegisteredTranslationService,
     ReversingTranslationService,
     RowOwnerInfo,
-    Runningquestion,
+    RunningQuestion,
     ScimUserGroup,
-    Showpoints,
+    ShowPoints,
     SlideStatus,
     Tag,
     TaskBlock,
@@ -208,7 +208,7 @@ all_models = (
     TranslationService,
     TranslationServiceKey,
     User,
-    Useractivity,
+    UserActivity,
     UserAnswer,
     UserContact,
     UserGroup,
@@ -238,6 +238,9 @@ all_models = (
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
 
+app.json = TimJsonProvider(app)
+app.json_provider_class = TimJsonProvider
+
 # The autoescape setting needs to be forced because the template file extension used in TIM is jinja2.
 # The more accurate file extension helps IDEs recognize the file type better.
 app.jinja_env.autoescape = True
@@ -251,12 +254,6 @@ Request.user_agent_class = SimpleUserAgent
 setup_logging(app)
 
 # Compress(app)
-
-# Disabling object expiration on commit makes testing easier
-# because sometimes objects would expire after calling a route.
-if app.config["TESTING"]:
-    db.session = db.create_scoped_session({"expire_on_commit": False})
-
 db.init_app(app)
 db.app = app
 migrate = Migrate(app, db)
@@ -272,9 +269,6 @@ app.jinja_env.filters["timreldatetime"] = humanize_datetime
 app.jinja_env.add_extension("jinja2.ext.do")
 
 mimetypes.add_type("text/plain", ".scss")
-
-app.json_encoder = TimJsonEncoder
-
 # Caddy sets the following headers:
 # X-Forwarded-For: <ip>
 # X-Forwarded-Proto: <http/https>
@@ -304,15 +298,17 @@ def print_schema(bind: str | None = None):
     :param bind: The bind to use.
 
     """
-    models = inspect.getmembers(
-        sys.modules[__name__], lambda x: inspect.isclass(x) and hasattr(x, "__table__")
-    )
-    eng = db.get_engine(app, bind)
+    with app.app_context():
+        models = inspect.getmembers(
+            sys.modules[__name__],
+            lambda x: inspect.isclass(x) and hasattr(x, "__table__"),
+        )
+        eng = db.engines[bind]
 
-    for _, model_class in models:
-        print(CreateTable(model_class.__table__).compile(eng), end=";")
-    print()
-    sys.stdout.flush()
+        for _, model_class in models:
+            print(CreateTable(model_class.__table__).compile(eng), end=";")
+        print()
+        sys.stdout.flush()
 
 
 # print_schema()

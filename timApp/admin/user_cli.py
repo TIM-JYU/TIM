@@ -11,15 +11,14 @@ from pprint import pprint
 import click
 from flask import current_app
 from flask.cli import AppGroup
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from timApp.admin.import_accounts import import_accounts_impl
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document
-from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.tim_app import get_home_organization_group
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.user import User, UserInfo, deleted_user_suffix
 from timApp.user.usercontact import UserContact
@@ -28,6 +27,7 @@ from timApp.user.usergroupmember import UserGroupMember
 from timApp.user.userutils import check_password_hash
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.utils import approximate_real_name
+from tim_common.timjsonencoder import TimJsonEncoder
 
 
 def create_user_info_set(u: User) -> set[str]:
@@ -93,7 +93,9 @@ def migrate_themes_to_styles(dry_run: bool, skip_warnings: bool) -> None:
 
         click.echo("Updating user styles")
 
-        for u in User.query.filter(User.prefs != None):  # type: User
+        for u in run_sql(
+            select(User).filter(User.prefs != None)
+        ).scalars():  # type: User
             prefs_json: dict = json.loads(u.prefs)
             css_combined = prefs_json.pop("css_combined", None)
             css_files: dict[str, bool] = prefs_json.pop("css_files", {})
@@ -334,7 +336,7 @@ def create(
 ) -> None:
     """Creates or updates a user."""
 
-    user = User.query.filter_by(name=username).first()
+    user = run_sql(select(User).filter_by(name=username).limit(1)).scalars().first()
     info = UserInfo(
         username=username,
         email=email or None,
@@ -388,7 +390,11 @@ From {lowerlimit} to {higherlimit}.
         return
     for i in range(lowerlimit, higherlimit + 1):
         strnum = str(i)
-        user = User.query.filter_by(name=username + strnum).first()
+        user = (
+            run_sql(select(User).filter_by(name=username + strnum).limit(1))
+            .scalars()
+            .first()
+        )
         # print(i)
         info = UserInfo(
             username=username + strnum,
@@ -410,11 +416,13 @@ From {lowerlimit} to {higherlimit}.
 @user_cli.command()
 def fix_aalto_student_ids() -> None:
     users_to_fix: list[User] = (
-        UserGroup.query.filter(
-            UserGroup.name.in_(["aalto19test", "cs-a1141-2017-2018"])
+        run_sql(
+            select(User)
+            .select_from(UserGroup)
+            .filter(UserGroup.name.in_(["aalto19test", "cs-a1141-2017-2018"]))
+            .join(User, UserGroup.users)
         )
-        .join(User, UserGroup.users)
-        .with_entities(User)
+        .scalars()
         .all()
     )
     for u in users_to_fix:
@@ -550,15 +558,16 @@ def find_duplicate_accounts() -> None:
 def find_duplicate_accounts_by_email() -> list[tuple[User, set[User]]]:
     email_lwr = func.lower(User.email)
     dupes: list[User] = (
-        User.query.filter(
-            email_lwr.in_(
-                User.query.group_by(email_lwr)
-                .having(func.count("*") > 1)
-                .with_entities(email_lwr)
-                .all()
+        run_sql(
+            select(User)
+            .filter(
+                email_lwr.in_(
+                    select(email_lwr).group_by(email_lwr).having(func.count("*") > 1)
+                )
             )
+            .order_by(User.email)
         )
-        .order_by(User.email)
+        .scalars()
         .all()
     )
     result = []

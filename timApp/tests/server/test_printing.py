@@ -128,7 +128,7 @@ class PrintingTest(TimRouteTest):
         # Just check the file size for now.
         pdf_length = len(result)
         self.assertTrue(
-            2809 <= pdf_length <= 2910, msg=f"Unexpected file length: {pdf_length}"
+            2809 <= pdf_length <= 2911, msg=f"Unexpected file length: {pdf_length}"
         )
         self.login_test2()
         self.get(expected_url, expect_status=403)

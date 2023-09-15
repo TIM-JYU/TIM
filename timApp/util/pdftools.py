@@ -746,7 +746,6 @@ def is_pdf_producer_ghostscript(f: UploadedFile):
 
 
 def compress_pdf_if_not_already(f: UploadedFile):
-
     # If the PDF producer is Ghostscript, let's assume this PDF has already been compressed.
     # It's unlikely that any end user uses it.
     if is_pdf_producer_ghostscript(f):

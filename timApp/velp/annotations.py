@@ -8,9 +8,11 @@ annotations as well as adding comments to the annotations. The module also retri
 """
 
 from enum import Enum, unique
+from typing import Any
 
-from sqlalchemy import func, true
-from sqlalchemy.orm import joinedload, contains_eager, Query
+from sqlalchemy import func, true, select
+from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.sql import Select
 
 from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
@@ -19,6 +21,7 @@ from timApp.peerreview.util.peerreview_utils import (
     get_reviews_where_user_is_reviewer_query,
     is_peerreview_enabled,
 )
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import VelpContent, VelpVersion, Velp, AnnotationComment
@@ -55,22 +58,24 @@ def get_annotations_with_comments_in_document(
         vis_filter = vis_filter | (
             Annotation.visible_to == AnnotationVisibility.owner.value
         )
-    answer_filter = true()
-    own_review_filter = true()
+    answer_filter: Any = true()
+    own_review_filter: Any = true()
     if not user.has_seeanswers_access(d) or only_own:
         answer_filter = (User.id == user.id) | (User.id == None)
         if is_peerreview_enabled(d):
             answer_filter |= User.id.in_(
-                get_reviews_where_user_is_reviewer_query(d, user)
-                .with_entities(PeerReview.reviewable_id)
-                .subquery()
+                get_reviews_where_user_is_reviewer_query(d, user).with_only_columns(
+                    PeerReview.reviewable_id
+                )
             )
             own_review_filter = (User.id == user.id) | (
                 Annotation.annotator_id == user.id
             )
-    anns = (
+
+    q = (
         set_annotation_query_opts(
-            Annotation.query.filter_by(document_id=d.id)
+            select(Annotation)
+            .filter_by(document_id=d.id)
             .filter(
                 (Annotation.valid_until == None)
                 | (Annotation.valid_until >= func.current_timestamp())
@@ -90,39 +95,29 @@ def get_annotations_with_comments_in_document(
                 Annotation.offset_start.desc(),
             )
         )
-        .options(contains_eager(Annotation.velp_content))
-        .options(contains_eager(Annotation.answer).contains_eager(Answer.users_all))
-        .options(
-            contains_eager(Annotation.velp_version).contains_eager(VelpVersion.velp)
-        )
-        .with_entities(Annotation)
-        .all()
+        .options(joinedload(Annotation.answer).selectinload(Answer.users_all))
+        .with_only_columns(Annotation)
     )
+    anns = list(run_sql(q).scalars().all())
     return anns
 
 
-def set_annotation_query_opts(q: Query) -> Query:
+def set_annotation_query_opts(q: Select) -> Select:
     return (
-        q.options(
-            joinedload(Annotation.velp_content, innerjoin=True).load_only(
-                VelpContent.content
-            )
-        )
+        q.options(joinedload(Annotation.velp_content).load_only(VelpContent.content))
         .options(
-            joinedload(Annotation.comments)
-            .joinedload(AnnotationComment.commenter, innerjoin=True)
+            selectinload(Annotation.comments)
+            .joinedload(AnnotationComment.commenter)
             .raiseload(User.groups)
         )
-        .options(
-            joinedload(Annotation.annotator, innerjoin=True).raiseload(User.groups)
-        )
+        .options(selectinload(Annotation.annotator).raiseload(User.groups))
         .options(
             joinedload(Annotation.answer)
-            .joinedload(Answer.users_all)
+            .selectinload(Answer.users_all)
             .raiseload(User.groups)
         )
         .options(
-            joinedload(Annotation.velp_version, innerjoin=True)
+            joinedload(Annotation.velp_version)
             .load_only(VelpVersion.id, VelpVersion.velp_id)
             .joinedload(VelpVersion.velp)
             .load_only(Velp.color)

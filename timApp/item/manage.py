@@ -11,7 +11,7 @@ from flask import redirect
 from flask import render_template, Response
 from flask import request
 from isodate import Duration
-from sqlalchemy import inspect
+from sqlalchemy import inspect, select
 from sqlalchemy.orm.state import InstanceState
 
 from timApp.auth.accesshelper import (
@@ -53,7 +53,7 @@ from timApp.plugin.jsrunner.util import (
     FieldSaveRequest,
     FieldSaveUserEntry,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import (
@@ -129,7 +129,7 @@ def manage(path: str) -> Response | str:
         js=["angular-ui-grid"],
         jsMods=get_grid_modules(),
         orgs=UserGroup.get_organizations(),
-        access_types=AccessTypeModel.query.all(),
+        access_types=run_sql(select(AccessTypeModel)).scalars().all(),
     )
 
 
@@ -210,7 +210,11 @@ class PermissionEditModelBase:
 
     @cached_property
     def group_objects(self):
-        return UserGroup.query.filter(UserGroup.name.in_(self.groups)).all()
+        return (
+            run_sql(select(UserGroup).filter(UserGroup.name.in_(self.groups)))
+            .scalars()
+            .all()
+        )
 
     @property
     def nonexistent_groups(self):
@@ -421,11 +425,19 @@ def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
         # Only expire permissions from velp groups attached to the document
         if is_velp_group_in_document(vg, doc):
             # TODO Should this apply to ALL permissions, instead of just 'view'?
-            acc: BlockAccess | None = BlockAccess.query.filter_by(
-                type=AccessType.view.value,
-                block_id=vg.id,
-                usergroup_id=ug.id,
-            ).first()
+            acc: BlockAccess | None = (
+                run_sql(
+                    select(BlockAccess)
+                    .filter_by(
+                        type=AccessType.view.value,
+                        block_id=vg.id,
+                        usergroup_id=ug.id,
+                    )
+                    .limit(1)
+                )
+                .scalars()
+                .first()
+            )
             if acc:
                 accs.append(acc)
     for a in accs:
@@ -446,11 +458,17 @@ def expire_doc_translation_perms(doc_id: int, ug: UserGroup) -> None:
         if tr.id == doc.id:
             continue
         # TODO Should this apply to ALL permissions, instead of just 'view'?
-        acc: BlockAccess | None = BlockAccess.query.filter_by(
-            type=AccessType.view.value,
-            block_id=tr.id,
-            usergroup_id=ug.id,
-        ).first()
+        acc: BlockAccess | None = (
+            run_sql(
+                select(BlockAccess).filter_by(
+                    type=AccessType.view.value,
+                    block_id=tr.id,
+                    usergroup_id=ug.id,
+                )
+            )
+            .scalars()
+            .first()
+        )
         if acc:
             accs.append(acc)
     for a in accs:
@@ -479,11 +497,17 @@ def do_confirm_permission(
     redir: str | None = None,
     confirm_translations: bool = True,
 ):
-    ba: BlockAccess | None = BlockAccess.query.filter_by(
-        type=m.type.value,
-        block_id=m.id,
-        usergroup_id=m.group,
-    ).first()
+    ba: BlockAccess | None = (
+        run_sql(
+            select(BlockAccess).filter_by(
+                type=m.type.value,
+                block_id=m.id,
+                usergroup_id=m.group,
+            )
+        )
+        .scalars()
+        .first()
+    )
     if not ba:
         return raise_or_redirect("Right not found.", redir)
     if not ba.require_confirm:
@@ -492,7 +516,7 @@ def do_confirm_permission(
             redir,
         )
     ba.do_confirm()
-    ug: UserGroup = UserGroup.query.get(m.group)
+    ug: UserGroup = db.session.get(UserGroup, m.group)
     log_right(f"confirmed {ba.info_str} for {ug.name} in {i.path}")
 
     if confirm_translations and i.is_original_translation:
@@ -523,11 +547,15 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
     if nonexistent:
         raise RouteException(f"Non-existent groups: {nonexistent}")
     items: list[ItemOrBlock] = (
-        Block.query.filter(
-            Block.id.in_(m.ids)
-            & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])
+        run_sql(
+            select(Block)
+            .filter(
+                Block.id.in_(m.ids)
+                & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])
+            )
+            .order_by(Block.id)
         )
-        .order_by(Block.id)
+        .scalars()
         .all()
     )
 
@@ -626,8 +654,7 @@ def add_perm(
 def remove_permission(m: PermissionRemoveModel) -> Response:
     i = get_item_or_abort(m.id)
     had_ownership = verify_permission_edit_access(i, m.type)
-    # ug: UserGroup = UserGroup.query.get(m.group)  # query.get() is deprecated
-    ug: UserGroup = UserGroup.query.filter_by(id=m.group).first()
+    ug: UserGroup = db.session.get(UserGroup, m.group)
     if not ug:
         raise RouteException("User group not found")
     a = remove_perm(
@@ -895,7 +922,7 @@ def get_permissions(item_id: int) -> Response:
     return json_response(
         {
             "grouprights": grouprights,
-            "accesstypes": AccessTypeModel.query.all(),
+            "accesstypes": run_sql(select(AccessTypeModel)).scalars().all(),
             "orgs": UserGroup.get_organizations(),
         },
         date_conversion=True,
@@ -935,7 +962,7 @@ def add_default_doc_permission(m: DefaultPermissionModel) -> Response:
 def remove_default_doc_permission(m: DefaultPermissionRemoveModel) -> Response:
     f = get_folder_or_abort(m.id)
     verify_permission_edit_access(f, m.type)
-    ug = UserGroup.query.get(m.group)
+    ug = db.session.get(UserGroup, m.group)
     if not ug:
         raise NotExist("Usergroup not found")
     remove_default_access(ug, f, m.type, BlockType.from_str(m.item_type.name))

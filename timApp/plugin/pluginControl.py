@@ -9,7 +9,7 @@ from xml.sax.saxutils import quoteattr
 import attr
 import yaml
 import yaml.parser
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import valid_answers_query, valid_taskid_filter
@@ -43,6 +43,8 @@ from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
+from timApp.timdb.sqa import run_sql
+from timApp.user.user import User
 from timApp.util.get_fields import (
     get_fields_and_users,
     RequestedGroups,
@@ -376,14 +378,14 @@ def check_task_access(errs: ErrorMap, p_range: Range, plugin_name: str, tid: Tas
 KeyType = tuple[int, Range]
 
 
-def get_answers(user, task_ids, answer_map):
+def get_answers(user: User, task_ids, answer_map):
     col = func.max(Answer.id).label("col")
     cnt = func.count(Answer.id).label("cnt")
     if user is None:
         sub = (
             valid_answers_query(task_ids)
             .add_columns(col, cnt)
-            .with_entities(col, cnt)
+            .with_only_columns(col, cnt)
             .group_by(Answer.task_id)
             .subquery()
         )
@@ -395,11 +397,11 @@ def get_answers(user, task_ids, answer_map):
             .group_by(Answer.task_id)
             .subquery()
         )
-    answers: list[tuple[Answer, int]] = (
-        Answer.query.join(sub, Answer.id == sub.c.col)
-        .with_entities(Answer, sub.c.cnt)
-        .all()
-    )
+    answers: list[tuple[Answer, int]] = run_sql(
+        select(Answer)
+        .join(sub, Answer.id == sub.c.col)
+        .with_only_columns(Answer, sub.c.cnt)
+    ).all()
     for answer, cnt in answers:
         answer_map[answer.task_id] = answer, cnt
     return cnt, answers
@@ -701,7 +703,7 @@ def pluginify(
                     )
                 continue
             if not isinstance(plugin_htmls, list):
-                for ((idx, r), plugin) in plugin_block_map.items():
+                for (idx, r), plugin in plugin_block_map.items():
                     plugin.plugin_lazy = plugin_lazy
                     placements[idx].set_error(
                         r,

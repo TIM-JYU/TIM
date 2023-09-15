@@ -8,6 +8,7 @@ from timApp.markdown.markdownconverter import md_to_html, par_list_to_html_list
 from timApp.printing.documentprinter import DocumentPrinter
 from timApp.tests.db.timdbtest import TEST_USER_1_ID
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 
 
@@ -89,7 +90,8 @@ auto_number_headings: 0
 
         printer = DocumentPrinter(d, template_to_use=None, urlroot="")
         counters = printer.get_autocounters(
-            UserContext.from_one_user(User.query.get(TEST_USER_1_ID)), default_view_ctx
+            UserContext.from_one_user(db.session.get(User, TEST_USER_1_ID)),
+            default_view_ctx,
         )
         new_counter_macro_values = (
             f'``` {{settings="counters"}}\n{counters.get_counter_macros()}```\n'

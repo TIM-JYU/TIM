@@ -1,4 +1,5 @@
 from timApp.auth.accesstype import AccessType
+from timApp.item.block import Block
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
@@ -12,10 +13,6 @@ from timApp.user.usergroupmember import UserGroupMember
 
 class AccessLockTest(TimRouteTest):
     """Tests for access locking and unlocking"""
-
-    def tearDown(self):
-        with self.client.session_transaction() as s:
-            s.clear()
 
     def test_access_lock_document_redirect(self):
         """Test that document viewing is restricted when access level is locked."""
@@ -148,10 +145,6 @@ cols: 20
 class ActiveGroupLockTest(TimRouteTest):
     """Tests for active group locking and unlocking"""
 
-    def tearDown(self):
-        with self.client.session_transaction() as s:
-            s.clear()
-
     def test_active_group_lock_visibility(self):
         self.login_test1()
 
@@ -161,6 +154,8 @@ class ActiveGroupLockTest(TimRouteTest):
         self.test_user_3.add_to_group(ug, None)
         self.test_user_1.remove_access(admin_doc.block.id, "owner")
         db.session.commit()
+        ug_id = ug.id
+        admin_block_id = admin_doc.block.id
 
         d = self.create_doc(
             initial_par="""
@@ -189,7 +184,7 @@ Test user 2
         self.json_post(
             "/access/groups/lock",
             {
-                "group_ids": [ug.id],
+                "group_ids": [ug_id],
             },
             expect_status=403,
         )
@@ -203,7 +198,7 @@ Test user 2
             "/access/groups/lock",
             {
                 "group_ids": [
-                    ug.id,
+                    ug_id,
                     get_anonymous_group_id(),
                     get_logged_in_group_id(),
                 ],
@@ -219,17 +214,20 @@ Test user 2
         )
 
         # Case 3: User can lock active group to testgroup1 (testuser1 has edit access)
+        # FIXME: SQLAlchemy dynamic
         ugm: UserGroupMember = self.test_user_1.memberships_dyn.filter(
-            UserGroupMember.usergroup_id == ug.id
+            UserGroupMember.usergroup_id == ug_id
         ).first()
         ugm.set_expired()
-        self.test_user_1.grant_access(admin_doc.block, AccessType.edit)
+        self.test_user_1.grant_access(
+            db.session.get(Block, admin_block_id), AccessType.edit
+        )
         db.session.commit()
         self.json_post(
             "/access/groups/lock",
             {
                 "group_ids": [
-                    ug.id,
+                    ug_id,
                     get_anonymous_group_id(),
                     get_logged_in_group_id(),
                 ],
@@ -250,7 +248,7 @@ Test user 2
             {
                 "group_ids": [
                     self.test_user_2.get_personal_group().id,
-                    ug.id,
+                    ug_id,
                     get_anonymous_group_id(),
                     get_logged_in_group_id(),
                 ],
@@ -265,7 +263,7 @@ Test user 2
             {
                 "group_ids": [
                     self.test_user_2.get_personal_group().id,
-                    ug.id,
+                    ug_id,
                     get_anonymous_group_id(),
                     get_logged_in_group_id(),
                 ],

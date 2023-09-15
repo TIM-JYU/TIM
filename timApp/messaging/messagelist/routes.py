@@ -32,7 +32,10 @@ from timApp.messaging.messagelist.listinfo import (
     GroupAndMembers,
     ArchiveType,
 )
-from timApp.messaging.messagelist.messagelist_models import MessageListModel
+from timApp.messaging.messagelist.messagelist_models import (
+    MessageListModel,
+    MessageListTimMember,
+)
 from timApp.messaging.messagelist.messagelist_utils import (
     verify_messagelist_name_requirements,
     new_list,
@@ -435,7 +438,11 @@ def get_group_members(list_name: str) -> Response:
         )
 
     # Get group.
-    groups = [member for member in message_list.members if member.is_group()]
+    groups: list[MessageListTimMember] = [
+        member
+        for member in message_list.members
+        if isinstance(member, MessageListTimMember) and member.is_group()
+    ]
 
     # At this point we assume we have a user that is a TIM user group.
     groups_and_members = []
@@ -445,11 +452,13 @@ def get_group_members(list_name: str) -> Response:
         # group, removed is None.
         group_members = [
             MemberInfo(
-                name=user.real_name if not hide_names else f"User {user.id}",
+                name=user.real_name
+                if not hide_names and user.real_name
+                else f"User {user.id}",
                 username=user.name if not hide_names else f"user{user.id}",
                 email=user.email if not hide_names else "user@noreply",
-                sendRight=group.send_right,
-                deliveryRight=group.delivery_right,
+                sendRight=group.send_right or False,
+                deliveryRight=group.delivery_right or False,
                 removed=None,
             )
             for user in user_group.users

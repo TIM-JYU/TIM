@@ -1,13 +1,13 @@
 from dataclasses import field
 
 from flask import Response
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.orm import load_only
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.listinfo import Channel
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usercontact import UserContact, ContactOrigin, PrimaryContact
 from timApp.user.verification.verification import (
     resend_verification,
@@ -53,9 +53,15 @@ def add_contact(
             raise RouteException(
                 "The contact is already added but is pending verification"
             )
-        verification = ContactAddVerification.query.filter_by(
-            contact=existing_contact_info, reacted_at=None
-        ).first()
+        verification = (
+            run_sql(
+                select(ContactAddVerification)
+                .filter_by(contact=existing_contact_info, reacted_at=None)
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
         if verification:
             resend_verification(verification, existing_contact_info.contact)
         else:
@@ -121,15 +127,13 @@ def remove_contact(
     if contact.contact_origin != ContactOrigin.Custom:
         raise RouteException("Cannot remove managed contacts")
 
-    verified_emails_count = (
-        db.session.query(func.count(UserContact.id))
-        .filter_by(
+    verified_emails_count = db.session.scalar(
+        select(func.count(UserContact.id)).filter_by(
             user_id=user.id,
             channel=Channel.EMAIL,
             verified=True,
             contact_origin=ContactOrigin.Custom,
         )
-        .scalar()
     )
 
     if contact.verified and verified_emails_count == 1:
@@ -168,21 +172,32 @@ def set_primary(
     if existing_contact.primary:
         json_response({"verify": False})
 
-    primary_contact_exists = db.session.query(
-        UserContact.query.filter_by(
-            channel=channel, contact=contact, primary=PrimaryContact.true
-        ).exists()
-    ).scalar()
+    primary_contact_exists = (
+        run_sql(
+            select(UserContact.id)
+            .filter_by(channel=channel, contact=contact, primary=PrimaryContact.true)
+            .limit(1)
+        )
+        .scalars()
+        .first()
+        is not None
+    )
 
     if primary_contact_exists:
         raise RouteException(
             "Another user already has this contact set to primary, please choose another contact"
         )
 
-    existing_verification = SetPrimaryContactVerification.query.filter_by(
-        contact=existing_contact,
-        reacted_at=None,
-    ).first()
+    existing_verification = (
+        run_sql(
+            select(SetPrimaryContactVerification).filter_by(
+                contact=existing_contact,
+                reacted_at=None,
+            )
+        )
+        .scalars()
+        .first()
+    )
     if existing_verification:
         resend_verification(existing_verification)
         return json_response({"verify": True})

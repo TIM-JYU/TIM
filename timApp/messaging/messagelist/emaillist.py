@@ -5,6 +5,7 @@ from urllib.error import HTTPError
 from mailmanclient import Client, MailingList, Domain, Member
 from mailmanclient.restbase.connection import Connection
 from marshmallow import EXCLUDE
+from sqlalchemy import select, delete
 
 from timApp.messaging.messagelist.listinfo import (
     ListInfo,
@@ -19,7 +20,7 @@ from timApp.messaging.messagelist.messagelist_models import (
     MessageListMember,
 )
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User, deleted_user_pattern
 from timApp.util.flask.requesthelper import NotExist, RouteException
 from timApp.util.logger import log_warning, log_info, log_error
@@ -285,7 +286,7 @@ def create_new_email_list(list_options: ListInfo, owner: User) -> None:
         raise
 
 
-def get_list_ui_link(listname: str, domain: str | None) -> str | None:
+def get_list_ui_link(listname: str | None, domain: str | None) -> str | None:
     """Get a link for a list to use for advanced email list options and moderation.
 
     The function assumes that Mailman uses Postorius as its web-UI. There exists no guarantee that other web-UIs would
@@ -297,6 +298,8 @@ def get_list_ui_link(listname: str, domain: str | None) -> str | None:
     then return None. Return None if no connection to Mailman is configured.
     """
     try:
+        if listname is None:
+            return None
         if domain is None or not config.MAILMAN_UI_LINK_PREFIX:
             return None
         if _client is None:
@@ -728,7 +731,7 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
     try:
         mail_list_settings = mlist.settings
         mail_list_settings["default_member_action"] = "accept"
-        set_email_list_allow_nonmember(mlist, msg_list.non_member_message_pass)
+        set_email_list_allow_nonmember(mlist, msg_list.non_member_message_pass or False)
         mail_list_settings.save()
     except HTTPError as e:
         log_mailman(e, "In unfreeze_list()")
@@ -777,7 +780,6 @@ def update_mailing_list_address(old: str, new: str) -> None:
     if not check_mailman_connection():
         return
     try:
-
         usr = _client.get_user(old)
         addr = usr.add_address(new, absorb_existing=True)
         addr.verify()
@@ -798,20 +800,24 @@ def update_mailing_list_address(old: str, new: str) -> None:
         # TODO: This is irreversible, i.e. user changing primary email back doesn't restore old external membership
 
         for old_member, new_member in member_pairs:
-            delete_ids_q = (
-                db.session.query(MessageListExternalMember.id)
+            delete_ids_stmt = (
+                select(MessageListExternalMember.id)
                 .join(MessageListModel)
                 .filter(
                     (MessageListExternalMember.email_address == new)
                     & (MessageListModel.mailman_list_id == new_member.list_id)
                 )
-            ).all()
-            MessageListExternalMember.query.filter(
-                MessageListExternalMember.id.in_(delete_ids_q)
-            ).delete(synchronize_session=False)
-            MessageListMember.query.filter(
-                MessageListMember.id.in_(delete_ids_q)
-            ).delete(synchronize_session=False)
+            )
+            run_sql(
+                delete(MessageListExternalMember)
+                .where(MessageListExternalMember.id.in_(delete_ids_stmt))
+                .execution_options(synchronize_session=False)
+            )
+            run_sql(
+                delete(MessageListMember)
+                .where(MessageListMember.id.in_(delete_ids_stmt))
+                .execution_options(synchronize_session=False)
+            )
             new_member.unsubscribe()
 
         for member in old_members.values():
