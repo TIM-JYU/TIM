@@ -16,7 +16,8 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
     from timApp.user.usergroup import UserGroup
 
 
-class UserGroupMember(DbModel):
+class UserGroupMember(db.Model):
     """
     Associates a user with a user group.
     """

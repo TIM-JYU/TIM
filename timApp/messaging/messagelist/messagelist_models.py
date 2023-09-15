@@ -15,8 +15,8 @@ from timApp.messaging.messagelist.listinfo import (
     Distribution,
     MessageVerificationType,
 )
-from timApp.timdb.sqa import run_sql
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import run_sql, db
+from timApp.timdb.types import datetime_tz
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
 
@@ -36,7 +36,7 @@ class MemberJoinMethod(Enum):
     """User joined the list on their own."""
 
 
-class MessageListModel(DbModel):
+class MessageListModel(db.Model):
     """Database model for message lists"""
 
     __tablename__ = "messagelist"
@@ -225,7 +225,11 @@ class MessageListModel(DbModel):
             raise ValueError
 
         for member in self.members:
-            if username and username == member.get_username():
+            if (
+                username
+                and isinstance(member, MessageListTimMember)
+                and username == member.get_username()
+            ):
                 return member
             if email and email == member.get_email():
                 return member
@@ -266,7 +270,7 @@ class MessageListModel(DbModel):
         )
 
 
-class MessageListMember(DbModel):
+class MessageListMember(db.Model):
     """Database model for members of a message list."""
 
     __tablename__ = "messagelist_member"
@@ -393,8 +397,8 @@ class MessageListMember(DbModel):
 
         return {
             **user_info,
-            "sendRight": self.member.send_right,
-            "deliveryRight": self.member.delivery_right,
+            "sendRight": self.send_right,
+            "deliveryRight": self.delivery_right,
             "removed": self.membership_ended,
         }
 
@@ -500,7 +504,7 @@ class MessageListExternalMember(MessageListMember):
         return ""
 
 
-class MessageListDistribution(DbModel):
+class MessageListDistribution(db.Model):
     """Message list member's chosen distribution channels."""
 
     __tablename__ = "messagelist_distribution"

@@ -5,15 +5,14 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import select, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import run_sql
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import run_sql, db
 from timApp.user.hakaorganization import HakaOrganization
 
 if TYPE_CHECKING:
     from timApp.user.user import User
 
 
-class PersonalUniqueCode(DbModel):
+class PersonalUniqueCode(db.Model):
     """The database model for the 'schacPersonalUniqueCode' Haka attribute."""
 
     __tablename__ = "personal_unique_code"

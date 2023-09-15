@@ -19,7 +19,7 @@ from sqlalchemy import func, select, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from tim_common.dumboclient import call_dumbo
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from timApp.item.block import Block
 
 
-class EventGroup(DbModel):
+class EventGroup(db.Model):
     """Information about a user group participating in an event."""
 
     event_id: Mapped[int] = mapped_column(
@@ -51,7 +51,7 @@ class EventGroup(DbModel):
     """The usergroup that belongs to the group"""
 
 
-class Enrollment(DbModel):
+class Enrollment(db.Model):
     """A single enrollment in an event"""
 
     event_id: Mapped[int] = mapped_column(
@@ -98,7 +98,7 @@ class Enrollment(DbModel):
         )
 
 
-class EventTagAttachment(DbModel):
+class EventTagAttachment(db.Model):
     """Attachment information for the event tag"""
 
     event_id: Mapped[int] = mapped_column(
@@ -109,7 +109,7 @@ class EventTagAttachment(DbModel):
     """Tag that is attached to the event"""
 
 
-class EventTag(DbModel):
+class EventTag(db.Model):
     """A string tag that can be attached to an event"""
 
     tag_id: Mapped[int] = mapped_column(primary_key=True)
@@ -171,7 +171,7 @@ class EnrollmentRight:
         return self.can_enroll or self.can_manage_event
 
 
-class Event(DbModel):
+class Event(db.Model):
     """A calendar event. Event has metadata (title, time, location) and various participating user groups."""
 
     event_id: Mapped[int] = mapped_column(primary_key=True)
@@ -399,7 +399,7 @@ class Event(DbModel):
         }
 
 
-class EnrollmentType(DbModel):
+class EnrollmentType(db.Model):
     """Table for enrollment type, combines enrollment type ID to specific enrollment type"""
 
     enroll_type_id: Mapped[int] = mapped_column(primary_key=True)
@@ -409,7 +409,7 @@ class EnrollmentType(DbModel):
     """Name of the enrollment type"""
 
 
-class ExportedCalendar(DbModel):
+class ExportedCalendar(db.Model):
     """Information about exported calendars"""
 
     user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)

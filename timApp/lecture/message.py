@@ -4,14 +4,15 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.lecture.lecture import Lecture
     from timApp.user.user import User
 
 
-class Message(DbModel):
+class Message(db.Model):
     msg_id: Mapped[int] = mapped_column(primary_key=True)
     lecture_id: Mapped[int] = mapped_column(ForeignKey("lecture.lecture_id"))
     user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))

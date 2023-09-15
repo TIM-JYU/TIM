@@ -7,18 +7,18 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.auth.accesstype import AccessType
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.item.distribute_rights import Right
     from timApp.item.block import Block
     from timApp.user.usergroup import UserGroup
 
-from timApp.timdb.sqa import include_if_loaded
+from timApp.timdb.sqa import include_if_loaded, db
 from timApp.util.utils import get_current_time
 
 
-class AccessTypeModel(DbModel):
+class AccessTypeModel(db.Model):
     """A kind of access that a UserGroup may have to a Block."""
 
     __tablename__ = "accesstype"
@@ -38,7 +38,7 @@ class AccessTypeModel(DbModel):
         return AccessType(self.id)
 
 
-class BlockAccess(DbModel):
+class BlockAccess(db.Model):
     """A single permission. Relates a UserGroup with a Block along with an AccessType."""
 
     block_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)

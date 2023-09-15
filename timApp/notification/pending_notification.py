@@ -5,8 +5,8 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.document.version import Version
 from timApp.notification.notification import NotificationType
-from timApp.timdb.sqa import run_sql
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import run_sql, db
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 GroupingKey = tuple[int, str]
 
 
-class PendingNotification(DbModel):
+class PendingNotification(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))

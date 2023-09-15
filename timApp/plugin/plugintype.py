@@ -8,7 +8,6 @@ from sqlalchemy.orm import mapped_column, Mapped, Session
 
 import timApp
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import DbModel
 
 CONTENT_FIELD_NAME_MAP = {
     "csPlugin": "usercode",
@@ -35,7 +34,7 @@ class PluginTypeBase:
 
 
 # TODO: Right now values are added dynamically to the table when saving answers. Instead add them on TIM start.
-class PluginType(DbModel, PluginTypeBase):
+class PluginType(db.Model, PluginTypeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     type: Mapped[str] = mapped_column(unique=True)

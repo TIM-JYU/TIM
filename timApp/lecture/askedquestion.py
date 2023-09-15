@@ -9,7 +9,7 @@ from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped, relationship
 from timApp.lecture.question_utils import qst_rand_array, qst_filter_markup_points
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from timApp.lecture.showpoints import ShowPoints
 
 
-class AskedQuestion(DbModel):
+class AskedQuestion(db.Model):
     asked_id: Mapped[int] = mapped_column(primary_key=True)
     lecture_id: Mapped[int] = mapped_column(ForeignKey("lecture.lecture_id"))
     doc_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))

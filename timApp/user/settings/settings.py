@@ -161,7 +161,7 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
     for ann in annotations:
         for c in ann.comments:
             if c.commenter.id != u.id:
-                c.commenter.anonymize = True
+                c.commenter.is_anonymized = True
 
     return {
         "annotations": annotations,

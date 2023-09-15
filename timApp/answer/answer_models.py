@@ -3,14 +3,14 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import UniqueConstraint, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import db
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
     from timApp.answer.answer import Answer
 
 
-class AnswerTag(DbModel):
+class AnswerTag(db.Model):
     """Tags for an Answer.
 
     TODO: Answer should be a Block and the tags would then come from the tag table.
@@ -21,7 +21,7 @@ class AnswerTag(DbModel):
     tag: Mapped[str]
 
 
-class AnswerUpload(DbModel):
+class AnswerUpload(db.Model):
     """Associates uploaded files (Block with type BlockType.AnswerUpload) with Answers."""
 
     upload_block_id: Mapped[int] = mapped_column(
@@ -37,7 +37,7 @@ class AnswerUpload(DbModel):
         self.answer = answer
 
 
-class UserAnswer(DbModel):
+class UserAnswer(db.Model):
     """Associates Users with Answers."""
 
     id: Mapped[int] = mapped_column(primary_key=True)

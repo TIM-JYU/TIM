@@ -3,10 +3,10 @@ from typing import Optional
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import db
 
 
-class RowOwnerInfo(DbModel):
+class RowOwnerInfo(db.Model):
     """
     Information about the owner of a TimTable row. Includes document and paragraph
     id for determining the TimTable instance.

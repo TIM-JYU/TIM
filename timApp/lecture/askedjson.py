@@ -5,14 +5,13 @@ from typing import Any, TYPE_CHECKING
 from sqlalchemy import select
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import run_sql
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import run_sql, db
 
 if TYPE_CHECKING:
     from timApp.lecture.askedquestion import AskedQuestion
 
 
-class AskedJson(DbModel):
+class AskedJson(db.Model):
     asked_json_id: Mapped[int] = mapped_column(primary_key=True)
     json: Mapped[str]
     hash: Mapped[str]

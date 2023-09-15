@@ -23,12 +23,14 @@ if os.environ.get("TIM_TESTING", None):
     # because sometimes objects would expire after calling a route.
     session_options["expire_on_commit"] = False
 
-db = SQLAlchemy(session_options=session_options, model_class=DbModel)
+db = SQLAlchemy(
+    session_options=session_options, model_class=DbModel, disable_autonaming=True
+)
 # Overwrite metadata to use the DbModel's metadata
 # Flask-SQLAlchemy 3.x doesn't appear to have a correct handler of model_class, so it ends up overwriting our DbModel
 # Instead, we pass our model manually
-db.Model = DbModel
-db.metadatas[None] = DbModel.metadata
+# db.Model = DbModel
+# db.metadatas[None] = DbModel.metadata
 
 
 # TODO: Switch models to use dataclasses instead

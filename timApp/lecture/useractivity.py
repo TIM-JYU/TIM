@@ -4,14 +4,14 @@ from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.user import User
     from timApp.lecture.lecture import Lecture
 
 
-class UserActivity(DbModel):
+class UserActivity(db.Model):
     lecture_id: Mapped[int] = mapped_column(
         ForeignKey("lecture.lecture_id"), primary_key=True
     )

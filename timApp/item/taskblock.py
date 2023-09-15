@@ -5,11 +5,10 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.item.block import Block, BlockType, insert_block
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup
 
 
-class TaskBlock(DbModel):
+class TaskBlock(db.Model):
     id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
     task_id: Mapped[str] = mapped_column(primary_key=True)
 

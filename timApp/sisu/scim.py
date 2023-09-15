@@ -518,10 +518,10 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
         ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup
     ) or ug.external_id.is_administrative_person:
         tg = UserGroup.get_teachers_group()
-        for u in added_users:
-            if tg not in u.groups:
-                u.groups.append(tg)
-            send_course_group_mail(p, u)
+        for usr in added_users:
+            if tg not in usr.groups:
+                usr.groups.append(tg)
+            send_course_group_mail(p, usr)
 
 
 def parse_sisu_group_display_name_or_error(args: SCIMGroupModel) -> SisuDisplayName:

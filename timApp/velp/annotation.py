@@ -286,10 +286,10 @@ def anonymize_annotations(anns: list[Annotation], current_user_id: int) -> None:
     """
     for ann in anns:
         if ann.annotator.id != current_user_id:
-            ann.annotator.anonymize = True
+            ann.annotator.is_anonymized = True
         for c in ann.comments:
             if c.commenter.id != current_user_id:
-                c.commenter.anonymize = True
+                c.commenter.is_anonymized = True
 
 
 @annotations.get("/<int:doc_id>/get_annotations")
@@ -336,12 +336,12 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
         revset = {r.reviewer_id for r in peer_reviews}
         for ann in results:
             if ann.annotator.id != current_user.id and ann.annotator_id in revset:
-                ann.annotator.hide_name = True
+                ann.annotator.is_name_hidden = True
         for p in peer_reviews:
             if p.reviewer_id != current_user.id:
-                p.reviewer.hide_name = True
+                p.reviewer.is_name_hidden = True
             if p.reviewable_id != current_user:
-                p.reviewable.hide_name = True
+                p.reviewable.is_name_hidden = True
 
     return no_cache_json_response(
         {"annotations": results, "peer_reviews": peer_reviews}, date_conversion=True

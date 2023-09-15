@@ -13,7 +13,6 @@ from timApp.item.block import BlockType, Block
 from timApp.item.block import insert_block
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup, get_admin_group_id
 from timApp.util.utils import split_location
 
@@ -21,7 +20,7 @@ if TYPE_CHECKING:
     from timApp.user.user import User
 
 
-class DocEntry(DbModel, DocInfo):
+class DocEntry(db.Model, DocInfo):
     """Represents a TIM document in the directory hierarchy.
 
     A document can have several aliases, which is why the primary key is "name" column and not "id".

@@ -439,7 +439,9 @@ def get_group_members(list_name: str) -> Response:
 
     # Get group.
     groups: list[MessageListTimMember] = [
-        member for member in message_list.members if member.is_group()
+        member
+        for member in message_list.members
+        if isinstance(member, MessageListTimMember) and member.is_group()
     ]
 
     # At this point we assume we have a user that is a TIM user group.

@@ -4,14 +4,14 @@ from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.usergroup import UserGroup
     from timApp.item.block import Block
 
 
-class UserNote(DbModel):
+class UserNote(db.Model):
     """A comment/note that has been posted in a document paragraph."""
 
     __tablename__ = "usernotes"

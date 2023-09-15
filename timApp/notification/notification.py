@@ -5,8 +5,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.item.block import BlockType, Block
-from timApp.timdb.sqa import is_attribute_loaded
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import is_attribute_loaded, db
 from timApp.util.logger import log_warning
 
 if TYPE_CHECKING:
@@ -34,7 +33,7 @@ class NotificationType(enum.Enum):
         )
 
 
-class Notification(DbModel):
+class Notification(db.Model):
     """Notification settings for a User for a block."""
 
     user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)

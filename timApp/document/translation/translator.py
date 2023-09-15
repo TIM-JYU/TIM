@@ -34,8 +34,7 @@ from timApp.document.translation.translationparser import (
     Table,
     Translate,
 )
-from timApp.timdb.sqa import run_sql
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import run_sql, db
 from timApp.user.usergroup import UserGroup
 from timApp.util import logger
 from timApp.util.flask.requesthelper import RouteException
@@ -71,7 +70,7 @@ class LanguagePairing:
         return self.value[item]
 
 
-class TranslationService(DbModel):
+class TranslationService(db.Model):
     """Represents the information and methods that must be available from all
     possible machine translators.
     """
@@ -172,7 +171,7 @@ class TranslationService(DbModel):
     __mapper_args__ = {"polymorphic_on": "service_name"}
 
 
-class TranslationServiceKey(DbModel):
+class TranslationServiceKey(db.Model):
     """Represents an API-key (or any string value) that is needed for using a
     machine translator and that one or more users are in possession of.
     """

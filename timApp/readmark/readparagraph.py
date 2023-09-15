@@ -4,13 +4,14 @@ from sqlalchemy import func, ForeignKey, Index
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.readmark.readparagraphtype import ReadParagraphType
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.usergroup import UserGroup
 
 
-class ReadParagraph(DbModel):
+class ReadParagraph(db.Model):
     """Denotes that a User(Group) has read a specific paragraph in some way."""
 
     id: Mapped[int] = mapped_column(primary_key=True)

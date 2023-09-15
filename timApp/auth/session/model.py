@@ -8,14 +8,14 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
     from timApp.user.user import User
 
 
-class UserSession(DbModel):
+class UserSession(db.Model):
     """
     User session. A session is given to the user when they log in.
 

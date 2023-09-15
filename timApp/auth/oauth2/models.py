@@ -13,7 +13,7 @@ from authlib.oauth2.rfc6749 import (
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import db
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -109,7 +109,7 @@ class OAuth2Client(ClientMixin):
         return grant_type in self.grant_types
 
 
-class OAuth2Token(DbModel, TokenMixin):
+class OAuth2Token(db.Model, TokenMixin):
     __tablename__ = "oauth2_token"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -146,7 +146,7 @@ class OAuth2Token(DbModel, TokenMixin):
         return expires_at < time.time()
 
 
-class OAuth2AuthorizationCode(DbModel, AuthorizationCodeMixin):
+class OAuth2AuthorizationCode(db.Model, AuthorizationCodeMixin):
     __tablename__ = "oauth2_auth_code"
 
     id: Mapped[int] = mapped_column(primary_key=True)

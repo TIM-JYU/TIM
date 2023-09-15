@@ -62,7 +62,7 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
             f"(set to {review_count} but {len(users)} users have answered so far)"
         )
 
-    for idx, user in enumerate(users):
+    for idx, _ in enumerate(users):
         pairings_left = review_count + 1
         start = idx + 1
         end = idx + pairings_left

@@ -7,13 +7,14 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship, attribute_keyed_
 from sqlalchemy.orm.collections import attribute_mapped_collection  # type: ignore
 
 from timApp.item.block import Block
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.user import User
 
 
-class VelpContent(DbModel):
+class VelpContent(db.Model):
     """The actual content of a Velp."""
 
     version_id: Mapped[int] = mapped_column(
@@ -26,7 +27,7 @@ class VelpContent(DbModel):
     velp_version: Mapped["VelpVersion"] = relationship()
 
 
-class AnnotationComment(DbModel):
+class AnnotationComment(db.Model):
     """A comment in an Annotation."""
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -56,21 +57,21 @@ class AnnotationComment(DbModel):
         }
 
 
-class LabelInVelp(DbModel):
+class LabelInVelp(db.Model):
     """Associates VelpLabels with Velps."""
 
     label_id: Mapped[int] = mapped_column(ForeignKey("velplabel.id"), primary_key=True)
     velp_id: Mapped[int] = mapped_column(ForeignKey("velp.id"), primary_key=True)
 
 
-class VelpInGroup(DbModel):
+class VelpInGroup(db.Model):
     velp_group_id: Mapped[int] = mapped_column(
         ForeignKey("velpgroup.id"), primary_key=True
     )
     velp_id: Mapped[int] = mapped_column(ForeignKey("velp.id"), primary_key=True)
 
 
-class Velp(DbModel):
+class Velp(db.Model):
     """A Velp is a kind of category for Annotations and is visually represented by a Post-it note."""
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -117,7 +118,7 @@ class Velp(DbModel):
         }
 
 
-class VelpGroup(DbModel):
+class VelpGroup(db.Model):
     """Represents a group of Velps."""
 
     id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
@@ -143,7 +144,7 @@ class VelpGroup(DbModel):
         }
 
 
-class VelpGroupDefaults(DbModel):
+class VelpGroupDefaults(db.Model):
     doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
     target_id: Mapped[str] = mapped_column(primary_key=True)
     velp_group_id: Mapped[int] = mapped_column(
@@ -153,14 +154,14 @@ class VelpGroupDefaults(DbModel):
     selected: Mapped[Optional[bool]] = mapped_column(default=False)
 
 
-class VelpGroupLabel(DbModel):
+class VelpGroupLabel(db.Model):
     """Currently not used (0 rows in production DB as of 5th July 2018)."""
 
     id: Mapped[int] = mapped_column(primary_key=True)
     content: Mapped[str]
 
 
-class VelpGroupSelection(DbModel):
+class VelpGroupSelection(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
     doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
     target_id: Mapped[str] = mapped_column(primary_key=True)
@@ -171,7 +172,7 @@ class VelpGroupSelection(DbModel):
     )
 
 
-class VelpGroupsInDocument(DbModel):
+class VelpGroupsInDocument(db.Model):
     """
 
     TODO: This table contains lots of rows in production DB (about 19000 as of 5th July 2018).
@@ -185,7 +186,7 @@ class VelpGroupsInDocument(DbModel):
     )
 
 
-class VelpLabel(DbModel):
+class VelpLabel(db.Model):
     """A label that can be assigned to a Velp."""
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -200,7 +201,7 @@ class VelpLabel(DbModel):
     )
 
 
-class VelpLabelContent(DbModel):
+class VelpLabelContent(db.Model):
     velplabel_id: Mapped[int] = mapped_column(
         ForeignKey("velplabel.id"), primary_key=True
     )
@@ -217,7 +218,7 @@ class VelpLabelContent(DbModel):
         }
 
 
-class VelpVersion(DbModel):
+class VelpVersion(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     velp_id: Mapped[int] = mapped_column(ForeignKey("velp.id"))
     modify_time: Mapped[datetime_tz] = mapped_column(default=datetime.utcnow)

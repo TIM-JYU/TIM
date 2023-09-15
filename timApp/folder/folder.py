@@ -14,7 +14,6 @@ from timApp.item.block import Block, insert_block, copy_default_rights, BlockTyp
 from timApp.item.item import Item
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import DbModel
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location, join_location, relative_location
 
@@ -24,7 +23,7 @@ if TYPE_CHECKING:
 ROOT_FOLDER_ID = -1
 
 
-class Folder(DbModel, Item):
+class Folder(db.Model, Item):
     """Represents a folder in the directory hierarchy."""
 
     id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)

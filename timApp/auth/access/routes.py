@@ -62,7 +62,7 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
         return ok_response()
 
     user = get_current_user_object()
-    user.bypass_access_lock = True
+    user.skip_access_lock = True
 
     group_ids_set = set(group_ids)
     group_ids_set -= set(ug.id for ug in user.groups)
@@ -101,7 +101,7 @@ def show_edit_info(group_name: str) -> Response:
     """
     verify_logged_in()
     user = get_current_user_object()
-    user.bypass_access_lock = True
+    user.skip_access_lock = True
     ug = get_group_or_abort(group_name)
     if not user.is_admin:
         verify_group_edit_access(ug)
@@ -124,7 +124,7 @@ def find_editable_groups(
     """
     verify_logged_in()
     user = get_current_user_object()
-    user.bypass_access_lock = True
+    user.skip_access_lock = True
     ugs = run_sql(select(UserGroup).filter(UserGroup.id.in_(group_ids))).scalars().all()
     visible_ugs = [
         ug for ug in ugs if user.is_admin or verify_group_edit_access(ug, require=False)

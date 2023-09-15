@@ -7,7 +7,7 @@ from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped, relationship
 
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 from timApp.util.utils import get_current_time
 
 if TYPE_CHECKING:
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from timApp.lecture.useractivity import UserActivity
 
 
-class Lecture(DbModel):
+class Lecture(db.Model):
     lecture_id: Mapped[int] = mapped_column(primary_key=True)
     lecture_code: Mapped[Optional[str]]
     doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))

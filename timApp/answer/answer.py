@@ -6,8 +6,8 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship, DynamicMapped
 
 from timApp.answer.answer_models import UserAnswer, AnswerUpload
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import include_if_loaded
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import include_if_loaded, db
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from timApp.plugin.plugintype import PluginType
 
 
-class AnswerSaver(DbModel):
+class AnswerSaver(db.Model):
     """Holds information about who has saved an answer. For example, in teacher view, "Save teacher's fix"
     would store the teacher in this table.
     """
@@ -24,7 +24,7 @@ class AnswerSaver(DbModel):
     user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
 
 
-class Answer(DbModel):
+class Answer(db.Model):
     """An answer to a task."""
 
     id: Mapped[int] = mapped_column(primary_key=True)

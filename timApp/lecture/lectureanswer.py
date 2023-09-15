@@ -7,7 +7,7 @@ from sqlalchemy.orm import lazyload, mapped_column, Mapped, relationship
 
 from timApp.lecture.lecture import Lecture
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ def unshuffle_lectureanswer(
     return unshuffled_ans
 
 
-class LectureAnswer(DbModel):
+class LectureAnswer(db.Model):
     answer_id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     question_id: Mapped[int] = mapped_column(ForeignKey("askedquestion.asked_id"))

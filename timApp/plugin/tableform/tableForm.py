@@ -792,7 +792,7 @@ def tableform_get_fields(
     membership_end_map: dict[str, str | None] = {}
     for f in fielddata:
         u: User = f["user"]
-        u.hide_name = anonymize_names
+        u.is_name_hidden = anonymize_names
         user_info = u.to_json()
         username = user_info["name"]
         rn = user_info["real_name"]

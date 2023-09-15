@@ -4,13 +4,13 @@ from sqlalchemy import UniqueConstraint, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.user import User
 
 
-class PeerReview(DbModel):
+class PeerReview(db.Model):
     """A peer review to a task."""
 
     __tablename__ = "peer_review"

@@ -197,7 +197,7 @@ RUN /usr/local/bin/wrap_chrome_binary
 ARG CHROME_DRIVER_VERSION
 RUN if [ ! -z "$CHROME_DRIVER_VERSION" ]; \
   then CHROME_DRIVER_URL=https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_DRIVER_VERSION/linux64/chromedriver-linux64.zip ; \
-  else echo "Geting ChromeDriver binary from https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" \
+  else echo "Getting ChromeDriver binary from https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" \
     && CFT_URL=https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json \
     && CFT_CHANNEL="Stable" \
     && if [ "$CHROME_VERSION" = "google-chrome-beta" ]; then CFT_CHANNEL="Beta" ; fi \

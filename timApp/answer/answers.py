@@ -204,7 +204,7 @@ def save_answer(
 
     for tag in tags:
         at = AnswerTag(tag=tag)
-        a.tags.append(at)
+        db.session.add(at)
     if saver:
         a.saver = saver
     db.session.flush()

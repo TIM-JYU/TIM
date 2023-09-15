@@ -181,7 +181,7 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
     )
 
     if item_id is not None:
-        current_page_obj = DocEntry.find_by_id(item_id)
+        current_page_obj: DocInfo | Folder | None = DocEntry.find_by_id(item_id)
         if isinstance(current_page_obj, Translation):
             # Resolve to original file instead of translation file
             current_page_obj = current_page_obj.docentry
@@ -322,7 +322,9 @@ def check_urls(urls: str) -> Response:
             shortened_url = URL_PATTERN.sub("", url)
         else:
             shortened_url = url
-        document = DocEntry.find_by_path(shortened_url)  # check if url exists in TIM
+        document: DocInfo | Folder | None = DocEntry.find_by_path(
+            shortened_url
+        )  # check if url exists in TIM
         if document is None:
             document = Folder.find_by_path(shortened_url)
         if document is None:

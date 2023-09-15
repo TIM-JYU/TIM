@@ -820,6 +820,7 @@ def create_velp_group_route(doc_id: int) -> Response:
                 else:
                     # Copy all document rights to document velp group
                     if target_type == 1:
+                        assert isinstance(target, DocInfo)
                         add_velp_group_perms(target.document.id, velp_group)
             else:
                 raise RouteException(f"Could not find document or folder.")

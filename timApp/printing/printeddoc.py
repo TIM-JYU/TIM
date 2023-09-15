@@ -4,10 +4,10 @@ from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 
 
-class PrintedDoc(DbModel):
+class PrintedDoc(db.Model):
     """A printed document. A PrintedDoc is created each time a document is printed
     (CSS printing does not count because it happens entirely in browser)."""
 

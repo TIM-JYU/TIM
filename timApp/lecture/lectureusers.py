@@ -1,10 +1,10 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import db
 
 
-class LectureUsers(DbModel):
+class LectureUsers(db.Model):
     lecture_id: Mapped[int] = mapped_column(
         ForeignKey("lecture.lecture_id"), primary_key=True
     )

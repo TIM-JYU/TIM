@@ -20,10 +20,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import mapped_column, Mapped
 
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import DbModel
 
 
-class Language(DbModel):
+class Language(db.Model):
     """Represents a standardized language code used for example with
     translation documents.
 

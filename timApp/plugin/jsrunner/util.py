@@ -30,7 +30,7 @@ from timApp.messaging.messagelist.messagelist_utils import (
 )
 from timApp.peerreview.util.peerreview_utils import change_peerreviewers_for_user
 from timApp.plugin.importdata.importData import MissingUser, MissingUserSchema
-from timApp.plugin.plugin import TaskNotFoundException, CachedPluginFinder
+from timApp.plugin.plugin import TaskNotFoundException, CachedPluginFinder, Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId, TaskIdAccess
@@ -302,7 +302,7 @@ def save_fields(
                 UserContext.from_one_user(curr_user),
                 view_ctx,
             )
-            plugin = vr.plugin
+            plugin: PluginType | Plugin = vr.plugin
         except TaskNotFoundException as e:
             if not allow_missing:
                 if ignore_missing:
@@ -604,7 +604,7 @@ def _handle_item_right_actions(
 
     # Apply actions as we go
     for item_id, actions in item_actions.items():
-        item = items[item_id]
+        itm = items[item_id]
         for action in actions:
             group = UserGroup.get_by_name(action.group)
             access_type = action.accessType or AccessType.view
@@ -614,13 +614,13 @@ def _handle_item_right_actions(
                 case "add":
                     grant_access(
                         group,
-                        item,
+                        itm,
                         access_type,
                         accessible_from=action.accessibleFrom,
                         accessible_to=action.accessibleTo,
                     )
                 case "expire":
-                    expire_access(group, item, access_type)
+                    expire_access(group, itm, access_type)
 
     # Flush so that access rights are correct for any other JSRunner operations
     db.session.flush()

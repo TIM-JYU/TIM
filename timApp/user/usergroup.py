@@ -24,7 +24,6 @@ from timApp.timdb.sqa import (
     is_attribute_loaded,
     run_sql,
 )
-from timApp.timdb.types import DbModel
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import (
     ANONYMOUS_GROUPNAME,
@@ -64,7 +63,7 @@ def tim_group_to_scim(tim_group: str) -> str:
 ORG_GROUP_SUFFIX = " users"
 
 
-class UserGroup(DbModel, TimeStampMixin, SCIMEntity):
+class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     """A usergroup. Each User should belong to a personal UserGroup that has the same name as the User name. No one
     else should belong to a personal UserGroup.
 

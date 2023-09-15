@@ -6,7 +6,6 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.timdb.sqa import db
-from timApp.timdb.types import DbModel
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -37,7 +36,7 @@ class PrimaryContact(Enum):
     true = True
 
 
-class UserContact(DbModel):
+class UserContact(db.Model):
     """TIM users' additional contact information."""
 
     __table_args__ = (

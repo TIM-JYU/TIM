@@ -3,10 +3,10 @@ from typing import Optional
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 
-from timApp.timdb.types import DbModel
+from timApp.timdb.sqa import db
 
 
-class Question(DbModel):
+class Question(db.Model):
     question_id: Mapped[int] = mapped_column(primary_key=True)
     doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
     par_id: Mapped[str]

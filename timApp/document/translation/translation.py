@@ -5,14 +5,13 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
-from timApp.timdb.types import DbModel
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
     from timApp.document.docentry import DocEntry
 
 
-class Translation(DbModel, DocInfo):
+class Translation(db.Model, DocInfo):
     """A translated document.
 
     Translation objects may be created in two scenarios:

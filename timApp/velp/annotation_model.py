@@ -6,7 +6,8 @@ from typing import Optional, TYPE_CHECKING, List
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -45,7 +46,7 @@ class AnnotationPosition:
     end: AnnotationCoordinate
 
 
-class Annotation(DbModel):
+class Annotation(db.Model):
     """An annotation that can be associated with an Answer or with a DocParagraph in a Document.
 
     The annotation can start and end in specific positions, in which case the annotation is supposed to be displayed

@@ -56,6 +56,7 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.qst.qst import question_convert_js_to_yaml
 from timApp.plugin.save_plugin import save_plugin
 from timApp.readmark.readings import mark_read
+
 # from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, run_sql

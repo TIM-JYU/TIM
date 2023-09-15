@@ -5,8 +5,8 @@ from typing import Any, Optional, TYPE_CHECKING, List
 from sqlalchemy import func, select, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import run_sql
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import run_sql, db
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -19,7 +19,7 @@ class DisplayType(Enum):
     STICKY = 2
 
 
-class InternalMessage(DbModel):
+class InternalMessage(db.Model):
     """A TIM message."""
 
     __tablename__ = "internalmessage"
@@ -73,7 +73,7 @@ class InternalMessage(DbModel):
         }
 
 
-class InternalMessageDisplay(DbModel):
+class InternalMessageDisplay(db.Model):
     """Where and for whom a TIM message is displayed."""
 
     __tablename__ = "internalmessage_display"
@@ -110,7 +110,7 @@ class InternalMessageDisplay(DbModel):
         }
 
 
-class InternalMessageReadReceipt(DbModel):
+class InternalMessageReadReceipt(db.Model):
     """Metadata about read receipts."""
 
     __tablename__ = "internalmessage_readreceipt"

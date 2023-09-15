@@ -4,7 +4,8 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
@@ -24,7 +25,7 @@ class TagType(Enum):
     """The Tag is the name for a subject."""
 
 
-class Tag(DbModel):
+class Tag(db.Model):
     """A tag with associated document id, tag name, type and expiration date."""
 
     block_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)

@@ -9,7 +9,7 @@ from sqlalchemy.orm import load_only, mapped_column, Mapped, relationship
 
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
 from timApp.user.usercontact import UserContact, PrimaryContact
 from timApp.util.utils import get_current_time
@@ -46,7 +46,7 @@ VERIFICATION_TEMPLATES = {
 }
 
 
-class Verification(DbModel):
+class Verification(db.Model):
     """For various pending verifications, such as message list joining and contact information ownership
     verification."""
 
@@ -113,7 +113,7 @@ class ContactAddVerification(Verification):
             "contact": self.contact.contact,
         }
 
-    __mapper_args__ = {"polymorphic_identity": VerificationType.CONTACT_OWNERSHIP}
+    __mapper_args__ = {"polymorphic_identity": VerificationType.CONTACT_OWNERSHIP}  # type: ignore
 
 
 class SetPrimaryContactVerification(ContactAddVerification):
@@ -159,7 +159,7 @@ class SetPrimaryContactVerification(ContactAddVerification):
             u._email = self.contact.contact
         update_mailing_list_address(old_email, self.contact.contact)
 
-    __mapper_args__ = {"polymorphic_identity": VerificationType.SET_PRIMARY_CONTACT}
+    __mapper_args__ = {"polymorphic_identity": VerificationType.SET_PRIMARY_CONTACT}  # type: ignore
 
 
 def send_verification_impl(

@@ -253,7 +253,7 @@ VelpGroupOrDocInfo = Union[VelpGroup, DocInfo]
 
 
 def add_groups_to_document(
-    velp_groups: list[VelpGroupOrDocInfo], doc: DocInfo, user: User
+    velp_groups: Sequence[VelpGroupOrDocInfo], doc: DocInfo, user: User
 ) -> None:
     """Adds velp groups to VelpGroupsInDocument table."""
     existing: Sequence[VelpGroupsInDocument] = (

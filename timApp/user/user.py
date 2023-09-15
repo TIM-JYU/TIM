@@ -41,7 +41,6 @@ from timApp.notification.notification import Notification, NotificationType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded, run_sql
-from timApp.timdb.types import DbModel
 from timApp.user.hakaorganization import HakaOrganization, get_home_organization_id
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.preferences import Preferences
@@ -258,7 +257,7 @@ def user_query_with_joined_groups() -> Select:
     return select(User).options(selectinload(User.groups))
 
 
-class User(DbModel, TimeStampMixin, SCIMEntity):
+class User(db.Model, TimeStampMixin, SCIMEntity):
     """A user account. Used to identify users.
 
     .. note:: Some user IDs are reserved for internal use:
@@ -1176,6 +1175,10 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
         """If set, access any access locking is skipped when checking for permissions."""
         return getattr(self, "bypass_access_lock", False)
 
+    @skip_access_lock.setter
+    def skip_access_lock(self, value):
+        setattr(self, "bypass_access_lock", value)
+
     def _downgrade_access(
         self, access_vals: set[int], access: BlockAccess | None
     ) -> BlockAccess | None:
@@ -1467,10 +1470,18 @@ class User(DbModel, TimeStampMixin, SCIMEntity):
         """Hides names and email of the user, but not user ID"""
         return getattr(self, "hide_name", False)
 
+    @is_name_hidden.setter
+    def is_name_hidden(self, value):
+        setattr(self, "hide_name", value)
+
     @property
     def is_anonymized(self):
         """Hides names, email and ID of the user"""
         return getattr(self, "anonymize", False)
+
+    @is_anonymized.setter
+    def is_anonymized(self, value):
+        setattr(self, "anonymize", value)
 
     @property
     def is_anonymous_guest_user(self):

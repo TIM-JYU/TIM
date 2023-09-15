@@ -26,7 +26,6 @@ from timApp.document.translation.translator import (
     Usage,
 )
 
-
 REVERSE_LANG = {
     "lang_code": langcodes.standardize_tag("rev-erse"),
     "lang_name": "Reverse",
@@ -115,7 +114,7 @@ class ReversingTranslationService(TranslationService):
         lang = Language.query_by_code(REVERSE_LANG["lang_code"])
         if lang is not None:
             return LanguagePairing(
-                value={source: lang for source in Language.query_all()}
+                value={source.lang_code: [lang] for source in Language.query_all()}
             )
         raise Exception(
             f"Test-language is not found in database with the code '{REVERSE_LANG['lang_code']}'."

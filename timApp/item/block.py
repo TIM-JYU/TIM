@@ -16,7 +16,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.blockassociation import BlockAssociation
 from timApp.timdb.sqa import db
-from timApp.timdb.types import datetime_tz, DbModel
+from timApp.timdb.types import datetime_tz
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.util.utils import get_current_time
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     )
 
 
-class Block(DbModel):
+class Block(db.Model):
     """The "base class" for all database objects that are part of the permission system."""
 
     id: Mapped[int] = mapped_column(primary_key=True)
