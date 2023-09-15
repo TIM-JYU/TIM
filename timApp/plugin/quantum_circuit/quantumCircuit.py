@@ -290,7 +290,9 @@ def get_gate_matrix(
         matrix_size = math.floor(math.log2(gate_matrix.shape[0]))
         if matrix_size > 1:
             # all concurrent indices of target are qubits it affects
-            return DenseMatrix([target + i for i in range(matrix_size)], gate_matrix)
+            return DenseMatrix(
+                [target + i for i in range(matrix_size - 1, -1, -1)], gate_matrix
+            )
         return DenseMatrix(target, gate_matrix)
     return None
 
