@@ -305,7 +305,7 @@ def get_all_gate_names(custom_gates: dict[str, np.ndarray]) -> set[str]:
     :return:
     """
     custom_names = custom_gates.keys()
-    def_names = ["H", "X", "Y", "Z", "S", "T"]
+    def_names = ["H", "X", "Y", "Z", "S", "T", "swap"]
 
     all_names: set[str] = set()
     all_names.update(custom_names)
