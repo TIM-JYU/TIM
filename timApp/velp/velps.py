@@ -254,7 +254,7 @@ def get_velp_content_for_document(
         .options(selectinload(Velp.groups).raiseload(VelpGroup.block))
         .options(selectinload(Velp.velp_versions).joinedload(VelpVersion.content))
     )
-    return list(run_sql(vq).scalars().all())
+    return list(run_sql(vq).unique().scalars().all())
 
 
 def get_velp_label_content_for_document(
@@ -289,6 +289,7 @@ def get_velp_label_content_for_document(
             .filter_by(doc_id=doc_id, user_id=user_id)
             .with_only_columns(VelpLabelContent)
         )
+        .unique()
         .scalars()
         .all()
     )

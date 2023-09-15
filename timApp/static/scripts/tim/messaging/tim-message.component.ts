@@ -159,7 +159,7 @@ export class TimMessageComponent implements OnInit {
         const result = await toPromise(
             this.http.post("/timMessage/reply", {
                 options: this.replyOptions,
-                messageBody: {
+                message: {
                     messageBody: this.replyMessage,
                     messageSubject: `[Re] ${this.message.message_subject}`,
                     recipients: [this.replyOptions.recipient],
