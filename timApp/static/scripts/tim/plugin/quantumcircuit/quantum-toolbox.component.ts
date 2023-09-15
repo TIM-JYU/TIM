@@ -10,7 +10,7 @@ import {
     selector: "tim-quantum-toolbox",
     template: `
         <div class="toolbox">
-            <div class="gate-info" *ngIf="activeGateInfo">
+            <div class="gate-info" *ngIf="activeGateInfo && !activeGateInfo.hide">
                 <div class="gate-info-header">
                     <div>{{activeGateInfo.description}}</div>
                     <div *ngIf="showEditableInfo" class="text-info gate-editable-message">

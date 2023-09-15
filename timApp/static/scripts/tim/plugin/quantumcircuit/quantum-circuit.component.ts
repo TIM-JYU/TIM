@@ -156,6 +156,7 @@ const QuantumCircuitMarkup = t.intersection([
         qubits: nullable(t.array(QubitInfo)),
         outputNames: nullable(t.array(t.string)),
         maxRunTimeout: nullable(t.number),
+        hideGateInfo: nullable(t.array(t.string)),
     }),
     GenericPluginMarkup,
     t.type({
@@ -785,6 +786,14 @@ export class QuantumCircuitComponent
     }
 
     /**
+     * Determine whether gate info should be hidden from user.
+     * @param name name of the gate
+     */
+    isHiddenGateInfo(name: string) {
+        return this.markup.hideGateInfo?.includes(name) ?? false;
+    }
+
+    /**
      * Sets active gate based on chosen cell.
      * @param gate position of gate
      */
@@ -813,6 +822,8 @@ export class QuantumCircuitComponent
         const editable =
             this.board.get(gate.target, gate.time)?.editable === true;
 
+        const hide = this.isHiddenGateInfo(name);
+
         this.activeGateInfo = new CircuitActiveGateInfo(
             gate.target,
             gate.time,
@@ -822,6 +833,7 @@ export class QuantumCircuitComponent
             this.qubits,
             gateInfo.info,
             editable,
+            hide,
             swapInfo
         );
     }
@@ -835,10 +847,12 @@ export class QuantumCircuitComponent
         if (gateInfo && gateInfo.name === "control") {
             this.activeGateInfo = undefined;
         } else if (gateInfo) {
+            const hide = this.isHiddenGateInfo(gateInfo.name);
             this.activeGateInfo = new ActiveGateInfo(
                 gateInfo.name,
                 gateInfo.info,
-                gateInfo.matrix
+                gateInfo.matrix,
+                hide
             );
         }
     }

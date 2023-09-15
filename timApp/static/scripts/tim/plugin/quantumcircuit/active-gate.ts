@@ -17,15 +17,19 @@ export class ActiveGateInfo {
     name: string;
     description: string;
     matrix: Matrix;
+    hide: boolean;
+
     /**
      * @param name the name of gate
      * @param description more detailed info about gate than its name
      * @param mat actual matrix presentation of the gate
+     * @param hide whether the info about this gate can't be shown to user
      */
-    constructor(name: string, description: string, mat: Matrix) {
+    constructor(name: string, description: string, mat: Matrix, hide: boolean) {
         this.name = name;
         this.description = description;
         this.matrix = mat;
+        this.hide = hide;
     }
 
     /**
@@ -71,6 +75,7 @@ export class CircuitActiveGateInfo extends ActiveGateInfo {
      * @param qubits qubit objects used to get names of qubits
      * @param description more detailed info about gate than its name
      * @param swap pair of qubit indices for swap gate
+     * @param hide whether the info about this gate can't be shown to user
      * @param editable whether this gate can be edited or not
      */
     constructor(
@@ -82,9 +87,10 @@ export class CircuitActiveGateInfo extends ActiveGateInfo {
         qubits: Qubit[],
         description: string,
         editable: boolean,
+        hide: boolean,
         swap?: [number, number]
     ) {
-        super(name, description, mat);
+        super(name, description, mat, hide);
         this.target = target;
         this.time = time;
         this.qubits = qubits;
