@@ -174,6 +174,9 @@ const QuantumCircuitMarkup = t.intersection([
             t.keyof({browser: null, server: null}),
             "browser"
         ),
+        leftAxisLabel: withDefault(t.string, "Qubit"),
+        timeAxisLabel: withDefault(t.string, "Time"),
+        rightAxisLabel: withDefault(t.string, "Output"),
     }),
 ]);
 
@@ -313,6 +316,9 @@ export interface CircuitOptions {
                             [qubitOutputs]="qubitOutputs"
                             [circuitOptions]="circuitOptions"
                             [showOutputBits]="showOutputBits"
+                            [leftAxisLabel]="leftAxisLabel"
+                            [rightAxisLabel]="rightAxisLabel"
+                            [timeAxisLabel]="timeAxisLabel"
                             (qubitChange)="handleQubitChange($event)"
                             (gateDrop)="handleGateDrop($event)"
                             (gateMove)="handleGateMove($event)"
@@ -493,6 +499,18 @@ export class QuantumCircuitComponent
 
     get nSamples() {
         return this.markup.nSamples;
+    }
+
+    get leftAxisLabel() {
+        return this.markup.leftAxisLabel;
+    }
+
+    get rightAxisLabel() {
+        return this.markup.rightAxisLabel;
+    }
+
+    get timeAxisLabel() {
+        return this.markup.timeAxisLabel;
     }
 
     parseError(e: string) {

@@ -60,8 +60,26 @@ export interface GateBeingDragged {
         <div class="circuit-container">
             <div class="qubits">
                 <div class="left-block" [style.height.px]="circuitOptions.timeAxisHeight">
-                    <div class="axis-text-time"><ng-container i18n>Time</ng-container></div>
-                    <div class="axis-text-qubit"><ng-container i18n>Qubit</ng-container></div>
+                    <div [ngSwitch]="timeAxisLabel">
+                        <div *ngSwitchCase="'Time'" class="axis-text-time">
+                            <ng-container i18n>Time</ng-container>
+                        </div>
+                        <div *ngSwitchDefault class="axis-text-time">
+                            {{timeAxisLabel}}
+                        </div>
+                    </div>
+
+                    <div [ngSwitch]="leftAxisLabel">
+                        <div *ngSwitchCase="'Qubit'" class="axis-text-qubit">
+                            <ng-container i18n>Qubit</ng-container>
+                        </div>
+                        <div *ngSwitchCase="'Bit'" class="axis-text-qubit">
+                            <ng-container i18n>Bit</ng-container>
+                        </div>
+                        <div *ngSwitchDefault class="axis-text-qubit">
+                            {{leftAxisLabel}}
+                        </div>
+                    </div>
                 </div>
                 <div *ngFor="let qubit of qubits; let i=index"
                      [style.height.px]="circuitOptions.baseSize"
@@ -148,8 +166,24 @@ export interface GateBeingDragged {
 
             <div class="output-container">
                 <div class="right-block" [style.height.px]="circuitOptions.timeAxisHeight">
-                    <div class="out-axis-time"><ng-container i18n>Time</ng-container></div>
-                    <div class="out-axis-text"><ng-container i18n>Output</ng-container></div>
+                    <div [ngSwitch]="timeAxisLabel">
+                        <div *ngSwitchCase="'Time'" class="out-axis-time">
+                            <ng-container i18n>Time</ng-container>
+                        </div>
+                        <div *ngSwitchDefault class="out-axis-time">
+                            {{timeAxisLabel}}
+                        </div>
+                    </div>
+                    
+                    <div [ngSwitch]="rightAxisLabel">
+                        <div *ngSwitchCase="'Output'" class="out-axis-text">
+                            <ng-container i18n>Output</ng-container>
+                        </div>
+                        <div *ngSwitchDefault class="out-axis-text">
+                            {{rightAxisLabel}}
+                        </div>
+                    </div>
+                    
                 </div>
                 <div class="output" *ngFor="let output of qubitOutputs"
                      [style.height.px]="circuitOptions.baseSize">
@@ -219,6 +253,15 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
     @Input()
     showOutputBits: boolean = true;
+
+    @Input()
+    leftAxisLabel!: string;
+
+    @Input()
+    rightAxisLabel!: string;
+
+    @Input()
+    timeAxisLabel!: string;
 
     @Output()
     qubitChange = new EventEmitter<number>();
