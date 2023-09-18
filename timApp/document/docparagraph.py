@@ -1110,7 +1110,7 @@ class DocParagraph:
                 raise InvalidReferenceException(
                     "Source document for reference not specified."
                 )
-            ref_doc = self.doc.get_ref_doc(ref_docid)
+            ref_doc = self.doc.get_ref_doc(ref_docid, preload_option=PreloadOption.none)
 
         if not ref_doc.exists():
             raise InvalidReferenceException("The referenced document does not exist.")

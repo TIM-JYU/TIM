@@ -1280,10 +1280,13 @@ class Document:
         self.ref_doc_cache = {}
         self.single_par_cache = {}
 
-    def get_ref_doc(self, ref_docid: int):
+    def get_ref_doc(self, ref_docid: int, preload_option: PreloadOption | None = None):
         cached = self.ref_doc_cache.get(ref_docid)
+        preload_option = (
+            preload_option if preload_option is not None else self.preload_option
+        )
         if not cached:
-            cached = Document(ref_docid, preload_option=self.preload_option)
+            cached = Document(ref_docid, preload_option=preload_option)
             if not cached.exists():
                 raise InvalidReferenceException(
                     "The referenced document does not exist."
