@@ -13,7 +13,6 @@ import requests
 from flask.testing import FlaskClient
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
-from selenium.common import WebDriverException
 from selenium.common.exceptions import (
     NoSuchElementException,
     StaleElementReferenceException,

@@ -19,17 +19,25 @@ from timApp.timdb.types import datetime_tz, DbModel
 
 session_options = {}
 
-if os.environ.get("TIM_TESTING", None):
-    # Disabling object expiration on commit makes testing easier
-    # because sometimes objects would expire after calling a route.
-    session_options["expire_on_commit"] = False
-
 cpus = multiprocessing.cpu_count()
 pg_max_connections = os.environ.get("PG_MAX_CONNECTIONS")
 max_pool_all_workers = int(pg_max_connections or cpus * 3 + 5) - 5
 SQLALCHEMY_POOL_SIZE = (max_pool_all_workers // cpus) - 1
 SQLALCHEMY_POOL_TIMEOUT = 15
 SQLALCHEMY_MAX_OVERFLOW = (max_pool_all_workers - SQLALCHEMY_POOL_SIZE * cpus) // cpus
+
+if os.environ.get("TIM_TESTING", None):
+    # Disabling object expiration on commit makes testing easier
+    # because sometimes objects would expire after calling a route.
+    session_options["expire_on_commit"] = False
+
+    # Increase pool size in tests because sessions are persisted for longer
+    SQLALCHEMY_POOL_SIZE = 50
+    SQLALCHEMY_MAX_OVERFLOW = 100
+elif os.environ.get("COMPOSE_PROFILES", None) == "dev":
+    SQLALCHEMY_POOL_SIZE = 100
+    SQLALCHEMY_MAX_OVERFLOW = 150
+
 
 db = SQLAlchemy(
     session_options=session_options,
