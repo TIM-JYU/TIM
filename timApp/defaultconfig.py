@@ -70,15 +70,7 @@ DB_URI = f"postgresql://postgres:{DB_PASSWORD}@postgresql:5432/{TIM_NAME}"
 SASS_GEN_PATH = Path("generated")
 TEMPLATES_AUTO_RELOAD = True
 SQLALCHEMY_DATABASE_URI = DB_URI
-cpus = multiprocessing.cpu_count()
 
-# If PG_MAX_CONNECTIONS is not defined (possible when running from IDE), we use a default value that gives
-# pool size 2.
-PG_MAX_CONNECTIONS = os.environ.get("PG_MAX_CONNECTIONS")
-max_pool_all_workers = int(PG_MAX_CONNECTIONS or cpus * 3 + 5) - 5
-SQLALCHEMY_POOL_SIZE = (max_pool_all_workers // cpus) - 1
-SQLALCHEMY_POOL_TIMEOUT = 15
-SQLALCHEMY_MAX_OVERFLOW = (max_pool_all_workers - SQLALCHEMY_POOL_SIZE * cpus) // cpus
 LAST_EDITED_BOOKMARK_LIMIT = 15
 LAST_READ_BOOKMARK_LIMIT = 15
 

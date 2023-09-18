@@ -6,6 +6,7 @@ name is class name in lowercase.
 Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs.io/en/latest/>.
 
 """
+import multiprocessing
 import os
 from typing import Optional
 
@@ -23,14 +24,23 @@ if os.environ.get("TIM_TESTING", None):
     # because sometimes objects would expire after calling a route.
     session_options["expire_on_commit"] = False
 
+cpus = multiprocessing.cpu_count()
+pg_max_connections = os.environ.get("PG_MAX_CONNECTIONS")
+max_pool_all_workers = int(pg_max_connections or cpus * 3 + 5) - 5
+SQLALCHEMY_POOL_SIZE = (max_pool_all_workers // cpus) - 1
+SQLALCHEMY_POOL_TIMEOUT = 15
+SQLALCHEMY_MAX_OVERFLOW = (max_pool_all_workers - SQLALCHEMY_POOL_SIZE * cpus) // cpus
+
 db = SQLAlchemy(
-    session_options=session_options, model_class=DbModel, disable_autonaming=True
+    session_options=session_options,
+    model_class=DbModel,
+    disable_autonaming=True,
+    engine_options={
+        "pool_size": SQLALCHEMY_POOL_SIZE,
+        "pool_timeout": SQLALCHEMY_POOL_TIMEOUT,
+        "max_overflow": SQLALCHEMY_MAX_OVERFLOW,
+    },
 )
-# Overwrite metadata to use the DbModel's metadata
-# Flask-SQLAlchemy 3.x doesn't appear to have a correct handler of model_class, so it ends up overwriting our DbModel
-# Instead, we pass our model manually
-# db.Model = DbModel
-# db.metadatas[None] = DbModel.metadata
 
 
 # TODO: Switch models to use dataclasses instead
