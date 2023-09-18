@@ -225,6 +225,13 @@ export class GroupManagementComponent implements OnInit {
                 real_name: "Roope Ankka",
                 student_id: "623456789",
             },
+            {
+                id: 723456789,
+                name: "testiankka",
+                email: "testiankka@ankkalinna.com",
+                real_name: "Testi Ankka",
+                student_id: "723456789",
+            },
         ];
         this.mockGroups = [
             {
