@@ -9,6 +9,7 @@ from marshmallow.utils import missing
 
 from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 from timApp.tim_app import csrf
+from timApp.util.flask.cache import cache
 from tim_common.dumboclient import call_dumbo
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
@@ -224,6 +225,12 @@ def get_attribute(line: str, attr_name: str) -> str | None:
         return None
 
 
+@cache.memoize(timeout=60 * 60 * 24)
+def _get_menu_html_cached(text_list: list[str]) -> list[str]:
+    # FIXME: This needs better caching! Redis cache is not good option for user input.
+    return call_dumbo(text_list)
+
+
 def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenuItem]:
     """
     Converts menu-attribute string into a menu structure with html content.
@@ -261,7 +268,7 @@ def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenu
             text_list.append("")
             continue
         text_list.append(item[list_symbol_index + 1 :])
-    html_text_list = call_dumbo(text_list)
+    html_text_list = _get_menu_html_cached(text_list)
 
     level_indentations = [TimMenuIndentation(level=0, spaces_min=0, spaces_max=0)]
     parents = [TimMenuItem(text="", level=-1, items=[])]
