@@ -12,7 +12,8 @@ from typing import Match, Type
 
 from flask import Blueprint, json, Request
 from flask import request
-from sqlalchemy.orm import joinedload, defaultload
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload, defaultload
 
 from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
 from timApp.auth.sessioninfo import get_current_user_object
@@ -23,6 +24,7 @@ from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import InvalidReferenceException
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import (
     get_option,
@@ -65,7 +67,9 @@ def get_subfolders(m: GetFoldersModel):
     root_path = m.folder
     if root_path == "":
         return json_response([])
-    folders = Folder.query.filter(Folder.location.like(root_path + "%")).limit(50)
+    folders = run_sql(
+        select(Folder).filter(Folder.location.like(root_path + "%")).limit(50)
+    ).scalars()
     folders_viewable = [root_path]
     for folder in folders:
         if has_view_access(folder):
@@ -359,7 +363,7 @@ def validate_query(query: str, search_whole_words: bool) -> None:
 # Query options for loading DocEntry relevance eagerly; it should speed up search cache processing because
 # we know we'll need relevance.
 docentry_eager_relevance_opt = (
-    defaultload(DocEntry._block).joinedload(Block.relevance),
+    defaultload(DocEntry._block).selectinload(Block.relevance),
 )
 
 
@@ -545,7 +549,6 @@ def create_search_files(remove_deleted_pars=True) -> tuple[int, str]:
         ) as temp_tags_file, index_log_file_name.open(
             "w+", encoding="utf-8"
         ) as index_log_file:
-
             current_doc, current_pars = None, []
 
             for line in raw_file:
@@ -727,10 +730,18 @@ def fetch_search_items(search_items: dict, search_folder: str) -> list[DocInfo]:
     :param search_folder: folder path that the search is limited to
     :return: list of DocInfo objects
     """
-    doc_infos: list[DocInfo] = DocEntry.query.filter(
-        (DocEntry.id.in_(search_items.keys()))
-        & (DocEntry.name.like(search_folder + "%"))
-    ).options(joinedload(DocEntry._block).joinedload(Block.relevance))
+    doc_infos: list[DocInfo] = (
+        run_sql(
+            select(DocEntry)
+            .filter(
+                (DocEntry.id.in_(search_items.keys()))
+                & (DocEntry.name.like(search_folder + "%"))
+            )
+            .options(selectinload(DocEntry._block).selectinload(Block.relevance))
+        )
+        .scalars()
+        .all()
+    )
     return doc_infos
 
 

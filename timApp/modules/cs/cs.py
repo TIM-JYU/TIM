@@ -1194,7 +1194,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query: QueryClass):
-
         convert_graphviz(query)
 
         t1start = time.time()

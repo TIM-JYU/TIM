@@ -136,7 +136,7 @@ def calculate_points_from_json_answer(
         default_points = 0
     if points_table is None:
         points_table = [{}] * len(single_answers)
-    for (oneAnswer, point_row) in zip(single_answers, points_table):
+    for oneAnswer, point_row in zip(single_answers, points_table):
         for oneLine in oneAnswer:
             if oneLine in point_row:
                 points += point_row[oneLine]

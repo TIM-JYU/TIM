@@ -1,53 +1,56 @@
 import json
 from contextlib import contextmanager
 from datetime import timedelta, datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING, List
 
-from sqlalchemy import func
-from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy import func, select, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, DynamicMapped, relationship
 
-from timApp.lecture.askedjson import AskedJson
-from timApp.lecture.lecture import Lecture
 from timApp.lecture.question_utils import qst_rand_array, qst_filter_markup_points
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
-from timApp.timdb.sqa import db
-from timApp.timtypes import UserType
+from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.types import datetime_tz
 from timApp.util.utils import get_current_time
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
+    from timApp.lecture.askedjson import AskedJson
+    from timApp.lecture.lecture import Lecture
+    from timApp.lecture.lectureanswer import LectureAnswer
+    from timApp.lecture.runningquestion import RunningQuestion
+    from timApp.lecture.showpoints import ShowPoints
 
 
 class AskedQuestion(db.Model):
-    __tablename__ = "askedquestion"
-    asked_id = db.Column(db.Integer, primary_key=True)
-    lecture_id = db.Column(
-        db.Integer, db.ForeignKey("lecture.lecture_id"), nullable=False
-    )
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"))
-    par_id = db.Column(db.Text)
-    asked_time = db.Column(db.DateTime(timezone=True), nullable=False)
-    points = db.Column(db.Text)  # not a single number; cannot be numeric
-    asked_json_id = db.Column(
-        db.Integer, db.ForeignKey("askedjson.asked_json_id"), nullable=False
-    )
-    expl = db.Column(db.Text)
+    asked_id: Mapped[int] = mapped_column(primary_key=True)
+    lecture_id: Mapped[int] = mapped_column(ForeignKey("lecture.lecture_id"))
+    doc_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
+    par_id: Mapped[Optional[str]]
+    asked_time: Mapped[datetime_tz]
+    points: Mapped[Optional[str]]
+    asked_json_id: Mapped[int] = mapped_column(ForeignKey("askedjson.asked_json_id"))
+    expl: Mapped[Optional[str]]
 
-    asked_json: AskedJson = db.relationship(
-        "AskedJson", back_populates="asked_questions", lazy="joined"
+    asked_json: Mapped["AskedJson"] = relationship(
+        back_populates="asked_questions", lazy="selectin"
     )
-    lecture: Lecture = db.relationship(
-        "Lecture", back_populates="asked_questions", lazy="joined"
+    lecture: Mapped["Lecture"] = relationship(
+        back_populates="asked_questions", lazy="selectin"
     )
-    answers = db.relationship(
-        "LectureAnswer", back_populates="asked_question", lazy="dynamic"
+    answers: DynamicMapped["LectureAnswer"] = relationship(
+        back_populates="asked_question", lazy="dynamic"
     )
-    answers_all = db.relationship("LectureAnswer", back_populates="asked_question")
-    running_question = db.relationship(
-        "Runningquestion", back_populates="asked_question", lazy="select", uselist=False
+    answers_all: Mapped[List["LectureAnswer"]] = relationship(
+        back_populates="asked_question", overlaps="answers"
     )
-    questionactivity = db.relationship(
-        "QuestionActivity", back_populates="asked_question", lazy="dynamic"
+    running_question: Mapped[Optional["RunningQuestion"]] = relationship(
+        back_populates="asked_question", lazy="select"
     )
-    showpoints = db.relationship(
-        "Showpoints", back_populates="asked_question", lazy="select"
+    questionactivity: DynamicMapped["QuestionActivity"] = relationship(
+        back_populates="asked_question", lazy="dynamic"
+    )
+    showpoints: Mapped[Optional["ShowPoints"]] = relationship(
+        back_populates="asked_question", lazy="select"
     )
 
     @property
@@ -57,10 +60,10 @@ class AskedQuestion(db.Model):
             return None
         return self.asked_time + timedelta(seconds=timelimit)
 
-    def has_activity(self, kind: QuestionActivityKind, user: UserType):
+    def has_activity(self, kind: QuestionActivityKind, user: "User"):
         return self.questionactivity.filter_by(kind=kind, user_id=user.id).first()
 
-    def add_activity(self, kind: QuestionActivityKind, user: UserType):
+    def add_activity(self, kind: QuestionActivityKind, user: "User"):
         if self.has_activity(kind, user):
             return
         a = QuestionActivity(kind=kind, user=user, asked_question=self)
@@ -95,7 +98,7 @@ class AskedQuestion(db.Model):
         aj = self.asked_json.to_json()
         return aj["json"].get("defaultPoints", 0)
 
-    def build_answer_and_points(self, answer, u: UserType):
+    def build_answer_and_points(self, answer, u: "User"):
         """
         Checks whether question was randomized
         If so, set question point input accordingly and expand answer to contain randomization data
@@ -136,12 +139,12 @@ class AskedQuestion(db.Model):
 
 
 def get_asked_question(asked_id: int) -> AskedQuestion | None:
-    return AskedQuestion.query.get(asked_id)
+    return db.session.get(AskedQuestion, asked_id)
 
 
 @contextmanager
-def user_activity_lock(user: UserType):
-    db.session.query(func.pg_advisory_xact_lock(user.id)).all()
+def user_activity_lock(user: "User"):
+    run_sql(select(func.pg_advisory_xact_lock(user.id)))
     yield
     return
     # db.session.query(func.pg_advisory_lock(user.id)).all()

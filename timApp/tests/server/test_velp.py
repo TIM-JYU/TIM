@@ -13,8 +13,7 @@ Tested routes from velp.py:
 """
 import json
 
-from timApp.util.utils import get_current_time
-from timApp.user.usergroup import UserGroup
+from sqlalchemy import select
 
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.accesstype import AccessType
@@ -24,7 +23,9 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
+from timApp.user.usergroup import UserGroup
+from timApp.util.utils import get_current_time
 from timApp.velp.annotation import Annotation
 from timApp.velp.velp import create_new_velp, DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.velp.velp_models import (
@@ -365,11 +366,27 @@ class VelpGroupDeletionTest(TimRouteTest):
         self.assertEqual(f"roskis/{g['name']}", deleted.path)
 
         # database should not contain any references to the velp group
-        vg = VelpGroup.query.filter_by(id=g["id"]).first()
-        v_in_g = VelpInGroup.query.filter_by(velp_group_id=g["id"]).all()
-        vg_sel = VelpGroupSelection.query.filter_by(velp_group_id=g["id"]).all()
-        vg_def = VelpGroupDefaults.query.filter_by(velp_group_id=g["id"]).all()
-        vg_in_doc = VelpGroupsInDocument.query.filter_by(velp_group_id=g["id"]).all()
+        vg = run_sql(select(VelpGroup).filter_by(id=g["id"]).limit(1)).scalars().first()
+        v_in_g = (
+            run_sql(select(VelpInGroup).filter_by(velp_group_id=g["id"]))
+            .scalars()
+            .all()
+        )
+        vg_sel = (
+            run_sql(select(VelpGroupSelection).filter_by(velp_group_id=g["id"]))
+            .scalars()
+            .all()
+        )
+        vg_def = (
+            run_sql(select(VelpGroupDefaults).filter_by(velp_group_id=g["id"]))
+            .scalars()
+            .all()
+        )
+        vg_in_doc = (
+            run_sql(select(VelpGroupsInDocument).filter_by(velp_group_id=g["id"]))
+            .scalars()
+            .all()
+        )
 
         self.assertEqual(None, vg)
         self.assertEqual(0, len(v_in_g))
@@ -388,11 +405,29 @@ class VelpGroupDeletionTest(TimRouteTest):
         self.assertEqual(f"roskis/{g2['name']}", deleted.path)
 
         # database should not contain any references to the velp group
-        vg2 = VelpGroup.query.filter_by(id=g2["id"]).first()
-        v_in_g2 = VelpInGroup.query.filter_by(velp_group_id=g2["id"]).all()
-        vg_sel2 = VelpGroupSelection.query.filter_by(velp_group_id=g2["id"]).all()
-        vg_def2 = VelpGroupDefaults.query.filter_by(velp_group_id=g2["id"]).all()
-        vg_in_doc2 = VelpGroupsInDocument.query.filter_by(velp_group_id=g2["id"]).all()
+        vg2 = (
+            run_sql(select(VelpGroup).filter_by(id=g2["id"]).limit(1)).scalars().first()
+        )
+        v_in_g2 = (
+            run_sql(select(VelpInGroup).filter_by(velp_group_id=g2["id"]))
+            .scalars()
+            .all()
+        )
+        vg_sel2 = (
+            run_sql(select(VelpGroupSelection).filter_by(velp_group_id=g2["id"]))
+            .scalars()
+            .all()
+        )
+        vg_def2 = (
+            run_sql(select(VelpGroupDefaults).filter_by(velp_group_id=g2["id"]))
+            .scalars()
+            .all()
+        )
+        vg_in_doc2 = (
+            run_sql(select(VelpGroupsInDocument).filter_by(velp_group_id=g2["id"]))
+            .scalars()
+            .all()
+        )
 
         self.assertEqual(None, vg2)
         self.assertEqual(0, len(v_in_g2))
@@ -695,15 +730,14 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         # test user 2 should not have access anymore
         self.get(deleted.url, expect_status=403)
         # admin should still be able to access
-        test_user_2 = get_current_user_object()
-        self.make_admin(test_user_2)
+        self.make_admin(self.test_user_2)
         self.get(deleted.url, expect_status=200)
         # remove testuser2 from admin group to prevent it from affecting other tests
         self.json_post(
             f"/groups/removemember/{UserGroup.get_admin_group().name}",
-            {"names": [test_user_2.name]},
+            {"names": [self.test_user_2.name]},
             expect_content={
-                "removed": [test_user_2.name],
+                "removed": [self.test_user_2.name],
                 "does_not_belong": [],
                 "not_exist": [],
             },
@@ -817,7 +851,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         self.get(g_doc.url, expect_status=403)
 
     def test_velp_group_mass_edit_permissions(self):
-
         self.login_test1()
         d1 = self.create_doc(title="test velp group permissions")
         d2 = self.create_doc(title="test velp group permissions 2")
@@ -955,6 +988,7 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             {"name": "folder-group", "target_type": 2},
         )
         db.session.commit()
+        db.session.expire_all()
 
         g_persnl_doc = get_doc_or_abort(g_persnl["id"])
         g_docmnt_doc = get_doc_or_abort(g_docmnt["id"])

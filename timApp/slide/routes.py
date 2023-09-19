@@ -1,8 +1,10 @@
 import json
 
+from sqlalchemy import select
+
 from timApp.auth.accesshelper import get_doc_or_abort, verify_manage_access
 from timApp.slide.slidestatus import SlideStatus
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -15,7 +17,9 @@ slide_bp = TypedBlueprint(
 
 @slide_bp.get("/getslidestatus")
 def getslidestatus(doc_id: int):
-    status: SlideStatus = SlideStatus.query.filter_by(doc_id=doc_id).first()
+    status: SlideStatus = (
+        run_sql(select(SlideStatus).filter_by(doc_id=doc_id).limit(1)).scalars().first()
+    )
     st = status.status if status else None
     return json_response(json.loads(st))
 

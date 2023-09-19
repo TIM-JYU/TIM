@@ -1,11 +1,13 @@
 from lxml import html
 
 from timApp.answer.answer import Answer
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 
 
 class PluginPreambleTest(TimRouteTest):
@@ -34,7 +36,7 @@ choices:
         plug = Plugin.from_paragraph(par, default_view_ctx)
         self.assertEqual(f"{d.id}.t", plug.task_id.doc_task)
         resp = self.post_answer(plug.type, plug.task_id.extended, [True])
-        a: Answer = Answer.query.get(resp["savedNew"])
+        a: Answer = db.session.get(Answer, resp["savedNew"])
         self.assertEqual(1, a.points)
         self.assertEqual(f"{d.id}.t", a.task_id)
         self.get_state(a.id)
@@ -56,9 +58,12 @@ choices:
             [False],
             ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()),
         )
-        a: Answer = Answer.query.get(resp["savedNew"])
+        a: Answer = db.session.get(Answer, resp["savedNew"])
         self.assertEqual(1 if create_preamble_translation else 0, a.points)
         self.assertEqual(f"{d.id}.t", a.task_id)
+        # Reattach the documents to the session
+        db.session.add(tr)
+        d = DocEntry.find_by_id(d.id)
         self.check_plugin_ref_correct(
             tr, d, p.document.get_paragraphs()[0], preamble_doc=tr_p
         )
@@ -107,7 +112,7 @@ choices:
             [True],
             ref_from=(d.id, d.document.get_paragraphs()[0].get_id()),
         )
-        a: Answer = Answer.query.get(resp["savedNew"])
+        a: Answer = db.session.get(Answer, resp["savedNew"])
         self.assertEqual(1, a.points)
         self.assertEqual(plug.task_id.doc_task, a.task_id)
 
@@ -125,7 +130,7 @@ choices:
             [False],
             ref_from=(tr.id, tr.document.get_paragraphs()[0].get_id()),
         )
-        a: Answer = Answer.query.get(resp["savedNew"])
+        a: Answer = db.session.get(Answer, resp["savedNew"])
         self.assertEqual(0, a.points)
         self.assertEqual(plug.task_id.doc_task, a.task_id)
         self.check_plugin_ref_correct(tr, plugin_doc, plugin_par, preamble_doc=tr_p)
@@ -157,17 +162,8 @@ choices:
             tr_p.document.get_paragraphs()[1].create_reference(n.document)
         )
         # print(f'd={d.id} p={p.id} tr_p={tr_p.id} n={n.id}')
-
-        tr_d = self.create_translation(d)
-        self.check_plugin_ref_correct(n, p, p.document.get_paragraphs()[0])
-
-        n = self.create_doc()
-        tr_d.document.insert_preamble_pars()
-        n.document.add_paragraph_obj(
-            tr_d.document.get_paragraphs()[0].create_reference(n.document)
-        )
         self.check_plugin_ref_correct(
-            n, d, p.document.get_paragraphs()[0], text_to_check="This is in English"
+            n, p, p.document.get_paragraphs()[0], text_to_check="This is in English"
         )
 
     def check_plugin_ref_correct(
@@ -185,8 +181,11 @@ choices:
             .getparent()
             .getparent()
         )
+        doc_to_check = DocEntry.find_by_id(doc_to_check.id)
+        expected_doc = DocEntry.find_by_id(expected_doc.id)
         # print(html.tostring(par, pretty_print=True).decode())
         if preamble_doc:
+            preamble_doc = DocEntry.find_by_id(preamble_doc.id)
             self.assertEqual(preamble_doc.path, par.attrib["data-from-preamble"])
         else:
             self.assertIsNone(par.attrib.get("data-from-preamble"))

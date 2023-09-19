@@ -8,7 +8,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from tempfile import mkstemp
 from time import time
-from typing import Iterable, Generator
+from typing import Iterable, Generator, Optional
 from typing import TYPE_CHECKING
 
 from filelock import FileLock
@@ -33,7 +33,6 @@ from timApp.timdb.exceptions import (
     PreambleException,
     InvalidReferenceException,
 )
-from timApp.timtypes import DocInfoType
 from timApp.util.utils import get_error_html, trim_markdown, cache_folder_path
 from tim_common.html_sanitize import presanitize_html_body
 
@@ -79,7 +78,7 @@ class Document:
         # Cache for document settings.
         self.settings_cache: DocSettings | None = None
         # The corresponding DocInfo object.
-        self.docinfo: DocInfoType = None
+        self.docinfo: Optional["DocInfo"] = None
         # Cache for own settings; see get_own_settings
         self.own_settings = None
         # Whether preamble has been loaded
@@ -1281,16 +1280,22 @@ class Document:
         self.ref_doc_cache = {}
         self.single_par_cache = {}
 
-    def get_ref_doc(self, ref_docid: int):
+    def get_ref_doc(self, ref_docid: int, preload_option: PreloadOption | None = None):
         cached = self.ref_doc_cache.get(ref_docid)
+        preload_option = (
+            preload_option if preload_option is not None else self.preload_option
+        )
         if not cached:
-            cached = Document(ref_docid, preload_option=self.preload_option)
+            cached = Document(ref_docid, preload_option=preload_option)
             if not cached.exists():
                 raise InvalidReferenceException(
                     "The referenced document does not exist."
                 )
-            # It is allowed to reference things in preamble.
-            cached.insert_preamble_pars()
+            # PERF: Enabling this is REALLY slow! It essentially causes all paragraph reference lookups be O(k*n)
+            #       where k = number of preambles and n = number of paragraphs in the document.
+            # Enabling this allows to reference paragraphs inserted via preamble documents.
+            # This is currently disabled in UI, so it's not needed generally.
+            # cached.insert_preamble_pars()
             self.ref_doc_cache[ref_docid] = cached
         return cached
 

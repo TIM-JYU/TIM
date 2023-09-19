@@ -1,14 +1,14 @@
 from collections import defaultdict
-from typing import Optional
+from typing import Sequence
 
-from sqlalchemy import func
-from sqlalchemy.orm import joinedload
+from sqlalchemy import func, select, Row
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.special_group_names import (
     ANONYMOUS_USERNAME,
     ANONYMOUS_GROUPNAME,
@@ -41,20 +41,20 @@ def get_rights_holders(block_id: int) -> RightsList:
 def get_rights_holders_all(block_ids: list[int], order_by=None):
     if not order_by:
         order_by = User.name
-    result: list[tuple[BlockAccess, UserGroup, User | None]] = (
-        BlockAccess.query.options(
-            joinedload(BlockAccess.usergroup)
-            .joinedload(UserGroup.admin_doc)
-            .joinedload(Block.docentries)
+    result: Sequence[Row[BlockAccess, UserGroup, User | None]] = run_sql(
+        select(BlockAccess)
+        .options(
+            selectinload(BlockAccess.usergroup)
+            .selectinload(UserGroup.admin_doc)
+            .selectinload(Block.docentries)
         )
-        .options(joinedload(BlockAccess.atype))
+        .options(selectinload(BlockAccess.atype))
         .filter(BlockAccess.block_id.in_(block_ids))
         .join(UserGroup)
         .outerjoin(User, User.name == UserGroup.name)
-        .with_entities(BlockAccess, UserGroup, User)
+        .with_only_columns(BlockAccess, UserGroup, User)
         .order_by(order_by)
-        .all()
-    )
+    ).all()
     results = defaultdict(list)
     for acc, ug, user in result:
         if user:
@@ -105,7 +105,7 @@ def create_anonymous_user(name: str, real_name: str) -> User:
 
     """
 
-    next_id = User.query.with_entities(func.min(User.id)).scalar() - 1
+    next_id = db.session.scalar(select(func.min(User.id))) - 1
     u, _ = User.create_with_group(
         UserInfo(username=name + str(abs(next_id)), full_name=real_name), uid=next_id
     )

@@ -142,7 +142,7 @@ def paste_from_clipboard(
 
     src_doc = None
     parrefs = clip.read(as_ref=True, force_parrefs=True)
-    for (src_par_dict, dest_par) in zip(parrefs, pars):
+    for src_par_dict, dest_par in zip(parrefs, pars):
         try:
             src_docid = int(src_par_dict["attrs"]["rd"])
             src_parid = src_par_dict["attrs"]["rp"]

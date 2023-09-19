@@ -1,7 +1,15 @@
 from enum import Enum
+from typing import Optional, TYPE_CHECKING, List
+
+from sqlalchemy import UniqueConstraint, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.timdb.sqa import db
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
+    from timApp.user.verification.verification import ContactAddVerification
 
 
 class ContactOrigin(Enum):
@@ -31,14 +39,12 @@ class PrimaryContact(Enum):
 class UserContact(db.Model):
     """TIM users' additional contact information."""
 
-    __tablename__ = "usercontact"
-
     __table_args__ = (
         # A user should not have the same contact for the channel
         # Different users are fine though
-        db.UniqueConstraint("user_id", "contact", "channel", name="user_contact_uc"),
+        UniqueConstraint("user_id", "contact", "channel", name="user_contact_uc"),
         # The same user cannot have multiple primary contacts for the same channel
-        db.UniqueConstraint(
+        UniqueConstraint(
             "user_id",
             "channel",
             "primary",
@@ -46,7 +52,7 @@ class UserContact(db.Model):
             initially="DEFERRED",  # Allow for easy swapping of primary email within the same transaction
         ),
         # Multiple users cannot have the same contact as primary
-        db.UniqueConstraint(
+        UniqueConstraint(
             "channel",
             "contact",
             "primary",
@@ -54,33 +60,32 @@ class UserContact(db.Model):
         ),
     )
 
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """Which user owns this contact information."""
 
-    contact = db.Column(db.Text, nullable=False)
+    contact: Mapped[str]
     """Contact identifier for a channel."""
 
-    channel = db.Column(db.Enum(Channel), nullable=False)
+    channel: Mapped[Channel]
     """Channel the contact information points to."""
 
-    verified = db.Column(db.Boolean, nullable=False, default=False)
+    verified: Mapped[bool] = mapped_column(default=False)
     """Whether this contact info is verified by the user.
     
     If False, the user has made a claim for a contact info, but has not yet verified it's ownership."""
 
-    primary = db.Column(db.Enum(PrimaryContact))
+    primary: Mapped[Optional[PrimaryContact]]
     """Whether the contact is primary for the user"""
 
-    contact_origin: ContactOrigin = db.Column(db.Enum(ContactOrigin), nullable=False)
+    contact_origin: Mapped[ContactOrigin]
     """How the contact was added."""
 
-    user = db.relationship("User", back_populates="contacts", lazy="select")
+    user: Mapped["User"] = relationship(back_populates="contacts")
     """User that the contact is associated with."""
 
-    _verifications = db.relationship(
-        "ContactAddVerification",
+    _verifications: Mapped[List["ContactAddVerification"]] = relationship(
         back_populates="contact",
         cascade="all, delete-orphan",
     )

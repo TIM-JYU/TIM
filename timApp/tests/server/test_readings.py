@@ -1,12 +1,14 @@
 from datetime import timedelta
 
 from lxml.cssselect import CSSSelector
+from sqlalchemy import select, func
 
 from timApp.document.docinfo import DocInfo
 from timApp.readmark.readings import get_readings, get_read_expiry_condition
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 
 readline_selector = CSSSelector("div.readline")
 
@@ -21,7 +23,7 @@ class ReadingsTest(TimRouteTest):
     def test_readings_normal(self):
         self.login_test1()
         doc = self.create_doc(initial_par=["test", "test2", "test3"])
-        q = ReadParagraph.query.filter_by(doc_id=doc.id)
+        stmt = select(func.count(ReadParagraph.id)).filter_by(doc_id=doc.id)
         pars = doc.document.get_paragraphs()
 
         self.check_readlines(self.get_readings(doc), (UNREAD, UNREAD, UNREAD))
@@ -38,12 +40,12 @@ class ReadingsTest(TimRouteTest):
             self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED)
         )
         self.mark_as_read(doc, pars[2].get_id())
-        self.assertEqual(q.count(), 4)
+        self.assertEqual(db.session.scalar(stmt), 4)
         self.check_readlines(
             self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED + " " + READ)
         )
         self.mark_as_unread(doc, pars[2].get_id())
-        self.assertEqual(q.count(), 3)
+        self.assertEqual(db.session.scalar(stmt), 3)
         self.check_readlines(
             self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED)
         )
@@ -52,7 +54,6 @@ class ReadingsTest(TimRouteTest):
         self.login_test1()
         self.login_test2(add=True)
         doc = self.create_doc(initial_par=["test", "test2", "test3", "test4"])
-        q = ReadParagraph.query.filter_by(doc_id=doc.id)
         self.check_readlines(self.get_readings(doc), (UNREAD, UNREAD, UNREAD, UNREAD))
         pars = doc.document.get_paragraphs()
         self.mark_as_read(doc, pars[0].get_id())
@@ -82,7 +83,12 @@ class ReadingsTest(TimRouteTest):
         self.check_readlines(self.get_readings(doc), (READ, READ, UNREAD, UNREAD))
         self.login_test1()
         self.check_readlines(self.get_readings(doc), (READ, READ, MODIFIED, UNREAD))
-        self.assertEqual(q.count(), 7)
+        self.assertEqual(
+            db.session.scalar(
+                select(func.count(ReadParagraph.id)).filter_by(doc_id=doc.id)
+            ),
+            7,
+        )
 
         self.get(
             f"/read/stats/{doc.id}",
@@ -187,10 +193,10 @@ testuser2,3,0,0,0,0
         d = self.create_doc(initial_par=["1", "2"])
         self.json_put(f"/read/{d.id}")
         self.check_readlines(self.get_readings(d), (READ, READ))
-        q = ReadParagraph.query.filter_by(doc_id=d.id)
-        self.assertEqual(q.count(), 2)
+        stmt = select(func.count(ReadParagraph.id)).filter_by(doc_id=d.id)
+        self.assertEqual(db.session.scalar(stmt), 2)
         self.json_put(f"/read/{d.id}")
-        self.assertEqual(q.count(), 2)
+        self.assertEqual(db.session.scalar(stmt), 2)
 
     def test_expiry(self):
         self.login_test1()

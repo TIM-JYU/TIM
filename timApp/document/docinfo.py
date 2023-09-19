@@ -3,7 +3,8 @@ from __future__ import annotations
 from itertools import accumulate
 from typing import Iterable, Generator, TYPE_CHECKING
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
@@ -16,7 +17,7 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.item.item import Item
 from timApp.markdown.markdownconverter import expand_macros_info
 from timApp.notification.notification import Notification
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.util.utils import get_current_time, partition
 from tim_common.utils import safe_parse_item_list
 
@@ -174,16 +175,16 @@ class DocInfo(Item):
         from timApp.document.translation.translation import Translation
 
         def get_docs(doc_paths: list[str]) -> list[tuple[DocEntry, Translation | None]]:
-            return (
-                db.session.query(DocEntry, Translation)
+            return run_sql(
+                select(DocEntry, Translation)
+                .select_from(DocEntry)
                 .filter(DocEntry.name.in_(doc_paths))
                 .outerjoin(
                     Translation,
                     (Translation.src_docid == DocEntry.id)
                     & (Translation.lang_id == self.lang_id),
                 )
-                .all()
-            )
+            ).all()
 
         result = get_docs(paths)
         result.sort(key=lambda x: path_index_map[x[0].path])
@@ -243,11 +244,13 @@ class DocInfo(Item):
         items.add(self)
         from timApp.user.user import User
 
-        q = Notification.query.options(
-            joinedload(Notification.user).joinedload(User.groups)
-        ).filter(Notification.block_id.in_([f.id for f in items]))
-        q = q.filter(condition)
-        return q.all()
+        stmt = (
+            select(Notification)
+            .options(selectinload(Notification.user).selectinload(User.groups))
+            .filter(Notification.block_id.in_([f.id for f in items]))
+        )
+        stmt = stmt.filter(condition)
+        return run_sql(stmt).scalars().all()
 
     def has_translation(self, lang_id):
         for t in self.translations:

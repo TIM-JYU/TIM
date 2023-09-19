@@ -6,7 +6,6 @@ from timApp.document.specialnames import (
     PRINT_FOLDER_NAME,
     PREAMBLE_FOLDER_NAME,
 )
-from timApp.tests.browser.browsertest import BrowserTest
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
@@ -44,10 +43,12 @@ class MinutesCreation(TimRouteTest):
         self.get(f"/images/{image_path}", expect_status=403)
 
 
-# BrowserTest is required because test needs in-process plugin (timTable) and
-# TimRouteTest's testclient is not multithreaded.
-class MinutesHandling(BrowserTest):
+class MinutesHandling(TimRouteTest):
     def test_minute_extracts(self):
+        with self.internal_container_ctx():
+            self.impl_test_minute_extracts()
+
+    def impl_test_minute_extracts(self):
         # Tests creation of extracts from a full minutes document
         self.login_test1()
         ug1 = UserGroup.create("ittdk18")

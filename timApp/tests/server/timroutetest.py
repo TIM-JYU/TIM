@@ -4,21 +4,31 @@ import io
 import json
 import re
 import socket
+import time
 import warnings
 from base64 import b64encode
 from contextlib import contextmanager
 from datetime import datetime
 from functools import lru_cache
-from typing import Union, Any
-from urllib.parse import urlparse
+from typing import Union, Any, Generator
 
+import requests
 import responses
-from flask import Response, current_app
-from flask import session
+from flask import (
+    Response,
+    current_app,
+    session,
+    has_app_context,
+    has_request_context,
+    g,
+)
+from flask.sessions import SessionMixin
 from flask.testing import FlaskClient
 from lxml import html
 from lxml.html import HtmlElement
 from requests import PreparedRequest
+from sqlalchemy import select
+from sqlalchemy.orm import close_all_sessions, joinedload
 
 import timApp.tim
 from timApp.answer.answer import Answer
@@ -32,9 +42,8 @@ from timApp.document.specialnames import (
     PREAMBLE_FOLDER_NAME,
     DEFAULT_PREAMBLE_DOC,
 )
-from tim_common.timjsonencoder import TimJsonEncoder
-from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
+from timApp.document.translation.translation import Translation
 from timApp.item.item import Item
 from timApp.item.routes import create_item_direct
 from timApp.messaging.messagelist.listinfo import ArchiveType
@@ -45,15 +54,14 @@ from timApp.messaging.messagelist.mailman_events import (
     MailmanMessageList,
 )
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
-from timApp.plugin import containerLink
-from timApp.plugin.containerLink import do_request
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import remove_prefix
+from tim_common.timjsonencoder import TimJsonEncoder
 
 
 def load_json(resp: Response):
@@ -80,9 +88,6 @@ def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
 
 socket.getaddrinfo = fast_getaddrinfo
 
-testclient: FlaskClient = timApp.tim.app.test_client()
-testclient = testclient.__enter__()
-
 
 def get_content(element: HtmlElement, selector: str = ".parContent") -> list[str]:
     return [r.text_content().strip() for r in element.cssselect(selector)]
@@ -104,7 +109,24 @@ def get_cookie_value(resp: Response, key: str) -> str | None:
     return None
 
 
-class TimRouteTest(TimDbTest):
+def del_g():
+    """
+    Clean up global object.
+
+    For some reason, the g object is not cleared when running browser test.
+    This helper method cleans up all the TIM-related attributes in the g object.
+    """
+    if has_request_context() and app.config["TESTING"]:
+        g.pop("user", None)
+        g.pop("viewable", None)
+        g.pop("editable", None)
+        g.pop("teachable", None)
+        g.pop("manageable", None)
+        g.pop("see_answers", None)
+        g.pop("owned", None)
+
+
+class TimRouteTestBase(TimDbTest):
     """A base class for running tests for TIM routes."""
 
     doc_num = 1
@@ -120,11 +142,32 @@ class TimRouteTest(TimDbTest):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.client = testclient
-        # Default language on create_translation NOTE not same as british or
-        # american english.
-        cls.add_language("english")
-        db.session.commit()
+        with app.app_context():
+            # Default language on create_translation NOTE not same as british or
+            # american english.
+            cls.add_language("english")
+            db.session.commit()
+            db.session.expire_all()
+
+    def tearDown(self):
+        self.client.__exit__(None, None, None)
+        close_all_sessions()
+
+    def _init_client(self) -> FlaskClient:
+        # Must be implemented by subclasses
+        raise NotImplementedError
+
+    def setUp(self):
+        self.check_skip_tests()
+        # Create a default Flask client that holds the app context
+        self.client = self._init_client()
+
+        # FIXME: It is a VERY bad idea to enter a client context for the duration of the entire test
+        #   because the client is not multithreaded. See https://github.com/pallets/flask/issues/4734
+        #   Instead, the client context should be entered only in specific tests and explicitly
+        self.client = self.client.__enter__()
+        self.client.open("/")
+        del_g()
 
     @classmethod
     def add_language(cls, lang_name: str) -> Language:
@@ -248,7 +291,9 @@ class TimRouteTest(TimDbTest):
         headers: list[tuple[str, str]] | None = None,
         xhr=True,
         auth: BasicAuthParams | None = None,
-        force_return_text=False,
+        force_return_text: bool = False,
+        expire_session_after_request: bool = True,
+        client: FlaskClient | None = None,
         **kwargs,
     ) -> Response | str | dict:
         """Performs a request.
@@ -274,83 +319,108 @@ class TimRouteTest(TimDbTest):
         :param headers: Custom headers for the request.
         :param kwargs: Custom parameters to be passed to test client's 'open' method. Can be, for example,
            query_string={'a': '1', 'b': '2'} for passing URL arguments.
+        :param xhr: Whether to set the X-Requested-With header to XMLHttpRequest.
+        :param auth: Basic auth username and password as a tuple.
+        :param force_return_text: Whether to force returning the response as text.
+        :param expire_session_after_request: Whether to expire all session objects after the request.
+        :param client: The test client to use. If not provided, the default test client is used.
         :return: If as_tree is True: Returns the response as an HTML tree.
                  Otherwise, if the response mimetype is application/json, returns the response as a JSON dict or list.
                  Otherwise, returns the response as a string.
 
         """
-        if headers is None:
-            headers = []
-        if xhr:
-            headers.append(("X-Requested-With", "XMLHttpRequest"))
-        if auth:
-            u, p = auth
-            up = f"{u}:{p}".encode()
-            headers.append(("Authorization", f"Basic {b64encode(up).decode()}"))
-        resp = self.client.open(url, method=method, headers=headers, **kwargs)
-        is_textual = resp.mimetype in TEXTUAL_MIMETYPES
-        if expect_status is not None:
-            self.assertEqual(
-                expect_status,
-                resp.status_code,
-                msg=resp.get_data(as_text=True) if is_textual else None,
-            )
-        if expect_mimetype is not None:
-            self.assertEqual(expect_mimetype, resp.mimetype)
-        if is_redirect(resp) and expect_content is not None:
-            self.assertEqual(expect_content, remove_prefix(resp.location, LOCALHOST))
-        if expect_cookie is not None:
-            self.assertEqual(expect_cookie[1], get_cookie_value(resp, expect_cookie[0]))
-        resp_data = resp.get_data(as_text=is_textual)
-        if not is_textual:
-            return resp_data
-        if force_return_text:
-            return resp_data
-        if (
-            expect_status >= 400
-            and json_key is None
-            and (isinstance(expect_content, str) or isinstance(expect_contains, str))
-        ):
-            json_key = "error"
-        if as_response:
-            return resp
-        if as_tree:
-            if json_key is not None:
-                resp_data = json.loads(resp_data)[json_key]
-            if as_tree is True:
-                tree = html.fromstring(resp_data)
-                if expect_xpath is not None:
-                    self.assertLessEqual(1, len(tree.findall(expect_xpath)))
-            elif as_tree == "fragments":
-                tree = html.fragments_fromstring(resp_data)
-            else:
-                raise Exception(f"Unknown value for as_tree: {as_tree}")
-            return tree
-        elif resp.mimetype == "application/json":
-            loaded = json.loads(resp_data)
-            if json_key is not None:
-                loaded = loaded[json_key]
-            if expect_content is not None:
-                self.assertEqual(expect_content, loaded)
-            if expect_contains is not None:
-                self.check_contains(expect_contains, loaded)
-            if expect_xpath is not None:
-                self.assertIsNotNone(json_key)
-                self.assertLessEqual(
-                    1,
-                    len(
-                        html.fragment_fromstring(loaded, create_parent=True).findall(
-                            expect_xpath
-                        )
-                    ),
+
+        @contextmanager
+        def clean_db_after_request():
+            try:
+                yield
+            finally:
+                del_g()
+                if expire_session_after_request and has_app_context():
+                    db.session.remove()
+                    # Reattach the user object to the session so that it can be tracked for changes
+
+        with clean_db_after_request():
+            if headers is None:
+                headers = []
+            if xhr:
+                headers.append(("X-Requested-With", "XMLHttpRequest"))
+            if auth:
+                u, p = auth
+                up = f"{u}:{p}".encode()
+                headers.append(("Authorization", f"Basic {b64encode(up).decode()}"))
+            c = client or self.client
+            resp = c.open(url, method=method, headers=headers, **kwargs)
+
+            is_textual = resp.mimetype in TEXTUAL_MIMETYPES
+            if expect_status is not None:
+                self.assertEqual(
+                    expect_status,
+                    resp.status_code,
+                    msg=resp.get_data(as_text=True) if is_textual else None,
                 )
-            return loaded
-        else:
-            if expect_content is not None and not is_redirect(resp):
-                self.assertEqual(expect_content, resp_data)
-            elif expect_contains is not None:
-                self.check_contains(expect_contains, resp_data)
-            return resp_data if not is_redirect(resp) else resp.location
+            if expect_mimetype is not None:
+                self.assertEqual(expect_mimetype, resp.mimetype)
+            if is_redirect(resp) and expect_content is not None:
+                self.assertEqual(
+                    expect_content, remove_prefix(resp.location, LOCALHOST)
+                )
+            if expect_cookie is not None:
+                self.assertEqual(
+                    expect_cookie[1], get_cookie_value(resp, expect_cookie[0])
+                )
+            resp_data = resp.get_data(as_text=is_textual)
+            if not is_textual:
+                return resp_data
+            if force_return_text:
+                return resp_data
+            if (
+                expect_status >= 400
+                and json_key is None
+                and (
+                    isinstance(expect_content, str) or isinstance(expect_contains, str)
+                )
+            ):
+                json_key = "error"
+            if as_response:
+                return resp
+            if as_tree:
+                if json_key is not None:
+                    resp_data = json.loads(resp_data)[json_key]
+                if as_tree is True:
+                    tree = html.fromstring(resp_data)
+                    if expect_xpath is not None:
+                        self.assertLessEqual(1, len(tree.findall(expect_xpath)))
+                elif as_tree == "fragments":
+                    tree = html.fragments_fromstring(resp_data)
+                else:
+                    raise Exception(f"Unknown value for as_tree: {as_tree}")
+                return tree
+            elif resp.mimetype == "application/json":
+                loaded = json.loads(resp_data)
+                if json_key is not None:
+                    loaded = loaded[json_key]
+                if expect_content is not None:
+                    self.assertEqual(expect_content, loaded)
+                if expect_contains is not None:
+                    self.check_contains(expect_contains, loaded)
+                if expect_xpath is not None:
+                    self.assertIsNotNone(json_key)
+                    self.assertLessEqual(
+                        1,
+                        len(
+                            html.fragment_fromstring(
+                                loaded, create_parent=True
+                            ).findall(expect_xpath)
+                        ),
+                    )
+                return loaded
+            else:
+                if expect_content is not None and not is_redirect(resp):
+                    self.assertEqual(expect_content, resp_data)
+                elif expect_contains is not None:
+                    self.check_contains(expect_contains, resp_data)
+                return resp_data if not is_redirect(resp) else resp.location
 
     def check_contains(self, expect_contains, data):
         if isinstance(expect_contains, str):
@@ -634,27 +704,31 @@ class TimRouteTest(TimDbTest):
         ref_from=None,
         expect_content=None,
         expect_status=200,
+        init_mock=None,
         **kwargs,
     ):
-        return self.json_put(
-            f"/{plugin_type}/{task_id}/answer",
-            {
-                "input": user_input,
-                "ref_from": {"docId": ref_from[0], "par": ref_from[1]}
-                if ref_from
-                else None,
-                "abData": {
-                    "saveTeacher": save_teacher,
-                    "teacher": teacher,
-                    "userId": user_id,
-                    "answer_id": answer_id,
-                    "saveAnswer": True,
+        with self.internal_container_ctx() as m:
+            if init_mock:
+                init_mock(m)
+            return self.json_put(
+                f"/{plugin_type}/{task_id}/answer",
+                {
+                    "input": user_input,
+                    "ref_from": {"docId": ref_from[0], "par": ref_from[1]}
+                    if ref_from
+                    else None,
+                    "abData": {
+                        "saveTeacher": save_teacher,
+                        "teacher": teacher,
+                        "userId": user_id,
+                        "answer_id": answer_id,
+                        "saveAnswer": True,
+                    },
                 },
-            },
-            expect_content=expect_content,
-            expect_status=expect_status,
-            **kwargs,
-        )
+                expect_content=expect_content,
+                expect_status=expect_status,
+                **kwargs,
+            )
 
     def post_answer_no_abdata(
         self, plugin_type, task_id, user_input, ref_from=None, **kwargs
@@ -698,10 +772,9 @@ class TimRouteTest(TimDbTest):
         return self.current_user.get_personal_group()
 
     def login_anonymous(self):
-        with self.client.session_transaction() as s:
+        with self.refreshing_session_transaction() as s:
             log_in_as_anonymous(s)
-            db.session.commit()
-        self.client.session_transaction().__enter__()
+            self.commit_db()
 
     def login_test1(self, force: bool = False, add: bool = False, **kwargs):
         """Logs testuser1 in.
@@ -785,20 +858,19 @@ class TimRouteTest(TimDbTest):
         :return: Response as a JSON dict.
 
         """
-        if self.client.application.got_first_request and not manual:
+        if not manual:
             if not force and not add:
                 u = User.get_by_name(username)
-                # if not flask.has_request_context():
-                #     print('creating request context')
-                #     tim.app.test_request_context().__enter__()
                 if not u:
                     raise Exception(f"User not found: {username}")
-                with self.client.session_transaction() as s:
+                with self.refreshing_session_transaction() as s:
                     s["user_id"] = u.id
                     s.pop("other_users", None)
-                self.client.session_transaction().__enter__()
+                if has_request_context():
+                    # Force user object to refresh for the current request
+                    g.pop("user", None)
                 return
-            with self.client.session_transaction() as s:
+            with self.refreshing_session_transaction() as s:
                 s.pop("last_doc", None)
                 s.pop("came_from", None)
         return self.post(
@@ -807,6 +879,20 @@ class TimRouteTest(TimDbTest):
             follow_redirects=True,
             **kwargs,
         )
+
+    @contextmanager
+    def refreshing_session_transaction(self) -> Generator[SessionMixin, None, None]:
+        """A context manager that refreshes the active session context after the block is executed."""
+        with self.client.session_transaction() as s:
+            yield s
+            if has_request_context():
+                # If we are already in a request (or we had already one request), sync the session with the transaction
+                # This way any further calls to TIM API will reference the correct user
+                session_keys = set(session.keys())
+                for k in session_keys:
+                    if k not in session:
+                        session.pop(k, None)
+                session.update(s)
 
     def create_doc(
         self,
@@ -860,6 +946,11 @@ class TimRouteTest(TimDbTest):
             self.assertIsInstance(resp["id"], int)
             self.assertEqual(path, resp["path"])
             de = DocEntry.find_by_path(path)
+
+            # After finding the document, modify the modifier group in case paragraphs will be added
+            # This will keep the edit log consistent
+            current_user_group_id = self.current_user.get_personal_group().id
+            de.document.modifier_group_id = current_user_group_id
         else:
             de = create_item_direct(
                 item_path=path,
@@ -869,10 +960,6 @@ class TimRouteTest(TimDbTest):
                 template=template,
                 cite=cite,
             )
-            # TODO this isn't really correct but gives equivalent behavior compared to the True branch.
-            #  The modifier should be corrected to be the current user in the True branch after
-            #  calling DocEntry.find_by_path. After that, some tests need to be corrected.
-            de.document.modifier_group_id = 0
         doc = de.document
         self.init_doc(doc, from_file, initial_par, settings)
         return de
@@ -957,7 +1044,13 @@ class TimRouteTest(TimDbTest):
             expect_status=expect_status,
             **kwargs,
         )
-        return Translation.query.get(j["id"]) if expect_status == 200 else None
+        return (
+            db.session.get(
+                Translation, j["id"], options=[joinedload(Translation.docentry)]
+            )
+            if expect_status == 200
+            else None
+        )
 
     def assert_content(self, element: HtmlElement, expected: list[str]):
         pars = get_content(element)
@@ -1035,7 +1128,7 @@ class TimRouteTest(TimDbTest):
     def make_admin(self, u: User):
         gr = UserGroup.get_admin_group()
         u.add_to_group(gr, added_by=None)
-        db.session.commit()
+        self.commit_db()
 
     def post_comment(
         self,
@@ -1232,7 +1325,7 @@ class TimRouteTest(TimDbTest):
         self.client.__enter__()
 
     @contextmanager
-    def internal_container_ctx(self):
+    def internal_container_ctx(self) -> Generator[responses.RequestsMock, None, None]:
         """Redirects internal container requests to go through Flask test client.
          Otherwise such requests would fail during test, unless BrowserTest class is used.
 
@@ -1241,16 +1334,32 @@ class TimRouteTest(TimDbTest):
         """
         with responses.RequestsMock(assert_all_requests_are_fired=False) as m:
 
-            def rq_cb(request: PreparedRequest, fn):
-                r: Response = fn(
-                    request.path_url,
-                    json_data=json.loads(request.body),
-                    as_response=True,
-                    content_type=request.headers.get(
-                        "content-type", "application/octet-stream"
-                    ),
-                )
+            def rq_cb(request: PreparedRequest, fn, body_as_json: bool = True):
+                kwargs = {}
+                if body_as_json:
+                    kwargs["json_data"] = json.loads(request.body)
+                with app.test_client() as c:
+                    r: Response = fn(
+                        request.path_url,
+                        as_response=True,
+                        content_type=request.headers.get(
+                            "content-type", "application/octet-stream"
+                        ),
+                        client=c,
+                        # Do not expire any sessions because there is likely an active session ongoing.
+                        # This mock will be invoked likely by TIM calling internal plugin routes
+                        # inside another routes.
+                        # Because of the way Flask test client works, DB session is shared between
+                        # the main route and the internal plugin routes.
+                        # Closing a session inside internal plugin route may
+                        # invalidate the objects in the main plugin route.
+                        expire_session_after_request=False,
+                        **kwargs,
+                    )
                 return r.status_code, {}, r.data
+
+            def rq_cb_get(request: PreparedRequest):
+                return rq_cb(request, self.get, body_as_json=False)
 
             def rq_cb_put(request: PreparedRequest):
                 return rq_cb(request, self.json_put)
@@ -1260,6 +1369,9 @@ class TimRouteTest(TimDbTest):
 
             host = current_app.config["INTERNAL_PLUGIN_DOMAIN"]
             m.add_callback(
+                "GET", re.compile(f"http://{host}:5001/"), callback=rq_cb_get
+            )
+            m.add_callback(
                 "PUT", re.compile(f"http://{host}:5001/"), callback=rq_cb_put
             )
             m.add_callback(
@@ -1268,73 +1380,55 @@ class TimRouteTest(TimDbTest):
             m.add_passthru("http://csplugin:5000")
             m.add_passthru("http://jsrunner:5000")
             m.add_passthru("http://fields:5000")
-            yield
-
-    @contextmanager
-    def importdata_ctx(self, aalto_return=None):
-        with responses.RequestsMock() as m:
-            if aalto_return:
-                m.add(
-                    "GET",
-                    "https://plus.cs.aalto.fi/api/v2/courses/1234/aggregatedata/?format=json",
-                    body=json.dumps(aalto_return),
-                    status=200,
-                )
-
-            def rq_cb(request: PreparedRequest):
-                r = self.json_put(request.path_url, json_data=json.loads(request.body))
-                return 200, {}, json.dumps(r)
-
-            host = current_app.config["INTERNAL_PLUGIN_DOMAIN"]
-            m.add_callback(
-                "PUT", f"http://{host}:5001/importData/answer", callback=rq_cb
-            )
-            m.add_passthru("http://jsrunner:5000")
-            yield
+            m.add_passthru("http://dumbo:5000")
+            m.add_passthru("http://pali:5000")
+            m.add_passthru("http://feedback:5000")
+            m.add_passthru("http://haskellplugins:5002")
+            m.add_passthru("http://showfile:5000")
+            m.add_passthru("http://mailman-test:8001")
+            yield m
 
     @contextmanager
     def temp_config(self, settings: dict[str, Any]):
-        old_settings = {k: current_app.config[k] for k in settings.keys()}
+        old_settings = {k: app.config[k] for k in settings.keys()}
         for k, v in settings.items():
-            current_app.config[k] = v
+            app.config[k] = v
         try:
             yield
         finally:
             for k, v in old_settings.items():
-                current_app.config[k] = v
+                app.config[k] = v
+
+    @staticmethod
+    def wait_for_url(url: str, wait_time: float = 1.0, timeout: float = 30.0) -> None:
+        """
+        Waits for a URL to become available. Useful for waiting for a container to start.
+
+        :param url: URL to wait for
+        :param wait_time: Time to wait between requests
+        :param timeout: Timeout in seconds. If None, uses default timeout.
+        """
+        start_time = time.time()
+        while True:
+            # noinspection PyBroadException
+            try:
+                res = requests.get(url)
+                ok = res.status_code == 200
+            except Exception:
+                ok = False
+
+            if not ok:
+                now = time.time()
+                if now - start_time > timeout:
+                    raise TimeoutError(f"Timeout waiting for {url}")
+                time.sleep(wait_time)
+            else:
+                break
 
 
-class TimPluginFix(TimRouteTest):
-    """Unused class. This was a test whether local plugins could be made to work without BrowserTest class."""
-
-    def setUp(self):
-        super().setUp()
-
-        # Some plugins live in TIM container, which means we cannot use the requests library to call those plugins
-        # because there is no real server running (it is just the test client).
-        # Here we replace the request method in containerLink so that all such requests are redirected
-        # to the test client.
-        def test_do_request(method: str, url: str, data, params, headers, read_timeout):
-            parsed = urlparse(url)
-            if parsed.hostname != "localhost":
-                return do_request(method, url, data, params, headers, read_timeout)
-            r = self.request(
-                url=parsed.path,
-                method=method,
-                headers=[(k, v) for k, v in headers.items()] if headers else None,
-                data=data,
-                query_string=params,
-                force_return_text=True,
-                follow_redirects=True,
-            )
-            testclient.__exit__(None, None, None)
-            return r
-
-        containerLink.plugin_request_fn = test_do_request
-
-    def tearDown(self):
-        super().tearDown()
-        containerLink.plugin_request_fn = do_request
+class TimRouteTest(TimRouteTestBase):
+    def _init_client(self) -> FlaskClient:
+        return timApp.tim.app.test_client()
 
 
 class TimMessageListTest(TimRouteTest):
@@ -1389,9 +1483,9 @@ class TimMessageListTest(TimRouteTest):
                 }
             },
         )
-        message_list: MessageListModel = MessageListModel.query.filter_by(
-            name=name
-        ).one()
+        message_list: MessageListModel = (
+            run_sql(select(MessageListModel).filter_by(name=name)).scalars().one()
+        )
         return manage_doc, message_list
 
     def trigger_mailman_event(self, event: MessageEventType) -> None:

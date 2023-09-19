@@ -1,8 +1,10 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Any
+from typing import Optional, Any, TYPE_CHECKING, List
 
+from sqlalchemy import select, ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property  # type: ignore
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound  # type: ignore
 
 from timApp.messaging.messagelist.listinfo import (
@@ -13,8 +15,13 @@ from timApp.messaging.messagelist.listinfo import (
     Distribution,
     MessageVerificationType,
 )
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql, db
+from timApp.timdb.types import datetime_tz
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
+
+if TYPE_CHECKING:
+    from timApp.item.block import Block
 
 
 class MemberJoinMethod(Enum):
@@ -34,94 +41,100 @@ class MessageListModel(db.Model):
 
     __tablename__ = "messagelist"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    manage_doc_id = db.Column(db.Integer, db.ForeignKey("block.id"))
+    manage_doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
     """The document which manages a message list."""
 
-    name = db.Column(db.Text)
+    name: Mapped[str]
     """The name of a message list."""
 
-    can_unsubscribe = db.Column(db.Boolean)
+    can_unsubscribe: Mapped[Optional[bool]]
     """If a member can unsubscribe from this list on their own."""
 
-    email_list_domain = db.Column(db.Text)
+    email_list_domain: Mapped[Optional[str]]
     """The domain used for an email list attached to a message list. If None/null, then message list doesn't have an 
     attached email list. This is a tad silly at this point in time, because JYU TIM only has one domain. However, 
     this allows quick adaptation if more domains are added or otherwise changed in the future. """
 
-    archive = db.Column(db.Enum(ArchiveType))
+    archive: Mapped[Optional[ArchiveType]]
     """The archive policy of a message list."""
 
-    notify_owner_on_change = db.Column(db.Boolean)
+    notify_owner_on_change: Mapped[Optional[bool]]
     """Should the owner of the message list be notified if there are changes on message list members."""
 
-    description = db.Column(db.Text)
+    description: Mapped[Optional[str]]
     """A short description what a message list is about."""
 
-    info = db.Column(db.Text)
+    info: Mapped[Optional[str]]
     """Additional information about the message list."""
 
-    removed = db.Column(db.DateTime(timezone=True))
+    removed: Mapped[Optional[datetime_tz]]
     """When this list has been marked for removal."""
 
-    default_send_right = db.Column(db.Boolean)
+    default_send_right: Mapped[Optional[bool]]
     """Default send right for new members who join the list on their own."""
 
-    default_delivery_right = db.Column(db.Boolean)
+    default_delivery_right: Mapped[Optional[bool]]
     """Default delivery right for new members who join the list on their own."""
 
-    tim_user_can_join = db.Column(db.Boolean)
+    tim_user_can_join: Mapped[Optional[bool]]
     """Flag if TIM users can join the list on their own."""
 
-    subject_prefix = db.Column(db.Text)
+    subject_prefix: Mapped[Optional[str]]
     """What prefix message subjects that go through the list get."""
 
-    only_text = db.Column(db.Boolean)
+    only_text: Mapped[Optional[bool]]
     """Flag if only text format messages are allowed on a list."""
 
-    default_reply_type = db.Column(db.Enum(ReplyToListChanges))
+    default_reply_type: Mapped[Optional[ReplyToListChanges]]
     """Default reply type for the list."""
 
-    non_member_message_pass = db.Column(db.Boolean)
+    non_member_message_pass: Mapped[Optional[bool]]
     """Flag if non members messages to the list are passed straight through without moderation."""
 
-    allow_attachments = db.Column(db.Boolean)
+    allow_attachments: Mapped[Optional[bool]]
     """Flag if attachments are allowed on the list. The list of allowed attachment file extensions are stored at 
     listoptions.py """
 
-    message_verification = db.Column(
-        db.Enum(MessageVerificationType),
-        nullable=False,
+    message_verification: Mapped[MessageVerificationType] = mapped_column(
         default=MessageVerificationType.MUNGE_FROM,
     )
     """How to verify messages sent to the list."""
 
-    block = db.relationship(
-        "Block", back_populates="managed_messagelist", lazy="select"
+    block: Mapped["Block"] = relationship(
+        back_populates="managed_messagelist", lazy="select"
     )
     """Relationship to the document that is used to manage this message list."""
 
-    members: list["MessageListTimMember"] = db.relationship(
-        "MessageListMember", back_populates="message_list", lazy="select"
+    members: Mapped[List["MessageListMember"]] = relationship(
+        back_populates="message_list", lazy="select"
     )
     """All the members of the list."""
 
-    distribution = db.relationship(
-        "MessageListDistribution", back_populates="message_list", lazy="select"
+    distribution: Mapped["MessageListDistribution"] = relationship(
+        back_populates="message_list", lazy="select"
     )
     """The message channels the list uses."""
 
     @staticmethod
     def get_by_email(email: str) -> Optional["MessageListModel"]:
         name, domain = email.split("@", 1)
-        return MessageListModel.query.filter_by(
-            name=name, email_list_domain=domain
-        ).first()
+        return (
+            run_sql(
+                select(MessageListModel).filter_by(name=name, email_list_domain=domain)
+            )
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def from_manage_doc_id(doc_id: int) -> "MessageListModel":
-        return MessageListModel.query.filter_by(manage_doc_id=doc_id).one()
+        return (
+            run_sql(select(MessageListModel).filter_by(manage_doc_id=doc_id))
+            .scalars()
+            .one()
+        )
 
     @staticmethod
     def from_name(name: str) -> "MessageListModel":
@@ -144,7 +157,11 @@ class MessageListModel(db.Model):
         :param name_candidate: The name of the message list.
         :return: Return the message list after query by name. Returns at most one result or None if no there are hits.
         """
-        return MessageListModel.query.filter_by(name=name_candidate).first()
+        return (
+            run_sql(select(MessageListModel).filter_by(name=name_candidate))
+            .scalars()
+            .first()
+        )
 
     @staticmethod
     def name_exists(name_candidate: str) -> bool:
@@ -153,19 +170,21 @@ class MessageListModel(db.Model):
         :param name_candidate: The name we are checking if it already is already in use by another list.
         """
         return (
-            db.session.query(MessageListModel.name)
-            .filter_by(name=name_candidate)
+            run_sql(
+                select(MessageListModel.name).filter_by(name=name_candidate).limit(1)
+            )
+            .scalars()
             .first()
             is not None
         )
 
     @property
-    def archive_policy(self) -> ArchiveType:
+    def archive_policy(self) -> ArchiveType | None:
         return self.archive
 
     @hybrid_property
     def mailman_list_id(self) -> str:
-        return self.name + "." + self.email_list_domain
+        return f"{self.name}.{self.email_list_domain}"
 
     def get_individual_members(self) -> list["MessageListMember"]:
         """Get all the members that are not groups.
@@ -180,13 +199,13 @@ class MessageListModel(db.Model):
         return individuals
 
     def get_tim_members(self) -> list["MessageListTimMember"]:
-        """Get all members that have belong to a user group, i.e. TIM users and user groups.
+        """Get all members that belong to a user group, i.e. TIM users and user groups.
 
         :return: A list of MessageListTimMember objects.
         """
         tim_members = []
         for member in self.members:
-            if member.is_tim_member():
+            if member.tim_member is not None:
                 tim_members.append(member.tim_member)
         return tim_members
 
@@ -206,7 +225,11 @@ class MessageListModel(db.Model):
             raise ValueError
 
         for member in self.members:
-            if username and username == member.get_username():
+            if (
+                username
+                and isinstance(member, MessageListTimMember)
+                and username == member.get_username()
+            ):
                 return member
             if email and email == member.get_email():
                 return member
@@ -215,7 +238,8 @@ class MessageListModel(db.Model):
     @property
     def email_address(self) -> str | None:
         """Full email address of the messagelist, if the list has been assigned an active address.
-        Otherwise None."""
+        Otherwise None.
+        """
         return (
             f"{self.name}@{self.email_list_domain}" if self.email_list_domain else None
         )
@@ -224,10 +248,10 @@ class MessageListModel(db.Model):
         from timApp.messaging.messagelist.emaillist import get_list_ui_link
 
         return ListInfo(
-            name=self.name,
+            name=self.name or "unnamed_list",
             notify_owners_on_list_change=self.notify_owner_on_change,
             domain=self.email_list_domain,
-            archive=self.archive,
+            archive=self.archive or ArchiveType.NONE,
             default_reply_type=self.default_reply_type,
             verification_type=self.message_verification,
             tim_users_can_join=self.tim_user_can_join,
@@ -251,54 +275,54 @@ class MessageListMember(db.Model):
 
     __tablename__ = "messagelist_member"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    message_list_id = db.Column(db.Integer, db.ForeignKey("messagelist.id"))
+    message_list_id: Mapped[Optional[int]] = mapped_column(ForeignKey("messagelist.id"))
     """What message list a member belongs to."""
 
-    send_right = db.Column(db.Boolean)
+    send_right: Mapped[Optional[bool]]
     """If a member can send messages to a message list."""
 
-    delivery_right = db.Column(db.Boolean)
+    delivery_right: Mapped[Optional[bool]]
     """If a member can get messages from a message list."""
 
-    membership_ended = db.Column(db.DateTime(timezone=True))
+    membership_ended: Mapped[Optional[datetime_tz]]
     """When member's membership on a list ended. This is set when member is removed from a list. A value of None means 
     the member is still on the list."""
 
-    join_method = db.Column(db.Enum(MemberJoinMethod))
+    join_method: Mapped[Optional[MemberJoinMethod]]
     """How the member came to a list."""
 
-    membership_verified = db.Column(db.DateTime(timezone=True))
+    membership_verified: Mapped[Optional[datetime_tz]]
     """When the user's joining was verified. If user is added e.g. by a teacher to a course's message list, 
     this date is the date teacher added the member. If the member was invited, then this is the date they verified 
     their join. """
 
-    member_type = db.Column(db.Text)
+    member_type: Mapped[Optional[str]]
     """Discriminator for polymorhphic members."""
 
-    message_list = db.relationship(
-        "MessageListModel", back_populates="members", lazy="select", uselist=False
+    message_list: Mapped["MessageListModel"] = relationship(
+        back_populates="members", lazy="select"
     )
-    tim_member = db.relationship(
-        "MessageListTimMember",
+    tim_member: Mapped[Optional["MessageListTimMember"]] = relationship(
+        back_populates="member",
+        lazy="select",
+        post_update=True,
+    )
+    external_member: Mapped[Optional["MessageListExternalMember"]] = relationship(
         back_populates="member",
         lazy="select",
         uselist=False,
         post_update=True,
     )
-    external_member = db.relationship(
-        "MessageListExternalMember",
-        back_populates="member",
-        lazy="select",
-        uselist=False,
-        post_update=True,
-    )
-    distribution = db.relationship(
-        "MessageListDistribution", back_populates="member", lazy="select"
+    distribution: Mapped[Optional["MessageListDistribution"]] = relationship(
+        back_populates="member", lazy="select"
     )
 
-    __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
+    __mapper_args__ = {
+        "polymorphic_identity": "member",
+        "polymorphic_on": "member_type",
+    }
 
     def is_external_member(self) -> bool:
         """If this member is an external member to a message list."""
@@ -315,14 +339,14 @@ class MessageListMember(db.Model):
 
     def is_personal_user(self) -> bool:
         """If this member is an individual user, i.e. a personal user group or an external member."""
-        try:
-            gid = self.tim_member.group_id
-        except AttributeError:
-            # External members don't have a group_id attribute.
+        if self.tim_member is None:
             return self.is_external_member()
-        from timApp.user.usergroup import UserGroup
 
-        ug = UserGroup.query.filter_by(id=gid).one()
+        ug = (
+            run_sql(select(UserGroup).filter_by(id=self.tim_member.group_id))
+            .scalars()
+            .one()
+        )
         return ug.is_personal_group
 
     def is_group(self) -> bool:
@@ -373,8 +397,8 @@ class MessageListMember(db.Model):
 
         return {
             **user_info,
-            "sendRight": self.member.send_right,
-            "deliveryRight": self.member.delivery_right,
+            "sendRight": self.send_right,
+            "deliveryRight": self.delivery_right,
             "removed": self.membership_ended,
         }
 
@@ -385,24 +409,20 @@ class MessageListTimMember(MessageListMember):
 
     __tablename__ = "messagelist_tim_member"
 
-    id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(
+        ForeignKey("messagelist_member.id"), primary_key=True
+    )
 
-    group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
+    group_id: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """A UserGroup id for a member."""
 
-    member = db.relationship(
-        "MessageListMember",
+    member: Mapped["MessageListMember"] = relationship(
         back_populates="tim_member",
-        lazy="select",
-        uselist=False,
         post_update=True,
     )
 
-    user_group = db.relationship(
-        "UserGroup",
+    user_group: Mapped["UserGroup"] = relationship(
         back_populates="messagelist_membership",
-        lazy="select",
-        uselist=False,
         post_update=True,
     )
 
@@ -444,20 +464,17 @@ class MessageListExternalMember(MessageListMember):
 
     __tablename__ = "messagelist_external_member"
 
-    id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(
+        ForeignKey("messagelist_member.id"), primary_key=True
+    )
 
-    email_address = db.Column(db.Text)
+    email_address: Mapped[Optional[str]]
     """Email address of message list's external member."""
 
-    display_name = db.Column(db.Text)
+    display_name: Mapped[Optional[str]]
     """Display name for external user, which in most cases should be the external member's address' owner's name."""
 
-    member = db.relationship(
-        "MessageListMember",
-        back_populates="external_member",
-        lazy="select",
-        uselist=False,
-    )
+    member: Mapped["MessageListMember"] = relationship(back_populates="external_member")
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
 
@@ -480,7 +497,7 @@ class MessageListExternalMember(MessageListMember):
 
         :return: The email address.
         """
-        return self.email_address
+        return self.email_address or f"member_{self.id}@noreply"
 
     def get_username(self) -> str:
         """External member's don't have usernames, but this is for consistency when using other methods."""
@@ -492,20 +509,20 @@ class MessageListDistribution(db.Model):
 
     __tablename__ = "messagelist_distribution"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"))
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("messagelist_member.id"))
     """Message list member's id, if this row is about message list member's channel distribution."""
 
-    message_list_id = db.Column(db.Integer, db.ForeignKey("messagelist.id"))
+    message_list_id: Mapped[Optional[int]] = mapped_column(ForeignKey("messagelist.id"))
     """Message list's id, if this row is about message list's channel distribution."""
 
-    channel = db.Column(db.Enum(Channel))
+    channel: Mapped[Optional[Channel]]
     """Which message channels are used by a message list or a user."""
 
-    member = db.relationship(
-        "MessageListMember", back_populates="distribution", lazy="select", uselist=False
+    member: Mapped[Optional["MessageListMember"]] = relationship(
+        back_populates="distribution", lazy="select"
     )
-    message_list = db.relationship(
-        "MessageListModel", back_populates="distribution", lazy="select", uselist=False
+    message_list: Mapped[Optional["MessageListModel"]] = relationship(
+        back_populates="distribution", lazy="select"
     )

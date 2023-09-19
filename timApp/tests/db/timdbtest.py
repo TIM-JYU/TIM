@@ -16,7 +16,6 @@ from timApp.document.document import Document
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.timdb.timdb import TimDb
 from timApp.user.user import User
 from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
@@ -29,9 +28,6 @@ class TimDbTest(unittest.TestCase):
     db_path = app.config["DB_URI"]
     i = 0
     create_docs = False
-
-    def get_db(self):
-        return self.db
 
     @classmethod
     def setUpClass(cls):
@@ -52,25 +48,34 @@ class TimDbTest(unittest.TestCase):
             "See https://tim.jyu.fi/view/tim/TIMin-kehitys/PyCharm#testauskonfiguraation-luominen"
         )
         # The following throws if the testing database has not been created yet; we can safely ignore it
-        try:
-            db.drop_all()
-        except sqlalchemy.exc.OperationalError:
-            pass
-        except sqlalchemy.exc.InternalError:
-            # An internal error can happen when switching Git branches that have different database structure.
-            # In that case, we can just drop the whole test database.
-            db.session.rollback()
-            drop_database(app.config["SQLALCHEMY_DATABASE_URI"])
+        with app.app_context():
+            try:
+                db.drop_all()
+            except sqlalchemy.exc.OperationalError:
+                pass
+            except sqlalchemy.exc.InternalError:
+                # An internal error can happen when switching Git branches that have different database structure.
+                # In that case, we can just drop the whole test database.
+                db.session.rollback()
+                drop_database(app.config["SQLALCHEMY_DATABASE_URI"])
         timApp.timdb.init.initialize_database(create_docs=cls.create_docs)
 
-    def setUp(self):
+    def check_skip_tests(self):
         if running_in_ci() and remove_prefix(self.id(), "timApp.") in CI_SKIP_TESTS:
             self.skipTest("This test is skipped in CI")
-        self.db = TimDb(files_root_path=self.test_files_path)
+
+    def setUp(self):
+        self.check_skip_tests()
+        self.ctx = app.app_context()
+        self.ctx.__enter__()
 
     def tearDown(self):
+        self.ctx.__exit__(None, None, None)
         close_all_sessions()
-        self.db.close()
+
+    def commit_db(self):
+        db.session.commit()
+        db.session.expire_all()
 
     def create_doc(
         self, from_file=None, initial_par: str | list[str] = None, settings=None

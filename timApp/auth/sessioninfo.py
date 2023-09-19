@@ -1,10 +1,14 @@
 from textwrap import dedent
 
 from flask import session, g, request, has_request_context
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from timApp.document.usercontext import UserContext
-from timApp.user.user import User, user_query_with_joined_groups
+from timApp.timdb.sqa import db, run_sql
+from timApp.user.user import (
+    User,
+)
 from timApp.user.usergroup import UserGroup
 
 
@@ -20,10 +24,10 @@ def clear_session() -> None:
 def get_current_user_object() -> User:
     if not hasattr(g, "user"):
         curr_id = get_current_user_id()
-        u = (
-            user_query_with_joined_groups()
-            .options(joinedload(User.lectures))
-            .get(curr_id)
+        u: User | None = db.session.get(
+            User,
+            curr_id,
+            options=[joinedload(User.lectures), joinedload(User.groups)],
         )
         if u is None:
             if curr_id != 0:
@@ -78,7 +82,11 @@ def get_other_session_users_objs() -> list[User]:
 
 
 def get_users_objs(lis) -> list[User]:
-    return User.query.filter(User.id.in_([u["id"] for u in lis])).all()
+    return (
+        run_sql(select(User).filter(User.id.in_([u["id"] for u in lis])))
+        .scalars()
+        .all()
+    )
 
 
 def get_session_users_ids() -> list[int]:

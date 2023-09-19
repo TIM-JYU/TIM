@@ -1,13 +1,17 @@
+from typing import Optional
+
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped
+
 from timApp.timdb.sqa import db
 
 
 class Question(db.Model):
-    __tablename__ = "question"
-    question_id = db.Column(db.Integer, primary_key=True)
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
-    par_id = db.Column(db.Text, nullable=False)
-    question_title = db.Column(db.Text, nullable=False)
-    answer = db.Column(db.Text)
-    questionjson = db.Column(db.Text)
-    points = db.Column(db.Text)
-    expl = db.Column(db.Text)
+    question_id: Mapped[int] = mapped_column(primary_key=True)
+    doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"))
+    par_id: Mapped[str]
+    question_title: Mapped[str]
+    answer: Mapped[Optional[str]]
+    questionjson: Mapped[Optional[str]]
+    points: Mapped[Optional[str]]
+    expl: Mapped[Optional[str]]

@@ -47,6 +47,7 @@ def getproxy(
             mimetype=mimetype,
         )
         add_csp_header(resp, "sandbox allow-scripts")
+        resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp
     if file and r.status_code == 200:
         filename = basename(parsed.path) or "download"

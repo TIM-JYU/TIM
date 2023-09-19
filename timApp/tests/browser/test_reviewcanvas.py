@@ -48,7 +48,7 @@ class ReviewcanvasTest(BrowserTest):
         )
         self.test_user_2.grant_access(d2, AccessType.view)
         db.session.commit()
-        db.session.refresh(Block.query.get(d2.block.id))
+        db.session.refresh(db.session.get(Block, d2.block.id))
         self.login_test2()
         # Fail, upload is not testuser2's
         self.post_answer("reviewcanvas", f"{d2.id}.rc2", user_input, expect_status=403)
@@ -65,7 +65,7 @@ class ReviewcanvasTest(BrowserTest):
         self.get(pdfurl, expect_status=403)
         self.test_user_2.grant_access(d, AccessType.teacher)
         db.session.commit()
-        db.session.refresh(Block.query.get(d.block.id))
+        db.session.refresh(db.session.get(Block, d.block.id))
         self.get(pdfurl, expect_status=200)
 
     def test_corrupt_image(self):

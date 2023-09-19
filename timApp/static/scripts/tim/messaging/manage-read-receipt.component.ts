@@ -184,7 +184,7 @@ interface TimMessageReadReceipt {
     // Information about the read receipt retrieved from server
     message_id: number;
     user_id: number;
-    marked_as_read_on: Date;
+    marked_as_read_on?: Date;
     can_mark_as_read: boolean;
 }
 

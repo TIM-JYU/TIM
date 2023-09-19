@@ -1,4 +1,6 @@
-from typing import Any, Mapping
+import sys
+from dataclasses import field
+from typing import Any, Mapping, overload
 
 import marshmallow
 from isodate import Duration, duration_isoformat, parse_duration
@@ -7,6 +9,11 @@ from marshmallow.fields import Boolean
 from marshmallow.utils import _Missing
 
 Missing = _Missing
+Missing.__hash__ = lambda self: id(self)  # type: ignore
+
+#
+
+missing_field = field(default_factory=lambda: marshmallow.missing)  # type: ignore
 
 _BoolField = Boolean()
 
@@ -55,6 +62,34 @@ def safe_parse_item_list(item_list: str) -> list[str]:
             result.append(line)
 
     return result
+
+
+@overload
+def round_float_error(v: None) -> None:
+    ...
+
+
+@overload
+def round_float_error(v: float) -> float:
+    ...
+
+
+def round_float_error(v: float | None) -> float | None:
+    """
+    Round floats to remove any round-off errors.
+
+    Example:
+    >>> round_float_error(0.1 + 0.2)
+    >>> 0.3
+    >>> round_float_error(1.8 + 0.1)
+    >>> 1.9
+
+    :param v: Value to round
+    :return: Rounded value
+    """
+    if v is None:
+        return None
+    return round(v, sys.float_info.dig)
 
 
 class DurationField(marshmallow.fields.Field):

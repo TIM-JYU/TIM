@@ -30,6 +30,7 @@ from timApp.auth.login import logout
 from timApp.auth.session.util import SessionExpired
 from timApp.auth.sessioninfo import get_current_user_object, clear_session
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.docsettings import get_minimal_visibility_settings
 from timApp.folder.folder import Folder
 from timApp.notification.send_email import send_email
@@ -267,21 +268,19 @@ def register_errorhandlers(app: Flask) -> None:
 
     @app.errorhandler(ItemLockedException)
     def handle_item_locked(error: ItemLockedException) -> ResponseReturnValue:
-        item = DocEntry.find_by_id(error.access.block_id)
-        is_folder = False
+        item: DocInfo | Folder | None = DocEntry.find_by_id(error.access.block_id)
         if not item:
-            is_folder = True
             item = Folder.get_by_id(error.access.block_id)
         if not item:
             raise NotExist()
         view_settings = get_minimal_visibility_settings(
-            item.document if not is_folder else None
+            item.document if not isinstance(item, Folder) else None
         )
         return (
             render_template(
                 "duration_unlock.jinja2",
                 item=item,
-                item_type="folder" if is_folder else "document",
+                item_type="folder" if isinstance(item, Folder) else "document",
                 access=error.access,
                 msg=error.msg,
                 next_doc=error.next_doc,

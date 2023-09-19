@@ -10,9 +10,9 @@ from flask import Response
 from flask import current_app
 from flask import request
 from flask import session
-from sqlalchemy import func
+from sqlalchemy import func, select, delete
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm.exc import StaleDataError
 
 from timApp.auth.accesshelper import (
@@ -50,11 +50,11 @@ from timApp.lecture.question_utils import (
     qst_handle_randomization,
 )
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
-from timApp.lecture.runningquestion import Runningquestion
-from timApp.lecture.showpoints import Showpoints
-from timApp.lecture.useractivity import Useractivity
+from timApp.lecture.runningquestion import RunningQuestion
+from timApp.lecture.showpoints import ShowPoints
+from timApp.lecture.useractivity import UserActivity
 from timApp.plugin.qst.qst import get_question_data_from_document
-from timApp.timdb.sqa import db, tim_main_execute
+from timApp.timdb.sqa import db, tim_main_execute, run_sql
 from timApp.user.user import User
 from timApp.util.error_handlers import suppress_wuff
 from timApp.util.flask.requesthelper import (
@@ -89,13 +89,13 @@ def get_lecture_info():
     u = get_current_user_object()
     lecture_questions: list[AskedQuestion] = (
         lecture.asked_questions.options(
-            joinedload(AskedQuestion.answers_all).raiseload(
+            selectinload(AskedQuestion.answers_all).raiseload(
                 LectureAnswer.asked_question
             )
         )
         .options(
-            joinedload(AskedQuestion.answers_all)
-            .joinedload(LectureAnswer.user)
+            selectinload(AskedQuestion.answers_all)
+            .selectinload(LectureAnswer.user)
             .raiseload(User.groups)
         )
         .all()
@@ -374,7 +374,7 @@ def get_new_question(
     """
     current_user = get_current_user_id()
     u = get_current_user_object()
-    rqs: list[Runningquestion] = lecture.running_questions
+    rqs: list[RunningQuestion] = lecture.running_questions
     with user_activity_lock(u):
         if rqs and rqs[0].asked_question.is_running:
             question: AskedQuestion = rqs[0].asked_question
@@ -437,7 +437,7 @@ def get_new_question(
 
 
 def get_shown_points(lecture) -> AskedQuestion | None:
-    return lecture.asked_questions.join(Showpoints).first()
+    return lecture.asked_questions.join(ShowPoints).first()
 
 
 def check_if_lecture_is_ending(lecture: Lecture):
@@ -595,7 +595,7 @@ def get_lecture_users(lecture: Lecture):
     lecturers = []
     students = []
 
-    activity = Useractivity.query.filter_by(lecture=lecture).all()
+    activity = run_sql(select(UserActivity).filter_by(lecture=lecture)).scalars().all()
     cur_time = get_current_time()
 
     for ac in activity:
@@ -718,23 +718,27 @@ def clean_dictionaries_by_lecture(lecture: Lecture):
     stop_showing_points(lecture)
     for a in lecture.useractivity:
         db.session.delete(a)
-    QuestionActivity.query.filter(
-        (
-            QuestionActivity.asked_id.in_(
-                AskedQuestion.query.filter_by(
-                    lecture_id=lecture.lecture_id
-                ).with_entities(AskedQuestion.asked_id)
+    run_sql(
+        delete(QuestionActivity)
+        .where(
+            (
+                QuestionActivity.asked_id.in_(
+                    select(AskedQuestion.asked_id).filter_by(
+                        lecture_id=lecture.lecture_id
+                    )
+                )
+            )
+            & QuestionActivity.kind.in_(
+                [
+                    QuestionActivityKind.Usershown,
+                    QuestionActivityKind.Pointsshown,
+                    QuestionActivityKind.Pointsclosed,
+                    QuestionActivityKind.Useranswered,
+                ]
             )
         )
-        & QuestionActivity.kind.in_(
-            [
-                QuestionActivityKind.Usershown,
-                QuestionActivityKind.Pointsshown,
-                QuestionActivityKind.Pointsclosed,
-                QuestionActivityKind.Useranswered,
-            ]
-        )
-    ).delete(synchronize_session="fetch")
+        .execution_options(synchronize_session="fetch")
+    )
 
 
 def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
@@ -747,7 +751,9 @@ def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
             QuestionActivityKind.Pointsshown,
         ],
     )
-    Runningquestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
+    run_sql(
+        delete(RunningQuestion).where(RunningQuestion.lecture_id == lecture.lecture_id)
+    )
     stop_showing_points(lecture)
 
 
@@ -773,9 +779,8 @@ def delete_lecture(m: DeleteLectureModel):
     lecture = get_lecture_from_request(lecture_id=m.lecture_id)
     with db.session.no_autoflush:
         empty_lecture(lecture)
-        Message.query.filter_by(lecture_id=lecture.lecture_id).delete()
-        LectureAnswer.query.filter_by(lecture_id=lecture.lecture_id).delete()
-        AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
+        for t in (Message, LectureAnswer, AskedQuestion):
+            run_sql(delete(t).where(t.lecture_id == lecture.lecture_id))
         db.session.delete(lecture)
     db.session.commit()
 
@@ -837,7 +842,7 @@ def join_lecture():
 
 
 def update_activity(lecture: Lecture, u: User):
-    ua = Useractivity(user_id=u.id, lecture_id=lecture.lecture_id, active=func.now())
+    ua = UserActivity(user_id=u.id, lecture_id=lecture.lecture_id, active=func.now())
     db.session.merge(ua)
 
 
@@ -862,7 +867,7 @@ def extend_question():
     q = get_asked_question(asked_id)
     if not q:
         raise NotExist()
-    rq: Runningquestion = q.running_question
+    rq: RunningQuestion = q.running_question
     if not q.is_running:
         raise RouteException("Question is not running")
     rq.end_time += timedelta(seconds=extend)
@@ -915,7 +920,7 @@ def ask_question():
         if not doc_id:
             raise RouteException("doc_id missing")
         if question_id:
-            question = Question.query.get(question_id)  # Old version???
+            question = db.session.get(Question, question_id)  # Old version???
             question_json_str = question.questionjson
             markup = json.loads(question_json_str)
         else:
@@ -950,7 +955,7 @@ def ask_question():
         raise RouteException("Missing parameters")
 
     delete_question_temp_data(question, lecture)
-    rq = Runningquestion(
+    rq = RunningQuestion(
         lecture=lecture,
         asked_question=question,
         ask_time=question.asked_time,
@@ -977,7 +982,7 @@ def show_points(m: ShowAnswerPointsModel):
         raise NotExist()
 
     stop_showing_points(lecture)
-    sp = Showpoints(asked_question=q)
+    sp = ShowPoints(asked_question=q)
     db.session.add(sp)
 
     current_question_id = m.current_question_id
@@ -990,13 +995,15 @@ def show_points(m: ShowAnswerPointsModel):
 
 
 def stop_showing_points(lecture: Lecture):
-    Showpoints.query.filter(
-        Showpoints.asked_id.in_(
-            AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).with_entities(
-                AskedQuestion.asked_id
+    run_sql(
+        delete(ShowPoints)
+        .where(
+            ShowPoints.asked_id.in_(
+                select(AskedQuestion.asked_id).filter_by(lecture_id=lecture.lecture_id)
             )
         )
-    ).delete(synchronize_session="fetch")
+        .execution_options(synchronize_session="fetch")
+    )
 
 
 @lecture_routes.post("/updatePoints/")
@@ -1023,10 +1030,14 @@ def update_question_points():
 
 
 def delete_activity(question: AskedQuestion, kinds):
-    QuestionActivity.query.filter(
-        (QuestionActivity.asked_id == question.asked_id)
-        & QuestionActivity.kind.in_(kinds)
-    ).delete(synchronize_session="fetch")
+    run_sql(
+        delete(QuestionActivity)
+        .where(
+            (QuestionActivity.asked_id == question.asked_id)
+            & QuestionActivity.kind.in_(kinds)
+        )
+        .execution_options(synchronize_session="fetch")
+    )
 
 
 @lecture_routes.get("/getQuestionByParId")

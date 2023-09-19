@@ -13,65 +13,72 @@ __license__ = "MIT"
 __date__ = "24.5.2022"
 
 from dataclasses import dataclass
-from typing import Optional, Iterable
+from typing import Optional, Iterable, List, TYPE_CHECKING
 
-from sqlalchemy import func
+from sqlalchemy import func, select, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from tim_common.dumboclient import call_dumbo
+
+if TYPE_CHECKING:
+    from timApp.item.block import Block
 
 
 class EventGroup(db.Model):
     """Information about a user group participating in an event."""
 
-    __tablename__ = "eventgroup"
-    event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
+    event_id: Mapped[int] = mapped_column(
+        ForeignKey("event.event_id"), primary_key=True
+    )
     """Event the the group belongs to"""
 
-    usergroup_id = db.Column(
-        db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
+    usergroup_id: Mapped[int] = mapped_column(
+        ForeignKey("usergroup.id"), primary_key=True
     )
     """The usergroup that belongs to the group"""
 
-    manager = db.Column(db.Boolean)
+    manager: Mapped[Optional[bool]]
     """Is the group a manager (i.e. is able to modify event settings)?"""
 
-    extra = db.Column(db.Boolean, nullable=False, default=False)
+    extra: Mapped[bool] = mapped_column(default=False)
     """Is this group an extra group (i.e. can it enroll without affecting the event capacity)?"""
 
-    user_group = db.relationship(UserGroup, lazy="select")
+    user_group: Mapped["UserGroup"] = relationship(lazy="select")
     """The usergroup that belongs to the group"""
 
 
 class Enrollment(db.Model):
     """A single enrollment in an event"""
 
-    __tablename__ = "enrollment"
-    event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
+    event_id: Mapped[int] = mapped_column(
+        ForeignKey("event.event_id"), primary_key=True
+    )
     """Event the enrollment is for"""
 
-    usergroup_id = db.Column(
-        db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
+    usergroup_id: Mapped[int] = mapped_column(
+        ForeignKey("usergroup.id"), primary_key=True
     )
     """The usergroup that is enrolled (i.e. booked) in the event"""
 
-    booker_message = db.Column(db.Text)
+    booker_message: Mapped[Optional[str]]
     """The message left by the booker"""
 
-    enroll_type_id = db.Column(
-        db.Integer, db.ForeignKey("enrollmenttype.enroll_type_id"), nullable=False
+    enroll_type_id: Mapped[int] = mapped_column(
+        ForeignKey("enrollmenttype.enroll_type_id")
     )
     """Type of the enrollment"""
 
-    event = db.relationship("Event", lazy="select")
+    event: Mapped["Event"] = relationship()
     """The event the enrollment is related to"""
 
-    usergroup = db.relationship(UserGroup, lazy="select")
+    usergroup: Mapped["UserGroup"] = relationship()
     """User group that booked the event"""
 
-    extra = db.Column(db.Boolean, nullable=False, default=False)
+    extra: Mapped[bool] = mapped_column(default=False)
     """Is this an extra enrollment (i.e. can it enroll without affecting the event capacity)?"""
 
     @staticmethod
@@ -79,35 +86,40 @@ class Enrollment(db.Model):
         event_id: int, user_group_id: int
     ) -> Optional["Enrollment"]:
         """Returns a specific enrollment (or none) that match the user group id and event id"""
-        return Enrollment.query.filter(
-            Enrollment.event_id == event_id, Enrollment.usergroup_id == user_group_id
-        ).one_or_none()
+        return (
+            run_sql(
+                select(Enrollment).filter(
+                    Enrollment.event_id == event_id,
+                    Enrollment.usergroup_id == user_group_id,
+                )
+            )
+            .scalars()
+            .one_or_none()
+        )
 
 
 class EventTagAttachment(db.Model):
     """Attachment information for the event tag"""
 
-    __tablename__ = "eventtagattachment"
-    event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
+    event_id: Mapped[int] = mapped_column(
+        ForeignKey("event.event_id"), primary_key=True
+    )
     """Event the tag is attached to"""
-    tag_id = db.Column(db.Integer, db.ForeignKey("eventtag.tag_id"), primary_key=True)
+    tag_id: Mapped[int] = mapped_column(ForeignKey("eventtag.tag_id"), primary_key=True)
     """Tag that is attached to the event"""
 
 
 class EventTag(db.Model):
     """A string tag that can be attached to an event"""
 
-    __tablename__ = "eventtag"
-    tag_id = db.Column(db.Integer, primary_key=True)
+    tag_id: Mapped[int] = mapped_column(primary_key=True)
     """The id of the tag"""
 
-    tag = db.Column(db.Text, nullable=False)
+    tag: Mapped[str]
     """The tag itself"""
 
-    events: list["Event"] = db.relationship(
-        "Event",
+    events: Mapped[List["Event"]] = relationship(
         secondary=EventTagAttachment.__table__,
-        lazy="select",
         back_populates="tags",
     )
 
@@ -123,7 +135,9 @@ class EventTag(db.Model):
         """
         result = []
         # noinspection PyUnresolvedReferences
-        existing_tags = EventTag.query.filter(EventTag.tag.in_(tags)).all()
+        existing_tags = (
+            run_sql(select(EventTag).filter(EventTag.tag.in_(tags))).scalars().all()
+        )
         existing_tags_dict = {tag.tag: tag for tag in existing_tags}
         for tag in tags:
             if tag in existing_tags_dict:
@@ -160,77 +174,69 @@ class EnrollmentRight:
 class Event(db.Model):
     """A calendar event. Event has metadata (title, time, location) and various participating user groups."""
 
-    __tablename__ = "event"
-    event_id = db.Column(db.Integer, primary_key=True)
+    event_id: Mapped[int] = mapped_column(primary_key=True)
     """Identification number of the event"""
 
-    location = db.Column(db.Text)
+    location: Mapped[str] = mapped_column(default="")
     """Location of the event"""
 
-    max_size = db.Column(db.Integer)
+    max_size: Mapped[int]
     """How many people can attend the event"""
 
-    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    start_time: Mapped[datetime_tz]
     """Start time of the event"""
 
-    end_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    end_time: Mapped[datetime_tz]
     """End time of the event"""
 
-    message = db.Column(db.Text)
+    message: Mapped[str] = mapped_column(default="")
     """Message visible to anyone who can see the event"""
 
-    title = db.Column(db.Text, nullable=False)
+    title: Mapped[str]
     """Title of the event"""
 
-    signup_before = db.Column(db.DateTime(timezone=True))
+    signup_before: Mapped[datetime_tz]
     """Time until signup is closed"""
 
-    creator_user_id = db.Column(
-        db.Integer, db.ForeignKey("useraccount.id"), nullable=False
-    )
+    creator_user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """User who created the event originally"""
 
-    origin_doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=True)
+    origin_doc_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
     """Document that was used to create the event"""
 
-    origin_doc = db.relationship("Block", lazy="select")
+    origin_doc: Mapped[Optional["Block"]] = relationship()
     """Document that was used to create the event"""
 
-    enrolled_users: list[UserGroup] = db.relationship(
-        UserGroup,
-        Enrollment.__table__,
+    enrolled_users: Mapped[List["UserGroup"]] = relationship(
+        secondary=Enrollment.__table__,
         primaryjoin=event_id == Enrollment.event_id,
-        lazy="select",
+        overlaps="event, usergroup",
     )
     """List of usergroups that are enrolled in the event"""
 
-    enrollments: list[Enrollment] = db.relationship(
-        Enrollment,
-        lazy="select",
+    enrollments: Mapped[List["Enrollment"]] = relationship(
         back_populates="event",
         cascade="all, delete-orphan",
+        overlaps="enrolled_users",
     )
     """Enrollment information for the event"""
 
-    creator: User = db.relationship(User)
+    creator: Mapped["User"] = relationship()
     """User who created the event originally"""
 
-    send_notifications = db.Column(db.Boolean, nullable=False, default=True)
+    send_notifications: Mapped[bool] = mapped_column(default=True)
     """Whether to send notifications related to enrollment to the event"""
 
-    important = db.Column(db.Boolean, nullable=False, default=False)
+    important: Mapped[bool] = mapped_column(default=False)
     """Whether the event is important (i.e. should be show as special in calendar)"""
 
-    event_groups: list[EventGroup] = db.relationship(
-        EventGroup,
+    event_groups: Mapped[List["EventGroup"]] = relationship(
         foreign_keys="EventGroup.event_id",
         cascade="all,delete-orphan",
     )
 
-    tags: list[EventTag] = db.relationship(
-        EventTag,
+    tags: Mapped[List["EventTag"]] = relationship(
         secondary=EventTagAttachment.__table__,
-        lazy="select",
         back_populates="events",
     )
     """Tags attached to the event"""
@@ -240,23 +246,28 @@ class Event(db.Model):
         """Returns the number of enrollments in the event"""
         # noinspection PyUnresolvedReferences
         has_extras = (
-            EventGroup.query.filter(
-                (EventGroup.event_id == self.event_id) & EventGroup.extra.is_(True)
+            run_sql(
+                select(EventGroup.extra)
+                .filter(
+                    (EventGroup.event_id == self.event_id) & EventGroup.extra.is_(True)
+                )
+                .limit(1)
             )
-            .with_entities(EventGroup.extra)
+            .scalars()
             .first()
             is not None
         )
 
-        q = (
-            Enrollment.query.filter(Enrollment.event_id == self.event_id)
+        stmt = (
+            select(Enrollment)
+            .filter(Enrollment.event_id == self.event_id)
             .group_by(Enrollment.extra)
-            .with_entities(
+            .with_only_columns(
                 Enrollment.extra,
                 func.count(Enrollment.event_id).label("enrollments_count"),
             )
         )
-        res = {is_extra: count for is_extra, count in q}
+        res = {is_extra: count for is_extra, count in run_sql(stmt)}
         return EnrollmentCounts(
             res.get(False, 0), res.get(True, 0 if has_extras else None)
         )
@@ -272,11 +283,18 @@ class Event(db.Model):
 
         ug_ids = [ug.id for ug in user.groups]
         # noinspection PyUnresolvedReferences
-        event_groups = EventGroup.query.filter(
-            (EventGroup.event_id == self.event_id) & EventGroup.usergroup_id.in_(ug_ids)
-        ).all()
+        event_groups = (
+            run_sql(
+                select(EventGroup).filter(
+                    (EventGroup.event_id == self.event_id)
+                    & EventGroup.usergroup_id.in_(ug_ids)
+                )
+            )
+            .scalars()
+            .all()
+        )
         can_view_event_doc = False
-        if self.origin_doc_id:
+        if self.origin_doc:
             can_view_event_doc = verify_view_access(
                 self.origin_doc, require=False, user=user
             )
@@ -296,7 +314,9 @@ class Event(db.Model):
 
     @staticmethod
     def get_by_id(event_id: int) -> Optional["Event"]:
-        return Event.query.filter_by(event_id=event_id).one_or_none()
+        return (
+            run_sql(select(Event).filter_by(event_id=event_id)).scalars().one_or_none()
+        )
 
     def to_json(
         self,
@@ -332,12 +352,14 @@ class Event(db.Model):
             user_group_ids = [ug.id for ug in for_user.groups]
             # noinspection PyUnresolvedReferences
             e = (
-                db.session.query(EventGroup.extra)
-                .filter(
-                    (EventGroup.event_id == self.event_id)
-                    & (EventGroup.usergroup_id.in_(user_group_ids))
-                    & (EventGroup.extra.is_(True))
+                run_sql(
+                    select(EventGroup.extra).filter(
+                        (EventGroup.event_id == self.event_id)
+                        & (EventGroup.usergroup_id.in_(user_group_ids))
+                        & (EventGroup.extra.is_(True))
+                    )
                 )
+                .scalars()
                 .first()
             )
             meta |= {
@@ -380,24 +402,20 @@ class Event(db.Model):
 class EnrollmentType(db.Model):
     """Table for enrollment type, combines enrollment type ID to specific enrollment type"""
 
-    __tablename__ = "enrollmenttype"
-    enroll_type_id = db.Column(db.Integer, primary_key=True)
+    enroll_type_id: Mapped[int] = mapped_column(primary_key=True)
     """Enrollment type"""
 
-    enroll_type = db.Column(db.Text, nullable=False)
+    enroll_type: Mapped[str]
     """Name of the enrollment type"""
 
 
 class ExportedCalendar(db.Model):
     """Information about exported calendars"""
 
-    __tablename__ = "exportedcalendar"
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True, nullable=False
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
     """User who created the exported calendar"""
 
-    calendar_hash = db.Column(db.Text, nullable=False)
+    calendar_hash: Mapped[str]
     """Hash of the exported calendar"""
 
-    user = db.relationship(User)
+    user: Mapped["User"] = relationship()

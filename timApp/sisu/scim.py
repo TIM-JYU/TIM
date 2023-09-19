@@ -2,9 +2,10 @@ import re
 import traceback
 from dataclasses import field, dataclass
 from functools import cached_property
-from typing import Optional, Any, Generator
+from typing import Any, Generator, Sequence
 
 from flask import Blueprint, request, current_app, Response
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
@@ -22,7 +23,7 @@ from timApp.sisu.parse_display_name import (
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
 from timApp.tim_app import csrf
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.scimentity import get_meta
 from timApp.user.user import (
     User,
@@ -132,7 +133,7 @@ class SCIMGroupModel(SCIMCommonModel):
 SCIMGroupModelSchema = class_schema(SCIMGroupModel)
 
 
-@dataclass(frozen=True)
+@dataclass
 class SCIMException(Exception):
     code: int
     msg: str
@@ -218,11 +219,13 @@ def get_groups(args: GetGroupsModel) -> Response:
     if not m:
         raise SCIMException(422, "Unsupported filter")
     groups = (
-        ScimUserGroup.query.filter(
-            ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1)))
+        run_sql(
+            select(UserGroup)
+            .select_from(ScimUserGroup)
+            .filter(ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1))))
+            .join(UserGroup)
         )
-        .join(UserGroup)
-        .with_entities(UserGroup)
+        .scalars()
         .all()
     )
 
@@ -316,6 +319,7 @@ def put_group(group_id: str) -> Response:
 @scim.delete("/Groups/<group_id>")
 def delete_group(group_id: str) -> Response:
     ug = get_group_by_scim(group_id)
+    assert ug.external_id is not None
     ug.name = f"{DELETED_GROUP_PREFIX}{ug.external_id.external_id}"
     db.session.delete(ug.external_id)
     db.session.commit()
@@ -387,9 +391,15 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
 
     added_users = set()
     scimuser = User.get_scimuser()
-    existing_accounts: list[User] = User.query.filter(
-        User.name.in_(current_usernames) | User.email.in_(emails)
-    ).all()
+    existing_accounts: Sequence[User] = (
+        run_sql(
+            select(User).filter(
+                User.name.in_(current_usernames) | User.email.in_(emails)
+            )
+        )
+        .scalars()
+        .all()
+    )
     existing_accounts_dict: dict[str, User] = {u.name: u for u in existing_accounts}
     existing_accounts_by_email_dict: dict[str, User] = {
         u.email: u for u in existing_accounts
@@ -508,10 +518,10 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
         ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup
     ) or ug.external_id.is_administrative_person:
         tg = UserGroup.get_teachers_group()
-        for u in added_users:
-            if tg not in u.groups:
-                u.groups.append(tg)
-            send_course_group_mail(p, u)
+        for usr in added_users:
+            if tg not in usr.groups:
+                usr.groups.append(tg)
+            send_course_group_mail(p, usr)
 
 
 def parse_sisu_group_display_name_or_error(args: SCIMGroupModel) -> SisuDisplayName:
@@ -525,7 +535,7 @@ def parse_sisu_group_display_name_or_error(args: SCIMGroupModel) -> SisuDisplayN
 
 
 def raise_conflict_error(args: SCIMGroupModel, e: IntegrityError) -> None:
-    msg = e.orig.diag.message_detail
+    msg = e.orig.diag.message_detail if e.orig else ""  # type: ignore
     m = email_error_re.fullmatch(msg)
     if m:
         em = m.group("email")
@@ -577,9 +587,14 @@ def group_scim(ug: UserGroup) -> dict:
 def try_get_group_by_scim(group_id: str) -> UserGroup | None:
     try:
         ug = (
-            ScimUserGroup.query.filter_by(external_id=scim_group_to_tim(group_id))
-            .join(UserGroup)
-            .with_entities(UserGroup)
+            run_sql(
+                select(UserGroup)
+                .select_from(ScimUserGroup)
+                .filter_by(external_id=scim_group_to_tim(group_id))
+                .join(UserGroup)
+                .limit(1)
+            )
+            .scalars()
             .first()
         )
     except ValueError:

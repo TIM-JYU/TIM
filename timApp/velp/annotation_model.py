@@ -1,9 +1,18 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING, List
+
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
+    from timApp.answer.answer import Answer
+    from timApp.velp.velp_models import AnnotationComment, VelpVersion, VelpContent
 
 
 @dataclass
@@ -44,35 +53,28 @@ class Annotation(db.Model):
     as highlighted text in the corresponding location.
     """
 
-    __tablename__ = "annotation"
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     """Annotation identifier."""
 
-    velp_version_id = db.Column(
-        db.Integer, db.ForeignKey("velpversion.id"), nullable=False
-    )
+    velp_version_id: Mapped[int] = mapped_column(ForeignKey("velpversion.id"))
     """Id of the velp that has been used for this annotation."""
 
-    annotator_id = db.Column(
-        db.Integer, db.ForeignKey("useraccount.id"), nullable=False
-    )
+    annotator_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """Id of the User who created the annotation."""
 
-    points = db.Column(db.Float)
+    points: Mapped[Optional[float]]
     """Points associated with the annotation."""
 
-    creation_time = db.Column(
-        db.DateTime(timezone=True), nullable=False, default=datetime.utcnow
-    )
+    creation_time: Mapped[datetime_tz] = mapped_column(default=datetime.utcnow)
     """Creation time."""
 
-    valid_from = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    valid_from: Mapped[Optional[datetime_tz]] = mapped_column(default=datetime.utcnow)
     """Since when should this annotation be valid."""
 
-    valid_until = db.Column(db.DateTime(timezone=True))
+    valid_until: Mapped[Optional[datetime_tz]]
     """Until when should this annotation be valid."""
 
-    visible_to = db.Column(db.Integer)
+    visible_to: Mapped[Optional[int]]
     """Who should this annotation be visible to.
     
     Possible values are denoted by AnnotationVisibility enum:
@@ -84,64 +86,66 @@ class Annotation(db.Model):
     
     """
 
-    document_id = db.Column(db.Integer, db.ForeignKey("block.id"))
+    document_id: Mapped[Optional[int]] = mapped_column(ForeignKey("block.id"))
     """Id of the document in case this is a paragraph annotation."""
 
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"))
+    answer_id: Mapped[Optional[int]] = mapped_column(ForeignKey("answer.id"))
     """Id of the Answer in case this is an answer annotation."""
 
-    paragraph_id_start = db.Column(db.Text)
+    paragraph_id_start: Mapped[Optional[str]]
     """The id of the paragraph where this annotation starts from (in case this is a paragraph annotation)."""
 
-    paragraph_id_end = db.Column(db.Text)
+    paragraph_id_end: Mapped[Optional[str]]
     """The id of the paragraph where this annotation ends (in case this is a paragraph annotation)."""
 
-    offset_start = db.Column(db.Integer)
+    offset_start: Mapped[Optional[int]]
     """Positional information about the annotation."""
 
-    node_start = db.Column(db.Integer)
+    node_start: Mapped[Optional[int]]
     """Positional information about the annotation."""
 
-    depth_start = db.Column(db.Integer)
+    depth_start: Mapped[Optional[int]]
     """Positional information about the annotation."""
 
-    offset_end = db.Column(db.Integer)
+    offset_end: Mapped[Optional[int]]
     """Positional information about the annotation."""
 
-    node_end = db.Column(db.Integer)
+    node_end: Mapped[Optional[int]]
     """Positional information about the annotation."""
 
-    depth_end = db.Column(db.Integer)
+    depth_end: Mapped[Optional[int]]
     """Positional information about the annotation."""
 
-    hash_start = db.Column(db.Text)
+    hash_start: Mapped[Optional[str]]
     """Positional information about the annotation."""
 
-    hash_end = db.Column(db.Text)
+    hash_end: Mapped[Optional[str]]
     """Positional information about the annotation."""
 
-    color = db.Column(db.Text)
+    color: Mapped[Optional[str]]
     """Color for the annotation."""
 
-    element_path_start = db.Column(db.Text)
+    element_path_start: Mapped[Optional[str]]
     """Positional information about the annotation."""
 
-    element_path_end = db.Column(db.Text)
+    element_path_end: Mapped[Optional[str]]
     """Positional information about the annotation."""
 
-    draw_data = db.Column(db.Text)
+    draw_data: Mapped[Optional[str]]
     """Drawing information about the annotation (for annotations on images)."""
 
-    style = db.Column(db.Integer)
+    style: Mapped[Optional[int]]
     """Appearance of the annotation"""
 
-    annotator = db.relationship("User", back_populates="annotations")
-    answer = db.relationship("Answer", back_populates="annotations")
-    comments = db.relationship("AnnotationComment", order_by="AnnotationComment.id")
-    velp_version = db.relationship("VelpVersion")
-    velp_content = db.relationship(
-        "VelpContent",
+    annotator: Mapped["User"] = relationship(back_populates="annotations")
+    answer: Mapped[Optional["Answer"]] = relationship(back_populates="annotations")
+    comments: Mapped[List["AnnotationComment"]] = relationship(
+        order_by="AnnotationComment.id"
+    )
+    velp_version: Mapped["VelpVersion"] = relationship()
+    velp_content: Mapped["VelpContent"] = relationship(
         primaryjoin="VelpContent.version_id == foreign(Annotation.velp_version_id)",
+        overlaps="velp_version",
     )
 
     def set_position_info(self, coordinates: AnnotationPosition) -> None:

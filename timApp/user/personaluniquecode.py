@@ -1,40 +1,42 @@
-from typing import Optional
-
 import re
 from dataclasses import dataclass
+from typing import Optional, TYPE_CHECKING
 
-from timApp.timdb.sqa import db
+from sqlalchemy import select, UniqueConstraint, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
+
+from timApp.timdb.sqa import run_sql, db
 from timApp.user.hakaorganization import HakaOrganization
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
 
 
 class PersonalUniqueCode(db.Model):
     """The database model for the 'schacPersonalUniqueCode' Haka attribute."""
 
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("useraccount.id"), nullable=False, primary_key=True
-    )
+    __tablename__ = "personal_unique_code"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), primary_key=True)
     """User id."""
 
-    org_id = db.Column(
-        db.Integer,
-        db.ForeignKey("haka_organization.id"),
-        nullable=False,
-        primary_key=True,
+    org_id: Mapped[int] = mapped_column(
+        ForeignKey("haka_organization.id"), primary_key=True
     )
     """Organization id."""
 
-    code = db.Column(db.Text, nullable=False, index=True)
-    """The actual code. This could be e.g. student id or employee id."""
-
-    type = db.Column(db.Text, nullable=False, primary_key=True)
+    type: Mapped[str] = mapped_column(primary_key=True)
     """The type of the code, e.g. student or employee."""
 
-    user = db.relationship("User", back_populates="uniquecodes", lazy="joined")
-    organization = db.relationship(
-        "HakaOrganization", back_populates="uniquecodes", lazy="joined"
+    code: Mapped[str] = mapped_column(index=True)
+    """The actual code. This could be e.g. student id or employee id."""
+
+    user: Mapped["User"] = relationship(back_populates="uniquecodes", lazy="selectin")
+    organization: Mapped["HakaOrganization"] = relationship(
+        back_populates="uniquecodes", lazy="selectin"
     )
 
-    __table_args__ = (db.UniqueConstraint("org_id", "code", "type"),)
+    __table_args__ = (UniqueConstraint("org_id", "code", "type"),)
 
     @property
     def user_collection_key(self):
@@ -49,9 +51,14 @@ class PersonalUniqueCode(db.Model):
         code: str, org: str, codetype: str
     ) -> Optional["PersonalUniqueCode"]:
         return (
-            PersonalUniqueCode.query.filter_by(code=code, type=codetype)
-            .join(HakaOrganization)
-            .filter_by(name=org)
+            run_sql(
+                select(PersonalUniqueCode)
+                .filter_by(code=code, type=codetype)
+                .join(HakaOrganization)
+                .filter_by(name=org)
+                .limit(1)
+            )
+            .scalars()
             .first()
         )
 

@@ -10,8 +10,8 @@ from flask import Response
 from flask import current_app
 from flask import request
 from marshmallow.utils import missing
-from sqlalchemy import func
-from sqlalchemy.orm import lazyload, joinedload
+from sqlalchemy import func, select
+from sqlalchemy.orm import lazyload, selectinload
 from werkzeug.exceptions import NotFound
 
 from timApp.answer.answer import Answer, AnswerData
@@ -113,7 +113,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.plugintype import PluginTypeBase
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import (
     verify_group_view_access,
 )
@@ -187,12 +187,20 @@ def save_review_points(
     verify_view_access(doc)
     if not is_peerreview_enabled(doc):
         raise AccessDenied("Peer review is not enabled")
-    peer_review = PeerReview.query.filter_by(
-        block_id=tid.doc_id,
-        task_name=tid.task_name,
-        reviewer_id=curr_user_id,
-        reviewable_id=user_id,
-    ).first()
+    peer_review = (
+        run_sql(
+            select(PeerReview)
+            .filter_by(
+                block_id=tid.doc_id,
+                task_name=tid.task_name,
+                reviewer_id=curr_user_id,
+                reviewable_id=user_id,
+            )
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if not peer_review:
         raise RouteException("Invalid review target")
     try:
@@ -226,7 +234,7 @@ def save_points(answer_id: int, user_id: int, points: PointsType = None) -> Resp
         )
     except PluginException as e:
         raise RouteException(str(e))
-    a = Answer.query.get(answer_id)
+    a = db.session.get(Answer, answer_id)
     try:
         points = points_to_float(points)
     except ValueError:
@@ -440,8 +448,12 @@ def get_useranswers_for_task(
         .subquery()
     )
     answs: list[Answer] = (
-        Answer.query.join(sub, Answer.id == sub.c.col)
-        .options(joinedload(Answer.users_all))
+        run_sql(
+            select(Answer)
+            .join(sub, Answer.id == sub.c.col)
+            .options(selectinload(Answer.users_all))
+        )
+        .scalars()
         .all()
     )
     for answer in answs:
@@ -457,16 +469,16 @@ def get_globals_for_tasks(task_ids: list[TaskId], answer_map: dict[str, dict]) -
     sub = (
         valid_answers_query(task_ids)
         .add_columns(col, cnt)
-        .with_entities(col, cnt)
+        .with_only_columns(col, cnt)
         .group_by(Answer.task_id)
         .subquery()
     )
     answers_all: list[tuple[Answer, int]] = (
-        Answer.query.join(sub, Answer.id == sub.c.col)
-        .with_entities(Answer, sub.c.cnt)
-        .all()
+        select(Answer)
+        .join(sub, Answer.id == sub.c.col)
+        .with_only_columns(Answer, sub.c.cnt)
     )
-    for answer, _ in answers_all:
+    for answer, _ in run_sql(answers_all):
         asd = answer.to_json()
         answer_map[answer.task_id] = asd
 
@@ -751,7 +763,7 @@ def post_answer_impl(
         user_id = answer_browser_data.get("userId", None)
 
         if answer_id is not None:
-            answer = Answer.query.get(answer_id)
+            answer = db.session.get(Answer, answer_id)
             if not answer:
                 raise PluginException(f"Answer not found: {answer_id}")
             expected_task_id = answer.task_id
@@ -777,7 +789,7 @@ def post_answer_impl(
                     "Permission denied: you are not in teachers group."
                 )
         if user_id:
-            ctx_user = User.query.get(user_id)
+            ctx_user = db.session.get(User, user_id)
             if not ctx_user:
                 raise PluginException(f"User {user_id} not found")
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
@@ -859,7 +871,7 @@ def post_answer_impl(
     # TODO: Stack gets default for the field there???
     answer_id = answer_browser_data.get("answer_id", None)
     if answer_id is not None and curr_user.logged_in:
-        answer = Answer.query.get(answer_id)
+        answer = db.session.get(Answer, answer_id)
         if answer:
             state = try_load_json(answer.content)
 
@@ -1280,9 +1292,16 @@ def check_answerupload_file_accesses(
     """
     uploads: list[AnswerUpload] = []
     doc_map = {}
-    blocks = Block.query.filter(
-        Block.description.in_(filelist) & (Block.type_id == BlockType.Upload.value)
-    ).all()
+    blocks = (
+        run_sql(
+            select(Block).filter(
+                Block.description.in_(filelist)
+                & (Block.type_id == BlockType.Upload.value)
+            )
+        )
+        .scalars()
+        .all()
+    )
     if len(blocks) != len(filelist):
         block_filelist = [b.description for b in blocks]
         for f in filelist:
@@ -1569,12 +1588,12 @@ def export_answers(doc_path: str) -> Response:
     if not d:
         raise RouteException("Document not found")
     verify_teacher_access(d)
-    answer_list: list[tuple[Answer, str]] = (
-        Answer.query.filter(Answer.task_id.startswith(f"{d.id}."))
+    answer_list: list[tuple[Answer, str]] = run_sql(
+        select(Answer)
+        .filter(Answer.task_id.startswith(f"{d.id}."))
         .join(User, Answer.users)
-        .with_entities(Answer, User.email)
-        .all()
-    )
+        .with_only_columns(Answer, User.email)
+    ).all()
     return json_response(
         [
             {
@@ -1608,7 +1627,9 @@ def import_answers(
             raise NotFound(f"No group with name '{group}'")
         verify_group_view_access(ug)
     doc_paths = {doc_map.get(a.doc, a.doc) for a in exported_answers}
-    docs = DocEntry.query.filter(DocEntry.name.in_(doc_paths)).all()
+    docs = (
+        run_sql(select(DocEntry).filter(DocEntry.name.in_(doc_paths))).scalars().all()
+    )
     doc_path_map = {d.path: d for d in docs}
     missing_docs = doc_paths - set(doc_path_map)
     if missing_docs:
@@ -1619,26 +1640,26 @@ def import_answers(
     for d in docs[1:]:
         filter_cond |= Answer.task_id.startswith(f"{d.id}.")
 
-    no_identifier_answers = {
+    no_identifier_answers = any(
         a for a in exported_answers if not a.email and not a.username
-    }
+    )
     if no_identifier_answers:
         raise RouteException(
             f"Some answer don't have email nor username specified, cannot import."
         )
-    mixed_answers = {a for a in exported_answers if a.email and a.username}
+    mixed_answers = any(a for a in exported_answers if a.email and a.username)
     if mixed_answers:
         raise RouteException(
             "Answers with both email and username are not allowed. "
             f"Found: {seq_to_str([str((a.email, a.username)) for a in mixed_answers])}"
         )
 
-    existing_answers: list[tuple[Answer, str]] = (
-        Answer.query.filter(filter_cond)
+    existing_answers: list[tuple[Answer, str]] = run_sql(
+        select(Answer)
+        .filter(filter_cond)
         .join(User, Answer.users)
-        .with_entities(Answer, User.name)
-        .all()
-    )
+        .with_only_columns(Answer, User.name)
+    ).all()
 
     def convert_email_case(email: str | None) -> str | None:
         if email is None:
@@ -1661,10 +1682,16 @@ def import_answers(
 
     dupes = 0
     # noinspection PyUnresolvedReferences
-    all_users = User.query.filter(
-        email_field.in_([a.email for a in exported_answers if a.email])
-        | name_field.in_([a.username for a in exported_answers if a.username])
-    ).all()
+    all_users = (
+        run_sql(
+            select(User).filter(
+                email_field.in_([a.email for a in exported_answers if a.email])
+                | name_field.in_([a.username for a in exported_answers if a.username])
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     if not match_email_case:
         all_emails = defaultdict(list)
@@ -1780,9 +1807,13 @@ def get_answers(task_id: str, user_id: int) -> Response:
         verify_view_access(d)
         user_context = user_context_with_logged_in(curr_user)
         user_answers = (
-            Answer.query.filter_by(task_id=tid.doc_task)
-            .order_by(Answer.id.desc())
-            .options(joinedload(Answer.users_all))
+            run_sql(
+                select(Answer)
+                .filter_by(task_id=tid.doc_task)
+                .order_by(Answer.id.desc())
+                .options(selectinload(Answer.users_all))
+            )
+            .scalars()
             .all()
         )
         user = curr_user
@@ -2073,7 +2104,7 @@ def get_state(
         raise RouteException("Non-existent user")
     view_ctx = view_ctx_with_urlmacros(ViewRoute.View, origin=get_origin_from_request())
     if answer_id:
-        answer = Answer.query.get(answer_id)
+        answer = db.session.get(Answer, answer_id)
         if not answer:
             raise RouteException("Non-existent answer")
         tid = TaskId.parse(answer.task_id)
@@ -2170,16 +2201,19 @@ def get_task_users(task_id: str, peer_review: bool = False) -> Response:
         users = list(r.reviewable for r in reviews if r.task_name == tid.task_name)
     else:
         usergroups = request.args.getlist("groups")
-        q = (
-            User.query.options(lazyload(User.groups))
+        stmt = (
+            select(User)
+            .options(lazyload(User.groups))
             .join(Answer, User.answers)
             .filter_by(task_id=task_id)
             .order_by(User.real_name.asc())
             .distinct()
         )
         if usergroups:
-            q = q.join(UserGroup, User.groups).filter(UserGroup.name.in_(usergroups))
-        users = q.all()
+            stmt = stmt.join(UserGroup, User.groups).filter(
+                UserGroup.name.in_(usergroups)
+            )
+        users = run_sql(stmt).scalars().all()
     if hide_names_in_teacher(d):
         model_u = User.get_model_answer_user()
         for user in users:
@@ -2197,12 +2231,16 @@ def rename_answers(old_name: str, new_name: str, doc_path: str) -> Response:
     for n in (old_name, new_name):
         if not re.fullmatch("[a-zA-Z0-9_-]+", n):
             raise RouteException(f"Invalid task name: {n}")
-    conflicts = Answer.query.filter_by(task_id=f"{d.id}.{new_name}").count()
+    conflicts = db.session.scalar(
+        select(func.count(Answer.id)).filter_by(task_id=f"{d.id}.{new_name}")
+    )
     if conflicts > 0 and not force:
         raise RouteException(
             f"The new name conflicts with {conflicts} other answers with the same task name."
         )
-    answers_to_rename = Answer.query.filter_by(task_id=f"{d.id}.{old_name}").all()
+    answers_to_rename = (
+        run_sql(select(Answer).filter_by(task_id=f"{d.id}.{old_name}")).scalars().all()
+    )
     for a in answers_to_rename:
         a.task_id = f"{d.id}.{new_name}"
     db.session.commit()
@@ -2226,11 +2264,19 @@ def clear_task_block(user: str, task_id: str) -> Response:
     b = TaskBlock.get_by_task(tid.doc_task)
     if not b:
         return json_response({"cleared": False})
-    ba = BlockAccess.query.filter_by(
-        block_id=b.id,
-        type=AccessType.view.value,
-        usergroup_id=user_obj.get_personal_group().id,
-    ).first()
+    ba = (
+        run_sql(
+            select(BlockAccess)
+            .filter_by(
+                block_id=b.id,
+                type=AccessType.view.value,
+                usergroup_id=user_obj.get_personal_group().id,
+            )
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
     if not ba or not ba.accessible_to:
         return json_response({"cleared": False})
     ba.accessible_to = None
@@ -2269,11 +2315,19 @@ def unlock_locked_task(task_id: str) -> Response:
     if prerequisite_info.requireLock:
         b = TaskBlock.get_by_task(prerequisite_taskid.doc_task)
         if b:
-            ba = BlockAccess.query.filter_by(
-                block_id=b.id,
-                type=AccessType.view.value,
-                usergroup_id=current_user.get_personal_group().id,
-            ).first()
+            ba = (
+                run_sql(
+                    select(BlockAccess)
+                    .filter_by(
+                        block_id=b.id,
+                        type=AccessType.view.value,
+                        usergroup_id=current_user.get_personal_group().id,
+                    )
+                    .limit(1)
+                )
+                .scalars()
+                .first()
+            )
             if ba and ba.accessible_to and ba.accessible_to < get_current_time():
                 return json_response({"unlocked": True})
         return json_response(
@@ -2315,11 +2369,19 @@ def unlock_task(task_id: str) -> Response:
     if not b:
         b = insert_task_block(task_id=tid.doc_task, owner_groups=d.owners)
     else:
-        ba = BlockAccess.query.filter_by(
-            block_id=b.id,
-            type=AccessType.view.value,
-            usergroup_id=current_user.get_personal_group().id,
-        ).first()
+        ba = (
+            run_sql(
+                select(BlockAccess)
+                .filter_by(
+                    block_id=b.id,
+                    type=AccessType.view.value,
+                    usergroup_id=current_user.get_personal_group().id,
+                )
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
     if not ba:
         time_now = get_current_time()
         expire_time = time_now + timedelta(seconds=access_duration)

@@ -1,7 +1,6 @@
 import datetime
 import json
 from time import sleep
-from typing import Optional
 
 import dateutil.parser
 
@@ -9,7 +8,7 @@ from timApp.lecture.askedjson import AskedJson, make_error_question
 from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer
-from timApp.lecture.showpoints import Showpoints
+from timApp.lecture.showpoints import ShowPoints
 from timApp.tests.db.timdbtest import TEST_USER_1_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
@@ -267,14 +266,14 @@ class LectureTest(TimRouteTest):
         new_end_time = dateutil.parser.parse(resp["question_end_time"])
         self.assertTrue(original_end_time > new_end_time)
 
-        sp = Showpoints.query.get(aid)
+        sp = db.session.get(ShowPoints, aid)
         self.assertIsNone(sp)
 
         self.login_test1()
 
         self.post("/showAnswerPoints", query_string=dict(asked_id=aid))
         db.session.remove()
-        sp = Showpoints.query.get(aid)
+        sp = db.session.get(ShowPoints, aid)
         self.assertIsNotNone(sp)
 
         resp = self.get_updates(doc.id, msg_id, True, aid)
@@ -325,7 +324,7 @@ testuser2;count;1
         q = get_asked_question(aid2)
         db.session.refresh(q)
         self.assertFalse(q.is_running)
-        l: Lecture = Lecture.query.get(lecture_id)
+        l: Lecture = db.session.get(Lecture, lecture_id)
         self.assertEqual(1, len(l.running_questions))
 
         self.json_post("/extendLecture", {}, expect_status=400)

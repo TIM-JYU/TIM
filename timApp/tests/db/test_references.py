@@ -1,8 +1,5 @@
 """Unit tests for testing paragraph referencing."""
 
-import unittest
-from typing import Optional
-
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
@@ -70,7 +67,6 @@ class RefTest(TimDbTest):
         self.init_testdb()
 
     def init_testdb(self):
-        db = self.get_db()
         self.src_doc = self.create_doc().document
         self.ref_doc = self.create_doc().document
 
@@ -78,7 +74,6 @@ class RefTest(TimDbTest):
         self.assertEqual(
             self.src_par.get_id(), self.src_doc.get_paragraphs()[0].get_id()
         )
-        return db
 
     def test_simpleref(self):
         ref_par = add_ref_paragraph(self.ref_doc, self.src_par)

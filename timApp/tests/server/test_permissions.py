@@ -1,4 +1,3 @@
-import time
 from datetime import timedelta
 
 from timApp.auth.accesstype import AccessType
@@ -645,6 +644,7 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         tr = self.create_translation(d)
+        tr_url = tr.url
         self.test_user_2.grant_access(
             access_type=AccessType.view,
             accessible_to=get_current_time() - timedelta(days=1),
@@ -686,7 +686,7 @@ class PermissionTest(TimRouteTest):
         self.get(d2tr.url, expect_status=403)
         self.get(d2tr.url, expect_status=403)
 
-        r = self.get(tr.url, expect_status=403)
+        r = self.get(tr_url, expect_status=403)
         self.assertIn("My custom message", r)
         self.assertIn("Go to the next document", r)
         self.get(d2tr.url)
@@ -756,6 +756,7 @@ class PermissionTest(TimRouteTest):
         )
         uf = self.upload_file(d, b"test", "test.txt")
         tr = self.create_translation(d)
+        tr_url = tr.url
         f = d.parent
         self.test_user_2.grant_access(f, AccessType.view)
         db.session.commit()
@@ -765,7 +766,7 @@ class PermissionTest(TimRouteTest):
         self.get(f'/files/{uf["file"]}', expect_status=403)
         with self.temp_config({"INHERIT_FOLDER_RIGHTS_DOCS": {d.path}}):
             self.get(d.url)
-            self.get(tr.url)
+            self.get(tr_url)
             self.get(f'/files/{uf["file"]}')
             self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
             self.post_answer("textfield", f"{d.id}.t", user_input={"c": "x"})
@@ -983,6 +984,9 @@ class PermissionTest(TimRouteTest):
             },
             expect_status=200,
         )
+
+        t1 = DocEntry.find_by_id(t1.id)
+        t2 = DocEntry.find_by_id(t2.id)
 
         self.assertFalse(self.test_user_2.has_view_access(d))
         self.assertFalse(self.test_user_3.has_view_access(d))

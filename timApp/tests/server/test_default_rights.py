@@ -1,6 +1,7 @@
 from operator import itemgetter
 
 from dateutil import parser
+from sqlalchemy import select
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -10,7 +11,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import BlockType
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import get_home_organization_group
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import get_anonymous_group_id
 from timApp.user.users import get_rights_holders, get_default_rights_holders
 from timApp.user.userutils import grant_default_access, default_right_paths
@@ -20,7 +21,7 @@ class DefaultRightTest(TimRouteTest):
     def test_document_default_rights(self):
         self.login_test1()
         doc = self.create_doc().document
-        docentry = DocEntry.query.filter_by(id=doc.doc_id).one()
+        docentry = run_sql(select(DocEntry).filter_by(id=doc.doc_id)).scalars().one()
         folder: Folder = docentry.parent
         folder_owner_id = folder.owners[0].id
         kg = get_home_organization_group()

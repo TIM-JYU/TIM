@@ -1,26 +1,28 @@
 from __future__ import annotations
 
+from sqlalchemy import select, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from timApp.timdb.sqa import db
 from timApp.item.block import Block, BlockType, insert_block
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import UserGroup
 
 
 class TaskBlock(db.Model):
+    id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)
+    task_id: Mapped[str] = mapped_column(primary_key=True)
 
-    __tablename__ = "taskblock"
-    id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
-    task_id = db.Column(db.Text, primary_key=True)
-
-    block = db.relationship("Block", lazy="joined")
+    block: Mapped[Block] = relationship(lazy="select")
 
     @staticmethod
     def get_by_task(task_id: str) -> TaskBlock | None:
-        return TaskBlock.query.filter_by(task_id=task_id).first()
+        return run_sql(select(TaskBlock).filter_by(task_id=task_id)).scalars().first()
 
     @staticmethod
     def get_block_by_task(task_id: str) -> Block | None:
-        task_block = TaskBlock.query.filter_by(task_id=task_id).first()
+        task_block = (
+            run_sql(select(TaskBlock).filter_by(task_id=task_id)).scalars().first()
+        )
         if task_block is not None:
             return task_block.block
         else:

@@ -2,11 +2,12 @@ from pathlib import Path
 
 import filelock
 from flask import current_app, Response
+from sqlalchemy import select
 
 from timApp.answer.answer import Answer
 from timApp.answer.exportedanswer import ExportedAnswer
 from timApp.document.docentry import DocEntry
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember, membership_current
@@ -69,12 +70,15 @@ def sync_user_group_memberships_if_enabled(user: User) -> None:
     user_groups: list[str] = [
         ugn
         for ugn, in (
-            db.session.query(UserGroup.name)
-            .join(
-                UserGroupMember,
-                (UserGroup.id == UserGroupMember.usergroup_id) & membership_current,
+            run_sql(
+                select(UserGroup.name)
+                .join(
+                    UserGroupMember,
+                    (UserGroup.id == UserGroupMember.usergroup_id) & membership_current,
+                )
+                .filter(UserGroupMember.user_id == user.id)
             )
-            .filter(UserGroupMember.user_id == user.id)
+            .scalars()
             .all()
         )
     ]

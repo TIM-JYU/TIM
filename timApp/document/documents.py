@@ -1,6 +1,6 @@
 """Defines the Documents class."""
 
-from typing import Optional
+from sqlalchemy import delete
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry
@@ -12,6 +12,7 @@ from timApp.document.yamlblock import YamlBlock
 from timApp.item.block import Block, BlockType
 from timApp.note.usernote import UserNote
 from timApp.readmark.readparagraph import ReadParagraph
+from timApp.timdb.sqa import run_sql
 from timApp.user.usergroup import UserGroup
 
 
@@ -82,7 +83,6 @@ def add_reference_pars(
     doc: Document, original_doc: Document, r: str, translator: str | None = None
 ):
     for par in original_doc:
-
         # If the paragraph is a citation, it should remain a citation in the translation
         # instead of being converted into a 'regular' translated paragraph.
         # Additionally, we want to check for a translated version of the citation that
@@ -138,14 +138,20 @@ def delete_document(document_id: int):
 
     """
 
-    DocEntry.query.filter_by(id=document_id).delete()
-    BlockAccess.query.filter_by(block_id=document_id).delete()
-    Block.query.filter_by(type_id=BlockType.Document.value, id=document_id).delete()
-    ReadParagraph.query.filter_by(doc_id=document_id).delete()
-    UserNote.query.filter_by(doc_id=document_id).delete()
-    Translation.query.filter(
-        (Translation.doc_id == document_id) | (Translation.src_docid == document_id)
-    ).delete()
+    for stmt in (
+        delete(DocEntry).where(DocEntry.id == document_id),
+        delete(BlockAccess).where(BlockAccess.block_id == document_id),
+        delete(Block).where(
+            (Block.type_id == BlockType.Document.value) & (Block.id == document_id)
+        ),
+        delete(ReadParagraph).where(ReadParagraph.doc_id == document_id),
+        delete(UserNote).where(UserNote.doc_id == document_id),
+        delete(Translation).where(
+            (Translation.doc_id == document_id) | (Translation.src_docid == document_id)
+        ),
+    ):
+        run_sql(stmt)
+
     Document.remove(document_id)
 
 

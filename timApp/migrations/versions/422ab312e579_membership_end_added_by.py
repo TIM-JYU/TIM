@@ -7,6 +7,7 @@ Create Date: 2019-09-04 06:39:22.902132
 """
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from timApp.sisu.scimusergroup import ScimUserGroup
@@ -33,12 +34,13 @@ def upgrade():
     tmp: Any = scoped_session(session_factory=sessionmaker(bind=bind))
     db.session = tmp
     ugs: list[tuple[UserGroup, ScimUserGroup]] = (
-        UserGroup.query.join(ScimUserGroup)
-        .with_entities(UserGroup, ScimUserGroup)
+        db.session.execute(select(UserGroup, ScimUserGroup).join(ScimUserGroup))
+        .scalars()
         .all()
     )
     su = User.get_scimuser()
     for ug, sg in ugs:
+        # FIXME: SQLAlchemy dynamic
         ms = (
             ug.memberships.filter(
                 UserGroupMember.user_id.in_(

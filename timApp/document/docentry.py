@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, List
 
-from sqlalchemy.orm import foreign
+from sqlalchemy import select, ForeignKey, Index
+from sqlalchemy.orm import foreign, mapped_column, Mapped, relationship
 
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
 from timApp.folder.createopts import FolderCreationOptions
-from timApp.item.block import BlockType
+from timApp.item.block import BlockType, Block
 from timApp.item.block import insert_block
 from timApp.timdb.exceptions import ItemAlreadyExistsException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import UserGroup, get_admin_group_id
 from timApp.util.utils import split_location
 
@@ -27,23 +28,21 @@ class DocEntry(db.Model, DocInfo):
     Most of the time you should use DocInfo class instead of this.
     """
 
-    __tablename__ = "docentry"
-    name = db.Column(db.Text, primary_key=True)
+    name: Mapped[str] = mapped_column(primary_key=True)
     """Full path of the document.
     
     TODO: Improve the name.
     """
 
-    id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    id: Mapped[int] = mapped_column(ForeignKey("block.id"))  # type: ignore
     """Document identifier."""
 
-    public = db.Column(db.Boolean, nullable=False, default=True)
+    public: Mapped[bool] = mapped_column(default=True)
     """Whether the document is visible in directory listing."""
 
-    _block = db.relationship("Block", back_populates="docentries", lazy="joined")
+    _block: Mapped["Block"] = relationship(back_populates="docentries", lazy="joined")
 
-    trs: list[Translation] = db.relationship(
-        "Translation",
+    trs: Mapped[List[Translation]] = relationship(
         primaryjoin=id == foreign(Translation.src_docid),
         back_populates="docentry",
         # When a DocEntry object is deleted, we don't want to touch the translation objects at all.
@@ -53,7 +52,7 @@ class DocEntry(db.Model, DocInfo):
         passive_deletes="all",
     )
 
-    __table_args__ = (db.Index("docentry_id_idx", "id"),)
+    __table_args__ = (Index("docentry_id_idx", "id"),)
 
     @property
     def tr(self) -> Translation | None:
@@ -93,11 +92,11 @@ class DocEntry(db.Model, DocInfo):
 
     @staticmethod
     def get_all() -> list[DocEntry]:
-        return DocEntry.query.all()
+        return run_sql(select(DocEntry)).scalars().all()  # type: ignore
 
     @staticmethod
     def find_all_by_id(doc_id: int) -> list[DocEntry]:
-        return DocEntry.query.filter_by(id=doc_id).all()
+        return run_sql(select(DocEntry).filter_by(id=doc_id)).scalars().all()  # type: ignore
 
     @staticmethod
     def find_by_id(doc_id: int, docentry_load_opts: Any = None) -> DocInfo | None:
@@ -105,13 +104,13 @@ class DocEntry(db.Model, DocInfo):
 
         TODO: This method doesn't really belong in DocEntry class.
         """
-        q = DocEntry.query.filter_by(id=doc_id)
+        stmt = select(DocEntry).filter_by(id=doc_id)
         if docentry_load_opts:
-            q = q.options(*docentry_load_opts)
-        d = q.first()
+            stmt = stmt.options(*docentry_load_opts)
+        d = run_sql(stmt.limit(1)).scalars().first()
         if d:
             return d
-        return Translation.query.get(doc_id)
+        return db.session.get(Translation, doc_id)
 
     @staticmethod
     def find_by_path(
@@ -126,7 +125,7 @@ class DocEntry(db.Model, DocInfo):
         """
         if docentry_load_opts is None:
             docentry_load_opts = []
-        d = DocEntry.query.options(*docentry_load_opts).get(path)
+        d = db.session.get(DocEntry, path, options=docentry_load_opts)
         if d:
             return d
         # try translation
@@ -140,12 +139,19 @@ class DocEntry(db.Model, DocInfo):
             if entry is not None:
                 # Match lang id using LIKE to allow for partial matches.
                 # This is a simple way to allow mapping /en to newer /en-US or /en-GB.
-                tr = Translation.query.filter(
-                    (Translation.src_docid == entry.id)
-                    & (Translation.lang_id.like(f"{lang}%"))
-                ).first()
+                tr = (
+                    run_sql(
+                        select(Translation)
+                        .filter(
+                            (Translation.src_docid == entry.id)
+                            & (Translation.lang_id.like(f"{lang}%"))
+                        )
+                        .limit(1)
+                    )
+                    .scalars()
+                    .first()
+                )
                 if tr is not None:
-                    tr.docentry = entry
                     return tr
         if fallback_to_id:
             try:
@@ -249,23 +255,23 @@ def get_documents(
 
     """
 
-    q = DocEntry.query
+    stmt = select(DocEntry)
     if not include_nonpublic:
-        q = q.filter_by(public=True)
+        stmt = stmt.filter_by(public=True)
     if filter_folder is not None:
         filter_folder = filter_folder.strip("/") + "/"
         if filter_folder == "/":
             filter_folder = ""
-        q = q.filter(DocEntry.name.like(filter_folder + "%"))
+        stmt = stmt.filter(DocEntry.name.like(filter_folder + "%"))
         if not search_recursively:
-            q = q.filter(DocEntry.name.notlike(filter_folder + "%/%"))
+            stmt = stmt.filter(DocEntry.name.notlike(filter_folder + "%/%"))
     if custom_filter is not None:
-        q = q.filter(custom_filter)
+        stmt = stmt.filter(custom_filter)
     if query_options is not None:
-        q = q.options(query_options)
-    result = q.all()
+        stmt = stmt.options(query_options)
+    result = run_sql(stmt).scalars().all()
     if not filter_user:
-        return result
+        return result  # type: ignore
     return [r for r in result if filter_user.has_view_access(r)]
 
 

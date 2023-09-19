@@ -1,9 +1,11 @@
+from sqlalchemy import select
+
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
-from timApp.user.usercontact import ContactOrigin, UserContact
+from timApp.timdb.sqa import db, run_sql
+from timApp.user.usercontact import UserContact
 from timApp.user.verification.verification import ContactAddVerification
 
 
@@ -29,10 +31,15 @@ class VerificationTest(TimRouteTest):
             self.assertIsNotNone(u.get_contact(Channel.EMAIL, email))
 
             verification = (
-                ContactAddVerification.query.join(UserContact)
-                .filter(
-                    (ContactAddVerification.user == u) & (UserContact.contact == email)
+                run_sql(
+                    select(ContactAddVerification)
+                    .join(UserContact)
+                    .filter(
+                        (ContactAddVerification.user == u)
+                        & (UserContact.contact == email)
+                    )
                 )
+                .scalars()
                 .one()
             )
 
@@ -124,11 +131,15 @@ verify_url = {{ verify_url }}
         )
 
         verification = (
-            ContactAddVerification.query.join(UserContact)
-            .filter(
-                (ContactAddVerification.user == self.test_user_1)
-                & (UserContact.contact == "someotheremail1@example.com")
+            run_sql(
+                select(ContactAddVerification)
+                .join(UserContact)
+                .filter(
+                    (ContactAddVerification.user == self.test_user_1)
+                    & (UserContact.contact == "someotheremail1@example.com")
+                )
             )
+            .scalars()
             .one()
         )
 

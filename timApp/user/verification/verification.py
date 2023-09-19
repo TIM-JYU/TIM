@@ -4,10 +4,12 @@ from functools import cache
 from typing import Optional
 
 from flask import render_template_string, url_for
-from sqlalchemy.orm import load_only
+from sqlalchemy import select, ForeignKey
+from sqlalchemy.orm import load_only, mapped_column, Mapped, relationship
 
 from timApp.document.docentry import DocEntry
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
 from timApp.user.usercontact import UserContact, PrimaryContact
 from timApp.util.utils import get_current_time
@@ -48,24 +50,22 @@ class Verification(db.Model):
     """For various pending verifications, such as message list joining and contact information ownership
     verification."""
 
-    __tablename__ = "verification"
-
-    token = db.Column(db.Text, primary_key=True)
+    token: Mapped[str] = mapped_column(primary_key=True)
     """Verification token used for action verification"""
 
-    type: VerificationType = db.Column(db.Enum(VerificationType), primary_key=True)
+    type: Mapped[VerificationType] = mapped_column(primary_key=True)
     """The type of verification, see VerificationType class for details."""
 
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     """User that can react to verification request."""
 
-    requested_at = db.Column(db.DateTime(timezone=True))
+    requested_at: Mapped[Optional[datetime_tz]]
     """When a verification has been added to db, pending sending to a user."""
 
-    reacted_at = db.Column(db.DateTime(timezone=True))
+    reacted_at: Mapped[Optional[datetime_tz]]
     """When the user reacted to verification request."""
 
-    user: User = db.relationship("User", lazy="select")
+    user: Mapped["User"] = relationship()
     """User that can react to verification request."""
 
     @property
@@ -85,11 +85,9 @@ class Verification(db.Model):
 
 
 class ContactAddVerification(Verification):
-    contact_id = db.Column(db.Integer, db.ForeignKey("usercontact.id"))
+    contact_id: Mapped[Optional[int]] = mapped_column(ForeignKey("usercontact.id"))
 
-    contact: UserContact | None = db.relationship(
-        "UserContact", lazy="select", uselist=False
-    )
+    contact: Mapped[Optional["UserContact"]] = relationship()
     """Contact to verify."""
 
     @property
@@ -115,7 +113,7 @@ class ContactAddVerification(Verification):
             "contact": self.contact.contact,
         }
 
-    __mapper_args__ = {"polymorphic_identity": VerificationType.CONTACT_OWNERSHIP}
+    __mapper_args__ = {"polymorphic_identity": VerificationType.CONTACT_OWNERSHIP}  # type: ignore
 
 
 class SetPrimaryContactVerification(ContactAddVerification):
@@ -127,11 +125,19 @@ class SetPrimaryContactVerification(ContactAddVerification):
 
         if not self.contact:
             return
-        current_primary = UserContact.query.filter_by(
-            user_id=self.user_id,
-            channel=self.contact.channel,
-            primary=PrimaryContact.true,
-        ).first()
+        current_primary = (
+            run_sql(
+                select(UserContact)
+                .filter_by(
+                    user_id=self.user_id,
+                    channel=self.contact.channel,
+                    primary=PrimaryContact.true,
+                )
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
         with db.session.no_autoflush:
             if current_primary:
                 current_primary.primary = None
@@ -141,15 +147,19 @@ class SetPrimaryContactVerification(ContactAddVerification):
 
             # We update email directly since we already resolved the contact in previous steps
             u = (
-                User.query.filter_by(id=self.user_id)
-                .options(load_only(User.email, User.id))
+                run_sql(
+                    select(User)
+                    .filter_by(id=self.user_id)
+                    .options(load_only(User.email, User.id))
+                )
+                .scalars()
                 .one()
             )
             old_email = u._email
             u._email = self.contact.contact
         update_mailing_list_address(old_email, self.contact.contact)
 
-    __mapper_args__ = {"polymorphic_identity": VerificationType.SET_PRIMARY_CONTACT}
+    __mapper_args__ = {"polymorphic_identity": VerificationType.SET_PRIMARY_CONTACT}  # type: ignore
 
 
 def send_verification_impl(

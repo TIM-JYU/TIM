@@ -301,6 +301,7 @@ class PreambleTest3(PreambleTestBase):
         p = p2ctr.document.get_paragraphs()[0]
         p.set_markdown("p2ctr")
         p.save()
+        db.session.add(dt)
         e = self.get(dt.url, as_tree=True)
         self.assert_content(e, ["p1c", "p1", "p2ctr", "p2", "p3c", "p3", ""])
         d.document.set_settings({"preamble": "chat, preamblez"})

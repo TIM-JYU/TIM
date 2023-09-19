@@ -1,13 +1,17 @@
 import json
 from json import JSONDecodeError
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import func
-from sqlalchemy.orm import lazyload
+from sqlalchemy import func, select, ForeignKey
+from sqlalchemy.orm import lazyload, mapped_column, Mapped, relationship
 
 from timApp.lecture.lecture import Lecture
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
+
+if TYPE_CHECKING:
+    from timApp.lecture.askedquestion import AskedQuestion
 
 
 def unshuffle_lectureanswer(
@@ -25,27 +29,24 @@ def unshuffle_lectureanswer(
 
 
 class LectureAnswer(db.Model):
-    __tablename__ = "lectureanswer"
-    answer_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
-    question_id = db.Column(
-        db.Integer, db.ForeignKey("askedquestion.asked_id"), nullable=False
-    )
-    lecture_id = db.Column(
-        db.Integer, db.ForeignKey("lecture.lecture_id"), nullable=False
-    )
-    answer = db.Column(db.Text, nullable=False)
-    answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
-    points = db.Column(db.Float)
+    answer_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
+    question_id: Mapped[int] = mapped_column(ForeignKey("askedquestion.asked_id"))
+    lecture_id: Mapped[int] = mapped_column(ForeignKey("lecture.lecture_id"))
+    answer: Mapped[str]
+    answered_on: Mapped[datetime_tz]
+    points: Mapped[Optional[float]]
 
-    asked_question = db.relationship(
-        "AskedQuestion", back_populates="answers", lazy="joined"
+    asked_question: Mapped["AskedQuestion"] = relationship(
+        back_populates="answers", lazy="selectin"
     )
-    user = db.relationship("User", back_populates="lectureanswers", lazy="joined")
+    user: Mapped["User"] = relationship(
+        back_populates="lectureanswers", lazy="selectin"
+    )
 
     @staticmethod
     def get_by_id(ans_id: int) -> Optional["LectureAnswer"]:
-        return LectureAnswer.query.get(ans_id)
+        return db.session.get(LectureAnswer, ans_id)
 
     def get_parsed_answer(self):
         # If lecture question's rows are randomized, it will be saved as a dict
@@ -86,15 +87,15 @@ class LectureAnswer(db.Model):
 def get_totals(
     lecture: Lecture, user: User | None = None
 ) -> list[tuple[User, float, int]]:
-    q = User.query
+    stmt = select(User)
     if user:
-        q = q.filter_by(id=user.id)
-    q = (
-        q.join(LectureAnswer)
+        stmt = stmt.filter_by(id=user.id)
+    stmt = (
+        stmt.join(LectureAnswer)
         .options(lazyload(User.groups))
         .filter_by(lecture_id=lecture.lecture_id)
         .group_by(User.id)
         .order_by(User.name)
-        .with_entities(User, func.sum(LectureAnswer.points), func.count())
+        .with_only_columns(User, func.sum(LectureAnswer.points), func.count())
     )
-    return q.all()
+    return run_sql(stmt).all()

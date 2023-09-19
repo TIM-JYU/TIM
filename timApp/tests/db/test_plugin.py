@@ -4,6 +4,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.sqa import db
 from timApp.util.flask.responsehelper import to_dict
 from timApp.util.utils import static_tim_doc
 
@@ -29,7 +30,7 @@ class PluginTest(TimDbTest):
             )
             a_ids.append((a.id, a2.id))
         for i, (aid, aid2) in enumerate(a_ids, start=1):
-            a: Answer = Answer.query.get(aid)
+            a: Answer = db.session.get(Answer, aid)
             self.assert_dict_subset(
                 to_dict(a),
                 {
@@ -40,7 +41,7 @@ class PluginTest(TimDbTest):
                 },
             )
             self.assertEqual(i, a.get_answer_number())
-            a = Answer.query.get(aid2)
+            a = db.session.get(Answer, aid2)
             self.assert_dict_subset(
                 to_dict(a),
                 {

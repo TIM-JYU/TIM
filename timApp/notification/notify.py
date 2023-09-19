@@ -5,7 +5,8 @@ from threading import Thread
 from typing import DefaultDict, Callable
 
 from flask import current_app
-from sqlalchemy.orm import joinedload
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -30,7 +31,7 @@ from timApp.notification.pending_notification import (
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -81,15 +82,18 @@ def get_user_notify_settings():
 
 
 def get_current_user_notifications(limit: int | None = None):
-    q = (
-        Notification.query.filter_by(user_id=get_current_user_id())
-        .options(joinedload(Notification.block).joinedload(Block.docentries))
-        .options(joinedload(Notification.block).joinedload(Block.folder))
-        .options(joinedload(Notification.block).joinedload(Block.translation))
-    ).order_by(Notification.block_id.desc())
+    stmt = (
+        select(Notification)
+        .filter_by(user_id=get_current_user_id())
+        .options(selectinload(Notification.block).selectinload(Block.docentries))
+        .options(selectinload(Notification.block).selectinload(Block.folder))
+        .options(selectinload(Notification.block).selectinload(Block.translation))
+        .order_by(Notification.block_id.desc())
+    )
+
     if limit is not None:
-        q = q.limit(limit)
-    nots = q.all()
+        stmt = stmt.limit(limit)
+    nots = run_sql(stmt).scalars().all()
     return nots
 
 

@@ -152,7 +152,7 @@ def use_typed_params(
             return func(
                 *args,
                 **kwargs,
-                **{f.name: getattr(extracted, f.name) for f in fields(extracted)},
+                **{f.name: getattr(extracted, f.name) for f in fields(extracted)},  # type: ignore[arg-type]
             )
 
         @wraps(func)

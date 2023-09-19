@@ -1,10 +1,12 @@
 from datetime import timedelta
 
+from sqlalchemy import select
+
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id
 from timApp.user.userutils import grant_access
@@ -41,11 +43,17 @@ class DurationTest(TimRouteTest):
             expect_contains=self.unlock_success,
         )
         self.get(d.url_relative)
-        ba = BlockAccess.query.filter_by(
-            usergroup_id=self.get_test_user_2_group_id(),
-            block_id=doc_id,
-            type=get_access_type_id("view"),
-        ).one()
+        ba = (
+            run_sql(
+                select(BlockAccess).filter_by(
+                    usergroup_id=self.get_test_user_2_group_id(),
+                    block_id=doc_id,
+                    type=get_access_type_id("view"),
+                )
+            )
+            .scalars()
+            .one()
+        )
         ba.accessible_to -= timedelta(days=2)
         db.session.commit()
         self.get(
@@ -70,11 +78,17 @@ class DurationTest(TimRouteTest):
         )
         db.session.commit()
         self.get(d.url_relative, query_string={"unlock": "true"})
-        ba = BlockAccess.query.filter_by(
-            usergroup_id=self.get_test_user_2_group_id(),
-            block_id=d.id,
-            type=AccessType.view.value,
-        ).one()
+        ba = (
+            run_sql(
+                select(BlockAccess).filter_by(
+                    usergroup_id=self.get_test_user_2_group_id(),
+                    block_id=d.id,
+                    type=AccessType.view.value,
+                )
+            )
+            .scalars()
+            .one()
+        )
         real_duration = (ba.accessible_to - get_current_time()).total_seconds()
         delta_access_seconds = delta_access.total_seconds()
         self.assertAlmostEqual(real_duration, delta_access_seconds, delta=1)
@@ -162,11 +176,17 @@ class DurationTest(TimRouteTest):
             expect_contains=self.unlock_success,
         )
         self.get(d.url_relative)
-        ba = BlockAccess.query.filter_by(
-            usergroup_id=self.get_test_user_2_group_id(),
-            block_id=doc_id,
-            type=get_access_type_id("view"),
-        ).one()
+        ba = (
+            run_sql(
+                select(BlockAccess).filter_by(
+                    usergroup_id=self.get_test_user_2_group_id(),
+                    block_id=doc_id,
+                    type=get_access_type_id("view"),
+                )
+            )
+            .scalars()
+            .one()
+        )
         ba.accessible_to -= timedelta(days=2)
         db.session.commit()
         self.get(

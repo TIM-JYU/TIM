@@ -7,12 +7,12 @@ and their labels. The module also retrieves the data related to velps and their 
 
 """
 
-from typing import Optional, Iterable
+from typing import Iterable
 
-from sqlalchemy import func
-from sqlalchemy.orm import joinedload
+from sqlalchemy import func, delete, select
+from sqlalchemy.orm import selectinload
 
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.velp.velp_models import (
     Velp,
     VelpVersion,
@@ -139,7 +139,7 @@ def create_new_velp(
 
 
 def update_velp(
-    velp_id: int, default_points: str, color: str, visible_to: int, style: int
+    velp_id: int, default_points: float, color: str, visible_to: int, style: int
 ) -> None:
     """Changes the non-versioned properties of a velp. Does not update labels.
 
@@ -152,7 +152,7 @@ def update_velp(
     """
     if not visible_to:
         visible_to = 4
-    v: Velp = Velp.query.get(velp_id)
+    v: Velp = db.session.get(Velp, velp_id)
     if v:
         v.default_points = default_points
         v.color = color
@@ -183,7 +183,7 @@ def update_velp_labels(velp_id: int, labels: Iterable[int]) -> None:
 
     """
     # First nuke existing labels.
-    LabelInVelp.query.filter_by(velp_id=velp_id).delete()
+    run_sql(delete(LabelInVelp).where(LabelInVelp.velp_id == velp_id))
     # Then add the new ones.
     add_labels_to_velp(velp_id, labels)
 
@@ -199,11 +199,16 @@ def get_latest_velp_version(
 
     """
     return (
-        VelpContent.query.filter_by(language_id=language_id)
-        .join(VelpVersion)
-        .filter_by(velp_id=velp_id)
-        .order_by(VelpVersion.id.desc())
-        .with_entities(VelpContent)
+        run_sql(
+            select(VelpContent)
+            .filter_by(language_id=language_id)
+            .join(VelpVersion)
+            .filter_by(velp_id=velp_id)
+            .order_by(VelpVersion.id.desc())
+            .with_only_columns(VelpContent)
+            .limit(1)
+        )
+        .scalars()
         .first()
     )
 
@@ -222,12 +227,14 @@ def get_velp_content_for_document(
     """
 
     sq = (
-        VelpVersion.query.group_by(VelpVersion.velp_id)
-        .with_entities(VelpVersion.velp_id, func.max(VelpVersion.id).label("ver"))
+        select(VelpVersion)
+        .group_by(VelpVersion.velp_id)
+        .with_only_columns(VelpVersion.velp_id, func.max(VelpVersion.id).label("ver"))
         .subquery()
     )
     vq = (
-        Velp.query.join(sq, sq.c.velp_id == Velp.id)
+        select(Velp)
+        .join(sq, sq.c.velp_id == Velp.id)
         .join(VelpContent, sq.c.ver == VelpContent.version_id)
         .filter(VelpContent.language_id == language_id)
         .filter(
@@ -243,20 +250,16 @@ def get_velp_content_for_document(
             (VelpGroupsInDocument.user_id == user_id)
             & (VelpGroupsInDocument.doc_id == doc_id)
         )
-        .with_entities(Velp)
-        .options(joinedload(Velp.groups, innerjoin=True).raiseload(VelpGroup.block))
-        .options(
-            joinedload(Velp.velp_versions, innerjoin=True).joinedload(
-                VelpVersion.content, innerjoin=True
-            )
-        )
+        .with_only_columns(Velp)
+        .options(selectinload(Velp.groups).raiseload(VelpGroup.block))
+        .options(selectinload(Velp.velp_versions).joinedload(VelpVersion.content))
     )
-    return vq.all()
+    return list(run_sql(vq).unique().scalars().all())
 
 
 def get_velp_label_content_for_document(
     doc_id: int, user_id: int, language_id: str = "FI"
-) -> dict:
+) -> list[VelpLabelContent]:
     """Gets velp label content for document.
 
     Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable
@@ -268,20 +271,26 @@ def get_velp_label_content_for_document(
     :return: List of dicts containing velp label ids and content
 
     """
-    vlcs = (
-        VelpLabelContent.query.filter_by(language_id=language_id)
-        .join(LabelInVelp, VelpLabelContent.velplabel_id == LabelInVelp.label_id)
-        .join(Velp)
-        .filter(
-            (Velp.valid_until >= func.current_timestamp()) | (Velp.valid_until == None)
+    vlcs = list(
+        run_sql(
+            select(VelpLabelContent)
+            .filter_by(language_id=language_id)
+            .join(LabelInVelp, VelpLabelContent.velplabel_id == LabelInVelp.label_id)
+            .join(Velp)
+            .filter(
+                (Velp.valid_until >= func.current_timestamp())
+                | (Velp.valid_until == None)
+            )
+            .join(VelpInGroup)
+            .join(
+                VelpGroupsInDocument,
+                VelpInGroup.velp_group_id == VelpGroupsInDocument.velp_group_id,
+            )
+            .filter_by(doc_id=doc_id, user_id=user_id)
+            .with_only_columns(VelpLabelContent)
         )
-        .join(VelpInGroup)
-        .join(
-            VelpGroupsInDocument,
-            VelpInGroup.velp_group_id == VelpGroupsInDocument.velp_group_id,
-        )
-        .filter_by(doc_id=doc_id, user_id=user_id)
-        .with_entities(VelpLabelContent)
+        .unique()
+        .scalars()
         .all()
     )
     return vlcs

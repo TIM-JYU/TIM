@@ -3,9 +3,9 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TypedDict, Any, DefaultDict, Literal
+from typing import TypedDict, Any, DefaultDict, Literal, Sequence
 
-from sqlalchemy import func
+from sqlalchemy import func, select, Row
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_global_answers
@@ -30,12 +30,12 @@ from timApp.messaging.messagelist.messagelist_utils import (
 )
 from timApp.peerreview.util.peerreview_utils import change_peerreviewers_for_user
 from timApp.plugin.importdata.importData import MissingUser, MissingUserSchema
-from timApp.plugin.plugin import TaskNotFoundException, CachedPluginFinder
+from timApp.plugin.plugin import TaskNotFoundException, CachedPluginFinder, Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import do_create_group, verify_group_edit_access
 from timApp.user.user import User, UserInfo, UserOrigin
 from timApp.user.usergroup import UserGroup
@@ -78,7 +78,9 @@ def handle_jsrunner_groups(groupdata: JsrunnerGroups | None, curr_user: User) ->
                 group_members_state[ug] = UserGroupMembersState(
                     before=current_state, after=set(current_state)
                 )
-            users: list[User] = User.query.filter(User.id.in_(uids)).all()
+            users: Sequence[User] = (
+                run_sql(select(User).filter(User.id.in_(uids))).scalars().all()
+            )
             found_user_ids = {u.id for u in users}
             missing_ids = set(uids) - found_user_ids
             if missing_ids:
@@ -224,7 +226,9 @@ def save_fields(
     doc_map: dict[int, DocInfo] = {}
     user_map: dict[int, User] = {
         u.id: u
-        for u in User.query.filter(User.id.in_(x["user"] for x in save_obj)).all()
+        for u in run_sql(
+            select(User).filter(User.id.in_(x["user"] for x in save_obj))
+        ).scalars()
     }
 
     # We need this separate "add_users_to_group" parameter because the plugin may have reported missing users.
@@ -298,7 +302,7 @@ def save_fields(
                 UserContext.from_one_user(curr_user),
                 view_ctx,
             )
-            plugin = vr.plugin
+            plugin: PluginType | Plugin = vr.plugin
         except TaskNotFoundException as e:
             if not allow_missing:
                 if ignore_missing:
@@ -336,7 +340,8 @@ def save_fields(
         for key in user["fields"].keys()
     }
     sq = (
-        Answer.query.filter(
+        select(Answer)
+        .filter(
             Answer.task_id.in_(
                 [tid.doc_task for tid in parsed_task_ids.values() if not tid.is_global]
             )
@@ -345,14 +350,14 @@ def save_fields(
         .join(User, Answer.users)
         .filter(User.id.in_(user_map.keys()))
         .group_by(User.id, Answer.task_id)
-        .with_entities(func.max(Answer.id).label("aid"), User.id.label("uid"))
+        .with_only_columns(func.max(Answer.id).label("aid"), User.id.label("uid"))
         .subquery()
     )
-    datas: list[tuple[int, Answer]] = (
-        Answer.query.join(sq, Answer.id == sq.c.aid)
-        .with_entities(sq.c.uid, Answer)
-        .all()
-    )
+    datas: Sequence[Row[tuple[int, Answer]]] = run_sql(
+        select(Answer)
+        .join(sq, Answer.id == sq.c.aid)
+        .with_only_columns(sq.c.uid, Answer)
+    ).all()
     global_answers = get_global_answers(parsed_task_ids)
     answer_map: defaultdict[int, dict[str, Answer]] = defaultdict(dict)
     for uid, a in datas:
@@ -463,12 +468,12 @@ def save_fields(
                 valid=True,
                 saver=curr_user,
             )
+            db.session.add(ans)
             saveresult.fields_changed += 1
             # If this was a global task, add it to all users in the answer map so we won't save it multiple times.
             if task_id.is_global:
                 for uid in user_map.keys():
                     answer_map[uid][ans.task_id] = ans
-            db.session.add(ans)
     return saveresult
 
 
@@ -599,7 +604,7 @@ def _handle_item_right_actions(
 
     # Apply actions as we go
     for item_id, actions in item_actions.items():
-        item = items[item_id]
+        itm = items[item_id]
         for action in actions:
             group = UserGroup.get_by_name(action.group)
             access_type = action.accessType or AccessType.view
@@ -609,13 +614,13 @@ def _handle_item_right_actions(
                 case "add":
                     grant_access(
                         group,
-                        item,
+                        itm,
                         access_type,
                         accessible_from=action.accessibleFrom,
                         accessible_to=action.accessibleTo,
                     )
                 case "expire":
-                    expire_access(group, item, access_type)
+                    expire_access(group, itm, access_type)
 
     # Flush so that access rights are correct for any other JSRunner operations
     db.session.flush()

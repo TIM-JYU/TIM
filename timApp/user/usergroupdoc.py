@@ -1,3 +1,6 @@
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped
+
 from timApp.timdb.sqa import db
 
 
@@ -6,6 +9,5 @@ class UserGroupDoc(db.Model):
     and edit the members of the UserGroup.
     """
 
-    __tablename__ = "usergroupdoc"
-    group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"), primary_key=True)
-    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), primary_key=True)
+    doc_id: Mapped[int] = mapped_column(ForeignKey("block.id"), primary_key=True)

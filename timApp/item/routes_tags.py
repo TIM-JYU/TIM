@@ -5,9 +5,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from flask import request, Response
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError  # type: ignore
 
 from timApp.auth.accesshelper import (
@@ -20,7 +20,7 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_view_access
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
@@ -151,9 +151,13 @@ def edit_tag(doc: str, old_tag: TagInfo, new_tag: TagInfo) -> Response:
     new_tag_name = new_tag.name.split(",", 1)[0]
 
     new_tag_obj = Tag(name=new_tag_name, expires=new_tag.expires, type=new_tag.type)
-    old_tag_obj = Tag.query.filter_by(
-        block_id=d.id, name=old_tag.name, type=old_tag.type
-    ).first()
+    old_tag_obj = (
+        run_sql(
+            select(Tag).filter_by(block_id=d.id, name=old_tag.name, type=old_tag.type)
+        )
+        .scalars()
+        .first()
+    )
 
     if not old_tag_obj:
         raise RouteException("Tag to edit not found.")
@@ -182,7 +186,11 @@ def remove_tag(doc: str, tag: TagInfo) -> Response:
         raise NotExist()
     verify_manage_access(d)
 
-    tag_obj = Tag.query.filter_by(block_id=d.id, name=tag.name, type=tag.type).first()
+    tag_obj = (
+        run_sql(select(Tag).filter_by(block_id=d.id, name=tag.name, type=tag.type))
+        .scalars()
+        .first()
+    )
 
     if not tag_obj:
         raise RouteException("Tag not found.")
@@ -218,7 +226,7 @@ def get_all_tags() -> Response:
     of expiration.
     :returns The list of all unique tag names as list of strings.
     """
-    tags = Tag.query.all()
+    tags = run_sql(select(Tag)).scalars().all()
 
     tags_unique = set()
     for tag in tags:
@@ -244,34 +252,34 @@ def get_tagged_documents() -> Response:
     if exact_search:
         if case_sensitive:
             custom_filter = DocEntry.id.in_(
-                Tag.query.filter_by(name=tag_name).with_entities(Tag.block_id)
+                select(Tag.block_id).filter_by(name=tag_name)
             )
         else:
             custom_filter = DocEntry.id.in_(
-                Tag.query.filter(
+                select(Tag.block_id).filter(
                     func.lower(Tag.name) == func.lower(tag_name)
-                ).with_entities(Tag.block_id)
+                )
             )
 
     else:
         tag_name = f"%{tag_name}%"
         if case_sensitive:
             custom_filter = DocEntry.id.in_(
-                Tag.query.filter(
+                select(Tag.block_id).filter(
                     Tag.name.like(tag_name)
                     & ((Tag.expires > datetime.now()) | (Tag.expires == None))
-                ).with_entities(Tag.block_id)
+                )
             )
         else:
             custom_filter = DocEntry.id.in_(
-                Tag.query.filter(
+                select(Tag.block_id).filter(
                     Tag.name.ilike(tag_name)
                     & ((Tag.expires > datetime.now()) | (Tag.expires == None))
-                ).with_entities(Tag.block_id)
+                )
             )
 
     if list_doc_tags:
-        query_options = joinedload(DocEntry._block).joinedload(Block.tags)
+        query_options = selectinload(DocEntry._block).selectinload(Block.tags)
     else:
         query_options = None
 
@@ -293,7 +301,7 @@ def get_tagged_document_by_id(doc_id: int) -> Response:
     docs = get_documents(
         filter_user=get_current_user_object(),
         custom_filter=DocEntry.id.in_([doc_id]),
-        query_options=joinedload(DocEntry._block).joinedload(Block.tags),
+        query_options=selectinload(DocEntry._block).selectinload(Block.tags),
     )
     if not docs:
         raise NotExist("Document not found or not accessible!")

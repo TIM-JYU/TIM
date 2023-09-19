@@ -1,21 +1,21 @@
-from dataclasses import dataclass, asdict
-from typing import Union
 import json
+import math
 import re
 from collections import defaultdict
-import math
+from dataclasses import dataclass, asdict
 from threading import Thread
+from typing import Union
 
-from flask import render_template_string, request, jsonify, Response
+import numpy as np
 import yaml
-
+from flask import render_template_string, request, jsonify, Response
 from qulacs import QuantumCircuit, QuantumState, QuantumGateMatrix
 from qulacs.gate import H, X, Y, Z, S, T, to_matrix_gate, DenseMatrix
-import numpy as np
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.tim_app import csrf
 from timApp.util.flask.requesthelper import use_model
+from timApp.util.logger import log_warning
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
@@ -26,7 +26,6 @@ from tim_common.pluginserver_flask import (
     EditorTab,
 )
 from tim_common.utils import Missing
-from timApp.util.logger import log_warning
 
 
 @dataclass
@@ -206,6 +205,10 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     customGates: list[CustomGateInfo] | None = None
     gates: list[str] | None = None
     simulate: str | None = None
+
+    leftAxisLabel: str | None = None
+    rightAxisLabel: str | None = None
+    timeAxisLabel: str | None = None
 
     leftAxisLabel: str | None = None
     rightAxisLabel: str | None = None
@@ -532,7 +535,6 @@ def run_all_simulations_threaded(
     model_input: list[str] | None,
     max_run_timeout: int | None,
 ) -> tuple[bool, ErrorType | None]:
-
     sim_params = ThreadedSimParams(False, (True, None))
 
     # allow at max 25 seconds of simulation time
@@ -676,7 +678,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         )
         if not is_valid:
             valid_conditions = False
-            error = asdict(message)
+            error = asdict(message) if message else "Unknown error"
             points = 0.0
             result = ""
     if (
@@ -700,7 +702,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         else:
             points = 0.0
             result = ""
-            error = asdict(sim_error)
+            error = asdict(sim_error) if sim_error else "Unknown error"
 
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},
@@ -840,12 +842,14 @@ def quantum_circuit_simulate(args: SimulationArgs) -> Response:
     )
     if success and isinstance(result, np.ndarray):
         return jsonify({"web": {"result": list(result), "error": ""}})
-
+    error_message = (
+        asdict(result) if not isinstance(result, np.ndarray) else "Unknown result"
+    )
     return jsonify(
         {
             "web": {
                 "result": [],
-                "error": json.dumps(asdict(result), ensure_ascii=False, indent=4),
+                "error": json.dumps(error_message, ensure_ascii=False, indent=4),
             }
         }
     )

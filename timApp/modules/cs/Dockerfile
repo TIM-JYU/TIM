@@ -30,11 +30,17 @@ RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 # Install gpg and gpg-agent for verifying signatures before installing python
 RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
 
-ENV PY_VERSION=3.10
+ENV PY_VERSION=3.11
 ENV PYTHON=python$PY_VERSION
+
+# Install Python and pip
+# Also fix potential ModuleNotFoundError: No module named 'apt_pkg' error caused by apt_pkg
+# being targeted to some other Python version
 RUN bash -c "add-apt-repository ppa:deadsnakes/ppa && apt-get update && \
     ${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-distutils && \
-    wget -q https://bootstrap.pypa.io/get-pip.py -O get-pip.py && ${PYTHON} get-pip.py && rm get-pip.py && ${APT_CLEANUP}"
+    cd /usr/lib/python3/dist-packages/ && cp apt_pkg*.so apt_pkg.so && \
+    wget -q https://bootstrap.pypa.io/get-pip.py -O get-pip.py && ${PYTHON} get-pip.py && rm get-pip.py && \
+    ${APT_CLEANUP}"
 RUN ${PYTHON} -m pip install --ignore-installed Flask bleach lxml && bash -c "${APT_CLEANUP}"
 
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && bash -c "${APT_CLEANUP}"

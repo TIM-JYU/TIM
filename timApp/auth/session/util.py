@@ -3,13 +3,13 @@ Helper functions for managing user sessions.
 """
 
 from flask import has_request_context, session, current_app
-from sqlalchemy import func
+from sqlalchemy import func, select, update
 
 from timApp.auth.session.model import UserSession
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.item.item import Item
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.userutils import get_anon_user_id
 from timApp.util.logger import log_info, log_warning
@@ -27,10 +27,10 @@ def _max_concurrent_sessions() -> int | None:
 
 
 def _get_active_session_count(user: User) -> int:
-    return (
-        db.session.query(func.count(UserSession.session_id))
-        .filter((UserSession.user == user) & ~UserSession.expired)
-        .scalar()
+    return db.session.scalar(
+        select(func.count(UserSession.session_id)).filter(
+            (UserSession.user == user) & ~UserSession.expired  # type: ignore
+        )
     )
 
 
@@ -69,7 +69,11 @@ def expire_user_session(user: User, session_id: str | None) -> None:
 
     if not _save_sessions() or not session_id:
         return
-    sess = UserSession.query.filter_by(user=user, session_id=session_id).first()
+    sess = (
+        run_sql(select(UserSession).filter_by(user=user, session_id=session_id))
+        .scalars()
+        .first()
+    )
     if sess:
         log_info(
             f"SESSION: {user.name} logged out (expired={sess.expired}, active={_get_active_session_count(user) - 1})"
@@ -153,12 +157,16 @@ def has_valid_session(user: User | None = None) -> bool:
         return False
 
     current_session = (
-        db.session.query(UserSession.session_id)
-        .filter(
-            (UserSession.user == user)
-            & (UserSession.session_id == session_id)
-            & ~UserSession.expired
+        run_sql(
+            select(UserSession.session_id)
+            .filter(
+                (UserSession.user_id == user.id)
+                & (UserSession.session_id == session_id)
+                & ~UserSession.expired
+            )
+            .limit(1)
         )
+        .scalars()
         .first()
     )
 
@@ -172,29 +180,32 @@ def verify_session_for(username: str, session_id: str | None = None) -> None:
     :param username: Username of the user to verify the session for.
     :param session_id: If specified, verify the specific session ID. If None, verify the latest added session.
     """
-    user_subquery = db.session.query(User.id).filter(User.name == username).subquery()
-    q_base = UserSession.query.filter(UserSession.user_id.in_(user_subquery))
+    user_subquery = select(User.id).filter(User.name == username)
+    stmt_base = (
+        update(UserSession)
+        .where(UserSession.user_id.in_(user_subquery))
+        .execution_options(synchronize_session=False)
+    )
 
     if session_id:
-        q_expire = q_base.filter(UserSession.session_id != session_id)
-        q_verify = q_base.filter(UserSession.session_id == session_id)
+        stmt_expire = stmt_base.where(UserSession.session_id != session_id)
+        stmt_verify = stmt_base.where(UserSession.session_id == session_id)
     else:
         # Get the latest session
         subquery = (
-            db.session.query(UserSession.session_id)
+            select(UserSession.session_id)
             .filter(UserSession.user_id.in_(user_subquery))
             .order_by(UserSession.logged_in_at.desc())
             .limit(1)
-            .subquery()
         )
-        q_expire = q_base.filter(UserSession.session_id.notin_(subquery))
-        q_verify = q_base.filter(UserSession.session_id.in_(subquery))
+        stmt_expire = stmt_base.where(UserSession.session_id.notin_(subquery))
+        stmt_verify = stmt_base.where(UserSession.session_id.in_(subquery))
 
     # Only expire active sessions
-    q_expire = q_expire.filter(UserSession.expired == False)
+    stmt_expire = stmt_expire.where(UserSession.expired == False)
 
-    q_expire.update({"expired_at": get_current_time()}, synchronize_session=False)
-    q_verify.update({"expired_at": None}, synchronize_session=False)
+    run_sql(stmt_expire.values({"expired_at": get_current_time()}))
+    run_sql(stmt_verify.values({"expired_at": None}))
 
 
 def invalidate_sessions_for(username: str, session_id: str | None = None) -> None:
@@ -204,13 +215,17 @@ def invalidate_sessions_for(username: str, session_id: str | None = None) -> Non
     :param username: Username of the user to invalidate the session for.
     :param session_id: If specified, invalidate the specific session ID. If None, invalidate all sessions.
     """
-    user_subquery = db.session.query(User.id).filter(User.name == username).subquery()
-    q_invalidate = UserSession.query.filter(UserSession.user_id.in_(user_subquery))
-
+    user_subquery = select(User.id).filter(User.name == username)
+    stmt_invalidate = (
+        update(UserSession)
+        .filter(UserSession.user_id.in_(user_subquery))
+        .values({"expired_at": get_current_time()})
+        .execution_options(synchronize_session=False)
+    )
     if session_id:
-        q_invalidate = q_invalidate.filter(UserSession.session_id == session_id)
+        stmt_invalidate = stmt_invalidate.filter(UserSession.session_id == session_id)
 
-    q_invalidate.update({"expired_at": get_current_time()}, synchronize_session=False)
+    run_sql(stmt_invalidate)
 
 
 def distribute_session_verification(

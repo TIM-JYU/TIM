@@ -2,7 +2,9 @@ import datetime
 import json
 from dataclasses import is_dataclass, fields
 from enum import Enum
+from typing import Any
 
+from flask.json.provider import JSONProvider
 from isodate import duration_isoformat
 from isodate.duration import Duration
 from jinja2 import Undefined
@@ -10,10 +12,28 @@ from marshmallow import missing
 
 try:
     from sqlalchemy.ext.declarative import DeclarativeMeta
+    from sqlalchemy.orm import DeclarativeBase
 
     sqlalchemy_imported = True
 except ImportError:
     sqlalchemy_imported = False
+
+
+class TimJsonProvider(JSONProvider):
+    def dumps(self, obj: Any, **kwargs: Any) -> str:
+        return json.dumps(obj, cls=TimJsonEncoder, **kwargs)
+
+    def loads(self, s: str | bytes, **kwargs: Any) -> Any:
+        return json.loads(s, **kwargs)
+
+
+SQA_DBMODEL_ATTRS = {
+    "metadata",
+    "query",
+    "query_class",
+    "registry",
+    "type_annotation_map",
+}
 
 
 class TimJsonEncoder(json.JSONEncoder):
@@ -36,7 +56,9 @@ class TimJsonEncoder(json.JSONEncoder):
         if tojson:
             return tojson()
         # from http://stackoverflow.com/a/31569287 with some changes
-        if sqlalchemy_imported and isinstance(o.__class__, DeclarativeMeta):
+        if sqlalchemy_imported and (
+            isinstance(o, DeclarativeMeta) or isinstance(o, DeclarativeBase)
+        ):
             data = {}
             if hasattr(o, "__json__"):
                 flds = o.__json__()
@@ -45,8 +67,7 @@ class TimJsonEncoder(json.JSONEncoder):
                 flds = [
                     f
                     for f in flds
-                    if not f.startswith("_")
-                    and f not in ["metadata", "query", "query_class"]
+                    if not f.startswith("_") and f not in SQA_DBMODEL_ATTRS
                 ]
             for field in flds:
                 value = o.__getattribute__(field)

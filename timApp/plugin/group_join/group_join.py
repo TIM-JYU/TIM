@@ -1,15 +1,16 @@
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Callable, Sequence
 
 from flask import render_template_string, Response
 from marshmallow import missing
+from sqlalchemy import select
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.bookmark.course import update_user_course_bookmarks
 from timApp.document.docentry import DocEntry
 from timApp.document.docsettings import GroupSelfJoinSettings
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -104,8 +105,9 @@ def leave_groups(groups: list[str]) -> Response:
     current_user = get_current_user_object()
 
     def do_leave(user: User, group: UserGroup) -> None:
-        membership: UserGroupMember = user.active_memberships.get(group.id)
-        membership.set_expired()
+        membership: UserGroupMember | None = user.active_memberships.get(group.id)
+        if membership:
+            membership.set_expired()
 
     all_ok, _, result = _do_group_op(
         groups, current_user, "leave", True, lambda i: i.canLeave, do_leave
@@ -119,7 +121,9 @@ def leave_groups(groups: list[str]) -> Response:
 def _check_self_join(
     group: UserGroup, user: User, check: Callable[[GroupSelfJoinSettings], bool]
 ) -> bool:
-    admin_doc: DocEntry = group.admin_doc.docentries[0] if group.admin_doc else None
+    admin_doc: DocEntry | None = (
+        group.admin_doc.docentries[0] if group.admin_doc else None
+    )
     if admin_doc is None:
         return False
     self_join_info = admin_doc.document.get_settings().group_self_join_info()
@@ -136,11 +140,16 @@ def _do_group_op(
     apply: Callable[[User, UserGroup], None],
 ) -> tuple[bool, bool, dict[str, str]]:
     user_groups: set[str] = set(
-        g for g, in user.get_groups(include_expired=False).with_entities(UserGroup.name)
+        g
+        for g, in run_sql(
+            user.get_groups(include_expired=False).with_only_columns(UserGroup.name)
+        )
     )
 
     result = dict.fromkeys(groups, "")
-    ugs: list[UserGroup] = UserGroup.query.filter(UserGroup.name.in_(groups)).all()
+    ugs: Sequence[UserGroup] = (
+        run_sql(select(UserGroup).filter(UserGroup.name.in_(groups))).scalars().all()
+    )
 
     all_ok = True
     is_course = False

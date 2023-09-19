@@ -28,7 +28,7 @@ form: false
         )
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
-        db.session.refresh(Block.query.get(d.block.id))
+        db.session.refresh(db.session.get(Block, d.block.id))
         self.login_test2()
         self.login_browser_quick_test2()
         self.get(f"/getModelAnswer/{d.id}.lock", expect_status=403)
@@ -49,7 +49,7 @@ form: false
         self.assertEqual("Hello", model_answer.text)
         self.test_user_2.remove_access(d.id, "view")
         db.session.commit()
-        db.session.refresh(Block.query.get(d.block.id))
+        db.session.refresh(db.session.get(Block, d.block.id))
         self.get(f"/getModelAnswer/{d.id}.lock", expect_status=403)
 
     def test_model_answer_formatting(self):
@@ -118,7 +118,7 @@ hidden area
         )
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
-        db.session.refresh(Block.query.get(d.block.id))
+        db.session.refresh(db.session.get(Block, d.block.id))
         self.login_test2()
         self.login_browser_quick_test2()
         self.goto_document(d)
@@ -176,7 +176,7 @@ modelAnswer:
         )
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
-        db.session.refresh(Block.query.get(d.block.id))
+        db.session.refresh(db.session.get(Block, d.block.id))
         self.login_test2()
         error_msg = "points from this task to view the model answer"
         self.get(
@@ -284,7 +284,7 @@ rows:
         )
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
-        db.session.refresh(Block.query.get(d.block.id))
+        db.session.refresh(db.session.get(Block, d.block.id))
         self.login_test2()
         self.post_answer("csPlugin", f"{d.id}.cs", user_input={"usercode": "1"})
         self.post_answer("qst", f"{d.id}.qst", user_input={"answers": [["1"]]})
