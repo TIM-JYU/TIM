@@ -166,8 +166,10 @@ RUN bash -c "${APT_INSTALL} curl qpdf poppler-utils && ${APT_CLEANUP} && \
 #   output directory.
 #
 # It has not yet been investigated whether it's because of Node or NPM update.
-RUN (curl -sL https://deb.nodesource.com/setup_16.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN (curl -sL https://deb.nodesource.com/setup_18.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@6 -g && bash -c "${APT_CLEANUP}"
+# Fix issue with node-gyp until we upgrade NPM, see https://github.com/TIM-JYU/TIM/issues/3479 and https://github.com/nodejs/node-gyp/issues/2219
+RUN sed -i "s/^\( *\)\(build_file_contents = open(build_file_path, 'rU').read().*\)$/\1build_file_contents = open(build_file_path, 'r').read()/" /usr/lib/node_modules/npm/node_modules/node-gyp/gyp/pylib/gyp/input.py
 
 # Flask-Testing does not let us configure host, so we do it here.
 RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/${PYTHON}/dist-packages/flask_testing/utils.py
@@ -215,6 +217,7 @@ RUN if [ ! -z "$CHROME_DRIVER_VERSION" ]; \
   && mv /opt/selenium/chromedriver-linux64/chromedriver /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && chmod 755 /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver
+
 
 WORKDIR /service
 
