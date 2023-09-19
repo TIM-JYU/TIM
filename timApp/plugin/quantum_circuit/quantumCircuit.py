@@ -210,10 +210,6 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     rightAxisLabel: str | None = None
     timeAxisLabel: str | None = None
 
-    leftAxisLabel: str | None = None
-    rightAxisLabel: str | None = None
-    timeAxisLabel: str | None = None
-
     hideGateInfo: list[str] | None = None
 
 
