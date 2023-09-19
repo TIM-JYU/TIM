@@ -95,7 +95,7 @@ export interface GateBeingDragged {
                     <div class="moment" *ngFor="let w of circuitOptions.columnWidths; let i = index"
                          [style.width.px]="w"
                          [style.height.px]="circuitOptions.timeAxisHeight">
-                        <div>{{i}}</div>
+                        <div>{{i+1}}</div>
                     </div>
                 </div>
 
