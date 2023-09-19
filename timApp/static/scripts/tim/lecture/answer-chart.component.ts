@@ -169,6 +169,7 @@ interface ChartConfig {
         <div *ngIf="isText">
             <p *ngFor="let t of textAnswers" [innerText]="t"></p>
         </div>
+        <p *ngIf="answers">Total answers: {{ answers.length }}</p>
         <p *ngIf="answers">Total points: {{ getTotalPoints() }}</p>
         <div *ngIf="!isText">
             <button class="timButton btn-xs" (click)="toggleAxis()">Change chart orientation</button>
