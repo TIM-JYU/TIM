@@ -228,6 +228,8 @@ def verify_dev_python(path_prefix: str = "") -> List[str]:
         [path_prefix + "python3"],
         [path_prefix + "py", "-3"],
     ]
+    if os.environ.get("PYTHON_CMD"):
+        python_locations.insert(0, [path_prefix + os.environ["PYTHON_CMD"]])
     python_version_pattern = re.compile(r"^Python (?P<version>(\d\.?)+)")
     for python_location in python_locations:
         try:
