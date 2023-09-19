@@ -332,13 +332,13 @@ def setup_dev() -> None:
         log_info("Creating Python virtual environment")
         run_cmd([*python, "-m", "venv", VENV_NAME])
 
-    match platform.system():
-        case "Linux":
-            venv_bin_path = str(venv_path / "bin")
-        case "Windows":
-            venv_bin_path = str(venv_path / "Scripts")
-        case _:
-            raise CLIError(f"Unsupported platform: {platform.system()}")
+    plat = platform.system()
+    if plat == "Linux":
+        venv_bin_path = str(venv_path / "bin")
+    elif plat == "Windows":
+        venv_bin_path = str(venv_path / "Scripts")
+    else:
+        raise CLIError(f"Unsupported platform: {platform.system()}")
 
     python = verify_dev_python(f"{venv_bin_path}{os.path.sep}")
     pip = verify_pip(f"{venv_bin_path}{os.path.sep}")
