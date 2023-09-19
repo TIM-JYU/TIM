@@ -32,10 +32,12 @@ This command is intended to be run once, but can be re-run to re-initialize the 
 }
 
 # Version of Poetry to install
-POETRY_MIN_VERSION = "1.3.1"
+POETRY_MIN_VERSION = "1.5.1"
 
 # Minimal Python version needed for development
-PYTHON_MIN_DEV_VERSION = [3, 7]
+PYTHON_MIN_DEV_VERSION = [3, 10]
+
+VENV_NAME = ".venv"
 
 
 class Arguments:
@@ -197,12 +199,12 @@ Install the requirements before installing TIM.
         )
 
 
-def verify_pip() -> List[str]:
+def verify_pip(path_prefix: str = "") -> List[str]:
     pip_locations = [
-        ["pip"],
-        ["pip3"],
-        ["python3", "-m", "pip"],
-        ["py", "-m", "pip"],
+        [path_prefix + "pip"],
+        [path_prefix + "pip3"],
+        [path_prefix + "python3", "-m", "pip"],
+        [path_prefix + "py", "-m", "pip"],
     ]
 
     for pip_location in pip_locations:
@@ -220,11 +222,11 @@ def verify_pip() -> List[str]:
     )
 
 
-def verify_dev_python() -> List[str]:
+def verify_dev_python(path_prefix: str = "") -> List[str]:
     python_locations = [
-        ["python"],
-        ["python3"],
-        ["py", "-3"],
+        [path_prefix + "python"],
+        [path_prefix + "python3"],
+        [path_prefix + "py", "-3"],
     ]
     python_version_pattern = re.compile(r"^Python (?P<version>(\d\.?)+)")
     for python_location in python_locations:
@@ -257,8 +259,8 @@ def verify_dev_python() -> List[str]:
 
 def verify_poetry(python_cmd: List[str]) -> List[str]:
     poetry_locations = [
-        ["poetry"],
         [*python_cmd, "-m", "poetry"],
+        ["poetry"],
     ]
     for poetry_location in poetry_locations:
         try:
@@ -323,14 +325,29 @@ SECRET_KEY = '{secret_key}'
 
 def setup_dev() -> None:
     log_info("Setting up the development environment")
-    pip = verify_pip()
     python = verify_dev_python()
+    venv_path = Path.cwd() / VENV_NAME
+
+    if not venv_path.exists():
+        log_info("Creating Python virtual environment")
+        run_cmd([*python, "-m", "venv", VENV_NAME])
+
+    match platform.system():
+        case "Linux":
+            venv_bin_path = str(venv_path / "bin")
+        case "Windows":
+            venv_bin_path = str(venv_path / "Scripts")
+        case _:
+            raise CLIError(f"Unsupported platform: {platform.system()}")
+
+    python = verify_dev_python(f"{venv_bin_path}{os.path.sep}")
+    pip = verify_pip(f"{venv_bin_path}{os.path.sep}")
+
     log_info("Downloading Poetry")
     run_cmd(
         [
             *pip,
             "install",
-            "--break-system-packages",
             "--upgrade",
             f"poetry=={POETRY_MIN_VERSION}",
         ]
@@ -361,9 +378,9 @@ def setup_dev() -> None:
             str(Path.cwd() / "timApp" / "node_modules" / "typescript" / "lib")
         ).strip('"')
         venv_bin_path = (
-            f"{Path.cwd() / '.venv' / 'bin'}{os.path.sep}"
+            f"{Path.cwd() / VENV_NAME / 'bin'}{os.path.sep}"
             if platform.system() == "Linux"
-            else f"{Path.cwd() / '.venv' / 'Scripts'}{os.path.sep}"
+            else f"{Path.cwd() / VENV_NAME / 'Scripts'}{os.path.sep}"
         )
         for root, dirs, files in os.walk(idea_template):
             for file in files:
