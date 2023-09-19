@@ -790,7 +790,17 @@ export class QuantumCircuitComponent
      * @param name name of the gate
      */
     isHiddenGateInfo(name: string) {
-        return this.markup.hideGateInfo?.includes(name) ?? false;
+        if (!this.markup.hideGateInfo) {
+            return false;
+        }
+        for (const namePattern of this.markup.hideGateInfo) {
+            // has to match whole string
+            const fullNamePattern = "^" + namePattern + "$";
+            if (name.match(fullNamePattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
