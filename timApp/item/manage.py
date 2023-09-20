@@ -1043,6 +1043,7 @@ class CopyOptions:
     copy_active_rights: bool = True
     copy_expired_rights: bool = False
     stop_on_errors: bool = True
+    apply_default_rights: bool = False
 
 
 @manage_page.post("/copy/<int:folder_id>")
@@ -1056,9 +1057,18 @@ def copy_folder_endpoint(
     o = get_current_user_group_object()
     nf = Folder.find_by_path(dest)
     if not nf:
-        validate_item_and_create_intermediate_folders(dest, BlockType.Folder, o)
+        validate_item_and_create_intermediate_folders(
+            dest,
+            BlockType.Folder,
+            o,
+            apply_default_rights=copy_options.apply_default_rights,
+        )
         nf = Folder.create(
-            dest, o, creation_opts=FolderCreationOptions(apply_default_rights=True)
+            dest,
+            o,
+            creation_opts=FolderCreationOptions(
+                apply_default_rights=copy_options.apply_default_rights
+            ),
         )
     u = get_current_user_object()
     errors = copy_folder(f, nf, u, compiled, copy_options)
@@ -1120,7 +1130,10 @@ def copy_folder(
     process_queue: list[tuple[Folder, Folder]] = [(from_folder, to_folder)]
     user_who_copies_group = user_who_copies.get_personal_group()
     default_right_documents = []
-    folder_opts = FolderCreationOptions(get_templates_rights_from_parent=False)
+    folder_opts = FolderCreationOptions(
+        get_templates_rights_from_parent=False,
+        apply_default_rights=options.apply_default_rights,
+    )
 
     def do_copy_doc(doc: DocInfo, folder_to: Folder) -> bool | None:
         if exclude_re.search(doc.path):
@@ -1142,9 +1155,10 @@ def copy_folder(
             copy_active=options.copy_active_rights,
             copy_expired=options.copy_expired_rights,
         )
-        copy_default_rights(
-            nd, BlockType.Document, owners_to_skip=[user_who_copies_group]
-        )
+        if options.apply_default_rights:
+            copy_default_rights(
+                nd, BlockType.Document, owners_to_skip=[user_who_copies_group]
+            )
         nd.document.modifier_group_id = user_who_copies_group.id
         try:
             for tr, new_tr in copy_document_and_enum_translations(
@@ -1157,11 +1171,12 @@ def copy_folder(
                     copy_active=options.copy_active_rights,
                     copy_expired=options.copy_expired_rights,
                 )
-                copy_default_rights(
-                    new_tr,
-                    BlockType.Document,
-                    owners_to_skip=[user_who_copies_group],
-                )
+                if options.apply_default_rights:
+                    copy_default_rights(
+                        new_tr,
+                        BlockType.Document,
+                        owners_to_skip=[user_who_copies_group],
+                    )
         except ValidationException as e:
             errors.append(e)
             if options.stop_on_errors:
@@ -1207,11 +1222,12 @@ def copy_folder(
                     copy_active=options.copy_active_rights,
                     copy_expired=options.copy_expired_rights,
                 )
-                copy_default_rights(
-                    nf,
-                    BlockType.Folder,
-                    owners_to_skip=[user_who_copies_group],
-                )
+                if options.apply_default_rights:
+                    copy_default_rights(
+                        nf,
+                        BlockType.Folder,
+                        owners_to_skip=[user_who_copies_group],
+                    )
             process_queue.append((f, nf))
 
     # Copy default permissions last to ensure they are not re-applied during copying, which
