@@ -1744,9 +1744,11 @@ export class AnswerBrowserComponent
             ) {
                 this.hideModelAnswerPanel = true;
             }
-            this.onlyValid = false;
-            if (this.answers.length > 0) {
-                this.onOnlyValidChanged();
+            if (!this.viewctrl.teacherMode) {
+                this.onlyValid = false;
+                if (this.answers.length > 0) {
+                    this.onOnlyValidChanged();
+                }
             }
         }
         this.showNewTask = this.isAndSetShowNewTask();
