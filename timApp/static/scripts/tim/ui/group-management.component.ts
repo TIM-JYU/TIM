@@ -1,15 +1,14 @@
 import {HttpClient} from "@angular/common/http";
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, Input} from "@angular/core";
 // import moment from "moment";
-import {documentglobals} from "../util/globals";
-import {showInputDialog} from "./showInputDialog";
-import {InputDialogKind} from "./input-dialog.kind";
-// import {$http} from "tim/util/ngimport";
-import {Users} from "../user/userService";
-import {ADMIN_GROUPNAME, IGroup, IUser} from "tim/user/IUser";
-import {to2} from "tim/util/utils";
-import {forEach} from "angular";
+// import {forEach} from "angular";
+import type {IGroup, IUser} from "tim/user/IUser";
+import {ADMIN_GROUPNAME} from "tim/user/IUser";
+import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
+import {documentglobals} from "tim/util/globals";
+import {Users} from "tim/user/userService";
+import {to2, toPromise} from "tim/util/utils";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -17,6 +16,11 @@ export interface GroupMember extends IUser {
     email: string;
     real_name: string;
     student_id: string;
+}
+
+export interface Group extends IGroup {
+    // Group's doc path, eg. '/groups/test/group01'
+    path: string;
 }
 
 /*
@@ -49,7 +53,7 @@ additional_angular_modules:
                             <tr class="member-table-row">
                                 <th i18n>Select</th>
                                 <th i18n>Group name</th>
-                                <th i18n>Group file</th>
+                                <th *ngIf="isAdmin()" i18n>Group file</th>
                                 <th i18n>Exam</th>
                                 <th i18n>Timeslot</th>
                             </tr>
@@ -60,7 +64,8 @@ additional_angular_modules:
                                     <input type="checkbox" (click)="addToSelectedGroups(group)"/>
                                 </td>
                                 <td>{{group.name}}</td>
-                                <td *ngIf="isAdmin()">{{group.external_id}}</td>
+                                <td *ngIf="isAdmin()">
+                                    <a href="/view{{group.path}}">{{group.path}}</a></td>
                                 <td> - </td>
                                 <td> - </td>
                             </tr>
@@ -153,7 +158,7 @@ additional_angular_modules:
 })
 export class GroupManagementComponent implements OnInit {
     showAllGroups: boolean;
-
+    managingGroups: IGroup[] = [];
     // currently selected groups
     // TODO should maybe use a different group interface,
     //   or define a new interface for this use in this component
@@ -171,11 +176,13 @@ export class GroupManagementComponent implements OnInit {
 
     // just for visualizing/testing the interface
     mockMembers: IUser[];
-    mockGroups: IGroup[];
+    mockGroups: Group[];
     mockCurrentLoginKeyStart: number;
 
     // status info for group members table
     savingGroupMembers?: boolean;
+
+    @Input() eventHeading?: string;
 
     constructor(private http: HttpClient) {
         this.showAllGroups = false;
@@ -237,17 +244,27 @@ export class GroupManagementComponent implements OnInit {
             {
                 id: 1,
                 name: "EN1_7A",
-                external_id: "Sukol_2023_Ankkalinnan-koulu__RU4xXzdB",
+                path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4xXzdB",
             },
             {
                 id: 2,
                 name: "EN1_7B",
-                external_id: "Sukol_2023_Ankkalinnan-koulu__RU4xXzdC",
+                path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4xXzdC",
             },
             {
                 id: 3,
                 name: "EN3_8A",
-                external_id: "Sukol_2023_Ankkalinnan-koulu__RU4zXzhB",
+                path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4zXzhB",
+            },
+            {
+                id: 10,
+                name: "testi01",
+                path: "/groups/sukol/testi01",
+            },
+            {
+                id: 11,
+                name: "testi02",
+                path: "/groups/sukol/testi02",
             },
         ];
     }
@@ -269,6 +286,26 @@ export class GroupManagementComponent implements OnInit {
     async ngOnInit() {
         if (Users.isLoggedIn()) {
             // Load groups visible to the current user
+            // Users.isGroupAdmin()
+            await this.setManagingGroups();
+        }
+    }
+
+    async setManagingGroups() {
+        const docgroups = documentglobals().groups;
+        if (docgroups) {
+            for (const g of docgroups) {
+                const res = await toPromise(
+                    this.http.get<Group>("/login_code/group/" + g)
+                );
+                if (res.ok) {
+                    const mgroup = res.result;
+                    this.managingGroups.push({
+                        id: mgroup.id,
+                        name: mgroup.name,
+                    });
+                }
+            }
         }
     }
 
@@ -282,16 +319,18 @@ export class GroupManagementComponent implements OnInit {
 
     async createNewGroup() {
         // Create a new group
-        // We may want to display a dialog with an option to specify group member to add to the created group
-        const res = await to2(
-            showInputDialog<string>({
-                isInput: InputDialogKind.NoValidator,
-                inputType: "textarea",
-                text: "Enter group name",
-                title: "Create new group",
-                okValue: "",
-            })
-        );
+        const res = await to2(showUserGroupDialog());
+        if (res.ok) {
+            // add new group to list
+            const group = res.result;
+            // TODO Remove this, don't need to add anywhere, visible groups are populated from the groups folder
+            //      depending on the users membership in the managing group(s)
+            this.mockGroups.push({
+                id: group.id,
+                name: group.name,
+                path: group.path,
+            });
+        }
         return;
     }
 
@@ -308,7 +347,7 @@ export class GroupManagementComponent implements OnInit {
         // Should check for existing and still valid codes before refreshing
         // to avoid accidentally changing valid ones (also display a warning, perhaps in a dialog).
         members.forEach((member) => {
-            let loginkey = `${this.mockCurrentLoginKeyStart++}`;
+            const loginkey = `${this.mockCurrentLoginKeyStart++}`;
             member.student_id = `${"0".repeat(9 - loginkey.length)}${loginkey}`;
         });
         // return;
