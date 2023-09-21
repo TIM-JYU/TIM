@@ -210,6 +210,8 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     rightAxisLabel: str | None = None
     timeAxisLabel: str | None = None
 
+    hideGateInfo: list[str] | None = None
+
 
 @dataclass
 class QuantumCircuitStateModel:
@@ -287,7 +289,9 @@ def get_gate_matrix(
         matrix_size = math.floor(math.log2(gate_matrix.shape[0]))
         if matrix_size > 1:
             # all concurrent indices of target are qubits it affects
-            return DenseMatrix([target + i for i in range(matrix_size)], gate_matrix)
+            return DenseMatrix(
+                [target + i for i in range(matrix_size - 1, -1, -1)], gate_matrix
+            )
         return DenseMatrix(target, gate_matrix)
     return None
 
@@ -300,7 +304,7 @@ def get_all_gate_names(custom_gates: dict[str, np.ndarray]) -> set[str]:
     :return:
     """
     custom_names = custom_gates.keys()
-    def_names = ["H", "X", "Y", "Z", "S", "T"]
+    def_names = ["H", "X", "Y", "Z", "S", "T", "swap"]
 
     all_names: set[str] = set()
     all_names.update(custom_names)
