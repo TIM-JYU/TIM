@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Sequence
 
 from sqlalchemy import func, select, Row
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -44,8 +44,8 @@ def get_rights_holders_all(block_ids: list[int], order_by=None):
     result: Sequence[Row[BlockAccess, UserGroup, User | None]] = run_sql(
         select(BlockAccess)
         .options(
-            selectinload(BlockAccess.usergroup)
-            .selectinload(UserGroup.admin_doc)
+            joinedload(BlockAccess.usergroup)
+            .joinedload(UserGroup.admin_doc)
             .selectinload(Block.docentries)
         )
         .options(selectinload(BlockAccess.atype))
