@@ -24,6 +24,12 @@ export interface ILoginSettings {
     hide?: ILoginHideSettings;
 }
 
+export interface IGroupManagementSettings {
+    managingGroups?: string[];
+    managedGroupsPath?: string;
+    showAllGroups?: boolean;
+}
+
 export interface IDocSettings {
     show_velps?: boolean;
     autocounters?: Record<string, string>;
@@ -52,6 +58,7 @@ export interface IDocSettings {
     buttons?: string;
     mdButtons?: ITemplateButton[];
     lazyAnswers?: boolean;
+    groupManagement?: IGroupManagementSettings;
     parAuthorOnlyEdit?: boolean;
 }
 

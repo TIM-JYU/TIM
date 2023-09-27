@@ -694,6 +694,17 @@ class DocSettings:
     def need_view_for_answers(self) -> bool:
         return self.get_setting_or_default("need_view_for_answers", False)
 
+    def group_management_settings(self) -> dict | None:
+        settings = self.__dict.get("groupManagement", {})
+        if not isinstance(settings, dict):
+            return None
+        managers = settings.get("managingGroups", None)
+        path = settings.get("managedGroupsPath", None)
+
+        if managers and path:
+            return {"managing_groups": [*managers], "managed_groups_path": path}
+        return None
+
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     result, _ = __resolve_final_settings_impl(pars)
