@@ -356,6 +356,10 @@ def get_usergroup_eager_query() -> Select:
     )
 
 
+def get_groups_by_names(names: list[str]) -> list[UserGroup]:
+    return run_sql(select(UserGroup).filter(UserGroup.name.in_(names)).scalars().all())
+
+
 def get_sisu_groups_by_filter(f) -> list[UserGroup]:
     gs: list[UserGroup] = (
         run_sql(get_usergroup_eager_query().join(ScimUserGroup).filter(f))
