@@ -8,6 +8,11 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
 
+export interface UserGroupDialogParams {
+    defaultGroupFolder?: string;
+    canChooseFolder: boolean;
+}
+
 @Component({
     selector: "tim-user-group-dialog",
     template: `
@@ -46,9 +51,10 @@ import {CommonModule} from "@angular/common";
                                 <input i18n-placeholder type="text"
                                        [(ngModel)]="folder"
                                        (ngModelChange)="setMessage()"
+                                       [disabled]="!canChooseFolder()"
                                        id="folder" name="folder"
                                        class="form-control"
-                                       placeholder="Enter the location or leave empty">
+                                       placeholder="{{getDefaultFolder() ?? 'Enter the location or leave empty'}}">
                             </div>
                         </div>
                     </div>
@@ -89,17 +95,22 @@ import {CommonModule} from "@angular/common";
     `,
 })
 export class UserGroupDialogComponent extends AngularDialogComponent<
-    undefined,
+    UserGroupDialogParams,
     IDocument
 > {
     protected dialogName = "UserGroupCreate";
-
     name = "";
     folder = "";
     message?: string;
 
     constructor(private http: HttpClient) {
         super();
+    }
+
+    ngOnInit() {
+        if (!this.canChooseFolder() && this.data.defaultGroupFolder) {
+            this.folder = this.getDefaultFolder() ?? "";
+        }
     }
 
     async saveGroup(): Promise<void> {
@@ -125,6 +136,14 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
 
     setMessage(message?: string): void {
         this.message = message;
+    }
+
+    canChooseFolder(): boolean {
+        return this.data.canChooseFolder;
+    }
+
+    getDefaultFolder(): string | undefined {
+        return this.data.defaultGroupFolder ?? undefined;
     }
 }
 
