@@ -564,6 +564,19 @@ class UserTaskEntry(TypedDict):
     answer_duration: timedelta | None
 
 
+class AnswerCountRule(Enum):
+    """
+    Rule for including and counting tasks.
+    """
+
+    OnlyValid = 1
+    """Only count valid answer."""
+    ValidThenInvalid = 2
+    """Count valid answers. If the user has no valid answer, then count invalid tasks."""
+    Any = 3
+    """Count any answer, whichever is the latest."""
+
+
 def get_users_for_tasks(
     task_ids: list[TaskId],
     user_ids: list[int] | None = None,
@@ -571,7 +584,7 @@ def get_users_for_tasks(
     group_by_doc: bool = False,
     answer_filter: Any | None = None,
     with_answer_time: bool = False,
-    show_valid_only: bool = True,
+    count_rule: AnswerCountRule = AnswerCountRule.OnlyValid,
 ) -> list[UserTaskEntry]:
     if not task_ids:
         return []
@@ -600,7 +613,9 @@ def get_users_for_tasks(
         else []
     )
     subquery_user_answers = (
-        valid_answers_query(task_ids, True if show_valid_only else None)
+        valid_answers_query(
+            task_ids, True if count_rule == AnswerCountRule.OnlyValid else None
+        )
         .filter(answer_filter)
         .join(UserAnswer, UserAnswer.answer_id == Answer.id)
         .group_by(UserAnswer.user_id, Answer.task_id)
@@ -614,44 +629,76 @@ def get_users_for_tasks(
         .subquery()
     )
 
+    answer_select_condition = true()
+    annotation_select_condition = true()
+    match count_rule:
+        case AnswerCountRule.OnlyValid:
+            answer_select_condition = (subquery_user_answers.c.aid_valid != None) & (
+                subquery_user_answers.c.aid_valid == subquery_answers.c.id
+            )
+            annotation_select_condition = (
+                subquery_annotantions.c.annotation_answer_id
+                == subquery_user_answers.c.aid_valid
+            )
+        case AnswerCountRule.ValidThenInvalid:
+            answer_select_condition = (
+                (subquery_user_answers.c.aid_valid != None)
+                & (subquery_user_answers.c.aid_valid == subquery_answers.c.id)
+            ) | (
+                (subquery_user_answers.c.aid_valid == None)
+                & (subquery_user_answers.c.aid_any == subquery_answers.c.id)
+            )
+            annotation_select_condition = (
+                subquery_annotantions.c.annotation_answer_id
+                == subquery_user_answers.c.aid_valid
+            )
+        case AnswerCountRule.Any:
+            answer_select_condition = (
+                subquery_user_answers.c.aid_any == subquery_answers.c.id
+            )
+            annotation_select_condition = (
+                subquery_annotantions.c.annotation_answer_id
+                == subquery_user_answers.c.aid_any
+            )
+
     sub_joined = (
         select(subquery_user_answers, subquery_answers, subquery_annotantions)
         .outerjoin(
             subquery_answers,
-            # Pick the latest valid answer.
-            # If there is no valid answer, pick any latest answer.
-            (
-                (subquery_user_answers.c.aid_valid != None)
-                & (subquery_user_answers.c.aid_valid == subquery_answers.c.id)
-            )
-            | (
-                (subquery_user_answers.c.aid_valid == None)
-                & (subquery_user_answers.c.aid_any == subquery_answers.c.id)
-            ),
+            answer_select_condition,
         )
         .outerjoin(
             subquery_annotantions,
-            subquery_annotantions.c.annotation_answer_id
-            == subquery_user_answers.c.aid_valid,
+            annotation_select_condition,
         )
         .subquery()
     )
+
+    sub_joined_answer_join_condition = true()
+    match count_rule:
+        case AnswerCountRule.OnlyValid:
+            sub_joined_answer_join_condition = (sub_joined.c.aid_valid != None) & (
+                sub_joined.c.aid_valid == UserAnswer.answer_id
+            )
+        case AnswerCountRule.ValidThenInvalid:
+            sub_joined_answer_join_condition = (
+                (sub_joined.c.aid_valid != None)
+                & (sub_joined.c.aid_valid == UserAnswer.answer_id)
+            ) | (
+                (sub_joined.c.aid_valid == None)
+                & (sub_joined.c.aid_any == UserAnswer.answer_id)
+            )
+        case AnswerCountRule.Any:
+            sub_joined_answer_join_condition = (
+                sub_joined.c.aid_any == UserAnswer.answer_id
+            )
+
     main_stmt = (
         select(User)
         .join(UserAnswer, UserAnswer.user_id == User.id)
         .join(
             sub_joined,
-            (
-                (
-                    (sub_joined.c.aid_valid != None)
-                    & (sub_joined.c.aid_valid == UserAnswer.answer_id)
-                )
-                | (
-                    (sub_joined.c.aid_valid == None)
-                    & (sub_joined.c.aid_any == UserAnswer.answer_id)
-                )
-            )
-            & (User.id == sub_joined.c.uid),
+            sub_joined_answer_join_condition & (User.id == sub_joined.c.uid),
         )
     )
     group_by_cols = []
@@ -670,14 +717,20 @@ def get_users_for_tasks(
         main_stmt = main_stmt.options(selectinload("uniquecodes"))
     main_stmt = main_stmt.group_by(User.id, *group_by_cols)
 
+    def get_points(subquery_field: Any) -> Any:
+        match count_rule:
+            # When counting only valid answers or both, then only sum of the valid counts
+            case AnswerCountRule.OnlyValid | AnswerCountRule.ValidThenInvalid:
+                return case((sub_joined.c.valid == True, subquery_field), else_=0)
+            case AnswerCountRule.Any:
+                return subquery_field
+
     # prevents error:
     # column "usergroup_1.id" must appear in the GROUP BY clause or be used in an aggregate function
     main_stmt = main_stmt.options(selectinload(User.groups))
     task_sum = (
         func.round(
-            func.sum(
-                case((sub_joined.c.valid == True, sub_joined.c.points), else_=0)
-            ).cast(Numeric),
+            func.sum(get_points(sub_joined.c.points)).cast(Numeric),
             4,
         )
         .cast(Float)
@@ -685,9 +738,7 @@ def get_users_for_tasks(
     )
     velp_sum = (
         func.round(
-            func.sum(
-                case((sub_joined.c.valid == True, sub_joined.c.velp_points), else_=0)
-            ).cast(Numeric),
+            func.sum(get_points(sub_joined.c.velp_points)).cast(Numeric),
             4,
         )
         .cast(Float)
@@ -806,7 +857,7 @@ def get_points_by_rule(
     answer_filter: Any | None = None,
     force_user: User | None = None,
     with_answer_time: bool = False,
-    show_valid_only: bool = True,
+    count_rule: AnswerCountRule = AnswerCountRule.OnlyValid,
 ) -> (
     list[UserPoints] | list[UserTaskEntry]
 ):  # TODO: Would be better to return always same kind of list.
@@ -818,7 +869,7 @@ def get_points_by_rule(
     :param task_ids: The list of task ids to consider.
     :param user_ids: The list of users for which to compute the sum.
     :param with_answer_time: Whether to include the answer time data (last answer time, first answer time) in the result.
-    :param show_valid_only: Whether to show only valid answers.
+    :param count_rule: Rule for counting answers.
 
     :return: The computed result.
 
@@ -828,7 +879,7 @@ def get_points_by_rule(
             task_ids,
             user_ids,
             answer_filter=answer_filter,
-            show_valid_only=show_valid_only,
+            count_rule=count_rule,
         )
     tasks_users = get_users_for_tasks(
         task_ids,
@@ -836,7 +887,7 @@ def get_points_by_rule(
         group_by_user=False,
         answer_filter=answer_filter,
         with_answer_time=with_answer_time,
-        show_valid_only=show_valid_only,
+        count_rule=count_rule,
     )
     result: DefaultDict[int, UserPointInfo] = defaultdict(
         lambda: {
