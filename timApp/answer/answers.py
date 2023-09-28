@@ -629,8 +629,8 @@ def get_users_for_tasks(
         .subquery()
     )
 
-    answer_select_condition = true()
-    annotation_select_condition = true()
+    answer_select_condition: Any = true()
+    annotation_select_condition: Any = true()
     match count_rule:
         case AnswerCountRule.OnlyValid:
             answer_select_condition = (subquery_user_answers.c.aid_valid != None) & (
@@ -674,7 +674,7 @@ def get_users_for_tasks(
         .subquery()
     )
 
-    sub_joined_answer_join_condition = true()
+    sub_joined_answer_join_condition: Any = true()
     match count_rule:
         case AnswerCountRule.OnlyValid:
             sub_joined_answer_join_condition = (sub_joined.c.aid_valid != None) & (

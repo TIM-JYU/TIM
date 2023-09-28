@@ -21,6 +21,7 @@ from timApp.answer.answers import (
     basic_tally_fields,
     valid_answers_query,
     user_field_to_point_sum_field,
+    AnswerCountRule,
 )
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.document.docinfo import DocInfo
@@ -45,8 +46,13 @@ def chunks(l: list, n: int):
 
 
 tallyfield_re = re.compile(
-    r"tally:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(?:.(?P<subfield>[a-zA-Z0-9öäåÖÄÅ_-]+))?(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *\])?"
+    r"tally:(?:(?P<validity>count_only_valid|count_all):)?((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(?:.(?P<subfield>[a-zA-Z0-9öäåÖÄÅ_-]+))?(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *\])?"
 )
+
+
+class TallyAnswerValidity(Enum):
+    CountOnlyValid = "count_only_valid"
+    CountAllAnswers = "count_all"
 
 
 @attr.s(auto_attribs=True)
@@ -59,6 +65,7 @@ class TallyField:
     datetime_start: datetime | None
     datetime_end: datetime | None
     default_doc: DocInfo
+    validity: TallyAnswerValidity = TallyAnswerValidity.CountOnlyValid
 
     @property
     def effective_doc_id(self):
@@ -66,7 +73,7 @@ class TallyField:
 
     @property
     def grouping_key(self):
-        return f"{self.effective_doc_id}{self.datetime_start}{self.datetime_end}"
+        return f"{self.effective_doc_id}{self.validity.value}{self.datetime_start}{self.datetime_end}"
 
     @property
     def doc_and_field(self):
@@ -91,6 +98,11 @@ class TallyField:
         if de and de.tzinfo is None:
             de = fin_timezone.localize(de)
         doc = m.group("doc")
+        validity = (
+            TallyAnswerValidity(m.group("validity"))
+            if m.group("validity")
+            else TallyAnswerValidity.CountOnlyValid
+        )
         return TallyField(
             field=m.group("field"),
             subfield=m.group("subfield"),
@@ -98,6 +110,7 @@ class TallyField:
             datetime_end=de,
             doc_id=int(doc) if doc else None,
             default_doc=default_doc,
+            validity=validity,
         )
 
 
@@ -564,6 +577,11 @@ def get_tally_field_values(
         if g.datetime_end:
             ans_filter = ans_filter & (Answer.answered_on < g.datetime_end)
         psr = doc.get_settings().point_sum_rule()
+        answer_count_rule = (
+            AnswerCountRule.OnlyValid
+            if g.validity == TallyAnswerValidity.CountOnlyValid
+            else AnswerCountRule.Any
+        )
         pts = get_points_by_rule(
             rule=psr,
             task_ids=tids,
@@ -576,6 +594,7 @@ def get_tally_field_values(
             else None,
             answer_filter=ans_filter,
             with_answer_time=True,
+            count_rule=answer_count_rule,
         )
 
         known_tally_fields = list(
