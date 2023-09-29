@@ -59,11 +59,14 @@ import {initCssPrint} from "tim/printing/cssPrint";
 import type {IUser, IUserListEntry} from "tim/user/IUser";
 import {Users} from "tim/user/userService";
 import {widenFields} from "tim/util/common";
-import {documentglobals} from "tim/util/globals";
+import {documentglobals, genericglobals} from "tim/util/globals";
 import {$compile, $http, $interval, $timeout} from "tim/util/ngimport";
 import type {AnnotationComponent} from "tim/velp/annotation.component";
 import {ReviewController} from "tim/velp/reviewController";
-import {EditingHandler} from "tim/document/editing/editing";
+import {
+    EditingHandler,
+    ParMenuHandlePosition,
+} from "tim/document/editing/editing";
 import type {PendingCollection} from "tim/document/editing/edittypes";
 import {onClick} from "tim/document/eventhandlers";
 import type {IDocSettings} from "tim/document/IDocSettings";
@@ -235,10 +238,6 @@ export class ViewCtrl implements IController {
     public users: IUserListEntry[];
     public teacherMode: boolean;
     public velpMode: boolean;
-    private editMenuOnLeftStorage = new TimStorage(
-        "editMenu_openOnLeft",
-        t.boolean
-    );
     public instantUpdateTasks = false;
     public syncAnswerBrowsers = false;
 
@@ -446,12 +445,17 @@ export class ViewCtrl implements IController {
         this.editingHandler.updateEditBarState();
     }
 
-    get editMenuOnLeft() {
-        return this.editMenuOnLeftStorage.get() ?? false;
+    get editMenuOnLeft(): boolean {
+        return (
+            genericglobals().userPrefs.parmenu_position ==
+            ParMenuHandlePosition.Left
+        );
     }
 
     set editMenuOnLeft(value: boolean) {
-        this.editMenuOnLeftStorage.set(value);
+        genericglobals().userPrefs.parmenu_position = value
+            ? ParMenuHandlePosition.Right
+            : ParMenuHandlePosition.Left;
     }
 
     getDefaultAction(par: ParContext): IMenuFunctionEntry | undefined {
