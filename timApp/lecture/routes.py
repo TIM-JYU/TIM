@@ -931,6 +931,7 @@ def ask_question():
         asked_json = get_asked_json_by_hash(question_hash)
         if not asked_json:
             asked_json = AskedJson(json=question_json_str, hash=question_hash)
+            db.session.add(asked_json)
         asked_time = get_current_time()
 
         # Set points and expl as None because they're already contained in the JSON.

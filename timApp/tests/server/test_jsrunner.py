@@ -649,6 +649,51 @@ showInView: true
             r.json(),
         )
 
+    def test_tally_count_style(self):
+        self.login_test1()
+        fd = self.create_doc(initial_par="""#- {#t plugin=textfield}""")
+        self.current_user.answers.append(
+            Answer(
+                task_id=f"{fd.id}.t",
+                points=1,
+                content=json.dumps({"c": "x"}),
+                valid=True,
+            )
+        )
+        self.current_user.answers.append(
+            Answer(
+                task_id=f"{fd.id}.t",
+                points=2,
+                content=json.dumps({"c": "y"}),
+                valid=False,
+            )
+        )
+        db.session.commit()
+        d = self.create_jsrun(
+            f"""
+fields:
+ - tally:{fd.id}.total_points=total_all
+ - tally:count_only_valid:{fd.id}.total_points=total_all_valid
+ - tally:count_all:{fd.id}.total_points=total_all_any
+group: testuser1
+program: |!!
+tools.print(tools.getDouble("total_all"));
+tools.print(tools.getDouble("total_all_valid"));
+tools.print(tools.getDouble("total_all_any"));
+!!
+                        """
+        )
+        self.do_jsrun(
+            d,
+            expect_content={
+                "web": {
+                    "errors": [],
+                    "outdata": {},
+                    "output": "1\n1\n2\n",
+                }
+            },
+        )
+
     def test_tally_fields(self):
         fd = self.create_doc(initial_par="""#- {#t plugin=textfield}""")
         self.current_user.answers.append(

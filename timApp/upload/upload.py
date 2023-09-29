@@ -626,7 +626,12 @@ def get_file(file_id: str, file_filename: str) -> Response:
     else:
         mime_type = get_mimetype(file_path)
         conditional = True
-    return send_file(file_path, mimetype=mime_type, conditional=conditional)
+    res = send_file(file_path, mimetype=mime_type, conditional=conditional)
+    # Some browsers (e.g. Firefox) seem to request ranges only when the server responds with Accept-Ranges: bytes
+    # Here, we add the header to let the browser know they are supported
+    if conditional:
+        res.headers["Accept-Ranges"] = "bytes"
+    return res
 
 
 @upload.get("/reviewcanvaspdf/<user_name>_<doc_id>_<task_id>_<int:answer_id>.pdf")

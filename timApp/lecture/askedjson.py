@@ -16,7 +16,7 @@ class AskedJson(db.Model):
     json: Mapped[str]
     hash: Mapped[str]
 
-    asked_questions: Mapped["AskedQuestion"] = relationship(
+    asked_questions: Mapped[list["AskedQuestion"]] = relationship(
         back_populates="asked_json", lazy="selectin"
     )
 

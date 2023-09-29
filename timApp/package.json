@@ -99,7 +99,7 @@
     "@angular/language-service": "^14.2.3",
     "@limegrass/eslint-plugin-import-alias": "^1.0.6",
     "@prettier/plugin-xml": "^2.2.0",
-    "@types/angular": "^1.8.4",
+    "@types/angular": "1.8.4",
     "@types/angular-sanitize": "^1.8.1",
     "@types/angular-ui-bootstrap": "^1.0.1",
     "@types/bootstrap": "^5.2.4",

@@ -564,15 +564,19 @@ def get_read_receipts(
         raise NotExist("No document found")
     verify_manage_access(doc)
 
-    read_users = run_sql(
-        select(
-            InternalMessageReadReceipt.user_id,
-            InternalMessageReadReceipt.marked_as_read_on,
-            InternalMessageReadReceipt.last_seen,
+    read_users = (
+        run_sql(
+            select(
+                InternalMessageReadReceipt.user_id,
+                InternalMessageReadReceipt.marked_as_read_on,
+                InternalMessageReadReceipt.last_seen,
+            )
+            .join(InternalMessage)
+            .filter(InternalMessage.doc_id == doc.id)
         )
-        .join(InternalMessage)
-        .filter(InternalMessage.doc_id == doc.id)
-    ).all()
+        .unique()
+        .all()
+    )
 
     read_user_map: dict[int, datetime] = {
         user_id: read_time for user_id, read_time, _ in read_users if read_time
@@ -592,6 +596,7 @@ def get_read_receipts(
             .join(InternalMessage)
             .filter(InternalMessage.doc_id == doc.id)
         )
+        .unique()
         .scalars()
         .all()
     )

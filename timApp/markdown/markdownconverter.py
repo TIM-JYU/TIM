@@ -331,6 +331,7 @@ def expand_macros(
         text = env.counters.do_char_macros(text)
     if not has_macros(text, env):
         return text
+    orig_text = text
     try:
         globalmacros = settings.get_globalmacros() if settings else None
         if globalmacros:
@@ -366,12 +367,12 @@ def expand_macros(
             if err is not None:
                 return get_error_html(err)
             return get_error_html(f"Syntax error in macro template: {e}")
-        return text
+        return orig_text
     except Exception as e:
         if not ignore_errors:
             # traceback.print_exc()
             return get_error_html(f"Error in expanding macros: {e}")
-        return text
+        return orig_text
 
 
 def expand_macros_info(text: str, macro_info: "MacroInfo", ignore_errors: bool = False):

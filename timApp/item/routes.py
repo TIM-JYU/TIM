@@ -19,7 +19,11 @@ from marshmallow import EXCLUDE
 from sqlalchemy import select
 from sqlalchemy.orm import defaultload, joinedload
 
-from timApp.answer.answers import add_missing_users_from_groups, get_points_by_rule
+from timApp.answer.answers import (
+    add_missing_users_from_groups,
+    get_points_by_rule,
+    AnswerCountRule,
+)
 from timApp.auth.accesshelper import (
     verify_view_access,
     verify_teacher_access,
@@ -760,6 +764,11 @@ def render_doc_view(
         if m.valid_answers_only is not None
         else doc_settings.show_valid_answers_only()
     )
+    answer_count_rule = (
+        AnswerCountRule.OnlyValid
+        if show_valid_only
+        else AnswerCountRule.ValidThenInvalid
+    )
     if teacher_or_see_answers:
         user_list = None
         ugs = None
@@ -790,7 +799,7 @@ def render_doc_view(
             if ugs is not None:
                 user_list = [u.id for ug in ugs for u in ug.users]
         user_list = get_points_by_rule(
-            points_sum_rule, task_ids, user_list, show_valid_only=show_valid_only
+            points_sum_rule, task_ids, user_list, count_rule=answer_count_rule
         )
         if ugs is not None:
             user_list = add_missing_users_from_groups(
@@ -802,7 +811,7 @@ def render_doc_view(
             task_ids,
             [current_user.id],
             force_user=current_user,
-            show_valid_only=show_valid_only,
+            count_rule=answer_count_rule,
         )
         if info:
             total_points = info[0]["total_points"]
@@ -945,7 +954,7 @@ def render_doc_view(
             points_sum_rule,
             task_ids,
             user_list,
-            show_valid_only=show_valid_only,
+            count_rule=answer_count_rule,
         )
 
     if index is None:

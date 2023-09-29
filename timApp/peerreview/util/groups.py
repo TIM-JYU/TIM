@@ -6,7 +6,11 @@ from typing import DefaultDict, Sequence
 from sqlalchemy import select
 
 from timApp.answer.answer import Answer
-from timApp.answer.answers import get_points_by_rule, get_latest_answers_query
+from timApp.answer.answers import (
+    get_points_by_rule,
+    get_latest_answers_query,
+    AnswerCountRule,
+)
 from timApp.document.docinfo import DocInfo
 from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.taskid import TaskId
@@ -31,7 +35,14 @@ def generate_review_groups(doc: DocInfo, task_ids: list[TaskId]) -> None:
             ).scalars()
         ]
     valid_only = not settings.peer_review_allow_invalid()
-    points = get_points_by_rule(None, task_ids, user_ids, show_valid_only=valid_only)
+    points = get_points_by_rule(
+        None,
+        task_ids,
+        user_ids,
+        count_rule=AnswerCountRule.OnlyValid
+        if valid_only
+        else AnswerCountRule.ValidThenInvalid,
+    )
 
     users = []
     for user in points:
