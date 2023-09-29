@@ -272,11 +272,11 @@ class QuestionTest(BrowserTest):
         answer_type_choice=None,
         adjust_matrix=None,
     ):
+        self.use_left_menu()
         if adjust_matrix is None:
             adjust_matrix = []
         d = self.create_doc(initial_par="test")
         self.goto_document(d, view="lecture")
-        self.use_left_menu()
         # self.find_element('.glyphicon-option-horizontal').click()
         self.wait_until_present("#HELP_PAR")
         par = self.drv.find_elements(By.CSS_SELECTOR, ".editline")[1]
