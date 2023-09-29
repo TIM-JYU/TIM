@@ -79,6 +79,7 @@ class QuestionTest(BrowserTest):
         """Create document questions and answer them."""
         self.login_browser_quick_test1()
         self.login_test1()
+        self.use_left_menu()
 
         points = ["3", "1", "", "0"]
         choices = [
@@ -272,7 +273,6 @@ class QuestionTest(BrowserTest):
         answer_type_choice=None,
         adjust_matrix=None,
     ):
-        self.use_left_menu()
         if adjust_matrix is None:
             adjust_matrix = []
         d = self.create_doc(initial_par="test")
