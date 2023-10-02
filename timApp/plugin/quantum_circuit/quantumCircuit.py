@@ -567,7 +567,9 @@ def run_all_simulations_threaded(
 
 
 def get_gate_counts(
-    circuit: list[GateInfo], custom_gates: dict[str, np.ndarray], conditions: list[str] | None
+    circuit: list[GateInfo],
+    custom_gates: dict[str, np.ndarray],
+    conditions: list[str] | None,
 ) -> defaultdict:
     counts: defaultdict[str, int] = defaultdict(int)
     circuit_names: set[str] = set()
@@ -639,7 +641,9 @@ def evaluate_condition(
     if not result:
         condition_vars = list(map(lambda x: (x[0], str(x[1])), var_counts.items()))
         if user_input is not None:
-            condition_vars.append(("userInput", "'" + "".join(map(str, user_input)) + "'"))
+            condition_vars.append(
+                ("userInput", "'" + "".join(map(str, user_input)) + "'")
+            )
 
         values = ", ".join(map(lambda kv: f"{kv[0]}={kv[1]}", condition_vars))
         return False, ConditionsNotSatisfiedError(condition, values)
@@ -652,7 +656,7 @@ def check_conditions(
     circuit: list[GateInfo] | None,
     n_measurements: int | None,
     custom_gates: dict[str, np.ndarray],
-    user_input: list[int] | None
+    user_input: list[int] | None,
 ) -> tuple[bool, ErrorType | None]:
     if conditions is None or circuit is None:
         return True, None
