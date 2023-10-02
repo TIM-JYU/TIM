@@ -3713,6 +3713,7 @@ export class TimTableComponent
         if (clearSort == ClearSort.Yes) {
             this.clearSortOrder();
         }
+        this.dataViewComponent?.refresh();
     }
 
     /**
