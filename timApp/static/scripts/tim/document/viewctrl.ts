@@ -454,8 +454,8 @@ export class ViewCtrl implements IController {
 
     set editMenuOnLeft(value: boolean) {
         genericglobals().userPrefs.parmenu_position = value
-            ? ParMenuHandlePosition.Right
-            : ParMenuHandlePosition.Left;
+            ? ParMenuHandlePosition.Left
+            : ParMenuHandlePosition.Right;
     }
 
     getDefaultAction(par: ParContext): IMenuFunctionEntry | undefined {
