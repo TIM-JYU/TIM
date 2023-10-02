@@ -605,14 +605,20 @@ def get_gate_counts(
 
 
 def check_valid_characters(condition: str) -> bool:
-    valid_chars = r"(and|or|\d|[=<>() ])+"
+    valid_chars = r"(and|or|\d|[=<>()' ])+"
     return re.fullmatch(valid_chars, condition) is not None
 
 
 def evaluate_condition(
-    condition: str, var_counts: defaultdict[str, int]
+    condition: str, var_counts: defaultdict[str, int], user_input: list[int] | None
 ) -> tuple[bool, ErrorType | None]:
     eval_condition = condition
+
+    # replace userInput text with its value
+    if user_input is not None and "userInput" in condition:
+        user_input_str = "'" + "".join(map(str, user_input)) + "'"
+        eval_condition = eval_condition.replace("userInput", user_input_str)
+
     # sort by name length descending so that e.g. X in SX doesn't get replaced by the count of X
     for name, count in sorted(
         var_counts.items(), key=lambda x: len(x[0]), reverse=True
@@ -631,7 +637,11 @@ def evaluate_condition(
         return False, ConditionNotInterpretableError(condition)
 
     if not result:
-        values = ", ".join(map(lambda kv: f"{kv[0]}={kv[1]}", var_counts.items()))
+        condition_vars = list(map(lambda x: (x[0], str(x[1])), var_counts.items()))
+        if user_input is not None:
+            condition_vars.append(("userInput", "'" + "".join(map(str, user_input)) + "'"))
+
+        values = ", ".join(map(lambda kv: f"{kv[0]}={kv[1]}", condition_vars))
         return False, ConditionsNotSatisfiedError(condition, values)
 
     return result, None
@@ -642,6 +652,7 @@ def check_conditions(
     circuit: list[GateInfo] | None,
     n_measurements: int | None,
     custom_gates: dict[str, np.ndarray],
+    user_input: list[int] | None
 ) -> tuple[bool, ErrorType | None]:
     if conditions is None or circuit is None:
         return True, None
@@ -652,7 +663,7 @@ def check_conditions(
         counts["measurements"] = 0
 
     for condition in conditions:
-        is_valid, error = evaluate_condition(condition, counts)
+        is_valid, error = evaluate_condition(condition, counts, user_input)
         if not is_valid:
             return is_valid, error
 
@@ -682,7 +693,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     valid_conditions = True
     if model_conditions is not None:
         is_valid, message = check_conditions(
-            model_conditions, user_circuit, n_measurements, custom_gates
+            model_conditions, user_circuit, n_measurements, custom_gates, user_input
         )
         if not is_valid:
             valid_conditions = False
