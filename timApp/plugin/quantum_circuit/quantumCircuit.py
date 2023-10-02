@@ -567,7 +567,7 @@ def run_all_simulations_threaded(
 
 
 def get_gate_counts(
-    circuit: list[GateInfo], custom_gates: dict[str, np.ndarray]
+    circuit: list[GateInfo], custom_gates: dict[str, np.ndarray], conditions: list[str] | None
 ) -> defaultdict:
     counts: defaultdict[str, int] = defaultdict(int)
     circuit_names: set[str] = set()
@@ -579,8 +579,11 @@ def get_gate_counts(
             counts["swap"] += 1
             circuit_names.add("swap")
         elif isinstance(gate_def, ControlGateInfo):
-            counts[gate_def.name] += 1
-            circuit_names.add(gate_def.name)
+            # each gate with specific number of controls is treated as separate gate
+            n_controls = len(gate_def.controls)
+            control_gate_name = f"C{n_controls}{gate_def.name}"
+            counts[control_gate_name] += 1
+            circuit_names.add(control_gate_name)
         else:
             log_warning(f"quantum: undefined gate type {gate_def}")
 
@@ -588,6 +591,15 @@ def get_gate_counts(
     for name in get_all_gate_names(custom_gates):
         if name not in circuit_names:
             counts[name] = 0
+
+    # also add control gate names that are in conditions
+    if conditions is not None:
+        for condition in conditions:
+            # C<numberOfControls><gateName>
+            control_gate_names = re.findall(r"C\d+\D[^><=|&() ]*", condition)
+            for name in control_gate_names:
+                if name not in circuit_names:
+                    counts[name] = 0
 
     return counts
 
@@ -633,7 +645,7 @@ def check_conditions(
 ) -> tuple[bool, ErrorType | None]:
     if conditions is None or circuit is None:
         return True, None
-    counts = get_gate_counts(circuit, custom_gates)
+    counts = get_gate_counts(circuit, custom_gates, conditions)
     if n_measurements is not None:
         counts["measurements"] = n_measurements
     else:
