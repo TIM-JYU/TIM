@@ -433,6 +433,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     // region Public update functions
 
+    refresh() {
+        this.cellValueCache = {};
+        this.updateVisible();
+        this.updateAllSelected();
+    }
+
     /**
      * Updates all visible elements in the table
      */
