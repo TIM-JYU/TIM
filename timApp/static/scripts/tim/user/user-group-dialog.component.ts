@@ -143,7 +143,7 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
     }
 
     getDefaultFolder(): string | undefined {
-        return this.data.defaultGroupFolder ?? undefined;
+        return this.data.defaultGroupFolder;
     }
 }
 
