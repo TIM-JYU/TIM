@@ -567,7 +567,9 @@ def run_all_simulations_threaded(
 
 
 def get_gate_counts(
-    circuit: list[GateInfo], custom_gates: dict[str, np.ndarray]
+    circuit: list[GateInfo],
+    custom_gates: dict[str, np.ndarray],
+    conditions: list[str] | None,
 ) -> defaultdict:
     counts: defaultdict[str, int] = defaultdict(int)
     circuit_names: set[str] = set()
@@ -579,8 +581,11 @@ def get_gate_counts(
             counts["swap"] += 1
             circuit_names.add("swap")
         elif isinstance(gate_def, ControlGateInfo):
-            counts[gate_def.name] += 1
-            circuit_names.add(gate_def.name)
+            # each gate with specific number of controls is treated as separate gate
+            n_controls = len(gate_def.controls)
+            control_gate_name = f"C{n_controls}{gate_def.name}"
+            counts[control_gate_name] += 1
+            circuit_names.add(control_gate_name)
         else:
             log_warning(f"quantum: undefined gate type {gate_def}")
 
@@ -589,18 +594,33 @@ def get_gate_counts(
         if name not in circuit_names:
             counts[name] = 0
 
+    # also add control gate names that are in conditions
+    if conditions is not None:
+        for condition in conditions:
+            # C<numberOfControls><gateName>
+            control_gate_names = re.findall(r"C\d+\D[^><=|&() ]*", condition)
+            for name in control_gate_names:
+                if name not in circuit_names:
+                    counts[name] = 0
+
     return counts
 
 
 def check_valid_characters(condition: str) -> bool:
-    valid_chars = r"(and|or|\d|[=<>() ])+"
+    valid_chars = r"(and|or|\d|[=<>()' ])+"
     return re.fullmatch(valid_chars, condition) is not None
 
 
 def evaluate_condition(
-    condition: str, var_counts: defaultdict[str, int]
+    condition: str, var_counts: defaultdict[str, int], user_input: list[int] | None
 ) -> tuple[bool, ErrorType | None]:
     eval_condition = condition
+
+    # replace userInput text with its value
+    if user_input is not None and "userInput" in condition:
+        user_input_str = "'" + "".join(map(str, user_input)) + "'"
+        eval_condition = eval_condition.replace("userInput", user_input_str)
+
     # sort by name length descending so that e.g. X in SX doesn't get replaced by the count of X
     for name, count in sorted(
         var_counts.items(), key=lambda x: len(x[0]), reverse=True
@@ -619,7 +639,13 @@ def evaluate_condition(
         return False, ConditionNotInterpretableError(condition)
 
     if not result:
-        values = ", ".join(map(lambda kv: f"{kv[0]}={kv[1]}", var_counts.items()))
+        condition_vars = list(map(lambda x: (x[0], str(x[1])), var_counts.items()))
+        if user_input is not None:
+            condition_vars.append(
+                ("userInput", "'" + "".join(map(str, user_input)) + "'")
+            )
+
+        values = ", ".join(map(lambda kv: f"{kv[0]}={kv[1]}", condition_vars))
         return False, ConditionsNotSatisfiedError(condition, values)
 
     return result, None
@@ -630,17 +656,18 @@ def check_conditions(
     circuit: list[GateInfo] | None,
     n_measurements: int | None,
     custom_gates: dict[str, np.ndarray],
+    user_input: list[int] | None,
 ) -> tuple[bool, ErrorType | None]:
     if conditions is None or circuit is None:
         return True, None
-    counts = get_gate_counts(circuit, custom_gates)
+    counts = get_gate_counts(circuit, custom_gates, conditions)
     if n_measurements is not None:
         counts["measurements"] = n_measurements
     else:
         counts["measurements"] = 0
 
     for condition in conditions:
-        is_valid, error = evaluate_condition(condition, counts)
+        is_valid, error = evaluate_condition(condition, counts, user_input)
         if not is_valid:
             return is_valid, error
 
@@ -670,7 +697,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     valid_conditions = True
     if model_conditions is not None:
         is_valid, message = check_conditions(
-            model_conditions, user_circuit, n_measurements, custom_gates
+            model_conditions, user_circuit, n_measurements, custom_gates, user_input
         )
         if not is_valid:
             valid_conditions = False
