@@ -15,6 +15,7 @@ import {initReadings} from "tim/document/readings";
 import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
 import {
+    getTypedStorage,
     getURLParameter,
     getViewName,
     isPageDirty,
@@ -59,11 +60,14 @@ import {initCssPrint} from "tim/printing/cssPrint";
 import type {IUser, IUserListEntry} from "tim/user/IUser";
 import {Users} from "tim/user/userService";
 import {widenFields} from "tim/util/common";
-import {documentglobals} from "tim/util/globals";
+import {documentglobals, genericglobals} from "tim/util/globals";
 import {$compile, $http, $interval, $timeout} from "tim/util/ngimport";
 import type {AnnotationComponent} from "tim/velp/annotation.component";
 import {ReviewController} from "tim/velp/reviewController";
-import {EditingHandler} from "tim/document/editing/editing";
+import {
+    EditingHandler,
+    ParMenuHandlePosition,
+} from "tim/document/editing/editing";
 import type {PendingCollection} from "tim/document/editing/edittypes";
 import {onClick} from "tim/document/eventhandlers";
 import type {IDocSettings} from "tim/document/IDocSettings";
@@ -235,10 +239,6 @@ export class ViewCtrl implements IController {
     public users: IUserListEntry[];
     public teacherMode: boolean;
     public velpMode: boolean;
-    private editMenuOnLeftStorage = new TimStorage(
-        "editMenu_openOnLeft",
-        t.boolean
-    );
     public instantUpdateTasks = false;
     public syncAnswerBrowsers = false;
 
@@ -306,6 +306,8 @@ export class ViewCtrl implements IController {
     private updatePendingPromise: Promise<void> | undefined;
     private updatePendingPromiseResolve?: () => void;
     private updatePendingPromiseReject?: (e: unknown) => void;
+
+    private editMenuButtonChecked = false;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -446,12 +448,35 @@ export class ViewCtrl implements IController {
         this.editingHandler.updateEditBarState();
     }
 
-    get editMenuOnLeft() {
-        return this.editMenuOnLeftStorage.get() ?? false;
+    private checkAndSyncEditMenuPosition() {
+        if (this.editMenuButtonChecked) {
+            return;
+        }
+        this.editMenuButtonChecked = true;
+        // TODO: Remove after some migration period
+        const val = getTypedStorage("editMenu_openOnLeft", t.boolean);
+        if (val === undefined) {
+            return;
+        }
+        this.editMenuOnLeft = val;
+        (async () => {
+            await this.editingHandler.saveEditMenuPos(val);
+            window.localStorage.removeItem("editMenu_openOnLeft");
+        })();
+    }
+
+    get editMenuOnLeft(): boolean {
+        this.checkAndSyncEditMenuPosition();
+        return (
+            genericglobals().userPrefs.parmenu_position ==
+            ParMenuHandlePosition.Left
+        );
     }
 
     set editMenuOnLeft(value: boolean) {
-        this.editMenuOnLeftStorage.set(value);
+        genericglobals().userPrefs.parmenu_position = value
+            ? ParMenuHandlePosition.Left
+            : ParMenuHandlePosition.Right;
     }
 
     getDefaultAction(par: ParContext): IMenuFunctionEntry | undefined {
