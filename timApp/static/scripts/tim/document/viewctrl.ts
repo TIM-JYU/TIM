@@ -15,6 +15,7 @@ import {initReadings} from "tim/document/readings";
 import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
 import {
+    getTypedStorage,
     getURLParameter,
     getViewName,
     isPageDirty,
@@ -306,6 +307,8 @@ export class ViewCtrl implements IController {
     private updatePendingPromiseResolve?: () => void;
     private updatePendingPromiseReject?: (e: unknown) => void;
 
+    private editMenuButtonChecked = false;
+
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
         const dg = documentglobals();
@@ -445,7 +448,25 @@ export class ViewCtrl implements IController {
         this.editingHandler.updateEditBarState();
     }
 
+    private checkAndSyncEditMenuPosition() {
+        if (this.editMenuButtonChecked) {
+            return;
+        }
+        this.editMenuButtonChecked = true;
+        // TODO: Remove after some migration period
+        const val = getTypedStorage("editMenu_openOnLeft", t.boolean);
+        if (val === undefined) {
+            return;
+        }
+        this.editMenuOnLeft = val;
+        (async () => {
+            await this.editingHandler.saveEditMenuPos(val);
+            window.localStorage.removeItem("editMenu_openOnLeft");
+        })();
+    }
+
     get editMenuOnLeft(): boolean {
+        this.checkAndSyncEditMenuPosition();
         return (
             genericglobals().userPrefs.parmenu_position ==
             ParMenuHandlePosition.Left
