@@ -991,8 +991,8 @@ auto_number_headings: 0${CURSOR}
 
     async saveEditMenuPos(value: boolean) {
         const pos = value
-            ? ParMenuHandlePosition.Right
-            : ParMenuHandlePosition.Left;
+            ? ParMenuHandlePosition.Left
+            : ParMenuHandlePosition.Right;
         await to($http.post(`/settings/save/parmenupos/${pos}`, {}));
     }
 
