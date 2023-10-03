@@ -1,3 +1,4 @@
+from enum import Enum
 import re
 import sre_constants
 from functools import cached_property
@@ -19,6 +20,11 @@ BookmarkFolder = dict[str, BookmarkEntryList]
 BookmarkCollection = list[BookmarkFolder]
 
 
+class ParMenuPosition(Enum):
+    Left = 0
+    Right = 1
+
+
 @attr.s(auto_attribs=True)
 class Preferences:
     custom_css: str = ""
@@ -34,6 +40,7 @@ class Preferences:
     auto_mark_all_read: bool = False
     bookmarks: BookmarkCollection | None = None
     max_uncollapsed_toc_items: int | None = None
+    parmenu_position: int = ParMenuPosition.Right
 
     @staticmethod
     def from_json(j: dict) -> "Preferences":

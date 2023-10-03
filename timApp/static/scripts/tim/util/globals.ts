@@ -185,6 +185,7 @@ export interface ISettings {
     auto_mark_all_read: boolean;
     max_uncollapsed_toc_items: number | null;
     style_doc_ids: number[];
+    parmenu_position: number;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {
