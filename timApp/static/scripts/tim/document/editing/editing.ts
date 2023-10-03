@@ -89,11 +89,6 @@ export enum SelectionUpdateType {
     DontAllowShrink,
 }
 
-export enum ParMenuHandlePosition {
-    Left = 0,
-    Right = 1,
-}
-
 function prepareOptions(
     $this: HTMLElement,
     saveTag: string
@@ -975,7 +970,6 @@ auto_number_headings: 0${CURSOR}
         fns.push({
             func: (e) => {
                 this.viewctrl.editMenuOnLeft = !this.viewctrl.editMenuOnLeft;
-                this.saveEditMenuPos(this.viewctrl.editMenuOnLeft);
                 this.updateEditBarState();
                 this.viewctrl.notesHandler.updateBadgeState();
             },
@@ -987,13 +981,6 @@ auto_number_headings: 0${CURSOR}
             spacingBefore: 5,
         });
         return fns;
-    }
-
-    async saveEditMenuPos(value: boolean) {
-        const pos = value
-            ? ParMenuHandlePosition.Right
-            : ParMenuHandlePosition.Left;
-        await to($http.post(`/settings/save/parmenupos/${pos}`, {}));
     }
 
     updateEditBarState() {

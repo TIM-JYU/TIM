@@ -8241,8 +8241,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4215858884470188361" datatype="html">
-        <source>This gate can't be edited</source>
-        <target state="new">This gate can't be edited</target>
+        <source>This gate can&apos;t be edited</source>
+        <target state="new">This gate can&apos;t be edited</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
           <context context-type="linenumber">18</context>
@@ -8265,8 +8265,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3583886527803327688" datatype="html">
-        <source>Answer doesn't satisfy condition:</source>
-        <target state="new">Answer doesn't satisfy condition:</target>
+        <source>Answer doesn&apos;t satisfy condition:</source>
+        <target state="new">Answer doesn&apos;t satisfy condition:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">9</context>
@@ -8393,8 +8393,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="151222451665123813" datatype="html">
-        <source>Couldn't simulate circuit because there were too many qubits</source>
-        <target state="new">Couldn't simulate circuit because there were too many qubits</target>
+        <source>Couldn&apos;t simulate circuit because there were too many qubits</source>
+        <target state="new">Couldn&apos;t simulate circuit because there were too many qubits</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">39</context>
@@ -8417,8 +8417,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="9063698038582773958" datatype="html">
-        <source>Too many qubits for browser simulator. Try changing simulate attribute to "server".</source>
-        <target state="new">Too many qubits for browser simulator. Try changing simulate attribute to "server".</target>
+        <source>Too many qubits for browser simulator. Try changing simulate attribute to &quot;server&quot;.</source>
+        <target state="new">Too many qubits for browser simulator. Try changing simulate attribute to &quot;server&quot;.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-simulation.ts</context>
           <context context-type="linenumber">451</context>
@@ -8457,8 +8457,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6193475728133614712" datatype="html">
-        <source>Using browser simulator because user isn't logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></source>
-        <target state="new">Using browser simulator because user isn't logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></target>
+        <source>Using browser simulator because user isn&apos;t logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></source>
+        <target state="new">Using browser simulator because user isn&apos;t logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">1089,1088</context>
@@ -8473,16 +8473,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2503761822693065589" datatype="html">
-        <source>Couldn't interpret circuits</source>
-        <target state="new">Couldn't interpret circuits</target>
+        <source>Couldn&apos;t interpret circuits</source>
+        <target state="new">Couldn&apos;t interpret circuits</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">78</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6585102904443570717" datatype="html">
-        <source>Couldn't simulate circuit because there were too many moments</source>
-        <target state="new">Couldn't simulate circuit because there were too many moments</target>
+        <source>Couldn&apos;t simulate circuit because there were too many moments</source>
+        <target state="new">Couldn&apos;t simulate circuit because there were too many moments</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">69</context>
@@ -8542,46 +8542,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
           <context context-type="linenumber">71</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4524940619580662231" datatype="html">
-        <source>Paragraph menu position</source>
-        <target state="translated">Plats för paragraph meny</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">358,359</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5246819740476460403" datatype="html">
-        <source>Left</source>
-        <target state="translated">vänster</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">363</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4808834755787530462" datatype="html">
-        <source>Right</source>
-        <target state="translated">höger</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">367</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3024375068220163416" datatype="html">
-        <source> Left of the active paragraph, marked with a vertical blue bar.</source>
-        <target state="translated"> Vänster om det aktiva stycket, markerat med ett vertikalt blått fält.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">373</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="219841344342795336" datatype="html">
-        <source> Right of the active paragraph, marked with a pencil icon.</source>
-        <target state="translated">Till höger om det aktiva stycket, markerat med en pennikon.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">375</context>
         </context-group>
       </trans-unit>
     </body>
