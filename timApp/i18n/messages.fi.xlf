@@ -8642,46 +8642,6 @@
           <context context-type="linenumber">71</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4524940619580662231" datatype="html">
-        <source>Paragraph menu position</source>
-        <target state="translated">Kappalevalikon paikka</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">358,359</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5246819740476460403" datatype="html">
-        <source>Left</source>
-        <target state="translated">Vasen</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">363</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4808834755787530462" datatype="html">
-        <source>Right</source>
-        <target state="translated">Oikea</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">367</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3024375068220163416" datatype="html">
-        <source> Left of the active paragraph, marked with a vertical blue bar.</source>
-        <target state="translated"> Sininen pystypalkki aktiivisen kappaleen vasemmalla puolella.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">373</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="219841344342795336" datatype="html">
-        <source> Right of the active paragraph, marked with a pencil icon.</source>
-        <target state="translated"> Kynäikoni aktiivisen kappaleen oikealla puolella.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">375</context>
-        </context-group>
-      </trans-unit>
     </body>
   </file>
 </xliff>

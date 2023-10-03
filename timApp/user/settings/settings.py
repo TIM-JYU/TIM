@@ -112,17 +112,6 @@ def save_language_route(lang: str) -> Response:
     return r
 
 
-@settings_page.post("/save/parmenupos/<int:pos>")
-def save_parmenu_position_route(pos: int) -> Response:
-    u = get_current_user_object()
-    prefs = u.get_prefs()
-    prefs.parmenu_position = pos
-    u.set_prefs(prefs)
-    db.session.commit()
-    r = ok_response()
-    return r
-
-
 @settings_page.get("/get/<name>")
 def get_setting(name: str) -> Response:
     prefs = get_current_user_object().get_prefs()
