@@ -698,11 +698,11 @@ class DocSettings:
         settings = self.__dict.get("groupManagement", {})
         if not isinstance(settings, dict):
             return None
-        managers = settings.get("managingGroups", None)
-        path = settings.get("managedGroupsPath", None)
+        managers = settings.get("managers", None)
+        path = settings.get("groupsPath", None)
 
         if managers and path:
-            return {"managing_groups": [*managers], "managed_groups_path": path}
+            return {"managers": [*managers], "groups_path": path}
         return None
 
 

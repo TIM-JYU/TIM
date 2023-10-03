@@ -25,8 +25,8 @@ export interface ILoginSettings {
 }
 
 export interface IGroupManagementSettings {
-    managingGroups?: string[];
-    managedGroupsPath?: string;
+    managers?: string[];
+    groupsPath?: string;
     showAllGroups?: boolean;
 }
 

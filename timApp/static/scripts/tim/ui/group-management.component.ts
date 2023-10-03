@@ -1,5 +1,5 @@
 import {HttpClient} from "@angular/common/http";
-import type {OnInit} from "@angular/core";
+import type {AfterViewInit, OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 // import moment from "moment";
 // import {forEach} from "angular";
@@ -9,6 +9,9 @@ import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
 import {documentglobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {to2, toPromise} from "tim/util/utils";
+import type {IGroupManagementSettings} from "tim/document/IDocSettings";
+import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -20,7 +23,9 @@ export interface GroupMember extends IUser {
 
 export interface Group extends IGroup {
     // Group's doc path, eg. '/groups/test/group01'
-    path: string;
+    path?: string;
+    event?: string;
+    timeslot?: string;
 }
 
 /*
@@ -44,8 +49,8 @@ additional_angular_modules:
                 </div>
                 <div id="groups-list">
                     <!-- List groups here, include checkboxes for selecting groups to manage -->
-                    
-                    <!-- Mock members list -->
+
+                    <!-- Mock groups list -->
                     <div class="pull-left">
                         <!-- TODO: Implement as TimTable -->
                         <table>
@@ -59,7 +64,7 @@ additional_angular_modules:
                             </tr>
                             </thead>
                             <tbody>
-                            <tr class="member-table-row" *ngFor="let group of mockGroups">
+                            <tr class="member-table-row" *ngFor="let group of groups">
                                 <td>
                                     <input type="checkbox" (click)="addToSelectedGroups(group)"/>
                                 </td>
@@ -72,14 +77,14 @@ additional_angular_modules:
                             </tbody>
                         </table>
                     </div>
-                    <!-- END members list-->
-                    
+                    <!-- END groups list-->
+
                 </div>
                 <div id="groups-list-controls" style="display: inline-block">
                     <div class="flex">
-                        <button class="timButton" (click)="createNewGroup()" i18n>Create new group</button>
+                        <button class="timButton" (click)="createNewGroup()" i18n>Create a new group</button>
                         <button class="timButton" (click)="deleteSelectedGroups()"
-                                [disabled]="selectedGroups.length < 1" i18n>Delete selected
+                                [disabled]="selectedGroups.length < 1" i18n>Delete selected groups
                         </button>
                         <button class="timButton" (click)="generateLoginCodes(selectedMembers)"
                                 [disabled]="selectedGroups.length < 1" i18n>Generate login codes
@@ -89,7 +94,7 @@ additional_angular_modules:
                         </button>
                     </div>
                     <tim-alert severity="success"
-                                   *ngIf="saveGroupSuccessMessage">{{saveGroupSuccessMessage}}</tim-alert>
+                               *ngIf="saveGroupSuccessMessage">{{saveGroupSuccessMessage}}</tim-alert>
                     <tim-alert severity="danger" *ngIf="saveGroupFailMessage">{{saveGroupFailMessage}}</tim-alert>
                 </div>
             </bootstrap-panel>
@@ -102,7 +107,7 @@ additional_angular_modules:
                                  class="grid-tab tab-form">
                                 <ng-container>
                                     <!-- Member list, with sort and selection controls -->
-                                    
+
                                     <!-- Mock members list -->
                                     <div>
                                         <!-- TODO: Implement as TimTable -->
@@ -117,7 +122,7 @@ additional_angular_modules:
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            <tr class="member-table-row" *ngFor="let gMember of mockMembers">
+                                            <tr class="member-table-row" *ngFor="let gMember of getGroupMembers(group)">
                                                 <td>
                                                     <input type="checkbox" (click)="addToSelectedMembers(gMember)"/>
                                                 </td>
@@ -130,52 +135,57 @@ additional_angular_modules:
                                         </table>
                                     </div>
                                     <!-- END members list-->
-                                    
+
                                 </ng-container>
                             </tab>
                         </tabset>
-                                
+
                         <div id="members-controls">
                             <button class="timButton" (click)="addMembers()" i18n>
-                                Add members</button>
+                                Add members
+                            </button>
                             <button class="timButton" (click)="removeMembers()"
-                                [disabled]="selectedMembers.length < 1" i18n>
-                                Remove selected</button>
+                                    [disabled]="selectedMembers.length < 1" i18n>
+                                Remove selected
+                            </button>
                             <tim-alert severity="success"
                                        *ngIf="saveMembersSuccessMessage">{{saveMembersSuccessMessage}}</tim-alert>
-                            <tim-alert severity="danger" *ngIf="saveMembersFailMessage">{{saveMembersFailMessage}}</tim-alert>
+                            <tim-alert severity="danger"
+                                       *ngIf="saveMembersFailMessage">{{saveMembersFailMessage}}</tim-alert>
                         </div>
                     </bootstrap-panel>
                 </fieldset>
             </form>
-            
-<!--            <bootstrap-panel title="Dangerous actions" i18n-title severity="danger">-->
-<!--                <button class="btn btn-danger" (click)="deleteList()" i18n>Delete List</button>-->
-<!--            </bootstrap-panel>-->
+
+            <!--            <bootstrap-panel title="Dangerous actions" i18n-title severity="danger">-->
+            <!--                <button class="btn btn-danger" (click)="deleteList()" i18n>Delete List</button>-->
+            <!--            </bootstrap-panel>-->
         </ng-container>
     `,
     styleUrls: ["group-management.component.scss"],
 })
-export class GroupManagementComponent implements OnInit {
+export class GroupManagementComponent implements OnInit, AfterViewInit {
+    settings: IGroupManagementSettings;
+
     showAllGroups: boolean;
-    managingGroups: IGroup[] = [];
-    // currently selected groups
-    // TODO should maybe use a different group interface,
-    //   or define a new interface for this use in this component
-    //   since we may want to store references to group members
-    //   in it for convenience
-    selectedGroups: IGroup[];
+    // Groups that can manage login code groups, specified with document setting `groups`
+    managers: Group[] = [];
+    // Groups that are managed via the group management document
+    groups: Group[] = [];
+
+    // Currently selected login code groups
+    selectedGroups: Group[];
 
     saveGroupSuccessMessage?: string;
     saveGroupFailMessage?: string;
 
     // currently selected members
-    selectedMembers: IUser[];
+    selectedMembers: GroupMember[];
     saveMembersSuccessMessage?: string;
     saveMembersFailMessage?: string;
 
     // just for visualizing/testing the interface
-    mockMembers: IUser[];
+    mockMembers: GroupMember[];
     mockGroups: Group[];
     mockCurrentLoginKeyStart: number;
 
@@ -189,6 +199,15 @@ export class GroupManagementComponent implements OnInit {
         this.selectedGroups = [];
         this.selectedMembers = [];
         this.mockCurrentLoginKeyStart = 0;
+        this.settings = {
+            ...documentglobals().docSettings.groupManagement,
+            // managers:
+            //     documentglobals().docSettings.groupManagement?.managers,
+            // groupsPath:
+            //     documentglobals().docSettings.groupManagement?.groupsPath,
+            // showAllGroups:
+            //     documentglobals().docSettings.groupManagement?.showAllGroups,
+        };
         this.mockMembers = [
             {
                 id: 123456789,
@@ -283,30 +302,30 @@ export class GroupManagementComponent implements OnInit {
     /**
      * Initialization procedures.
      */
-    async ngOnInit() {
+    ngOnInit() {
         if (Users.isLoggedIn()) {
             // Load groups visible to the current user
             // Users.isGroupAdmin()
-            await this.setManagingGroups();
         }
     }
 
-    async setManagingGroups() {
-        const docgroups = documentglobals().groups;
+    async ngAfterViewInit() {
+        await this.setManagers();
+        await this.setGroups();
+        await this.debugCheck();
+    }
+
+    async setManagers() {
+        const docgroups = this.settings.managers;
         if (docgroups) {
-            for (const g of docgroups) {
-                const res = await toPromise(
-                    this.http.get<Group>("/login_code/group/" + g)
-                );
-                if (res.ok) {
-                    const mgroup = res.result;
-                    this.managingGroups.push({
-                        id: mgroup.id,
-                        name: mgroup.name,
-                    });
-                }
+            const res = await toPromise(
+                this.http.get<Group[]>("/loginCode/managers/" + docgroups)
+            );
+            if (res.ok) {
+                this.managers = res.result;
             }
         }
+        return;
     }
 
     showAllAvailableGroups() {
@@ -317,9 +336,51 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
+    /**
+     * Fetches the groups that the current user is allowed to manage.
+     * Note: current user must be member of one the document's groups
+     *       specified with the document (globals) setting `groups`.
+     */
+    async setGroups() {
+        // check that current user has ownership to this manage document
+        const resp = await toPromise(
+            this.http.get("/loginCode/checkOwner/" + this.getDocId())
+        );
+        if (resp.ok) {
+            const groupsPath = this.settings.groupsPath;
+            // TODO check that path corresponds to managing group
+            // TODO could just do the thing in backend without worrying about the path?
+            if (groupsPath) {
+                const groups = await toPromise<Group[]>(
+                    this.http.get<Group[]>("/loginCode/groups/" + groupsPath)
+                );
+                if (groups.ok) {
+                    this.groups = groups.result;
+                }
+            }
+        }
+
+        return;
+    }
+
+    async debugCheck() {
+        const resp = await toPromise(
+            this.http.get<string>("/loginCode/checkRequest/" + this.getDocId())
+        );
+        if (resp.ok) {
+            await to2(showMessageDialog(resp.result));
+        }
+    }
+
     async createNewGroup() {
+        // Disable setting group folder and provide a default path for it
+        const params: UserGroupDialogParams = {
+            canChooseFolder: false,
+            // TODO get default group folder from group management docSettings
+            defaultGroupFolder: "sukol",
+        };
         // Create a new group
-        const res = await to2(showUserGroupDialog());
+        const res = await to2(showUserGroupDialog(params));
         if (res.ok) {
             // add new group to list
             const group = res.result;
@@ -360,6 +421,14 @@ export class GroupManagementComponent implements OnInit {
         // see https://developer.mozilla.org/en-US/docs/Web/Guide/Printing
     }
 
+    /**
+     * Fetches users belonging to the specified group
+     * @param group
+     */
+    getGroupMembers(group: Group): GroupMember[] {
+        return this.mockMembers;
+    }
+
     addMembers() {
         // Add members to the currently active group
         // Should probably add members only to the group in the active tab in the group members view
@@ -373,13 +442,13 @@ export class GroupManagementComponent implements OnInit {
         // Note: remember to clear selectedMembers after deletion from the group
     }
 
-    addToSelectedMembers(member: IUser) {
+    addToSelectedMembers(member: GroupMember) {
         if (!this.selectedMembers.includes(member)) {
             this.selectedMembers.push(member);
         }
     }
 
-    addToSelectedGroups(group: IGroup) {
+    addToSelectedGroups(group: Group) {
         if (!this.selectedGroups.includes(group)) {
             this.selectedGroups.push(group);
         }
