@@ -13,6 +13,7 @@ from typing import Iterable, Generator, Optional
 from typing import TYPE_CHECKING
 
 from filelock import FileLock
+from flask import has_request_context, request
 from lxml import etree, html
 
 from timApp.document.changelog import Changelog
@@ -113,7 +114,7 @@ class Document:
         self,
     ) -> DocParagraphIter | CacheIterator | ParallelParagraphIter:
         if self.par_cache is None:
-            return DocParagraphIter(self)
+            return get_par_iterator(self)
         else:
             return CacheIterator(self.par_cache.__iter__())
 
@@ -990,7 +991,7 @@ class Document:
         return before_i
 
     def get_index(self, view_ctx: ViewContext) -> list[tuple]:
-        pars = [par for par in DocParagraphIter(self)]
+        pars = [par for par in get_par_iterator(self)]
         DocParagraph.preload_htmls(pars, self.get_settings(), view_ctx)
         pars = dereference_pars(pars, context_doc=self, view_ctx=view_ctx)
 
