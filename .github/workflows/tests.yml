@@ -58,6 +58,8 @@ jobs:
         run: ./tim setup --no-interactive --no-install --profile test
       - name: Download images
         run: ./tim dc pull --quiet
+      - name: Install Rust dependencies
+        run: ./tim rust
       - name: Install dependencies
         if: "${{ matrix.test_module == 'browser' || matrix.test_module == 'server'  }}"
         run: ./tim npmi
