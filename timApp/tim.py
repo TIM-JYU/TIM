@@ -22,6 +22,7 @@ from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.access.routes import access
 from timApp.auth.login import login_page
+from timApp.auth.login_code.routes import login_code
 from timApp.auth.oauth2.oauth2 import init_oauth
 from timApp.auth.saml.routes import saml
 from timApp.auth.session.routes import user_sessions
@@ -121,6 +122,7 @@ blueprints = [
     groups,
     saml,
     lecture_routes,
+    login_code,
     login_page,
     manage_page,
     minutes_blueprint,
