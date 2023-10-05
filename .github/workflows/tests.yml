@@ -49,6 +49,12 @@ jobs:
             timApp/node_modules
             timApp/modules/jsrunner/server/node_modules
           key: ${{ runner.os }}-ci-test-npm-${{ hashFiles('**/package-lock.json') }}
+      - name: Cache Rust crates
+        uses: actions/cache@v3
+        with:
+          path: |
+            tim_rust/target
+          key: ${{ runner.os }}-tim-rust-cache-${{ hashFiles('tim_rust/Cargo.lock') }}
       - name: Log info
         run: |
           uname -a
@@ -58,14 +64,14 @@ jobs:
         run: ./tim setup --no-interactive --no-install --profile test
       - name: Download images
         run: ./tim dc pull --quiet
-      - name: Install Rust dependencies
-        run: ./tim rust
       - name: Install dependencies
         if: "${{ matrix.test_module == 'browser' || matrix.test_module == 'server'  }}"
         run: ./tim npmi
       - name: Compile JS
         if: "${{ matrix.test_module == 'browser' || matrix.test_module == 'server'  }}"
         run: ./tim js --target ${{ matrix.test_module }}
+      - name: Install TIM Rust library
+        run: ./tim rust
       - name: Run tests
         run: ./tim test --dc-up ${{ matrix.test_module }}
         timeout-minutes: 40
