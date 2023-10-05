@@ -406,8 +406,8 @@ RUN raco pkg install -i sicp
 # Install Guile 3
 RUN bash -c "${APT_INSTALL} guile-3.0 && ${APT_CLEANUP}"
 
-# Install SpeechRecognition for basic speech recognition
-RUN $PYTHON -m pip install SpeechRecognition soundfile && bash -c "${APT_CLEANUP}"
+# Install SpeechRecognition for basic speech recognition and Google Translate API
+RUN $PYTHON -m pip install SpeechRecognition soundfile googletrans && bash -c "${APT_CLEANUP}"
 
 USER agent
 
