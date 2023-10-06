@@ -100,7 +100,7 @@ FROM base as complete
 ENV PY_VERSION=3.11
 ENV PYTHON=python$PY_VERSION
 RUN bash -c "add-apt-repository -y ppa:deadsnakes/ppa && ${APT_CLEANUP}"
-RUN bash -c "${APT_INSTALL} ${PYTHON} ${PYTHON}-distutils && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} ${PYTHON} ${PYTHON}-distutils ${PYTHON}-venv && ${APT_CLEANUP}"
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/${PYTHON} 20
 
