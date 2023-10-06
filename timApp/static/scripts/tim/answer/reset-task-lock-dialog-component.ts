@@ -14,6 +14,13 @@ export interface IRestTaskLockDialogParams {
     taskId: string;
 }
 
+interface IUserData {
+    user: IUser;
+    time: moment.Moment;
+    selected: boolean;
+    visible: boolean;
+}
+
 type sortOption = "name" | "username" | "email" | "time";
 
 @Component({
@@ -94,12 +101,7 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
     searchInput = "";
     responseMessage = "";
     fetchError = "";
-    userData: {
-        user: IUser;
-        time: moment.Moment;
-        selected: boolean;
-        visible: boolean;
-    }[] = [];
+    userData: IUserData[] = [];
     sortOption: sortOption = "time";
     reverseSort = true;
 
@@ -129,23 +131,31 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
     }
 
     doSort() {
-        if (this.sortOption == "name") {
-            this.userData.sort((a, b) => sortByRealName(a.user, b.user));
-        } else if (this.sortOption == "email") {
-            this.userData.sort((a, b) => sortByEmail(a.user, b.user));
-        } else if (this.sortOption == "username") {
-            this.userData.sort((a, b) =>
-                (a.user.name ?? "").localeCompare(b.user.name ?? "", sortLang)
-            );
-        } else if (this.sortOption == "time") {
-            this.userData.sort((a, b) => a.time.diff(b.time));
+        let sortFunction: (a: IUserData, b: IUserData) => number;
+        switch (this.sortOption) {
+            case "name":
+                sortFunction = (a, b) => sortByRealName(a.user, b.user);
+                break;
+            case "email":
+                sortFunction = (a, b) => sortByEmail(a.user, b.user);
+                break;
+            case "username":
+                sortFunction = (a, b) =>
+                    (a.user.name ?? "").localeCompare(
+                        b.user.name ?? "",
+                        sortLang
+                    );
+                break;
+            case "time":
+                sortFunction = (a, b) => a.time.diff(b.time);
         }
         if (this.reverseSort) {
-            this.userData.reverse();
+            this.userData.sort((a, b) => sortFunction(b, a));
+        } else {
+            this.userData.sort(sortFunction);
         }
     }
 
-    /* eslint-disable @typescript-eslint/prefer-optional-chain */ // FIXME
     updateSearch() {
         if (!this.searchInput) {
             this.setAllDataVisible();
@@ -153,16 +163,10 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
         }
         const l = this.searchInput.toLowerCase();
         this.userData.forEach((u) => {
-            if (
+            u.visible =
                 u.user.name.toLowerCase().includes(l) ||
-                (u.user.real_name &&
-                    u.user.real_name.toLowerCase().includes(l)) ||
-                (u.user.email && u.user.email?.toLowerCase().includes(l))
-            ) {
-                u.visible = true;
-            } else {
-                u.visible = false;
-            }
+                !!u.user.real_name?.toLowerCase().includes(l) ||
+                !!u.user.email?.toLowerCase().includes(l);
         });
     }
 
