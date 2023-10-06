@@ -1051,10 +1051,14 @@ class DocParagraph:
         cached = self.ref_pars.get(view_ctx)
         if cached is not None:
             return cached
+        d = self.doc.get_settings()
+        resolve_preamble_refs = d.resolve_preamble_references()
         pars = [
             create_final_par(p, view_ctx)
             for p in self.get_referenced_pars_impl(
-                referrer=self, blind_settings=blind_settings
+                referrer=self,
+                blind_settings=blind_settings,
+                resolve_preamble_refs=resolve_preamble_refs,
             )
         ]
         self.ref_pars[view_ctx] = pars
@@ -1065,6 +1069,7 @@ class DocParagraph:
         visited_pars: list[tuple[int, str]] | None = None,
         referrer: Optional["DocParagraph"] = None,
         blind_settings: bool = True,
+        resolve_preamble_refs: bool = False,
     ) -> list[DocParagraph]:
         """Returns the paragraphs that are referenced by this paragraph.
 
@@ -1074,6 +1079,7 @@ class DocParagraph:
         :param visited_pars: A list of already visited paragraphs to prevent infinite recursion.
         :param referrer: The paragraph that is referencing this paragraph.
         :param blind_settings: Whether to hide the settings of referenced paragraph.
+        :param resolve_preamble_refs: Whether to resolve preambles in reference documents.
         :return: The list of resolved paragraphs.
 
         """
@@ -1110,7 +1116,11 @@ class DocParagraph:
                 raise InvalidReferenceException(
                     "Source document for reference not specified."
                 )
-            ref_doc = self.doc.get_ref_doc(ref_docid, preload_option=PreloadOption.none)
+            ref_doc = self.doc.get_ref_doc(
+                ref_docid,
+                preload_option=PreloadOption.none,
+                resolve_preamble_refs=resolve_preamble_refs,
+            )
 
         if not ref_doc.exists():
             raise InvalidReferenceException("The referenced document does not exist.")

@@ -1280,7 +1280,12 @@ class Document:
         self.ref_doc_cache = {}
         self.single_par_cache = {}
 
-    def get_ref_doc(self, ref_docid: int, preload_option: PreloadOption | None = None):
+    def get_ref_doc(
+        self,
+        ref_docid: int,
+        preload_option: PreloadOption | None = None,
+        resolve_preamble_refs: bool = False,
+    ):
         cached = self.ref_doc_cache.get(ref_docid)
         preload_option = (
             preload_option if preload_option is not None else self.preload_option
@@ -1296,8 +1301,9 @@ class Document:
             # Enabling this allows to reference paragraphs inserted via preamble documents.
             # This is currently disabled in UI, but it is used in a few documents
             # (e.g. a preamble has a plugin with macros and children override the macro, and user wants to
-            #  reference the plugin with the overriden macros).
-            cached.insert_preamble_pars()
+            #  reference the plugin with the overridden macros).
+            if resolve_preamble_refs:
+                cached.insert_preamble_pars()
             self.ref_doc_cache[ref_docid] = cached
         return cached
 
