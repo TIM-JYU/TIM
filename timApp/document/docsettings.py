@@ -100,7 +100,6 @@ class DocSettingTypes:
     basicChangeNotifications: bool
     extraPreambles: list[str] | str | None
     lazyAnswers: bool
-    resolvePreambleReferences: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -669,9 +668,6 @@ class DocSettings:
     def lazy_answers(self) -> bool:
         return self.get_setting_or_default("lazyAnswers", False)
 
-    def resolve_preamble_references(self) -> bool:
-        return self.get_setting_or_default("resolvePreambleReferences", False)
-
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     result, _ = __resolve_final_settings_impl(pars)
@@ -711,7 +707,7 @@ def __resolve_final_settings_impl(
                 tr_attr = curr.get_attr("r")
                 curr.set_attr("r", None)
                 refs = curr.get_referenced_pars(
-                    blind_settings=False, resolve_preamble_refs=False
+                    blind_settings=False
                 )  # Don't blind when resolving and parsing settings
                 curr.set_attr("r", tr_attr)
             except InvalidReferenceException:

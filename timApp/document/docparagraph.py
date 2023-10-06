@@ -31,7 +31,12 @@ from timApp.markdown.markdownconverter import (
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.util.rndutils import get_rands_as_dict, SeedType
-from timApp.util.utils import count_chars_from_beginning, get_error_html, title_to_id
+from timApp.util.utils import (
+    count_chars_from_beginning,
+    get_error_html,
+    title_to_id,
+    get_boolean,
+)
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
 from tim_common.html_sanitize import sanitize_html, strip_div
 from tim_common.utils import parse_bool
@@ -1049,14 +1054,13 @@ class DocParagraph:
         self,
         view_ctx: ViewContext | None = None,
         blind_settings: bool = True,
-        resolve_preamble_refs: bool | None = None,
     ) -> list[DocParagraph]:
         cached = self.ref_pars.get(view_ctx)
         if cached is not None:
             return cached
-        if resolve_preamble_refs is None:
-            d = self.doc.get_settings()
-            resolve_preamble_refs = d.resolve_preamble_references()
+        resolve_preamble_refs = get_boolean(
+            self.get_attr("resolve_preamble_refs", "false"), False
+        )
         pars = [
             create_final_par(p, view_ctx)
             for p in self.get_referenced_pars_impl(
