@@ -711,7 +711,7 @@ def __resolve_final_settings_impl(
                 tr_attr = curr.get_attr("r")
                 curr.set_attr("r", None)
                 refs = curr.get_referenced_pars(
-                    blind_settings=False
+                    blind_settings=False, resolve_preamble_refs=False
                 )  # Don't blind when resolving and parsing settings
                 curr.set_attr("r", tr_attr)
             except InvalidReferenceException:

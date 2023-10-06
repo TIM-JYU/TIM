@@ -276,7 +276,7 @@ class Document:
             self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
         return self.own_settings
 
-    def get_settings(self) -> DocSettings:
+    def get_settings(self, only_own: bool = False) -> DocSettings:
         cached = self.settings_cache
         if cached:
             return cached

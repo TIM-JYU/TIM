@@ -1046,13 +1046,17 @@ class DocParagraph:
         return self.get_attr("r") == "tr" and self.get_attr("rp") is not None
 
     def get_referenced_pars(
-        self, view_ctx: ViewContext | None = None, blind_settings: bool = True
+        self,
+        view_ctx: ViewContext | None = None,
+        blind_settings: bool = True,
+        resolve_preamble_refs: bool | None = None,
     ) -> list[DocParagraph]:
         cached = self.ref_pars.get(view_ctx)
         if cached is not None:
             return cached
-        d = self.doc.get_settings()
-        resolve_preamble_refs = d.resolve_preamble_references()
+        if resolve_preamble_refs is None:
+            d = self.doc.get_settings()
+            resolve_preamble_refs = d.resolve_preamble_references()
         pars = [
             create_final_par(p, view_ctx)
             for p in self.get_referenced_pars_impl(
