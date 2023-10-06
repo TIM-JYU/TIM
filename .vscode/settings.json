@@ -3,7 +3,7 @@
     "python.defaultInterpreterPath": "./.venv/bin/python",
     "editor.formatOnSave": true,
     "python.analysis.indexing": true,
-    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.diagnosticMode": "openFilesOnly",
     "files.exclude": {
         "**/.mypy_cache/**": true,
         "**/.devcontainers/**": true,
