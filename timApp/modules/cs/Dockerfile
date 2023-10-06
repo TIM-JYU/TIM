@@ -37,7 +37,7 @@ ENV PYTHON=python$PY_VERSION
 # Also fix potential ModuleNotFoundError: No module named 'apt_pkg' error caused by apt_pkg
 # being targeted to some other Python version
 RUN bash -c "add-apt-repository ppa:deadsnakes/ppa && apt-get update && \
-    ${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-distutils && \
+    ${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-distutils ${PYTHON}-dev && \
     cd /usr/lib/python3/dist-packages/ && cp apt_pkg*.so apt_pkg.so && \
     wget -q https://bootstrap.pypa.io/get-pip.py -O get-pip.py && ${PYTHON} get-pip.py && rm get-pip.py && \
     ${APT_CLEANUP}"
@@ -46,6 +46,7 @@ RUN ${PYTHON} -m pip install --ignore-installed Flask bleach lxml && bash -c "${
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && bash -c "${APT_CLEANUP}"
 RUN echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" > /etc/apt/sources.list.d/mono-official-stable.list
 RUN bash -c "${APT_INSTALL} \
+build-essential \
 ca-certificates \
 doxygen \
 fsharp \
@@ -138,6 +139,13 @@ ENV OPENJFX_VERSION=20
 RUN wget -q https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip
+
+# Rust (nightly)
+ENV CARGO_HOME=/cargo
+ENV RUSTUP_HOME=/rustup
+RUN bash -c 'wget -qO- https://sh.rustup.rs | sh -s -- --default-toolchain nightly --profile=minimal -y && rm -r /rustup/toolchains/nightly-x86_64-unknown-linux-gnu/share/doc'
+RUN /cargo/bin/cargo install svgbob_cli && rm -rf "$CARGO_HOME/registry"
+RUN ln -s "/cargo/bin/"* "/usr/bin/"
 
 # dotnet
 # Based on https://github.com/dotnet/dotnet-docker/blob/main/documentation/scenarios/installing-dotnet.md#installing-from-dotnet-install-script
@@ -246,10 +254,7 @@ RUN $PYTHON -m pip install pyod && bash -c "${APT_CLEANUP}"
 RUN $PYTHON -m pip install pyqula && bash -c "${APT_CLEANUP}"
 
 # sktime
-RUN bash -c "${APT_INSTALL} $PYTHON-dev build-essential && \
-    $PYTHON -m pip install sktime[all_extras] && \
-    apt-get purge --auto-remove -y $PYTHON-dev build-essential && \
-    ${APT_CLEANUP}"
+RUN bash -c "$PYTHON -m pip install sktime[all_extras] && ${APT_CLEANUP}"
 
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
@@ -340,13 +345,6 @@ RUN bash -c 'cd  /tmp && \
             chmod +x ${KOTLIN_HOME}/bin/* && \
             ln -s "${KOTLIN_HOME}/bin/"* "/usr/bin/" && \
             ${APT_CLEANUP}'
-
-# Rust (nightly)
-ENV CARGO_HOME=/cargo
-ENV RUSTUP_HOME=/rustup
-RUN bash -c 'wget -qO- https://sh.rustup.rs | sh -s -- --default-toolchain nightly --profile=minimal -y && rm -r /rustup/toolchains/nightly-x86_64-unknown-linux-gnu/share/doc'
-RUN /cargo/bin/cargo install svgbob_cli && rm -rf "$CARGO_HOME/registry"
-RUN ln -s "/cargo/bin/"* "/usr/bin/"
 
 # Free Pascal
 RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
