@@ -52,7 +52,7 @@ tim_rust uses [PyO3](https://pyo3.rs/v0.19.2/) to handle interop between Python 
     Refer to [PyO3 type conversion chart](https://pyo3.rs/v0.19.2/conversions/tables)
     to see how to convert between Python and Rust types.
 
-3. Add the function to `tim_rust` module with `add_function` function:
+3. Add the function to `tim_rust` module with `add_function` function in `python/src/lib.rs`:
 
     ```rust
     #[pymodule]
