@@ -3,12 +3,12 @@ import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TabsModule} from "ngx-bootstrap/tabs";
-import {TimUtilityModule} from "./tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
-// import {TimTableModule} from "tim/plugin/timTable/tim-table.component";
-import {BrowserModule} from "@angular/platform-browser";
-import {GroupManagementComponent} from "./group-management.component";
 import {HttpClientModule} from "@angular/common/http";
+import {BrowserModule} from "@angular/platform-browser";
+import {GroupManagementComponent} from "tim/ui/group-management.component";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+// import {TimTableModule} from "tim/plugin/timTable/tim-table.component";
 
 @NgModule({
     declarations: [GroupManagementComponent],

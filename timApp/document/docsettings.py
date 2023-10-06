@@ -104,6 +104,8 @@ class DocSettingTypes:
     uiLangOverride: str
     allowedDocsettingMacroAttributes: list[str] | str
     need_view_for_answers: bool
+    # TODO simplify
+    groupManagement: dict[str, str | list[str]]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -164,6 +166,7 @@ class DocSettings:
     auto_confirm_key = "auto_confirm"
     expire_next_doc_message_key = "expire_next_doc_message"
     answer_grace_period_key = "answer_grace_period"
+    group_management_key = "groupManagement"
 
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
@@ -695,15 +698,26 @@ class DocSettings:
         return self.get_setting_or_default("need_view_for_answers", False)
 
     def group_management_settings(self) -> dict | None:
-        settings = self.__dict.get("groupManagement", {})
-        if not isinstance(settings, dict):
-            return None
-        managers = settings.get("managers", None)
-        path = settings.get("groupsPath", None)
+        # settings = {
+        #     "managers": self.get("managers", None),
+        #     "groupsPath": self.get("groupsPath", None),
+        # }
+        # return settings
 
-        if managers and path:
-            return {"managers": [*managers], "groups_path": path}
-        return None
+        s = self.__dict.get(
+            self.group_management_key, {"managers": [], "groupsPath": ""}
+        )
+        return s
+
+        # settings = self.get_setting_or_default("groupManagement", None)
+        # if not isinstance(settings, dict):
+        #     return None
+        # managers = settings.get("managers", None)
+        # path = settings.get("groupsPath", None)
+        #
+        # if managers and path:
+        #     return {"managers": [*managers], "groups_path": path}
+        # return None
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

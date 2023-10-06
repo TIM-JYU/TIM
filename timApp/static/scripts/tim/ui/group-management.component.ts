@@ -1,17 +1,20 @@
 import {HttpClient} from "@angular/common/http";
 import type {AfterViewInit, OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 // import moment from "moment";
 // import {forEach} from "angular";
 import type {IGroup, IUser} from "tim/user/IUser";
 import {ADMIN_GROUPNAME} from "tim/user/IUser";
 import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
 import {documentglobals} from "tim/util/globals";
-import {Users} from "tim/user/userService";
+import {isAdmin, Users} from "tim/user/userService";
+import type {Require} from "tim/util/utils";
 import {to2, toPromise} from "tim/util/utils";
 import type {IGroupManagementSettings} from "tim/document/IDocSettings";
 import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import type {ViewCtrl} from "tim/document/viewctrl";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -22,7 +25,7 @@ export interface GroupMember extends IUser {
 }
 
 export interface Group extends IGroup {
-    // Group's doc path, eg. '/groups/test/group01'
+    // Group's doc path, eg. 'test/group01'
     path?: string;
     event?: string;
     timeslot?: string;
@@ -40,6 +43,7 @@ additional_angular_modules:
     selector: "tim-group-management-console",
     template: `
         <ng-container>
+            <button class="timButton" (click)="debugCheck()">Debugcheck</button>
             <bootstrap-panel id="groups-panel" title="All groups" i18n-title>
                 <div id="list-all-groups-setting">
                     <label for="showAllGroups" class="form-control" i18n>
@@ -165,7 +169,9 @@ additional_angular_modules:
     styleUrls: ["group-management.component.scss"],
 })
 export class GroupManagementComponent implements OnInit, AfterViewInit {
-    settings: IGroupManagementSettings;
+    // FIXME viewsctrl shouldn't be needed?
+    viewctrl!: Require<ViewCtrl>;
+    settings: IGroupManagementSettings = {};
 
     showAllGroups: boolean;
     // Groups that can manage login code groups, specified with document setting `groups`
@@ -195,19 +201,13 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
     @Input() eventHeading?: string;
 
     constructor(private http: HttpClient) {
+        this.viewctrl = vctrlInstance!;
         this.showAllGroups = false;
         this.selectedGroups = [];
         this.selectedMembers = [];
         this.mockCurrentLoginKeyStart = 0;
-        this.settings = {
-            ...documentglobals().docSettings.groupManagement,
-            // managers:
-            //     documentglobals().docSettings.groupManagement?.managers,
-            // groupsPath:
-            //     documentglobals().docSettings.groupManagement?.groupsPath,
-            // showAllGroups:
-            //     documentglobals().docSettings.groupManagement?.showAllGroups,
-        };
+        // this.settings = {};
+
         this.mockMembers = [
             {
                 id: 123456789,
@@ -302,30 +302,66 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
     /**
      * Initialization procedures.
      */
-    ngOnInit() {
-        if (Users.isLoggedIn()) {
-            // Load groups visible to the current user
-            // Users.isGroupAdmin()
+    async ngOnInit() {
+        // Load content only for logged in users who are also owners of this management document
+        const isDocOwner = await toPromise(
+            this.http.get("/loginCode/checkOwner/" + this.getDocId())
+        );
+        if (!isAdmin() && (!isDocOwner.ok || !Users.isLoggedIn())) {
+            return;
         }
-    }
 
-    async ngAfterViewInit() {
-        await this.setManagers();
-        await this.setGroups();
+        // TODO do we even needs these? we already parse the necessary docsettings
+        //      when processing the requests on the server
+        this.settings = {
+            ...this.viewctrl.docSettings.groupManagement,
+        };
+
+        await this.getManagers();
+        await this.getGroups();
         await this.debugCheck();
     }
 
-    async setManagers() {
-        const docgroups = this.settings.managers;
-        if (docgroups) {
-            const res = await toPromise(
-                this.http.get<Group[]>("/loginCode/managers/" + docgroups)
+    async ngAfterViewInit() {}
+
+    async getManagers() {
+        // let managers = this.settings.managers;
+        // if (!managers) {
+        //     managers = ["sukoladmin1", "sukoladmin2"];
+        // }
+        const doc_id = this.getDocId();
+        const res = await to2(
+            toPromise(this.http.get<Group[]>("/loginCode/managers/" + doc_id))
+        );
+        if (res.ok && res.result.ok) {
+            this.managers = res.result.result;
+        }
+
+        // return;
+    }
+
+    /**
+     * Fetches the groups that the current user is allowed to manage.
+     * Note: current user must be member of one the document's groups
+     *       specified with the document (globals) setting `groups`.
+     */
+
+    async getGroups() {
+        const doc_id = this.getDocId();
+        // check that current user has ownership to this manage document
+        const resp = await toPromise(
+            this.http.get("/loginCode/checkOwner/" + doc_id)
+        );
+        if (resp.ok) {
+            const groups = await toPromise<Group[]>(
+                this.http.get<Group[]>("/loginCode/groups/" + doc_id)
             );
-            if (res.ok) {
-                this.managers = res.result;
+            if (groups.ok) {
+                this.groups = groups.result;
             }
         }
-        return;
+
+        // return;
     }
 
     showAllAvailableGroups() {
@@ -336,39 +372,12 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
         }
     }
 
-    /**
-     * Fetches the groups that the current user is allowed to manage.
-     * Note: current user must be member of one the document's groups
-     *       specified with the document (globals) setting `groups`.
-     */
-    async setGroups() {
-        // check that current user has ownership to this manage document
-        const resp = await toPromise(
-            this.http.get("/loginCode/checkOwner/" + this.getDocId())
-        );
-        if (resp.ok) {
-            const groupsPath = this.settings.groupsPath;
-            // TODO check that path corresponds to managing group
-            // TODO could just do the thing in backend without worrying about the path?
-            if (groupsPath) {
-                const groups = await toPromise<Group[]>(
-                    this.http.get<Group[]>("/loginCode/groups/" + groupsPath)
-                );
-                if (groups.ok) {
-                    this.groups = groups.result;
-                }
-            }
-        }
-
-        return;
-    }
-
     async debugCheck() {
         const resp = await toPromise(
-            this.http.get<string>("/loginCode/checkRequest/" + this.getDocId())
+            this.http.get<string>("/loginCode/checkRequest")
         );
         if (resp.ok) {
-            await to2(showMessageDialog(resp.result));
+            await to2(showMessageDialog(resp.result.toString()));
         }
     }
 
