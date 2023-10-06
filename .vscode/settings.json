@@ -1,4 +1,5 @@
 {
     "python.analysis.typeCheckingMode": "basic",
-    "python.linting.mypyEnabled": true,
+    "python.defaultInterpreterPath": "./.venv/bin/python",
+    "editor.formatOnSave": true
 }

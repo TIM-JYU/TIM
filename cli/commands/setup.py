@@ -14,6 +14,8 @@ from cli.commands.npmi import npmi
 from cli.commands.rust import build_rust
 from cli.commands.up import up
 from cli.config import has_config, get_config
+from cli.config.config_file import IdeProfile
+from cli.docker.compose import init_devcontainers
 from cli.docker.run import (
     verify_docker_installed,
     verify_compose_installed,
@@ -49,6 +51,7 @@ class Arguments:
     http_port: Optional[int]
     https_port: Optional[int]
     profile: Optional[str]
+    ide_profile: Optional[str]
     hostname: Optional[str]
     domains: Optional[str]
     is_proxied: Optional[str]
@@ -326,8 +329,8 @@ SECRET_KEY = '{secret_key}'
     log_info(f"Generated default TIM server config to {prod_config}")
 
 
-def setup_dev() -> None:
-    log_info("Setting up the development environment")
+def setup_pycharm_dev() -> None:
+    log_info("Setting up the development environment for PyCharm")
     python = verify_dev_python()
     venv_path = Path.cwd() / VENV_NAME
 
@@ -400,6 +403,41 @@ def setup_dev() -> None:
                 target_path.write_text(file_contents, encoding="utf-8")
     else:
         log_info("Project workspace already exists, skipping copying template")
+
+
+def setup_vscode_dev() -> None:
+    log_info("Setting up the development environment for Visual Studio Code")
+    venv_path = Path.cwd() / VENV_NAME
+
+    def run_tim_cmd(args: List[str]) -> None:
+        run_compose([
+            "run",
+            "-T",
+            "--rm",
+            "--no-deps",
+            "--workdir",
+            "/service",
+            "tim",
+            *args,
+        ])
+
+    if not venv_path.exists():
+        log_info("Creating Python virtual environment")
+        run_tim_cmd(["python3", "-m", "venv", VENV_NAME])
+
+    log_info("Installing Python development dependencies")
+    run_tim_cmd(["poetry", "install"])
+
+    init_devcontainers()
+
+
+def setup_dev() -> None:
+    log_info("Setting up the development environment")
+    ide_profile = get_config().ide_profile
+    if ide_profile == IdeProfile.PyCharm:
+        setup_pycharm_dev()
+    elif ide_profile == IdeProfile.VSCode:
+        setup_vscode_dev()
 
 
 def run(args: Arguments) -> None:
@@ -510,6 +548,23 @@ In most cases, you can use the default value (which is the same as the TIM host)
         )
         config.set("caddy", "domains", domains)
 
+    elif profile == "dev":
+        ide_profile = get_value(
+            args.ide_profile,
+            args.interactive,
+            "--ide-profile",
+            """
+Which IDE profile should be used?
+TIM supports development with multiple IDEs.
+Select the IDE you are using to develop TIM:
+
+* pycharm: Use JetBrains PyCharm IDE for development. Note that the Community version is not supported.
+* vscode: Use Microsoft Visual Studio Code for development.
+""",
+            lambda x: check_choices(x, IdeProfile.choices()),
+        )
+        config.set("dev", "ide_profile", ide_profile)
+
     log_info("Creating tim.conf")
     config.save()
     log_info("Created tim.conf created. Check the config file for more options.")
@@ -520,15 +575,15 @@ In most cases, you can use the default value (which is the same as the TIM host)
         )
         return
 
+    log_info("Docker: Pulling TIM images")
+    dc_pull_args = ["--quiet"] if not args.interactive else []
+    run_compose(["pull", *dc_pull_args])
+
     if profile == "dev":
         setup_dev()
 
     if profile == "prod":
         init_prod_config()
-
-    log_info("Docker: Pulling TIM images")
-    dc_pull_args = ["--quiet"] if not args.interactive else []
-    run_compose(["pull", *dc_pull_args])
 
     log_info("NPM: Installing TIM dependencies")
     npmi()
@@ -577,6 +632,12 @@ def init(parser: ArgumentParser) -> None:
         "--profile",
         help="TIM instance run profile",
         choices=["dev", "prod", "test"],
+    )
+    parser.add_argument(
+        "--ide-profile",
+        help="TIM instance run profile",
+        choices=IdeProfile.choices(),
+        dest="ide_profile",
     )
     parser.add_argument(
         "--http-port",

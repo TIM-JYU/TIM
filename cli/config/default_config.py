@@ -168,6 +168,20 @@ Max heap size for Cassandra used for csplugin tasks
 """,
         ),
     },
+    "dev": {
+        "ide_profile": (
+            "pycharm",
+            """
+Active IDE configuration profile.
+The profile is used to configure TIM container and all the folders to support development with the IDE.
+This option is only used when compose.profile is set to dev.
+
+Currently supported profiles:
+* pycharm: PyCharm IDE
+* vscode: Visual Studio Code
+"""
+        )
+    }
 }
 
 

@@ -46,7 +46,7 @@ services:
    - default
   read_only: true
   tmpfs:
-   - /root
+   ${ "- /root" if dev.ide_profile != "vscode" else "" }
    - /tmp
    - /var/cache
    - /var/log

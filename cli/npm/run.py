@@ -4,6 +4,8 @@ from pathlib import Path
 from shutil import which
 from typing import List, Optional
 
+from cli.config import get_config
+from cli.config.config_file import IdeProfile
 from cli.docker.run import run_compose
 from cli.util.errors import CLIError
 from cli.util.logging import log_debug
@@ -64,8 +66,10 @@ def run_npm(
     run_in_container: Optional[bool] = None,
 ) -> None:
     if run_in_container is None:
+        config = get_config()
+        is_vscode_dev = config.ide_profile == IdeProfile.VSCode
         log_debug(f"OS identifier: {platform.system()}")
-        run_in_container = platform.system() != "Windows"
+        run_in_container = is_vscode_dev or platform.system() != "Windows"
     log_debug(f"Running npm with args: {args}; running in docker: {run_in_container}")
     if not run_in_container:
         verify_npm()

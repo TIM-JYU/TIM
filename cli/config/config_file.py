@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from enum import Enum
 from typing import Dict, Tuple, List, Any, TYPE_CHECKING, Optional
 
 from cli.docker.service_variables import (
@@ -6,6 +7,7 @@ from cli.docker.service_variables import (
     csplugin_target,
     csplugin_image_tag,
 )
+from cli.util.errors import CLIError
 
 if TYPE_CHECKING:
     from _typeshed import SupportsWrite
@@ -17,6 +19,22 @@ class ProxyDict:
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.__dict__.get(key, default)
+
+
+class IdeProfile(Enum):
+    PyCharm = "pycharm"
+    VSCode = "vscode"
+
+    @classmethod
+    def from_str(cls, s: str) -> "IdeProfile":
+        try:
+            return cls(s)
+        except ValueError:
+            raise CLIError(f"Unknown IDE dev profile: {s}. Please fix the config file.")
+
+    @classmethod
+    def choices(cls) -> List[str]:
+        return [p.value for p in cls]
 
 
 class TIMConfig(ConfigParser):
@@ -44,6 +62,10 @@ class TIMConfig(ConfigParser):
     @property
     def host(self) -> str:
         return self.get("tim", "host")
+
+    @property
+    def ide_profile(self) -> IdeProfile:
+        return IdeProfile.from_str(self.get("dev", "ide_profile"))
 
     @property
     def images_repository(self) -> str:
