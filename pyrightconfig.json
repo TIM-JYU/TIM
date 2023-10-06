@@ -1,16 +1,24 @@
 {
+    "include": ["timApp", "cli"],
     "exclude": [
-        "**/.mypy_cache",
-        "**/.idea",
-        "**/node_modules",
-        "**/__pycache__",
-        "**/static",
-        "**/.angular",
-        "**/tim_files",
-        "**/tim_logs",
-        "**/screenshots",
-        "**/Dumbo",
-        "**/tim_rust/target",
-        ".git"
-    ]
+        "**/.mypy_cache/**",
+        "**/.devcontainers/**",
+        "**/.github/**",
+        "**/.run/**",
+        "**/.idea/**",
+        "**/.venv/**",
+        "**/mailman/**",
+        "**/pg_backup/**",
+        "**/node_modules/**",
+        "**/__pycache__/**",
+        "**/static/**",
+        "**/.angular/**",
+        "**/tim_files/**",
+        "**/tim_logs/**",
+        "**/tim_rust/**",
+        "**/screenshots/**",
+        "**/Dumbo/**",
+        "**/.git/**"
+    ],
+    "verboseOutput": true
 }

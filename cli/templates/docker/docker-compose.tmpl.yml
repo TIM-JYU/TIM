@@ -20,6 +20,7 @@ services:
    - oiko
    """ if not tim.is_dev else "[]"}
   volumes:
+   ${"- tim-dev-root:/root:rw" if dev.ide_profile == "vscode" else ""}
    - .:/service
    - ${tim.log_dir}:/service/tim_logs
    - ${tim.files_root}:/tim_files
@@ -439,6 +440,7 @@ volumes:
  csplugin_db_data:
  csplugin_data:
  csplugin_data_generated:
+ ${"tim-dev-root:" if dev.ide_profile == "vscode" else ""}
 networks:
  db:
  csplugin_db:
