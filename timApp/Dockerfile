@@ -218,6 +218,7 @@ RUN if [ ! -z "$CHROME_DRIVER_VERSION" ]; \
   && chmod 755 /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver
 
+RUN bash -c "${APT_INSTALL} strace && ${APT_CLEANUP}"
 
 WORKDIR /service
 
