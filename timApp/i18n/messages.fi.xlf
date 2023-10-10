@@ -8274,14 +8274,6 @@
           <context context-type="linenumber">151</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8294913404467240099" datatype="html">
-        <source>Output probabilities based on matrix computation</source>
-        <target state="translated">Ulostulojen todennäköisyydet matriisilaskun perusteella</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
-          <context context-type="linenumber">157</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5361585538695040272" datatype="html">
         <source>Measurements</source>
         <target state="translated">Mittaukset</target>
@@ -8680,6 +8672,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">375</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7841551725502756065" datatype="html">
+        <source>Output probabilities</source>
+        <target state="translated">Ulostulojen todennäköisyydet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">161</context>
         </context-group>
       </trans-unit>
     </body>
