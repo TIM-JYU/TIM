@@ -8,6 +8,7 @@ import {$http} from "tim/util/ngimport";
 import {CommonModule} from "@angular/common";
 import type {IUser} from "tim/user/IUser";
 import {sortByEmail, sortByRealName, sortLang} from "tim/user/IUser";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 
 export interface IRestTaskLockDialogParams {
     currentUser: string;
@@ -211,6 +212,19 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
             this.responseMessage = "No targets selected";
             return;
         }
+        const names = this.userData
+            .filter((v) => v.selected)
+            .map((v) => v.user.name)
+            .join("\n");
+        if (
+            !(await showConfirm(
+                "Confirm",
+                `Clear locks for following users? (${userids.length} selected)\n\n${names}`
+            ))
+        ) {
+            return;
+        }
+
         const r = await to(
             $http.post<{cleared: {name: string; id: number}[]; error?: string}>(
                 `/clearTaskBlock`,

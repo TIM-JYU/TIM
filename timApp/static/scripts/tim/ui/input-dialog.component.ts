@@ -51,7 +51,7 @@ export type InputDialogParams<T> = {
                 {{getTitle()}}
             </ng-container>
             <ng-container body>
-                <p tabindex="-1" #textEl [innerHtml]="text()"></p>
+                <p tabindex="-1" #textEl [innerHtml]="text()" class="content"></p>
                 <input (keydown.enter)="ok()"
                        class="form-control"
                        focusMe
