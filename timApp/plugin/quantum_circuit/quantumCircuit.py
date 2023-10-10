@@ -183,6 +183,12 @@ ErrorType = Union[
 
 
 @dataclass
+class FeedbackTextType:
+    correct: str | None = None
+    wrong: str | None = None
+
+
+@dataclass
 class QuantumCircuitMarkup(GenericMarkupModel):
     """Class that defines plugin markup (the YAML settings and their types)"""
 
@@ -211,6 +217,8 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     timeAxisLabel: str | None = None
 
     hideGateInfo: list[str] | None = None
+
+    feedbackText: FeedbackTextType | None = None
 
 
 @dataclass
@@ -749,7 +757,10 @@ lazy: false
 # deadline: '2020-08-25 23:10:05'
 # modelCircuit: []
 # modelInput: []
-# modelConditions: []
+modelConditions: ["measurements > 0"]
+feedbackText:
+    correct: "correct!"
+    wrong: "make at least one measurement"
 simulate: browser
 maxRunTimeout: 10
 nMoments: 5

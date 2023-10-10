@@ -157,6 +157,12 @@ const QuantumCircuitMarkup = t.intersection([
         outputNames: nullable(t.array(t.string)),
         maxRunTimeout: nullable(t.number),
         hideGateInfo: nullable(t.array(t.string)),
+        feedbackText: nullable(
+            t.partial({
+                correct: nullable(t.string),
+                wrong: nullable(t.string),
+            })
+        ),
     }),
     GenericPluginMarkup,
     t.type({
@@ -557,7 +563,13 @@ export class QuantumCircuitComponent
         this.isResultCheckingRunning = false;
         if (r.ok) {
             const resText = r.result.web.result ?? "";
-            if (resText === "saved") {
+            const customCorrectMessage = this.markup.feedbackText?.correct;
+            if (
+                (resText === "saved" || resText === "correct") &&
+                customCorrectMessage
+            ) {
+                this.result = customCorrectMessage;
+            } else if (resText === "saved") {
                 this.result = $localize`saved`;
             } else if (resText === "correct") {
                 this.result = $localize`correct`;
@@ -568,6 +580,16 @@ export class QuantumCircuitComponent
             if (e && e !== "null") {
                 try {
                     this.error = this.parseError(e);
+                    const customMessage = this.markup.feedbackText?.wrong;
+                    // show user defined error message as feedback if the error was caused by answer being incorrect
+                    if (
+                        customMessage &&
+                        (this.error.errorType === "answer-incorrect" ||
+                            this.error.errorType === "condition-not-satisfied")
+                    ) {
+                        this.error = undefined;
+                        this.showErrorMessage(customMessage);
+                    }
                 } catch (err) {
                     // We got an error, but it either was not valid JSON or it was not a valid ServerError instance
                     // This could happen e.g. if user sets a custom error via `postprogram` attribute.
@@ -575,6 +597,7 @@ export class QuantumCircuitComponent
                 }
             } else {
                 this.error = undefined;
+                this.errorString = "";
             }
         } else {
             this.result = "";
