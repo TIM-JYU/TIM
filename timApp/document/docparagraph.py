@@ -31,7 +31,12 @@ from timApp.markdown.markdownconverter import (
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.util.rndutils import get_rands_as_dict, SeedType
-from timApp.util.utils import count_chars_from_beginning, get_error_html, title_to_id
+from timApp.util.utils import (
+    count_chars_from_beginning,
+    get_error_html,
+    title_to_id,
+    get_boolean,
+)
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
 from tim_common.html_sanitize import sanitize_html, strip_div
 from tim_common.utils import parse_bool
@@ -1046,15 +1051,22 @@ class DocParagraph:
         return self.get_attr("r") == "tr" and self.get_attr("rp") is not None
 
     def get_referenced_pars(
-        self, view_ctx: ViewContext | None = None, blind_settings: bool = True
+        self,
+        view_ctx: ViewContext | None = None,
+        blind_settings: bool = True,
     ) -> list[DocParagraph]:
         cached = self.ref_pars.get(view_ctx)
         if cached is not None:
             return cached
+        resolve_preamble_refs = get_boolean(
+            self.get_attr("resolve_preamble_refs", "false"), False
+        )
         pars = [
             create_final_par(p, view_ctx)
             for p in self.get_referenced_pars_impl(
-                referrer=self, blind_settings=blind_settings
+                referrer=self,
+                blind_settings=blind_settings,
+                resolve_preamble_refs=resolve_preamble_refs,
             )
         ]
         self.ref_pars[view_ctx] = pars
@@ -1065,6 +1077,7 @@ class DocParagraph:
         visited_pars: list[tuple[int, str]] | None = None,
         referrer: Optional["DocParagraph"] = None,
         blind_settings: bool = True,
+        resolve_preamble_refs: bool = False,
     ) -> list[DocParagraph]:
         """Returns the paragraphs that are referenced by this paragraph.
 
@@ -1074,6 +1087,7 @@ class DocParagraph:
         :param visited_pars: A list of already visited paragraphs to prevent infinite recursion.
         :param referrer: The paragraph that is referencing this paragraph.
         :param blind_settings: Whether to hide the settings of referenced paragraph.
+        :param resolve_preamble_refs: Whether to resolve preambles in reference documents.
         :return: The list of resolved paragraphs.
 
         """
@@ -1110,7 +1124,11 @@ class DocParagraph:
                 raise InvalidReferenceException(
                     "Source document for reference not specified."
                 )
-            ref_doc = self.doc.get_ref_doc(ref_docid, preload_option=PreloadOption.none)
+            ref_doc = self.doc.get_ref_doc(
+                ref_docid,
+                preload_option=PreloadOption.none,
+                resolve_preamble_refs=resolve_preamble_refs,
+            )
 
         if not ref_doc.exists():
             raise InvalidReferenceException("The referenced document does not exist.")

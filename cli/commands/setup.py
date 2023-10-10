@@ -11,6 +11,7 @@ from urllib.parse import ParseResult, urlparse
 
 from cli.commands.js import js
 from cli.commands.npmi import npmi
+from cli.commands.rust import build_rust
 from cli.commands.up import up
 from cli.config import has_config, get_config
 from cli.docker.run import (
@@ -531,6 +532,9 @@ In most cases, you can use the default value (which is the same as the TIM host)
 
     log_info("NPM: Installing TIM dependencies")
     npmi()
+
+    log_info("Building Rust dependencies")
+    build_rust()
 
     if profile != "dev":
         log_info("Building TIM scripts")

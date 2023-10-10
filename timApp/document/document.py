@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+from dataclasses import dataclass
 from datetime import datetime
 from difflib import SequenceMatcher
 from pathlib import Path
@@ -12,6 +13,7 @@ from typing import Iterable, Generator, Optional
 from typing import TYPE_CHECKING
 
 from filelock import FileLock
+from flask import has_request_context, request
 from lxml import etree, html
 
 from timApp.document.changelog import Changelog
@@ -108,9 +110,11 @@ class Document:
     def __repr__(self):
         return f"Document(id={self.doc_id})"
 
-    def __iter__(self) -> DocParagraphIter | CacheIterator:
+    def __iter__(
+        self,
+    ) -> DocParagraphIter | CacheIterator | ParallelParagraphIter:
         if self.par_cache is None:
-            return DocParagraphIter(self)
+            return get_par_iterator(self)
         else:
             return CacheIterator(self.par_cache.__iter__())
 
@@ -987,7 +991,7 @@ class Document:
         return before_i
 
     def get_index(self, view_ctx: ViewContext) -> list[tuple]:
-        pars = [par for par in DocParagraphIter(self)]
+        pars = [par for par in get_par_iterator(self)]
         DocParagraph.preload_htmls(pars, self.get_settings(), view_ctx)
         pars = dereference_pars(pars, context_doc=self, view_ctx=view_ctx)
 
@@ -1280,7 +1284,12 @@ class Document:
         self.ref_doc_cache = {}
         self.single_par_cache = {}
 
-    def get_ref_doc(self, ref_docid: int, preload_option: PreloadOption | None = None):
+    def get_ref_doc(
+        self,
+        ref_docid: int,
+        preload_option: PreloadOption | None = None,
+        resolve_preamble_refs: bool = False,
+    ):
         cached = self.ref_doc_cache.get(ref_docid)
         preload_option = (
             preload_option if preload_option is not None else self.preload_option
@@ -1294,8 +1303,11 @@ class Document:
             # PERF: Enabling this is REALLY slow! It essentially causes all paragraph reference lookups be O(k*n)
             #       where k = number of preambles and n = number of paragraphs in the document.
             # Enabling this allows to reference paragraphs inserted via preamble documents.
-            # This is currently disabled in UI, so it's not needed generally.
-            # cached.insert_preamble_pars()
+            # This is currently disabled in UI, but it is used in a few documents
+            # (e.g. a preamble has a plugin with macros and children override the macro, and user wants to
+            #  reference the plugin with the overridden macros).
+            if resolve_preamble_refs:
+                cached.insert_preamble_pars()
             self.ref_doc_cache[ref_docid] = cached
         return cached
 
@@ -1342,6 +1354,52 @@ class CacheIterator:
 
     def __next__(self) -> DocParagraph:
         return self.i.__next__()
+
+
+def get_par_iterator(
+    doc: Document,
+) -> DocParagraphIter | ParallelParagraphIter:
+    if has_request_context():
+        # Check if native_iter=true is set in the request.
+        if request.args.get("native_iter", None):
+            return ParallelParagraphIter(doc)
+    return DocParagraphIter(doc)
+
+
+@dataclass(slots=True)
+class ParallelParagraphIter:
+    doc: Document
+    _iterator: Generator[DocParagraph, None, None] | None = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def __iter__(self):
+        return self._do_iter()
+
+    def __next__(self) -> DocParagraph:
+        if not self._iterator:
+            self._iterator = self._do_iter()
+        return next(self._iterator)
+
+    def _do_iter(self) -> Generator[DocParagraph, None, None]:
+        from tim_rust.python import read_all_blocks
+
+        cached_blocks = set(k for k in self.doc.single_par_cache)
+        version_path = self.doc.get_version_path(self.doc.get_version()).as_posix()
+        blocks = read_all_blocks(self.doc.doc_id, version_path, cached_blocks)
+        for block_json in blocks:
+            par_id = block_json["id"]
+            if p := self.doc.single_par_cache.get(par_id):
+                yield p
+                continue
+
+            p = DocParagraph.from_dict(self.doc, block_json)
+            self.doc.single_par_cache[p.get_id()] = p
+            yield p
 
 
 class DocParagraphIter:

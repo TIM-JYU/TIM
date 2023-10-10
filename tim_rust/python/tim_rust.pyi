@@ -1,0 +1,3 @@
+def read_all_blocks(
+    doc_id: int, doc_par_file_path: str, skip_blocks: set[str]
+) -> list[dict]: ...

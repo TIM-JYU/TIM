@@ -43,6 +43,7 @@ import {
     TimTableComponent,
     TimTableModule,
 } from "tim/plugin/timTable/tim-table.component";
+import {ParMenuHandlePosition} from "tim/document/editing/editing";
 
 @Component({
     selector: "settings-button-panel",
@@ -353,6 +354,26 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 <ng-container i18n>Side bar menu: remember the last open state</ng-container>
                             </label>
                         </div>
+                    </div>
+                    <label for="par-menu-position" i18n>Paragraph menu position</label>
+                    <div class="select-option" id="par-menu-pos-option">
+                        <div>
+                            <select [(ngModel)]="settings.parmenu_position" id="par-menu-position">
+                                <option [ngValue]="ParMenuHandlePosition.Left">
+                                    <ng-container i18n>Left</ng-container>
+                                </option>
+                                <!-- Current default setting is on the right of the paragraph -->
+                                <option [ngValue]="ParMenuHandlePosition.Right">
+                                    <ng-container i18n>Right</ng-container>
+                                </option>
+                            </select>
+                        </div>
+                        <span style="padding-left: 1em;" [ngSwitch]="settings.parmenu_position">
+                            <ng-container *ngSwitchCase="ParMenuHandlePosition.Left" i18n>
+                                Left of the active paragraph, marked with a vertical blue bar.</ng-container> 
+                            <ng-container *ngSwitchCase="ParMenuHandlePosition.Right" i18n>
+                                Right of the active paragraph, marked with a pencil icon.</ng-container>
+                        </span>
                     </div>
                 </div>
                 <settings-button-panel [saved]="submit"></settings-button-panel>
@@ -1247,6 +1268,8 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             await showMessageDialog(r.result.error.error);
         }
     }
+
+    protected readonly ParMenuHandlePosition = ParMenuHandlePosition;
 }
 
 @NgModule({

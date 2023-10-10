@@ -444,8 +444,8 @@ def update_associated_uploads(pars: list[DocParagraph], doc: DocInfo):
         for r in upload_regexes:
             c = re.compile(r, re.DOTALL)
             for m in c.finditer(md):
-                u_id = m.group("id")
-                name = m.group("name")
+                u_id = m.group("id").strip()
+                name = m.group("name").strip()
                 up = UploadedFile.get_by_id_and_filename(int(u_id), name)
                 if not up:
                     continue

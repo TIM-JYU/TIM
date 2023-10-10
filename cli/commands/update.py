@@ -3,6 +3,7 @@ from subprocess import PIPE
 from typing import Optional, Set
 
 from cli.commands.js import js
+from cli.commands.rust import build_rust
 from cli.commands.up import up
 from cli.config import get_config
 from cli.docker.run import run_compose, get_compose_cmd
@@ -100,6 +101,9 @@ def all() -> None:
     log_info("Updating TIM database")
     run_compose(["up", "-d", "postgresql"])
     _migrate_db()
+
+    log_info("Rebuilding Rust dependencies")
+    build_rust()
 
     log_info("Updating TIM frontend")
     js(True, [])
