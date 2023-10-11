@@ -665,7 +665,7 @@ def evaluate_condition(
                 ("userInput", "'" + "".join(map(str, user_input)) + "'")
             )
         # find variable names use in condition
-        ones_in_condition = set(re.findall(r"[^\d\W]+", condition))
+        ones_in_condition = set(re.findall(r"\w+", condition))
         # filter out those that are not in condition
         condition_vars = list(
             filter(lambda v: v[0] in ones_in_condition, condition_vars)
