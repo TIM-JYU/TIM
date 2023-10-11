@@ -1,6 +1,10 @@
 from flask import request, Response
 
-from timApp.auth.sessioninfo import logged_in, get_current_user_object
+from timApp.auth.sessioninfo import (
+    logged_in,
+    get_current_user_object,
+    get_document_lang_override,
+)
 
 
 def get_locale(force_refresh: bool = False) -> str:
@@ -14,7 +18,10 @@ def get_locale(force_refresh: bool = False) -> str:
         u = get_current_user_object()
         lng = u.get_prefs().language
     if lng in KNOWN_LANGUAGES:
-        return lng
+        header_lang = lng
+    override = get_document_lang_override()
+    if override and override in KNOWN_LANGUAGES:
+        header_lang = override
     return header_lang
 
 
