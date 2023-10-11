@@ -2,7 +2,7 @@ import itertools
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Any
 
 from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docinfo import DocInfo
@@ -89,7 +89,7 @@ def get_plugininfo_field_values(
         tuple[int, Iterable[tuple[PluginInfoField, str | None]]]
     ] = itertools.groupby(plugininfo_fields, key=lambda f: f[0].doc_id)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     for doc_id, fields in fields_by_doc:
         fs = list(fields)
@@ -104,7 +104,7 @@ def get_plugininfo_field_values(
 
             match field.info_field:
                 case "count":
-                    val = float(len(matched_tids))
+                    val: Any = float(len(matched_tids))
                 case "task_names":
                     val = [tid.task_name for tid in matched_tids]
                 case "task_ids":
