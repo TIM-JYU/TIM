@@ -289,13 +289,8 @@ def get_extra_gates() -> dict[str, np.ndarray]:
     """
     Extra gates that are not from qulacs nor custom gates.
     """
-    sx = np.array([
-        [0.5+0.5j, 0.5-0.5j],
-        [0.5-0.5j, 0.5+0.5j]
-    ], complex)
-    return {
-        "SX": sx
-    }
+    sx = np.array([[0.5 + 0.5j, 0.5 - 0.5j], [0.5 - 0.5j, 0.5 + 0.5j]], complex)
+    return {"SX": sx}
 
 
 def get_gate_matrix(
