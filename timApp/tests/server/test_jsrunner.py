@@ -809,12 +809,16 @@ tools.print(tools.getDouble("otherdoc"));
          - plugininfo:{fd.id}.bars.count=barcount
          - plugininfo:count=thiscount
          - plugininfo:{fd.id}.count=fdcount
+         - plugininfo:{fd.id}.task_names=fdnames
+         - plugininfo:{fd.id}.task_ids=fdids
         group: testuser1
         program: |!!
         tools.print(tools.getInt("foocount"));
         tools.print(tools.getInt("barcount"));
         tools.print(tools.getInt("thiscount"));
         tools.print(tools.getInt("fdcount"));
+        tools.print(tools.getValue("fdnames"));
+        tools.print(tools.getValue("fdids"));
         !!"""
         )
         d.document.add_text(
@@ -833,7 +837,12 @@ tools.print(tools.getDouble("otherdoc"));
                 "web": {
                     "errors": [],
                     "outdata": {},
-                    "output": "2\n3\n10\n5\n",
+                    "output": "2\n"
+                    "3\n"
+                    "10\n"
+                    "5\n"
+                    '["foo1","foo2","bar1","bar2","bar3"]\n'
+                    f'["{fd.id}.foo1","{fd.id}.foo2","{fd.id}.bar1","{fd.id}.bar2","{fd.id}.bar3"]\n',
                 }
             },
         )
