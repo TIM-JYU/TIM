@@ -664,7 +664,10 @@ def evaluate_condition(
             condition_vars.append(
                 ("userInput", "'" + "".join(map(str, user_input)) + "'")
             )
-
+        # find variable names use in condition
+        ones_in_condition = set(re.findall(r"[^\d\W]+", condition))
+        # filter out those that are not in condition
+        condition_vars = filter(lambda v: v[0] in ones_in_condition, condition_vars)
         values = ", ".join(map(lambda kv: f"{kv[0]}={kv[1]}", condition_vars))
         return False, ConditionsNotSatisfiedError(condition, values)
 
