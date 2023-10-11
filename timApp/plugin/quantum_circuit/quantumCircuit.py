@@ -772,12 +772,16 @@ stem: "Tehtävän kuvaus"
 lazy: false
 # starttime: '2020-08-25 23:00:05' 
 # deadline: '2020-08-25 23:10:05'
-# modelCircuit: []
-# modelInput: []
-modelConditions: ["measurements > 0"]
-feedbackText:
-    correct: "correct!"
-    wrong: "make at least one measurement"
+# modelCircuit:
+#   -
+#     name: H
+#     target: 0
+#     time: 0
+# modelInput: ["11."]
+# modelConditions: ["measurements > 0"]
+# feedbackText:
+#     correct: "correct!"
+#     wrong: "make at least one measurement"
 simulate: browser
 maxRunTimeout: 10
 nMoments: 5
@@ -813,6 +817,7 @@ leftAxisLabel: "Qubit"
 rightAxisLabel: "Output"
 timeAxisLabel: "Time"
 ```
+
 
     """
 
