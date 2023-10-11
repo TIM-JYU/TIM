@@ -11,7 +11,7 @@ from timApp.document.viewcontext import ViewContext
 from timApp.plugin.plugin import find_task_ids
 from timApp.plugin.taskid import TaskId
 
-PLUGININFO_FIELDS = {"count"}
+PLUGININFO_FIELDS = {"count", "task_names", "task_ids"}
 plugininfo_re = re.compile(
     r"plugininfo:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(?:.(?P<subfield>[a-zA-Z0-9öäåÖÄÅ_-]+))?"
 )
@@ -105,6 +105,10 @@ def get_plugininfo_field_values(
             match field.info_field:
                 case "count":
                     val = float(len(matched_tids))
+                case "task_names":
+                    val = [tid.task_name for tid in matched_tids]
+                case "task_ids":
+                    val = [tid.doc_task for tid in matched_tids]
                 case _:
                     val = 0.0
 
