@@ -285,6 +285,19 @@ class QuantumCircuitAnswerModel(
     pass
 
 
+def get_extra_gates() -> dict[str, np.ndarray]:
+    """
+    Extra gates that are not from qulacs nor custom gates.
+    """
+    sx = np.array([
+        [0.5+0.5j, 0.5-0.5j],
+        [0.5-0.5j, 0.5+0.5j]
+    ], complex)
+    return {
+        "SX": sx
+    }
+
+
 def get_gate_matrix(
     name: str, target: int, custom_gates: dict[str, np.ndarray]
 ) -> QuantumGateMatrix | None:
@@ -292,7 +305,10 @@ def get_gate_matrix(
     gate_constructor = gate_mapping.get(name, None)
     if gate_constructor is not None:
         return to_matrix_gate(gate_constructor(target))
+    extra_gates = get_extra_gates()
     gate_matrix = custom_gates.get(name, None)
+    if gate_matrix is None:
+        gate_matrix = extra_gates.get(name, None)
     if gate_matrix is not None:
         matrix_size = math.floor(math.log2(gate_matrix.shape[0]))
         if matrix_size > 1:
@@ -388,6 +404,7 @@ def parse_custom_gates(
     for gate in gates:
         m = parse_matrix(gate.matrix)
         custom_gates[gate.name] = m
+
     return custom_gates
 
 
@@ -765,7 +782,7 @@ simulate: browser
 maxRunTimeout: 10
 nMoments: 5
 nQubits: 3
-gates: ["H", "X", "Y", "Z", "S", "T", "swap", "control", "Fredkin"]
+gates: ["H", "X", "Y", "Z", "S", "T", "SX", "swap", "control", "Fredkin"]
 customGates:
   -
     name: Fredkin
