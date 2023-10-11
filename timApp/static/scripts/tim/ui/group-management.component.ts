@@ -37,6 +37,12 @@ Required document setting:
 additional_angular_modules:
   - timGroupManagementModule
 ```
+
+Adding the component to a document:
+```
+#- {allowangular="true"}
+<tim-group-management-console></tim-group-management-console>
+```
  */
 
 @Component({

@@ -10,7 +10,7 @@ import {CommonModule} from "@angular/common";
 
 export interface UserGroupDialogParams {
     defaultGroupFolder?: string;
-    canChooseFolder: boolean;
+    canChooseFolder?: boolean;
 }
 
 @Component({
@@ -139,11 +139,13 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
     }
 
     canChooseFolder(): boolean {
-        return this.data.canChooseFolder;
+        // if the `canChooseFolder` param isn't set, user should be able to set the folder
+        return this.data?.canChooseFolder ?? true;
     }
 
     getDefaultFolder(): string | undefined {
-        return this.data.defaultGroupFolder;
+        // TODO return empty string instead of undefined?
+        return this.data?.defaultGroupFolder;
     }
 }
 
