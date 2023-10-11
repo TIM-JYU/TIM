@@ -42,6 +42,7 @@ from timApp.auth.sessioninfo import (
     logged_in,
     save_last_page,
     clear_session,
+    set_document_lang_override,
 )
 from timApp.document.caching import check_doc_cache, set_doc_cache, refresh_doc_expire
 from timApp.document.create_item import (
@@ -689,6 +690,7 @@ def render_doc_view(
     hide_answers = m.noanswers
 
     doc_settings = doc.get_settings()
+    set_document_lang_override(doc_settings.ui_lang_override())
 
     # Used later to get partitioning with preambles included correct.
     # Includes either only special class preambles, or all of them if b=0.
