@@ -34,9 +34,9 @@ type sortOption = "name" | "username" | "email" | "time";
             <ng-container body>
                 <div class="mainContainer">
                     <div class="controlContainer">
-                        <div>Users who have an active lock on task {{data.taskId}}</div>
+                        <div i18n>Users who have an active lock on task {{data.taskId}}</div>
                         <div class="userFilter">
-                            <label class="col-sm-2 control-label">Find user</label>
+                            <label i18n class="col-sm-2 control-label">Find user</label>
                             <div class="col-sm-10">
                                 <input id="searchInput"
                                        class="form-control"
@@ -48,8 +48,8 @@ type sortOption = "name" | "username" | "email" | "time";
                             </div>
                         </div>
                         <div class="controls">
-                            <button class="btn btn-default" type="button" (click)="refresh()">Refresh</button>
-                            <button class="timButton" type="button" (click)="doClearRequest()">Clear locks for selected
+                            <button i18n class="btn btn-default" type="button" (click)="refresh()">Refresh</button>
+                            <button i18n class="timButton" type="button" (click)="doClearRequest()">Clear locks for selected
                                 users
                             </button>
                             <div class="response" *ngIf="responseMessage">{{responseMessage}}</div>
@@ -59,11 +59,11 @@ type sortOption = "name" | "username" | "email" | "time";
                         <table>
                             <thead>
                             <tr class="row">
-                                <th (click)="selectAll()">Select</th>
-                                <th (click)="sort('name')">Name</th>
-                                <th (click)="sort('username')">Username</th>
-                                <th (click)="sort('email')">Email</th>
-                                <th (click)="sort('time')">Task locked on</th>
+                                <th i18n (click)="selectAll()">Select</th>
+                                <th i18n (click)="sort('name')">Name</th>
+                                <th i18n (click)="sort('username')">Username</th>
+                                <th i18n (click)="sort('email')">Email</th>
+                                <th i18n (click)="sort('time')">Task locked on</th>
                             </tr>
                             </thead>
                             <tbody *ngIf="userData">
@@ -87,7 +87,7 @@ type sortOption = "name" | "username" | "email" | "time";
                 </div>
             </ng-container>
             <ng-container footer>
-                <button class="btn btn-default" type="button" (click)="done()">Close</button>
+                <button i18n class="btn btn-default" type="button" (click)="done()">Close</button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -107,7 +107,7 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
     reverseSort = true;
 
     getTitle() {
-        return `Clear task locking for task ${this.data.taskId}`;
+        return $localize`Clear task locking for task ${this.data.taskId}`;
     }
 
     ngOnInit() {
@@ -188,12 +188,12 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
         );
         if (!r.ok) {
             this.userData = [];
-            this.fetchError = `Failed to fetch data: \n${r.result.data.error}`;
+            this.fetchError = $localize`Failed to fetch data: \n${r.result.data.error}`;
             return;
         }
         const uData = r.result.data;
         if (uData.length == 0) {
-            this.fetchError = "No locks found";
+            this.fetchError = $localize`No locks found`;
             return;
         }
         this.fetchError = "";
@@ -209,7 +209,7 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
             .filter((v) => v.selected)
             .map((v) => v.user.id);
         if (userids.length == 0) {
-            this.responseMessage = "No targets selected";
+            this.responseMessage = $localize`No targets selected`;
             return;
         }
         const names = this.userData
@@ -218,8 +218,8 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
             .join("\n");
         if (
             !(await showConfirm(
-                "Confirm",
-                `Clear locks for following users? (${userids.length} selected)\n\n${names}`
+                $localize`Confirm`,
+                $localize`Clear locks for following users? (${userids.length} selected)\n\n${names}`
             ))
         ) {
             return;
@@ -237,13 +237,13 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
         if (r.ok) {
             const cl = r.result.data.cleared;
             if (cl.length > 1) {
-                this.responseMessage = `Cleared locks for ${cl.length} users`;
+                this.responseMessage = $localize`Cleared locks for ${cl.length} users`;
             } else if (r.result.data.cleared.length == 1) {
-                this.responseMessage = `Cleared lock for ${cl[0].name}`;
+                this.responseMessage = $localize`Cleared lock for ${cl[0].name}`;
             } else {
                 this.responseMessage =
                     r.result.data.error ??
-                    `No locks found for selected targets`;
+                    $localize`No locks found for selected targets`;
             }
             this.userData = this.userData.filter(
                 (ld) => !cl.map((cleared) => cleared.id).includes(ld.user.id)
