@@ -60,10 +60,10 @@ class UserLoginCode(db.Model):
               database.
     """
 
-    activation_status: Mapped[Enum] = mapped_column(default=ActivationStatus.Inactive)
+    activation_status: Mapped[int] = mapped_column(default=ActivationStatus.Inactive)
     """ActivationStatus of the login code, for manually setting the activation status of the login code."""
 
-    def expire(self, time_offset: timedelta | None = None):
+    def expire(self, time_offset: timedelta | None = None) -> None:
         delta = time_offset if time_offset else timedelta(seconds=0)
         self.activation_end = get_current_time() - delta
-        self.activation_status = ActivationStatus.Inactive
+        self.activation_status = ActivationStatus.Inactive.value

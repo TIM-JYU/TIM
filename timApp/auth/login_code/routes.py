@@ -20,28 +20,33 @@ def get_managers(doc_id: int) -> Response:
     """
     :return: UserGroups that are listed as managers in the docsetting `groupManagement`
     """
-    management_doc = get_doc_or_abort(doc_id).document
-    groupnames: list[str] = management_doc.get_settings().group_management_settings()[
+    mgmnt_doc = get_doc_or_abort(doc_id).document
+    groupnames: list[str] = mgmnt_doc.get_settings().group_management_settings()[
         "managers"
     ]
-    # TODO should notify user if some managers (groups/users) do not exist
 
     groups = get_groups_by_names(groupnames)
-    # TODO fetch usergroupdoc ids from db
+    # TODO fetch usergroupdoc ids from db? seems this is not necessary?
     # groupdoc_ids: list[int] = run_sql(select(UserGroupDoc.doc_id).filter())
+
+    if not groups:
+        return json_response(
+            status_code=404, jsondata={"error": f"Could not find groups: {groupnames}"}
+        )
     group_doc_paths = [
-        get_doc_or_abort(group.admin_doc.doc_id).path for group in groups
+        # FIXME This is kind of convoluted, just to avoid Mypy errors
+        get_doc_or_abort(group.admin_doc.id if group.admin_doc else -1).path
+        for group in groups
     ]
     return json_response(
         status_code=200,
         jsondata={
             [
-                {"id": g.id, "name": g.name, "path": g_doc.path}
-                for g, g_doc in (groups, group_doc_paths)
+                {"id": g.id, "name": g.name, "path": path}
+                for g, path in zip(groups, group_doc_paths)
             ]
         },
     )
-    # return json_response(status_code=400, jsondata={"error": "Could not find group: '" + groupname + "'"})
 
 
 @login_code.get("/groups/<int:doc_id>")
@@ -50,19 +55,23 @@ def get_groups(doc_id: int) -> Response:
     Fetch all UserGroups from the folder specified with document setting `groupManagement: groupsPath: <str>`
     :return:
     """
-    management_doc = get_doc_or_abort(doc_id).document
+    mgmnt_doc = get_doc_or_abort(doc_id).document
     # TODO currently only one group path should be taken into account
-    path: list[str] = management_doc.get_settings().group_management_settings()[
-        "groupsPath"
-    ]
+    path: list[str] = mgmnt_doc.get_settings().group_management_settings()["groupsPath"]
     fpath = None
     if not path[0].startswith("groups"):
         fpath = f"groups/{path[0]}"
     folder = Folder.find_by_path(fpath if fpath else path[0])
+    if not folder:
+        return json_response(
+            status_code=404,
+            jsondata={"error": f"Could not find any groups in path(s): {path}"},
+        )
+
     # TODO should we just compare group doc names to UserGroup names,
     #      since UserGroup names are unique? Current implementation is
     #      due to the group id being the primary key.
-    ug_docs = [doc for doc in folder.get_all_documents()]
+    ug_docs = folder.get_all_documents()
 
     groups = (
         run_sql(
@@ -76,7 +85,8 @@ def get_groups(doc_id: int) -> Response:
     )
 
     data = [
-        {"id": g.id, "name": g.name, "path": f"{folder.path}/{g.name}"} for g in groups
+        {"id": g.id, "name": g.name, "path": f"{folder.get_full_path()}"}
+        for g in groups
     ]
     return json_response(status_code=200, jsondata=data)
 
