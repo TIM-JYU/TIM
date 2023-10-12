@@ -50,6 +50,8 @@ Adding the component to a document:
     template: `
         <ng-container>
             <button class="timButton" (click)="debugCheck()">Debugcheck</button>
+            <button class="timButton" (click)="getGroups()">get_groups</button>
+            <button class="timButton" (click)="getManagers()">get_managers</button>
             <bootstrap-panel id="groups-panel" title="All groups" i18n-title>
                 <div id="list-all-groups-setting">
                     <label for="showAllGroups" class="form-control" i18n>
@@ -68,7 +70,7 @@ Adding the component to a document:
                             <tr class="member-table-row">
                                 <th i18n>Select</th>
                                 <th i18n>Group name</th>
-                                <th *ngIf="isAdmin()" i18n>Group file</th>
+                                <th *ngIf="isAdmin()" i18n>Group document</th>
                                 <th i18n>Exam</th>
                                 <th i18n>Timeslot</th>
                             </tr>
@@ -80,7 +82,7 @@ Adding the component to a document:
                                 </td>
                                 <td>{{group.name}}</td>
                                 <td *ngIf="isAdmin()">
-                                    <a href="/view{{group.path}}">{{group.path}}</a></td>
+                                    <a href="/view/{{group.path}}">{{group.path}}</a></td>
                                 <td> - </td>
                                 <td> - </td>
                             </tr>
@@ -323,9 +325,9 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
             ...this.viewctrl.docSettings.groupManagement,
         };
 
-        await this.getManagers();
-        await this.getGroups();
-        await this.debugCheck();
+        // await this.getManagers();
+        // await this.getGroups();
+        // await this.debugCheck();
     }
 
     async ngAfterViewInit() {}
