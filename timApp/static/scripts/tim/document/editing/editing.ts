@@ -37,10 +37,10 @@ import {Paragraph} from "tim/document/structure/paragraph";
 import {Area} from "tim/document/structure/area";
 import type {HelpPar} from "tim/document/structure/helpPar";
 import {ParSelection} from "tim/document/editing/parSelection";
-import type {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
 import {
     getExplicitSelection,
     getMinimalUnbrokenSelection,
+    UnbrokenSelection,
 } from "tim/document/editing/unbrokenSelection";
 import {ParContext} from "tim/document/structure/parContext";
 import {DerefOption} from "tim/document/structure/derefOption";
@@ -150,6 +150,19 @@ export class EditingHandler {
                     e.originalEvent,
                     par,
                     options
+                );
+            });
+
+            onClick(".replacePar", ($this, e) => {
+                const [par, options] = prepareOptions($this[0], "addAbove");
+                const selection = UnbrokenSelection.explicit(par);
+                this.viewctrl.closePopupIfOpen();
+                this.toggleParEditor(
+                    {type: EditType.Edit, pars: selection},
+                    {
+                        ...options,
+                        initialText: options.initialText ?? "",
+                    }
                 );
             });
 
@@ -290,7 +303,7 @@ export class EditingHandler {
         };
         let initialText = "";
         let cursorPos;
-        if (options.initialText) {
+        if (options.initialText !== undefined) {
             initialText = options.initialText;
             initialText = await replaceTemplateValues(initialText);
             cursorPos = initialText.indexOf(CURSOR);
