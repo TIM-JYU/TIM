@@ -7,7 +7,9 @@ table {
 
   thead {
     border-bottom: 2px solid var(--basic-border-color);
-
+    position: sticky;
+    top: 0;
+    background: var(--bg-color);
   }
 
   tbody tr.row {
