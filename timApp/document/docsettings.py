@@ -696,7 +696,7 @@ class DocSettings:
     def need_view_for_answers(self) -> bool:
         return self.get_setting_or_default("need_view_for_answers", False)
 
-    def group_management_settings(self) -> dict | None:
+    def group_management_settings(self) -> dict:
         settings = self.get_setting_or_default(
             "groupManagement", {"managers": [], "groupsPath": ""}
         )
