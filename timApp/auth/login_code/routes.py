@@ -22,8 +22,8 @@ def get_managers(doc_id: int) -> Response:
     """
     management_doc = get_doc_or_abort(doc_id).document
     groupnames: list[str] = management_doc.get_settings().group_management_settings()[
-        0
-    ]["managers"]
+        "managers"
+    ]
     # TODO should notify user if some managers (groups/users) do not exist
 
     groups = get_groups_by_names(groupnames)
@@ -51,24 +51,34 @@ def get_groups(doc_id: int) -> Response:
     :return:
     """
     management_doc = get_doc_or_abort(doc_id).document
-    path: str = management_doc.get_settings().group_management_settings()[1][
+    # TODO currently only one group path should be taken into account
+    path: list[str] = management_doc.get_settings().group_management_settings()[
         "groupsPath"
-    ][0]
+    ]
+    fpath = None
+    if not path[0].startswith("groups"):
+        fpath = f"groups/{path[0]}"
+    folder = Folder.find_by_path(fpath if fpath else path[0])
+    # TODO should we just compare group doc names to UserGroup names,
+    #      since UserGroup names are unique? Current implementation is
+    #      due to the group id being the primary key.
+    ug_docs = [doc for doc in folder.get_all_documents()]
 
-    folder = Folder.find_by_path(path)
-    usergroup_ids = [g.id for g in folder.get_all_documents(relative_paths=[path])]
-    groups: list[UserGroup] = (
+    groups = (
         run_sql(
             select(UserGroup).filter(
-                UserGroupDoc.doc_id.in_(usergroup_ids) & UserGroup.id
-                == UserGroupDoc.group_id
+                UserGroupDoc.doc_id.in_([doc.id for doc in ug_docs])
+                & (UserGroup.id == UserGroupDoc.group_id)
             )
         )
         .scalars()
         .all()
     )
-    data = [{"id": g.id, "name": g.name} for g in groups]
-    return json_response(status_code=200, jsondata={data})
+
+    data = [
+        {"id": g.id, "name": g.name, "path": f"{folder.path}/{g.name}"} for g in groups
+    ]
+    return json_response(status_code=200, jsondata=data)
 
 
 @login_code.get("/checkOwner/<doc_id>")
