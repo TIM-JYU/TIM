@@ -130,7 +130,7 @@ def decode_name(encoded: str) -> str:
     Separates the originally given group name from the group document path and the timestamp.
     The encoded string has the following format (without the curly brackets):
 
-        `{path/}{plain group name}_{timestamp}`, where
+        `{path/}{plain group name}_{timestamp}`, where:
 
             `path` is optional (but should default to 'groupsPath' if set in groupManagement document settings),
 
