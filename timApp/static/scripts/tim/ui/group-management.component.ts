@@ -1,7 +1,6 @@
 import {HttpClient} from "@angular/common/http";
 import type {AfterViewInit, OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 // import moment from "moment";
 // import {forEach} from "angular";
 import type {IGroup, IUser} from "tim/user/IUser";
@@ -14,7 +13,6 @@ import {to2, toPromise} from "tim/util/utils";
 import type {IGroupManagementSettings} from "tim/document/IDocSettings";
 import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import type {ViewCtrl} from "tim/document/viewctrl";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -55,7 +53,7 @@ Adding the component to a document:
             <bootstrap-panel id="groups-panel" title="All groups" i18n-title>
                 <div id="list-all-groups-setting">
                     <label for="showAllGroups" class="form-control" i18n>
-                        <input type="checkbox" id="showAllGroups" (click)="showAllAvailableGroups()" />
+                        <input type="checkbox" id="showAllGroups" [(ngModel)]="showAllGroups" (click)="toggleAllGroupsVisible()" />
                         <span style="padding-left: 2em;">List all existing groups</span>
                     </label>
                 </div>
@@ -177,8 +175,6 @@ Adding the component to a document:
     styleUrls: ["group-management.component.scss"],
 })
 export class GroupManagementComponent implements OnInit, AfterViewInit {
-    // FIXME viewsctrl shouldn't be needed?
-    viewctrl!: Require<ViewCtrl>;
     settings: IGroupManagementSettings = {};
 
     showAllGroups: boolean;
@@ -209,7 +205,6 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
     @Input() eventHeading?: string;
 
     constructor(private http: HttpClient) {
-        this.viewctrl = vctrlInstance!;
         this.showAllGroups = false;
         this.selectedGroups = [];
         this.selectedMembers = [];
@@ -313,7 +308,7 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
     async ngOnInit() {
         // Load content only for logged in users who are also owners of this management document
         const isDocOwner = await toPromise(
-            this.http.get("/loginCode/checkOwner/" + this.getDocId())
+            this.http.get(`/loginCode/checkOwner/${this.getDocId()}`)
         );
         if (!isAdmin() && (!isDocOwner.ok || !Users.isLoggedIn())) {
             return;
@@ -321,9 +316,9 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
 
         // TODO do we even needs these? we already parse the necessary docsettings
         //      when processing the requests on the server
-        this.settings = {
-            ...this.viewctrl.docSettings.groupManagement,
-        };
+        // this.settings = {
+        //     ...this.viewctrl.docSettings.groupManagement,
+        // };
 
         // await this.getManagers();
         // await this.getGroups();
@@ -339,7 +334,7 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
         // }
         const doc_id = this.getDocId();
         const res = await to2(
-            toPromise(this.http.get<Group[]>("/loginCode/managers/" + doc_id))
+            toPromise(this.http.get<Group[]>(`/loginCode/managers/${doc_id}`))
         );
         if (res.ok && res.result.ok) {
             this.managers = res.result.result;
@@ -350,19 +345,27 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
 
     /**
      * Fetches the groups that the current user is allowed to manage.
-     * Note: current user must be member of one the document's groups
-     *       specified with the document (globals) setting `groups`.
+     * Note: current user must be member of one the document's manager groups
+     *       specified with the document setting `groupManagement.managers`.
      */
-
     async getGroups() {
         const doc_id = this.getDocId();
         // check that current user has ownership to this manage document
         const resp = await toPromise(
-            this.http.get("/loginCode/checkOwner/" + doc_id)
+            this.http.get(`/loginCode/checkOwner/${doc_id}`)
         );
         if (resp.ok) {
+            // Filter out groups to which the current user does not have owner rights,
+            // unless the (UI option? could be doc setting as well?) option 'List all existing groups' is active.
+            // In general, group managers should not have access to groups they did not create,
+            // but there are exceptions (for instance, a group manager might need to be substituted suddenly).
+            let _showAllGroups: string = this.showAllGroups
+                ? `?showAllGroups=${this.showAllGroups}`
+                : "";
             const groups = await toPromise<Group[]>(
-                this.http.get<Group[]>("/loginCode/groups/" + doc_id)
+                this.http.get<Group[]>(
+                    `/loginCode/groups/${doc_id}${_showAllGroups}`
+                )
             );
             if (groups.ok) {
                 this.groups = groups.result;
@@ -372,12 +375,8 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
         // return;
     }
 
-    showAllAvailableGroups() {
-        if (this.showAllGroups) {
-            this.showAllGroups = false;
-        } else {
-            this.showAllGroups = true;
-        }
+    toggleAllGroupsVisible() {
+        this.showAllGroups = !this.showAllGroups;
     }
 
     async debugCheck() {
