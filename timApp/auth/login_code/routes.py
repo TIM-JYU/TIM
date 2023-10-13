@@ -1,10 +1,12 @@
-from flask import Response
+from flask import Response, request
 from sqlalchemy import select
 
 from timApp.auth.accesshelper import get_doc_or_abort, verify_ownership
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.timdb.sqa import run_sql
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_groups_by_names
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.util.flask.responsehelper import json_response
@@ -38,15 +40,11 @@ def get_managers(doc_id: int) -> Response:
         get_doc_or_abort(group.admin_doc.id if group.admin_doc else -1).path
         for group in groups
     ]
-    return json_response(
-        status_code=200,
-        jsondata={
-            [
-                {"id": g.id, "name": g.name, "path": path}
-                for g, path in zip(groups, group_doc_paths)
-            ]
-        },
-    )
+    data = [
+        {"id": g.id, "name": g.name, "path": path}
+        for g, path in zip(groups, group_doc_paths)
+    ]
+    return json_response(status_code=200, jsondata=data)
 
 
 @login_code.get("/groups/<int:doc_id>")
@@ -55,6 +53,8 @@ def get_groups(doc_id: int) -> Response:
     Fetch all UserGroups from the folder specified with document setting `groupManagement: groupsPath: <str>`
     :return:
     """
+
+    show_all_groups: str | None = request.args.get("showAllGroups")
     mgmnt_doc = get_doc_or_abort(doc_id).document
     # TODO currently only one group path should be taken into account
     path: list[str] = mgmnt_doc.get_settings().group_management_settings()["groupsPath"]
@@ -71,8 +71,15 @@ def get_groups(doc_id: int) -> Response:
     # TODO should we just compare group doc names to UserGroup names,
     #      since UserGroup names are unique? Current implementation is
     #      due to the group id being the primary key.
-    ug_docs = folder.get_all_documents()
+    ug_docs: list[DocInfo] = folder.get_all_documents()
+    if not show_all_groups or show_all_groups == "false":
+        from timApp.tim import get_current_user_object
 
+        curr_user: UserGroup = get_current_user_object().get_personal_group()
+        tmp = [ug for ug in ug_docs if curr_user in ug.owners]
+        ug_docs = tmp
+
+    # Mypy doesn't recognize the correct typing here :(
     groups = (
         run_sql(
             select(UserGroup).filter(
