@@ -391,9 +391,11 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
     async createNewGroup() {
         // Disable setting group folder and provide a default path for it
         const params: UserGroupDialogParams = {
+            // TODO set these in group management docSettings
             canChooseFolder: false,
-            // TODO get default group folder from group management docSettings
+            // TODO Should be same as 'groupsPath'
             defaultGroupFolder: "sukol",
+            encodeGroupName: true,
         };
         // Create a new group
         const res = await to2(showUserGroupDialog(params));
