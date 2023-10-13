@@ -119,7 +119,10 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
     }
 
     async saveGroup(): Promise<void> {
-        const request = `/groups/create/${this.getFolderName()}`;
+        const encodeName = this.data.encodeGroupName
+            ? `?encodeGroupName=${this.data.encodeGroupName}`
+            : "";
+        const request = `/groups/create/${this.getFolderName()}${encodeName}`;
         const response = await toPromise(this.http.get<IDocument>(request));
 
         if (response.ok) {
@@ -133,11 +136,7 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
      * User group must always have a name, but folder is optional.
      */
     private getFolderName(): string {
-        let unencoded = this.folder ? this.folder + "/" + this.name : this.name;
-        if (!this.data.encodeGroupName) return unencoded;
-
-        let timestamp: number = Date.now();
-        return Buffer.from(`${unencoded}_${timestamp}`).toString("base64");
+        return this.folder ? this.folder + "/" + this.name : this.name;
     }
 
     setMessage(message?: string): void {

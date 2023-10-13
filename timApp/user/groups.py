@@ -1,8 +1,9 @@
+import base64
 from dataclasses import dataclass
 from operator import attrgetter
 from typing import Any
 
-from flask import Response
+from flask import Response, request
 from sqlalchemy import select
 
 from timApp.auth.accesshelper import (
@@ -181,18 +182,32 @@ def create_group(group_path: str) -> Response:
      2. lowercase ASCII strings (Korppi users) with length being in range [2,8].
 
     """
-
-    _, doc = do_create_group(group_path)
+    encode_name = request.args.get("encodeGroupName")
+    _, doc = do_create_group(group_path, encode_name)
     db.session.commit()
     return json_response(doc)
 
 
-def do_create_group(group_path: str) -> tuple[UserGroup, DocInfo]:
+def do_create_group(
+    group_path: str, encode_name: bool | None = None
+) -> tuple[UserGroup, DocInfo]:
     group_path = group_path.strip("/ ")
 
     # The name of the user group is separated from the path.
     # Does not check whether a name or a path is missing.
     group_name = group_path.split("/")[-1]
+
+    # TODO This does not work yet!
+    #      We are currently restricted from creating groups
+    #      with base64-encoded names. Investigate whether the current
+    #      limitations are meaningful.
+    if encode_name:
+        from datetime import datetime
+
+        timestamp: int = int(datetime.now().microsecond / 1000)
+        # TODO we might need a marker to signify that the group name is in encoded form
+        encoding = "b64_"
+        name = base64.urlsafe_b64encode(f"{encoding}{group_name}_{timestamp}")
 
     if UserGroup.get_by_name(group_name):
         raise RouteException("User group already exists.")
