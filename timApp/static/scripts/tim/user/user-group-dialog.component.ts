@@ -139,7 +139,7 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
         // } else unencoded = this.name;
         if (!this.data.encodeGroupName) return unencoded;
 
-        let timestamp = new Date().getUTCMilliseconds();
+        let timestamp: number = Date.now();
         return Buffer.from(`${unencoded}_${timestamp}`).toString("base64");
     }
 
