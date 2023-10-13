@@ -138,8 +138,16 @@ def decode_name(encoded: str) -> str:
 
             `timestamp` is a timestamp of the group's time of creation measured in milliseconds (UTC time).
 
+    The string is prefixed with the marker 'b64_' to signify that the group name is in encoded form.
+
     :param encoded: The encoded group name used internally by TIM
     :returns: Human-readable group name displayed to the user.
     """
-    decoded = str(urlsafe_b64decode(encoded))
-    return decoded.rsplit("/", maxsplit=1)[-1].rsplit("_", maxsplit=1)[0]
+    if encoded.startswith("b64_"):
+        decoded = str(urlsafe_b64decode(encoded))
+        return (
+            decoded.split("_", maxsplit=1)[-1]
+            .rsplit("/", maxsplit=1)[-1]
+            .rsplit("_", maxsplit=1)[0]
+        )
+    return encoded
