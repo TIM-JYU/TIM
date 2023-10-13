@@ -134,9 +134,6 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
      */
     private getFolderName(): string {
         let unencoded = this.folder ? this.folder + "/" + this.name : this.name;
-        // if (this.folder) {
-        //     unencoded = this.folder + "/" + this.name;
-        // } else unencoded = this.name;
         if (!this.data.encodeGroupName) return unencoded;
 
         let timestamp: number = Date.now();
