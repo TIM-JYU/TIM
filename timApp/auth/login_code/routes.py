@@ -1,3 +1,4 @@
+from base64 import b64decode, urlsafe_b64decode
 from flask import Response, request
 from sqlalchemy import select
 
@@ -68,9 +69,6 @@ def get_groups(doc_id: int) -> Response:
             jsondata={"error": f"Could not find any groups in path(s): {path}"},
         )
 
-    # TODO should we just compare group doc names to UserGroup names,
-    #      since UserGroup names are unique? Current implementation is
-    #      due to the group id being the primary key.
     ug_docs: list[DocInfo] = folder.get_all_documents()
     if not show_all_groups or show_all_groups == "false":
         from timApp.tim import get_current_user_object
@@ -91,8 +89,14 @@ def get_groups(doc_id: int) -> Response:
         .all()
     )
 
+    # TODO How do we (reliably) detect whether group names have been encoded in base64?
+    #      Maybe include a prefix marker in the name, ie. 'b64_{encoded string}'?
     data = [
-        {"id": g.id, "name": g.name, "path": f"{folder.get_full_path()}"}
+        {
+            "id": g.id,
+            "name": decode_name(g.name),
+            "path": f"{folder.get_full_path()}",
+        }
         for g in groups
     ]
     return json_response(status_code=200, jsondata=data)
@@ -118,3 +122,24 @@ def check_ownership(doc_id: int) -> Response:
 def debug_dialog() -> Response:
     log_info(f"Checking http request")
     return json_response(status_code=200, jsondata={"result": "Request success!"})
+
+
+def decode_name(encoded: str) -> str:
+    """
+    Decode and return a group name encoded in base64.
+    Separates the originally given group name from the group document path and the timestamp.
+    The encoded string has the following format (without the curly brackets):
+
+        `{path/}{plain group name}_{timestamp}`, where
+
+            `path` is optional (but should default to 'groupsPath' if set in groupManagement document settings),
+
+            `plain group name` is the name given to the group originally,
+
+            `timestamp` is a timestamp of the group's time of creation measured in milliseconds (UTC time).
+
+    :param encoded: The encoded group name used internally by TIM
+    :returns: Human-readable group name displayed to the user.
+    """
+    decoded = str(urlsafe_b64decode(encoded))
+    return decoded.rsplit("/", maxsplit=1)[-1].rsplit("_", maxsplit=1)[0]

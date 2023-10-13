@@ -7,10 +7,15 @@ import {toPromise} from "tim/util/utils";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
+import {Buffer} from "buffer";
 
 export interface UserGroupDialogParams {
     defaultGroupFolder?: string;
     canChooseFolder?: boolean;
+    // Whether to encode the group name in base64;
+    // avoids naming clashes for certain uses
+    // since group names are required to be unique.
+    encodeGroupName?: boolean;
 }
 
 @Component({
@@ -128,10 +133,14 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
      * User group must always have a name, but folder is optional.
      */
     private getFolderName(): string {
-        if (this.folder) {
-            return this.folder + "/" + this.name;
-        }
-        return this.name;
+        let unencoded = this.folder ? this.folder + "/" + this.name : this.name;
+        // if (this.folder) {
+        //     unencoded = this.folder + "/" + this.name;
+        // } else unencoded = this.name;
+        if (!this.data.encodeGroupName) return unencoded;
+
+        let timestamp = new Date().getUTCMilliseconds();
+        return Buffer.from(`${unencoded}_${timestamp}`).toString("base64");
     }
 
     setMessage(message?: string): void {
