@@ -1,4 +1,4 @@
-from base64 import b64decode, urlsafe_b64decode
+from base64 import b64decode, standard_b64decode
 from flask import Response, request
 from sqlalchemy import select
 
@@ -18,6 +18,7 @@ from timApp.util.logger import log_info, log_debug, tim_logger
 login_code = TypedBlueprint("login_code", __name__, url_prefix="/loginCode")
 
 
+# TODO do we even need this route? we already check for
 @login_code.get("/managers/<int:doc_id>")
 def get_managers(doc_id: int) -> Response:
     """
@@ -29,8 +30,6 @@ def get_managers(doc_id: int) -> Response:
     ]
 
     groups = get_groups_by_names(groupnames)
-    # TODO fetch usergroupdoc ids from db? seems this is not necessary?
-    # groupdoc_ids: list[int] = run_sql(select(UserGroupDoc.doc_id).filter())
 
     if not groups:
         return json_response(
@@ -89,15 +88,43 @@ def get_groups(doc_id: int) -> Response:
         .all()
     )
 
-    # TODO How do we (reliably) detect whether group names have been encoded in base64?
-    #      Maybe include a prefix marker in the name, ie. 'b64_{encoded string}'?
+    data = []
+    for g in groups:
+        group_name = decode_name(g.name)
+        data.append(
+            {
+                "id": g.id,
+                "name": group_name,
+                "path": f"{folder.get_full_path()}/{group_name}",
+            }
+        )
+
+    return json_response(status_code=200, jsondata=data)
+
+
+@login_code.get("/members/<int:group_id>")
+def get_members(group_id: int) -> Response:
+    """
+    :return: Group members of the specified group
+    """
+    ug: UserGroup | None = (
+        run_sql(select(UserGroup).filter_by(id=group_id).limit(1)).scalars().first()
+    )
+
+    if not ug:
+        return json_response(
+            status_code=404, jsondata={"msg": f"Could not find group: {group_id}"}
+        )
+    members: list[User] = ug.users
     data = [
         {
-            "id": g.id,
-            "name": decode_name(g.name),
-            "path": f"{folder.get_full_path()}",
+            "id": m.id,
+            "name": m.name,
+            "email": m.email,
+            "real_name": m.real_name,
+            # "student_id": m.get_home_org_student_id(),
         }
-        for g in groups
+        for m in members
     ]
     return json_response(status_code=200, jsondata=data)
 
@@ -124,7 +151,7 @@ def debug_dialog() -> Response:
     return json_response(status_code=200, jsondata={"result": "Request success!"})
 
 
-def decode_name(encoded: str) -> str:
+def decode_name(name: str) -> str:
     """
     Decode and return a group name encoded in base64.
     Separates the originally given group name from the group document path and the timestamp.
@@ -136,18 +163,15 @@ def decode_name(encoded: str) -> str:
 
             `plain group name` is the name given to the group originally,
 
-            `timestamp` is a timestamp of the group's time of creation measured in milliseconds (UTC time).
+            `timestamp` is a server timestamp of the group's time of creation measured in milliseconds.
 
     The string is prefixed with the marker 'b64_' to signify that the group name is in encoded form.
 
-    :param encoded: The encoded group name used internally by TIM
+    :param name: The encoded group name used internally by TIM
     :returns: Human-readable group name displayed to the user.
     """
-    if encoded.startswith("b64_"):
-        decoded = str(urlsafe_b64decode(encoded))
-        return (
-            decoded.split("_", maxsplit=1)[-1]
-            .rsplit("/", maxsplit=1)[-1]
-            .rsplit("_", maxsplit=1)[0]
-        )
-    return encoded
+    if name.startswith("b64_"):
+        group_name = name.removeprefix("b64_")
+        decoded = str(standard_b64decode(group_name.encode()), encoding="utf-8")
+        return decoded.rsplit("/", maxsplit=1)[-1].rsplit("_", maxsplit=1)[0]
+    return name
