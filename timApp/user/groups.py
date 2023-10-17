@@ -1,4 +1,6 @@
 import base64
+import time
+from enum import Flag
 from dataclasses import dataclass
 from operator import attrgetter
 from typing import Any
@@ -38,6 +40,12 @@ from tim_common.marshmallow_dataclass import class_schema
 groups = TypedBlueprint("groups", __name__, url_prefix="/groups")
 
 USER_NOT_FOUND = "User not found"
+
+
+class NameValidationFlags(Flag):
+    RequireDigits = 1
+    AllowUpperCase = 2
+    AllowBase64 = 4
 
 
 def verify_groupadmin(
@@ -197,23 +205,28 @@ def do_create_group(
     # Does not check whether a name or a path is missing.
     group_name = group_path.split("/")[-1]
 
-    # TODO This does not work yet!
-    #      We are currently restricted from creating groups
-    #      with base64-encoded names. Investigate whether the current
-    #      limitations are meaningful.
+    validation_flags = None
     if encode_name:
-        from datetime import datetime
+        timestamp: int = int(time.time_ns() / 1_000_000)
 
-        timestamp: int = int(datetime.now().microsecond / 1000)
-        # TODO we might need a marker to signify that the group name is in encoded form
+        # TODO we need a prefix marker to signify that the group name is in encoded form
         encoding = "b64_"
-        name = base64.urlsafe_b64encode(f"{encoding}{group_name}_{timestamp}")
+        encoded_name_str = str(
+            base64.standard_b64encode(f"{group_name}_{timestamp}".encode()),
+            encoding="utf-8",
+        )
+        name = f"{encoding}{encoded_name_str}"
+        group_name = name
+        validation_flags = (
+            NameValidationFlags.AllowBase64 | NameValidationFlags.AllowUpperCase
+        )
 
     if UserGroup.get_by_name(group_name):
         raise RouteException("User group already exists.")
 
     verify_groupadmin(action=f"Creating group {group_name}")
-    validate_groupname(group_name)
+
+    validate_groupname(group_name, validation_flags)
 
     # To support legacy code:
     # The group administrator has always writing permission to the groups' root folder.
@@ -226,6 +239,8 @@ def do_create_group(
         else UserGroup.get_admin_group()
     )
 
+    # TODO Will special chars in encoded group name be a problem for creating related
+    #      folders/documents?
     doc = create_document(
         f"groups/{remove_path_special_chars(group_path)}",
         group_name,
@@ -268,17 +283,29 @@ def update_group_doc_settings(
     doc.document.add_setting("macros", s)
 
 
-def validate_groupname(group_name: str):
+def validate_groupname(group_name: str, flags: NameValidationFlags | None = None):
     has_digits = False
     has_letters = False
     has_upper_letters = False
     has_non_alnum = False
+    # Note: If future expansion is needed, create a new variable to hold the chars,
+    #       do *not* expand the existing one unless the leveraged spec for Base64 has changed.
+    # TODO: Should we make this a configurable property?
+    base64_chars = "+/=" if NameValidationFlags.AllowBase64 in flags else ""
+    allowed_special_chars = f"-_{base64_chars}"
     for c in group_name:
         has_digits = has_digits or c.isdigit()
         has_letters = has_letters or c.isalpha()
         has_upper_letters = has_upper_letters or c.isupper()
-        has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace() or c in "-_")
-    if not has_digits or not has_letters or has_non_alnum or has_upper_letters:
+        has_non_alnum = has_non_alnum or not (
+            c.isalnum() or c.isspace() or c in allowed_special_chars
+        )
+    if (
+        (NameValidationFlags.RequireDigits in flags and not has_digits)
+        or not has_letters
+        or has_non_alnum
+        or (NameValidationFlags.AllowUpperCase not in flags and has_upper_letters)
+    ):
         raise RouteException(
             'User group must contain at least one digit and one letter and must not have uppercase or special chars: "'
             + group_name
