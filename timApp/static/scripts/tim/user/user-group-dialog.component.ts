@@ -9,12 +9,16 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
 import {Buffer} from "buffer";
 
+/**
+ * Defines additional parameters for creating new user groups via the UserGroupDialog.
+ */
 export interface UserGroupDialogParams {
     defaultGroupFolder?: string;
     canChooseFolder?: boolean;
-    // Whether to encode the group name in base64;
-    // avoids naming clashes for certain uses
-    // since group names are required to be unique.
+    // Whether to encode the group name in base64; avoids naming clashes as group names are required to be unique,
+    // but we still want to enable non-unique display names for certain (temporary) uses.
+    // NOTE: setting encodeGroupName to true will bypass other group naming constraints
+    //       (no non-alphanumeric or upper case characters).
     encodeGroupName?: boolean;
 }
 
