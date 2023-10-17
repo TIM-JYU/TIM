@@ -13,6 +13,8 @@ import {to2, toPromise} from "tim/util/utils";
 import type {IGroupManagementSettings} from "tim/document/IDocSettings";
 import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {TabDirective} from "ngx-bootstrap/tabs";
+import {forEach} from "angular";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -25,8 +27,15 @@ export interface GroupMember extends IUser {
 export interface Group extends IGroup {
     // Group's doc path, eg. 'test/group01'
     path?: string;
-    event?: string;
-    timeslot?: string;
+    events?: GroupEvent[];
+}
+
+/**
+ * Represents an event (exam, meeting, etc.) that is scheduled for a specific group.
+ */
+export interface GroupEvent {
+    event: string;
+    timeslot: string;
 }
 
 /*
@@ -47,13 +56,11 @@ Adding the component to a document:
     selector: "tim-group-management-console",
     template: `
         <ng-container>
-            <button class="timButton" (click)="debugCheck()">Debugcheck</button>
-            <button class="timButton" (click)="getGroups()">get_groups</button>
-            <button class="timButton" (click)="getManagers()">get_managers</button>
             <bootstrap-panel id="groups-panel" title="All groups" i18n-title>
                 <div id="list-all-groups-setting">
                     <label for="showAllGroups" class="form-control" i18n>
-                        <input type="checkbox" id="showAllGroups" [(ngModel)]="showAllGroups" (click)="toggleAllGroupsVisible()" />
+                        <input type="checkbox" id="showAllGroups" [(ngModel)]="showAllGroups"
+                               (click)="toggleAllGroupsVisible()"/>
                         <span style="padding-left: 2em;">List all existing groups</span>
                     </label>
                 </div>
@@ -76,13 +83,13 @@ Adding the component to a document:
                             <tbody>
                             <tr class="member-table-row" *ngFor="let group of groups">
                                 <td>
-                                    <input type="checkbox" (click)="addToSelectedGroups(group)"/>
+                                    <input type="checkbox" (click)="toggleGroupSelection(group)"/>
                                 </td>
                                 <td>{{group.name}}</td>
                                 <td *ngIf="isAdmin()">
                                     <a href="/view/{{group.path}}">{{group.path}}</a></td>
-                                <td> - </td>
-                                <td> - </td>
+                                <td> -</td>
+                                <td> -</td>
                             </tr>
                             </tbody>
                         </table>
@@ -93,7 +100,7 @@ Adding the component to a document:
                 <div id="groups-list-controls" style="display: inline-block">
                     <div class="flex">
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new group</button>
-                        <button class="timButton" (click)="deleteSelectedGroups()"
+                        <button class="timButton btn-danger" (click)="deleteSelectedGroups()"
                                 [disabled]="selectedGroups.length < 1" i18n>Delete selected groups
                         </button>
                         <button class="timButton" (click)="generateLoginCodes(selectedMembers)"
@@ -113,12 +120,11 @@ Adding the component to a document:
                     <bootstrap-panel title="Group members" i18n-title>
                         <tabset class="merged">
                             <!-- Create a new tab for each group that is visible to the current user -->
-                            <tab *ngFor="let group of mockGroups" heading="{{group.name}}"
-                                 class="grid-tab tab-form">
+                            <tab *ngFor="let group of groups" heading="{{group.name}}"
+                                 class="grid-tab tab-form" (selectTab)="onGroupTabSelected($event)">
                                 <ng-container>
                                     <!-- Member list, with sort and selection controls -->
-
-                                    <!-- Mock members list -->
+                                    
                                     <div>
                                         <!-- TODO: Implement as TimTable -->
                                         <table>
@@ -132,14 +138,14 @@ Adding the component to a document:
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            <tr class="member-table-row" *ngFor="let gMember of getGroupMembers(group)">
+                                            <tr class="member-table-row" *ngFor="let member of members[group.name]">
                                                 <td>
-                                                    <input type="checkbox" (click)="addToSelectedMembers(gMember)"/>
+                                                    <input type="checkbox" (click)="toggleMemberSelection(member)"/>
                                                 </td>
-                                                <td>{{gMember.real_name}}</td>
-                                                <td>{{gMember.name}}</td>
-                                                <td>{{gMember.email}}</td>
-                                                <td>{{gMember.student_id}}</td>
+                                                <td>{{member.real_name}}</td>
+                                                <td>{{member.name}}</td>
+                                                <td>{{member.email}}</td>
+                                                <td>{{member.student_id}}</td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -154,7 +160,7 @@ Adding the component to a document:
                             <button class="timButton" (click)="addMembers()" i18n>
                                 Add members
                             </button>
-                            <button class="timButton" (click)="removeMembers()"
+                            <button class="timButton btn-danger" (click)="removeMembers()"
                                     [disabled]="selectedMembers.length < 1" i18n>
                                 Remove selected
                             </button>
@@ -174,7 +180,7 @@ Adding the component to a document:
     `,
     styleUrls: ["group-management.component.scss"],
 })
-export class GroupManagementComponent implements OnInit, AfterViewInit {
+export class GroupManagementComponent implements OnInit {
     settings: IGroupManagementSettings = {};
 
     showAllGroups: boolean;
@@ -182,6 +188,8 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
     managers: Group[] = [];
     // Groups that are managed via the group management document
     groups: Group[] = [];
+    // Members visible on the currently active group tab (in the group members table)
+    members: Record<string, GroupMember[]> = {};
 
     // Currently selected login code groups
     selectedGroups: Group[];
@@ -193,10 +201,11 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
     selectedMembers: GroupMember[];
     saveMembersSuccessMessage?: string;
     saveMembersFailMessage?: string;
+    selectedGroupTab?: string;
 
     // just for visualizing/testing the interface
-    mockMembers: GroupMember[];
-    mockGroups: Group[];
+    // mockMembers: GroupMember[];
+    // mockGroups: Group[];
     mockCurrentLoginKeyStart: number;
 
     // status info for group members table
@@ -211,84 +220,84 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
         this.mockCurrentLoginKeyStart = 0;
         // this.settings = {};
 
-        this.mockMembers = [
-            {
-                id: 123456789,
-                name: "aku",
-                email: "aku@ankkalinna.com",
-                real_name: "Aku Ankka",
-                student_id: "123456789",
-            },
-            {
-                id: 223456789,
-                name: "hupu",
-                email: "hupu@ankkalinna.com",
-                real_name: "Hupu Ankka",
-                student_id: "223456789",
-            },
-            {
-                id: 323456789,
-                name: "tupu",
-                email: "tupu@ankkalinna.com",
-                real_name: "Tupu Ankka",
-                student_id: "323456789",
-            },
-            {
-                id: 423456789,
-                name: "lupu",
-                email: "lupu@ankkalinna.com",
-                real_name: "Lupu Ankka",
-                student_id: "423456789",
-            },
-            {
-                id: 523456789,
-                name: "iines",
-                email: "iines@ankkalinna.com",
-                real_name: "Iines Ankka",
-                student_id: "523456789",
-            },
-            {
-                id: 623456789,
-                name: "roope",
-                email: "roope@ankkalinna.com",
-                real_name: "Roope Ankka",
-                student_id: "623456789",
-            },
-            {
-                id: 723456789,
-                name: "testiankka",
-                email: "testiankka@ankkalinna.com",
-                real_name: "Testi Ankka",
-                student_id: "723456789",
-            },
-        ];
-        this.mockGroups = [
-            {
-                id: 1,
-                name: "EN1_7A",
-                path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4xXzdB",
-            },
-            {
-                id: 2,
-                name: "EN1_7B",
-                path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4xXzdC",
-            },
-            {
-                id: 3,
-                name: "EN3_8A",
-                path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4zXzhB",
-            },
-            {
-                id: 10,
-                name: "testi01",
-                path: "/groups/sukol/testi01",
-            },
-            {
-                id: 11,
-                name: "testi02",
-                path: "/groups/sukol/testi02",
-            },
-        ];
+        // this.mockMembers = [
+        //     {
+        //         id: 123456789,
+        //         name: "aku",
+        //         email: "aku@ankkalinna.com",
+        //         real_name: "Aku Ankka",
+        //         student_id: "123456789",
+        //     },
+        //     {
+        //         id: 223456789,
+        //         name: "hupu",
+        //         email: "hupu@ankkalinna.com",
+        //         real_name: "Hupu Ankka",
+        //         student_id: "223456789",
+        //     },
+        //     {
+        //         id: 323456789,
+        //         name: "tupu",
+        //         email: "tupu@ankkalinna.com",
+        //         real_name: "Tupu Ankka",
+        //         student_id: "323456789",
+        //     },
+        //     {
+        //         id: 423456789,
+        //         name: "lupu",
+        //         email: "lupu@ankkalinna.com",
+        //         real_name: "Lupu Ankka",
+        //         student_id: "423456789",
+        //     },
+        //     {
+        //         id: 523456789,
+        //         name: "iines",
+        //         email: "iines@ankkalinna.com",
+        //         real_name: "Iines Ankka",
+        //         student_id: "523456789",
+        //     },
+        //     {
+        //         id: 623456789,
+        //         name: "roope",
+        //         email: "roope@ankkalinna.com",
+        //         real_name: "Roope Ankka",
+        //         student_id: "623456789",
+        //     },
+        //     {
+        //         id: 723456789,
+        //         name: "testiankka",
+        //         email: "testiankka@ankkalinna.com",
+        //         real_name: "Testi Ankka",
+        //         student_id: "723456789",
+        //     },
+        // ];
+        // this.mockGroups = [
+        //     {
+        //         id: 1,
+        //         name: "EN1_7A",
+        //         path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4xXzdB",
+        //     },
+        //     {
+        //         id: 2,
+        //         name: "EN1_7B",
+        //         path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4xXzdC",
+        //     },
+        //     {
+        //         id: 3,
+        //         name: "EN3_8A",
+        //         path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4zXzhB",
+        //     },
+        //     {
+        //         id: 10,
+        //         name: "testi01",
+        //         path: "/groups/sukol/testi01",
+        //     },
+        //     {
+        //         id: 11,
+        //         name: "testi02",
+        //         path: "/groups/sukol/testi02",
+        //     },
+        // ];
     }
 
     /**
@@ -314,6 +323,13 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
             return;
         }
 
+        await this.getGroups();
+        this.selectedGroupTab = this.groups[0]?.name ?? "";
+
+        for (let g of this.groups) {
+            await this.getGroupMembers(g);
+        }
+
         // TODO do we even needs these? we already parse the necessary docsettings
         //      when processing the requests on the server
         // this.settings = {
@@ -321,11 +337,8 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
         // };
 
         // await this.getManagers();
-        // await this.getGroups();
         // await this.debugCheck();
     }
-
-    async ngAfterViewInit() {}
 
     async getManagers() {
         // let managers = this.settings.managers;
@@ -371,12 +384,12 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
                 this.groups = groups.result;
             }
         }
-
-        // return;
     }
 
-    toggleAllGroupsVisible() {
+    async toggleAllGroupsVisible() {
         this.showAllGroups = !this.showAllGroups;
+        // refresh
+        await this.getGroups();
     }
 
     async debugCheck() {
@@ -402,9 +415,8 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
         if (res.ok) {
             // add new group to list
             const group = res.result;
-            // TODO Remove this, don't need to add anywhere, visible groups are populated from the groups folder
-            //      depending on the users membership in the managing group(s)
-            this.mockGroups.push({
+            // TODO We should perhaps fetch or refresh the displayed groups in case of sync issues?
+            this.groups.push({
                 id: group.id,
                 name: group.name,
                 path: group.path,
@@ -443,8 +455,14 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
      * Fetches users belonging to the specified group
      * @param group
      */
-    getGroupMembers(group: Group): GroupMember[] {
-        return this.mockMembers;
+    async getGroupMembers(group: Group) {
+        const resp = await toPromise(
+            // this.http.get<GroupMember[]>(`/show/${group.name}`)
+            this.http.get<GroupMember[]>(`/loginCode/members/${group.id}`)
+        );
+        if (resp.ok) {
+            this.members[group.name] = resp.result;
+        }
     }
 
     addMembers() {
@@ -460,16 +478,27 @@ export class GroupManagementComponent implements OnInit, AfterViewInit {
         // Note: remember to clear selectedMembers after deletion from the group
     }
 
-    addToSelectedMembers(member: GroupMember) {
+    toggleMemberSelection(member: GroupMember) {
         if (!this.selectedMembers.includes(member)) {
             this.selectedMembers.push(member);
+        } else {
+            this.selectedMembers.splice(
+                this.selectedMembers.indexOf(member),
+                1
+            );
         }
     }
 
-    addToSelectedGroups(group: Group) {
+    toggleGroupSelection(group: Group) {
         if (!this.selectedGroups.includes(group)) {
             this.selectedGroups.push(group);
+        } else {
+            this.selectedGroups.splice(this.selectedGroups.indexOf(group), 1);
         }
+    }
+
+    onGroupTabSelected(groupTab: TabDirective) {
+        this.selectedGroupTab = groupTab.heading;
     }
 
     // /**
