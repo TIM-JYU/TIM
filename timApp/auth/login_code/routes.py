@@ -18,7 +18,7 @@ from timApp.util.logger import log_info, log_debug, tim_logger
 login_code = TypedBlueprint("login_code", __name__, url_prefix="/loginCode")
 
 
-# TODO do we even need this route? we already check for
+# TODO do we even need this route? we already check for document ownership.
 @login_code.get("/managers/<int:doc_id>")
 def get_managers(doc_id: int) -> Response:
     """
