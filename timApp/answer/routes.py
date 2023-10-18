@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Union, Any, Callable, TypedDict
+from typing import Union, Any, Callable, TypedDict, Tuple
 
 from flask import Response
 from flask import current_app
@@ -2247,8 +2247,33 @@ def rename_answers(old_name: str, new_name: str, doc_path: str) -> Response:
     return json_response({"modified": len(answers_to_rename), "conflicts": conflicts})
 
 
+@answers.get("/getTaskBlocks/<task_id>")
+def getTaskBlocks(task_id: str) -> Response:
+    tid = TaskId.parse(task_id)
+    if tid.doc_id is None:
+        raise RouteException(f"Task ID is missing document: {task_id}")
+    d = get_doc_or_abort(tid.doc_id)
+    verify_teacher_access(d)
+    b = TaskBlock.get_by_task(tid.doc_task)
+    if not b:
+        return json_response([])
+    bas: list[tuple[User, datetime]] = run_sql(
+        select(BlockAccess)
+        .filter_by(
+            block_id=b.id,
+            type=AccessType.view.value,
+        )
+        .filter(BlockAccess.accessible_to < get_current_time())
+        .join(UserGroup)
+        .outerjoin(User, User.name == UserGroup.name)
+        .with_only_columns(User, BlockAccess.accessible_to)
+    ).all()
+    ret = list(map(lambda b: {"user": b[0], "time": b[1]}, bas))
+    return json_response(ret, date_conversion=True)
+
+
 @answers.post("/clearTaskBlock")
-def clear_task_block(user: str, task_id: str) -> Response:
+def clear_task_block(userids: list[int], task_id: str) -> Response:
     """Sets user's task-related blockAccess access_end to None
 
     For now task related blockAccesses have inverse logic: lack of blockAccess row or restrictions means free access
@@ -2258,33 +2283,54 @@ def clear_task_block(user: str, task_id: str) -> Response:
         raise RouteException(f"Task ID is missing document: {task_id}")
     d = get_doc_or_abort(tid.doc_id)
     verify_teacher_access(d)
-    user_obj = User.get_by_name(user)
-    if not user_obj:
-        raise RouteException(f"User {user} not found")
     b = TaskBlock.get_by_task(tid.doc_task)
-    if not b:
-        return json_response({"cleared": False})
-    ba = (
+    if not b or not userids:
+        return json_response({"cleared": []})
+    users: list[User] = (
+        run_sql(select(User).filter(User.id.in_(userids))).scalars().all()
+    )
+    users_and_groups: list[Tuple[User, UserGroup]] = [
+        (u, u.get_personal_group()) for u in users
+    ]  # TODO check if single query possible
+    log_set: dict[int, Tuple[User, UserGroup]] = {
+        uag[1].id: uag for uag in users_and_groups
+    }
+    bas = (
         run_sql(
             select(BlockAccess)
             .filter_by(
                 block_id=b.id,
                 type=AccessType.view.value,
-                usergroup_id=user_obj.get_personal_group().id,
             )
-            .limit(1)
+            .filter(BlockAccess.usergroup_id.in_([ug[1].id for ug in users_and_groups]))
         )
         .scalars()
-        .first()
+        .all()
     )
-    if not ba or not ba.accessible_to:
-        return json_response({"cleared": False})
-    ba.accessible_to = None
+    cleared_usergroupids = []
+    for ba in bas:
+        if ba.accessible_to:
+            ba.accessible_to = None
+            cleared_usergroupids.append(ba.usergroup_id)
+    cleared_users_and_groups: list[Tuple[User, UserGroup]] = []
+    for ug in cleared_usergroupids:
+        user_and_group = log_set.get(ug)
+        if not user_and_group:
+            raise Exception(f"Error logging task lock clearing for usergroup {ug}")
+        cleared_users_and_groups.append(user_and_group)
     db.session.commit()
-    log_task_block(
-        f"set task {tid.doc_task} accessible_to to None for user {user_obj.name} via clearTaskBlock"
+    for cleared in cleared_users_and_groups:
+        log_task_block(
+            f"set task {tid.doc_task} accessible_to to None for user {cleared[1].name} via clearTaskBlock"
+        )
+    return json_response(
+        {
+            "cleared": [
+                {"name": cleared[0].name, "id": cleared[0].id}
+                for cleared in cleared_users_and_groups
+            ]
+        }
     )
-    return json_response({"cleared": True})
 
 
 @answers.get("/unlockHiddenTask")
