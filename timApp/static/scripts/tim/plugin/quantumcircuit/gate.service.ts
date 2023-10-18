@@ -1,5 +1,6 @@
 import {Injectable} from "@angular/core";
 import type {Complex} from "mathjs";
+import {add} from "mathjs";
 import {
     complex,
     divide,
@@ -74,6 +75,18 @@ export class GateService {
             [0, tValue],
         ]);
 
+        const halfI = multiply(0.5, complex(0, 1));
+        const SX = matrix([
+            [
+                add(0.5, halfI) as Complex,
+                add(0.5, multiply(-1, halfI)) as Complex,
+            ],
+            [
+                add(0.5, multiply(-1, halfI)) as Complex,
+                add(0.5, halfI) as Complex,
+            ],
+        ]);
+
         this.gates = [
             {
                 name: "H",
@@ -116,6 +129,13 @@ export class GateService {
                 hidden: false,
                 group: "phase",
                 info: "Phase T",
+            },
+            {
+                name: "SX",
+                matrix: SX,
+                hidden: false,
+                group: "basic",
+                info: "square root of X",
             },
             {
                 name: "swap",

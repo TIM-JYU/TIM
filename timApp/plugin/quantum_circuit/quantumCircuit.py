@@ -183,6 +183,12 @@ ErrorType = Union[
 
 
 @dataclass
+class FeedbackTextType:
+    correct: str | None = None
+    wrong: str | None = None
+
+
+@dataclass
 class QuantumCircuitMarkup(GenericMarkupModel):
     """Class that defines plugin markup (the YAML settings and their types)"""
 
@@ -211,6 +217,8 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     timeAxisLabel: str | None = None
 
     hideGateInfo: list[str] | None = None
+
+    feedbackText: FeedbackTextType | None = None
 
 
 @dataclass
@@ -277,6 +285,14 @@ class QuantumCircuitAnswerModel(
     pass
 
 
+def get_extra_gates() -> dict[str, np.ndarray]:
+    """
+    Extra gates that are not from qulacs nor custom gates.
+    """
+    sx = np.array([[0.5 + 0.5j, 0.5 - 0.5j], [0.5 - 0.5j, 0.5 + 0.5j]], complex)
+    return {"SX": sx}
+
+
 def get_gate_matrix(
     name: str, target: int, custom_gates: dict[str, np.ndarray]
 ) -> QuantumGateMatrix | None:
@@ -284,7 +300,10 @@ def get_gate_matrix(
     gate_constructor = gate_mapping.get(name, None)
     if gate_constructor is not None:
         return to_matrix_gate(gate_constructor(target))
+    extra_gates = get_extra_gates()
     gate_matrix = custom_gates.get(name, None)
+    if gate_matrix is None:
+        gate_matrix = extra_gates.get(name, None)
     if gate_matrix is not None:
         matrix_size = math.floor(math.log2(gate_matrix.shape[0]))
         if matrix_size > 1:
@@ -380,6 +399,7 @@ def parse_custom_gates(
     for gate in gates:
         m = parse_matrix(gate.matrix)
         custom_gates[gate.name] = m
+
     return custom_gates
 
 
@@ -644,7 +664,12 @@ def evaluate_condition(
             condition_vars.append(
                 ("userInput", "'" + "".join(map(str, user_input)) + "'")
             )
-
+        # find variable names use in condition
+        ones_in_condition = set(re.findall(r"\w+", condition))
+        # filter out those that are not in condition
+        condition_vars = list(
+            filter(lambda v: v[0] in ones_in_condition, condition_vars)
+        )
         values = ", ".join(map(lambda kv: f"{kv[0]}={kv[1]}", condition_vars))
         return False, ConditionsNotSatisfiedError(condition, values)
 
@@ -741,59 +766,58 @@ def reqs_handler() -> PluginReqs:
     """Return plugins' dependencies and info on how to render it"""
 
     template_full = """
-``` {#tehtava1 plugin="quantumCircuit"}
-header: "Tehtävän otsikko"
-stem: "Tehtävänanto"
-# footer: "alateksti"
-# starttime: '2023-07-25 15:00:00'
-# deadline: '2023-07-28 23:59:00'
-nQubits: 4
-nMoments: 8
+``` {#tehtava plugin="quantumCircuit"}
+header: Tehtävän otsikko
+stem: "Tehtävän kuvaus"
 lazy: false
-# gates: ["H", "X", "Y", "Z", "S", "T", "swap", "control", "SX"]
-qubitNotation: "bit"
-showChart: true
-showOutputBits: true
-showPrintField: true
-samplingMode: matrix
-nSamples: 100
-# simulate: server
+# starttime: '2020-08-25 23:00:05' 
+# deadline: '2020-08-25 23:10:05'
+# modelCircuit:
+#   -
+#     name: H
+#     target: 0
+#     time: 0
+# modelInput: ["11."]
+# modelConditions: ["measurements > 0"]
+# feedbackText:
+#     correct: "correct!"
+#     wrong: "make at least one measurement"
+simulate: browser
+maxRunTimeout: 10
+nMoments: 5
+nQubits: 3
+gates: ["H", "X", "Y", "Z", "S", "T", "SX", "swap", "control", "Fredkin"]
+customGates:
+  -
+    name: Fredkin
+    matrix: "[[1,0,0,0,0,0,0,0],
+              [0,1,0,0,0,0,0,0],
+              [0,0,1,0,0,0,0,0],
+              [0,0,0,1,0,0,0,0],
+              [0,0,0,0,1,0,0,0],
+              [0,0,0,0,0,0,1,0],
+              [0,0,0,0,0,1,0,0],
+              [0,0,0,0,0,0,0,1]]"
+    info: Fredkin (controlled-swap)
 initialCircuit:
   -
     name: H
     target: 0
     time: 0
-  - 
-    name: X
-    target: 1
-    time: 1
-    controls: [0]
-  -
-    swap1: 2
-    swap2: 3
-    time: 2
-  -
-    name: I2
-    target: 1
-    time: 3
-    editable: false
-customGates:
-  -
-    name: Id
-    matrix: "[[1,0],[0,1]]"
-    info: identiteettiportti
-    color: "#484848"
-    textColor: white
-  -
-    name: I2
-    matrix: "[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]"
-    info: "identiteetti portti"
-    color: "rgb(100, 100, 100)"
-  -
-    name: SX
-    matrix: "(0.5)*[[1+i,1-i],[1-i,1+i]]"
-    info: "X:n neliöjuuri"
+# qubits: []
+# outputNames: []
+qubitNotation: "bit"
+hideGateInfo: []
+samplingMode: "matrix"
+nSamples: 100
+showChart: true
+showPrintField: true
+showOutputBits: true
+leftAxisLabel: "Qubit"
+rightAxisLabel: "Output"
+timeAxisLabel: "Time"
 ```
+
 
     """
 

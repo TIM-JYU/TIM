@@ -158,7 +158,7 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
                 this.statsDescription = $localize`Output probabilities based on ${this.measurements.length} measurements`;
                 break;
             case "matrix":
-                this.statsDescription = $localize`Output probabilities based on matrix computation`;
+                this.statsDescription = $localize`Output probabilities`;
                 break;
         }
     }
