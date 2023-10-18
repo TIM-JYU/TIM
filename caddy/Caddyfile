@@ -40,6 +40,11 @@
 	    file_server {
 			root /tim/timApp/static/scripts/build
 		}
+		header {
+		    // Needed to make language change work properly
+		    // TODO: Find some other way to revalidate Angular scripts without asking for cache
+		    Cache-Control "no-cache, must-revalidate"
+		}
 	}
 
 	handle_path /csstatic/* {

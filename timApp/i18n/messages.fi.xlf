@@ -8682,6 +8682,124 @@
           <context context-type="linenumber">161</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="689292269674458518" datatype="html">
+        <source>Users who have an active lock on task <x id="INTERPOLATION" equiv-text="{{data.taskId}}"/></source>
+        <target state="translated">Käyttäjät joilla on aktiivinen lukitus tehtävässä <x id="INTERPOLATION" equiv-text="{{data.taskId}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">37,38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8819283978792517976" datatype="html">
+        <source>Find user</source>
+        <target state="translated">Etsi käyttäjää</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">39,40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1102717806459547726" datatype="html">
+        <source>Refresh</source>
+        <target state="translated">Virkistä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">51,52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6665435798574150791" datatype="html">
+        <source>Clear locks for selected users </source>
+        <target state="translated">Poista lukitukset valituilta käyttäjiltä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">52,53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7007108321522930578" datatype="html">
+        <source>Task locked on</source>
+        <target state="translated">Tehtävä lukittu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">66,67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5401264506294323560" datatype="html">
+        <source>Clear task locking for task <x id="PH" equiv-text="this.data.taskId"/></source>
+        <target state="translated">Poista lukituksia tehtävästä <x id="PH" equiv-text="this.data.taskId"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">110</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2756136267402199398" datatype="html">
+        <source>Failed to fetch data:
+<x id="PH" equiv-text="r.result.data.error"/></source>
+        <target state="translated">Tietojen hakeminen epäonnistui:
+<x id="PH" equiv-text="r.result.data.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">191</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2505711558256115387" datatype="html">
+        <source>No locks found</source>
+        <target state="translated">Lukituksia ei löytynyt</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">196</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5794138143661229408" datatype="html">
+        <source>No targets selected</source>
+        <target state="translated">Ei valittuja kohteita</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">212</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9178182467454450952" datatype="html">
+        <source>Confirm</source>
+        <target state="translated">Varmista</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">221,220</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4737368775109447707" datatype="html">
+        <source>Clear locks for following users? (<x id="PH" equiv-text="userids.length"/> selected)
+
+<x id="PH_1" equiv-text="names"/></source>
+        <target state="translated">Poista lukitukset seuraavilta käyttäjiltä (<x id="PH" equiv-text="userids.length"/> kohdetta valittu)
+
+<x id="PH_1" equiv-text="names"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">222,220</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6517420745737129184" datatype="html">
+        <source>Cleared locks for <x id="PH" equiv-text="cl.length"/> users</source>
+        <target state="translated">Poistettiin lukitus <x id="PH" equiv-text="cl.length"/> käyttäjältä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">240</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5731390128193303673" datatype="html">
+        <source>Cleared lock for <x id="PH" equiv-text="cl[0].name"/></source>
+        <target state="translated">Poistettiin lukitus käyttäjältä <x id="PH" equiv-text="cl[0].name"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">242</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6814378789308877022" datatype="html">
+        <source>No locks found for selected targets</source>
+        <target state="translated">Valituilta kohteilta ei löytynyt lukituksia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
+          <context context-type="linenumber">246,244</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -1055,7 +1055,7 @@ def find_task_ids(
                 task_ids.append(tid)
         elif block.get_attr("defaultplugin"):
             for task_id, _, _, _ in find_inline_plugins(
-                block, block.doc.get_settings().get_macroinfo(view_ctx)
+                block, block.doc.get_settings().get_macroinfo(view_ctx, user_ctx)
             ):
                 try:
                     task_id = task_id.validate()

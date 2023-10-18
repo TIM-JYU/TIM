@@ -100,6 +100,8 @@ class DocSettingTypes:
     basicChangeNotifications: bool
     extraPreambles: list[str] | str | None
     lazyAnswers: bool
+    uiLangOverride: str
+    allowedDocsettingMacroAttributes: list[str] | str
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -667,6 +669,12 @@ class DocSettings:
 
     def lazy_answers(self) -> bool:
         return self.get_setting_or_default("lazyAnswers", False)
+
+    def ui_lang_override(self) -> str | None:
+        return self.get_setting_or_default("uiLangOverride", None)
+
+    def allowed_docsetting_macro_attributes(self) -> list[str] | str:
+        return self.get_setting_or_default("allowedDocsettingMacroAttributes", [])
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

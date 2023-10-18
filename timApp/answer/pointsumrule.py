@@ -1,7 +1,7 @@
 import enum
 import re
 from dataclasses import dataclass, field
-from typing import Union, Generator, Optional
+from typing import Generator
 
 from marshmallow import ValidationError, EXCLUDE
 
@@ -41,7 +41,8 @@ class Group:
             if isinstance(match_re, str):
                 self.matchers = {match_re}
             elif isinstance(match_re, list):
-                self.matchers = set(match_re)
+                # TODO: Display error if regexes are invalid => e.g. wrong type
+                self.matchers = set(str(r) for r in match_re)
             else:
                 raise Exception("Unknown type for match.")
             point_type = data.get("type", "vt")

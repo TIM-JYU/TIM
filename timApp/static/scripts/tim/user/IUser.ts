@@ -73,3 +73,16 @@ export const sortLang = "fi";
 export function sortByRealName(a: IUser, b: IUser) {
     return (a.real_name ?? "").localeCompare(b.real_name ?? "", sortLang);
 }
+
+export function sortByEmail(a: IUser, b: IUser) {
+    if (!a.email && !b.email) {
+        return sortByRealName(a, b);
+    }
+    if (!a.email) {
+        return -1;
+    }
+    if (!b.email) {
+        return 1;
+    }
+    return (a.email ?? "").localeCompare(b.email ?? "", sortLang);
+}

@@ -1,0 +1,53 @@
+tim-dialog-frame {
+  z-index: 99;
+  position: fixed;
+}
+
+table {
+
+  thead {
+    border-bottom: 2px solid var(--basic-border-color);
+    position: sticky;
+    top: 0;
+    background: var(--bg-color);
+  }
+
+  tbody tr.row {
+    border-bottom: 1px solid var(--basic-border-color);
+
+  }
+    td, th {
+      vertical-align: middle;
+      border: none;
+      padding: 5px;
+      background-color: transparent;
+    }
+}
+
+.userFilter {
+  display: flex;
+  align-items: center;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+}
+
+.response {
+  padding: 5px;
+}
+
+.mainContainer {
+  height: 50vh;
+  max-height: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableContainer {
+  overflow-y: auto;
+  width: 100%;
+  display: grid;
+}

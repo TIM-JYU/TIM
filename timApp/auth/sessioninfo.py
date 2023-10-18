@@ -49,6 +49,14 @@ def get_current_user_object() -> User:
     return g.user
 
 
+def get_document_lang_override() -> str | None:
+    return g.get("document_lang_override", None)
+
+
+def set_document_lang_override(lang: str) -> None:
+    g.document_lang_override = lang
+
+
 def user_context_with_logged_in(u: User | None) -> UserContext:
     curr = get_current_user_object()
     return UserContext(user=u or curr, logged_user=curr)

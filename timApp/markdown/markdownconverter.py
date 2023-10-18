@@ -1,8 +1,10 @@
 """Provides functions for converting markdown-formatted text to HTML."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from re import Pattern
 from typing import TYPE_CHECKING, Iterable, Any
 from urllib.parse import quote_plus
 
@@ -420,6 +422,107 @@ def get_document_path(doc_id: Any) -> str:
     return doc.path if doc else ""
 
 
+@dataclass
+class GetDocumentSettingMacro:
+    doc: Document | None = None
+    _settings_cache: dict[int, dict] = field(default_factory=dict)
+    _allowed_docsetting_macro_attributes: dict[int, list[Pattern]] = field(
+        default_factory=dict
+    )
+
+    def get_document_setting(self, setting_path: Any) -> Any:
+        """
+        Get document setting by path.
+
+        Setting path is in format
+
+        [doc_id].setting_name.subsetting_name...
+
+        If doc_id is not given, current document is used if available.
+
+        If no setting or subsetting is set, None is returned.
+        Subsettings are parsed as follows:
+        - For lists, subsetting can be an index
+        - For dicts, subsetting is a name of the dict key
+        - For any other values, subsettings are not permitted (None is returned if subsetting is given)
+
+        :param setting_path: Subsetting path.
+        :return: Value of the setting or None if not found.
+        :raises Exception: If access to the setting is not allowed via the allowedDocsettingMacroAttributes setting.
+        """
+        from timApp.document.docentry import DocEntry
+
+        if not isinstance(setting_path, str):
+            return None
+        parts = setting_path.split(".")
+        if not parts:
+            return None
+
+        current_setting_path = setting_path
+        first_part = parts[0]
+        doc_id = -1
+        if first_part.isdigit():
+            doc_id = int(first_part)
+            parts = parts[1:]
+            current_setting_path = ".".join(parts)
+
+        if not (settings_dict := self._settings_cache.get(doc_id)):
+            if doc_id == -1:
+                if not self.doc:
+                    return None
+                doc = self.doc
+            else:
+                doc = DocEntry.find_by_id(doc_id).document
+
+            doc_settings = doc.get_settings()
+            allowed_attrs = doc_settings.allowed_docsetting_macro_attributes()
+            allowed_attr_patterns = []
+            if allowed_attrs:
+                regexes: list[str] = (
+                    [allowed_attrs] if isinstance(allowed_attrs, str) else allowed_attrs
+                )
+                for regex in regexes:
+                    allowed_attr_patterns.append(re.compile(regex))
+
+            settings_dict = dict(doc.get_settings().get_dict().values)
+            self._settings_cache[doc_id] = settings_dict
+            self._allowed_docsetting_macro_attributes[doc_id] = allowed_attr_patterns
+
+        allowed_patterns = self._allowed_docsetting_macro_attributes[doc_id]
+        accessible = False
+        for pattern in allowed_patterns:
+            if pattern.match(current_setting_path):
+                accessible = True
+                break
+
+        if not accessible:
+            raise Exception(
+                f"docsetting: Access to document setting {current_setting_path} in document {doc_id} is not allowed. "
+                "Set the allowedDocsettingMacroAttributes document setting to allow the path."
+            )
+
+        current_val = settings_dict
+
+        # Special case: return entire object if it is allowed
+        if len(parts) == 1 and parts[0] == "":
+            return current_val
+
+        for part in parts:
+            if isinstance(current_val, list) and part.isdigit():
+                part = int(part)
+                if 0 > part or part >= len(current_val):
+                    return None
+            elif isinstance(current_val, dict):
+                if part not in current_val:
+                    return None
+            else:
+                return None
+
+            current_val = current_val[part]
+
+        return current_val
+
+
 def url_quote(s: Any) -> str:
     if isinstance(s, str):
         return quote_plus(s)
@@ -487,6 +590,7 @@ def create_environment(
     env = TimSandboxedEnvironment(macro_delimiter)
     env.filters.update(tim_filters)
     env.filters["isview"] = view_ctx.isview
+    env.filters["docsetting"] = GetDocumentSettingMacro(doc).get_document_setting
 
     if macros:
         counters = AutoCounters(macros, doc)

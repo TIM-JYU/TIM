@@ -74,7 +74,12 @@ def round_float_error(v: float) -> float:
     ...
 
 
-def round_float_error(v: float | None) -> float | None:
+@overload
+def round_float_error(v: str) -> float:
+    ...
+
+
+def round_float_error(v: float | str | None) -> float | None:
     """
     Round floats to remove any round-off errors.
 
@@ -89,6 +94,11 @@ def round_float_error(v: float | None) -> float | None:
     """
     if v is None:
         return None
+    if isinstance(v, str):
+        try:
+            v = float(v.replace(",", "."))
+        except ValueError:
+            return 0
     return round(v, sys.float_info.dig)
 
 
