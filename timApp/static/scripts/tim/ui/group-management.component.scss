@@ -37,8 +37,9 @@ tab {
 
 .grid-tab {
   display: grid !important;
-  grid-template-columns: max-content auto;
-  grid-auto-rows: max-content;
+  grid-template-columns: max-content;
+  grid-auto-rows: max-content auto;
+  grid-template-areas: "tab-main-content" "tab-controls";
   align-items: baseline;
   gap: 1em 0.5em;
 }
