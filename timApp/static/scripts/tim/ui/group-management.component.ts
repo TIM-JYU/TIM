@@ -124,7 +124,9 @@ Adding the component to a document:
                     <ng-container *ngIf="!anySelected(this.groups)">
                         <p>Selected groups:</p>
                         <ol>
-                            <li *ngFor="let group of selectedGroups">{{group.name}}</li>
+                            <ng-container *ngFor="let group of groups">
+                                <li *ngIf="group.selected">{{group.name}}</li>
+                            </ng-container>
                         </ol>
                     </ng-container>
                 </div>
@@ -154,7 +156,7 @@ Adding the component to a document:
                                             <tbody>
                                             <tr class="member-table-row" *ngFor="let member of members[group.name]">
                                                 <td>
-                                                    <input type="checkbox" name="toggleSelection_{{member.id}}" [(ngModel)]="member.selected" (change)="toggleMemberSelection(member, group)" />
+                                                    <input type="checkbox" name="toggleSelection_{{member.id}}" [(ngModel)]="member.selected" (change)="toggleMemberSelection(group)" />
                                                 </td>
                                                 <td>{{member.real_name}}</td>
                                                 <td>{{member.name}}</td>
@@ -185,7 +187,9 @@ Adding the component to a document:
                                 <ng-container *ngIf="!anySelected(this.members[group.name])">
                                     <p>Selected members:</p>
                                         <ol>
-                                            <li *ngFor="let member of selectedMembers[group.name]">{{member.name}}</li>
+                                            <ng-container *ngFor="let member of this.members[group.name]">
+                                                <li *ngIf="member.selected">{{member.name}}</li>
+                                            </ng-container>
                                         </ol>
                                 </ng-container>
                             </tab>
@@ -214,22 +218,16 @@ export class GroupManagementComponent implements OnInit {
     members: Record<string, GroupMember[]> = {};
 
     // Currently selected groups
-    // FIXME this is probably an unnecessary duplication
-    selectedGroups: Group[];
     allGroupsSelected: boolean;
     saveGroupSuccessMessage?: string;
     saveGroupFailMessage?: string;
 
     // currently selected members
-    // FIXME this is probably an unnecessary duplication
-    selectedMembers: Record<string, GroupMember[]> = {};
     selectedGroupTab?: string;
     saveMembersSuccessMessage?: string;
     saveMembersFailMessage?: string;
 
     // just for visualizing/testing the interface
-    // mockMembers: GroupMember[];
-    // mockGroups: Group[];
     mockCurrentLoginKeyStart: number;
 
     // status info for group members table
@@ -240,8 +238,7 @@ export class GroupManagementComponent implements OnInit {
     constructor(private http: HttpClient) {
         this.showAllGroups = false;
         this.allGroupsSelected = false;
-        this.selectedGroups = [];
-        this.selectedMembers = {};
+
         this.mockCurrentLoginKeyStart = 0;
         // this.settings = {};
 
@@ -394,15 +391,13 @@ export class GroupManagementComponent implements OnInit {
         await this.getGroups();
     }
 
+    toggleGroupSelection(group: Group) {
+        this.allGroupsSelected = this.groups.every((g) => g.selected);
+    }
+
     toggleAllGroupsSelected() {
-        if (!this.allGroupsSelected) {
-            this.selectedGroups = [];
-        }
         for (const g of this.groups) {
             g.selected = this.allGroupsSelected;
-            if (g.selected && (!this.selectedGroups.includes(g) ?? false)) {
-                this.selectedGroups.push(g);
-            }
         }
     }
 
@@ -472,7 +467,7 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
-    async addMembers(group: Group) {
+    protected async addMembers(group: Group) {
         // Add members to the group in the currently active group members tab
         // Should probably add members only to the group in the active tab in the group members view
         // Should display a dialog where the user may provide a list of members to add
@@ -486,60 +481,18 @@ export class GroupManagementComponent implements OnInit {
         let selected = this.members[group.name].filter((m) => m.selected);
     }
 
-    toggleMemberSelection(member: GroupMember, group: Group) {
-        if (
-            member.selected &&
-            !this.selectedMembers[group.name].includes(member)
-        ) {
-            this.selectedMembers[group.name].push(member);
-        } else {
-            this.selectedMembers[group.name].splice(
-                this.selectedMembers[group.name].indexOf(member),
-                1
-            );
-        }
-
+    toggleMemberSelection(group: Group) {
         // if selecting a member results in all of the group's members being selected,
         // set the corresponding flag value to reflect that
-        let allSelected = true;
-        for (const m of this.members[group.name]) {
-            if (!m.selected) {
-                allSelected = false;
-                break;
-            }
-        }
-        group.allMembersSelected = allSelected;
+        group.allMembersSelected = this.members[group.name].every(
+            (m) => m.selected
+        );
     }
 
     toggleAllMembersSelected(group: Group) {
-        if (!group.allMembersSelected || !this.selectedMembers[group.name]) {
-            this.selectedMembers[group.name] = [];
-        }
         for (const m of this.members[group.name]) {
             m.selected = group.allMembersSelected;
-            if (m.selected && !this.selectedMembers[group.name].includes(m)) {
-                this.selectedMembers[group.name].push(m);
-            }
         }
-    }
-
-    toggleGroupSelection(group: Group) {
-        if (group.selected && !this.selectedGroups.includes(group)) {
-            this.selectedGroups.push(group);
-        } else {
-            this.selectedGroups.splice(this.selectedGroups.indexOf(group), 1);
-        }
-
-        // if selecting a group results in all of the groups being selected,
-        // set the corresponding flag value to reflect that
-        let allSelected = true;
-        for (const g of this.groups) {
-            if (!g.selected) {
-                allSelected = false;
-                break;
-            }
-        }
-        this.allGroupsSelected = allSelected;
     }
 
     // TODO this is probably not needed
