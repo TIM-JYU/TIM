@@ -21,13 +21,17 @@ export interface GroupMember extends IUser {
     name: string;
     email: string;
     real_name: string;
-    student_id: string;
+    // login codes will need to be treated like passwords
+    login_code: string;
+    selected: boolean;
 }
 
 export interface Group extends IGroup {
     // Group's doc path, eg. 'test/group01'
     path?: string;
     events?: GroupEvent[];
+    selected: boolean;
+    allMembersSelected: boolean;
 }
 
 /**
@@ -37,6 +41,8 @@ export interface GroupEvent {
     event: string;
     timeslot: string;
 }
+
+type Selectable = Group | GroupMember;
 
 /*
 Required document setting:
@@ -60,7 +66,7 @@ Adding the component to a document:
                 <div id="list-all-groups-setting">
                     <label for="showAllGroups" class="form-control" i18n>
                         <input type="checkbox" id="showAllGroups" [(ngModel)]="showAllGroups"
-                               (click)="toggleAllGroupsVisible()"/>
+                               (change)="toggleAllGroupsVisible()"/>
                         <span style="padding-left: 2em;">List all existing groups</span>
                     </label>
                 </div>
@@ -73,7 +79,7 @@ Adding the component to a document:
                         <table>
                             <thead>
                             <tr class="member-table-row">
-                                <th i18n>Select</th>
+                                <th i18n><input type="checkbox" name="selectAllGroups" [(ngModel)]="allGroupsSelected" (change)="toggleAllGroupsSelected()"/></th>
                                 <th i18n>Group name</th>
                                 <th *ngIf="isAdmin()" i18n>Group document</th>
                                 <th i18n>Exam</th>
@@ -83,7 +89,7 @@ Adding the component to a document:
                             <tbody>
                             <tr class="member-table-row" *ngFor="let group of groups">
                                 <td>
-                                    <input type="checkbox" (click)="toggleGroupSelection(group)"/>
+                                    <input type="checkbox" name="toggleGroupSelection_{{group.id}}" [(ngModel)]="group.selected" (change)="toggleGroupSelection(group)"/>
                                 </td>
                                 <td>{{group.name}}</td>
                                 <td *ngIf="isAdmin()">
@@ -101,18 +107,26 @@ Adding the component to a document:
                     <div class="flex">
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new group</button>
                         <button class="timButton btn-danger" (click)="deleteSelectedGroups()"
-                                [disabled]="selectedGroups.length < 1" i18n>Delete selected groups
+                                [disabled]="anySelected(this.groups)" i18n>Delete selected groups
                         </button>
-                        <button class="timButton" (click)="generateLoginCodes(selectedMembers)"
-                                [disabled]="selectedGroups.length < 1" i18n>Generate login codes
+                        <button class="timButton" (click)="generateLoginCodes(this.groups)"
+                                [disabled]="anySelected(this.groups)" i18n>Generate login codes
                         </button>
-                        <button class="timButton" (click)="printLoginCodes(selectedGroups)"
-                                [disabled]="selectedGroups.length < 1" i18n>Print login codes
+                        <button class="timButton" (click)="printLoginCodes(this.groups)"
+                                [disabled]="anySelected(this.groups)" i18n>Print login codes
                         </button>
                     </div>
                     <tim-alert severity="success"
                                *ngIf="saveGroupSuccessMessage">{{saveGroupSuccessMessage}}</tim-alert>
                     <tim-alert severity="danger" *ngIf="saveGroupFailMessage">{{saveGroupFailMessage}}</tim-alert>
+                </div>
+                <div>
+                    <ng-container *ngIf="!anySelected(this.groups)">
+                        <p>Selected groups:</p>
+                        <ol>
+                            <li *ngFor="let group of selectedGroups">{{group.name}}</li>
+                        </ol>
+                    </ng-container>
                 </div>
             </bootstrap-panel>
             <form>
@@ -130,7 +144,7 @@ Adding the component to a document:
                                         <table>
                                             <thead>
                                             <tr class="member-table-row">
-                                                <th i18n>Select</th>
+                                                <th i18n><input type="checkbox" name="selectAllMembers_{{group.id}}" [(ngModel)]="group.allMembersSelected" (change)="toggleAllMembersSelected(group)"/></th>
                                                 <th i18n>Name</th>
                                                 <th i18n>Username</th>
                                                 <th i18n>Email</th>
@@ -140,12 +154,12 @@ Adding the component to a document:
                                             <tbody>
                                             <tr class="member-table-row" *ngFor="let member of members[group.name]">
                                                 <td>
-                                                    <input type="checkbox" (click)="toggleMemberSelection(member)"/>
+                                                    <input type="checkbox" name="toggleSelection_{{member.id}}" [(ngModel)]="member.selected" (change)="toggleMemberSelection(member, group)" />
                                                 </td>
                                                 <td>{{member.real_name}}</td>
                                                 <td>{{member.name}}</td>
                                                 <td>{{member.email}}</td>
-                                                <td>{{member.student_id}}</td>
+                                                <td>{{member.login_code}}</td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -153,22 +167,30 @@ Adding the component to a document:
                                     <!-- END members list-->
 
                                 </ng-container>
+                                <ng-container>
+                                    <div id="members-controls">
+                                        <button class="timButton" (click)="addMembers(group)" i18n>
+                                            Add members
+                                        </button>
+                                        <button class="timButton btn-danger" (click)="removeMembers(group)"
+                                                [disabled]="anySelected(this.members[group.name])" i18n>
+                                            Remove selected
+                                        </button>
+                                        <tim-alert severity="success"
+                                                   *ngIf="saveMembersSuccessMessage">{{saveMembersSuccessMessage}}</tim-alert>
+                                        <tim-alert severity="danger"
+                                                   *ngIf="saveMembersFailMessage">{{saveMembersFailMessage}}</tim-alert>
+                                    </div>
+                                </ng-container>
+                                <ng-container *ngIf="!anySelected(this.members[group.name])">
+                                    <p>Selected members:</p>
+                                        <ol>
+                                            <li *ngFor="let member of selectedMembers[group.name]">{{member.name}}</li>
+                                        </ol>
+                                </ng-container>
                             </tab>
                         </tabset>
 
-                        <div id="members-controls">
-                            <button class="timButton" (click)="addMembers()" i18n>
-                                Add members
-                            </button>
-                            <button class="timButton btn-danger" (click)="removeMembers()"
-                                    [disabled]="selectedMembers.length < 1" i18n>
-                                Remove selected
-                            </button>
-                            <tim-alert severity="success"
-                                       *ngIf="saveMembersSuccessMessage">{{saveMembersSuccessMessage}}</tim-alert>
-                            <tim-alert severity="danger"
-                                       *ngIf="saveMembersFailMessage">{{saveMembersFailMessage}}</tim-alert>
-                        </div>
                     </bootstrap-panel>
                 </fieldset>
             </form>
@@ -191,17 +213,19 @@ export class GroupManagementComponent implements OnInit {
     // Members visible on the currently active group tab (in the group members table)
     members: Record<string, GroupMember[]> = {};
 
-    // Currently selected login code groups
+    // Currently selected groups
+    // FIXME this is probably an unnecessary duplication
     selectedGroups: Group[];
-
+    allGroupsSelected: boolean;
     saveGroupSuccessMessage?: string;
     saveGroupFailMessage?: string;
 
     // currently selected members
-    selectedMembers: GroupMember[];
+    // FIXME this is probably an unnecessary duplication
+    selectedMembers: Record<string, GroupMember[]> = {};
+    selectedGroupTab?: string;
     saveMembersSuccessMessage?: string;
     saveMembersFailMessage?: string;
-    selectedGroupTab?: string;
 
     // just for visualizing/testing the interface
     // mockMembers: GroupMember[];
@@ -215,8 +239,9 @@ export class GroupManagementComponent implements OnInit {
 
     constructor(private http: HttpClient) {
         this.showAllGroups = false;
+        this.allGroupsSelected = false;
         this.selectedGroups = [];
-        this.selectedMembers = [];
+        this.selectedMembers = {};
         this.mockCurrentLoginKeyStart = 0;
         // this.settings = {};
 
@@ -269,33 +294,6 @@ export class GroupManagementComponent implements OnInit {
         //         email: "testiankka@ankkalinna.com",
         //         real_name: "Testi Ankka",
         //         student_id: "723456789",
-        //     },
-        // ];
-        // this.mockGroups = [
-        //     {
-        //         id: 1,
-        //         name: "EN1_7A",
-        //         path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4xXzdB",
-        //     },
-        //     {
-        //         id: 2,
-        //         name: "EN1_7B",
-        //         path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4xXzdC",
-        //     },
-        //     {
-        //         id: 3,
-        //         name: "EN3_8A",
-        //         path: "/groups/sukol/Sukol_2023_Ankkalinnan-koulu__RU4zXzhB",
-        //     },
-        //     {
-        //         id: 10,
-        //         name: "testi01",
-        //         path: "/groups/sukol/testi01",
-        //     },
-        //     {
-        //         id: 11,
-        //         name: "testi02",
-        //         path: "/groups/sukol/testi02",
         //     },
         // ];
     }
@@ -386,18 +384,25 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
+    anySelected(selectables: GroupMember[] | Group[]) {
+        return !selectables?.some((s) => s.selected) ?? false;
+    }
+
     async toggleAllGroupsVisible() {
         this.showAllGroups = !this.showAllGroups;
         // refresh
         await this.getGroups();
     }
 
-    async debugCheck() {
-        const resp = await toPromise(
-            this.http.get<string>("/loginCode/checkRequest")
-        );
-        if (resp.ok) {
-            await to2(showMessageDialog(resp.result.toString()));
+    toggleAllGroupsSelected() {
+        if (!this.allGroupsSelected) {
+            this.selectedGroups = [];
+        }
+        for (const g of this.groups) {
+            g.selected = this.allGroupsSelected;
+            if (g.selected && (!this.selectedGroups.includes(g) ?? false)) {
+                this.selectedGroups.push(g);
+            }
         }
     }
 
@@ -407,7 +412,7 @@ export class GroupManagementComponent implements OnInit {
             // TODO set these in group management docSettings
             canChooseFolder: false,
             // TODO Should be same as 'groupsPath'
-            defaultGroupFolder: "sukol",
+            defaultGroupFolder: "sukol/2023/testikoulu",
             encodeGroupName: true,
         };
         // Create a new group
@@ -415,11 +420,13 @@ export class GroupManagementComponent implements OnInit {
         if (res.ok) {
             // add new group to list
             const group = res.result;
-            // TODO We should perhaps fetch or refresh the displayed groups in case of sync issues?
+
             this.groups.push({
                 id: group.id,
                 name: group.name,
                 path: group.path,
+                selected: false,
+                allMembersSelected: false,
             });
         }
         return;
@@ -432,15 +439,15 @@ export class GroupManagementComponent implements OnInit {
         return;
     }
 
-    generateLoginCodes(members: IUser[]) {
+    generateLoginCodes(groups: Group[]) {
         // Generate temporary login codes for members of the currently selected groups
         // The codes are linked to the individual users via a database table
         // Should check for existing and still valid codes before refreshing
         // to avoid accidentally changing valid ones (also display a warning, perhaps in a dialog).
-        members.forEach((member) => {
-            const loginkey = `${this.mockCurrentLoginKeyStart++}`;
-            member.student_id = `${"0".repeat(9 - loginkey.length)}${loginkey}`;
-        });
+        // members.forEach((member) => {
+        //     const loginkey = `${this.mockCurrentLoginKeyStart++}`;
+        //     member.student_id = `${"0".repeat(9 - loginkey.length)}${loginkey}`;
+        // });
         // return;
     }
 
@@ -465,76 +472,78 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
-    addMembers() {
-        // Add members to the currently active group
+    async addMembers(group: Group) {
+        // Add members to the group in the currently active group members tab
         // Should probably add members only to the group in the active tab in the group members view
         // Should display a dialog where the user may provide a list of members to add
         // Support adding members via an existing UserGroup in addition to username, email, and [creating new users on the spot]
         return;
     }
 
-    removeMembers() {
-        // Remove selected members from the active group
+    protected async removeMembers(group: Group) {
+        // Remove selected members from the currently active group
         // Note: remember to clear selectedMembers after deletion from the group
+        let selected = this.members[group.name].filter((m) => m.selected);
     }
 
-    toggleMemberSelection(member: GroupMember) {
-        if (!this.selectedMembers.includes(member)) {
-            this.selectedMembers.push(member);
+    toggleMemberSelection(member: GroupMember, group: Group) {
+        if (
+            member.selected &&
+            !this.selectedMembers[group.name].includes(member)
+        ) {
+            this.selectedMembers[group.name].push(member);
         } else {
-            this.selectedMembers.splice(
-                this.selectedMembers.indexOf(member),
+            this.selectedMembers[group.name].splice(
+                this.selectedMembers[group.name].indexOf(member),
                 1
             );
+        }
+
+        // if selecting a member results in all of the group's members being selected,
+        // set the corresponding flag value to reflect that
+        let allSelected = true;
+        for (const m of this.members[group.name]) {
+            if (!m.selected) {
+                allSelected = false;
+                break;
+            }
+        }
+        group.allMembersSelected = allSelected;
+    }
+
+    toggleAllMembersSelected(group: Group) {
+        if (!group.allMembersSelected || !this.selectedMembers[group.name]) {
+            this.selectedMembers[group.name] = [];
+        }
+        for (const m of this.members[group.name]) {
+            m.selected = group.allMembersSelected;
+            if (m.selected && !this.selectedMembers[group.name].includes(m)) {
+                this.selectedMembers[group.name].push(m);
+            }
         }
     }
 
     toggleGroupSelection(group: Group) {
-        if (!this.selectedGroups.includes(group)) {
+        if (group.selected && !this.selectedGroups.includes(group)) {
             this.selectedGroups.push(group);
         } else {
             this.selectedGroups.splice(this.selectedGroups.indexOf(group), 1);
         }
+
+        // if selecting a group results in all of the groups being selected,
+        // set the corresponding flag value to reflect that
+        let allSelected = true;
+        for (const g of this.groups) {
+            if (!g.selected) {
+                allSelected = false;
+                break;
+            }
+        }
+        this.allGroupsSelected = allSelected;
     }
 
+    // TODO this is probably not needed
     onGroupTabSelected(groupTab: TabDirective) {
         this.selectedGroupTab = groupTab.heading;
     }
-
-    // /**
-    //  * Helper for setting members of a group to a table.
-    //  */
-    // setGroupMembers() {
-    //     if (this.currentGroup) {
-    //         // Find the currently selected group where we want to see members.
-    //         const groupAndMembers = this.groupsAndMembers?.find(
-    //             (g) => g.groupName === this.currentGroup
-    //         );
-    //         if (groupAndMembers) {
-    //             this.groupMembers = groupAndMembers.members;
-    //         }
-    //     }
-    // }
-
-    // private async updateMemberList() {
-    //     // Load list members.
-    //     const result2 = await this.getListMembers();
-    //
-    //     if (result2.ok) {
-    //         // TODO order members by name.
-    //         this.membersList = result2.result;
-    //         // Set the UI value for removed attribute.
-    //         for (const member of this.membersList) {
-    //             if (member.removed) {
-    //                 member.removedDisplay = moment(member.removed).format(
-    //                     "DD.MM.YYYY hh:mm"
-    //                 );
-    //             }
-    //         }
-    //     } else {
-    //         this.permanentErrorMessage = $localize`Loading list's members failed: ${result2.result.error.error}`;
-    //     }
-    //
-    //     await this.getGroupMembers();
-    // }
 }
