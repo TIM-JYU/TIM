@@ -360,6 +360,24 @@ def log_request(response):
 
 
 @app.after_request
+def robots_request(response: Response):
+    if app.config["RESTRICT_ROBOTS"] and request.method == "GET":
+        if app.config["RESTRICT_ROBOTS_METHODS"].get("restrict_global"):
+            response.headers.add_header(
+                "X-Robots-Tag",
+                ", ".join(app.config["RESTRICT_ROBOTS_METHODS"].get("global")),
+            )
+        else:
+            for bot in app.config["RESTRICT_ROBOTS_METHODS"].keys:
+                if bot not in ["restrict_global", "global"]:
+                    response.headers.add_header(
+                        "X-Robots-Tag",
+                        f"{bot}: {', '.join(app.config['RESTRICT_ROBOTS_METHODS'].get(bot))}",
+                    )
+    return response
+
+
+@app.after_request
 def after_request(resp: Response):
     token = generate_csrf()
     resp.set_cookie(

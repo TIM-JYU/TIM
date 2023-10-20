@@ -503,3 +503,17 @@ GLOBAL_DOCUMENT_CACHING = False
 """
 Global default value for document caching. The value allows globally enabling or disabling document cache.
 """
+
+RESTRICT_ROBOTS = True
+RESTRICT_ROBOTS_METHODS = {
+    "restrict_global": True,
+    "global": ["noindex", "nofollow", "noarchive"],
+    "googlebot": [],  # Google
+    "bingbot": [],  # Microsoft
+    "facebot": [],  # Facebook/Meta
+    "duckduckbot": [],  # Duck-Duck Go
+    "slurp": [],  # Yahoo
+    "baiduspider": [],  # Baidu
+    "yandexbot": [],  # Yandex
+    "otherbot": [],
+}
