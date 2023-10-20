@@ -506,7 +506,7 @@ Global default value for document caching. The value allows globally enabling or
 
 RESTRICT_ROBOTS = True
 RESTRICT_ROBOTS_METHODS = {
-    "restrict_global": True,
+    "restrict_global": False,
     "global_unavailable_date": "2023-10-20",
     "global": ["noindex", "nofollow", "noarchive"],
     "bots": {
