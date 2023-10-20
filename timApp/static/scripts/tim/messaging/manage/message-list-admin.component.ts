@@ -297,7 +297,7 @@ import {Users} from "tim/user/userService";
                                     <td>{{member.email}}</td>
                                     <td>
                                         <input type="checkbox" [(ngModel)]="member.sendRight"
-                                               name="member-send-right-{{member.email ?? member.username">
+                                               name="member-send-right-{{member.email || member.username}}">
                                     </td>
                                     <td>
                                         <input type="checkbox" [(ngModel)]="member.deliveryRight"
