@@ -297,16 +297,16 @@ import {Users} from "tim/user/userService";
                                     <td>{{member.email}}</td>
                                     <td>
                                         <input type="checkbox" [(ngModel)]="member.sendRight"
-                                               name="member-send-right-{{member.email}}">
+                                               name="member-send-right-{{member.email ?? member.username">
                                     </td>
                                     <td>
                                         <input type="checkbox" [(ngModel)]="member.deliveryRight"
-                                               name="member-delivery-right-{{member.email}}">
+                                               name="member-delivery-right-{{member.email ?? member.username}}">
                                     </td>
                                     <td>{{member.removedDisplay}}</td>
                                     <td><input type="checkbox" (click)="membershipChange(member)"
                                                [ngModel]="!!member.removed"
-                                               name="removed-{{member.email}}"/></td>
+                                               name="removed-{{member.email ?? member.username}}"/></td>
                                 </tr>
                                 </tbody>
                             </table>
