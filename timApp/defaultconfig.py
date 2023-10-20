@@ -508,6 +508,7 @@ RESTRICT_ROBOTS = True
 RESTRICT_ROBOTS_METHODS = {
     "restrict_global": True,
     "global": ["noindex", "nofollow", "noarchive"],
+    "global_unavaílable_date": "2023-10-20",
     "googlebot": [],  # Google
     "bingbot": [],  # Microsoft
     "facebot": [],  # Facebook/Meta

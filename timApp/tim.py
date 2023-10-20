@@ -374,6 +374,11 @@ def robots_request(response: Response):
                         "X-Robots-Tag",
                         f"{bot}: {', '.join(app.config['RESTRICT_ROBOTS_METHODS'].get(bot))}",
                     )
+
+        response.headers.add_header(
+            "X-Robots-Tag",
+            f"unavailable_after: {app.config['RESTRICT_ROBOTS_METHODS'].get('global_unavailable_date')}",
+        )
     return response
 
 
