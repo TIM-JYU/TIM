@@ -507,14 +507,16 @@ Global default value for document caching. The value allows globally enabling or
 RESTRICT_ROBOTS = True
 RESTRICT_ROBOTS_METHODS = {
     "restrict_global": True,
-    "global": ["noindex", "nofollow", "noarchive"],
     "global_unavailable_date": "2023-10-20",
-    "googlebot": [],  # Google
-    "bingbot": [],  # Microsoft
-    "facebot": [],  # Facebook/Meta
-    "duckduckbot": [],  # Duck-Duck Go
-    "slurp": [],  # Yahoo
-    "baiduspider": [],  # Baidu
-    "yandexbot": [],  # Yandex
-    "otherbot": [],
+    "global": ["noindex", "nofollow", "noarchive"],
+    "bots": {
+        "googlebot": [],  # Google
+        "bingbot": [],  # Microsoft
+        "facebot": [],  # Facebook/Meta
+        "duckduckbot": [],  # Duck-Duck Go
+        "slurp": [],  # Yahoo
+        "baiduspider": [],  # Baidu
+        "yandexbot": [],  # Yandex
+        "otherbot": [],
+    },
 }
