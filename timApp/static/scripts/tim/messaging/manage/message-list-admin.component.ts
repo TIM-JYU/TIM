@@ -301,12 +301,12 @@ import {Users} from "tim/user/userService";
                                     </td>
                                     <td>
                                         <input type="checkbox" [(ngModel)]="member.deliveryRight"
-                                               name="member-delivery-right-{{member.email ?? member.username}}">
+                                               name="member-delivery-right-{{member.email || member.username}}">
                                     </td>
                                     <td>{{member.removedDisplay}}</td>
                                     <td><input type="checkbox" (click)="membershipChange(member)"
                                                [ngModel]="!!member.removed"
-                                               name="removed-{{member.email ?? member.username}}"/></td>
+                                               name="removed-{{member.email || member.username}}"/></td>
                                 </tr>
                                 </tbody>
                             </table>
