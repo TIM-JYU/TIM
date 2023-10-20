@@ -368,7 +368,7 @@ def robots_request(response: Response):
                 ", ".join(app.config["RESTRICT_ROBOTS_METHODS"].get("global")),
             )
         else:
-            for bot in app.config["RESTRICT_ROBOTS_METHODS"].keys:
+            for bot in app.config["RESTRICT_ROBOTS_METHODS"].keys():
                 if bot not in ["restrict_global", "global"]:
                     response.headers.add_header(
                         "X-Robots-Tag",
