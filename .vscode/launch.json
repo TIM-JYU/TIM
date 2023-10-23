@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Python: Run TIM server",
             "type": "python",
             "request": "launch",
             "program": "/service/timApp/launch.py",

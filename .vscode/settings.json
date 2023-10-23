@@ -1,49 +1,58 @@
 {
-    "python.analysis.typeCheckingMode": "off",
-    "python.defaultInterpreterPath": "./.venv/bin/python",
-    "editor.formatOnSave": true,
-    "python.analysis.indexing": true,
-    "python.analysis.diagnosticMode": "openFilesOnly",
-    "files.exclude": {
-        "**/.mypy_cache/**": true,
-        "**/.devcontainers/**": true,
-        "**/.run/**": true,
-        "**/.idea/**": true,
-        "**/.venv/**": true,
-        "**/node_modules/**": true,
-        "**/__pycache__/**": true,
-        "**/static/**": true,
-        "**/.git/**": true
-    },
-    "files.watcherExclude": {
-        "**/.mypy_cache/**": true,
-        "**/.devcontainers/**": true,
-        "**/.github/**": true,
-        "**/.run/**": true,
-        "**/.idea/**": true,
-        "**/.venv/**": true,
-        "**/mailman/**": true,
-        "**/pg_backup/**": true,
-        "**/node_modules/**": true,
-        "**/__pycache__/**": true,
-        "**/static/**": true,
-        "**/.angular/**": true,
-        "**/tim_files/**": true,
-        "**/tim_logs/**": true,
-        "**/tim_rust/**": true,
-        "**/screenshots/**": true,
-        "**/Dumbo/**": true,
-        "**/.git/**": true
-    },
-    "search.exclude": {
-        "**/.mypy_cache/**": true,
-        "**/.devcontainers/**": true,
-        "**/.run/**": true,
-        "**/.idea/**": true,
-        "**/.venv/**": true,
-        "**/node_modules/**": true,
-        "**/__pycache__/**": true,
-        "**/static/**": true,
-        "**/.git/**": true
-    }
+  "python.analysis.typeCheckingMode": "off",
+  "python.defaultInterpreterPath": "./.venv/bin/python",
+  "editor.formatOnSave": true,
+  "python.analysis.indexing": true,
+  "python.analysis.diagnosticMode": "openFilesOnly",
+  "files.exclude": {
+    "**/.mypy_cache/**": true,
+    "**/.devcontainers/**": true,
+    "**/.run/**": true,
+    "**/.idea/**": true,
+    "**/.venv/**": true,
+    "**/node_modules/**": true,
+    "**/__pycache__/**": true,
+    "**/.git/**": true
+  },
+  "files.watcherExclude": {
+    "**/.mypy_cache/**": true,
+    "**/.devcontainers/**": true,
+    "**/.github/**": true,
+    "**/.run/**": true,
+    "**/.idea/**": true,
+    "**/.venv/**": true,
+    "**/mailman/**": true,
+    "**/pg_backup/**": true,
+    "**/node_modules/**": true,
+    "**/__pycache__/**": true,
+    "**/.angular/**": true,
+    "**/tim_files/**": true,
+    "**/tim_logs/**": true,
+    "**/tim_rust/**": true,
+    "**/screenshots/**": true,
+    "**/Dumbo/**": true,
+    "**/.git/**": true
+  },
+  "search.exclude": {
+    "**/.mypy_cache/**": true,
+    "**/.devcontainers/**": true,
+    "**/.run/**": true,
+    "**/.idea/**": true,
+    "**/.venv/**": true,
+    "**/node_modules/**": true,
+    "**/__pycache__/**": true,
+    "**/static/**": true,
+    "**/.git/**": true
+  },
+  "python.analysis.autoImportCompletions": true,
+  "mypy-type-checker.reportingScope": "workspace",
+  "mypy-type-checker.importStrategy": "fromEnvironment",
+  "mypy-type-checker.args": [
+    "--follow-imports=error"
+  ],
+  "eslint.workingDirectories": [
+    "./timApp"
+  ],
+  "angular.log": "normal",
+  "angular.trace.server": "messages"
 }
