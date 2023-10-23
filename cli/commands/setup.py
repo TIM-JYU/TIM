@@ -410,20 +410,22 @@ def setup_vscode_dev() -> None:
     venv_path = Path.cwd() / VENV_NAME
 
     def run_tim_cmd(args: List[str]) -> None:
-        run_compose([
-            "run",
-            "-T",
-            "--rm",
-            "--no-deps",
-            "--workdir",
-            "/service",
-            "tim",
-            *args,
-        ])
+        run_compose(
+            [
+                "run",
+                "-T",
+                "--rm",
+                "--no-deps",
+                "--workdir",
+                "/service",
+                "tim",
+                *args,
+            ]
+        )
 
     if not venv_path.exists():
         log_info("Creating Python virtual environment")
-        run_tim_cmd(["python3", "-m", "venv", VENV_NAME])
+        run_tim_cmd(["python3", "-m", "venv", "--system-site-packages", VENV_NAME])
 
     log_info("Installing Python development dependencies")
     run_tim_cmd(["poetry", "install"])
