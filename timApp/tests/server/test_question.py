@@ -450,3 +450,35 @@ rows:
             },
             r,
         )
+
+    def test_question_explanation_visibility(self):
+        with self.internal_container_ctx():
+            self.login_test1()
+            d = self.create_doc(
+                initial_par="""
+``` {#t plugin="qst"}
+answerFieldType: radio
+expl:
+ 1: wrong
+ 2: right
+headers:
+ - False
+ - True
+points: '2:1'
+questionText: test
+questionTitle: test
+questionType: matrix
+matrixType: radiobutton-horizontal
+rows:
+- 'A'
+- 'B'
+```"""
+            )
+            r = self.post_answer(
+                "qst", f"{d.id}.t", user_input={"answers": [["2"], []]}
+            )
+            self.assertEqual({"1": "wrong", "2": "right"}, r["web"]["markup"]["expl"])
+            r = self.get(d.url_relative, as_tree=True)
+            plugjson = self.get_plugin_json(r.cssselect(".parContent tim-qst")[0])
+            self.assertTrue(plugjson["show_result"])
+            self.assertEqual({"1": "wrong", "2": "right"}, plugjson["markup"]["expl"])
