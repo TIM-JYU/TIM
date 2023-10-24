@@ -231,8 +231,10 @@ def qst_answer_jso(m: QstAnswerModel):
     result = False
     if (
         info
-        and info.max_answers
-        and info.max_answers <= info.earlier_answers + 1
+        and (
+            (info.max_answers and info.max_answers <= info.earlier_answers + 1)
+            or not info.max_answers
+        )
         and prev_state != answers
     ):
         result = True
