@@ -152,7 +152,8 @@ points: '2:1'</code></pre>
             )
             self.get(d.url)
 
-        def test_hidden_points(self):
+    def test_hidden_points(self):
+        with self.internal_container_ctx():
             self.login_test1()
             d = self.create_doc(
                 initial_par="""
@@ -160,7 +161,9 @@ points: '2:1'</code></pre>
 answerFieldType: radio
 answerLimit: 1
 defaultPoints: -0.5
-expl: {}
+expl:
+  '1': def
+  '2': def
 headers:
 - a
 - b
@@ -205,6 +208,11 @@ rows:
             self.assertTrue("error" not in r)
             answers = self.get_task_answers(f"{d.id}.t", self.current_user)
             self.assertEqual(0.5, answers[0]["points"])
+            r = self.get(d.url, as_tree=True)
+            # TODO: showPoints: false hides explanations and points from teachers too
+            plugjson = self.get_plugin_json(r.cssselect(".parContent tim-qst")[0])
+            self.assertIsNone(plugjson["markup"].get("points"))
+            self.assertIsNone(plugjson["markup"].get("expl"))
             self.login_test2()
             r = self.post_answer(
                 "qst", f"{d.id}.t", user_input={"answers": [["2"], ["1"]]}
@@ -231,6 +239,10 @@ rows:
             self.assertTrue("error" not in r)
             answers = self.get_task_answers(f"{d.id}.t", self.current_user)
             self.assertEqual(None, answers[0]["points"])  # Should be hidden.
+            r = self.get(d.url, as_tree=True)
+            plugjson = self.get_plugin_json(r.cssselect(".parContent tim-qst")[0])
+            self.assertIsNone(plugjson["markup"].get("points"))
+            self.assertIsNone(plugjson["markup"].get("expl"))
 
     def test_question_shuffle(self):
         """
