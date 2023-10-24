@@ -209,7 +209,7 @@ def do_create_group(
     if encode_name:
         timestamp: int = int(time.time_ns() / 1_000_000)
 
-        # TODO we need a prefix marker to signify that the group name is in encoded form
+        # We need a prefix marker to signify that the group name is in encoded form
         encoding = "b64_"
         encoded_name_str = str(
             base64.standard_b64encode(f"{group_name}_{timestamp}".encode()),

@@ -13,6 +13,7 @@ import {to2, toPromise} from "tim/util/utils";
 import type {IGroupManagementSettings} from "tim/document/IDocSettings";
 import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {showUserCreationDialog} from "tim/user/showUserCreationDialog";
 import {TabDirective} from "ngx-bootstrap/tabs";
 import {forEach} from "angular";
 
@@ -472,13 +473,53 @@ export class GroupManagementComponent implements OnInit {
         // Should probably add members only to the group in the active tab in the group members view
         // Should display a dialog where the user may provide a list of members to add
         // Support adding members via an existing UserGroup in addition to username, email, and [creating new users on the spot]
-        return;
+        // TODO refactor to enable import users en masse, via CSV for example
+        const resp = await to2(showUserCreationDialog({group: group.name}));
+        if (resp.ok) {
+            let newUser: GroupMember = resp.result;
+            this.members[group.name].push(newUser);
+        }
     }
 
     protected async removeMembers(group: Group) {
         // Remove selected members from the currently active group
         // Note: remember to clear selectedMembers after deletion from the group
         let selected = this.members[group.name].filter((m) => m.selected);
+
+        const resp = await toPromise(
+            this.http.post<{}>(`/groups/removemember/${group.name}`, {
+                names: selected.map((mn) => mn.name),
+            })
+        );
+        if (resp.ok) {
+            let result: Record<string, string[]> = resp.result;
+            const removed = result["removed"].join("\n");
+            const not_in_group = result["does_not_belong"].join("\n");
+            const not_exist = result["not_exist"].join("\n");
+
+            let msg = `${removed ? "Removed members:\n" + removed + "\n" : ""}
+                              ${
+                                  not_in_group
+                                      ? "Following users do not belong to group '" +
+                                        group +
+                                        "':\n" +
+                                        not_in_group +
+                                        "\n"
+                                      : ""
+                              }
+                              ${
+                                  not_exist
+                                      ? "Could not find user(s):\n" + not_exist
+                                      : ""
+                              }`;
+            await to2(showMessageDialog(msg));
+            for (let s of selected) {
+                this.members[group.name].splice(
+                    this.members[group.name].indexOf(s),
+                    1
+                );
+            }
+        }
     }
 
     toggleMemberSelection(group: Group) {
@@ -495,7 +536,7 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
-    // TODO this is probably not needed
+    // TODO this is not needed since we generate separate group members controls for each group tab
     onGroupTabSelected(groupTab: TabDirective) {
         this.selectedGroupTab = groupTab.heading;
     }
