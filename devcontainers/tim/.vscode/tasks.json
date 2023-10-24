@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "bdw",
+      "path": "timApp",
+      "label": "npm: bdw - timApp",
+      "detail": "env-cmd ng build --configuration development --watch --delete-output-path --deploy-url /js/",
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "base": "$tsc",
+          "pattern": {
+            "regexp": "^(Error: )?([^\\s].*)[\\(:](\\d+)[,:](\\d+)(?:\\):\\s+|\\s+-\\s+)(error|warning|info)\\s+TS(\\d+)\\s*:\\s*(.*)$",
+            "file": 2,
+            "line": 3,
+            "column": 4,
+            "severity": 5,
+            "code": 6,
+            "message": 7
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*Generatin\\s*gbrowser\\s*application\\s*bundles..*",
+            "endsPattern": "^.*Build at:\\s*.*\\s*-\\s*Hash:\\s*.*\\s*-\\s*Time:\\s*.*"
+          }
+        }
+      ]
+    }
+  ]
+}

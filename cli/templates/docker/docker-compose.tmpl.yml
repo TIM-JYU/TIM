@@ -21,6 +21,7 @@ services:
    """ if not tim.is_dev else "[]"}
   volumes:
    ${"- tim-dev-root:/root:rw" if dev.ide_profile == "vscode" else ""}
+   ${"- ./devcontainers/tim/.vscode:/service/.vscode" if dev.ide_profile == "vscode" else ""}
    - .:/service
    - ${tim.log_dir}:/service/tim_logs
    - ${tim.files_root}:/tim_files

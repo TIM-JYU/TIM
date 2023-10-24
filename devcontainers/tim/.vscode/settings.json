@@ -54,5 +54,5 @@
     "./timApp"
   ],
   "angular.log": "normal",
-  "angular.trace.server": "messages"
+  "angular.trace.server": "messages",
 }
