@@ -1,13 +1,20 @@
+import base64
+import json
+import time
 from base64 import b64decode, standard_b64decode
 from flask import Response, request
 from sqlalchemy import select
 
-from timApp.auth.accesshelper import get_doc_or_abort, verify_ownership
+from timApp.auth.accesshelper import (
+    get_doc_or_abort,
+    verify_ownership,
+    get_origin_from_request,
+)
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
-from timApp.timdb.sqa import run_sql
-from timApp.user.user import User
+from timApp.timdb.sqa import db, run_sql
+from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup, get_groups_by_names
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.util.flask.responsehelper import json_response
@@ -129,7 +136,7 @@ def get_members(group_id: int) -> Response:
     return json_response(status_code=200, jsondata=data)
 
 
-@login_code.get("/checkOwner/<doc_id>")
+@login_code.get("/checkOwner/<int:doc_id>")
 def check_ownership(doc_id: int) -> Response:
     from timApp.tim import get_current_user_object
 
@@ -153,7 +160,7 @@ def debug_dialog() -> Response:
 
 def decode_name(name: str) -> str:
     """
-    Decode and return a group name encoded in base64.
+    Decode a group name encoded in base64 and return the plain name.
     Separates the originally given group name from the group document path and the timestamp.
     The encoded string has the following format (without the curly brackets):
 
@@ -175,3 +182,73 @@ def decode_name(name: str) -> str:
         decoded = str(standard_b64decode(group_name.encode()), encoding="utf-8")
         return decoded.rsplit("/", maxsplit=1)[-1].rsplit("_", maxsplit=1)[0]
     return name
+
+
+@login_code.post("/addMembers/<group_name>")
+def create_users(group_name: str) -> Response:
+    # TODO get user data from request
+    # TODO create UserInfo object
+    # TODO call user.create_with_group with UserInfo
+    # TODO get internal group name from plain group name param
+    # TODO add user to internal group
+    # TODO commit to database
+    from timApp.tim import get_current_user_object
+
+    # req_json = request.get_json()
+    # u = json.loads(req_json)
+    u: dict = request.get_json()
+    username: str = u.get("username")
+    given_name: str = u.get("given_name")
+    surname: str = u.get("surname")
+    email: str = u.get("email")
+
+    # Create dummy password (for now), we do not want teacher-managed users to have
+    # their personal passwords as we are using temporary login codes.
+    dummy_pass: str = str(
+        base64.standard_b64encode(f"{email}{username}{time.time_ns()}".encode()),
+        encoding="utf-8",
+    )
+
+    ui: UserInfo = UserInfo(
+        username=username,
+        given_name=given_name,
+        last_name=surname,
+        full_name=f"{surname} {given_name}",
+        email=email,
+        password=dummy_pass,
+    )
+
+    user, _ = User.create_with_group(ui)
+
+    groups = (
+        run_sql(
+            select(UserGroup).where(
+                (UserGroup.name == group_name) | UserGroup.name.like("b64_%")
+            )
+        )
+        .scalars()
+        .all()
+    )
+    group = None
+    for g in groups:
+        dec = decode_name(g.name)
+        if g.name == group_name or dec == group_name:
+            group = g
+            break
+    if not group:
+        return json_response(
+            status_code=404,
+            jsondata={"result": {"error": f"No matching group: {group_name}."}},
+        )
+
+    user.add_to_group(group, get_current_user_object())
+    db.session.commit()
+    return json_response(
+        status_code=200,
+        jsondata={
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "real_name": user.real_name,
+        },
+    )
