@@ -194,13 +194,12 @@ def create_users(group_name: str) -> Response:
     # TODO commit to database
     from timApp.tim import get_current_user_object
 
-    # req_json = request.get_json()
-    # u = json.loads(req_json)
     u: dict = request.get_json()
-    username: str = u.get("username")
-    given_name: str = u.get("given_name")
-    surname: str = u.get("surname")
-    email: str = u.get("email")
+    # FIXME: workaround for Mypy errors
+    username: str = str(u.get("username"))
+    given_name: str = str(u.get("given_name"))
+    surname: str = str(u.get("surname"))
+    email: str = str(u.get("email"))
 
     # Create dummy password (for now), we do not want teacher-managed users to have
     # their personal passwords as we are using temporary login codes.
