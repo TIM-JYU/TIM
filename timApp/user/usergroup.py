@@ -286,7 +286,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_organizations() -> list[UserGroup]:
-        return (
+        return list(
             run_sql(
                 select(UserGroup).filter(
                     UserGroup.name.endswith(" users")
@@ -357,7 +357,7 @@ def get_usergroup_eager_query() -> Select:
 
 
 def get_sisu_groups_by_filter(f) -> list[UserGroup]:
-    gs: list[UserGroup] = (
+    gs: list[UserGroup] = list(
         run_sql(get_usergroup_eager_query().join(ScimUserGroup).filter(f))
         .scalars()
         .all()
@@ -370,10 +370,37 @@ DELETED_GROUP_PREFIX = "deleted:"
 
 
 def get_groups_by_names(names: list[str]) -> list[UserGroup]:
-    groups: list[UserGroup] = (
+    groups: list[UserGroup] = list(
         run_sql(select(UserGroup).filter(UserGroup.name.in_(names))).scalars().all()
     )
     return groups
+
+
+def get_b64_group_by_plain_name(name: str) -> UserGroup | None:
+    """
+    Finds and returns a UserGroup with a base64-encoded name matching the one requested.
+    Should be used sparingly due to the additional overhead caused by iterating and decoding the names.
+    """
+    groups: list[UserGroup] = list(
+        run_sql(select(UserGroup).where(UserGroup.name.like("b64_%"))).scalars().all()
+    )
+    from timApp.auth.login_code.routes import decode_name
+
+    for group in groups:
+        if decode_name(group.name) == name:
+            return group
+    return None
+
+
+def get_groups_by_ids(group_ids: list[int]) -> list[UserGroup]:
+    """
+    Retrieves a UserGroup based on its ID number.
+    :param group_ids: ID numbers
+    :return: UserGroup
+    """
+    return list(
+        run_sql(select(UserGroup).filter(UserGroup.id.in_(group_ids))).scalars().all()
+    )
 
 
 @attr.s(auto_attribs=True)
