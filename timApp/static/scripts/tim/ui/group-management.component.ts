@@ -16,14 +16,21 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showUserCreationDialog} from "tim/user/showUserCreationDialog";
 import {TabDirective} from "ngx-bootstrap/tabs";
 import {forEach} from "angular";
+import http from "http";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 
 export interface GroupMember extends IUser {
     id: number;
     name: string;
     email: string;
     real_name: string;
+    // 'home' org, class, or other identifier that we can use to check
+    // if this GroupMember already exists in a situation where we cannot
+    // confidently use email, name or real_name for this purpose.
+    association: string;
     // login codes will need to be treated like passwords
     login_code: string;
+
     selected: boolean;
 }
 
@@ -39,8 +46,12 @@ export interface Group extends IGroup {
  * Represents an event (exam, meeting, etc.) that is scheduled for a specific group.
  */
 export interface GroupEvent {
-    event: string;
+    title: string;
     timeslot: string;
+
+    // List of document ids/paths that are related to the event.
+    // Can be used to eg. modify document rights for an event group in the given timeslot
+    documents: string[];
 }
 
 type Selectable = Group | GroupMember;
@@ -77,13 +88,16 @@ Adding the component to a document:
                     <!-- Mock groups list -->
                     <div class="pull-left">
                         <!-- TODO: Implement as TimTable -->
+                        <!-- TODO: Event and Timeslot should be combined in the future,
+                                   so that we can list multiple events for a specific group
+                                   in a sensible way. -->
                         <table>
                             <thead>
                             <tr class="member-table-row">
                                 <th i18n><input type="checkbox" name="selectAllGroups" [(ngModel)]="allGroupsSelected" (change)="toggleAllGroupsSelected()"/></th>
                                 <th i18n>Group name</th>
                                 <th *ngIf="isAdmin()" i18n>Group document</th>
-                                <th i18n>Exam</th>
+                                <th i18n>Event</th>
                                 <th i18n>Timeslot</th>
                             </tr>
                             </thead>
@@ -104,10 +118,15 @@ Adding the component to a document:
                     <!-- END groups list-->
 
                 </div>
-                <div id="groups-list-controls" style="display: inline-block">
+                <!-- style="display: inline-block" -->
+                <div id="groups-list-controls" >
                     <div class="flex">
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new group</button>
-                        <button class="timButton btn-danger" (click)="deleteSelectedGroups()"
+                        <!-- TODO disable copying if more than one group selected -->
+                        <button class="timButton" (click)="copyGroup(this.groups)"
+                                [disabled]="!oneSelected(this.groups)" i18n>Copy selected group
+                        </button>
+                        <button class="timButton btn-danger" (click)="deleteSelectedGroups(this.groups)"
                                 [disabled]="anySelected(this.groups)" i18n>Delete selected groups
                         </button>
                         <button class="timButton" (click)="generateLoginCodes(this.groups)"
@@ -173,7 +192,10 @@ Adding the component to a document:
                                 <ng-container>
                                     <div id="members-controls">
                                         <button class="timButton" (click)="addMembers(group)" i18n>
-                                            Add members
+                                            Create new members
+                                        </button>
+                                        <button class="timButton" (click)="addExistingMembers(this.groups)" i18n>
+                                            Add existing users
                                         </button>
                                         <button class="timButton btn-danger" (click)="removeMembers(group)"
                                                 [disabled]="anySelected(this.members[group.name])" i18n>
@@ -382,8 +404,25 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
+    /**
+     * Checks that at least one Gourp or GroupMember is selected.
+     * @param selectables list of selectable Groups or GroupMembers
+     */
     anySelected(selectables: GroupMember[] | Group[]) {
         return !selectables?.some((s) => s.selected) ?? false;
+    }
+
+    /**
+     * Checks that exactly one Group is selected.
+     * @param groups list of selectable Groups
+     */
+    oneSelected(groups: Group[]) {
+        let count = 0;
+        for (let g of groups) {
+            if (g.selected) count++;
+            if (count > 1) return false;
+        }
+        return count == 1;
     }
 
     async toggleAllGroupsVisible() {
@@ -425,14 +464,100 @@ export class GroupManagementComponent implements OnInit {
                 allMembersSelected: false,
             });
         }
-        return;
     }
 
-    deleteSelectedGroups() {
+    /**
+     * Copies the selected Group (including memberships) into a new Group.
+     * @param groups
+     */
+    async copyGroup(groups: Group[]) {
+        let selected;
+        for (let g of groups) {
+            if (g.selected) {
+                selected = g;
+                break;
+            }
+        }
+        if (selected) {
+            const path = selected!.path;
+            const folder = path.slice(
+                path.indexOf("/") + 1,
+                path.lastIndexOf("/")
+            );
+            const params: UserGroupDialogParams = {
+                canChooseFolder: false,
+                defaultGroupFolder: folder,
+                encodeGroupName: true,
+            };
+            const res = await to2(showUserGroupDialog(params));
+            if (res.ok) {
+                const group: Group = {
+                    id: res.result.id,
+                    name: res.result.name,
+                    path: res.result.path,
+                    selected: false,
+                    allMembersSelected: false,
+                };
+                this.groups.push(group);
+
+                const copyres = await toPromise(
+                    this.http.post(
+                        `/groups/copymemberships/${selected.name}/${group.name}`,
+                        {}
+                    )
+                );
+                if (copyres.ok) {
+                    // refresh group members
+                    await this.getGroupMembers(group);
+                }
+            }
+        }
+    }
+
+    /**
+     * Delete selected groups from the database
+     * @param groups
+     */
+    async deleteSelectedGroups(groups: Group[]) {
         // Delete selected groups
-        // Should probably return a message denoting the names of the removed groups, or an error message
-        // Note: remember to clear selectedGroups after deletion
-        return;
+        let selected: Group[] = [];
+        for (const g of groups) {
+            if (g.selected) selected.push(g);
+        }
+        const confirmTitle = $localize`Delete groups`;
+        const confirmMessage = $localize`Are you certain you wish to delete the following groups?\nThis action cannot be undone!\n\nGroups to be deleted:\n`;
+        const confirmGroups = selected.map((g) => g.name).join("\n");
+
+        const res = await to2<boolean>(
+            showConfirm(confirmTitle, `${confirmMessage}${confirmGroups}`)
+        );
+
+        const group_ids = selected.map((g) => g.id);
+
+        if (res.ok) {
+            // call server group delete
+            if (selected.length == 1) {
+                const deleteResp = await toPromise(
+                    this.http.delete(`/groups/delete/${selected[0].id}`)
+                );
+            } else if (selected.length > 1) {
+                // mass delete groups
+                const deleteResp = await toPromise(
+                    this.http.delete(`/groups/delete`, {body: {ids: group_ids}})
+                );
+            } else {
+                return;
+            }
+            // remove from group record
+            selected.map((group) => delete this.members[group.name]);
+            // remove group from groups array
+            const indices = selected.map((group) => this.groups.indexOf(group));
+            indices.map((index) => this.groups.splice(index, 1));
+
+            // update ui
+            await this.getGroups();
+            this.selectedGroupTab = this.groups[0]?.name ?? "";
+        }
     }
 
     generateLoginCodes(groups: Group[]) {
@@ -479,6 +604,12 @@ export class GroupManagementComponent implements OnInit {
             let newUser: GroupMember = resp.result;
             this.members[group.name].push(newUser);
         }
+    }
+
+    async addExistingMembers(groups: Group[]) {
+        // TODO dialog and interface for selecting users from all existing groups
+        //      so that managers don't have to create each user themselves (and also avoids
+        //      having multiple accounts for each member/user
     }
 
     protected async removeMembers(group: Group) {
