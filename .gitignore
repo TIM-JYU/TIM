@@ -80,3 +80,4 @@ build_docs.sh
 /.env
 /docker-compose.yml
 /docker-compose.dev.yml
+/.vscode
