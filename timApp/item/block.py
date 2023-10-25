@@ -113,7 +113,7 @@ class Block(db.Model):
     internalmessage: Mapped[Optional["InternalMessage"]] = relationship(
         back_populates="block"
     )
-    internalmessage_display: Mapped[Optional["InternalMessageDisplay"]] = relationship(
+    internalmessage_display: Mapped[List["InternalMessageDisplay"]] = relationship(
         back_populates="display_block"
     )
 
