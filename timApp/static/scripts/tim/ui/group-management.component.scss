@@ -157,3 +157,12 @@ tbody {
 .not-implemented {
   color: #b3b3b3;
 }
+
+#groups-list-controls {
+  display: inline-flex;
+}
+
+#groups-list-controls > div {
+  display: flex;
+  flex-wrap: wrap;
+}
