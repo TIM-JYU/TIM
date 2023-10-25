@@ -6,7 +6,7 @@ from operator import attrgetter
 from typing import Any
 
 from flask import Response, request
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from timApp.auth.accesshelper import (
     verify_admin,
@@ -30,7 +30,7 @@ from timApp.user.special_group_names import (
     SPECIAL_USERNAMES,
 )
 from timApp.user.user import User, view_access_set, edit_access_set
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, get_groups_by_ids
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -433,3 +433,169 @@ def get_usernames(usernames: list[str]):
     usernames = list({n for name in usernames if (n := name.strip())})
     usernames.sort()
     return usernames
+
+
+@groups.post("/copymemberships/<source>/<target>")
+def copy_members(source: str, target: str) -> Response:
+    """
+    Copies group memberships from one UserGroup to another.
+
+    Note: this function is intended to be used in conjunction with the group-management component,
+    see `timApp/static/scripts/tim/ui/group-management.component.ts`. We should probably limit
+    the database queries to only the base64-encoded names, since the group-management
+    component is currently configured to produce such names by default.
+    :param source: source UserGroup name
+    :param target: target UserGroup name
+    :return: Response with added member names, or error message
+    """
+    from timApp.auth.login_code.routes import decode_name
+
+    if source == target:
+        return json_response(
+            status_code=400,
+            jsondata={
+                "result": {
+                    "error": f"Copying group members failed: source ('{source}') and target ('{target}') are the same."
+                },
+            },
+        )
+
+    # We need to do some shenanigans here because group names might be base64-encoded.
+    # Try plain names first, then base64-encoded ones.
+
+    source_group = (
+        run_sql(select(UserGroup).filter_by(name=source).limit(1)).scalars().first()
+    )
+    target_group = (
+        run_sql(select(UserGroup).filter_by(name=target).limit(1)).scalars().first()
+    )
+    if not source_group or not target_group:
+        b64groups: list[UserGroup] = list(
+            run_sql(select(UserGroup).where(UserGroup.name.like("b64_%")))
+            .scalars()
+            .all()
+        )
+        for ug in b64groups:
+            ug_plain_name = decode_name(ug.name)
+            if not source_group and ug_plain_name == source:
+                source_group = ug
+            elif not target_group and ug_plain_name == target:
+                target_group = ug
+
+        missing_groups = []
+        if not source_group:
+            missing_groups.append(source)
+        if not target_group:
+            missing_groups.append(target)
+
+        if missing_groups:
+            return json_response(
+                status_code=404,
+                jsondata={
+                    "result": {
+                        "error": f"Copying group members failed: groups {missing_groups} do not exist."
+                    },
+                },
+            )
+
+    # FIXME: verify_group_view_access currently results in an error,
+    #  so bypass it for now, we already check for access elsewhere
+    # verify_group_view_access(source_group)
+    verify_group_edit_access(target_group)
+    members: list[User] = list(source_group.users)
+    added_memberships = []
+    for u in members:
+        u.add_to_group(target_group, get_current_user_object())
+        added_memberships.append(u.name)
+    db.session.commit()
+    return json_response(
+        status_code=200,
+        jsondata={
+            "added_members": added_memberships,
+        },
+    )
+
+
+@groups.delete("/delete/<int:group_id>")
+def delete_group(group_id: int) -> Response:
+    """Route for deleting a user group.
+    Permanently deletes a UserGroup from the database.
+    When calling this function, user should be notified that the operation cannot be undone.
+
+    The group documents will remain in the TIM 'trash' folder, but without database entries they
+    should not be able to reference any data.
+
+    :param group_id ID of the group that should be deleted
+    """
+
+    group_name = "\n".join(do_delete_groups([group_id]))
+    db.session.commit()
+    return json_response(
+        status_code=200,
+        jsondata={"message": f"Successfully deleted group: {group_name}"},
+    )
+
+
+@groups.delete("/delete")
+def mass_delete_groups() -> Response:
+    """Route for mass deleting a UserGroups.
+    Permanently deletes UserGroups from the database.
+    When calling this function, user should be notified that the operation cannot be undone.
+
+    The group documents will remain in the TIM 'trash' folder, but without database entries they
+    should not be able to reference any data.
+    """
+
+    req: dict = request.get_json()
+    group_ids: list[int] = req["ids"]
+    group_names = "\n".join(do_delete_groups(group_ids))
+    db.session.commit()
+    return json_response(
+        status_code=200,
+        jsondata={"message": f"Successfully deleted groups:\n{group_names}"},
+    )
+
+
+def do_delete_groups(group_ids: list[int]) -> list[str]:
+    del_groups = get_groups_by_ids(group_ids)
+    group_names = list(group.name for group in del_groups)
+    for g in del_groups:
+        verify_group_edit_access(g)
+
+    from timApp.document.routes import get_doc_or_abort
+    from timApp.user.usergroup import UserGroupDoc, UserGroupMember
+    from timApp.item.deleting import soft_delete_document
+
+    group_doc_ids: list[int] = list(
+        run_sql(
+            select(UserGroupDoc.doc_id).filter(UserGroupDoc.group_id.in_(group_ids))
+        )
+        .scalars()
+        .all()
+    )
+    group_docs = list(get_doc_or_abort(gdid) for gdid in group_doc_ids)
+    for group_doc in group_docs:
+        soft_delete_document(group_doc)
+
+    # TODO we probably need to clear a whole bunch of db rows / relationships
+    #      before we can delete the actual UserGroup
+
+    run_sql(
+        delete(UserGroupDoc)
+        .where(UserGroupDoc.group_id.in_(group_ids))
+        .execution_options(synchronize_session="auto")
+    )
+
+    run_sql(
+        delete(UserGroupMember)
+        .where(UserGroupMember.usergroup_id.in_(group_ids))
+        .execution_options(synchronize_session="auto")
+    )
+
+    run_sql(
+        delete(UserGroup)
+        .where(UserGroup.id.in_(group_ids))
+        .execution_options(synchronize_session="auto")
+    )
+
+    return group_names
