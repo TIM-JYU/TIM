@@ -662,9 +662,10 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
     )
     check_ownership_loss(had_ownership, i)
 
-    log_right(
-        f"removed {a[0].info_str} for {ug.name} in {seq_to_str(list(str(x.block_id) for x in a))}"
-    )
+    if a:
+        log_right(
+            f"removed {a[0].info_str} for {ug.name} in {seq_to_str(list(str(x.block_id) for x in a))}"
+        )
 
     db.session.commit()
     return ok_response()
