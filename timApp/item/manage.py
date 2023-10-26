@@ -344,9 +344,15 @@ def add_permission(m: PermissionSingleEditModel):
     if accs:
         check_ownership_loss(is_owner, i)
 
+        found_groups = {x.usergroup.name for x in accs}
+        not_found_groups = set(m.groups) - found_groups
         log_right(
-            f"added {accs[0].info_str} for {seq_to_str(m.groups)} in {seq_to_str(list(str(x.block.id) for x in accs))}"
+            f"added {accs[0].info_str} for {seq_to_str([x.usergroup.name for x in accs])} in {seq_to_str(list(str(x.block.id) for x in accs))}"
         )
+        if not_found_groups:
+            log_right(
+                f"skipped {seq_to_str(list(not_found_groups))} in {i.path} because usergroup not found"
+            )
 
         db.session.commit()
     return permission_response(m)
