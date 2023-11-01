@@ -55,7 +55,7 @@ import {Users} from "tim/user/userService";
 import {InstanceofModule} from "tim/util/instanceof.module";
 
 export interface QubitOutput {
-    value: number;
+    value: string;
     probability: number;
     probabilityText: string;
     name?: string;
@@ -1116,14 +1116,14 @@ export class QuantumCircuitComponent
         for (let i = 0; i < this.nQubits; i++) {
             if (this.markup.outputNames) {
                 this.qubitOutputs.push({
-                    value: 0,
+                    value: "0",
                     probability: 0,
                     probabilityText: "0",
                     name: this.markup.outputNames[i],
                 });
             } else {
                 this.qubitOutputs.push({
-                    value: 0,
+                    value: "0",
                     probability: 0,
                     probabilityText: "0",
                 });
@@ -1141,14 +1141,11 @@ export class QuantumCircuitComponent
             return;
         }
 
-        this.qubitOutputs = vals.output
-            .split("")
-            .reverse()
-            .map((bit) => ({
-                value: parseInt(bit, 10),
-                probability: 0,
-                probabilityText: "0",
-            }));
+        this.qubitOutputs = vals.output.split("").map((bit) => ({
+            value: bit,
+            probability: 0,
+            probabilityText: "0",
+        }));
 
         if (this.showOutputBits) {
             const outputProbabilities = this.simulator.getOutputProbabilities();

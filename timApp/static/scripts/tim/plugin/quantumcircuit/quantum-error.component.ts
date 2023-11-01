@@ -119,6 +119,23 @@ export class QuantumErrorComponent implements OnChanges {
     }
 
     /**
+     * Bits in result should be in reverse order in terms of qubits.
+     * probability(001) -> probability(100)
+     * @param result result with qubit order changed
+     */
+    protected reverseResultQubitOrder(result: number[]) {
+        const rev = [];
+        const nQubits = Math.floor(Math.log2(result.length));
+        for (let i = 0; i < 2 ** nQubits; i++) {
+            const bitString = this.indexToBitstring(i, nQubits);
+            const bitStringReversed = bitString.split("").reverse().join("");
+            const j = parseInt(bitStringReversed, 2);
+            rev.push(result[j]);
+        }
+        return rev;
+    }
+
+    /**
      * Create fields necessary to display answer error
      */
     createAnswerDisplayData() {
@@ -126,20 +143,25 @@ export class QuantumErrorComponent implements OnChanges {
             const nQubits = Math.floor(Math.log2(this.error.actual.length));
 
             this.answerIncorrectRows = [];
-            for (let i = 0; i < this.error.actual.length; i++) {
-                const actual = this.error.actual[i];
-                const expected = this.error.expected[i];
+            const actual = this.reverseResultQubitOrder(this.error.actual);
+            const expected = this.reverseResultQubitOrder(this.error.expected);
+            for (let i = 0; i < actual.length; i++) {
+                const actualI = actual[i];
+                const expectedI = expected[i];
                 let correct = true;
-                const res = equal(actual, expected);
+                const res = equal(actualI, expectedI);
                 if (typeof res === "boolean") {
                     correct = res;
                 }
 
                 if (this.answerIncorrectShowAll || !correct) {
                     this.answerIncorrectRows.push({
-                        output: this.indexToBitstring(i, nQubits),
-                        expected: this.error.expected[i],
-                        actual: this.error.actual[i],
+                        output: this.indexToBitstring(i, nQubits)
+                            .split("")
+                            .reverse()
+                            .join(""),
+                        expected: expectedI,
+                        actual: actualI,
                         correct: correct,
                     });
                 }

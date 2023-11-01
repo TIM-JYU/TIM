@@ -436,7 +436,7 @@ def run_simulation(
 
 def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
     """
-    Checks whether the arrays have same values.
+    Checks whether the arrays have the same values.
     :param user_result: the probabilities of states of user's circuit after simulation
     :param model_result: the probabilities of states of the model circuit after simulation
     :return: whether the array are same up to some small error margin

@@ -38,6 +38,8 @@ export abstract class QuantumCircuitSimulator {
 
     /**
      * Runs simulator. The implementations should put the result in this.result
+     * this.result should contain probabilities for each possible output.
+     * bit order in this.result is e.g. "0101" is q[0]=0, q[1]=1, q[2]=0, q[3]=1
      * @param qubits initial state to use for simulation. [q[0], q[1],...]
      */
     abstract run(
@@ -90,10 +92,7 @@ export abstract class QuantumCircuitSimulator {
      * Get one measurement chosen randomly from possible outcomes and their relative probabilities.
      */
     sample(qubits: Qubit[]): Measurement | undefined {
-        const input = qubits
-            .map((q) => q.value)
-            .reverse()
-            .join("");
+        const input = qubits.map((q) => q.value).join("");
         if (!this.result) {
             console.error("run simulator before sampling");
             return undefined;
@@ -131,7 +130,6 @@ export abstract class QuantumCircuitSimulator {
                 }
             }
         }
-        probabilities.reverse();
 
         return probabilities;
     }
@@ -481,7 +479,7 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
                 res.push(resMatrix.get([i]));
             }
         }
-        this.result = this.reverseResultQubitOrder(res);
+        this.result = res;
 
         return Promise.resolve({
             ok: true,
@@ -547,7 +545,10 @@ export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
                 const err = this.parseError(e);
                 return Promise.resolve({ok: false, result: err});
             }
-            this.result = r.result.web.result;
+            const res = r.result.web.result;
+            if (res) {
+                this.result = this.reverseResultQubitOrder(res);
+            }
         } else {
             return Promise.resolve({ok: false, result: r.result.error.error});
         }
