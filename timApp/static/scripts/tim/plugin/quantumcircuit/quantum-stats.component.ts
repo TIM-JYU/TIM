@@ -32,6 +32,20 @@ export interface QuantumChartData {
                 <div class="stats-description">
                     <span *ngIf="showChart">{{statsDescription}}</span>
                     <tim-loading *ngIf="isSimulatorRunning"></tim-loading>
+
+                    <div class="btn-group export-container">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                                aria-haspopup="true" aria-expanded="false">
+                            <ng-container i18n>Export</ng-container>
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li (click)="handleExport($event, 'probabilities')"><a>
+                                <ng-container i18n>Probabilities</ng-container>
+                            </a></li>
+                        </ul>
+                    </div>
+
                 </div>
 
                 <div class="chart" *ngIf="showChart">
@@ -44,7 +58,9 @@ export interface QuantumChartData {
 
             <div class="output-container">
 
-                <p *ngIf="showPrintField" class="measurements-description"><ng-container i18n>Measurements</ng-container></p>
+                <p *ngIf="showPrintField" class="measurements-description">
+                    <ng-container i18n>Measurements</ng-container>
+                </p>
                 <div class="output-print" *ngIf="showPrintField">
                     <table #outputTable class="output-table">
                         <thead>
@@ -66,8 +82,12 @@ export interface QuantumChartData {
                 </div>
 
                 <div class="buttons" *ngIf="showPrintField || samplingMode === 'sample'">
-                    <button class="timButton" (click)="handleMeasure()"><ng-container i18n>Measure</ng-container></button>
-                    <button class="timButton" (click)="handleClear()"><ng-container i18n>Clear</ng-container></button>
+                    <button class="timButton" (click)="handleMeasure()">
+                        <ng-container i18n>Measure</ng-container>
+                    </button>
+                    <button class="timButton" (click)="handleClear()">
+                        <ng-container i18n>Clear</ng-container>
+                    </button>
                 </div>
 
                 <label class="font-weight-normal" *ngIf="showChart">
@@ -147,6 +167,9 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     @Output()
     measure = new EventEmitter<void>();
 
+    @Output()
+    export = new EventEmitter<string>();
+
     constructor() {}
 
     updateStatsDescription() {
@@ -165,6 +188,11 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
     ngOnInit(): void {
         this.updateStatsDescription();
+    }
+
+    handleExport(event: MouseEvent, type: string) {
+        event.preventDefault();
+        this.export.emit(type);
     }
 
     /**

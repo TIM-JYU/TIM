@@ -8702,6 +8702,22 @@
           <context context-type="linenumber">246,244</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7462301153729425254" datatype="html">
+        <source>Export</source>
+        <target state="new">Export</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3686315288514138686" datatype="html">
+        <source>Probabilities</source>
+        <target state="new">Probabilities</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

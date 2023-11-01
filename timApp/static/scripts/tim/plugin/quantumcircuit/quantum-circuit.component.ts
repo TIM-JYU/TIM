@@ -342,7 +342,8 @@ export interface CircuitOptions {
                                        [nSamples]="nSamples"
                                        [isSimulatorRunning]="isSimulatorRunning"
                                        (clear)="handleClearMeasurements()"
-                                       (measure)="handleMeasure()">
+                                       (measure)="handleMeasure()"
+                                       (export)="handleExport($event)">
                     </tim-quantum-stats>
 
                     <div class="buttons">
@@ -929,6 +930,16 @@ export class QuantumCircuitComponent
                 undefined,
                 this.measurements
             );
+        }
+    }
+
+    handleExport(type: string) {
+        const res = this.simulator.result;
+        if (!res) {
+            return;
+        }
+        if (type === "probabilities") {
+            copyToClipboard(JSON.stringify(res));
         }
     }
 
