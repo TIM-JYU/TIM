@@ -337,6 +337,7 @@ class Event(db.Model):
             "owner": {
                 "name": self.creator.pretty_full_name,
                 "email": self.creator.email,
+                "username": self.creator.name,
             },
         }
 
