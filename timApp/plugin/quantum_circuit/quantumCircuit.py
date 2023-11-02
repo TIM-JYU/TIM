@@ -901,7 +901,9 @@ def quantum_circuit_simulate(args: SimulationArgs) -> Response:
     if success and isinstance(result, tuple):
         state = result[0]
         state_str = [format_complex_to_js(x) for x in state]
-        return jsonify({"web": {"result": list(result[1]), "error": "", "stateVector": state_str}})
+        return jsonify(
+            {"web": {"result": list(result[1]), "error": "", "stateVector": state_str}}
+        )
     error_message = (
         asdict(result) if not isinstance(result, tuple) else "Unknown result"
     )
