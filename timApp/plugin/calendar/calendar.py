@@ -618,11 +618,12 @@ def get_event(event_id: int) -> Response:
 
 
 @calendar_plugin.get("/events/<int:event_id>/bookers")
-def get_event_bookers(event_id: int) -> str | Response:
+def get_event_bookers(event_id: int, json: bool = False) -> str | Response:
     """Fetches all enrollments from the database for the given event and returns the full name and email of every
     booker in a html table
 
     :param event_id: event id
+    :param json: If true, return in JSON format instead of HTML
     :return: Full name and email of every booker of the given event in a html table"""
 
     verify_logged_in()
@@ -641,6 +642,7 @@ def get_event_bookers(event_id: int) -> str | Response:
         for booker in bookers:
             bookers_info.append(
                 {
+                    "name": booker.name,
                     "full_name": booker.real_name,
                     "email": booker.email,
                     "isExtra": "x" if enrollment.extra else "",
@@ -648,6 +650,10 @@ def get_event_bookers(event_id: int) -> str | Response:
             )
 
     bookers_info = sorted(bookers_info, key=lambda x: 0 if x["isExtra"] else 1)
+
+    if json:
+        return json_response(bookers_info)
+
     return render_template_string(
         """
     <style>
