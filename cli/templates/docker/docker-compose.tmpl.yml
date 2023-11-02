@@ -78,6 +78,7 @@ services:
     "postgres",
     "-c", "log_statement=mod",
     "-c", "max_connections=${postgresql.max_connections}",
+    ${"\n".join([f'"-c", "{opt}",' for opt in postgresql.pg_config_ops])}
   ]
   restart: unless-stopped
   networks:
