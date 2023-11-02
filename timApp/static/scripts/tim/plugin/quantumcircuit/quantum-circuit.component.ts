@@ -617,6 +617,17 @@ export class QuantumCircuitComponent
     }
 
     /**
+     * Shows message on screen and hides it after three seconds.
+     * @param message text to show
+     */
+    showNotification(message: string) {
+        this.notification = message;
+        setTimeout(() => {
+            this.notification = "";
+        }, 3000);
+    }
+
+    /**
      * Copy current circuit to clipboard
      */
     async copyCircuit() {
@@ -629,10 +640,7 @@ export class QuantumCircuitComponent
         if (r.ok) {
             const yaml = r.result.web;
             copyToClipboard(yaml);
-            this.notification = $localize`copied`;
-            setTimeout(() => {
-                this.notification = "";
-            }, 2000);
+            this.showNotification($localize`copied`);
         } else {
             this.result = "";
             this.errorString = r.result.error.error;
@@ -934,12 +942,18 @@ export class QuantumCircuitComponent
     }
 
     handleExport(type: string) {
-        const res = this.simulator.result;
-        if (!res) {
-            return;
-        }
         if (type === "probabilities") {
-            copyToClipboard(JSON.stringify(res));
+            const res = this.simulator.result;
+            if (res) {
+                copyToClipboard(JSON.stringify(res));
+                this.showNotification($localize`copied`);
+            }
+        } else if (type === "stateVector") {
+            const state = this.simulator.stateVector;
+            if (state) {
+                copyToClipboard(JSON.stringify(state));
+                this.showNotification($localize`copied`);
+            }
         }
     }
 

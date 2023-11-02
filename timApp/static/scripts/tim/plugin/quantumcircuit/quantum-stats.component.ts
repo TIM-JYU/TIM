@@ -43,6 +43,9 @@ export interface QuantumChartData {
                             <li (click)="handleExport($event, 'probabilities')"><a>
                                 <ng-container i18n>Probabilities</ng-container>
                             </a></li>
+                            <li (click)="handleExport($event, 'stateVector')"><a>
+                                <ng-container i18n>State vector</ng-container>
+                            </a></li>
                         </ul>
                     </div>
 

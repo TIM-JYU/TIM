@@ -8718,6 +8718,14 @@
           <context context-type="linenumber">44</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7253891147289854757" datatype="html">
+        <source>State vector</source>
+        <target state="new">State vector</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
+          <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
