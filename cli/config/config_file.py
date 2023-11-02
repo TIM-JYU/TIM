@@ -90,7 +90,7 @@ class TIMConfig(ConfigParser):
         var_dict["postgresql"].set(
             "pg_config_ops",
             [
-                f"{k[4:]}={v}"
+                f"{k[3:]}={v}"
                 for k, v in self._sections.get("postgresql").items()  # type: ignore
                 if k.startswith("pg_")
             ],
