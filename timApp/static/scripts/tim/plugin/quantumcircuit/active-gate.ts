@@ -115,7 +115,7 @@ export class CircuitActiveGateInfo extends ActiveGateInfo {
     }
 
     formatTimeAsString() {
-        return this.time.toString();
+        return (this.time + 1).toString();
     }
 
     formatQubitAsString() {
