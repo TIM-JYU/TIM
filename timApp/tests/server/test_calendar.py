@@ -52,26 +52,27 @@ class CalendarModificationTest(CalendarTest):
             expect_status=200,
             expect_content=[
                 {
-                    "id": event["id"],
-                    "title": "Otsake",
-                    "start": "2022-05-18T07:20:00+00:00",
                     "end": "2022-05-18T07:40:00+00:00",
+                    "id": 1,
                     "meta": {
                         "booker_groups": [],
                         "description": "kuvaus",
                         "enrollments": 0,
+                        "extraEnrollments": None,
+                        "important": False,
+                        "isExtra": False,
                         "location": "sijainti",
                         "maxSize": 1,
-                        "important": False,
-                        "extraEnrollments": None,
-                        "isExtra": False,
+                        "owner": {
+                            "email": "test1@example.com",
+                            "name": "user 1 Test",
+                            "username": "testuser1",
+                        },
                         "send_notifications": True,
                         "signup_before": "2022-05-18T07:20:00+00:00",
-                        "owner": {
-                            "name": self.test_user_1.pretty_full_name,
-                            "email": self.test_user_1.email,
-                        },
                     },
+                    "start": "2022-05-18T07:20:00+00:00",
+                    "title": "Otsake",
                 }
             ],
         )
@@ -110,26 +111,27 @@ class CalendarModificationTest(CalendarTest):
             expect_status=200,
             expect_content=[
                 {
-                    "id": event["id"],
-                    "title": "ihauus Otsake",
-                    "start": "2022-05-18T07:20:00+00:00",
                     "end": "2022-05-18T07:40:00+00:00",
+                    "id": 2,
                     "meta": {
                         "booker_groups": [],
                         "description": "toinen kuvaus",
                         "enrollments": 0,
                         "extraEnrollments": None,
-                        "isExtra": False,
-                        "send_notifications": True,
-                        "location": "eri sijainti",
                         "important": False,
+                        "isExtra": False,
+                        "location": "eri sijainti",
                         "maxSize": 1,
                         "owner": {
-                            "name": self.test_user_1.pretty_full_name,
-                            "email": self.test_user_1.email,
+                            "email": "test1@example.com",
+                            "name": "user 1 Test",
+                            "username": "testuser1",
                         },
+                        "send_notifications": True,
                         "signup_before": "2022-05-18T07:20:00+00:00",
                     },
+                    "start": "2022-05-18T07:20:00+00:00",
+                    "title": "ihauus Otsake",
                 }
             ],
         )
@@ -194,26 +196,27 @@ class CalendarBookTest(CalendarTest):
             expect_status=200,
             expect_content=[
                 {
-                    "id": event["id"],
-                    "title": "Bookattava",
-                    "start": "2023-05-18T07:20:00+00:00",
                     "end": "2023-05-18T07:40:00+00:00",
+                    "id": 1,
                     "meta": {
                         "booker_groups": [],
                         "description": "kerhon kokous",
                         "enrollments": 0,
+                        "extraEnrollments": None,
+                        "important": False,
+                        "isExtra": False,
                         "location": "kerhohuone",
                         "maxSize": 2,
-                        "extraEnrollments": None,
-                        "isExtra": False,
-                        "important": False,
+                        "owner": {
+                            "email": "test2@example.com",
+                            "name": "user 2 Test",
+                            "username": "testuser2",
+                        },
                         "send_notifications": True,
                         "signup_before": "2023-05-18T07:20:00+00:00",
-                        "owner": {
-                            "name": self.test_user_2.pretty_full_name,
-                            "email": self.test_user_2.email,
-                        },
                     },
+                    "start": "2023-05-18T07:20:00+00:00",
+                    "title": "Bookattava",
                 }
             ],
         )
