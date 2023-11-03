@@ -344,9 +344,15 @@ def add_permission(m: PermissionSingleEditModel):
     if accs:
         check_ownership_loss(is_owner, i)
 
+        found_groups = {x.usergroup.name for x in accs}
+        not_found_groups = set(m.groups) - found_groups
         log_right(
-            f"added {accs[0].info_str} for {seq_to_str(m.groups)} in {seq_to_str(list(str(x.block.id) for x in accs))}"
+            f"added {accs[0].info_str} for {seq_to_str([x.usergroup.name for x in accs])} in {seq_to_str(list(str(x.block.id) for x in accs))}"
         )
+        if not_found_groups:
+            log_right(
+                f"skipped {seq_to_str(list(not_found_groups))} in {i.path} because usergroup not found"
+            )
 
         db.session.commit()
     return permission_response(m)
@@ -662,9 +668,10 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
     )
     check_ownership_loss(had_ownership, i)
 
-    log_right(
-        f"removed {a[0].info_str} for {ug.name} in {seq_to_str(list(str(x.block_id) for x in a))}"
-    )
+    if a:
+        log_right(
+            f"removed {a[0].info_str} for {ug.name} in {seq_to_str(list(str(x.block_id) for x in a))}"
+        )
 
     db.session.commit()
     return ok_response()

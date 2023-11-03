@@ -147,7 +147,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         back_populates="user_group"
     )
 
-    internalmessage_display: Mapped[Optional["InternalMessageDisplay"]] = relationship(
+    internalmessage_display: Mapped[List["InternalMessageDisplay"]] = relationship(
         back_populates="usergroup"
     )
 

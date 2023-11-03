@@ -6,6 +6,7 @@ Default configuration for TIM.
 # This is used to automatically apply migrations to the config file.
 from enum import Enum
 
+
 CURRENT_REVISION = 1
 
 DEFAULT_CONFIG = {
@@ -129,6 +130,14 @@ Extra configuration to append to Caddyfile.
         ),
     },
     "postgresql": {
+        "__doc__": (
+            "",
+            """
+PostgreSQL configuration.
+
+Any options prefixed with pg_ will be passed to PostgreSQL as configuration options.
+""",
+        ),
         "max_connections": (
             "200",
             """

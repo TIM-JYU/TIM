@@ -360,6 +360,31 @@ def log_request(response):
 
 
 @app.after_request
+def robots_request(response: Response):
+    if app.config["RESTRICT_ROBOTS"] and request.method == "GET":
+        if app.config["RESTRICT_ROBOTS_METHODS"].get("restrict_global"):
+            response.headers.add_header(
+                "X-Robots-Tag",
+                ", ".join(app.config["RESTRICT_ROBOTS_METHODS"].get("global")),
+            )
+        else:
+            for bot in app.config["RESTRICT_ROBOTS_METHODS"]["bots"].keys():
+                restricted_methods = f"{', '.join(app.config['RESTRICT_ROBOTS_METHODS']['bots'].get(bot))}"
+                if restricted_methods:
+                    value = f"{bot}: {restricted_methods}"
+                    response.headers.add_header(
+                        "X-Robots-Tag",
+                        value,
+                    )
+
+        response.headers.add_header(
+            "X-Robots-Tag",
+            f"unavailable_after: {app.config['RESTRICT_ROBOTS_METHODS'].get('global_unavailable_date')}",
+        )
+    return response
+
+
+@app.after_request
 def after_request(resp: Response):
     token = generate_csrf()
     resp.set_cookie(

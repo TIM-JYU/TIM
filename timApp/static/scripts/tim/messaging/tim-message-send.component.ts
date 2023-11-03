@@ -85,7 +85,7 @@ interface TimMessageOptions extends t.TypeOf<typeof TimSavedMessageOptions> {
                             </div>
                             <div class="cb-collection" *ngIf="timMessageOptions.email && !sendGlobal">
                                 <div>
-                                    <input type="radio" [(ngModel)]="timMessageOptions.defaultEmail" name="send-tim-message" id="send-tim"
+                                    <input type="radio" [(ngModel)]="timMessageOptions.defaultEmail" name="send-tim-email" id="send-tim"
                                            [value]="false">
                                     <label for="send-tim" i18n>Use TIM to send</label>
                                 </div>
@@ -265,6 +265,7 @@ export class TimMessageSendComponent {
                 };
                 this.showOptions = true;
             }
+            console.log(this.timMessageOptions);
         }
 
         if (this.sendGlobal) {

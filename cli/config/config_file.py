@@ -87,6 +87,15 @@ class TIMConfig(ConfigParser):
         var_dict["tim"].set("is_dev", profile == "dev")
         var_dict["csplugin"].set("target", csplugin_target(profile))
 
+        var_dict["postgresql"].set(
+            "pg_config_ops",
+            [
+                f"{k[3:]}={v}"
+                for k, v in self._sections.get("postgresql").items()  # type: ignore
+                if k.startswith("pg_")
+            ],
+        )
+
         if var_dict["mailman"].get("is_dev"):
             var_dict["caddy"].set(
                 "extra_tim_config",
@@ -118,8 +127,14 @@ class TIMConfig(ConfigParser):
         section_items: List[Tuple[str, str]],
         delimiter: str,
     ) -> None:
+        doc_comment = self._comment_lines.get((section_name, "__doc__"))
+        if doc_comment:
+            for comment_line in doc_comment.splitlines():
+                fp.write("{} {}\n".format(self._comment_prefixes[0], comment_line))  # type: ignore
         fp.write("[{}]\n".format(section_name))
         for key, value in section_items:
+            if key == "__doc__":
+                continue
             comment = self._comment_lines.get((section_name, key))
             if comment:
                 for comment_line in comment.splitlines():
