@@ -408,7 +408,7 @@ def run_simulation(
     input_list: list[int],
     n_qubits: int,
     custom_gates: dict[str, np.ndarray],
-) -> tuple[bool, ErrorType | np.ndarray]:
+) -> tuple[bool, ErrorType | tuple[np.ndarray, np.ndarray]]:
     """
     Runs simulator.
     :param gates: gates that are in the circuit
@@ -431,12 +431,14 @@ def run_simulation(
 
     circuit.update_quantum_state(state)
 
-    return True, np.power(np.abs(state.get_vector()), 2)
+    state_vector = state.get_vector()
+    probabilities = np.power(np.abs(state_vector), 2)
+    return True, (state_vector, probabilities)
 
 
 def check_answer(user_result: np.ndarray, model_result: np.ndarray) -> bool:
     """
-    Checks whether the arrays have same values.
+    Checks whether the arrays have the same values.
     :param user_result: the probabilities of states of user's circuit after simulation
     :param model_result: the probabilities of states of the model circuit after simulation
     :return: whether the array are same up to some small error margin
@@ -513,13 +515,13 @@ def run_all_simulations(
             success1, expected = run_simulation(
                 model_circuit, input_list, n_qubits, custom_gates
             )
-            if not success1 and not isinstance(expected, np.ndarray):
+            if not success1 and not isinstance(expected, tuple):
                 threaded_sim_params.result = False, expected
                 return
             success2, actual = run_simulation(
                 user_circuit, input_list, n_qubits, custom_gates
             )
-            if not success2 and not isinstance(actual, np.ndarray):
+            if not success2 and not isinstance(actual, tuple):
                 threaded_sim_params.result = False, actual
                 return
         except (TypeError, RuntimeError) as e:
@@ -531,12 +533,12 @@ def run_all_simulations(
             return
 
         if (
-            isinstance(actual, np.ndarray)
-            and isinstance(expected, np.ndarray)
-            and not check_answer(actual, expected)
+            isinstance(actual, tuple)
+            and isinstance(expected, tuple)
+            and not check_answer(actual[1], expected[1])
         ):
             threaded_sim_params.result = False, AnswerIncorrectError(
-                bitstring_reversed, list(expected), list(actual)
+                bitstring_reversed, list(expected[1]), list(actual[1])
             )
             return
 
@@ -873,6 +875,15 @@ class SimulationArgs:
     customGates: list[NumericCustomGateInfo] | None = None
 
 
+def format_complex_to_js(d: complex) -> str:
+    """
+    Formats a complex number to format that browser wants it in
+    :param d:
+    :return:
+    """
+    return str(d).replace("(", "").replace(")", "").replace("j", "i")
+
+
 @quantum_circuit_plugin.post("/simulate")
 @use_model(SimulationArgs)
 def quantum_circuit_simulate(args: SimulationArgs) -> Response:
@@ -887,10 +898,14 @@ def quantum_circuit_simulate(args: SimulationArgs) -> Response:
     success, result = run_simulation(
         args.gates, args.inputList, args.nQubits, custom_gates
     )
-    if success and isinstance(result, np.ndarray):
-        return jsonify({"web": {"result": list(result), "error": ""}})
+    if success and isinstance(result, tuple):
+        state = result[0]
+        state_str = [format_complex_to_js(x) for x in state]
+        return jsonify(
+            {"web": {"result": list(result[1]), "error": "", "stateVector": state_str}}
+        )
     error_message = (
-        asdict(result) if not isinstance(result, np.ndarray) else "Unknown result"
+        asdict(result) if not isinstance(result, tuple) else "Unknown result"
     )
     return jsonify(
         {

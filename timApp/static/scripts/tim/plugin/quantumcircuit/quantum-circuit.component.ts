@@ -55,7 +55,7 @@ import {Users} from "tim/user/userService";
 import {InstanceofModule} from "tim/util/instanceof.module";
 
 export interface QubitOutput {
-    value: number;
+    value: string;
     probability: number;
     probabilityText: string;
     name?: string;
@@ -342,7 +342,8 @@ export interface CircuitOptions {
                                        [nSamples]="nSamples"
                                        [isSimulatorRunning]="isSimulatorRunning"
                                        (clear)="handleClearMeasurements()"
-                                       (measure)="handleMeasure()">
+                                       (measure)="handleMeasure()"
+                                       (export)="handleExport($event)">
                     </tim-quantum-stats>
 
                     <div class="buttons">
@@ -616,6 +617,17 @@ export class QuantumCircuitComponent
     }
 
     /**
+     * Shows message on screen and hides it after three seconds.
+     * @param message text to show
+     */
+    showNotification(message: string) {
+        this.notification = message;
+        setTimeout(() => {
+            this.notification = "";
+        }, 3000);
+    }
+
+    /**
      * Copy current circuit to clipboard
      */
     async copyCircuit() {
@@ -628,10 +640,7 @@ export class QuantumCircuitComponent
         if (r.ok) {
             const yaml = r.result.web;
             copyToClipboard(yaml);
-            this.notification = $localize`copied`;
-            setTimeout(() => {
-                this.notification = "";
-            }, 2000);
+            this.showNotification($localize`copied`);
         } else {
             this.result = "";
             this.errorString = r.result.error.error;
@@ -932,6 +941,22 @@ export class QuantumCircuitComponent
         }
     }
 
+    handleExport(type: string) {
+        if (type === "probabilities") {
+            const res = this.simulator.result;
+            if (res) {
+                copyToClipboard(JSON.stringify(res));
+                this.showNotification($localize`copied`);
+            }
+        } else if (type === "stateVector") {
+            const state = this.simulator.stateVector;
+            if (state) {
+                copyToClipboard(JSON.stringify(state));
+                this.showNotification($localize`copied`);
+            }
+        }
+    }
+
     /**
      * Deletes all measurements.
      */
@@ -1116,14 +1141,14 @@ export class QuantumCircuitComponent
         for (let i = 0; i < this.nQubits; i++) {
             if (this.markup.outputNames) {
                 this.qubitOutputs.push({
-                    value: 0,
+                    value: "0",
                     probability: 0,
                     probabilityText: "0",
                     name: this.markup.outputNames[i],
                 });
             } else {
                 this.qubitOutputs.push({
-                    value: 0,
+                    value: "0",
                     probability: 0,
                     probabilityText: "0",
                 });
@@ -1141,14 +1166,11 @@ export class QuantumCircuitComponent
             return;
         }
 
-        this.qubitOutputs = vals.output
-            .split("")
-            .reverse()
-            .map((bit) => ({
-                value: parseInt(bit, 10),
-                probability: 0,
-                probabilityText: "0",
-            }));
+        this.qubitOutputs = vals.output.split("").map((bit) => ({
+            value: bit,
+            probability: 0,
+            probabilityText: "0",
+        }));
 
         if (this.showOutputBits) {
             const outputProbabilities = this.simulator.getOutputProbabilities();

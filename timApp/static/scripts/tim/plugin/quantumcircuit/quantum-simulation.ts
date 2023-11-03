@@ -7,7 +7,8 @@ import type {
 } from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {ServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
-import type {Matrix} from "mathjs";
+import type {Matrix, FormatOptions} from "mathjs";
+import {format} from "mathjs";
 import {dotPow, abs, transpose, multiply, kron, identity, index} from "mathjs";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import type {Cell, QuantumBoard} from "tim/plugin/quantumcircuit/quantum-board";
@@ -27,7 +28,11 @@ import {isRight} from "fp-ts/Either";
 
 export abstract class QuantumCircuitSimulator {
     board: QuantumBoard;
+
+    // array of probabilities of each output
     result?: number[];
+    // array of imaginary numbers
+    stateVector?: string[];
 
     protected constructor(
         protected gateService: GateService,
@@ -37,7 +42,16 @@ export abstract class QuantumCircuitSimulator {
     }
 
     /**
-     * Runs simulator. The implementations should put the result in this.result
+     * Runs simulator. The implementations should put output probability vector in this.result
+     * and final state vector in this.stateVector as array of imaginary numbers.
+     * method return information about success of simulation in Promise.
+     *
+     * the bit order in arrays is e.g. with two qubits as follows:
+     * 00 (q[0]=0, q[1]=0)
+     * 01 (q[0]=0, q[1]=1)
+     * 10 (q[0]=1, q[1]=0)
+     * 11 (q[0]=1, q[1]=1)
+     *
      * @param qubits initial state to use for simulation. [q[0], q[1],...]
      */
     abstract run(
@@ -75,7 +89,7 @@ export abstract class QuantumCircuitSimulator {
      * probability(001) -> probability(100)
      * @param result result with qubit order changed
      */
-    protected reverseResultQubitOrder(result: number[]) {
+    protected reverseResultQubitOrder<T>(result: T[]): T[] {
         const rev = [];
         for (let i = 0; i < 2 ** this.board.length; i++) {
             const bitString = this.indexToBitstring(i);
@@ -90,10 +104,7 @@ export abstract class QuantumCircuitSimulator {
      * Get one measurement chosen randomly from possible outcomes and their relative probabilities.
      */
     sample(qubits: Qubit[]): Measurement | undefined {
-        const input = qubits
-            .map((q) => q.value)
-            .reverse()
-            .join("");
+        const input = qubits.map((q) => q.value).join("");
         if (!this.result) {
             console.error("run simulator before sampling");
             return undefined;
@@ -131,7 +142,6 @@ export abstract class QuantumCircuitSimulator {
                 }
             }
         }
-        probabilities.reverse();
 
         return probabilities;
     }
@@ -473,15 +483,26 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
 
         const resMatrix = dotPow(abs(output), 2) as Matrix;
         const res = [];
+        const state = [];
+        const formatOptions: FormatOptions = {
+            precision: 2,
+        };
         for (let i = 0; i < 2 ** this.board.length; i++) {
             // when nQubits === 1 then this.result is 1d array
             if (resMatrix.size().length > 1) {
                 res.push(resMatrix.get([i, 0]));
+                state.push(
+                    format(output.get([i, 0]), formatOptions).replace(/\s/g, "")
+                );
             } else {
                 res.push(resMatrix.get([i]));
+                state.push(
+                    format(output.get([i]), formatOptions).replace(/\s/g, "")
+                );
             }
         }
-        this.result = this.reverseResultQubitOrder(res);
+        this.result = res;
+        this.stateVector = state;
 
         return Promise.resolve({
             ok: true,
@@ -536,10 +557,13 @@ export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
 
         const url = "/quantumCircuit/simulate";
         const r = await toPromise(
-            this.http.post<{web: {result?: number[]; error?: string}}>(
-                url,
-                params
-            )
+            this.http.post<{
+                web: {
+                    result?: number[];
+                    error?: string;
+                    stateVector?: string[];
+                };
+            }>(url, params)
         );
         if (r.ok) {
             const e = r.result.web.error;
@@ -547,7 +571,12 @@ export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
                 const err = this.parseError(e);
                 return Promise.resolve({ok: false, result: err});
             }
-            this.result = r.result.web.result;
+            const res = r.result.web.result;
+            const stateVector = r.result.web.stateVector;
+            if (res && stateVector) {
+                this.result = this.reverseResultQubitOrder(res);
+                this.stateVector = this.reverseResultQubitOrder(stateVector);
+            }
         } else {
             return Promise.resolve({ok: false, result: r.result.error.error});
         }
