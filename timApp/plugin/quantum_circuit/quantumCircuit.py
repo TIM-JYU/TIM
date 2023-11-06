@@ -198,6 +198,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     showChart: bool | None = None
     showPrintField: bool | None = None
     showOutputBits: bool | None = None
+    showExport: bool | None = None
     samplingMode: str | None = None
     nSamples: int | None = None
     modelCircuit: list[GateInfo] | None = None
@@ -813,6 +814,7 @@ hideGateInfo: []
 samplingMode: "matrix"
 nSamples: 100
 showChart: true
+showExport: false
 showPrintField: true
 showOutputBits: true
 leftAxisLabel: "Qubit"
