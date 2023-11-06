@@ -12,8 +12,8 @@ from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
 
 
-def task_ids_to_strlist(ids: list[TaskId]) -> list[str]:
-    return [t.doc_task for t in ids]
+def task_ids_to_strlist(ids: list[TaskId]) -> set[str]:
+    return set(t.doc_task for t in ids)
 
 
 GLOBAL_SINCE_LAST_KEY = "*"
