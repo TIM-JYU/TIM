@@ -27,13 +27,12 @@ export interface QuantumChartData {
 @Component({
     selector: "tim-quantum-stats",
     template: `
-        <div class="stats-container" [hidden]="!showChart && !showPrintField">
+        <div class="stats-container" [hidden]="!showChart && !showPrintField && !showExport">
             <div>
                 <div class="stats-description">
                     <span *ngIf="showChart">{{statsDescription}}</span>
-                    <tim-loading *ngIf="isSimulatorRunning"></tim-loading>
 
-                    <div class="btn-group export-container">
+                    <div class="btn-group export-container" *ngIf="showExport">
                         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                                 aria-haspopup="true" aria-expanded="false">
                             <ng-container i18n>Export</ng-container>
@@ -48,6 +47,8 @@ export interface QuantumChartData {
                             </a></li>
                         </ul>
                     </div>
+                    
+                    <tim-loading *ngIf="isSimulatorRunning"></tim-loading>
 
                 </div>
 
@@ -154,6 +155,9 @@ export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
 
     @Input()
     showChart: boolean = true;
+
+    @Input()
+    showExport: boolean = false;
 
     @Input()
     showPrintField: boolean = true;

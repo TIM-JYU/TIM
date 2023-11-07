@@ -172,6 +172,7 @@ const QuantumCircuitMarkup = t.intersection([
         showChart: withDefault(t.boolean, true),
         showPrintField: withDefault(t.boolean, true),
         showOutputBits: withDefault(t.boolean, true),
+        showExport: withDefault(t.boolean, false),
         samplingMode: withDefault(
             t.keyof({sample: null, autoSample: null, matrix: null}),
             "matrix"
@@ -338,6 +339,7 @@ export interface CircuitOptions {
                                        [quantumChartData]="quantumChartData"
                                        [showChart]="showChart"
                                        [showPrintField]="showPrintField"
+                                       [showExport]="showExport"
                                        [samplingMode]="samplingMode"
                                        [nSamples]="nSamples"
                                        [isSimulatorRunning]="isSimulatorRunning"
@@ -499,6 +501,10 @@ export class QuantumCircuitComponent
 
     get showOutputBits() {
         return this.markup.showOutputBits;
+    }
+
+    get showExport() {
+        return this.markup.showExport;
     }
 
     get samplingMode() {
