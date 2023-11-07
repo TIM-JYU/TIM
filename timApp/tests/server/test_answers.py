@@ -32,6 +32,11 @@ class AnswerTest(TimRouteTest):
                     "total_points": total_points,
                     "velp_points": None,
                     "velped_task_count": 0,
+                    "answer_duration": None,
+                    "doc_id": "",
+                    "first_answer_on": None,
+                    "last_answer_on": None,
+                    "task_id": "",
                 }
             ],
             get_users_for_tasks(task_ids, [user.id]),
