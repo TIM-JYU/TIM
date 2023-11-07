@@ -559,9 +559,45 @@ class UserTaskEntry(TypedDict):
     task_points: float | None
     velp_points: float | None
     task_id: str
+    doc_id: str
     first_answer_on: datetime | None
     last_answer_on: datetime | None
     answer_duration: timedelta | None
+
+
+def task_entry_for_user(user: User) -> "UserTaskEntry":
+    return UserTaskEntry(
+        user=user,
+        task_count=0,
+        velped_task_count=0,
+        total_points=None,
+        task_points=None,
+        velp_points=None,
+        task_id="",
+        doc_id="",
+        first_answer_on=None,
+        last_answer_on=None,
+        answer_duration=None,
+    )
+
+
+def update_entry_totals(entry: UserTaskEntry) -> None:
+    if entry["first_answer_on"] and entry["last_answer_on"]:
+        entry["answer_duration"] = entry["last_answer_on"] - entry["first_answer_on"]
+
+    if entry["task_points"] is not None and entry["velp_points"] is not None:
+        entry["total_points"] = round(entry["task_points"] + entry["velp_points"], 4)
+    elif entry["task_points"] is not None:
+        entry["total_points"] = round(entry["task_points"], 4)
+    elif entry["velp_points"] is not None:
+        entry["total_points"] = round(entry["velp_points"], 4)
+
+    entry["task_points"] = (
+        round(entry["task_points"], 4) if entry["task_points"] is not None else None
+    )
+    entry["velp_points"] = (
+        round(entry["velp_points"], 4) if entry["velp_points"] is not None else None
+    )
 
 
 class AnswerCountRule(Enum):
@@ -577,7 +613,49 @@ class AnswerCountRule(Enum):
     """Count any answer, whichever is the latest."""
 
 
-def get_users_for_tasks(
+@dataclass(slots=True)
+class UserAnswerInfo:
+    answered_on_min: datetime | None = None
+    answered_on_max: datetime | None = None
+    answer_id: int = -1
+    points: float | None = None
+    velp_points: float | None = None
+    velped: bool = False
+
+    def update_entry(self, entry: UserTaskEntry) -> None:
+        if self.points:
+            if entry["task_points"] is None:
+                entry["task_points"] = 0.0
+            assert entry["task_points"] is not None
+            entry["task_points"] += self.points
+        if self.velp_points:
+            if entry["velp_points"] is None:
+                entry["velp_points"] = 0.0
+            assert entry["velp_points"] is not None
+            entry["velp_points"] += self.velp_points
+        if self.answer_id >= 0:
+            entry["task_count"] += 1
+        if self.velped:
+            entry["velped_task_count"] += 1
+        if self.answered_on_min and (
+            entry["first_answer_on"] is None
+            or self.answered_on_min < entry["first_answer_on"]
+        ):
+            entry["first_answer_on"] = self.answered_on_min
+        if self.answered_on_max and (
+            entry["last_answer_on"] is None
+            or self.answered_on_max > entry["last_answer_on"]
+        ):
+            entry["last_answer_on"] = self.answered_on_max
+
+
+@dataclass(slots=True)
+class SingleAnswerInfo:
+    answer_id: int
+    points: float | None
+
+
+def get_users_for_tasks_py(
     task_ids: list[TaskId],
     user_ids: list[int] | None = None,
     group_by_user: bool = True,
@@ -589,6 +667,270 @@ def get_users_for_tasks(
     if not task_ids:
         return []
 
+    # Step 1: Collect all answers for the specified tasks and users
+
+    if answer_filter is None:
+        answer_filter = true()
+
+    userid_filter: Any = true()
+    if user_ids:
+        userid_filter = UserAnswer.user_id.in_(user_ids)
+
+    user_answers_query = (
+        select(Answer)
+        .filter(answer_filter)
+        .filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
+        .join(UserAnswer, UserAnswer.answer_id == Answer.id)
+        .filter(userid_filter)
+        .with_only_columns(
+            Answer.id,
+            Answer.task_id,
+            Answer.points,
+            Answer.valid,
+            Answer.answered_on,
+            UserAnswer.user_id,
+        )
+    )
+
+    user_answers: Result[tuple[int, str, float | None, bool, datetime, int]] = run_sql(
+        user_answers_query
+    )
+    user_answers_by_id: dict[int, dict[str, UserAnswerInfo]] = defaultdict(
+        lambda: defaultdict(UserAnswerInfo)
+    )
+    answer_to_task_id: dict[int, str] = {}
+
+    # Step 2: Collect the latest answer and latest valid answer for each user and task
+    # Also we start precomputing answer times if they are enabled
+
+    latest_answers_per_user: dict[
+        tuple[int, str], tuple[SingleAnswerInfo | None, SingleAnswerInfo | None]
+    ] = defaultdict(lambda: (None, None))
+
+    for answer_id, task_id, points, valid, answered_on, user_id in user_answers:
+        info = user_answers_by_id[user_id][task_id]
+        answer_to_task_id[answer_id] = task_id
+        latest_answer, latest_valid_answer = latest_answers_per_user[(user_id, task_id)]
+
+        if latest_answer is None or answer_id > latest_answer.answer_id:
+            if latest_answer is None:
+                latest_answer = SingleAnswerInfo(answer_id, points)
+            else:
+                latest_answer.answer_id = answer_id
+                latest_answer.points = points
+
+        if valid and (
+            latest_valid_answer is None or answer_id > latest_valid_answer.answer_id
+        ):
+            if latest_valid_answer is None:
+                latest_valid_answer = SingleAnswerInfo(answer_id, points)
+            else:
+                latest_valid_answer.answer_id = answer_id
+                latest_valid_answer.points = points
+
+        latest_answers_per_user[(user_id, task_id)] = (
+            latest_answer,
+            latest_valid_answer,
+        )
+
+        if with_answer_time and (
+            info.answered_on_max is None or answered_on > info.answered_on_max
+        ):
+            info.answered_on_max = answered_on
+        if with_answer_time and (
+            info.answered_on_min is None or answered_on < info.answered_on_min
+        ):
+            info.answered_on_min = answered_on
+
+    # Step 3: Select the latest answer for each user and task according to the count rule
+
+    answer_info_by_answer_id: dict[int, list[UserAnswerInfo]] = defaultdict(list)
+
+    for (user_id, task_id), (
+        latest_answer,
+        latest_valid_answer,
+    ) in latest_answers_per_user.items():
+        match count_rule:
+            case AnswerCountRule.OnlyValid:
+                selected_answer = latest_valid_answer
+            case AnswerCountRule.ValidThenInvalid:
+                selected_answer = latest_valid_answer or latest_answer
+            case AnswerCountRule.Any:
+                selected_answer = latest_answer
+        if selected_answer:
+            # If the answer was selected, assign the points to the user and task
+            info = user_answers_by_id[user_id][task_id]
+            info.answer_id = selected_answer.answer_id
+            info.points = selected_answer.points
+            answer_info_by_answer_id[selected_answer.answer_id].append(info)
+        else:
+            # If no answer was selected, remove the task from the dict
+            # If the user has no tasks left, remove the user so that they are not tallied
+            del user_answers_by_id[user_id][task_id]
+            if len(user_answers_by_id[user_id]) == 0:
+                del user_answers_by_id[user_id]
+
+    # Step 4: Select annotations for the selected answers and add the points to the user and task
+    annotations_query = (
+        select(Annotation)
+        .filter_by(valid_until=None)
+        .filter(
+            Annotation.answer_id.in_(
+                [
+                    i.answer_id
+                    for infos in user_answers_by_id.values()
+                    for i in infos.values()
+                    if i.answer_id >= 0
+                ]
+            )
+        )
+        .with_only_columns(Annotation.answer_id, Annotation.points)
+    )
+
+    annotations: Result[tuple[int, float | None]] = run_sql(annotations_query)
+    for answer_id, points in annotations:
+        infos = answer_info_by_answer_id[answer_id]
+        if not points:
+            continue
+        for info in infos:
+            if info.points is None:
+                info.points = 0.0
+            if info.velp_points is None:
+                info.velp_points = 0.0
+            info.velp_points += points
+            info.velped = True
+
+    # Step 5: Collect the user infos of all users
+
+    if user_ids:
+        userid_filter = User.id.in_(user_ids)
+    else:
+        userid_filter = User.id.in_(user_answers_by_id.keys())
+
+    users_query = select(User).filter(userid_filter).order_by(User.real_name)
+    if current_app.config["LOAD_STUDENT_IDS_IN_TEACHER"]:
+        users_query = users_query.options(selectinload("uniquecodes"))
+
+    # Step 6: Aggregate the results based on the different grouping options
+
+    def collect_by_user() -> list[UserTaskEntry]:
+        result: list[UserTaskEntry] = []
+
+        for user in run_sql(users_query).scalars():
+            infos = user_answers_by_id.get(user.id)
+            if not infos:
+                continue
+
+            entry = task_entry_for_user(user)
+            for info in infos.values():
+                info.update_entry(entry)
+
+            update_entry_totals(entry)
+            result.append(entry)
+
+        return result
+
+    def collect_by_doc() -> list[UserTaskEntry]:
+        result: list[UserTaskEntry] = []
+
+        user_answers_by_doc: dict[int, dict[str, list[UserAnswerInfo]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
+
+        for user_id, infos in user_answers_by_id.items():
+            for task_id, info in infos.items():
+                doc_id = task_id.split(".", maxsplit=1)[0]
+                user_answers_by_doc[user_id][doc_id].append(info)
+
+        for user in run_sql(users_query).scalars():
+            entry_per_doc_id: dict[str, UserTaskEntry] = defaultdict(
+                lambda: task_entry_for_user(user)
+            )
+
+            user_infos = user_answers_by_doc.get(user.id)
+            if user_infos:
+                for doc_id, user_doc_infos in user_infos.items():
+                    for info in user_doc_infos:
+                        info.update_entry(entry_per_doc_id[doc_id])
+
+            for doc_id, entry in entry_per_doc_id.items():
+                update_entry_totals(entry)
+                entry["doc_id"] = doc_id
+                result.append(entry)
+
+        return result
+
+    def collect_by_task() -> list[UserTaskEntry]:
+        result: list[UserTaskEntry] = []
+
+        for user in run_sql(users_query).scalars():
+            infos = user_answers_by_id.get(user.id)
+
+            if not infos:
+                continue
+
+            for task_id, info in infos.items():
+                entry = task_entry_for_user(user)
+                info.update_entry(entry)
+                update_entry_totals(entry)
+                entry["task_id"] = task_id
+                result.append(entry)
+
+        return result
+
+    if group_by_doc:
+        return collect_by_doc()
+    if group_by_user:
+        return collect_by_user()
+    return collect_by_task()
+
+
+def get_users_for_tasks(
+    task_ids: list[TaskId],
+    user_ids: list[int] | None = None,
+    group_by_user: bool = True,
+    group_by_doc: bool = False,
+    answer_filter: Any | None = None,
+    with_answer_time: bool = False,
+    count_rule: AnswerCountRule = AnswerCountRule.OnlyValid,
+) -> list[UserTaskEntry]:
+    # FIXME: Fix the get_users_for_tasks_sql version and call it instead. See the PERF comment below for details.
+    return get_users_for_tasks_py(
+        task_ids,
+        user_ids,
+        group_by_user,
+        group_by_doc,
+        answer_filter,
+        with_answer_time,
+        count_rule,
+    )
+
+
+# PERF: Right now this single-query version is *very* slow.
+#   The primary reason is related to the deeply nested joins that force the query planner to use many nested loops
+#   without reusing data. The current query also uses multiple groupings with complex computations which further slows
+#   down the query.
+#   As a temporary measure, we use the get_users_for_tasks_py version instead which relies on three separate queries
+#   and offloads computation to Python.
+#   Before returning to the query version, the following changes should be made:
+#     - Replace single query with CTEs (Common Table Expressions) to reuse data.
+#     - Replace the in_ with ARRAY and ANY constructs in PostgreSQL,
+#       as they are faster for large task_id and user lists.
+#   Additionally, the following major (possibly breaking) changes should be considered:
+#     - Consider using a materialized view for the query. However, this will require running
+#       updates on the view periodically, which increases speed at the cost of data freshness.
+#     - Consider adding an aggregate table that contains the per-user tally on each answer.
+def get_users_for_tasks_sql(
+    task_ids: list[TaskId],
+    user_ids: list[int] | None = None,
+    group_by_user: bool = True,
+    group_by_doc: bool = False,
+    answer_filter: Any | None = None,
+    with_answer_time: bool = False,
+    count_rule: AnswerCountRule = AnswerCountRule.OnlyValid,
+) -> list[UserTaskEntry]:
+    if not task_ids:
+        return []
     subquery_annotantions = (
         select(Annotation)
         .filter_by(valid_until=None)
@@ -922,6 +1264,7 @@ def get_points_by_rule(
                     total_points=None,
                     task_points=None,
                     task_id=t.doc_task,
+                    doc_id=str(t.doc_id or 0),
                     first_answer_on=None,
                     last_answer_on=None,
                     answer_duration=None,

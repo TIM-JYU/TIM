@@ -3,7 +3,6 @@ from timApp.tests.db.timdbtest import TEST_USER_1_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
-from timApp.util.utils import get_current_time
 
 
 class HideNamesTest(TimRouteTest):
@@ -23,6 +22,11 @@ class HideNamesTest(TimRouteTest):
             "users",
             [
                 {
+                    "answer_duration": None,
+                    "doc_id": "",
+                    "first_answer_on": None,
+                    "last_answer_on": None,
+                    "task_id": "",
                     "task_count": 1,
                     "task_points": None,
                     "total_points": None,
@@ -36,6 +40,11 @@ class HideNamesTest(TimRouteTest):
                     "velped_task_count": 0,
                 },
                 {
+                    "answer_duration": None,
+                    "doc_id": "",
+                    "first_answer_on": None,
+                    "last_answer_on": None,
+                    "task_id": "",
                     "task_count": 1,
                     "task_points": None,
                     "total_points": None,

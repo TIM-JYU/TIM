@@ -1,6 +1,5 @@
 """Server tests for xxx."""
 import json
-
 import re
 
 from timApp.answer.answer import Answer
@@ -69,6 +68,11 @@ class TeacherTest(TimRouteTest):
             "users",
             [
                 {
+                    "answer_duration": None,
+                    "doc_id": "",
+                    "first_answer_on": None,
+                    "last_answer_on": None,
+                    "task_id": "",
                     "task_count": 1,
                     "task_points": None,
                     "total_points": None,
