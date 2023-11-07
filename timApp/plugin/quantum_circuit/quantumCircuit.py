@@ -215,7 +215,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
 
     leftAxisLabel: str | None = None
     rightAxisLabel: str | None = None
-    timeAxisLabel: str | None = None
+    middleAxisLabel: str | None = None
 
     hideGateInfo: list[str] | None = None
 
@@ -819,7 +819,7 @@ showPrintField: true
 showOutputBits: true
 leftAxisLabel: "Qubit"
 rightAxisLabel: "Output"
-timeAxisLabel: "Time"
+middleAxisLabel: "Step"
 ```
 
 

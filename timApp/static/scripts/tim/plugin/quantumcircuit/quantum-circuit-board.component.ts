@@ -60,12 +60,12 @@ export interface GateBeingDragged {
         <div class="circuit-container">
             <div class="qubits">
                 <div class="left-block" [style.height.px]="circuitOptions.timeAxisHeight">
-                    <div [ngSwitch]="timeAxisLabel">
-                        <div *ngSwitchCase="'Time'" class="axis-text-time">
-                            <ng-container i18n>Time</ng-container>
+                    <div [ngSwitch]="middleAxisLabel">
+                        <div *ngSwitchCase="'Step'" class="axis-text-time">
+                            <ng-container i18n>Step</ng-container>
                         </div>
                         <div *ngSwitchDefault class="axis-text-time">
-                            {{timeAxisLabel}}
+                            {{middleAxisLabel}}
                         </div>
                     </div>
 
@@ -166,12 +166,12 @@ export interface GateBeingDragged {
 
             <div class="output-container">
                 <div class="right-block" [style.height.px]="circuitOptions.timeAxisHeight">
-                    <div [ngSwitch]="timeAxisLabel">
-                        <div *ngSwitchCase="'Time'" class="out-axis-time">
-                            <ng-container i18n>Time</ng-container>
+                    <div [ngSwitch]="middleAxisLabel">
+                        <div *ngSwitchCase="'Step'" class="out-axis-time">
+                            <ng-container i18n>Step</ng-container>
                         </div>
                         <div *ngSwitchDefault class="out-axis-time">
-                            {{timeAxisLabel}}
+                            {{middleAxisLabel}}
                         </div>
                     </div>
                     
@@ -261,7 +261,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
     rightAxisLabel!: string;
 
     @Input()
-    timeAxisLabel!: string;
+    middleAxisLabel!: string;
 
     @Output()
     qubitChange = new EventEmitter<number>();
