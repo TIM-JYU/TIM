@@ -8824,6 +8824,14 @@
           <context context-type="linenumber">47</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8980375993935541237" datatype="html">
+        <source>Step</source>
+        <target state="translated">Askel</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
+          <context context-type="linenumber">171</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
