@@ -3226,7 +3226,7 @@ ${fhtml}
         return this.cleanSimcirData(JSON.parse(this.usercode) as ICsSimcirData);
     }
 
-    private async getCurrenSimcirCircuit() {
+    private async getCurrentSimcirCircuit() {
         if (!this.simcir) {
             return undefined;
         }
@@ -3245,7 +3245,7 @@ ${fhtml}
             await timeout();
 
             const saved = this.getSavedSimcirCircuit();
-            const current = (await this.getCurrenSimcirCircuit())!;
+            const current = (await this.getCurrentSimcirCircuit())!;
 
             this.isSimcirUnsaved = !deepEqual(saved, current);
             this.canResetSimcir =
