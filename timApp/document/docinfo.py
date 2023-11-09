@@ -134,7 +134,7 @@ class DocInfo(Item):
         # If the conditions are met, then proceed as in the relative preamble.
         def absolute_path(variable: str) -> bool:
             variable = variable.strip()
-            return variable.startswith("/") and f"/{PREAMBLE_FOLDER_NAME}/" in variable
+            return variable.startswith("/")
 
         # These two lists are mutually exclusive to avoid if statements.
         absolute_path_parts, relative_path_parts = partition(
@@ -148,12 +148,15 @@ class DocInfo(Item):
         )
 
         for preamble_name in absolute_path_parts:
-            preamble_path_parts = preamble_name.split("/")[1:-2]
-            preamble_name = preamble_name.split("/")[-1]
-            paths.extend(
-                f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
-                for p in accumulate(part + "/" for part in preamble_path_parts)
-            )
+            if f"/{PREAMBLE_FOLDER_NAME}/" in preamble_name:
+                preamble_path_parts = preamble_name.split("/")[1:-2]
+                preamble_name = preamble_name.split("/")[-1]
+                paths.extend(
+                    f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
+                    for p in accumulate(part + "/" for part in preamble_path_parts)
+                )
+            else:
+                paths.append(preamble_name[1:])
 
         # Remove duplicates and then self-reference
         paths = list(dict.fromkeys(paths))
