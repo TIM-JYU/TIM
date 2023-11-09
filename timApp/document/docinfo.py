@@ -198,7 +198,10 @@ class DocInfo(Item):
             for de, tr in docs_q:  # type: DocEntry, Translation | None
                 d = tr or de
                 path = d.path_without_lang
-                if preamble_path_part not in path and not user_ctx.user.has_view_access(d):
+                if (
+                    preamble_path_part not in path
+                    and not user_ctx.user.has_view_access(d)
+                ):
                     continue
                 docs.append((de, tr))
 
