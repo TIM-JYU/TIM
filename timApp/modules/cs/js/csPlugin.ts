@@ -1241,6 +1241,7 @@ export class CsController extends CsBase implements ITimComponent {
     uploadByCodeFiles: {path: string; show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
     private isSimcirUnsaved?: boolean;
+    private canResetSimcir?: boolean;
     private clearSaved: boolean = false;
     private originalUserInput?: string;
     exportingMD = false;
@@ -3166,6 +3167,11 @@ ${fhtml}
         this.simcir.children().remove();
         const simcir = await loadSimcir();
         simcir.setupSimcir(this.simcir, data);
+
+        const saved = this.getSavedSimcirCircuit();
+        const original = this.getOriginalSimcirCircuit();
+        this.canResetSimcir = original && !deepEqual(saved, original);
+        this.updateCanReset();
     }
 
     async getSimcirData(simcirElem: JQuery): Promise<ICsSimcirData> {
@@ -3196,29 +3202,56 @@ ${fhtml}
         }
     }
 
+    private cleanSimcirData(data: ICsSimcirData): ICsSimcirData {
+        data.devices.forEach((d) => delete d.state);
+        return data;
+    }
+
+    private getOriginalSimcirCircuit() {
+        let originalCircuit: ICsSimcirData | undefined;
+        try {
+            if (this.byCode) {
+                originalCircuit = this.cleanSimcirData(
+                    JSON.parse(this.byCode) as ICsSimcirData
+                );
+            }
+        } catch (e) {
+            // Ignore errors
+        }
+
+        return originalCircuit;
+    }
+
+    private getSavedSimcirCircuit() {
+        return this.cleanSimcirData(JSON.parse(this.usercode) as ICsSimcirData);
+    }
+
+    private async getCurrenSimcirCircuit() {
+        if (!this.simcir) {
+            return undefined;
+        }
+        return this.cleanSimcirData(await this.getSimcirData(this.simcir));
+    }
+
     private initSimcirCircuitListener() {
         if (!this.simcir) {
             return;
         }
 
-        const scr = this.simcir;
-        // Ignore state when saving
-        const cleanSimcirData = (data: ICsSimcirData) => {
-            data.devices.forEach((d) => delete d.state);
-            return data;
-        };
+        const originalCircuit = this.getOriginalSimcirCircuit();
 
         this.simcir.find(".simcir-workspace").on("mouseup", async () => {
             // Simcir's own mouseup hasn't happened yet - timeout hack is for that.
             await timeout();
 
-            const saved = cleanSimcirData(
-                JSON.parse(this.usercode) as ICsSimcirData
-            );
-            const current = cleanSimcirData(await this.getSimcirData(scr));
+            const saved = this.getSavedSimcirCircuit();
+            const current = (await this.getCurrenSimcirCircuit())!;
 
             this.isSimcirUnsaved = !deepEqual(saved, current);
+            this.canResetSimcir =
+                originalCircuit && !deepEqual(originalCircuit, current);
             this.anyChanged();
+            this.updateCanReset();
         });
     }
 
@@ -3278,7 +3311,7 @@ ${fhtml}
         this.canReset = !!(
             (this.editor?.modified ?? false) ||
             this.isSage ||
-            this.simcir ||
+            this.canResetSimcir ||
             (this.markup.resetUserInput &&
                 this.userinput !== this.originalUserInput)
         );
