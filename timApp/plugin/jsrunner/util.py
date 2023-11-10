@@ -23,7 +23,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.item.item import Item
+from timApp.item.item import Item, ItemBase
 from timApp.messaging.messagelist.messagelist_utils import (
     UserGroupDiff,
     sync_usergroup_messagelist_members,
@@ -36,6 +36,7 @@ from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, run_sql
+from timApp.upload.uploadedfile import UploadedFile
 from timApp.user.groups import do_create_group, verify_group_edit_access
 from timApp.user.user import User, UserInfo, UserOrigin
 from timApp.user.usergroup import UserGroup
@@ -580,7 +581,12 @@ def _handle_item_right_actions(
 
     for action in item_right_actions:
         # Items can be declared either as path or ID, so it's easier to find_by_path for everything
-        item = Item.find_by_path(action.item, fallback_to_id=True)
+        item: ItemBase | None = Item.find_by_path(action.item, fallback_to_id=True)
+
+        # If item not found and the item is an integer, we can try finding a file.
+        if not item and action.item.strip().isdigit():
+            item = UploadedFile.find_by_id(int(action.item))
+
         if not item:
             raise NotExist()
 
@@ -589,13 +595,28 @@ def _handle_item_right_actions(
         if isinstance(item, Folder):
             raise RouteException("Managing folder rights is not yet supported")
 
+        items_to_check: list[DocInfo] = []
+        valid_manage_keys = set()
+        if isinstance(item, DocInfo):
+            items_to_check.append(item)
+
+        elif isinstance(item, UploadedFile):
+            for p in item.parents:  # type: Block
+                for d in p.docentries:
+                    items_to_check.append(d)
+
+        for doc in items_to_check:
+            settings = doc.document.get_settings()
+            k = settings.manage_key()
+            if k:
+                valid_manage_keys.add(k)
+
         if item.block.id not in item_actions:
-            if isinstance(item, DocInfo):
-                settings = item.document.get_settings()
-                if settings.manage_key() != action.manageKey:
-                    raise RouteException(
-                        f"Invalid manage key for document '{item.path}'"
-                    )
+            if action.manageKey not in valid_manage_keys:
+                raise RouteException(
+                    f"Failed to validate manage key for item '{item.id}'. "
+                    f"Tried to check manage keys in: {', '.join(d.path for d in items_to_check)}."
+                )
 
             item_actions[item.block.id] = []
             items[item.block.id] = item.block
