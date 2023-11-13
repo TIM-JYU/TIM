@@ -53,23 +53,23 @@ class TimMenuIndentation:
         return str(self)
 
 
+@dataclass(slots=True)
 class TimMenuItem:
     """
     Menu item with mandatory attributes (content, level, id, list of contained menu items and opening state)
     and optional styles.
     """
 
-    def __init__(
-        self, text: str, level: int, items: list["TimMenuItem"], is_open: bool = False
-    ) -> None:
-        self.text = text
-        self.level = level
-        self.id = ""
-        self.items = items
-        self.open = is_open
-        self.width: str | None = None
-        self.height: str | None = None
-        self.rights: str | None = None
+    text: str
+    level: int
+    items: list["TimMenuItem"]
+    open: bool = False
+    id: str = ""
+    width: str | None = None
+    height: str | None = None
+    rights: str | None = None
+    tooltip: str | None = None
+    tooltipPlacement: str | None = None
 
     def __str__(self) -> str:
         s = f"{{level: {self.level}, id: '{self.id}', text: '{self.text}', items: {self.items}"
@@ -105,6 +105,10 @@ class TimMenuItem:
             s.update({"height": self.height})
         if self.rights:
             s.update({"rights": self.rights})
+        if self.tooltip:
+            s.update({"tooltip": self.tooltip})
+        if self.tooltipPlacement:
+            s.update({"tooltipPlacement": self.tooltipPlacement})
         return s
 
 
@@ -209,6 +213,14 @@ def set_attributes(line: str, item: TimMenuItem) -> None:
         rights = get_attribute(line, "rights")
         if rights:
             item.rights = rights
+    if not item.tooltip:
+        tooltip = get_attribute(line, "tooltip")
+        if tooltip:
+            item.tooltip = tooltip
+    if not item.tooltipPlacement:
+        tooltip_placement = get_attribute(line, "tooltipPlacement")
+        if tooltip_placement:
+            item.tooltipPlacement = tooltip_placement
 
 
 def get_attribute(line: str, attr_name: str) -> str | None:
