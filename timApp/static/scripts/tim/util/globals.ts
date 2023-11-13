@@ -176,6 +176,7 @@ export interface ICssFile {
 export interface ISettings {
     custom_css: string;
     disable_menu_hover: boolean;
+    tim_menu_always_top: boolean;
     remember_last_sidebar_menu_tab: boolean;
     remember_last_sidebar_menu_state: boolean;
     email_exclude: string;

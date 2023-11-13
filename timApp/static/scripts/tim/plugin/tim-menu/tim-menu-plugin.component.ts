@@ -223,9 +223,13 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
-        if (genericglobals().userPrefs.disable_menu_hover) {
+        const prefs = genericglobals().userPrefs;
+        if (prefs.disable_menu_hover) {
             this.userPrefersHoverDisabled =
                 genericglobals().userPrefs.disable_menu_hover;
+        }
+        if (prefs.tim_menu_always_top) {
+            this.topMenu = false;
         }
         this.hoverOpen =
             this.markup.hoverOpen && !this.userPrefersHoverDisabled;

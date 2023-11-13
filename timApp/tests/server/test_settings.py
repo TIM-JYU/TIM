@@ -97,15 +97,14 @@ class SettingsTest(TimRouteTest):
                     "name": "testuser1",
                     "origin": None,
                     "prefs": '{"custom_css": "", "use_document_word_list": false, '
-                    '"disable_menu_hover": false, '
+                    '"disable_menu_hover": false, "tim_menu_always_top": false, '
                     '"remember_last_sidebar_menu_tab": false, '
                     '"remember_last_sidebar_menu_state": false, "word_list": '
                     '"", "email_exclude": "", "language": null, '
                     '"style_doc_ids": [], "last_answer_fetch": {}, '
                     '"auto_mark_all_read": false, "bookmarks": [{"Last edited": '
                     '[{"document 2": "/view/users/test-user-1/doc1"}]}], '
-                    '"max_uncollapsed_toc_items": null, '
-                    '"parmenu_position": 1}',
+                    '"max_uncollapsed_toc_items": null, "parmenu_position": 1}',
                     "real_name": "Test user 1",
                 },
                 "velps": [],
@@ -213,6 +212,7 @@ type: python
                 "max_uncollapsed_toc_items": None,
                 "remember_last_sidebar_menu_state": False,
                 "remember_last_sidebar_menu_tab": False,
+                "tim_menu_always_top": False,
                 "style_doc_ids": [],
                 "use_document_word_list": False,
                 "word_list": "",
@@ -252,6 +252,7 @@ type: python
                 "remember_last_sidebar_menu_tab": True,
                 "auto_mark_all_read": True,
                 "bookmarks": None,
+                "tim_menu_always_top": False,
                 "parmenu_position": 0,
             },
         )
@@ -268,6 +269,7 @@ type: python
                 "remember_last_sidebar_menu_state": False,
                 "remember_last_sidebar_menu_tab": True,
                 "auto_mark_all_read": False,
+                "tim_menu_always_top": False,
                 "parmenu_position": 1,
             },
         )
@@ -287,6 +289,7 @@ type: python
                 "auto_mark_all_read": False,
                 "max_uncollapsed_toc_items": None,
                 "bookmarks": None,
+                "tim_menu_always_top": False,
                 "parmenu_position": 1,
             },
         )

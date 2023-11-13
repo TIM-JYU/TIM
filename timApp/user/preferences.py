@@ -30,6 +30,7 @@ class Preferences:
     custom_css: str = ""
     use_document_word_list: bool = False
     disable_menu_hover: bool = False
+    tim_menu_always_top: bool = False
     remember_last_sidebar_menu_tab: bool = False
     remember_last_sidebar_menu_state: bool = False
     word_list: str = ""
