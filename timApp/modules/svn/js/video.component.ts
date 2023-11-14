@@ -12,6 +12,7 @@ import {
     isSafari,
     parseIframeopts,
     seconds2Time,
+    TimStorage,
     valueDefu,
 } from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -237,7 +238,7 @@ const ShowFileAll = t.type({
             </ng-container>
             <div class="flex" *ngIf="videoOn" style="justify-content: flex-end">
                 <div *ngIf="videosettings" class="margin-5-right">
-                    <label class="normalLabel" title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" /></label>
+                    <label class="normalLabel" title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
                     Speed:
                     <span class="text-smaller">
                         {{playbackRateString}}
@@ -345,11 +346,17 @@ export class VideoComponent extends AngularPluginBase<
     isPdf = false;
     videosettings?: {src: string; crossOrigin: string | null};
     playbackRateString = "";
-    advVideo: boolean = false;
+    advVideo: boolean = true;
     requiresTaskId = false;
+    advVideoState = new TimStorage("advVideoState", t.boolean);
+
+    onAdvVideoStateChange(newValue: boolean) {
+        this.advVideoState.set(newValue);
+    }
 
     ngOnInit() {
         super.ngOnInit();
+        this.advVideo = this.advVideoState.get() ?? false;
         this.start = toSeconds(this.markup.start);
         this.end = toSeconds(this.markup.end);
         this.bookmarks[0] = this.start ?? 0;
