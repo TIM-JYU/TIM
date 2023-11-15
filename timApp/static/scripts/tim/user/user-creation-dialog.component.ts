@@ -13,8 +13,16 @@ import {GroupMember} from "tim/ui/group-management.component";
  */
 export interface UserCreationDialogParams {
     group: string;
+    // type of association for users created within the current manage document,
+    // used only to represent the type of association in the UI
+    associationType?: string;
     // options for hiding/displaying certain input fields for user creation
 }
+
+// export type UserAssociation = {
+//     type: string;
+//     value: string;
+// };
 
 @Component({
     selector: "tim-user-creation-dialog",
@@ -65,6 +73,18 @@ export interface UserCreationDialogParams {
                     </div>
 
                     <div class="form-group">
+                        <label i18n for="association" class="col-sm-2 control-label">{{getAssociationType()}}</label>
+                        <div class="col-sm-10">
+                            <input i18n-placeholder type="text"
+                                   [(ngModel)]="association"
+                                   (ngModelChange)="setMessage()"
+                                   id="association" name="association"
+                                   class="form-control"
+                                   placeholder="User's association, eg. class or group name">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
                         <label i18n for="email" class="col-sm-2 control-label">Email</label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
@@ -75,15 +95,8 @@ export interface UserCreationDialogParams {
                                    placeholder="User's email">
                         </div>
                     </div>
+                    
                 </form>
-
-                <!--
-                User group validation has two (2) stages.
-                1) Browser validates that at least a name is required and does not contain a character slash
-                before sending a request to the server.
-                2) Server responses with an error message if a given folder or name of the user group failed.
-                Refer to documentation: https://angular.io/guide/form-validation#validating-form-input
-                -->
 
                 <tim-alert *ngIf="ngModelName.invalid && ngModelName.dirty" severity="danger">
                     <ng-container i18n *ngIf="ngModelName.errors?.['required']">
@@ -117,10 +130,11 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
     GroupMember
 > {
     protected dialogName = "UserCreate";
-    username = "";
-    given_name = "";
-    surname = "";
-    email = "";
+    username: string = "";
+    given_name: string = "";
+    surname: string = "";
+    association?: string = "";
+    email: string = "";
 
     message?: string;
 
@@ -138,6 +152,7 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
                 given_name: this.given_name,
                 surname: this.surname,
                 email: this.email,
+                association: this.association ?? "",
             })
         );
 
@@ -150,6 +165,10 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
 
     private getGroup(): string {
         return this.data.group;
+    }
+
+    getAssociationType(): string {
+        return this.data.associationType ?? "Association";
     }
 
     setMessage(message?: string): void {
