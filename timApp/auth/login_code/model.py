@@ -28,7 +28,6 @@ def generate_code():
     code = code[len(code) - 10 : -1]
 
 
-@mapper_registry.mapped
 class UserLoginCode(db.Model):
     """
     A (temporary) login code for a User.
