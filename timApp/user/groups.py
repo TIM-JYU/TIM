@@ -35,6 +35,7 @@ from timApp.util.flask.requesthelper import load_data_from_req, RouteException, 
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars, get_current_time
+from timApp.util.logger import log_error
 from tim_common.marshmallow_dataclass import class_schema
 
 groups = TypedBlueprint("groups", __name__, url_prefix="/groups")
@@ -498,14 +499,52 @@ def copy_members(source: str, target: str) -> Response:
                 },
             )
 
-    # FIXME: verify_group_view_access currently results in an error,
-    #  so bypass it for now, we already check for access elsewhere
-    # verify_group_view_access(source_group)
-    verify_group_edit_access(target_group)
+    current_user = get_current_user_object()
+
+    from timApp.auth.accesshelper import verify_ownership
+    from timApp.document.routes import get_doc_or_abort
+    from timApp.user.usergroup import UserGroupDoc
+
+    source_group_doc_id: int = (
+        run_sql(
+            select(UserGroupDoc.doc_id)
+            .where(UserGroupDoc.group_id == source_group.id)
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+    target_group_doc_id: int = (
+        run_sql(
+            select(UserGroupDoc.doc_id)
+            .where(UserGroupDoc.group_id == target_group.id)
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+
+    source_group_doc = get_doc_or_abort(source_group_doc_id)
+    target_group_doc = get_doc_or_abort(target_group_doc_id)
+
+    if (
+        not verify_groupadmin(user=current_user)
+        or not verify_ownership(b=source_group_doc)
+        or not verify_ownership(b=target_group_doc)
+    ):
+        return json_response(
+            status_code=403,
+            jsondata={
+                "result": {
+                    "error": f"Copying group members failed: insufficient permissions."
+                },
+            },
+        )
+
     members: list[User] = list(source_group.users)
     added_memberships = []
     for u in members:
-        u.add_to_group(target_group, get_current_user_object())
+        u.add_to_group(target_group, current_user)
         added_memberships.append(u.name)
     db.session.commit()
     return json_response(
@@ -525,9 +564,9 @@ def delete_group(group_id: int) -> Response:
     The group documents will remain in the TIM 'trash' folder, but without database entries they
     should not be able to reference any data.
 
-    :param group_id ID of the group that should be deleted
+    :param group_id: ID of the group that should be deleted
     """
-
+    # TODO Return a fail response to user instead of raising RouteException?
     group_name = "\n".join(do_delete_groups([group_id]))
     db.session.commit()
     return json_response(
@@ -538,7 +577,7 @@ def delete_group(group_id: int) -> Response:
 
 @groups.delete("/delete")
 def mass_delete_groups() -> Response:
-    """Route for mass deleting a UserGroups.
+    """Route for mass deleting UserGroups.
     Permanently deletes UserGroups from the database.
     When calling this function, user should be notified that the operation cannot be undone.
 
@@ -548,6 +587,8 @@ def mass_delete_groups() -> Response:
 
     req: dict = request.get_json()
     group_ids: list[int] = req["ids"]
+
+    # TODO Return a fail response to user instead of raising RouteException?
     group_names = "\n".join(do_delete_groups(group_ids))
     db.session.commit()
     return json_response(
@@ -559,8 +600,8 @@ def mass_delete_groups() -> Response:
 def do_delete_groups(group_ids: list[int]) -> list[str]:
     del_groups = get_groups_by_ids(group_ids)
     group_names = list(group.name for group in del_groups)
-    for g in del_groups:
-        verify_group_edit_access(g)
+    # for g in del_groups:
+    #     verify_group_edit_access(g)
 
     from timApp.document.routes import get_doc_or_abort
     from timApp.user.usergroup import UserGroupDoc, UserGroupMember
@@ -573,12 +614,26 @@ def do_delete_groups(group_ids: list[int]) -> list[str]:
         .scalars()
         .all()
     )
+
+    current_user = get_current_user_object()
+    from timApp.auth.accesshelper import verify_ownership
+
     group_docs = list(get_doc_or_abort(gdid) for gdid in group_doc_ids)
     for group_doc in group_docs:
-        soft_delete_document(group_doc)
+        # Preferably we should do permissions checks earlier, but we need the references to check for doc ownership
+        if not verify_groupadmin(user=current_user) or not verify_ownership(
+            b=group_doc
+        ):
+            log_error(
+                f"User {current_user} does not have permission to delete group {group_doc.document.docinfo.title}"
+            )
+            raise RouteException(
+                f"Insufficient permissions to delete group: {group_doc.document.docinfo.title}"
+            )
 
-    # TODO we probably need to clear a whole bunch of db rows / relationships
-    #      before we can delete the actual UserGroup
+        soft_delete_document(group_doc)
+        # TODO Since we already have to clear the database references,
+        #  we might as well delete the usergroup doc from disk
 
     run_sql(
         delete(UserGroupDoc)
