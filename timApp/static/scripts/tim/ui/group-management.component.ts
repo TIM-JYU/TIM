@@ -58,20 +58,26 @@ export interface GroupEvent {
 
 type Selectable = Group | GroupMember;
 
-/*
-Required document setting:
-```
-additional_angular_modules:
-  - timGroupManagementModule
-```
-
-Adding the component to a document:
-```
-#- {allowangular="true"}
-<tim-group-management-console></tim-group-management-console>
-```
+/**
+ * A group management component, that can be used to manage groups and group members.
+ * It is intended for 'one-off' type situations like course exams, where it is not desirable
+ * to require complete user accounts for students (such as when the course itself is not held in TIM).
+ * Instead, the component can be used to create minimal user accounts with temporary login codes for logging into TIM.
+ *
+ * Events (exams) can be added for groups, so that group permissions to the event documents can be propagated automatically.
+ *
+ * Required document setting:
+ * ```
+ * additional_angular_modules:
+ *   - timGroupManagementModule
+ * ```
+ *
+ * Adding the component to a document:
+ * ```
+ * #- {allowangular="true"}
+ * <tim-group-management-console></tim-group-management-console>
+ * ```
  */
-
 @Component({
     selector: "tim-group-management-console",
     template: `
@@ -124,7 +130,6 @@ Adding the component to a document:
                 <div id="groups-list-controls" >
                     <div class="flex">
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new group</button>
-                        <!-- TODO disable copying if more than one group selected -->
                         <button class="timButton" (click)="copyGroup(this.groups)"
                                 [disabled]="!oneSelected(this.groups)" i18n>Copy selected group
                         </button>
@@ -171,6 +176,8 @@ Adding the component to a document:
                                                 <th i18n><input type="checkbox" name="selectAllMembers_{{group.id}}" [(ngModel)]="group.allMembersSelected" (change)="toggleAllMembersSelected(group)"/></th>
                                                 <th i18n>Name</th>
                                                 <th i18n>Username</th>
+                                                <!-- FIXME: This will probably not translate correctly -->
+                                                <th i18n>{{this.settings.associationType ?? "Association"}}</th>
                                                 <th i18n>Email</th>
                                                 <th i18n>Login code</th>
                                             </tr>
@@ -182,6 +189,7 @@ Adding the component to a document:
                                                 </td>
                                                 <td>{{member.real_name}}</td>
                                                 <td>{{member.name}}</td>
+                                                <td>{{member.association}}</td>
                                                 <td>{{member.email}}</td>
                                                 <td>{{member.login_code}}</td>
                                             </tr>
