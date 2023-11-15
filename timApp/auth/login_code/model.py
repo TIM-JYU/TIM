@@ -20,6 +20,14 @@ class ActivationStatus(enum.Enum):
     Active = 1
 
 
+def generate_code():
+    millis = get_current_time().microsecond / 1000
+    code = str(int(millis))
+    # last 9 digits, this flips around every ~11.5 days
+    # which should be fine for temporary use
+    code = code[len(code) - 10 : -1]
+
+
 @mapper_registry.mapped
 class UserLoginCode(db.Model):
     """
@@ -36,15 +44,23 @@ class UserLoginCode(db.Model):
               via the server config setting :attr:`timApp.defaultconfig.LOGINCODES_ENABLE`.
     """
 
-    code: Mapped[str] = mapped_column(String(9), primary_key=True)
+    code: Mapped[str] = mapped_column(String(9), unique=True, primary_key=True)
     """User's temporary login code.
     
     .. note:: Login codes consist of only the numbers 0-9, but we want to store
               them as strings for easier handling elsewhere (eg. formatting for the UI).
     """
 
-    id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), primary_key=True)
-    """User or group that is linked to this login code"""
+    id: Mapped[int] = mapped_column(
+        ForeignKey("usergroup.id"), unique=True, primary_key=True
+    )
+    """User or group that is linked to this login code.
+    
+       We likely need this to be unique as well, to prevent users having multiple login_codes.
+    """
+
+    association: Mapped[str] = mapped_column(String)
+    """User's association identifier, for example, the name of a real-world class or 'homegroup'."""
 
     activation_start: Mapped[Optional[datetime_tz]] = mapped_column(
         default=get_current_time()
