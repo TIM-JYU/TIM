@@ -292,7 +292,9 @@ def validate_groupname(group_name: str, flags: NameValidationFlags | None = None
     # Note: If future expansion is needed, create a new variable to hold the chars,
     #       do *not* expand the existing one unless the leveraged spec for Base64 has changed.
     # TODO: Should we make this a configurable property?
-    base64_chars = "+/=" if NameValidationFlags.AllowBase64 in flags else ""
+    # TODO: allowing special chars is now probably redundant since we are using urlsafe_base64en/decode,
+    #       which substitutes '+' and '/' with '-' and '_' respectively (and '=' is explicitly allowed)
+    base64_chars = "+/=" if flags and NameValidationFlags.AllowBase64 in flags else ""
     allowed_special_chars = f"-_{base64_chars}"
     for c in group_name:
         has_digits = has_digits or c.isdigit()
@@ -301,12 +303,19 @@ def validate_groupname(group_name: str, flags: NameValidationFlags | None = None
         has_non_alnum = has_non_alnum or not (
             c.isalnum() or c.isspace() or c in allowed_special_chars
         )
-    if (
-        (NameValidationFlags.RequireDigits in flags and not has_digits)
-        or not has_letters
-        or has_non_alnum
-        or (NameValidationFlags.AllowUpperCase not in flags and has_upper_letters)
-    ):
+    if flags:
+        if (
+            (NameValidationFlags.RequireDigits in flags and not has_digits)
+            or not has_letters
+            or has_non_alnum
+            or (NameValidationFlags.AllowUpperCase not in flags and has_upper_letters)
+        ):
+            raise RouteException(
+                'User group must contain at least one digit and one letter and must not have uppercase or special chars: "'
+                + group_name
+                + '"'
+            )
+    elif not has_digits or not has_letters or has_non_alnum or has_upper_letters:
         raise RouteException(
             'User group must contain at least one digit and one letter and must not have uppercase or special chars: "'
             + group_name
