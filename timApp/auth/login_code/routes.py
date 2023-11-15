@@ -129,12 +129,13 @@ def get_members(group_id: int) -> Response:
     """
 
     # Only admins, group admins, and specified management doc owners should be able to view group members
-    ug_doc_id: int = (
-        run_sql(select(UserGroupDoc.doc_id).filter_by(group_id=group_id).limit(1))
+    # Note: Mypy is not yet happy with explicit type declaration here
+    ugd: UserGroupDoc = UserGroupDoc(
+        run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1))
         .scalars()
         .first()
     )
-    ug_doc = get_doc_or_abort(ug_doc_id)
+    ug_doc = get_doc_or_abort(ugd.doc_id)
     if not (verify_ownership(ug_doc) or verify_admin() or verify_groupadmin()):
         return json_response(
             status_code=403,
@@ -263,18 +264,13 @@ def create_users(group_name: str) -> Response:
         .scalars()
         .all()
     )
-    group = UserGroup | None
+    group = None
     for g in groups:
         dec = decode_name(g.name)
         if g.name == group_name or dec == group_name:
             group = g
             break
-    if not group:
-        return json_response(
-            status_code=404,
-            jsondata={"result": {"error": f"No matching group: {group_name}."}},
-        )
-    else:
+    if group:
         user.add_to_group(group, current_user)
         db.session.commit()
         return json_response(
@@ -285,4 +281,9 @@ def create_users(group_name: str) -> Response:
                 "email": user.email,
                 "real_name": user.real_name,
             },
+        )
+    else:
+        return json_response(
+            status_code=404,
+            jsondata={"result": {"error": f"No matching group: {group_name}."}},
         )

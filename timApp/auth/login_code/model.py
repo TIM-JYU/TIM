@@ -20,12 +20,13 @@ class ActivationStatus(enum.Enum):
     Active = 1
 
 
-def generate_code():
+def generate_code() -> str:
     millis = get_current_time().microsecond / 1000
     code = str(int(millis))
     # last 9 digits, this flips around every ~11.5 days
     # which should be fine for temporary use
     code = code[len(code) - 10 : -1]
+    return code
 
 
 class UserLoginCode(db.Model):
