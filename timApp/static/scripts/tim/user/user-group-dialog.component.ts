@@ -7,7 +7,6 @@ import {toPromise} from "tim/util/utils";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
-import {Buffer} from "buffer";
 
 /**
  * Defines additional parameters for creating new user groups via the UserGroupDialog.
@@ -124,7 +123,7 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
 
     async saveGroup(): Promise<void> {
         const encodeName = this.data.encodeGroupName
-            ? `?encodeGroupName=${this.data.encodeGroupName}`
+            ? `?encodeGroupName=${this.data.encodeGroupName.toString()}`
             : "";
         const request = `/groups/create/${this.getFolderName()}${encodeName}`;
         const response = await toPromise(this.http.get<IDocument>(request));
