@@ -18,6 +18,8 @@ import {TabDirective} from "ngx-bootstrap/tabs";
 import {forEach} from "angular";
 import http from "http";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -250,72 +252,17 @@ export class GroupManagementComponent implements OnInit {
     saveMembersSuccessMessage?: string;
     saveMembersFailMessage?: string;
 
-    // just for visualizing/testing the interface
-    mockCurrentLoginKeyStart: number;
-
     // status info for group members table
     savingGroupMembers?: boolean;
 
     @Input() eventHeading?: string;
+    private viewctrl!: Require<ViewCtrl>;
 
     constructor(private http: HttpClient) {
+        this.viewctrl = vctrlInstance!;
+        // this.settings = this.viewctrl.docSettings.groupManagement ?? {}; // ngOnInit
         this.showAllGroups = false;
         this.allGroupsSelected = false;
-
-        this.mockCurrentLoginKeyStart = 0;
-        // this.settings = {};
-
-        // this.mockMembers = [
-        //     {
-        //         id: 123456789,
-        //         name: "aku",
-        //         email: "aku@ankkalinna.com",
-        //         real_name: "Aku Ankka",
-        //         student_id: "123456789",
-        //     },
-        //     {
-        //         id: 223456789,
-        //         name: "hupu",
-        //         email: "hupu@ankkalinna.com",
-        //         real_name: "Hupu Ankka",
-        //         student_id: "223456789",
-        //     },
-        //     {
-        //         id: 323456789,
-        //         name: "tupu",
-        //         email: "tupu@ankkalinna.com",
-        //         real_name: "Tupu Ankka",
-        //         student_id: "323456789",
-        //     },
-        //     {
-        //         id: 423456789,
-        //         name: "lupu",
-        //         email: "lupu@ankkalinna.com",
-        //         real_name: "Lupu Ankka",
-        //         student_id: "423456789",
-        //     },
-        //     {
-        //         id: 523456789,
-        //         name: "iines",
-        //         email: "iines@ankkalinna.com",
-        //         real_name: "Iines Ankka",
-        //         student_id: "523456789",
-        //     },
-        //     {
-        //         id: 623456789,
-        //         name: "roope",
-        //         email: "roope@ankkalinna.com",
-        //         real_name: "Roope Ankka",
-        //         student_id: "623456789",
-        //     },
-        //     {
-        //         id: 723456789,
-        //         name: "testiankka",
-        //         email: "testiankka@ankkalinna.com",
-        //         real_name: "Testi Ankka",
-        //         student_id: "723456789",
-        //     },
-        // ];
     }
 
     /**
@@ -348,11 +295,9 @@ export class GroupManagementComponent implements OnInit {
             await this.getGroupMembers(g);
         }
 
-        // TODO do we even needs these? we already parse the necessary docsettings
-        //      when processing the requests on the server
-        // this.settings = {
-        //     ...this.viewctrl.docSettings.groupManagement,
-        // };
+        this.settings = {
+            ...this.viewctrl.docSettings.groupManagement,
+        };
 
         // await this.getManagers();
         // await this.debugCheck();
@@ -446,8 +391,9 @@ export class GroupManagementComponent implements OnInit {
         const params: UserGroupDialogParams = {
             // TODO set these in group management docSettings
             canChooseFolder: false,
-            // TODO Should be same as 'groupsPath'
-            defaultGroupFolder: "sukol/2023/testikoulu",
+            // TODO Should be same as 'groupsPath' as it should always be set
+            defaultGroupFolder:
+                this.settings.groupsPath ?? "sukol/2023/testikoulu",
             encodeGroupName: true,
         };
         // Create a new group
@@ -599,7 +545,12 @@ export class GroupManagementComponent implements OnInit {
         // Should display a dialog where the user may provide a list of members to add
         // Support adding members via an existing UserGroup in addition to username, email, and [creating new users on the spot]
         // TODO refactor to enable import users en masse, via CSV for example
-        const resp = await to2(showUserCreationDialog({group: group.name}));
+        const creationParams = {
+            group: group.name,
+            // Defaults to "Association" if not set in doc settings
+            associationType: this.settings.associationType,
+        };
+        const resp = await to2(showUserCreationDialog(creationParams));
         if (resp.ok) {
             let newUser: GroupMember = resp.result;
             this.members[group.name].push(newUser);
