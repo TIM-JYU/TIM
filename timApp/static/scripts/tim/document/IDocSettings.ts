@@ -28,6 +28,7 @@ export interface IGroupManagementSettings {
     managers?: string[];
     groupsPath?: string;
     showAllGroups?: boolean;
+    associationType?: string;
 }
 
 export interface IDocSettings {
