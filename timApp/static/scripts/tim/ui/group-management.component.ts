@@ -1,8 +1,6 @@
 import {HttpClient} from "@angular/common/http";
-import type {AfterViewInit, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
-// import moment from "moment";
-// import {forEach} from "angular";
 import type {IGroup, IUser} from "tim/user/IUser";
 import {ADMIN_GROUPNAME} from "tim/user/IUser";
 import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
@@ -14,11 +12,9 @@ import type {IGroupManagementSettings} from "tim/document/IDocSettings";
 import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showUserCreationDialog} from "tim/user/showUserCreationDialog";
-import {TabDirective} from "ngx-bootstrap/tabs";
-import {forEach} from "angular";
-import http from "http";
+import type {TabDirective} from "ngx-bootstrap/tabs";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 
 export interface GroupMember extends IUser {
@@ -55,8 +51,6 @@ export interface GroupEvent {
     // Can be used to eg. modify document rights for an event group in the given timeslot
     documents: string[];
 }
-
-type Selectable = Group | GroupMember;
 
 /**
  * A group management component, that can be used to manage groups and group members.
@@ -299,7 +293,7 @@ export class GroupManagementComponent implements OnInit {
         await this.getGroups();
         this.selectedGroupTab = this.groups[0]?.name ?? "";
 
-        for (let g of this.groups) {
+        for (const g of this.groups) {
             await this.getGroupMembers(g);
         }
 
@@ -343,12 +337,12 @@ export class GroupManagementComponent implements OnInit {
             // unless the (UI option? could be doc setting as well?) option 'List all existing groups' is active.
             // In general, group managers should not have access to groups they did not create,
             // but there are exceptions (for instance, a group manager might need to be substituted suddenly).
-            let _showAllGroups: string = this.showAllGroups
-                ? `?showAllGroups=${this.showAllGroups}`
+            const showAllGroups: string = this.showAllGroups
+                ? `?showAllGroups=${this.showAllGroups.toString()}`
                 : "";
             const groups = await toPromise<Group[]>(
                 this.http.get<Group[]>(
-                    `/loginCode/groups/${doc_id}${_showAllGroups}`
+                    `/loginCode/groups/${doc_id}${showAllGroups}`
                 )
             );
             if (groups.ok) {
@@ -358,7 +352,7 @@ export class GroupManagementComponent implements OnInit {
     }
 
     /**
-     * Checks that at least one Gourp or GroupMember is selected.
+     * Checks that at least one Group or GroupMember is selected.
      * @param selectables list of selectable Groups or GroupMembers
      */
     anySelected(selectables: GroupMember[] | Group[]) {
@@ -371,9 +365,13 @@ export class GroupManagementComponent implements OnInit {
      */
     oneSelected(groups: Group[]) {
         let count = 0;
-        for (let g of groups) {
-            if (g.selected) count++;
-            if (count > 1) return false;
+        for (const g of groups) {
+            if (g.selected) {
+                count++;
+            }
+            if (count > 1) {
+                return false;
+            }
         }
         return count == 1;
     }
@@ -425,19 +423,18 @@ export class GroupManagementComponent implements OnInit {
      * @param groups
      */
     async copyGroup(groups: Group[]) {
-        let selected;
-        for (let g of groups) {
+        let selected: Group | undefined;
+        for (const g of groups) {
             if (g.selected) {
                 selected = g;
                 break;
             }
         }
         if (selected) {
-            const path = selected!.path;
-            const folder = path.slice(
-                path.indexOf("/") + 1,
-                path.lastIndexOf("/")
-            );
+            const path = selected.path;
+            const folder = path
+                ? path.slice(path.indexOf("/") + 1, path.lastIndexOf("/"))
+                : "";
             const params: UserGroupDialogParams = {
                 canChooseFolder: false,
                 defaultGroupFolder: folder,
@@ -474,9 +471,11 @@ export class GroupManagementComponent implements OnInit {
      */
     async deleteSelectedGroups(groups: Group[]) {
         // Delete selected groups
-        let selected: Group[] = [];
+        const selected: Group[] = [];
         for (const g of groups) {
-            if (g.selected) selected.push(g);
+            if (g.selected) {
+                selected.push(g);
+            }
         }
         const confirmTitle = $localize`Delete groups`;
         const confirmMessage = $localize`Are you certain you wish to delete the following groups?\nThis action cannot be undone!\n\nGroups to be deleted:\n`;
@@ -489,18 +488,12 @@ export class GroupManagementComponent implements OnInit {
         const group_ids = selected.map((g) => g.id);
 
         if (res.ok) {
-            // call server group delete
-            if (selected.length == 1) {
-                const deleteResp = await toPromise(
-                    this.http.delete(`/groups/delete/${selected[0].id}`)
-                );
-            } else if (selected.length > 1) {
-                // mass delete groups
-                const deleteResp = await toPromise(
+            if (!selected.length) {
+                return;
+            } else {
+                await toPromise(
                     this.http.delete(`/groups/delete`, {body: {ids: group_ids}})
                 );
-            } else {
-                return;
             }
             // remove from group record
             selected.map((group) => delete this.members[group.name]);
@@ -560,7 +553,7 @@ export class GroupManagementComponent implements OnInit {
         };
         const resp = await to2(showUserCreationDialog(creationParams));
         if (resp.ok) {
-            let newUser: GroupMember = resp.result;
+            const newUser: GroupMember = resp.result;
             this.members[group.name].push(newUser);
         }
     }
@@ -574,24 +567,27 @@ export class GroupManagementComponent implements OnInit {
     protected async removeMembers(group: Group) {
         // Remove selected members from the currently active group
         // Note: remember to clear selectedMembers after deletion from the group
-        let selected = this.members[group.name].filter((m) => m.selected);
+        const selected = this.members[group.name].filter((m) => m.selected);
 
         const resp = await toPromise(
-            this.http.post<{}>(`/groups/removemember/${group.name}`, {
-                names: selected.map((mn) => mn.name),
-            })
+            this.http.post<Record<string, string[]>>(
+                `/groups/removemember/${group.name}`,
+                {
+                    names: selected.map((mn) => mn.name),
+                }
+            )
         );
         if (resp.ok) {
-            let result: Record<string, string[]> = resp.result;
-            const removed = result["removed"].join("\n");
-            const not_in_group = result["does_not_belong"].join("\n");
-            const not_exist = result["not_exist"].join("\n");
+            const result: Record<string, string[]> = resp.result;
+            const removed = result.removed.join("\n");
+            const not_in_group = result.does_not_belong.join("\n");
+            const not_exist = result.not_exist.join("\n");
 
-            let msg = `${removed ? "Removed members:\n" + removed + "\n" : ""}
+            const msg = `${removed ? "Removed members:\n" + removed + "\n" : ""}
                               ${
                                   not_in_group
                                       ? "Following users do not belong to group '" +
-                                        group +
+                                        group.name +
                                         "':\n" +
                                         not_in_group +
                                         "\n"
@@ -603,7 +599,7 @@ export class GroupManagementComponent implements OnInit {
                                       : ""
                               }`;
             await to2(showMessageDialog(msg));
-            for (let s of selected) {
+            for (const s of selected) {
                 this.members[group.name].splice(
                     this.members[group.name].indexOf(s),
                     1

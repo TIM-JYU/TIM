@@ -1,12 +1,12 @@
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
-import {to2, toPromise} from "../util/utils";
-import {DialogModule} from "../ui/angulardialog/dialog.module";
-import {TimUtilityModule} from "../ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
-import {GroupMember} from "tim/ui/group-management.component";
+import type {GroupMember} from "tim/ui/group-management.component";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {toPromise} from "tim/util/utils";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 /**
  * Defines additional parameters for creating new users via the UserCreationDialog.
@@ -18,11 +18,6 @@ export interface UserCreationDialogParams {
     associationType?: string;
     // options for hiding/displaying certain input fields for user creation
 }
-
-// export type UserAssociation = {
-//     type: string;
-//     value: string;
-// };
 
 @Component({
     selector: "tim-user-creation-dialog",
