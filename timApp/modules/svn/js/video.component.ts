@@ -113,10 +113,10 @@ const ShowFileMarkup = t.intersection([
         thumbnailFile: nullable(t.string),
         width: t.number,
         defaultSubtitles: t.string,
+        autoplay: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
-        autoplay: withDefault(t.boolean, true),
         file: withDefault(t.string, ""),
         subtitles: withDefault(t.array(SubtitlesMarkup), []),
         target: withDefault(t.string, "timdoc"),
@@ -216,7 +216,7 @@ const ShowFileAll = t.type({
                        [style.height.px]="height"
                        [src]="videosettings.src"
                        [crossOrigin]="videosettings.crossOrigin"
-                       [autoplay]="markup.autoplay"
+                       [autoplay]="videoAutoPlay"
                 >
                         <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" />    
                 </video>
@@ -558,6 +558,10 @@ export class VideoComponent extends AngularPluginBase<
         }
     }
 
+    get videoAutoPlay() {
+        return this.markup.autoplay ?? true;
+    }
+
     toggleVideo() {
         if (this.videoOn) {
             this.hideVideo();
@@ -601,6 +605,9 @@ export class VideoComponent extends AngularPluginBase<
                 srcUrl.hostname = "www.youtube.com";
                 srcUrl.pathname = `/embed/${id}`;
             }
+            if (youtubeDomains.has(srcUrl.hostname) && this.markup.autoplay) {
+                srcUrl.searchParams.set("autoplay", "1");
+            }
             const moniviestinConvertPattern = moniviestinIdConverters.get(
                 srcUrl.hostname
             );
@@ -618,11 +625,15 @@ export class VideoComponent extends AngularPluginBase<
             this.isPdf =
                 src.includes(".pdf") && // TODO: hack for Mac Safari see https://github.com/TIM-JYU/TIM/issues/2114
                 isSafari();
+            let defaultOpts = 'sandbox="allow-scripts allow-same-origin"';
+            if (this.markup.autoplay) {
+                defaultOpts += ' allow="autoplay"';
+            }
             const iframeopts = parseIframeopts(
                 this.markup.iframeopts ??
                     // Some GeoGebra instances use showVideo plugin.
                     // The allow-same-origin is needed for GeoGebra on iPad.
-                    'sandbox="allow-scripts allow-same-origin"',
+                    defaultOpts,
                 src
             );
             this.iframesettings = {
