@@ -22,10 +22,9 @@ export interface GroupMember extends IUser {
     name: string;
     email: string;
     real_name: string;
-    // 'home' org, class, or other identifier that we can use to check
-    // if this GroupMember already exists in a situation where we cannot
-    // confidently use email, name or real_name for this purpose.
-    association: string;
+    // additional information on the member not conveyed by other properties,
+    // such as name of class, homegroup, etc.
+    extra_info: string;
     // login codes will need to be treated like passwords
     login_code: string;
 
@@ -80,8 +79,8 @@ export interface GroupEvent {
  *     - groupname
  *   groupsPath: // path for groups created with this component
  *     - sukol/2023/testikoulu
- *   associationType:
- *     - title // title used in the ui for the association/relationship type of members, eg. "Class", "Group", etc.
+ *   extraInfoTitle:
+ *     - title // title used in the ui for extra info on members, eg. "Class", "Group", etc.
  * ```
  *
  */
@@ -184,7 +183,7 @@ export interface GroupEvent {
                                                 <th i18n>Name</th>
                                                 <th i18n>Username</th>
                                                 <!-- FIXME: This will probably not translate correctly -->
-                                                <th i18n>{{this.settings.associationType ?? "Association"}}</th>
+                                                <th i18n>{{this.settings.extraInfoTitle ?? "Extra info"}}</th>
                                                 <th i18n>Email</th>
                                                 <th i18n>Login code</th>
                                             </tr>
@@ -196,7 +195,7 @@ export interface GroupEvent {
                                                 </td>
                                                 <td>{{member.real_name}}</td>
                                                 <td>{{member.name}}</td>
-                                                <td>{{member.association}}</td>
+                                                <td>{{member.extra_info}}</td>
                                                 <td>{{member.email}}</td>
                                                 <td>{{member.login_code}}</td>
                                             </tr>
@@ -561,8 +560,8 @@ export class GroupManagementComponent implements OnInit {
         // TODO refactor to enable import users en masse, via CSV for example
         const creationParams = {
             group: group.name,
-            // Defaults to "Association" if not set in doc settings
-            associationType: this.settings.associationType,
+            // Defaults to "Extra info" if not set in doc settings
+            extra_info: this.settings.extraInfoTitle,
         };
         const resp = await to2(showUserCreationDialog(creationParams));
         if (resp.ok) {

@@ -15,7 +15,7 @@ export interface UserCreationDialogParams {
     group: string;
     // type of association for users created within the current manage document,
     // used only to represent the type of association in the UI
-    associationType?: string;
+    extraInfoTitle?: string;
     // options for hiding/displaying certain input fields for user creation
 }
 
@@ -68,17 +68,17 @@ export interface UserCreationDialogParams {
                     </div>
 
                     <div class="form-group">
-                        <label i18n for="association" class="col-sm-2 control-label">{{getAssociationType()}}</label>
+                        <label i18n for="extra_info" class="col-sm-2 control-label">{{getExtraInfoTitle()}}</label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
-                                   [(ngModel)]="association"
+                                   [(ngModel)]="extra_info"
                                    (ngModelChange)="setMessage()"
-                                   id="association" name="association"
+                                   id="extra_info" name="extra_info"
                                    class="form-control"
-                                   placeholder="User's association, eg. class or group name">
+                                   placeholder="Additional information related to the user, eg. class or group name">
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label i18n for="email" class="col-sm-2 control-label">Email</label>
                         <div class="col-sm-10">
@@ -90,7 +90,7 @@ export interface UserCreationDialogParams {
                                    placeholder="User's email">
                         </div>
                     </div>
-                    
+
                 </form>
 
                 <tim-alert *ngIf="ngModelName.invalid && ngModelName.dirty" severity="danger">
@@ -128,7 +128,7 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
     username: string = "";
     given_name: string = "";
     surname: string = "";
-    association?: string = "";
+    extra_info?: string = "";
     email: string = "";
 
     message?: string;
@@ -147,7 +147,7 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
                 given_name: this.given_name,
                 surname: this.surname,
                 email: this.email,
-                association: this.association ?? "",
+                extra_info: this.extra_info ?? "",
             })
         );
 
@@ -162,8 +162,8 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
         return this.data.group;
     }
 
-    getAssociationType(): string {
-        return this.data.associationType ?? "Association";
+    getExtraInfoTitle(): string {
+        return this.data.extraInfoTitle ?? "Extra info";
     }
 
     setMessage(message?: string): void {
