@@ -3,7 +3,7 @@ from __future__ import annotations
 from itertools import accumulate
 from typing import Iterable, Generator, TYPE_CHECKING
 
-from sqlalchemy import select
+from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload
 
 from timApp.document.docparagraph import DocParagraph
@@ -129,12 +129,13 @@ class DocInfo(Item):
         preamble_names = preamble_setting.split(",")
         doc_path = self.path_without_lang
         path_parts = doc_path.split("/")
+        preamble_path_part = f"/{PREAMBLE_FOLDER_NAME}/"
 
         # An absolute path begins with "/" and "/preambles/" appears in it.
         # If the conditions are met, then proceed as in the relative preamble.
         def absolute_path(variable: str) -> bool:
             variable = variable.strip()
-            return variable.startswith("/") and f"/{PREAMBLE_FOLDER_NAME}/" in variable
+            return variable.startswith("/")
 
         # These two lists are mutually exclusive to avoid if statements.
         absolute_path_parts, relative_path_parts = partition(
@@ -148,12 +149,15 @@ class DocInfo(Item):
         )
 
         for preamble_name in absolute_path_parts:
-            preamble_path_parts = preamble_name.split("/")[1:-2]
-            preamble_name = preamble_name.split("/")[-1]
-            paths.extend(
-                f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
-                for p in accumulate(part + "/" for part in preamble_path_parts)
-            )
+            if preamble_path_part in preamble_name:
+                preamble_path_parts = preamble_name.split("/")[1:-2]
+                preamble_name = preamble_name.split("/")[-1]
+                paths.extend(
+                    f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
+                    for p in accumulate(part + "/" for part in preamble_path_parts)
+                )
+            else:
+                paths.append(preamble_name[1:])
 
         # Remove duplicates and then self-reference
         paths = list(dict.fromkeys(paths))
@@ -173,9 +177,12 @@ class DocInfo(Item):
 
         from timApp.document.docentry import DocEntry
         from timApp.document.translation.translation import Translation
+        from timApp.auth.sessioninfo import user_context_with_logged_in_or_anon
+
+        user_ctx = user_context_with_logged_in_or_anon()
 
         def get_docs(doc_paths: list[str]) -> list[tuple[DocEntry, Translation | None]]:
-            return run_sql(
+            docs_q: Result[tuple[DocEntry, Translation | None]] = run_sql(
                 select(DocEntry, Translation)
                 .select_from(DocEntry)
                 .filter(DocEntry.name.in_(doc_paths))
@@ -184,7 +191,21 @@ class DocInfo(Item):
                     (Translation.src_docid == DocEntry.id)
                     & (Translation.lang_id == self.lang_id),
                 )
-            ).all()
+            )
+
+            docs = []
+
+            for de, tr in docs_q:  # type: DocEntry, Translation | None
+                d = tr or de
+                path = d.path_without_lang
+                if (
+                    preamble_path_part not in path
+                    and not user_ctx.user.has_view_access(d)
+                ):
+                    continue
+                docs.append((de, tr))
+
+            return docs
 
         result = get_docs(paths)
         result.sort(key=lambda x: path_index_map[x[0].path])
@@ -197,10 +218,12 @@ class DocInfo(Item):
             settings = d.document.get_settings()
             extra_preambles = settings.extra_preambles()
             if extra_preambles:
-                from timApp.auth.sessioninfo import user_context_with_logged_in_or_anon
-
-                macro_info = settings.get_macroinfo(
-                    default_view_ctx, user_context_with_logged_in_or_anon()
+                macro_info = settings.get_macroinfo(default_view_ctx, user_ctx)
+                macro_info.macro_map.update(
+                    {
+                        "ref_docid": self.id,
+                        "ref_docpath": doc_path,
+                    }
                 )
 
                 if isinstance(extra_preambles, str):

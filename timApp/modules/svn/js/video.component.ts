@@ -12,6 +12,7 @@ import {
     isSafari,
     parseIframeopts,
     seconds2Time,
+    TimStorage,
     valueDefu,
 } from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -112,10 +113,10 @@ const ShowFileMarkup = t.intersection([
         thumbnailFile: nullable(t.string),
         width: t.number,
         defaultSubtitles: t.string,
+        autoplay: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
-        autoplay: withDefault(t.boolean, true),
         file: withDefault(t.string, ""),
         subtitles: withDefault(t.array(SubtitlesMarkup), []),
         target: withDefault(t.string, "timdoc"),
@@ -215,7 +216,7 @@ const ShowFileAll = t.type({
                        [style.height.px]="height"
                        [src]="videosettings.src"
                        [crossOrigin]="videosettings.crossOrigin"
-                       [autoplay]="markup.autoplay"
+                       [autoplay]="videoAutoPlay"
                 >
                         <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" />    
                 </video>
@@ -237,7 +238,7 @@ const ShowFileAll = t.type({
             </ng-container>
             <div class="flex" *ngIf="videoOn" style="justify-content: flex-end">
                 <div *ngIf="videosettings" class="margin-5-right">
-                    <label class="normalLabel" title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" /></label>
+                    <label class="normalLabel" title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
                     Speed:
                     <span class="text-smaller">
                         {{playbackRateString}}
@@ -345,11 +346,17 @@ export class VideoComponent extends AngularPluginBase<
     isPdf = false;
     videosettings?: {src: string; crossOrigin: string | null};
     playbackRateString = "";
-    advVideo: boolean = false;
+    advVideo: boolean = true;
     requiresTaskId = false;
+    advVideoState = new TimStorage("advVideoState", t.boolean);
+
+    onAdvVideoStateChange(newValue: boolean) {
+        this.advVideoState.set(newValue);
+    }
 
     ngOnInit() {
         super.ngOnInit();
+        this.advVideo = this.advVideoState.get() ?? false;
         this.start = toSeconds(this.markup.start);
         this.end = toSeconds(this.markup.end);
         this.bookmarks[0] = this.start ?? 0;
@@ -551,6 +558,10 @@ export class VideoComponent extends AngularPluginBase<
         }
     }
 
+    get videoAutoPlay() {
+        return this.markup.autoplay ?? true;
+    }
+
     toggleVideo() {
         if (this.videoOn) {
             this.hideVideo();
@@ -594,6 +605,9 @@ export class VideoComponent extends AngularPluginBase<
                 srcUrl.hostname = "www.youtube.com";
                 srcUrl.pathname = `/embed/${id}`;
             }
+            if (youtubeDomains.has(srcUrl.hostname) && this.markup.autoplay) {
+                srcUrl.searchParams.set("autoplay", "1");
+            }
             const moniviestinConvertPattern = moniviestinIdConverters.get(
                 srcUrl.hostname
             );
@@ -611,11 +625,15 @@ export class VideoComponent extends AngularPluginBase<
             this.isPdf =
                 src.includes(".pdf") && // TODO: hack for Mac Safari see https://github.com/TIM-JYU/TIM/issues/2114
                 isSafari();
+            let defaultOpts = 'sandbox="allow-scripts allow-same-origin"';
+            if (this.markup.autoplay) {
+                defaultOpts += ' allow="autoplay"';
+            }
             const iframeopts = parseIframeopts(
                 this.markup.iframeopts ??
                     // Some GeoGebra instances use showVideo plugin.
                     // The allow-same-origin is needed for GeoGebra on iPad.
-                    'sandbox="allow-scripts allow-same-origin"',
+                    defaultOpts,
                 src
             );
             this.iframesettings = {

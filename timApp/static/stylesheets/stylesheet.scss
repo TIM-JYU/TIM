@@ -598,6 +598,11 @@ div.error {
     padding-right: 2em;
     min-width: inherit;
     margin-left: auto;
+
+    .timMenu .tim-menu-dropdown {
+        position: fixed;
+        z-index: 100;
+    }
 }
 
 .timButton, .editorButton {
@@ -1562,3 +1567,4 @@ tim-rights-editor {
 .lazy-answer-inactive {
   opacity: 0.3;
 }
+

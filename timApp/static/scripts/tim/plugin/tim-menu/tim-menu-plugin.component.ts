@@ -3,7 +3,7 @@
  */
 import * as t from "io-ts";
 import $ from "jquery";
-import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
 import {
     ChangeDetectorRef,
     Component,
@@ -29,6 +29,7 @@ import {
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {DomSanitizer} from "@angular/platform-browser";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 
 const TimMenuMarkup = t.intersection([
     t.partial({
@@ -59,6 +60,8 @@ interface ITimMenuItem {
     rights?: string;
     text: string;
     width?: string;
+    tooltip?: string;
+    tooltipPlacement?: "top" | "bottom" | "left" | "right";
 }
 
 const ITimMenuItem: t.Type<ITimMenuItem> = t.recursion("ITimMenuItem", () =>
@@ -68,6 +71,13 @@ const ITimMenuItem: t.Type<ITimMenuItem> = t.recursion("ITimMenuItem", () =>
             items: t.array(ITimMenuItem),
             rights: t.string,
             width: t.string,
+            tooltip: t.string,
+            tooltipPlacement: t.union([
+                t.literal("top"),
+                t.literal("bottom"),
+                t.literal("left"),
+                t.literal("right"),
+            ]),
         }),
         t.type({
             id: t.string,
@@ -100,53 +110,67 @@ const TimMenuAll = t.intersection([
     <span class="tim-menu-links" *ngFor="let t1 of menu; let last = last">
         <span *ngIf="t1.items && t1.items.length > 0 && hasRights(t1)" class="btn-group" style="{{setStyle(t1)}}">
           <span [innerHtml]="t1.text+openingSymbol" (click)="toggleSubmenu(t1, undefined, undefined, true)"
-                (pointerover)="toggleSubmenu(t1, undefined, undefined, false, $event)"></span>
+                (pointerover)="toggleSubmenu(t1, undefined, undefined, false, $event)"
+               [tooltip]="t1.tooltip" [placement]="t1.tooltipPlacement ?? 'bottom'"></span>
           <ul class="tim-menu-dropdown" *ngIf="t1.open" [ngClass]="openDirection(t1.id)" id="{{t1.id}}">
             <li class="tim-menu-list-item" *ngFor="let t2 of t1.items" style="{{setStyle(t2)}}">
                 <span class="tim-menu-item" *ngIf="t2.items && t2.items.length > 0 && hasRights(t2)">
                     <span class="tim-menu-item tim-menu-itemcontent" [innerHtml]="t2.text+openingSymbol"
                           (click)="toggleSubmenu(t2, t1, undefined, true)"
-                          (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"></span>
+                              (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"
+                          [tooltip]="t2.tooltip" [placement]="t2.tooltipPlacement ?? 'bottom'"></span>
                     <ul class="tim-menu-dropdown tim-menu-innerlist" id="{{t2.id}}" [ngClass]="openDirection(t2.id)" *ngIf="t2.open">
                         <li class="tim-menu-list-item" *ngFor="let t3 of t2.items" style="{{setStyle(t3)}}">
                             <span class="tim-menu-item" *ngIf="t3.items && t3.items.length > 0 && hasRights(t3)">
                                 <span class="tim-menu-item tim-menu-itemcontent" [innerHtml]="t3.text+openingSymbol"
                                       (click)="toggleSubmenu(t3, t2, t1, true)"
-                                      (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"></span>
+                                      (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"
+                                      [tooltip]="t3.tooltip" [placement]="t3.tooltipPlacement ?? 'bottom'"></span>
                                 <ul class="tim-menu-dropdown tim-menu-innerlist" id="{{t3.id}}" [ngClass]="openDirection(t3.id)"
                                     *ngIf="t3.open">
                                     <ng-container *ngFor="let t4 of t3.items">
-                                        <li class="tim-menu-list-item tim-menu-itemcontent" [innerHtml]="t4.text" style="{{setStyle(t4)}}"
-                                            *ngIf="hasRights(t4)"></li>
+                                        <li class="tim-menu-list-item tim-menu-itemcontent" style="{{setStyle(t4)}}"
+                                            [tooltip]="t4.tooltip" [placement]="t4.tooltipPlacement ?? 'bottom'"
+                                            *ngIf="hasRights(t4)"
+                                            [innerHtml]="t4.text"
+                                        >
+                                        </li>
                                     </ng-container>
                                 </ul>
                             </span>
                             <span class="tim-menu-item tim-menu-itemcontent" *ngIf="t3.items && t3.items.length < 1  && hasRights(t3)"
                                   [innerHtml]="t3.text" (click)="toggleSubmenu(t3, t2, t1, true)"
-                                  (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"></span>
+                                  (pointerover)="toggleSubmenu(t3, t2, t1, false, $event)"
+                                  [tooltip]="t3.tooltip" [placement]="t3.tooltipPlacement ?? 'bottom'"></span>
                         </li>
                     </ul>
                 </span>
                 <span class="tim-menu-item tim-menu-itemcontent" *ngIf="t2.items && t2.items.length < 1 && hasRights(t2)"
                       [innerHtml]="t2.text" (click)="toggleSubmenu(t2, t1, undefined, true)"
-                      (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"></span>
+                      (pointerover)="toggleSubmenu(t2, t1, undefined, false, $event)"
+                      [tooltip]="t2.tooltip" [placement]="t2.tooltipPlacement ?? 'bottom'"></span>
             </li>
           </ul>
         </span>
         <span *ngIf="t1.items && t1.items.length < 1 && hasRights(t1)" class="btn-group" style="{{setStyle(t1)}}"
-              [innerHtml]="t1.text" (click)="toggleSubmenu(t1, undefined, undefined, true)"
-              (pointerover)="toggleSubmenu(t1, undefined, undefined, false, $event)"></span>
+               (click)="toggleSubmenu(t1, undefined, undefined, true)"
+              [innerHtml]="t1.text"
+              (pointerover)="toggleSubmenu(t1, undefined, undefined, false, $event)"
+              [tooltip]="t1.tooltip" [placement]="t1.tooltipPlacement ?? 'bottom'"></span>
         <span *ngIf="!last && hasRights(t1)" [innerHtml]="separator"></span>
     </span>
         </div>
     `,
     styleUrls: ["tim-menu-plugin.component.scss"],
 })
-export class TimMenuPluginComponent extends AngularPluginBase<
-    t.TypeOf<typeof TimMenuMarkup>,
-    t.TypeOf<typeof TimMenuAll>,
-    typeof TimMenuAll
-> {
+export class TimMenuPluginComponent
+    extends AngularPluginBase<
+        t.TypeOf<typeof TimMenuMarkup>,
+        t.TypeOf<typeof TimMenuAll>,
+        typeof TimMenuAll
+    >
+    implements AfterViewInit
+{
     menu: ITimMenuItem[] = [];
 
     openingSymbol: string = "";
@@ -193,6 +217,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
             return;
         }
         this.menu = this.attrsall.menu;
+        console.log(this.menu);
         this.separator = this.markup.separator;
         this.topMenu = this.markup.topMenu;
         this.openAbove = this.markup.openAbove;
@@ -231,6 +256,25 @@ export class TimMenuPluginComponent extends AngularPluginBase<
             this.markup.hoverOpen && !this.userPrefersHoverDisabled;
         this.userRights = this.vctrl.item.rights;
         this.setBarStyles();
+    }
+
+    ngAfterViewInit() {
+        const el = this.element[0];
+        const links = el.querySelectorAll(".tim-menu-links a");
+        const currentUrl = new URL(window.location.href);
+
+        for (const link of links) {
+            const a = link as HTMLAnchorElement;
+            if (a.href) {
+                const fullHref = new URL(a.href, window.location.href);
+                if (
+                    fullHref.hostname == currentUrl.hostname &&
+                    fullHref.pathname == currentUrl.pathname
+                ) {
+                    a.classList.add("active");
+                }
+            }
+        }
     }
 
     getAttributeType() {
@@ -545,6 +589,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
         TimUtilityModule,
         AnswerSheetModule,
         PurifyModule,
+        TooltipModule.forRoot(),
     ],
 })
 export class TimMenuPluginModule implements DoBootstrap {

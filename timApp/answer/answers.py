@@ -623,12 +623,12 @@ class UserAnswerInfo:
     velped: bool = False
 
     def update_entry(self, entry: UserTaskEntry) -> None:
-        if self.points:
+        if self.points is not None:
             if entry["task_points"] is None:
                 entry["task_points"] = 0.0
             assert entry["task_points"] is not None
             entry["task_points"] += self.points
-        if self.velp_points:
+        if self.velp_points is not None:
             if entry["velp_points"] is None:
                 entry["velp_points"] = 0.0
             assert entry["velp_points"] is not None
@@ -793,8 +793,6 @@ def get_users_for_tasks_py(
         if not points:
             continue
         for info in infos:
-            if info.points is None:
-                info.points = 0.0
             if info.velp_points is None:
                 info.velp_points = 0.0
             info.velp_points += points

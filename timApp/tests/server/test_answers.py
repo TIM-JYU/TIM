@@ -53,6 +53,18 @@ class AnswerTest(TimRouteTest):
         self.check_totals(user1, [task_id1, task_id2], 2, 1000.5)
         self.check_totals(user2, [task_id1, task_id2], 2, 1000.5)
 
+    def test_no_points_summary(self):
+        user1 = User.get_by_name("testuser1")
+        task_id1 = TaskId.parse("1.test")
+
+        # Answer with no points should leave total_points at None
+        save_answer([user1], task_id1, "content0", None, [], True)
+        self.check_totals(user1, [task_id1], 1, None)
+
+        # Answer with 0 points should leave total_points at 0
+        save_answer([user1], task_id1, "content1", 0, [], True)
+        self.check_totals(user1, [task_id1], 1, 0)
+
     def check_user(self, u: User, task_id1: TaskId, task_id2: TaskId):
         uid = u.id
         self.assertListEqual([], get_users_for_tasks([task_id1], [uid]))
