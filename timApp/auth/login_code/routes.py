@@ -129,12 +129,9 @@ def get_members(group_id: int) -> Response:
     """
 
     # Only admins, group admins, and specified management doc owners should be able to view group members
-    # Note: Mypy is not yet happy with explicit type declaration here
-    ugd: UserGroupDoc = UserGroupDoc(
-        run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1))
-        .scalars()
-        .first()
-    )
+    # Note: Mypy is not happy with explicit type declaration here.
+    #       Automatic formatting/Black might still break this.
+    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1)).scalars().first()  # type: ignore
     ug_doc = get_doc_or_abort(ugd.doc_id)
     if not (verify_ownership(ug_doc) or verify_admin() or verify_groupadmin()):
         return json_response(
