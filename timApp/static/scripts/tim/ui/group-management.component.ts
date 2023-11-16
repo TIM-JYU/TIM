@@ -51,6 +51,11 @@ export interface GroupEvent {
     documents: string[];
 }
 
+export interface UserCode {
+    id: number; // user id
+    code: string;
+}
+
 /**
  * A group management component, that can be used to manage groups and group members.
  * It is intended for 'one-off' type situations like course exams, where it is not desirable
@@ -142,7 +147,7 @@ export interface GroupEvent {
                         <button class="timButton btn-danger" (click)="deleteSelectedGroups(this.groups)"
                                 [disabled]="anySelected(this.groups)" i18n>Delete selected groups
                         </button>
-                        <button class="timButton" (click)="generateLoginCodes(this.groups)"
+                        <button class="timButton" (click)="generateLoginCodes()"
                                 [disabled]="anySelected(this.groups)" i18n>Generate login codes
                         </button>
                         <button class="timButton" (click)="printLoginCodes(this.groups)"
@@ -404,6 +409,31 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
+    private getSelectedGroups(): Group[] {
+        const selected: Group[] = [];
+        for (const g of this.groups) {
+            if (g.selected) {
+                selected.push(g);
+            }
+        }
+        return selected;
+    }
+
+    private async getMembersFromSelectedGroups() {
+        const groups = this.getSelectedGroups();
+        const group_ids = groups.map((g) => g.id);
+
+        const url = `/loginCode/members/from_groups`;
+        const response = await toPromise(
+            this.http.post<GroupMember[]>(url, {
+                ids: group_ids,
+            })
+        );
+        if (response.ok) {
+            return response.result;
+        }
+    }
+
     async createNewGroup() {
         // Disable setting group folder and provide a default path for it
         const params: UserGroupDialogParams = {
@@ -483,12 +513,7 @@ export class GroupManagementComponent implements OnInit {
      */
     async deleteSelectedGroups(groups: Group[]) {
         // Delete selected groups
-        const selected: Group[] = [];
-        for (const g of groups) {
-            if (g.selected) {
-                selected.push(g);
-            }
-        }
+        const selected: Group[] = this.getSelectedGroups();
         const confirmTitle = $localize`Delete groups`;
         const confirmMessage = $localize`Are you certain you wish to delete the following groups?\nThis action cannot be undone!\n\nGroups to be deleted:\n`;
         const confirmGroups = selected.map((g) => g.name).join("\n");
@@ -519,16 +544,33 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
-    generateLoginCodes(groups: Group[]) {
+    async generateLoginCodes() {
         // Generate temporary login codes for members of the currently selected groups
         // The codes are linked to the individual users via a database table
-        // Should check for existing and still valid codes before refreshing
-        // to avoid accidentally changing valid ones (also display a warning, perhaps in a dialog).
-        // members.forEach((member) => {
-        //     const loginkey = `${this.mockCurrentLoginKeyStart++}`;
-        //     member.student_id = `${"0".repeat(9 - loginkey.length)}${loginkey}`;
-        // });
-        // return;
+        // TODO: Should check for existing and still valid codes before refreshing
+        //       to avoid accidentally changing valid ones (also display a warning).
+        // TODO: dialog that allows to set the activation_start and activation_end properties
+        const members = await this.getMembersFromSelectedGroups();
+        if (members !== undefined) {
+            const url = `/loginCode/generateCodes`;
+            const response = await toPromise(
+                this.http.post<UserCode[]>(url, {
+                    members: members,
+                })
+            );
+            if (response.ok) {
+                const usercodes = response.result;
+                for (const code of usercodes) {
+                    const m = members.find((me) => me.id == code.id);
+                    if (m !== undefined) {
+                        m.login_code = code.code;
+                    }
+                }
+
+                const msg = `${"Created user codes:\n" + usercodes}`;
+                await to2(showMessageDialog(msg));
+            }
+        }
     }
 
     printLoginCodes(groups: IGroup[]) {
@@ -558,12 +600,14 @@ export class GroupManagementComponent implements OnInit {
         // Should display a dialog where the user may provide a list of members to add
         // Support adding members via an existing UserGroup in addition to username, email, and [creating new users on the spot]
         // TODO refactor to enable import users en masse, via CSV for example
-        const creationParams = {
+        // TODO create UserLoginCode entries here, without the login codes (those are updated with the generate codes function)
+        //      this way, we can store the extra info more handily than if we do it later
+        const creationDialogParams = {
             group: group.name,
             // Defaults to "Extra info" if not set in doc settings
             extra_info: this.settings.extraInfoTitle,
         };
-        const resp = await to2(showUserCreationDialog(creationParams));
+        const resp = await to2(showUserCreationDialog(creationDialogParams));
         if (resp.ok) {
             const newUser: GroupMember = resp.result;
             this.members[group.name].push(newUser);

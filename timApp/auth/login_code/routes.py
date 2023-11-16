@@ -11,6 +11,7 @@ from timApp.auth.accesshelper import (
     get_origin_from_request,
     verify_admin,
 )
+from timApp.auth.login_code.model import UserLoginCode
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
@@ -161,6 +162,62 @@ def get_members(group_id: int) -> Response:
     return json_response(status_code=200, jsondata=data)
 
 
+@login_code.post("/members/from_groups")
+def get_members_from_groups() -> Response:
+    """
+    :return: Group members of all listed groups
+    """
+
+    r: dict = request.get_json()
+    group_ids: list[int] = r.get("ids")
+
+    ugds: list[UserGroupDoc] = list(
+        run_sql(select(UserGroupDoc).where(UserGroupDoc.group_id.in_(group_ids)))
+        .scalars()
+        .all()
+    )
+    ug_docs = list(get_doc_or_abort(u.doc_id) for u in ugds)
+    accessible_ugdocs: list[DocInfo] = list()
+
+    for ugd in ug_docs:
+        accessible_ugdocs.append(ugd) if (
+            verify_ownership(ugd) or verify_admin() or verify_groupadmin()
+        ) else None
+
+    if not accessible_ugdocs:
+        return json_response(
+            status_code=403,
+            jsondata={"error": f"Insufficient permissions."},
+        )
+
+    ugd_ids: list[int] = list(ugd.id for ugd in accessible_ugdocs)
+    accessible_group_ids: list[int] = list(
+        g.group_id for g in ugds if g.doc_id in ugd_ids
+    )
+
+    ugs: list[UserGroup] = list(
+        run_sql(select(UserGroup).where(UserGroup.id.in_(accessible_group_ids)))
+        .scalars()
+        .all()
+    )
+
+    members: list[User] = [u for ug in ugs for u in ug.users]
+    # for ug in ugs:
+    #     for u in ug.users:
+    #         members.extend(u)
+
+    data = [
+        {
+            "id": m.id,
+            "name": m.name,
+            "email": m.email,
+            "real_name": m.real_name,
+        }
+        for m in members
+    ]
+    return json_response(status_code=200, jsondata=data)
+
+
 @login_code.get("/checkOwner/<int:doc_id>")
 def check_ownership(doc_id: int) -> Response:
     from timApp.tim import get_current_user_object
@@ -221,12 +278,14 @@ def create_users(group_name: str) -> Response:
     # Check for permission to create users
     # Since we do not want to add every group manager (teacher) to Group admins groups,
     # we will allow them to create users for their own groups if they have ownership of the group
-    if not verify_groupadmin(
-        user=current_user, action=f"Creating new user"
-    ) or not verify_ownership(require=False, b=UserGroup.get_by_name(group_name)):
-        return json_response(
-            status_code=403, jsondata={"result": {"error": "Insufficient permissions."}}
-        )
+
+    # TODO: we have to convert base64-encoded names here before checking for permissions
+    # if not verify_groupadmin(
+    #     user=current_user, action=f"Creating new user"
+    # ) or not verify_ownership(b=UserGroup.get_by_name(group_name)):
+    #     return json_response(
+    #         status_code=403, jsondata={"result": {"error": "Insufficient permissions."}}
+    #     )
 
     u: dict = request.get_json()
     username: str = str(u.get("username"))
@@ -284,3 +343,23 @@ def create_users(group_name: str) -> Response:
             status_code=404,
             jsondata={"result": {"error": f"No matching group: {group_name}."}},
         )
+
+
+@login_code.post("/generateCodes")
+def generate_codes_for_members() -> Response:
+    r: dict = request.get_json()
+    members: list = r.get("members")
+    created_codes: list[dict] = list()
+    # TODO eventually we will want to set activation_start, _end here as well
+    for m in members:
+        user_id: int = int(m.get("id"))
+        extra_info: str = str(m.get("extra_info"))
+        ulc = UserLoginCode.create(_id=user_id, extra_info=extra_info)
+        usercode = {"id": ulc.id, "code": ulc.code}
+        created_codes.append(usercode)
+
+    db.session.commit()
+    return json_response(
+        status_code=200,
+        jsondata=created_codes,
+    )
