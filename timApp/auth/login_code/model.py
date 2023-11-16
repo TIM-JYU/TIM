@@ -4,7 +4,7 @@ Database models for managing login codes
 from datetime import timedelta
 from typing import Optional
 import enum
-
+import time
 from sqlalchemy import ForeignKey, String, Enum
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
@@ -21,7 +21,7 @@ class ActivationStatus(enum.Enum):
 
 
 def generate_code() -> str:
-    millis = get_current_time().microsecond / 1000
+    millis = time.time_ns() / 1_000_000
     code = str(int(millis))
     # last 9 digits, this flips around every ~11.5 days
     # which should be fine for temporary use
@@ -76,7 +76,9 @@ class UserLoginCode(db.Model):
               database.
     """
 
-    activation_status: Mapped[int] = mapped_column(default=ActivationStatus.Inactive)
+    activation_status: Mapped[int] = mapped_column(
+        default=ActivationStatus.Inactive.value
+    )
     """ActivationStatus of the login code, for manually setting the activation status of the login code."""
 
     def expire(self, time_offset: timedelta | None = None) -> None:
