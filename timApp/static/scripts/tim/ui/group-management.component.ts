@@ -71,6 +71,19 @@ export interface GroupEvent {
  * #- {allowangular="true"}
  * <tim-group-management-console></tim-group-management-console>
  * ```
+ *
+ * Document settings for this component:
+ *
+ * ```
+ * groupManagement:
+ *   managers: // currently not used, this may change yet
+ *     - groupname
+ *   groupsPath: // path for groups created with this component
+ *     - sukol/2023/testikoulu
+ *   associationType:
+ *     - title // title used in the ui for the association/relationship type of members, eg. "Class", "Group", etc.
+ * ```
+ *
  */
 @Component({
     selector: "tim-group-management-console",
