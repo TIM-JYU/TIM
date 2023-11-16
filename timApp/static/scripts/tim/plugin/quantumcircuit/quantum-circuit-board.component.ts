@@ -149,6 +149,7 @@ export interface GateBeingDragged {
                            [target]="i"
                            [time]="j"
                            (drop)="handleDrop($event, i, j)"
+                           (dragenter)="handleDragEnter($event)"
                            (mousedown)="handleDragStart($event, i, j)"
                            (touchstart)="handleDragStart($event, i, j)"
                            (dragover)="handleDragOver($event, i, j)"
@@ -414,6 +415,10 @@ export class QuantumCircuitBoardComponent implements OnInit {
             event.changedTouches[0].clientX,
             event.changedTouches[0].clientY,
         ];
+    }
+
+    handleDragEnter(event: MouseEvent | TouchEvent) {
+        event.preventDefault();
     }
 
     /**

@@ -53,6 +53,8 @@ import {QuantumErrorComponent} from "tim/plugin/quantumcircuit/quantum-error.com
 import {isRight} from "fp-ts/Either";
 import {Users} from "tim/user/userService";
 import {InstanceofModule} from "tim/util/instanceof.module";
+import {polyfill} from "mobile-drag-drop";
+import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 
 export interface QubitOutput {
     value: string;
@@ -1319,6 +1321,18 @@ export class QuantumCircuitComponent
         const item = genericglobals().curr_item;
 
         this.hasEditRights = item?.rights.editable ?? false;
+
+        // apply polyfills to make drag-and-drop work for touch screen devices
+        polyfill({
+            // Use this to make use of the scroll behaviour.
+            dragImageTranslateOverride:
+                scrollBehaviourDragImageTranslateOverride,
+        });
+
+        // iOS>=10 supports passive event listeners
+        // but make sure to catch or check passive event listener support
+        // regarding this code running on other platforms.
+        window.addEventListener("touchmove", () => {}, {passive: false});
     }
 
     getAttributeType() {
