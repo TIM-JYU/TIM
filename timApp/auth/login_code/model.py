@@ -59,8 +59,8 @@ class UserLoginCode(db.Model):
        We likely need this to be unique as well, to prevent users having multiple login_codes.
     """
 
-    association: Mapped[str] = mapped_column(String)
-    """User's association identifier, for example, the name of a real-world class or 'homegroup'."""
+    extra_info: Mapped[str] = mapped_column(String)
+    """Additional information on the user, for example, the name of a real-world class or 'homegroup' they belong to."""
 
     activation_start: Mapped[Optional[datetime_tz]] = mapped_column(
         default=get_current_time()
@@ -83,3 +83,33 @@ class UserLoginCode(db.Model):
         delta = time_offset if time_offset else timedelta(seconds=0)
         self.activation_end = get_current_time() - delta
         self.activation_status = ActivationStatus.Inactive.value
+
+    @staticmethod
+    def create(
+        _id: int,
+        extra_info: str | None = None,
+        activation_start: datetime_tz | None = None,
+        activation_end: datetime_tz | None = None,
+        activation_status: ActivationStatus | None = None,
+    ) -> "UserLoginCode":
+        """Creates a new login code for a user.
+
+        :param _id: Usergroup id that this login code is linked to.
+        :param extra_info: optional extra information on the linked user.
+        :param activation_start: optional time when the code should be activated,
+                                 ie. earliest time when the code can be used.
+        :param activation_end: optional time when the code should expire.
+        :param activation_status: activation status of the code.
+        :returns: Created UserLoginCode object.
+        """
+
+        ulc = UserLoginCode(
+            code=generate_code(),
+            id=_id,
+            extra_info=extra_info,
+            activation_start=activation_start,
+            activation_end=activation_end,
+            activation_status=activation_status,
+        )
+        db.session.add(ulc)
+        return ulc
