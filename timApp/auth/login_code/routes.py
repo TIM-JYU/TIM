@@ -151,16 +151,20 @@ def get_members(group_id: int) -> Response:
             status_code=404, jsondata={"msg": f"Could not find group: {group_id}"}
         )
     members: list[User] = ug.users
-    data = [
-        {
-            "id": m.id,
-            "name": m.name,
-            "email": m.email,
-            "real_name": m.real_name,
-            # "student_id": m.get_home_org_student_id(),
-        }
-        for m in members
-    ]
+    data = []
+    for m in members:
+        ulc: UserLoginCode = get_logincode_by_id(m.id)
+        data.append(
+            {
+                "id": m.id,
+                "name": m.name,
+                "email": m.email,
+                "real_name": m.real_name,
+                "extra_info": ulc.extra_info if ulc else None,
+                "login_code": ulc.code if ulc else None,
+            }
+        )
+
     return json_response(status_code=200, jsondata=data)
 
 
