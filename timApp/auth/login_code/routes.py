@@ -222,7 +222,7 @@ def get_members_from_groups() -> Response:
 
 @login_code.get("/checkOwner/<int:doc_id>")
 def check_ownership(doc_id: int) -> Response:
-    from timApp.tim import get_current_user_object
+    from timApp.auth.sessioninfo import get_current_user_object
 
     log_info(f"Checking document ownership with user: {get_current_user_object().name}")
     doc = get_doc_or_abort(doc_id=doc_id)
