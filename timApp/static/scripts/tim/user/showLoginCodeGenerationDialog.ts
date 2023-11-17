@@ -1,6 +1,5 @@
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import type {LoginCodeGenerationDialogParams} from "tim/user/login-code-generation-dialog.component";
-import type {GroupMember} from "tim/ui/group-management.component";
 
 export async function showLoginCodeGenerationDialog(
     params?: LoginCodeGenerationDialogParams

@@ -6,7 +6,7 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {toPromise} from "tim/util/utils";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {GroupMember} from "tim/ui/group-management.component";
+import type {GroupMember} from "tim/ui/group-management.component";
 
 export interface LoginCodeGenerationDialogParams {
     members: GroupMember[];
