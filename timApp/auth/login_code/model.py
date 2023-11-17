@@ -20,15 +20,6 @@ class ActivationStatus(enum.Enum):
     Active = 1
 
 
-def generate_code() -> str:
-    millis = time.time_ns() / 1_000_000
-    code = str(int(millis))
-    # last 9 digits, this flips around every ~11.5 days
-    # which should be fine for temporary use
-    code = code[len(code) - 10 : -1]
-    return code
-
-
 class UserLoginCode(db.Model):
     """
     A (temporary) login code for a User.
@@ -62,9 +53,7 @@ class UserLoginCode(db.Model):
     extra_info: Mapped[str] = mapped_column(String)
     """Additional information on the user, for example, the name of a real-world class or 'homegroup' they belong to."""
 
-    activation_start: Mapped[Optional[datetime_tz]] = mapped_column(
-        default=get_current_time()
-    )
+    activation_start: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp for the earliest time that the login code can be used for logging into TIM."""
 
     activation_end: Mapped[Optional[datetime_tz]] = mapped_column()
@@ -106,7 +95,7 @@ class UserLoginCode(db.Model):
         """
 
         ulc = UserLoginCode(
-            code=generate_code(),
+            code=UserLoginCode.generate_code(),
             id=_id,
             extra_info=extra_info,
             activation_start=activation_start,
@@ -115,3 +104,12 @@ class UserLoginCode(db.Model):
         )
         db.session.add(ulc)
         return ulc
+
+    @staticmethod
+    def generate_code() -> str:
+        millis = time.time_ns() / 1_000_000
+        code = str(int(millis))
+        # last 9 digits, this flips around every ~11.5 days
+        # which should be fine for temporary use
+        code = code[len(code) - 10 : -1]
+        return code
