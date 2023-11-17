@@ -169,7 +169,7 @@ def get_members_from_groups() -> Response:
     """
 
     r: dict = request.get_json()
-    group_ids: list[int] = r.get("ids")
+    group_ids: list[int] = [*r.get("ids")]  # type: ignore
 
     ugds: list[UserGroupDoc] = list(
         run_sql(select(UserGroupDoc).where(UserGroupDoc.group_id.in_(group_ids)))
@@ -275,17 +275,43 @@ def create_users(group_name: str) -> Response:
 
     # TODO mass import from CSV, probably want a dedicated function for it
     current_user = get_current_user_object()
+
+    # TODO: only consider groups with base64-encoded groupnames in production,
+    #       since all groups created with the group management component will have those.
+    #       We do not want to accidentally pick a 'normal' group that for some reason
+    #       has the same name as the human-readable form of a base64-encoded name
+    groups: list[UserGroup] = list(
+        run_sql(
+            select(UserGroup).where(
+                (UserGroup.name == group_name) | UserGroup.name.like("b64_%")
+            )
+        )
+        .scalars()
+        .all()
+    )
+    group = None
+    for g in groups:
+        dec = decode_name(g.name)
+        if g.name == group_name or dec == group_name:
+            group = g
+            break
+    if not group:
+        return json_response(
+            status_code=404,
+            jsondata={"result": {"error": f"No matching group: {group_name}."}},
+        )
+
+    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group.id).limit(1)).scalars().first()  # type: ignore
+    ug_doc = get_doc_or_abort(ugd.doc_id)
     # Check for permission to create users
     # Since we do not want to add every group manager (teacher) to Group admins groups,
     # we will allow them to create users for their own groups if they have ownership of the group
-
-    # TODO: we have to convert base64-encoded names here before checking for permissions
-    # if not verify_groupadmin(
-    #     user=current_user, action=f"Creating new user"
-    # ) or not verify_ownership(b=UserGroup.get_by_name(group_name)):
-    #     return json_response(
-    #         status_code=403, jsondata={"result": {"error": "Insufficient permissions."}}
-    #     )
+    if not verify_groupadmin(
+        user=current_user, action=f"Creating new user"
+    ) or not verify_ownership(b=ug_doc):
+        return json_response(
+            status_code=403, jsondata={"result": {"error": "Insufficient permissions."}}
+        )
 
     u: dict = request.get_json()
     username: str = str(u.get("username"))
@@ -310,45 +336,23 @@ def create_users(group_name: str) -> Response:
     )
 
     user, _ = User.create_with_group(ui)
-
-    groups: list[UserGroup] = list(
-        run_sql(
-            select(UserGroup).where(
-                (UserGroup.name == group_name) | UserGroup.name.like("b64_%")
-            )
-        )
-        .scalars()
-        .all()
+    user.add_to_group(group, current_user)
+    db.session.commit()
+    return json_response(
+        status_code=200,
+        jsondata={
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "real_name": user.real_name,
+        },
     )
-    group = None
-    for g in groups:
-        dec = decode_name(g.name)
-        if g.name == group_name or dec == group_name:
-            group = g
-            break
-    if group:
-        user.add_to_group(group, current_user)
-        db.session.commit()
-        return json_response(
-            status_code=200,
-            jsondata={
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "real_name": user.real_name,
-            },
-        )
-    else:
-        return json_response(
-            status_code=404,
-            jsondata={"result": {"error": f"No matching group: {group_name}."}},
-        )
 
 
 @login_code.post("/generateCodes")
 def generate_codes_for_members() -> Response:
     r: dict = request.get_json()
-    members: list = r.get("members")
+    members: list = [*r.get("members")]  # type: ignore
     created_codes: list[dict] = list()
     # TODO eventually we will want to set activation_start, _end here as well
     for m in members:
