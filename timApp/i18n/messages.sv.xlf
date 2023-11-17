@@ -8862,6 +8862,34 @@
           <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7131697983125883532" datatype="html">
+        <source> Generate login codes </source>
+        <target state="translated"> Generera inloggningskoder</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
+          <context context-type="linenumber">56</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5115992006445027974" datatype="html">
+        <source>Activation start</source>
+        <target state="translated">Start av aktivering</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
+          <context context-type="linenumber">26,27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8716281726980346679" datatype="html">
+        <source>Activation end</source>
+        <target state="translated">Slut på aktivering</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
+          <context context-type="linenumber">36,37</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
