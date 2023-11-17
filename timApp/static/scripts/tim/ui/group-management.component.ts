@@ -16,6 +16,7 @@ import type {TabDirective} from "ngx-bootstrap/tabs";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {showLoginCodeGenerationDialog} from "tim/user/showLoginCodeGenerationDialog";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -552,24 +553,30 @@ export class GroupManagementComponent implements OnInit {
         // TODO: dialog that allows to set the activation_start and activation_end properties
         const members = await this.getMembersFromSelectedGroups();
         if (members !== undefined) {
-            const url = `/loginCode/generateCodes`;
-            const response = await toPromise(
-                this.http.post<UserCode[]>(url, {
-                    members: members,
-                })
-            );
-            if (response.ok) {
-                const usercodes = response.result;
-                for (const code of usercodes) {
-                    const m = members.find((me) => me.id == code.id);
-                    if (m !== undefined) {
-                        m.login_code = code.code;
-                    }
-                }
-
-                const msg = `${"Created user codes:\n" + usercodes}`;
-                await to2(showMessageDialog(msg));
+            const params = {members: members};
+            const res = await to2(showLoginCodeGenerationDialog(params));
+            if (res.ok) {
+                // fetch login codes for the UI
             }
+
+            // const url = `/loginCode/generateCodes`;
+            // const response = await toPromise(
+            //     this.http.post<UserCode[]>(url, {
+            //         members: members,
+            //     })
+            // );
+            // if (response.ok) {
+            //     // const usercodes = response.result;
+            //     // for (const code of usercodes) {
+            //     //     const m = members.find((me) => me.id == code.id);
+            //     //     if (m !== undefined) {
+            //     //         m.login_code = code.code;
+            //     //     }
+            //     // }
+            //     //
+            //     // const msg = `${"Created user codes:\n" + usercodes}`;
+            //     // await to2(showMessageDialog(msg));
+            // }
         }
     }
 
@@ -600,8 +607,6 @@ export class GroupManagementComponent implements OnInit {
         // Should display a dialog where the user may provide a list of members to add
         // Support adding members via an existing UserGroup in addition to username, email, and [creating new users on the spot]
         // TODO refactor to enable import users en masse, via CSV for example
-        // TODO create UserLoginCode entries here, without the login codes (those are updated with the generate codes function)
-        //      this way, we can store the extra info more handily than if we do it later
         const creationDialogParams = {
             group: group.name,
             // Defaults to "Extra info" if not set in doc settings
