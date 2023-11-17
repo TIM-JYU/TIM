@@ -1,4 +1,5 @@
 import base64
+import datetime
 import json
 import time
 from base64 import urlsafe_b64decode, urlsafe_b64encode
@@ -16,11 +17,12 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.types import datetime_tz
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup, get_groups_by_names
 from timApp.user.usergroupdoc import UserGroupDoc
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.document.docsettings import DocSettings
 from timApp.util.logger import log_info, log_debug, tim_logger
@@ -318,6 +320,7 @@ def create_users(group_name: str) -> Response:
     given_name: str = str(u.get("given_name"))
     surname: str = str(u.get("surname"))
     email: str = str(u.get("email"))
+    extra_info: str = str(u.get("extra_info"))
 
     # Create dummy password (for now), we do not want teacher-managed users to have
     # their personal passwords as we are using temporary login codes.
@@ -337,6 +340,21 @@ def create_users(group_name: str) -> Response:
 
     user, _ = User.create_with_group(ui)
     user.add_to_group(group, current_user)
+
+    # Create a UserLoginCode entry linked to this user, so we only have to update it when:
+    # - actual login code is generated
+    # - activation start or end times are modified
+    # - activation status changes
+    existing: UserLoginCode = get_logincode_by_id(user.id)
+    if existing:
+        # Instead of throwing an error response, update existing values
+        # return json_response(
+        #     status_code=409, jsondata={"result": {"error": f"Login code entry for user {user.name} already exists."}}
+        # )
+        existing.extra_info = extra_info
+
+    UserLoginCode.create(_id=user.id, extra_info=extra_info)
+
     db.session.commit()
     return json_response(
         status_code=200,
@@ -345,25 +363,48 @@ def create_users(group_name: str) -> Response:
             "name": user.name,
             "email": user.email,
             "real_name": user.real_name,
+            "extra_info": extra_info,
         },
     )
 
 
 @login_code.post("/generateCodes")
 def generate_codes_for_members() -> Response:
+    """
+    Updates UserLoginCode properties.
+    Note: this function will always overwrite previous values
+    :return: Response
+    """
     r: dict = request.get_json()
     members: list = [*r.get("members")]  # type: ignore
-    created_codes: list[dict] = list()
-    # TODO eventually we will want to set activation_start, _end here as well
+
+    # TODO time should be in server time (UTC+0), it now appears to be local time
+    act_start = datetime.datetime.fromisoformat(r.get("activation_start"))
+    act_end = datetime.datetime.fromisoformat(r.get("activation_end"))
+    # act_status: int = int(r.get("activation_status"))
+
     for m in members:
         user_id: int = int(m.get("id"))
-        extra_info: str = str(m.get("extra_info"))
-        ulc = UserLoginCode.create(_id=user_id, extra_info=extra_info)
-        usercode = {"id": ulc.id, "code": ulc.code}
-        created_codes.append(usercode)
+        # extra_info: str = str(m.get("extra_info"))
+
+        ulc: UserLoginCode = get_logincode_by_id(user_id)
+        if not ulc:
+            ulc = UserLoginCode.create(
+                _id=user_id,
+                extra_info=str(m.get("extra_info")),
+            )
+        ulc.activation_start = act_start
+        ulc.activation_end = act_end
+        # ulc.activation_status = act_status
+        # ulc.extra_info = extra_info
+
+        # TODO: is there a case where we should not refresh the login code?
+        #       maybe if a user has had their code revoked?
+        ulc.code = UserLoginCode.generate_code()
 
     db.session.commit()
-    return json_response(
-        status_code=200,
-        jsondata=created_codes,
-    )
+    return ok_response()
+
+
+def get_logincode_by_id(uid: int) -> UserLoginCode:
+    return run_sql(select(UserLoginCode).filter_by(id=uid).limit(1)).scalars().first()  # type: ignore
