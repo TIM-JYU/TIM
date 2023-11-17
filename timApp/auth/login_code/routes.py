@@ -94,7 +94,7 @@ def get_groups(doc_id: int) -> Response:
 
     ug_docs: list[DocInfo] = folder.get_all_documents()
     if not show_all_groups or show_all_groups == "false":
-        from timApp.tim import get_current_user_object
+        from timApp.auth.sessioninfo import get_current_user_object
 
         curr_user: UserGroup = get_current_user_object().get_personal_group()
         tmp = [ug for ug in ug_docs if curr_user in ug.owners]
@@ -272,7 +272,7 @@ def decode_name(name: str) -> str:
 
 @login_code.post("/addMembers/<group_name>")
 def create_users(group_name: str) -> Response:
-    from timApp.tim import get_current_user_object
+    from timApp.auth.sessioninfo import get_current_user_object
     from timApp.user.groups import verify_groupadmin
 
     # TODO mass import from CSV, probably want a dedicated function for it
