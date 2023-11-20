@@ -107,9 +107,16 @@ class UserLoginCode(db.Model):
 
     @staticmethod
     def generate_code() -> str:
-        millis = time.time_ns() / 1_000_000
-        code = str(int(millis))
-        # last 9 digits, this flips around every ~11.5 days
-        # which should be fine for temporary use
-        code = code[len(code) - 10 : -1]
+        from random import randint
+
+        # timer resolution on Linux is ~100ns (see https://peps.python.org/pep-0564/#annex-clocks-resolution-in-python),
+        # so we should be fine with milliseconds
+        millis = int(time.time_ns() / 1_000_000)
+        # sleep for some random amount between ~1-27ms to ensure we do not get the same reading twice
+        # randomness is introduced only to make it harder to predict the next generated code
+        sleep_time = (randint(1, 27)) / 1000
+        time.sleep(sleep_time)
+        code = str(millis)
+        code = code[len(code) - 9 : len(code)]
+
         return code
