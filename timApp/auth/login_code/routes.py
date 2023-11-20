@@ -404,7 +404,8 @@ def generate_codes_for_members() -> Response:
 
         # TODO: is there a case where we should not refresh the login code?
         #       maybe if a user has had their code revoked?
-        ulc.code = UserLoginCode.generate_code()
+        if not ulc.code:
+            ulc.code = UserLoginCode.generate_code()
 
     db.session.commit()
     return ok_response()
