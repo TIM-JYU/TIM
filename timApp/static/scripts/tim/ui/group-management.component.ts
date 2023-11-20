@@ -437,6 +437,9 @@ export class GroupManagementComponent implements OnInit {
 
     async createNewGroup() {
         // Disable setting group folder and provide a default path for it
+        // TODO: give owner permissions to the created group
+        //  for groups listed under the doc setting managers,
+        //  so that we don't have to set permissions manually
         const params: UserGroupDialogParams = {
             // TODO set these in group management docSettings
             canChooseFolder: false,
