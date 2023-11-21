@@ -36,7 +36,7 @@ import {
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {copyToClipboard, timeout} from "tim/util/utils";
+import {copyToClipboard, isIOS, timeout} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -1327,6 +1327,7 @@ export class QuantumCircuitComponent
             // Use this to make use of the scroll behaviour.
             dragImageTranslateOverride:
                 scrollBehaviourDragImageTranslateOverride,
+            forceApply: isIOS(),
         });
 
         // iOS>=10 supports passive event listeners
