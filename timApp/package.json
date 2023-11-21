@@ -70,7 +70,7 @@
     "katex": "^0.16.2",
     "mathjax-full": "^3.2.2",
     "mathjs": "^11.2.1",
-    "mobile-drag-drop": "^3.0.0-beta.0",
+    "mobile-drag-drop": "^3.0.0-rc.0",
     "moment": "^2.29.4",
     "monocle-ts": "^2.3.13",
     "newtype-ts": "^0.3.5",
