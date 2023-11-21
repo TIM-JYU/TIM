@@ -3,12 +3,17 @@
  */
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
-import {HttpClientModule} from "@angular/common/http";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {DndDropEvent, EffectAllowed} from "ngx-drag-drop";
 import {DndModule} from "ngx-drag-drop";
 import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    ChangeDetectorRef,
+    ElementRef,
+} from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -28,6 +33,7 @@ import {defaultErrorMessage, isIOS} from "tim/util/utils";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {shuffle} from "tim/plugin/util";
+import {DomSanitizer} from "@angular/platform-browser";
 
 const DragMarkup = t.intersection([
     t.partial({
@@ -152,6 +158,15 @@ export class DragComponent
 
     styles: Record<string, string> = {};
     saveFailed = false;
+
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private cdr: ChangeDetectorRef
+    ) {
+        super(el, http, domSanitizer);
+    }
 
     getAttributeType(): typeof DragAll {
         return DragAll;
@@ -306,6 +321,9 @@ export class DragComponent
             void this.save();
         }
         word.taskId = taskId;
+        // NOTE: It seems that on mobile the list is updated at a different time from desktop
+        //  To normalize the behavior, we force a change detection here.
+        this.cdr.detectChanges();
     }
 
     async save() {
