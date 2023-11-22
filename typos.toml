@@ -20,6 +20,7 @@ extend-exclude = [
     "embedded_sagecell.js",
     "processing.js",
     "codeHighlight.scss",
+    "timApp/migrations/versions/*.py",
 ]
 
 [default.extend-identifiers]

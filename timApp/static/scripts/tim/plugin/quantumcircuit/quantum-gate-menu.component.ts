@@ -26,7 +26,7 @@ interface MenuGate {
                      [title]="gate.info"
                      [style.width.px]="gate.name === 'control' || gate.name === 'swap' ? circuitOptions.gateSize : gate.width"
                      [style.height.px]="circuitOptions.gateSize"
-                     (click)="handleClick(gate.name)"
+                     (click)="handleClick($event, gate.name)"
                      (dragstart)="handleDragStart($event, gate.name)">
                     <div [ngSwitch]="gate.name">
                         <svg *ngSwitchCase="'control'"
@@ -65,7 +65,7 @@ interface MenuGate {
                              [attr.height]="circuitOptions.gateSize">
                             <rect [attr.x]="0" [attr.y]="0"
                                   [attr.height]="circuitOptions.gateSize"
-                                  [style.width.px]="gate.width"
+                                  [attr.width]="gate.width"
                                   [attr.fill]="gate.color.fill"
                                   [attr.stroke]="circuitOptions.colors.dark"
                                   rx="2"/>
@@ -138,7 +138,8 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
         this.subscription.unsubscribe();
     }
 
-    handleClick(name: string) {
+    handleClick(event: MouseEvent | TouchEvent, name: string) {
+        event.preventDefault();
         this.select.emit(name);
     }
 }

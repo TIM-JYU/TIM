@@ -139,6 +139,7 @@ const ShowFileAll = t.type({
     selector: "tim-video",
     template: `
         <div [class]="videoClass"
+             [class.videoOn]="videoOn"
              tabindex="0"
              (keydown.-)="speed(1.0/1.2, $event)"
              (keydown.1)="speed(0, $event)"
