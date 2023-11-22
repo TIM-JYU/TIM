@@ -33,6 +33,7 @@ from timApp.auth.accesshelper import (
     ItemLockedException,
     verify_edit_access,
     verify_route_access,
+    verify_admin,
 )
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
@@ -572,6 +573,11 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     view_ctx = view_ctx_with_urlmacros(
         route, hide_names_requested=should_hide_names or is_hide_names()
     )
+
+    if m.as_user and verify_admin(require=False, user=current_user):
+        u = User.get_by_name(m.as_user)
+        if u:
+            current_user = u
 
     if render_doc:
         cr = check_doc_cache(doc_info, current_user, view_ctx, m, vp.nocache)

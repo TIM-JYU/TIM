@@ -22,6 +22,7 @@ class DocViewParams:
     preamble: bool = False
     size: int | None = None
     valid_answers_only: bool | None = None
+    as_user: str | None = None
 
     def __post_init__(self) -> None:
         if self.b and self.e:
