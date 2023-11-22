@@ -336,6 +336,8 @@ def create_users(group_id: int) -> Response:
 
     user, ug = User.create_with_group(ui)
     user.add_to_group(group, current_user)
+    # Commit to db so we can reference the id later
+    db.session.commit()
 
     # Create a UserLoginCode entry linked to this user, so we only have to update it when:
     # - actual login code is generated
