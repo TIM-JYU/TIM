@@ -8948,6 +8948,14 @@
           <context context-type="linenumber">36,37</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1392223819399449504" datatype="html">
+        <source>Number of students</source>
+        <target state="translated">Opiskelijamäärä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">120,121</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
