@@ -8832,6 +8832,14 @@
           <context context-type="linenumber">171</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1836342875578532611" datatype="html">
+        <source>Switch to '<x id="INTERPOLATION" equiv-text="{{ restoreContextUser }}"/>'</source>
+        <target state="translated">Vaihda käyttäjään '<x id="INTERPOLATION" equiv-text="{{ restoreContextUser }}"/>'</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">79,80</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

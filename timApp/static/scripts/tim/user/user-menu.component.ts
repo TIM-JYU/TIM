@@ -74,9 +74,14 @@ import {Users} from "tim/user/userService";
                     <li class="divider"></li>
                 </ng-container>
                 <li *ngIf="!isLoggingOut" role="menuitem">
-                    <a (click)="beginLogout($event)" role="button" [ngSwitch]="numSession() > 0">
-                        <ng-container *ngSwitchCase="true" i18n>Log everyone out</ng-container>
-                        <ng-container *ngSwitchCase="false" i18n>Log out</ng-container>
+                    <a (click)="beginLogout($event)" role="button">
+                        <ng-container *ngIf="restoreContextUser; else normalContext">
+                            <ng-container i18n>Switch to '{{ restoreContextUser }}'</ng-container>
+                        </ng-container>
+                        <ng-template #normalContext [ngSwitch]="numSession() > 0">
+                            <ng-container *ngSwitchCase="true" i18n>Log everyone out</ng-container>
+                            <ng-container *ngSwitchCase="false" i18n>Log out</ng-container>    
+                        </ng-template>
                     </a>
                 </li>
                 <li role="menuitem" *ngFor="let u of getSessionUsers()">
@@ -101,6 +106,7 @@ export class UserMenuComponent implements OnInit {
     accessTypePrefix?: string;
     buttonTitle = $localize`You're logged in`;
     private groupSwitchOpened = false;
+    restoreContextUser: string | null = null;
 
     constructor(private access: AccessRoleService) {}
 
@@ -136,6 +142,8 @@ export class UserMenuComponent implements OnInit {
                 this.buttonTitle = $localize`${this.buttonTitle} (group access locked)`;
             }
         }
+
+        this.restoreContextUser = Users.restoreUser;
     }
 
     isLoggedIn = () => Users.isRealUser();
