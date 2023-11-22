@@ -12,7 +12,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
  * Defines additional parameters for creating new users via the UserCreationDialog.
  */
 export interface UserCreationDialogParams {
-    group: string;
+    group: number;
     // type of association for users created within the current manage document,
     // used only to represent the type of association in the UI
     extraInfoTitle?: string;
@@ -158,7 +158,7 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
         }
     }
 
-    private getGroup(): string {
+    private getGroup(): number {
         return this.data.group;
     }
 
