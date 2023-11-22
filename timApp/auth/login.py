@@ -20,7 +20,12 @@ from timApp.auth.accesshelper import (
     check_admin_access,
 )
 from timApp.auth.session.util import expire_user_session, add_user_session
-from timApp.auth.sessioninfo import get_current_user_id, logged_in, clear_session
+from timApp.auth.sessioninfo import (
+    get_current_user_id,
+    logged_in,
+    clear_session,
+    get_restored_context_user,
+)
 from timApp.auth.sessioninfo import (
     get_other_users,
     get_session_users_ids,
@@ -575,16 +580,10 @@ def save_came_from() -> None:
 
 
 @login_page.get("/quickLogin/<username>")
-def quick_login(username: str) -> Response:
+def quick_login(username: str, redirect: bool = True) -> Response:
     """Logs in as another user."""
     user = User.get_by_name(username)
-
-    # Look up in the restore context if the original user is an admin
-    if RESTORE_CONTEXT_KEY in session:
-        user_id = session[RESTORE_CONTEXT_KEY]["user_id"]
-        curr_user = User.get_by_id(user_id)
-    else:
-        curr_user = get_current_user_object()
+    curr_user = get_restored_context_user()
 
     if user is None:
         verify_admin(user=curr_user)
@@ -612,7 +611,13 @@ def quick_login(username: str) -> Response:
     set_single_user_to_session(user, restore_on_logout=True)
     db.session.commit()
     flash(f"Temporarily logged in as: {username}")
-    return update_locale_lang(safe_redirect(url_for("view_page.index_page")))
+
+    if redirect:
+        result = safe_redirect(url_for("view_page.index_page"))
+    else:
+        result = ok_response()
+
+    return update_locale_lang(result)
 
 
 def log_in_as_anonymous(sess: SessionMixin) -> User:

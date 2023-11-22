@@ -141,3 +141,16 @@ def logged_in() -> bool:
 
 def save_last_page() -> None:
     session["last_doc"] = request.full_path
+
+
+def get_restored_context_user() -> User:
+    from timApp.auth.login import RESTORE_CONTEXT_KEY
+
+    # Look up in the restore context if the original user is an admin
+    if RESTORE_CONTEXT_KEY in session:
+        user_id = session[RESTORE_CONTEXT_KEY]["user_id"]
+        curr_user = User.get_by_id(user_id)
+    else:
+        curr_user = get_current_user_object()
+
+    return curr_user

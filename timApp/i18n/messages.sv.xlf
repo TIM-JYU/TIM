@@ -8742,6 +8742,62 @@
           <context context-type="linenumber">79,80</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2399597003780692851" datatype="html">
+        <source>Admin: Switch user</source>
+        <target state="translated">Admin: Växla användare</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">78,79</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1353298902710654370" datatype="html">
+        <source>User name (or email) to log in as</source>
+        <target state="translated">Användarnamn (eller e-postadress) att logga in som</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">203,200</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9066185122374865739" datatype="html">
+        <source>Quick login</source>
+        <target state="translated">Snabb inloggning</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">204,200</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7013428076523553580" datatype="html">
+        <source>Please enter a user name</source>
+        <target state="translated">Ange ett användarnamn</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">210</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4273028666363374378" datatype="html">
+        <source>Could not find users matching '<x id="PH" equiv-text="input"/>'</source>
+        <target state="translated">Kunde inte hitta användare som matchar '<x id="PH" equiv-text="input"/>'</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="610626701105554971" datatype="html">
+        <source>No user found matching '<x id="PH" equiv-text="input"/>'</source>
+        <target state="translated">Ingen användare hittades som matchade '<x id="PH" equiv-text="input"/>'</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">232</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8734603768376564175" datatype="html">
+        <source>Could not log in as '<x id="PH" equiv-text="quickLoginUser"/>': <x id="PH_1" equiv-text="loginResult.result.error"/></source>
+        <target state="translated">Kunde inte logga in som '<x id="PH" equiv-text="quickLoginUser"/>': <x id="PH_1" equiv-text="loginResult.result.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">250,249</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
