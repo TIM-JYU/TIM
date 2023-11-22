@@ -274,34 +274,32 @@ def decode_name(name: str) -> str:
     return name
 
 
-@login_code.post("/addMembers/<group_name>")
-def create_users(group_name: str) -> Response:
+@login_code.post("/addMembers/<int:group_id>")
+def create_users(group_id: int) -> Response:
     from timApp.auth.sessioninfo import get_current_user_object
     from timApp.user.groups import verify_groupadmin
 
     # TODO mass import from CSV, probably want a dedicated function for it
     current_user = get_current_user_object()
 
-    # Only consider groups with base64-encoded groupnames, since all groups
-    # created with the group management component will have those. We do not
-    # want to accidentally pick a 'normal' group that for some reason has
-    # the same name as the human-readable form of a base64-encoded name
-    groups: list[UserGroup] = list(
-        run_sql(select(UserGroup).where(UserGroup.name.like("b64_%"))).scalars().all()
-    )
-    group = None
-    for g in groups:
-        dec = decode_name(g.name)
-        if dec == group_name:
-            group = g
-            break
+    group: UserGroup = run_sql(select(UserGroup).where(UserGroup.id == group_id).limit(1)).scalars().first()  # type: ignore
+    # UserGroup.name.like("b64_%"))).scalars().first()
+
+    # group = None
+    # for g in groups:
+    #     dec = decode_name(g.name)
+    #     if dec == group_name:
+    #         group = g
+    #         break
     if not group:
         return json_response(
             status_code=404,
-            jsondata={"result": {"error": f"No matching group: {group_name}."}},
+            jsondata={
+                "result": {"error": f"No matching group: {decode_name(group.name)}."}
+            },
         )
 
-    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group.id).limit(1)).scalars().first()  # type: ignore
+    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1)).scalars().first()  # type: ignore
     ug_doc = get_doc_or_abort(ugd.doc_id)
     # Check for permission to create users
     # Since we do not want to add every group manager (teacher) to Group admins groups,
@@ -321,7 +319,7 @@ def create_users(group_name: str) -> Response:
     extra_info: str = str(u.get("extra_info"))
 
     # Create dummy password (for now), we do not want teacher-managed users to have
-    # their personal passwords as we are using temporary login codes.
+    # personal passwords as we are using temporary login codes.
     dummy_pass: str = str(
         base64.urlsafe_b64encode(f"{email}{username}{time.time_ns()}".encode()),
         encoding="utf-8",
@@ -336,14 +334,14 @@ def create_users(group_name: str) -> Response:
         password=dummy_pass,
     )
 
-    user, _ = User.create_with_group(ui)
+    user, ug = User.create_with_group(ui)
     user.add_to_group(group, current_user)
 
     # Create a UserLoginCode entry linked to this user, so we only have to update it when:
     # - actual login code is generated
     # - activation start or end times are modified
     # - activation status changes
-    existing: UserLoginCode = get_logincode_by_id(user.id)
+    existing: UserLoginCode = get_logincode_by_id(ug.id)
     if existing:
         # Instead of throwing an error response, update existing values
         # return json_response(
@@ -351,13 +349,14 @@ def create_users(group_name: str) -> Response:
         # )
         existing.extra_info = extra_info
 
-    UserLoginCode.create(_id=user.id, extra_info=extra_info)
+    # Note: UserLoginCode has a foreign key link to User personal UserGroup.id, do not use User.id!
+    UserLoginCode.create(_id=ug.id, extra_info=extra_info)
 
     db.session.commit()
     return json_response(
         status_code=200,
         jsondata={
-            "id": user.id,
+            "id": ug.id,
             "name": user.name,
             "email": user.email,
             "real_name": user.real_name,

@@ -611,7 +611,7 @@ export class GroupManagementComponent implements OnInit {
         // Support adding members via an existing UserGroup in addition to username, email, and [creating new users on the spot]
         // TODO refactor to enable import users en masse, via CSV for example
         const creationDialogParams = {
-            group: group.name,
+            group: group.id,
             // Defaults to "Extra info" if not set in doc settings
             extra_info: this.settings.extraInfoTitle,
         };
