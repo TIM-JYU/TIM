@@ -114,7 +114,8 @@ export interface UserCode {
                         <table>
                             <thead>
                             <tr class="member-table-row">
-                                <th i18n><input type="checkbox" name="selectAllGroups" [(ngModel)]="allGroupsSelected" (change)="toggleAllGroupsSelected()"/></th>
+                                <th i18n><input type="checkbox" name="selectAllGroups" [(ngModel)]="allGroupsSelected"
+                                                (change)="toggleAllGroupsSelected()"/></th>
                                 <th i18n>Group name</th>
                                 <th *ngIf="isAdmin()" i18n>Group document</th>
                                 <th i18n>Number of students</th>
@@ -125,11 +126,13 @@ export interface UserCode {
                             <tbody>
                             <tr class="member-table-row" *ngFor="let group of groups">
                                 <td>
-                                    <input type="checkbox" name="toggleGroupSelection_{{group.id}}" [(ngModel)]="group.selected" (change)="toggleGroupSelection(group)"/>
+                                    <input type="checkbox" name="toggleGroupSelection_{{group.id}}"
+                                           [(ngModel)]="group.selected" (change)="toggleGroupSelection(group)"/>
                                 </td>
                                 <td>{{group.name}}</td>
                                 <td *ngIf="isAdmin()">
-                                    <a href="/view/{{group.path}}">{{group.path}}</a></td>
+                                    <a href="/view/{{group.path}}">{{group.path!.slice(group.path!.lastIndexOf('/') + 1, group.path!.length)}}</a>
+                                </td>
                                 <td>{{members[group.name].length}}</td>
                                 <td> -</td>
                                 <td> -</td>
@@ -141,7 +144,7 @@ export interface UserCode {
 
                 </div>
                 <!-- style="display: inline-block" -->
-                <div id="groups-list-controls" >
+                <div id="groups-list-controls">
                     <div class="flex">
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new group</button>
                         <button class="timButton" (click)="copyGroup(this.groups)"
@@ -181,13 +184,15 @@ export interface UserCode {
                                  class="grid-tab tab-form" (selectTab)="onGroupTabSelected($event)">
                                 <ng-container>
                                     <!-- Member list, with sort and selection controls -->
-                                    
+
                                     <div>
                                         <!-- TODO: Implement as TimTable -->
                                         <table>
                                             <thead>
                                             <tr class="member-table-row">
-                                                <th i18n><input type="checkbox" name="selectAllMembers_{{group.id}}" [(ngModel)]="group.allMembersSelected" (change)="toggleAllMembersSelected(group)"/></th>
+                                                <th i18n><input type="checkbox" name="selectAllMembers_{{group.id}}"
+                                                                [(ngModel)]="group.allMembersSelected"
+                                                                (change)="toggleAllMembersSelected(group)"/></th>
                                                 <th i18n>Name</th>
                                                 <th i18n>Username</th>
                                                 <!-- FIXME: This will probably not translate correctly -->
@@ -199,7 +204,9 @@ export interface UserCode {
                                             <tbody>
                                             <tr class="member-table-row" *ngFor="let member of members[group.name]">
                                                 <td>
-                                                    <input type="checkbox" name="toggleSelection_{{member.id}}" [(ngModel)]="member.selected" (change)="toggleMemberSelection(group)" />
+                                                    <input type="checkbox" name="toggleSelection_{{member.id}}"
+                                                           [(ngModel)]="member.selected"
+                                                           (change)="toggleMemberSelection(group)"/>
                                                 </td>
                                                 <td>{{member.real_name}}</td>
                                                 <td>{{member.name}}</td>
@@ -233,11 +240,11 @@ export interface UserCode {
                                 </ng-container>
                                 <ng-container *ngIf="!anySelected(this.members[group.name])">
                                     <p>Selected members:</p>
-                                        <ol>
-                                            <ng-container *ngFor="let member of this.members[group.name]">
-                                                <li *ngIf="member.selected">{{member.name}}</li>
-                                            </ng-container>
-                                        </ol>
+                                    <ol>
+                                        <ng-container *ngFor="let member of this.members[group.name]">
+                                            <li *ngIf="member.selected">{{member.name}}</li>
+                                        </ng-container>
+                                    </ol>
                                 </ng-container>
                             </tab>
                         </tabset>
