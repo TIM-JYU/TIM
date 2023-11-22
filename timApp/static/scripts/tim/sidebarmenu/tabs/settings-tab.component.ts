@@ -34,6 +34,7 @@ import {showMessageListCreation} from "tim/messaging/showMessageListCreation";
 import type {IVisibilityVars} from "tim/timRoot";
 import {getVisibilityVars} from "tim/timRoot";
 import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
+import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
 
 const DEFAULT_PIECE_SIZE = 20;
 
@@ -591,7 +592,12 @@ export class SettingsTabComponent implements OnInit {
     }
 
     async createGroup(): Promise<void> {
-        const doc = await to2(showUserGroupDialog());
+        const params: UserGroupDialogParams = {
+            defaultGroupFolder: "",
+            canChooseFolder: true,
+            encodeGroupName: false,
+        };
+        const doc = await to2(showUserGroupDialog(params));
         if (doc.ok) {
             redirectToItem(doc.result);
         }
