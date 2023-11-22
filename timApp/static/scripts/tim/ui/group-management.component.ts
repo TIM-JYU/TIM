@@ -117,6 +117,7 @@ export interface UserCode {
                                 <th i18n><input type="checkbox" name="selectAllGroups" [(ngModel)]="allGroupsSelected" (change)="toggleAllGroupsSelected()"/></th>
                                 <th i18n>Group name</th>
                                 <th *ngIf="isAdmin()" i18n>Group document</th>
+                                <th i18n>Number of students</th>
                                 <th i18n>Event</th>
                                 <th i18n>Timeslot</th>
                             </tr>
@@ -129,6 +130,7 @@ export interface UserCode {
                                 <td>{{group.name}}</td>
                                 <td *ngIf="isAdmin()">
                                     <a href="/view/{{group.path}}">{{group.path}}</a></td>
+                                <td>{{members[group.name].length}}</td>
                                 <td> -</td>
                                 <td> -</td>
                             </tr>
