@@ -282,23 +282,17 @@ def create_users(group_name: str) -> Response:
     # TODO mass import from CSV, probably want a dedicated function for it
     current_user = get_current_user_object()
 
-    # TODO: only consider groups with base64-encoded groupnames in production,
-    #       since all groups created with the group management component will have those.
-    #       We do not want to accidentally pick a 'normal' group that for some reason
-    #       has the same name as the human-readable form of a base64-encoded name
+    # Only consider groups with base64-encoded groupnames, since all groups
+    # created with the group management component will have those. We do not
+    # want to accidentally pick a 'normal' group that for some reason has
+    # the same name as the human-readable form of a base64-encoded name
     groups: list[UserGroup] = list(
-        run_sql(
-            select(UserGroup).where(
-                (UserGroup.name == group_name) | UserGroup.name.like("b64_%")
-            )
-        )
-        .scalars()
-        .all()
+        run_sql(select(UserGroup).where(UserGroup.name.like("b64_%"))).scalars().all()
     )
     group = None
     for g in groups:
         dec = decode_name(g.name)
-        if g.name == group_name or dec == group_name:
+        if dec == group_name:
             group = g
             break
     if not group:
