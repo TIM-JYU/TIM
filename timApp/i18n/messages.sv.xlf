@@ -8345,19 +8345,19 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4232283552912303724" datatype="html">
-        <source>invalid nQubits value <x id="PH" equiv-text="this.nQubits"/></source>
-        <target state="new">invalid nQubits value <x id="PH" equiv-text="this.nQubits"/></target>
+        <source>invalid nQubits value <x id="PH" equiv-text="this.markup.nQubits"/></source>
+        <target state="new">invalid nQubits value <x id="PH" equiv-text="this.markup.nQubits"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
-          <context context-type="linenumber">900,899</context>
+          <context context-type="linenumber">1088,1087</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7163187511874522313" datatype="html">
-        <source>Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.nQubits"/> qubits.</source>
-        <target state="new">Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.nQubits"/> qubits.</target>
+        <source>Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.markup.nQubits"/> qubits.</source>
+        <target state="new">Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.markup.nQubits"/> qubits.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
-          <context context-type="linenumber">949,948</context>
+          <context context-type="linenumber">1098,1097</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5235137580040427813" datatype="html">
@@ -8732,6 +8732,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
           <context context-type="linenumber">171</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4278569870596030612" datatype="html">
+        <source>Got incorrect amount of outputNames: <x id="PH" equiv-text="this.markup.outputNames.length"/>. There needs to be <x id="PH_1" equiv-text="this.markup.nQubits"/> names.</source>
+        <target state="new">Got incorrect amount of outputNames: <x id="PH" equiv-text="this.markup.outputNames.length"/>. There needs to be <x id="PH_1" equiv-text="this.markup.nQubits"/> names.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">1189,1188</context>
         </context-group>
       </trans-unit>
     </body>
