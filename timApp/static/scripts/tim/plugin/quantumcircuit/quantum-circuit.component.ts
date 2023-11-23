@@ -319,6 +319,7 @@ export interface CircuitOptions {
                     </div>
 
                     <tim-quantum-circuit-board
+                            *ngIf="board"
                             class="circuit"
                             [board]="board"
                             [selectedGate]="selectedGate"
@@ -456,7 +457,7 @@ export class QuantumCircuitComponent
         gateBorderRadius: 3,
     };
 
-    board!: QuantumBoard;
+    board?: QuantumBoard;
 
     selectedGate: GatePos | null = null;
 
@@ -483,14 +484,6 @@ export class QuantumCircuitComponent
         domSanitizer: DomSanitizer
     ) {
         super(el, http, domSanitizer);
-    }
-
-    get nQubits() {
-        return this.markup.nQubits;
-    }
-
-    get nMoments() {
-        return this.markup.nMoments;
     }
 
     get showChart() {
@@ -542,6 +535,9 @@ export class QuantumCircuitComponent
      * Save answer.
      */
     async save() {
+        if (!this.board) {
+            return;
+        }
         const userCircuit = this.serializerService.serializeUserCircuit(
             this.board
         );
@@ -619,7 +615,9 @@ export class QuantumCircuitComponent
      */
     reset() {
         this.initializeBoard(true);
-        this.simulator.setBoard(this.board);
+        if (this.board) {
+            this.simulator.setBoard(this.board);
+        }
         void this.runSimulation();
         this.setSizes();
     }
@@ -639,6 +637,9 @@ export class QuantumCircuitComponent
      * Copy current circuit to clipboard
      */
     async copyCircuit() {
+        if (!this.board) {
+            return;
+        }
         const circuit = this.serializerService.serializeUserCircuit(this.board);
         if (!circuit) {
             return;
@@ -731,8 +732,10 @@ export class QuantumCircuitComponent
      * Override reference to board for change detection to work.
      */
     updateBoard() {
-        this.board = this.board.clone();
-        this.simulator.setBoard(this.board);
+        if (this.board) {
+            this.board = this.board.clone();
+            this.simulator.setBoard(this.board);
+        }
     }
 
     /**
@@ -741,6 +744,9 @@ export class QuantumCircuitComponent
      */
     handleGateDrop(gate: GateDrop) {
         if (!this.gateService.isMenuGate(gate.name)) {
+            return;
+        }
+        if (!this.board) {
             return;
         }
 
@@ -775,6 +781,9 @@ export class QuantumCircuitComponent
      * @param gateMove object describing gate movement
      */
     handleGateMove(gateMove: GateMove) {
+        if (!this.board) {
+            return;
+        }
         this.board.moveCell(gateMove.from, gateMove.to, this.selectedGate);
         this.selectedGate = null;
         this.updateBoard();
@@ -788,6 +797,9 @@ export class QuantumCircuitComponent
      * @param gate gate to remove
      */
     handleGateRemove(gate: GatePos) {
+        if (!this.board) {
+            return;
+        }
         if (this.board.get(gate.target, gate.time)?.editable !== false) {
             this.board.remove(gate.target, gate.time);
         }
@@ -804,6 +816,9 @@ export class QuantumCircuitComponent
      * @param pos position of gate to get name for
      */
     getGateName(pos: GatePos) {
+        if (!this.board) {
+            return;
+        }
         const cell = this.board.get(pos.target, pos.time);
         if (cell instanceof Gate || cell instanceof MultiQubitGate) {
             return cell.name;
@@ -848,6 +863,9 @@ export class QuantumCircuitComponent
      * @param gate position of gate
      */
     updateActiveGate(gate: GatePos) {
+        if (!this.board) {
+            return;
+        }
         if (this.board.get(gate.target, gate.time) === undefined) {
             this.handleActiveGateHide();
             return;
@@ -912,6 +930,9 @@ export class QuantumCircuitComponent
      * @param gate position of gate on board
      */
     handleGateSelect(gate: GatePos) {
+        if (!this.board) {
+            return;
+        }
         const cell = this.board.get(gate.target, gate.time);
 
         this.updateActiveGate(gate);
@@ -993,6 +1014,9 @@ export class QuantumCircuitComponent
         if (!circuit) {
             return;
         }
+        if (!this.board) {
+            return;
+        }
 
         for (const gateData of circuit) {
             if (this.isSwap(gateData)) {
@@ -1059,16 +1083,19 @@ export class QuantumCircuitComponent
     }
 
     initializeQubits(reset: boolean) {
-        if (this.nQubits < 1) {
+        if (this.markup.nQubits < 1) {
             this.showErrorMessage(
-                $localize`invalid nQubits value ${this.nQubits}`
+                $localize`invalid nQubits value ${this.markup.nQubits}`
             );
             return false;
         }
 
-        if (this.markup.qubits && this.markup.qubits.length !== this.nQubits) {
+        if (
+            this.markup.qubits &&
+            this.markup.qubits.length !== this.markup.nQubits
+        ) {
             this.showErrorMessage(
-                $localize`Got incorrect amount of qubits ${this.markup.qubits.length}. There needs to be ${this.nQubits} qubits.`
+                $localize`Got incorrect amount of qubits ${this.markup.qubits.length}. There needs to be ${this.markup.nQubits} qubits.`
             );
             return false;
         }
@@ -1076,7 +1103,7 @@ export class QuantumCircuitComponent
         this.qubits = [];
         const userInput = this.attrsall.state?.userInput;
 
-        for (let i = 0; i < this.nQubits; i++) {
+        for (let i = 0; i < this.markup.nQubits; i++) {
             let value = 0;
             let name = `q[${i}]`;
             let editable = true;
@@ -1104,7 +1131,11 @@ export class QuantumCircuitComponent
             // when resetting, use original value.
             // if userInput isn't the same length as nQubits then yaml was edited and
             // existing answers with different nQubits value wouldn't work
-            if (userInput && userInput.length === this.nQubits && !reset) {
+            if (
+                userInput &&
+                userInput.length === this.markup.nQubits &&
+                !reset
+            ) {
                 value = userInput[i];
             }
 
@@ -1125,7 +1156,10 @@ export class QuantumCircuitComponent
             return;
         }
 
-        this.board = new QuantumBoard(this.nQubits, this.nMoments);
+        this.board = new QuantumBoard(
+            this.markup.nQubits,
+            this.markup.nMoments
+        );
 
         try {
             this.gateService.registerUserDefinedGates(
@@ -1146,8 +1180,20 @@ export class QuantumCircuitComponent
         }
 
         this.qubitOutputs = [];
-        for (let i = 0; i < this.nQubits; i++) {
-            if (this.markup.outputNames) {
+
+        if (
+            this.markup.outputNames &&
+            this.markup.outputNames.length !== this.markup.nQubits
+        ) {
+            this.showErrorMessage(
+                $localize`Got incorrect amount of outputNames: ${this.markup.outputNames.length}. There needs to be ${this.markup.nQubits} names.`
+            );
+        }
+        for (let i = 0; i < this.markup.nQubits; i++) {
+            if (
+                this.markup.outputNames &&
+                this.markup.outputNames.length === this.markup.nQubits
+            ) {
                 this.qubitOutputs.push({
                     value: "0",
                     probability: 0,
@@ -1191,7 +1237,11 @@ export class QuantumCircuitComponent
             }
         }
 
-        if (this.markup.outputNames) {
+        // set names but only if there is right amount of them
+        if (
+            this.markup.outputNames &&
+            this.markup.outputNames.length === this.markup.nQubits
+        ) {
             for (let i = 0; i < this.qubitOutputs.length; i++) {
                 this.qubitOutputs[i].name = this.markup.outputNames[i];
             }
@@ -1199,6 +1249,9 @@ export class QuantumCircuitComponent
     }
 
     initializeSimulator() {
+        if (!this.board) {
+            return;
+        }
         if (this.markup.simulate === "browser") {
             this.simulator = new BrowserQuantumCircuitSimulator(
                 this.gateService,
@@ -1231,12 +1284,15 @@ export class QuantumCircuitComponent
      * Compute sizes for board cells based on available space and number of cells.
      */
     setSizes() {
+        if (!this.board) {
+            return;
+        }
         // qubit name | qubit bit value | nMoments * space for gate | measure-logo | output bit | maybe output name
         const extraSpaces = this.markup.outputNames ? 5 : 4;
         // try to fit everything on screen
         let baseSize =
             this.qcContainer.nativeElement.clientWidth /
-            (this.nMoments + extraSpaces);
+            (this.markup.nMoments + extraSpaces);
         // don't make gates excessively large
         baseSize = Math.min(50, baseSize);
         // don't make gates too small
@@ -1245,9 +1301,9 @@ export class QuantumCircuitComponent
         const useBraket = this.markup.qubitNotation === "braket";
 
         const colWidths = [];
-        for (let momentI = 0; momentI < this.nMoments; momentI++) {
+        for (let momentI = 0; momentI < this.markup.nMoments; momentI++) {
             let maxColWidth = baseSize;
-            for (let qubitI = 0; qubitI < this.nQubits; qubitI++) {
+            for (let qubitI = 0; qubitI < this.markup.nQubits; qubitI++) {
                 const cell = this.board.board[qubitI][momentI];
                 if (cell instanceof Gate || cell instanceof MultiQubitGate) {
                     const w = this.gateService.getTextWidth(cell.name);
