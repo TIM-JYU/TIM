@@ -154,6 +154,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     texbeforeprint: str | None | Missing = missing
     texprint: str | None | Missing = missing
     readonly: bool | Missing | None = missing
+    saveSingleAnswer: bool | Missing | None = missing
 
     def show_points(self) -> bool:
         if isinstance(self.showPoints, bool):

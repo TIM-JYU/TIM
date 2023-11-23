@@ -144,6 +144,7 @@ def save_answer(
     max_content_len: int | None = None,
     origin: OriginInfo | None = None,
     answered_on: datetime | None = None,
+    overwrite_existing: bool = False,
 ) -> Answer | None:
     """Saves an answer to the database.
 
@@ -160,6 +161,7 @@ def save_answer(
     :param force_save: Whether to force to save the answer even if the latest existing answer has the same content.
     :param origin: If known, the document from which the answer was sent.
     :param answered_on: If specified, overrides the date when the answer was saved. If None, uses the current date.
+    :param overwrite_existing: If specified, overwrites the existing answer with the new content if it exists.
 
     """
     # Never save points with round-off errors (could be caused by any computation)
@@ -182,6 +184,14 @@ def save_answer(
             a = answerinfo.latest_answer
             a.points = points
             a.last_points_modifier = points_given_by
+        return None
+    if overwrite_existing and answerinfo.latest_answer:
+        a = answerinfo.latest_answer
+        a.content = content_str
+        a.points = points
+        a.last_points_modifier = points_given_by
+        a.valid = valid
+        a.answered_on = answered_on or datetime.now()
         return None
 
     a = Answer(
