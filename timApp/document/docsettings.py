@@ -74,6 +74,7 @@ class DocSettingTypes:
     texmacros: dict[str, Any]
     urlmacros: UrlMacroMap
     rndmacros: dict[str, str]
+    fieldmacros: list[str]
     cache: bool
     peer_review: bool
     peer_review_count: int
@@ -232,7 +233,17 @@ class DocSettings:
             user_ctx=user_ctx,
         )
         self.macroinfo_cache[cache_key] = mi
-        return mi
+        # We resolve field macros after caching because resolving field macros may require
+        #  calling get_macroinfo
+        #  (get_macroinfo->
+        #    with_field_macros->
+        #    get_fields_and_users->
+        #    CachedPluginFinder.find->
+        #    find_plugin_from_document->
+        #    maybe_get_plugin_from_par->get_macroinfo)
+        # FIXME: with_field_macros should preferably resolve fields without relying on resolving other macros
+        #  This requires resolving the JSON schema for the answer in some other way
+        return mi.with_field_macros()
 
     def get_texmacroinfo(
         self, view_ctx: ViewContext, user_ctx: UserContext | None = None
@@ -243,7 +254,7 @@ class DocSettings:
             macro_map=self.get_setting_or_default("texmacros", {}),
             macro_delimiter=self.get_macro_delimiter(),
             user_ctx=user_ctx,
-        )
+        ).with_field_macros()
 
     def get_macro_delimiter(self) -> str:
         return self.__dict.get(self.macro_delimiter_key, "%%")
@@ -585,6 +596,9 @@ class DocSettings:
 
     def rndmacros(self) -> dict[str, str]:
         return self.get_setting_or_default("rndmacros", {})
+
+    def fieldmacros(self) -> list[str]:
+        return self.get_setting_or_default("fieldmacros", [])
 
     def is_cached(self):
         from timApp.tim_app import app

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Mapping
 
 from flask import session
 from marshmallow import missing
+from typing_extensions import Self
 
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
@@ -37,6 +38,38 @@ class MacroInfo:
     preserve_user_macros: bool = False
     """If True and user is not provided, get_macros() will preserve the user-specific-macros
      (instead of replacing them with empty values)."""
+
+    def with_field_macros(self) -> Self:
+        doc = self.doc
+        if doc is not None:
+            docinfo = doc.get_docinfo()
+            fieldmacros = doc.get_settings().fieldmacros()
+            if fieldmacros and self.user_ctx:
+                from timApp.util.get_fields import (
+                    get_fields_and_users,
+                    RequestedGroups,
+                    GetFieldsAccess,
+                )
+
+                field_data, _, _, _ = get_fields_and_users(
+                    fieldmacros,
+                    RequestedGroups(
+                        groups=[self.user_ctx.user.get_personal_group()],
+                        include_all_answered=False,
+                    ),
+                    docinfo,
+                    self.user_ctx.logged_user,
+                    self.view_ctx,
+                    autoalias=True,
+                    add_missing_fields=False,
+                    access_option=GetFieldsAccess.AllowAlwaysNonTeacher,
+                )
+
+                if field_data:
+                    data = field_data[0]
+                    self.macro_map.update(data["fields"])
+
+        return self
 
     def __post_init__(self) -> None:
         from timApp.tim_app import app
