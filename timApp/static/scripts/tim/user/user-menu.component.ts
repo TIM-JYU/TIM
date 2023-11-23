@@ -11,9 +11,12 @@ import {
 } from "tim/item/access-role.service";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showGroupLockDialog} from "tim/item/active-group-lock-dialog/showGroupLockDialog";
-import {to2} from "tim/util/utils";
+import {to2, toPromise} from "tim/util/utils";
 import type {IUser} from "tim/user/IUser";
-import {Users} from "tim/user/userService";
+import {isAdmin, Users} from "tim/user/userService";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {HttpClient} from "@angular/common/http";
 
 /**
  * Displays the current user name and the number of additional
@@ -70,13 +73,22 @@ import {Users} from "tim/user/userService";
                     <li role="menuitem">
                         <a (click)="openGroupDialog()" i18n>Change active groups</a>
                     </li>
+                    
+                    <li role="menuitem" *ngIf="isAdmin() || restoreContextUser">
+                        <a (click)="beginQuickLogin()" i18n>Admin: Switch user</a>
+                    </li>
 
                     <li class="divider"></li>
                 </ng-container>
                 <li *ngIf="!isLoggingOut" role="menuitem">
-                    <a (click)="beginLogout($event)" role="button" [ngSwitch]="numSession() > 0">
-                        <ng-container *ngSwitchCase="true" i18n>Log everyone out</ng-container>
-                        <ng-container *ngSwitchCase="false" i18n>Log out</ng-container>
+                    <a (click)="beginLogout($event)" role="button">
+                        <ng-container *ngIf="restoreContextUser; else normalContext">
+                            <ng-container i18n>Switch to '{{ restoreContextUser }}'</ng-container>
+                        </ng-container>
+                        <ng-template #normalContext [ngSwitch]="numSession() > 0">
+                            <ng-container *ngSwitchCase="true" i18n>Log everyone out</ng-container>
+                            <ng-container *ngSwitchCase="false" i18n>Log out</ng-container>    
+                        </ng-template>
                     </a>
                 </li>
                 <li role="menuitem" *ngFor="let u of getSessionUsers()">
@@ -101,8 +113,9 @@ export class UserMenuComponent implements OnInit {
     accessTypePrefix?: string;
     buttonTitle = $localize`You're logged in`;
     private groupSwitchOpened = false;
+    restoreContextUser: string | null = null;
 
-    constructor(private access: AccessRoleService) {}
+    constructor(private access: AccessRoleService, private http: HttpClient) {}
 
     ngOnInit(): void {
         if (!this.isLoggedIn()) {
@@ -136,12 +149,16 @@ export class UserMenuComponent implements OnInit {
                 this.buttonTitle = $localize`${this.buttonTitle} (group access locked)`;
             }
         }
+
+        this.restoreContextUser = Users.restoreUser;
     }
 
     isLoggedIn = () => Users.isRealUser();
 
     getCurrentUser = () => Users.getCurrent();
     getSessionUsers = () => Users.getSessionUsers();
+
+    isAdmin = () => isAdmin();
 
     numSession() {
         return Users.getSessionUsers().length;
@@ -176,5 +193,66 @@ export class UserMenuComponent implements OnInit {
         this.groupSwitchOpened = true;
         await to2(showGroupLockDialog());
         this.groupSwitchOpened = false;
+    }
+
+    async beginQuickLogin() {
+        try {
+            const quickLoginUser = await showInputDialog({
+                isInput: InputDialogKind.InputAndValidator,
+                defaultValue: "",
+                text: $localize`User name (or email) to log in as`,
+                title: $localize`Quick login`,
+                okText: $localize`Log in`,
+                validator: async (input) => {
+                    if (!input || input.trim().length == 0) {
+                        return {
+                            ok: false,
+                            result: $localize`Please enter a user name`,
+                        };
+                    }
+                    const r = await toPromise(
+                        this.http.get<IUser[]>(`/users/search/${input}`, {
+                            params: {
+                                exact_match: true,
+                            },
+                        })
+                    );
+
+                    if (!r.ok) {
+                        return {
+                            ok: false,
+                            result: $localize`Could not find users matching '${input}'`,
+                        };
+                    }
+
+                    const result = r.result;
+                    if (result.length == 0) {
+                        return {
+                            ok: false,
+                            result: $localize`No user found matching '${input}'`,
+                        };
+                    }
+
+                    return {ok: true, result: result[0].name};
+                },
+            });
+
+            const loginResult = await toPromise(
+                this.http.get(`/quickLogin/${quickLoginUser}`, {
+                    params: {
+                        redirect: false,
+                    },
+                })
+            );
+
+            if (!loginResult.ok) {
+                await showMessageDialog(
+                    $localize`Could not log in as '${quickLoginUser}': ${loginResult.result.error}`
+                );
+                return;
+            }
+
+            window.location.reload();
+        } catch (e) {}
     }
 }

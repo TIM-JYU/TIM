@@ -273,6 +273,7 @@ def save_fields(
                             current_doc, task, user_id, old, new
                         )
     task_content_name_map = {}
+    task_override_permission_map: dict[str, bool] = defaultdict(bool)
     for task in tasks:
         t_id = TaskId.parse(
             task, require_doc_id=True, allow_block_hint=False, allow_custom_field=True
@@ -294,6 +295,7 @@ def save_fields(
             )
         ):
             raise AccessDenied(f"Missing teacher access for document {dib.id}")
+        task_override_permission_map[task] = False
         try:
             vr = verify_task_access(
                 dib,
@@ -304,6 +306,7 @@ def save_fields(
                 view_ctx,
             )
             plugin: PluginType | Plugin = vr.plugin
+            task_override_permission_map[task] = bool(plugin.known.saveSingleAnswer)
         except TaskNotFoundException as e:
             if not allow_missing:
                 if ignore_missing:
@@ -461,6 +464,15 @@ def save_fields(
             if not content:
                 content[task_content_name_map[f"{task_id.doc_task}.{lastfield}"]] = None
             content_str = json.dumps(content)
+
+            if an and task_override_permission_map.get(taskid):
+                an.content = content_str
+                an.points = points
+                an.saver = curr_user
+                an.answered_on = datetime.now()
+                saveresult.fields_changed += 1
+                continue
+
             ans = Answer(
                 content=content_str,
                 points=points,

@@ -78,6 +78,7 @@ export interface IGenericGlobals {
     current_user: ICurrentUser;
     locale: Locale;
     other_users: IUser[];
+    restoreContextUser: string | null;
     bookmarks: IBookmarkGroup[] | null;
     ANGULARMODULES: unknown[];
     JSMODULES: string[];

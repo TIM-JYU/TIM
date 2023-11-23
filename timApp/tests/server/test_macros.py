@@ -1,4 +1,5 @@
 """Server tests for macros."""
+
 from timApp.auth.accesstype import AccessType
 from timApp.document.specialnames import (
     TEMPLATE_FOLDER_NAME,
@@ -14,6 +15,8 @@ from timApp.tests.server.timroutetest import TimRouteTest, get_content
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
+from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import grant_access
 from timApp.util.utils import decode_csplugin
 
 
@@ -229,3 +232,69 @@ globalmacros:
         )
         r = self.get(d.url)
         self.assertNotIn(script, r)
+
+    def test_fieldmacros(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+#- {defaultplugin="textfield"}
+{#field1 #}
+""",
+            settings={"fieldmacros": ["field1", "field1.points=f1p"]},
+        )
+        grant_access(UserGroup.get_anonymous_group(), d, AccessType.view)
+        db.session.commit()
+
+        pars = d.document.add_text(
+            """
+#- {nocache="true" #fieldNoCache}
+Field (nocache): %%field1%%
+Field points (nocache): %%f1p%%
+
+#-
+Field: %%field1%%
+Field points: %%f1p%%
+"""
+        )
+
+        self.add_answer(d, "field1", "answer1", user=self.test_user_1)
+        self.add_answer(d, "field1", "answer2", points=1, user=self.test_user_2)
+        db.session.commit()
+
+        r = self.get(d.url, as_tree=True)
+        self.assertEqual(
+            "Field (nocache): answer1 Field points (nocache): None",
+            r.cssselect(f"#{pars[0].id} .parContent")[0].text_content().strip(),
+            "Non-cached fieldmacros should fetch the latest answer with no points set",
+        )
+        self.assertEqual(
+            "Field: Field points:",
+            r.cssselect(f"#{pars[1].id} .parContent")[0].text_content().strip(),
+            "Cached fieldmacros should not fetch any answers",
+        )
+
+        self.login_test2()
+        r = self.get(d.url, as_tree=True)
+        self.assertEqual(
+            "Field (nocache): answer2 Field points (nocache): 1.0",
+            r.cssselect(f"#{pars[0].id} .parContent")[0].text_content().strip(),
+            "Non-cached fieldmacros should fetch the latest answer with the points as a float",
+        )
+        self.assertEqual(
+            "Field: Field points:",
+            r.cssselect(f"#{pars[1].id} .parContent")[0].text_content().strip(),
+            "Cached fieldmacros should not fetch any answers",
+        )
+
+        self.logout()
+        r = self.get(d.url, as_tree=True)
+        self.assertEqual(
+            "Field (nocache): Field points (nocache):",
+            r.cssselect(f"#{pars[0].id} .parContent")[0].text_content().strip(),
+            "Anonymous users should not see any answers",
+        )
+        self.assertEqual(
+            "Field: Field points:",
+            r.cssselect(f"#{pars[1].id} .parContent")[0].text_content().strip(),
+            "Anonymous users should not see any answers",
+        )

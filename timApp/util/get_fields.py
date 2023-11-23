@@ -138,7 +138,7 @@ class UserFieldObj(TypedDict):
     groupinfo: NotRequired[Any]
 
 
-@dataclass
+@dataclass(slots=True)
 class RequestedGroups:
     groups: list[UserGroup]
     include_all_answered: bool = False

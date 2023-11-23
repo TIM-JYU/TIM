@@ -812,7 +812,7 @@ class DocumentPrinter:
         macros.update(doc_settings.get_texmacroinfo(default_view_ctx).get_macros())
 
         out_pars = []
-        macroinfo = MacroInfo(default_view_ctx, macro_map=macros)
+        macroinfo = MacroInfo(default_view_ctx, macro_map=macros).with_field_macros()
         # go through doc pars to get all the template pars
         for par in pars:
             if par.get_attr("printing_template") is not None:

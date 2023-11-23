@@ -1172,6 +1172,7 @@ def post_answer_impl(
                     plugintype=plugin.ptype,
                     max_content_len=current_app.config["MAX_ANSWER_CONTENT_SIZE"],
                     origin=origin,
+                    overwrite_existing=plugin.known.saveSingleAnswer,
                 )
                 result["savedNew"] = a.id if a else None
                 if a:
@@ -1220,6 +1221,7 @@ def post_answer_impl(
                 plugintype=plugin.ptype,
                 max_content_len=current_app.config["MAX_ANSWER_CONTENT_SIZE"],
                 origin=origin,
+                overwrite_existing=plugin.known.saveSingleAnswer,
             )
             # TODO: Could call backup here too, but first we'd need to add support for saver in export/import.
             result["savedNew"] = a.id if a else None

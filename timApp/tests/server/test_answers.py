@@ -1,6 +1,8 @@
 from datetime import datetime
 from unittest.mock import patch
 
+from sqlalchemy import select
+
 from timApp import tim_celery
 from timApp.admin.answer_cli import delete_old_answers
 from timApp.answer.answer import Answer
@@ -14,7 +16,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.plugin.taskid import TaskId
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.util.utils import read_json_lines
 
@@ -311,3 +313,80 @@ class AnswerTest(TimRouteTest):
             expect_status=403,
             expect_content="Answering is disabled for this document.",
         )
+
+    def test_save_single_answer(self):
+        self.login_test1()
+        d = self.create_doc()
+        save_answer(
+            [self.test_user_1],
+            TaskId.parse(f"{d.id}.test"),
+            "content1",
+            0,
+            [],
+            True,
+            overwrite_existing=True,
+        )
+        db.session.commit()
+
+        ans = (
+            run_sql(select(Answer).filter(Answer.task_id == f"{d.id}.test"))
+            .scalars()
+            .all()
+        )
+        self.assertEqual(1, len(ans), "Should have saved one answer")
+        self.assertEqual('"content1"', ans[0].content, "Should have saved content1")
+        self.assertEqual(0, ans[0].points, "Should have saved 0 points")
+
+        save_answer(
+            [self.test_user_1],
+            TaskId.parse(f"{d.id}.test"),
+            "content2",
+            2,
+            [],
+            True,
+            overwrite_existing=True,
+        )
+        db.session.commit()
+        save_answer(
+            [self.test_user_1],
+            TaskId.parse(f"{d.id}.test"),
+            "content3",
+            2,
+            [],
+            True,
+            overwrite_existing=True,
+        )
+        db.session.commit()
+
+        ans = (
+            run_sql(select(Answer).filter(Answer.task_id == f"{d.id}.test"))
+            .scalars()
+            .all()
+        )
+
+        self.assertEqual(
+            1, len(ans), "Should have still one answer after saving multiple answers"
+        )
+        self.assertEqual(
+            '"content3"', ans[0].content, "Should have the content of the latest save"
+        )
+        self.assertEqual(2, ans[0].points, "Should have the points of the latest save")
+
+        save_answer(
+            [self.test_user_2],
+            TaskId.parse(f"{d.id}.test"),
+            "content1",
+            1,
+            [],
+            True,
+            overwrite_existing=True,
+        )
+        db.session.commit()
+
+        ans = (
+            run_sql(select(Answer).filter(Answer.task_id == f"{d.id}.test"))
+            .scalars()
+            .all()
+        )
+
+        self.assertEqual(2, len(ans), "Each user should have one answer")
