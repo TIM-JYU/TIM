@@ -15,14 +15,24 @@ export interface ILoginResponse {
 export class UserService {
     private current: ICurrentUser; // currently logged in user
     private group: IUser[]; // any additional users that have been added in the session - this does not include the main user
+    private restoreContextUser: string | null; // user to restore context to if the user is logged in as someone else
 
-    constructor(current: ICurrentUser, group: IUser[]) {
+    constructor(
+        current: ICurrentUser,
+        group: IUser[],
+        restoreContextUser: string | null = null
+    ) {
         this.current = current;
         this.group = group;
+        this.restoreContextUser = restoreContextUser;
     }
 
     public getCurrent(): ICurrentUser {
         return this.current;
+    }
+
+    public get restoreUser() {
+        return this.restoreContextUser;
     }
 
     public getCurrentPersonalFolderPath() {
@@ -44,7 +54,7 @@ export class UserService {
         const response = r.result;
         this.group = response.data.other_users;
         this.current = response.data.current_user;
-        if (!this.isLoggedIn()) {
+        if (!this.isLoggedIn() || this.restoreContextUser) {
             window.location.reload();
         }
     }
@@ -123,7 +133,8 @@ export class UserService {
 
 export const Users = new UserService(
     genericglobals().current_user,
-    genericglobals().other_users
+    genericglobals().other_users,
+    genericglobals().restoreContextUser
 );
 
 export function isAdmin() {

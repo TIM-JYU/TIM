@@ -50,6 +50,7 @@
 
             var userPrefs = {{ prefs|tojson }};
             var current_user = {{ current_user.to_json(full=True)|tojson }};
+            var restoreContextUser = {{ (session.restore_context.user_name if session.restore_context else None)|tojson }};
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};
             var locale = {{locale|tojson}};

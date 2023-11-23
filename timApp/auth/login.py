@@ -20,7 +20,12 @@ from timApp.auth.accesshelper import (
     check_admin_access,
 )
 from timApp.auth.session.util import expire_user_session, add_user_session
-from timApp.auth.sessioninfo import get_current_user_id, logged_in, clear_session
+from timApp.auth.sessioninfo import (
+    get_current_user_id,
+    logged_in,
+    clear_session,
+    get_restored_context_user,
+)
 from timApp.auth.sessioninfo import (
     get_other_users,
     get_session_users_ids,
@@ -51,6 +56,8 @@ login_page = TypedBlueprint(
 
 unambiguous_characters = "ABCDEFGJKLMNPQRSTUVWXYZ23456789"
 
+RESTORE_CONTEXT_KEY = "restore_context"
+
 
 def get_real_name(email: str) -> str:
     atindex = email.index("@")
@@ -77,7 +84,13 @@ def logout(user_id: int | None = None) -> Response:
     else:
         expire_user_session(get_current_user_object(), session.get("session_id"))
         db.session.commit()
+
+        restore_context = session.pop(RESTORE_CONTEXT_KEY, None)
         clear_session()
+
+        if restore_context:
+            session.update(restore_context)
+
     return login_response()
 
 
@@ -161,7 +174,15 @@ def set_user_to_session(user: User) -> None:
         set_single_user_to_session(user)
 
 
-def set_single_user_to_session(user: User) -> None:
+def set_single_user_to_session(user: User, restore_on_logout: bool = False) -> None:
+    if restore_on_logout and RESTORE_CONTEXT_KEY not in session:
+        restore_context = {
+            "user_id": session.get("user_id"),
+            "user_name": session.get("user_name"),
+            "session_id": session.get("session_id"),
+        }
+        session[RESTORE_CONTEXT_KEY] = restore_context
+
     session["user_id"] = user.id
 
     # We also store user name to session because we don't want to have to access the database every request
@@ -559,15 +580,16 @@ def save_came_from() -> None:
 
 
 @login_page.get("/quickLogin/<username>")
-def quick_login(username: str) -> Response:
+def quick_login(username: str, redirect: bool = True) -> Response:
     """Logs in as another user."""
     user = User.get_by_name(username)
+    curr_user = get_restored_context_user()
+
     if user is None:
-        verify_admin()
+        verify_admin(user=curr_user)
         raise NotExist("User not found.")
 
     if user == User.get_model_answer_user():
-        curr_user = get_current_user_object()
         stmt = (
             select(User.id)
             .join(UserGroup, User.groups)
@@ -584,12 +606,18 @@ def quick_login(username: str) -> Response:
         ):
             raise AccessDenied("Sorry, you don't have permission to quickLogin.")
     else:
-        verify_admin()
+        verify_admin(user=curr_user)
 
-    set_single_user_to_session(user)
+    set_single_user_to_session(user, restore_on_logout=True)
     db.session.commit()
-    flash(f"Logged in as: {username}")
-    return update_locale_lang(safe_redirect(url_for("view_page.index_page")))
+    flash(f"Temporarily logged in as: {username}")
+
+    if redirect:
+        result = safe_redirect(url_for("view_page.index_page"))
+    else:
+        result = ok_response()
+
+    return update_locale_lang(result)
 
 
 def log_in_as_anonymous(sess: SessionMixin) -> User:
