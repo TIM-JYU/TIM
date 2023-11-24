@@ -367,6 +367,62 @@ def create_users(group_id: int) -> Response:
     )
 
 
+@login_code.post("/addManyMembers/<int:group_id>")
+def add_users_to_group(group_id: int) -> Response:
+    from timApp.auth.sessioninfo import get_current_user_object
+    from timApp.user.groups import verify_groupadmin
+
+    current_user = get_current_user_object()
+
+    group: UserGroup = run_sql(select(UserGroup).where(UserGroup.id == group_id).limit(1)).scalars().first()  # type: ignore
+
+    if not group:
+        return json_response(
+            status_code=404,
+            jsondata={
+                "result": {"error": f"No matching group: {decode_name(group.name)}."}
+            },
+        )
+
+    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1)).scalars().first()  # type: ignore
+    ug_doc = get_doc_or_abort(ugd.doc_id)
+
+    if not verify_groupadmin(
+        user=current_user, action=f"Creating new user"
+    ) or not verify_ownership(b=ug_doc):
+        return json_response(
+            status_code=403, jsondata={"result": {"error": "Insufficient permissions."}}
+        )
+
+    uids: list[int] = request.get_json().get("ids")
+    users: list[User] = list(
+        run_sql(select(User).where(User.id.in_(uids))).scalars().all()
+    )
+
+    data = []
+    for user in users:
+        user.add_to_group(group, current_user)
+        ug = user.get_personal_group()
+        ulc = get_logincode_by_id(ug.id)
+        data.append(
+            {
+                "id": ug.id,
+                "name": user.name,
+                "email": user.email,
+                "real_name": user.real_name,
+                "extra_info": ulc.extra_info if ulc else None,
+                "login_code": ulc.code if ulc else None,
+            }
+        )
+
+    db.session.commit()
+
+    return json_response(
+        status_code=200,
+        jsondata=data,
+    )
+
+
 @login_code.post("/generateCodes")
 def generate_codes_for_members() -> Response:
     """

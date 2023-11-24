@@ -10,15 +10,26 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 /**
  * Defines additional parameters for creating new users via the UserCreationDialog.
+ *
+ *  - group (number): id of the group that the new user will be added to
+ *  - extraInfoTitle (string): optional alternate title for the extra information field in the UI
+ *  - hiddenFields (string[]): options for hiding certain input fields
+ *
+ *  Valid field names for *hiddenFields*:
+ *    - 'username' - username for the user
+ *    - 'email' - user's email
+ *    - 'extra_info' - extra information regarding the user
+ *
+ *      For fields which the system requires some input to create the new user, dummy data will be generated
+ *      when those fields are hidden.
  */
 export interface UserCreationDialogParams {
     group: number;
-    // type of association for users created within the current manage document,
-    // used only to represent the type of association in the UI
     extraInfoTitle?: string;
-    // options for hiding/displaying certain input fields for user creation
+    hiddenFields?: string[];
 }
 
+// TODO input validation
 @Component({
     selector: "tim-user-creation-dialog",
     template: `
@@ -28,26 +39,28 @@ export interface UserCreationDialogParams {
             </ng-container>
             <ng-container body>
                 <form #form="ngForm" class="form-horizontal">
-                    <div class="form-group"
-                         [ngClass]="{'has-error': ngModelName.invalid && ngModelName.dirty}">
-
-                        <label i18n for="username" class="col-sm-2 control-label">Username</label>
-                        <div class="col-sm-10">
-                            <input i18n-placeholder type="text" required
-                                   [(ngModel)]="username" #ngModelName="ngModel"
-                                   (ngModelChange)="setMessage()"
-                                   pattern="[^/]*"
-                                   id="username" name="username"
-                                   class="form-control"
-                                   placeholder="Enter a username for the user"/>
+                    <ng-container *ngIf="!isHidden('username')">
+                        <div class="form-group">
+                            <label i18n for="username" class="col-sm-2 control-label">Username</label>
+                            <div class="col-sm-10">
+                                <input i18n-placeholder type="text" required
+                                       [(ngModel)]="username"
+                                       #ngModelName="ngModel"
+                                       (ngModelChange)="setMessage()"
+                                       pattern="[^/]*"
+                                       id="username" name="username"
+                                       class="form-control"
+                                       placeholder="Enter a username for the user"/>
+                            </div>
                         </div>
-                    </div>
+                    </ng-container>
 
                     <div class="form-group">
                         <label i18n for="given_name" class="col-sm-2 control-label">First name(s)</label>
                         <div class="col-sm-10">
-                            <input i18n-placeholder type="text"
-                                   [(ngModel)]="given_name"
+                            <input i18n-placeholder type="text" required
+                                   [(ngModel)]="given_name" #ngModelName="ngModel"
+                                   pattern="[^/]*"
                                    (ngModelChange)="setMessage()"
                                    id="given_name" name="given_name"
                                    class="form-control"
@@ -59,7 +72,9 @@ export interface UserCreationDialogParams {
                         <label i18n for="surname" class="col-sm-2 control-label">Surname</label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
-                                   [(ngModel)]="surname"
+                                   [(ngModel)]="surname" #ngModelName="ngModel"
+                                   required
+                                   pattern="[^/]*"
                                    (ngModelChange)="setMessage()"
                                    id="surname" name="surname"
                                    class="form-control"
@@ -67,24 +82,25 @@ export interface UserCreationDialogParams {
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" *ngIf="!isHidden('extra_info')">
                         <label i18n for="extra_info" class="col-sm-2 control-label">{{getExtraInfoTitle()}}</label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
                                    [(ngModel)]="extra_info"
-                                   (ngModelChange)="setMessage()"
                                    id="extra_info" name="extra_info"
                                    class="form-control"
                                    placeholder="Additional information related to the user, eg. class or group name">
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" *ngIf="!isHidden('email')">
                         <label i18n for="email" class="col-sm-2 control-label">Email</label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
                                    [(ngModel)]="email"
+                                   #ngModelName="ngModel"
                                    (ngModelChange)="setMessage()"
+                                   pattern="[^/]*"
                                    id="email" name="email"
                                    class="form-control"
                                    placeholder="User's email">
@@ -95,10 +111,10 @@ export interface UserCreationDialogParams {
 
                 <tim-alert *ngIf="ngModelName.invalid && ngModelName.dirty" severity="danger">
                     <ng-container i18n *ngIf="ngModelName.errors?.['required']">
-                        Name is required.
+                        {{ngModelName.model}} is required.
                     </ng-container>
                     <ng-container i18n *ngIf="ngModelName.errors?.['pattern']">
-                        Name should not contain the slash character.
+                        {{ngModelName.model}} should not contain the slash character.
                     </ng-container>
                 </tim-alert>
                 <tim-alert *ngIf="message" severity="danger">
@@ -110,7 +126,7 @@ export interface UserCreationDialogParams {
             </ng-container>
             <ng-container footer>
                 <button i18n class="timButton" type="button" (click)="saveUser()" [disabled]="form.invalid">
-                    Create
+                    Add
                 </button>
                 <button i18n class="btn btn-default" type="button" (click)="dismiss()">
                     Cancel
@@ -130,14 +146,16 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
     surname: string = "";
     extra_info?: string = "";
     email: string = "";
-
+    hiddenFields?: string[];
     message?: string;
 
     constructor(private http: HttpClient) {
         super();
     }
 
-    ngOnInit() {}
+    ngOnInit() {
+        this.hiddenFields = this.data.hiddenFields;
+    }
 
     async saveUser(): Promise<void> {
         const url = `/loginCode/addMembers/${this.getGroup()}`;
@@ -164,6 +182,12 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
 
     getExtraInfoTitle(): string {
         return this.data.extraInfoTitle ?? "Extra info";
+    }
+
+    isHidden(fieldName: string): boolean {
+        return this.hiddenFields === undefined
+            ? false
+            : this.hiddenFields.includes(fieldName);
     }
 
     setMessage(message?: string): void {

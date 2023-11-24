@@ -133,7 +133,7 @@ export interface UserCode {
                                 <td *ngIf="isAdmin()">
                                     <a href="/view/{{group.path}}">{{group.path!.slice(group.path!.lastIndexOf('/') + 1, group.path!.length)}}</a>
                                 </td>
-                                <td>{{members[group.name].length}}</td>
+                                <td>{{getGroupMemberCount(group)}}</td>
                                 <td> -</td>
                                 <td> -</td>
                             </tr>
@@ -151,13 +151,13 @@ export interface UserCode {
                                 [disabled]="!oneSelected(this.groups)" i18n>Copy selected group
                         </button>
                         <button class="timButton btn-danger" (click)="deleteSelectedGroups(this.groups)"
-                                [disabled]="anySelected(this.groups)" i18n>Delete selected groups
+                                [disabled]="!anySelected(this.groups)" i18n>Delete selected groups
                         </button>
                         <button class="timButton" (click)="generateLoginCodes()"
-                                [disabled]="anySelected(this.groups)" i18n>Generate login codes
+                                [disabled]="!anySelected(this.groups)" i18n>Generate login codes
                         </button>
                         <button class="timButton" (click)="printLoginCodes(this.groups)"
-                                [disabled]="anySelected(this.groups)" i18n>Print login codes
+                                [disabled]="!anySelected(this.groups)" i18n>Print login codes
                         </button>
                     </div>
                     <tim-alert severity="success"
@@ -165,7 +165,7 @@ export interface UserCode {
                     <tim-alert severity="danger" *ngIf="saveGroupFailMessage">{{saveGroupFailMessage}}</tim-alert>
                 </div>
                 <div>
-                    <ng-container *ngIf="!anySelected(this.groups)">
+                    <ng-container *ngIf="anySelected(this.groups)">
                         <p>Selected groups:</p>
                         <ol>
                             <ng-container *ngFor="let group of groups">
@@ -223,13 +223,24 @@ export interface UserCode {
                                 <ng-container>
                                     <div id="members-controls">
                                         <button class="timButton" (click)="addMembers(group)" i18n>
-                                            Create new members
+                                            Add new student
                                         </button>
                                         <button class="timButton" (click)="addExistingMembers(this.groups)" i18n>
-                                            Add existing users
+                                            Import students from Wilma
                                         </button>
+                                        <ng-container *ngIf="this.groups.length > 1">
+                                            <span>
+                                                <button class="timButton" (click)="copyMembers(this.copyMembersTarget)" i18n [disabled]="!anySelected(this.members[group.name])">
+                                                    Copy students to group
+                                                </button>
+                                                <select id="copyMembersTarget" name="copyMembersTarget" class="form-control"
+                                                    [(ngModel)]="this.copyMembersTarget">
+                                                    <option *ngFor="let group of this.groups" value="{{group.id}}">{{group.name}}</option>
+                                                </select>
+                                            </span>
+                                        </ng-container>
                                         <button class="timButton btn-danger" (click)="removeMembers(group)"
-                                                [disabled]="anySelected(this.members[group.name])" i18n>
+                                                [disabled]="!anySelected(this.members[group.name])" i18n>
                                             Remove selected
                                         </button>
                                         <tim-alert severity="success"
@@ -238,7 +249,7 @@ export interface UserCode {
                                                    *ngIf="saveMembersFailMessage">{{saveMembersFailMessage}}</tim-alert>
                                     </div>
                                 </ng-container>
-                                <ng-container *ngIf="!anySelected(this.members[group.name])">
+                                <ng-container *ngIf="anySelected(this.members[group.name])">
                                     <p>Selected members:</p>
                                     <ol>
                                         <ng-container *ngFor="let member of this.members[group.name]">
@@ -253,9 +264,6 @@ export interface UserCode {
                 </fieldset>
             </form>
 
-            <!--            <bootstrap-panel title="Dangerous actions" i18n-title severity="danger">-->
-            <!--                <button class="btn btn-danger" (click)="deleteList()" i18n>Delete List</button>-->
-            <!--            </bootstrap-panel>-->
         </ng-container>
     `,
     styleUrls: ["group-management.component.scss"],
@@ -280,6 +288,9 @@ export class GroupManagementComponent implements OnInit {
     selectedGroupTab?: string;
     saveMembersSuccessMessage?: string;
     saveMembersFailMessage?: string;
+
+    // which group to add selected members into
+    copyMembersTarget: number = -1;
 
     // status info for group members table
     savingGroupMembers?: boolean;
@@ -316,6 +327,9 @@ export class GroupManagementComponent implements OnInit {
         if (!isAdmin() && (!isDocOwner.ok || !Users.isLoggedIn())) {
             return;
         }
+        this.settings = {
+            ...this.viewctrl.docSettings.groupManagement,
+        };
 
         await this.getGroups();
         this.selectedGroupTab = this.groups[0]?.name ?? "";
@@ -323,13 +337,6 @@ export class GroupManagementComponent implements OnInit {
         for (const g of this.groups) {
             await this.getGroupMembers(g);
         }
-
-        this.settings = {
-            ...this.viewctrl.docSettings.groupManagement,
-        };
-
-        // await this.getManagers();
-        // await this.debugCheck();
     }
 
     async getManagers() {
@@ -383,7 +390,7 @@ export class GroupManagementComponent implements OnInit {
      * @param selectables list of selectable Groups or GroupMembers
      */
     anySelected(selectables: GroupMember[] | Group[]) {
-        return !selectables?.some((s) => s.selected) ?? false;
+        return selectables?.some((s) => s.selected) ?? false;
     }
 
     /**
@@ -427,6 +434,12 @@ export class GroupManagementComponent implements OnInit {
             }
         }
         return selected;
+    }
+
+    getGroupMemberCount(group: Group): number {
+        return this.members[group.name] !== undefined
+            ? this.members[group.name].length
+            : 0;
     }
 
     private async getMembersFromSelectedGroups() {
@@ -605,7 +618,6 @@ export class GroupManagementComponent implements OnInit {
      */
     async getGroupMembers(group: Group) {
         const resp = await toPromise(
-            // this.http.get<GroupMember[]>(`/show/${group.name}`)
             this.http.get<GroupMember[]>(`/loginCode/members/${group.id}`)
         );
         if (resp.ok) {
@@ -613,7 +625,7 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
-    protected async addMembers(group: Group) {
+    async addMembers(group: Group) {
         // Add members to the group in the currently active group members tab
         // Should probably add members only to the group in the active tab in the group members view
         // Should display a dialog where the user may provide a list of members to add
@@ -637,10 +649,34 @@ export class GroupManagementComponent implements OnInit {
         //      having multiple accounts for each member/user
     }
 
-    protected async removeMembers(group: Group) {
+    async copyMembers(group_id: number) {
+        const source: Group = this.groups.filter(
+            (g) => g.name === this.selectedGroupTab
+        )[0];
+        // FIXME: the value returned from option.value is not really a number, but a string
+        const target: Group = this.groups.filter(
+            (g) => String(g.id) === String(group_id)
+        )[0];
+
+        if (source !== undefined && target !== undefined) {
+            const selected = this.getSelectedMembers(source);
+            const uids = selected.map((m) => m.id);
+            const url = `/loginCode/addManyMembers/${group_id}`;
+            const b = {ids: uids};
+            const response = await toPromise(
+                this.http.post<GroupMember[]>(url, b)
+            );
+            if (response.ok) {
+                const newMembers = response.result;
+                this.members[target.name].push(...newMembers);
+            }
+        }
+    }
+
+    async removeMembers(group: Group) {
         // Remove selected members from the currently active group
         // Note: remember to clear selectedMembers after deletion from the group
-        const selected = this.members[group.name].filter((m) => m.selected);
+        const selected = this.getSelectedMembers(group);
 
         const resp = await toPromise(
             this.http.post<Record<string, string[]>>(
@@ -679,6 +715,10 @@ export class GroupManagementComponent implements OnInit {
                 );
             }
         }
+    }
+
+    private getSelectedMembers(group: Group): GroupMember[] {
+        return this.members[group.name].filter((m) => m.selected);
     }
 
     toggleMemberSelection(group: Group) {
