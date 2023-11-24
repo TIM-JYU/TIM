@@ -83,8 +83,10 @@ export interface GateBeingDragged {
                 </div>
                 <div *ngFor="let qubit of qubits; let i=index"
                      [style.height.px]="circuitOptions.baseSize"
+                     [class.qubit-editable]="qubit.editable"
+                     [class.qubit-uneditable]="!qubit.editable"
                      class="qubit">
-                    <div class="qubit-name">{{qubit.name}}</div>
+                    <div class="qubit-name" (click)="toggleQubit(i)">{{qubit.name}}</div>
                     <button class="qubit-toggle-button"
                             (click)="toggleQubit(i)">{{qubit.text}}</button>
                 </div>

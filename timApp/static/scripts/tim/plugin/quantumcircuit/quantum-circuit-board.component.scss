@@ -3,7 +3,7 @@
   fill-opacity: 0.5;
 }
 
-svg text, .moment, .qubit, .output {
+svg text, .moment, .qubit, .output, .axis-text-time, .axis-text-qubit, .out-axis-time, .out-axis-text {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -12,6 +12,10 @@ svg text, .moment, .qubit, .output {
 
 svg text::selection {
   background: none;
+}
+
+text {
+  user-select: none;
 }
 
 .uneditable {
@@ -46,6 +50,22 @@ svg text::selection {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+
+.qubit-editable .qubit-name, .qubit-editable .qubit-toggle-button {
+  cursor: pointer;
+}
+
+.qubit-uneditable .qubit-name, .qubit-uneditable .qubit-toggle-button {
+  cursor: default;
+}
+
+.qubit-editable .qubit-toggle-button {
+  border: 1px solid black;
+}
+
+.qubit-uneditable .qubit-toggle-button {
+  border: 1px solid rgb(211 211 211);
 }
 
 .qubit-name, .output-name {
