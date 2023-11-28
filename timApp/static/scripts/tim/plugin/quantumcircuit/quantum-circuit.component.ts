@@ -851,8 +851,14 @@ export class QuantumCircuitComponent
         for (const namePattern of this.markup.hideGateInfo) {
             // has to match whole string
             const fullNamePattern = "^" + namePattern + "$";
-            if (name.match(fullNamePattern)) {
-                return true;
+            try {
+                if (name.match(fullNamePattern)) {
+                    return true;
+                }
+            } catch (error) {
+                this.showErrorMessage(
+                    $localize`hideGateInfo contains invalid regex: ${name}`
+                );
             }
         }
         return false;
