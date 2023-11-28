@@ -8806,6 +8806,14 @@
           <context context-type="linenumber">250,249</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1372998745713768518" datatype="html">
+        <source>hideGateInfo contains invalid regex: <x id="PH" equiv-text="name"/></source>
+        <target state="new">hideGateInfo contains invalid regex: <x id="PH" equiv-text="name"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
+          <context context-type="linenumber">860,859</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
