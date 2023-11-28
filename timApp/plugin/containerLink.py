@@ -406,7 +406,7 @@ def prepare_for_dumbo_attr_list_list_recursive(regex_obj: Pattern, data: list) -
         if isinstance(item, dict):
             prepare_for_dumbo_attr_list_recursive(regex_obj, item)
         elif isinstance(item, list):
-            prepare_for_dumbo_attr_list_list_recursive(regex_obj, data)
+            prepare_for_dumbo_attr_list_list_recursive(regex_obj, item)
         elif isinstance(item, str):
             if not item.startswith("md:"):
                 data[i] = "md:" + item
