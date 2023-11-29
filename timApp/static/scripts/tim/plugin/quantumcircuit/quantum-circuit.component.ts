@@ -928,7 +928,11 @@ export class QuantumCircuitComponent
 
         this.updateActiveGate(gate);
 
-        if (cell instanceof Gate) {
+        if (
+            cell instanceof Gate ||
+            cell instanceof MultiQubitGate ||
+            cell instanceof Swap
+        ) {
             // same was selected so unselect it
             if (
                 this.selectedGate &&
@@ -1009,7 +1013,8 @@ export class QuantumCircuitComponent
                         target: gateData.swap2,
                         time: gateData.time,
                     },
-                    gateData.editable
+                    gateData.editable,
+                    gateData.controls
                 );
             } else {
                 if (!this.gateService.getGate(gateData.name)) {
@@ -1039,6 +1044,15 @@ export class QuantumCircuitComponent
                     if (controlTarget === gateData.target) {
                         continue;
                     }
+                    // would go in cell that is occupied by multi-qubit gate
+                    if (
+                        size > 1 &&
+                        gateData.target <= controlTarget &&
+                        controlTarget < gateData.target + size
+                    ) {
+                        continue;
+                    }
+
                     const control = new Control(
                         gateData.target,
                         gateData.editable

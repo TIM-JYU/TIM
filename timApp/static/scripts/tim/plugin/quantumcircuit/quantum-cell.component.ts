@@ -205,14 +205,18 @@ export class QuantumCellComponent implements OnInit, AfterViewInit, OnChanges {
         } else if (this.cell instanceof Control) {
             const targetCell = this.board.get(this.cell.target, this.time);
             // use same color for control as its target
-            if (targetCell instanceof Gate) {
-                const targetGroup = this.gateService.getGateGroup(
-                    targetCell.name
-                );
+            if (
+                targetCell instanceof Gate ||
+                targetCell instanceof MultiQubitGate ||
+                targetCell instanceof Swap
+            ) {
+                const name =
+                    targetCell instanceof Swap ? "swap" : targetCell.name;
+                const targetGroup = this.gateService.getGateGroup(name);
                 groupColor = this.circuitOptions.gateColors.get(
                     targetGroup ?? ""
                 );
-                serviceGate = this.gateService.getGate(targetCell.name);
+                serviceGate = this.gateService.getGate(name);
             }
         } else if (this.cell instanceof Swap) {
             const group = this.gateService.getGateGroup("swap");

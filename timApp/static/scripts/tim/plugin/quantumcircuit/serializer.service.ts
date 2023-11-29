@@ -21,44 +21,30 @@ export class SerializerService {
         for (let targetI = 0; targetI < board.length; targetI++) {
             for (let timeI = 0; timeI < board.board[targetI].length; timeI++) {
                 const cell = board.board[targetI][timeI];
-                if (cell instanceof Gate) {
+                if (cell instanceof Gate || cell instanceof MultiQubitGate) {
                     const controls = board.getControls({
                         target: targetI,
                         time: timeI,
                     });
 
-                    if (controls.length > 0) {
-                        userCircuit.push({
-                            name: cell.name,
-                            editable: cell.editable,
-                            target: targetI,
-                            time: timeI,
-                            controls: controls,
-                        });
-                    } else {
-                        userCircuit.push({
-                            name: cell.name,
-                            target: targetI,
-                            time: timeI,
-                            editable: cell.editable,
-                            controls: [],
-                        });
-                    }
-                } else if (cell instanceof MultiQubitGate) {
                     userCircuit.push({
                         name: cell.name,
-                        time: timeI,
-                        target: targetI,
                         editable: cell.editable,
-                        controls: [],
+                        target: targetI,
+                        time: timeI,
+                        controls: controls,
                     });
                 } else if (cell instanceof Swap && targetI < cell.target) {
+                    const controls = board.getControls({
+                        target: targetI,
+                        time: timeI,
+                    });
                     userCircuit.push({
                         swap1: targetI,
                         swap2: cell.target,
                         time: timeI,
                         editable: cell.editable,
-                        controls: [],
+                        controls: controls,
                     });
                 }
             }
