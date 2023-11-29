@@ -243,6 +243,25 @@ def _get_menu_html_cached(text_list: list[str]) -> list[str]:
     return call_dumbo(text_list)
 
 
+def find_item_bullet_index(s: str) -> int:
+    """
+    Find the index of the item bullet (-) index.
+    The function allows a proper bullet, i.e. before the bullet only whitespaces are allowed.
+    If no bullet is found, return ValueError.
+
+    :param s:
+    :return: Index of the bullet or ValueError.
+    """
+    for i, c in enumerate(s):
+        if c.isspace():
+            continue
+        if c == "-":
+            return i
+        else:
+            raise ValueError("No bullet found")
+    raise ValueError("No bullet found")
+
+
 def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenuItem]:
     """
     Converts menu-attribute string into a menu structure with html content.
@@ -274,7 +293,7 @@ def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenu
     text_list = []
     for item in menu_split:
         try:
-            list_symbol_index = item.index("-")
+            list_symbol_index = find_item_bullet_index(item)
         except ValueError:
             # Attribute lines get a placeholder in list.
             text_list.append("")
@@ -290,7 +309,7 @@ def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenu
         try:
             if replace_tabs:
                 item = item.replace("\t", "    ")
-            list_symbol_index = item.index("-")
+            list_symbol_index = find_item_bullet_index(item)
         except ValueError:
             if current:
                 set_attributes(item, current)
