@@ -41,6 +41,7 @@ export class SerializerService {
                             target: targetI,
                             time: timeI,
                             editable: cell.editable,
+                            controls: [],
                         });
                     }
                 } else if (cell instanceof MultiQubitGate) {
@@ -49,6 +50,7 @@ export class SerializerService {
                         time: timeI,
                         target: targetI,
                         editable: cell.editable,
+                        controls: [],
                     });
                 } else if (cell instanceof Swap && targetI < cell.target) {
                     userCircuit.push({
@@ -56,6 +58,7 @@ export class SerializerService {
                         swap2: cell.target,
                         time: timeI,
                         editable: cell.editable,
+                        controls: [],
                     });
                 }
             }

@@ -72,21 +72,11 @@ export interface Measurement {
     output: string;
 }
 
-const ControlGateInfo = t.type({
+const NormalGateInfo = t.type({
     name: t.string,
     time: t.number,
     target: t.number,
-    controls: t.array(t.number),
-    editable: withDefault(t.boolean, true),
-});
-
-/**
- * Assume that multi-qubit gate uses qubits starting from target until it's size is matched.
- */
-const SingleOrMultiQubitGateInfo = t.type({
-    name: t.string,
-    time: t.number,
-    target: t.number,
+    controls: withDefault(t.array(t.number), []),
     editable: withDefault(t.boolean, true),
 });
 
@@ -94,19 +84,14 @@ const SwapGateInfo = t.type({
     time: t.number,
     swap1: t.number,
     swap2: t.number,
+    controls: withDefault(t.array(t.number), []),
     editable: withDefault(t.boolean, true),
 });
 
-const GateInfo = t.union([
-    SingleOrMultiQubitGateInfo,
-    SwapGateInfo,
-    ControlGateInfo,
-]);
+const GateInfo = t.union([NormalGateInfo, SwapGateInfo]);
 
 type IGateInfo = t.TypeOf<typeof GateInfo>;
-type ISingleOrMultiQubitGateInfo = t.TypeOf<typeof SingleOrMultiQubitGateInfo>;
 type ISwapGateInfo = t.TypeOf<typeof SwapGateInfo>;
-type IControlGateInfo = t.TypeOf<typeof ControlGateInfo>;
 
 const CustomGateInfo = t.intersection([
     t.type({
@@ -1004,14 +989,6 @@ export class QuantumCircuitComponent
         return "swap1" in gate;
     }
 
-    isControl(gate: IGateInfo): gate is IControlGateInfo {
-        return "controls" in gate;
-    }
-
-    isSingleOrMultiQubit(gate: IGateInfo): gate is ISingleOrMultiQubitGateInfo {
-        return !this.isSwap(gate) && !this.isControl(gate);
-    }
-
     /**
      * Add gates to board.
      * @param circuit gates to add to board
@@ -1034,32 +1011,14 @@ export class QuantumCircuitComponent
                     },
                     gateData.editable
                 );
-            } else if (this.isControl(gateData)) {
+            } else {
                 if (!this.gateService.getGate(gateData.name)) {
                     this.showErrorMessage(
                         $localize`Tried to add gate to circuit that is not part of known gates: ${gateData.name}`
                     );
                     continue;
                 }
-                const gate = new Gate(gateData.name, gateData.editable);
-                this.board.set(gateData.target, gateData.time, gate);
-                for (const controlTarget of gateData.controls) {
-                    if (controlTarget === gateData.target) {
-                        continue;
-                    }
-                    const control = new Control(
-                        gateData.target,
-                        gateData.editable
-                    );
-                    this.board.set(controlTarget, gateData.time, control);
-                }
-            } else if (this.isSingleOrMultiQubit(gateData)) {
-                if (!this.gateService.getGate(gateData.name)) {
-                    this.showErrorMessage(
-                        $localize`Tried to add gate to circuit that is not part of known gates: ${gateData.name}`
-                    );
-                    continue;
-                }
+
                 const size = this.gateService.getGateSize(gateData.name);
                 if (size > 1) {
                     const gate = new MultiQubitGate(
@@ -1073,13 +1032,19 @@ export class QuantumCircuitComponent
                     );
                 } else {
                     const gate = new Gate(gateData.name, gateData.editable);
-                    this.board.addGate(
-                        {target: gateData.target, time: gateData.time},
-                        gate
-                    );
+                    this.board.set(gateData.target, gateData.time, gate);
                 }
-            } else {
-                console.error("missing type", gateData);
+
+                for (const controlTarget of gateData.controls) {
+                    if (controlTarget === gateData.target) {
+                        continue;
+                    }
+                    const control = new Control(
+                        gateData.target,
+                        gateData.editable
+                    );
+                    this.board.set(controlTarget, gateData.time, control);
+                }
             }
         }
     }
