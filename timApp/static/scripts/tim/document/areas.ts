@@ -45,6 +45,66 @@ export class AreaHandler {
             }
             ar.collapse.toggle();
         });
+
+        onClick(".toggleAreaButton", ($this, e) => {
+            const areaClasses = Array.from($this[0].classList)
+                .filter((c) => c.startsWith("toggleClass-"))
+                .map((c) => c.substring("toggleClass-".length));
+
+            const areasToToggle = [];
+            const areasToCheck = [];
+
+            if (areaClasses.length > 0) {
+                for (const areaClass of areaClasses) {
+                    const areas = document.querySelectorAll(
+                        `.paragraphs .area .areaContent.${areaClass}`
+                    );
+                    for (const areaContent of areas) {
+                        const dataAreaName =
+                            areaContent.getAttribute("data-area");
+                        if (!dataAreaName) {
+                            continue;
+                        }
+                        const areaEl = document.querySelector(
+                            `.paragraphs .par[data-area="${dataAreaName}"]`
+                        );
+                        if (!areaEl) {
+                            continue;
+                        }
+                        areasToCheck.push(areaEl);
+                    }
+                }
+            } else {
+                const areas = document.querySelectorAll(
+                    ".paragraphs .par[data-area]"
+                );
+                for (const areaEl of areas) {
+                    areasToCheck.push(areaEl);
+                }
+            }
+
+            for (const areaEl of areasToCheck) {
+                const area = createParContext(areaEl);
+                const {areasBeforeRef, areasAfterRef} =
+                    getContextualAreaInfo(area);
+                const ar =
+                    areasAfterRef[areasAfterRef.length - 1] ??
+                    areasBeforeRef[areasBeforeRef.length - 1];
+                if (!ar.collapse) {
+                    continue;
+                }
+                areasToToggle.push(ar.collapse);
+            }
+
+            const shouldCollapse = $this.hasClass("is-open");
+            for (const area of areasToToggle) {
+                const isCollapsed = area.isCollapsed();
+                if (isCollapsed != shouldCollapse) {
+                    area.toggle();
+                }
+            }
+            $this.toggleClass("is-open", !shouldCollapse);
+        });
     }
 
     startSelection(e: MouseEvent, par: ParContext) {
