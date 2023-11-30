@@ -411,8 +411,8 @@ export class JsframeComponent
                 await this.viewctrl.documentUpdate;
                 this.viewctrl.addParMenuEntry(this, this.getPar()!);
             })();
-            this.initFrameData = unwrapAllC(this.markup.data);
         }
+        this.initFrameData = unwrapAllC(this.markup.data);
     }
 
     ngOnDestroy() {

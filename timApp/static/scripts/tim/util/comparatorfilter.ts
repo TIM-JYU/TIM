@@ -11,7 +11,9 @@
  * >2<4!  => find all numbers not in range ]2,4[
  * See: https://regex101.com/r/yfHbaH/3
  */
-const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,]*) *(!?) */g;
+// FIXME: https://github.com/TIM-JYU/TIM/issues/3538
+// const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,]*) *(!?) */g;
+const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,\s]*)/g;
 type NumStr = number | string;
 type FilterComparator = (a: NumStr, b: NumStr) => boolean;
 const filterComparatorOperators = {
@@ -44,9 +46,10 @@ export class ComparatorFilter {
             const op = result[1] as keyof typeof filterComparatorOperators; // We know that it'll be one of the operators.
             this.funcs.push(filterComparatorOperators[op]);
             const vs = result[2];
-            if (result[3]) {
-                this.negate = true;
-            }
+            // FIXME: https://github.com/TIM-JYU/TIM/issues/3538
+            // if (result[3]) {
+            //     this.negate = true;
+            // }
             let v: NumStr;
             try {
                 v = parseFloat(vs);
