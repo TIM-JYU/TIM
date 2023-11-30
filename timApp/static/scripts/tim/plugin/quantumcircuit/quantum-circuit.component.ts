@@ -312,9 +312,11 @@ export interface CircuitOptions {
                     <div class="top-menu">
                         <tim-quantum-gate-menu
                                 [circuitOptions]="circuitOptions"
+                                [isToolboxStaticHeight]="isToolboxStaticHeight"
                                 (select)="handleMenuGateSelect($event)">
                         </tim-quantum-gate-menu>
                         <tim-quantum-toolbox [activeGateInfo]="activeGateInfo"
+                                             [isToolboxStaticHeight]="isToolboxStaticHeight"
                                              (close)="handleActiveGateHide()"></tim-quantum-toolbox>
                     </div>
 
@@ -475,6 +477,8 @@ export class QuantumCircuitComponent
     isSimulatorRunning: boolean = false;
 
     isResultCheckingRunning: boolean = false;
+
+    isToolboxStaticHeight: boolean = true;
 
     constructor(
         private gateService: GateService,
@@ -1373,6 +1377,18 @@ export class QuantumCircuitComponent
         }
     }
 
+    /**
+     * Check if there's any gate which info can be viewed.
+     */
+    checkViewableGateInfo() {
+        for (const gate of this.gateService.getGates()) {
+            if (!this.isHiddenGateInfo(gate.name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     ngOnInit(): void {
         super.ngOnInit();
 
@@ -1383,6 +1399,9 @@ export class QuantumCircuitComponent
         const item = genericglobals().curr_item;
 
         this.hasEditRights = item?.rights.editable ?? false;
+
+        // don't render unnecessary height for gate info if there isn't any viewable gate info
+        this.isToolboxStaticHeight = this.checkViewableGateInfo();
 
         // apply polyfills to make drag-and-drop work for touch screen devices
         polyfill({

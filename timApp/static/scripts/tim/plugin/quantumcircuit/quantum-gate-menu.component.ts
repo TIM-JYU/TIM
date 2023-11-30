@@ -18,7 +18,7 @@ interface MenuGate {
     template: `
         <!--suppress HtmlUnknownAttribute -->
 
-        <div class="gate-container" *ngIf="gates.length > 0">
+        <div class="gate-container" *ngIf="gates.length > 0" [class.gate-container-static-height]="isToolboxStaticHeight">
             <p class="gate-container-heading"><ng-container i18n>Drag gate to circuit</ng-container></p>
 
             <div class="gate-list">
@@ -89,6 +89,9 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
 
     @Input()
     circuitOptions!: CircuitOptions;
+
+    @Input()
+    isToolboxStaticHeight: boolean = true;
 
     @Output()
     select = new EventEmitter<string>();

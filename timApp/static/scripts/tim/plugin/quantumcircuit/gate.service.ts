@@ -165,6 +165,10 @@ export class GateService {
         return of(this.gates.filter((g) => !g.hidden));
     }
 
+    getGates() {
+        return this.gates;
+    }
+
     getMatrix(name: string) {
         return this.gateNameToMatrix.get(name);
     }
