@@ -63,9 +63,7 @@ export class ParmenuHandler {
                 }
                 const editMenuLeft = this.viewctrl.editMenuOnLeft;
                 if ((editMenuLeft && !par.preamble) || !editMenuLeft) {
-                    const parOffset = par.offset() ?? getEmptyCoords();
-                    const badgeY = e.pageY - parOffset.top;
-                    this.viewctrl.notesHandler.updateNoteBadge(par, badgeY);
+                    this.updateBadgePosition(par, e);
                 }
                 if (!par.isActionable()) {
                     return;
@@ -124,8 +122,26 @@ export class ParmenuHandler {
             true
         );
 
-        onClick(".editline", this.openParMenu, true);
+        onClick(".editline", this.handleLeftEditAreaClick, true);
     }
+
+    private updateBadgePosition(par: ParContext, e: OnClickArg) {
+        const parOffset = par.offset() ?? getEmptyCoords();
+        const badgeY = e.pageY - parOffset.top;
+        this.viewctrl.notesHandler.updateNoteBadge(par, badgeY);
+    }
+
+    handleLeftEditAreaClick = async (
+        $this: JQuery,
+        e: OnClickArg
+    ): Promise<boolean | void> => {
+        const par = createParContextOrHelp(findParentPar($this));
+        if (!this.viewctrl.editMenuOnLeft && !par.isHelp) {
+            this.updateBadgePosition(par, e);
+            return;
+        }
+        await this.openParMenu($this, e);
+    };
 
     openParMenu = async (
         $this: JQuery,

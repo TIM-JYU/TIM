@@ -1010,10 +1010,15 @@ auto_number_headings: 0${CURSOR}
     }
 
     updateEditBarState() {
-        document.documentElement.style.setProperty(
-            "--editline-display",
-            this.viewctrl.editMenuOnLeft ? "block" : "none"
-        );
+        const body = document.body;
+
+        if (this.viewctrl.editMenuOnLeft) {
+            body.classList.add("editmenu-left");
+            body.classList.remove("editmenu-right");
+        } else {
+            body.classList.remove("editmenu-left");
+            body.classList.add("editmenu-right");
+        }
     }
 
     private getAddParagraphItem(pos: EditPosition) {

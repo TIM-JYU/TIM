@@ -674,7 +674,7 @@ a.timButton {
     width: $editline-width;
     height: 100%;
     top: 0;
-    display: var(--editline-display, none);
+    display: block;
 
     @media (max-width: 870px) { /* for ipdas because of outend headings */
         left: -($editline-width / 2);
@@ -689,6 +689,38 @@ a.timButton {
     &:hover, &.menuopen {
         opacity: 0.5;
         background: $editline-bg-color;
+    }
+}
+
+.editmenu-right {
+    .editline {
+        --_overfill-width: #{$editline-width + $editline-extra};
+        width: var(--_overfill-width);
+        z-index: 1;
+
+        @media (max-width: 870px) { /* for ipdas because of outend headings */
+            --_overfill-width: #{$editline-width / 2};
+        }
+
+        @media (max-width: $screen-xs-max) {
+            --_overfill-width: #{$grid-gutter-width / 3 + $focus-bar-width};
+        }
+
+        &:hover, &.menuopen {
+            opacity: 0;
+        }
+
+        &:focus {
+            outline: none;
+        }
+    }
+
+    .parContent {
+        z-index: 2;
+    }
+
+    .edit-menu-button {
+        z-index: 3;
     }
 }
 
