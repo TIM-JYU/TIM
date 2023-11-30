@@ -247,11 +247,10 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
     }
 
     /**
-     * Builds a controlled matrix using gate at specified cell with as many controls as
-     * that gate has.
+     * Builds a controlled gate matrix using gate at specified cell.
      * @param target qubit index to build gate for
      * @param time time
-     * @param controls controllers of this gate
+     * @param controls control qubits for this gate
      */
     private buildControlledGate(
         target: number,
@@ -262,6 +261,7 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
         const cellMatrix = this.getCellMatrix(cell);
         const matrixSize = this.gateService.getMatrixSize(cellMatrix);
         const size = 2 ** (controls.length + matrixSize);
+
         const res = identity(size) as Matrix;
         const [rows, cols] = cellMatrix.size();
         return res.subset(
@@ -433,15 +433,19 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
      */
     private applyColumnMatrix(colI: number, output: Matrix) {
         const gateControls = this.getGateControls(colI);
+        // apply all non controlled gates
         let result = this.buildColumnFromAdjacentGates(gateControls, colI);
         if (!result) {
             return undefined;
         }
         result = multiply(result, output);
+
+        // apply all controlled gates and uncontrolled swap gates
         for (let i = 0; i < gateControls.length; i++) {
             const cell = this.board.get(i, colI);
-            // controlled gate
+
             if (gateControls[i].length > 0) {
+                // add qubits that the gate occupies (controls and gate qubits)
                 const qubits = [...gateControls[i]];
                 if (cell instanceof MultiQubitGate) {
                     for (let mi = i; mi < i + cell.size; mi++) {
@@ -457,8 +461,20 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
                 } else {
                     qubits.push(i);
                 }
+
                 const gate = this.buildControlledGate(i, colI, gateControls[i]);
                 result = this.applyMultiQubitGate(qubits, gate, result);
+            } else if (
+                cell instanceof Swap &&
+                gateControls[i].length === 0 &&
+                cell.target > i
+            ) {
+                const qubits = [i, cell.target];
+                result = this.applyMultiQubitGate(
+                    qubits,
+                    this.gateService.swapMatrix,
+                    result
+                );
             }
         }
         return result;
