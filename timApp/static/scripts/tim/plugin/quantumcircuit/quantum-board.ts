@@ -423,11 +423,15 @@ export class QuantumBoard {
      * Adds control gate. Target is gate at gatePos if that is a gate.
      * If gatePos is not given then target is chosen automatically from
      * available gates at same time slot.
+     * Don't put control if the cell isn't empty.
      * @param pos position to put a control gate
      * @param gatePos position to set as target for the control
      */
     addControl(pos: GatePos, gatePos: GatePos | null) {
         if (this.get(pos.target, pos.time)?.editable === false) {
+            return;
+        }
+        if (this.get(pos.target, pos.time) !== undefined) {
             return;
         }
         if (gatePos) {

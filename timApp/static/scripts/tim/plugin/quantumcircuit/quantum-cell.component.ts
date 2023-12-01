@@ -23,13 +23,13 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
         <!--suppress HtmlUnknownAttribute -->
         <!-- Empty gate placeholder or backdrop for any other element -->
         <svg:rect
-                  [class.drag-over-element]="isBeingDraggedOver"
-                  [class.gate]="cell?.editable"
-                  [attr.x]="x"
-                  [attr.y]="y"
-                  [attr.width]="cellWidth"
-                  [attr.height]="backGroundHeight"
-                  [attr.fill]="circuitOptions.colors.light" fill-opacity="0"
+                [class.drag-over-element]="isBeingDraggedOver"
+                [class.gate]="cell?.editable"
+                [attr.x]="x"
+                [attr.y]="y"
+                [attr.width]="cellWidth"
+                [attr.height]="backGroundHeight"
+                [attr.fill]="circuitOptions.colors.light" fill-opacity="0"
         ></svg:rect>
 
         <!-- normal gate-->
@@ -71,12 +71,15 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                   [attr.x]="cx"
                   [attr.y]="cy"
                   [attr.stroke]="circuitOptions.colors.dark"
+                  [style.stroke-width]="isSelected ? 2 : 1"
                   [attr.font-size]="circuitOptions.gateSize / 2"
                   dominant-baseline="central" text-anchor="middle">X
         </svg:text>
 
         <!-- MultiQubit gate -->
         <svg:rect *ngIf="cell|instanceof: MultiQubitGate as g"
+                  [style.stroke]="isSelected ? color.selection : color.fill"
+                  [style.stroke-width]="isSelected ? 2 : 1"
                   [class.gate]="g.editable"
                   [class.drag-over-element]="isBeingDraggedOver"
                   [attr.x]="gx"

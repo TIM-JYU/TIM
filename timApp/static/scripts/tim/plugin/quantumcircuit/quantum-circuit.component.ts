@@ -931,6 +931,7 @@ export class QuantumCircuitComponent
         if (
             cell instanceof Gate ||
             cell instanceof MultiQubitGate ||
+            cell instanceof MultiQubitGateCell ||
             cell instanceof Swap
         ) {
             // same was selected so unselect it
@@ -940,8 +941,35 @@ export class QuantumCircuitComponent
                 this.selectedGate.target === gate.target
             ) {
                 this.selectedGate = null;
+            } else if (
+                this.selectedGate &&
+                cell instanceof MultiQubitGateCell &&
+                cell.target === this.selectedGate.target &&
+                this.selectedGate.time === gate.time
+            ) {
+                // multi-qubit gate was selected, and it's subcomponent was clicked, so unselect
+                this.selectedGate = null;
+            } else if (
+                this.selectedGate &&
+                cell instanceof Swap &&
+                cell.target === this.selectedGate.target &&
+                this.selectedGate.time === gate.time
+            ) {
+                this.selectedGate = null;
             } else {
-                this.selectedGate = gate;
+                if (cell instanceof Swap && cell.target < gate.target) {
+                    this.selectedGate = {
+                        target: cell.target,
+                        time: gate.time,
+                    };
+                } else if (cell instanceof MultiQubitGateCell) {
+                    this.selectedGate = {
+                        target: cell.target,
+                        time: gate.time,
+                    };
+                } else {
+                    this.selectedGate = gate;
+                }
             }
         }
         this.updateBoard();
