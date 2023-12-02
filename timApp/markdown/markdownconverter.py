@@ -8,7 +8,8 @@ from re import Pattern
 from typing import TYPE_CHECKING, Iterable, Any
 from urllib.parse import quote_plus
 
-from jinja2 import TemplateSyntaxError
+from jinja2 import TemplateSyntaxError, pass_context
+from jinja2.runtime import Context
 from lxml import html, etree
 from sqlalchemy.orm import load_only, lazyload
 
@@ -49,6 +50,21 @@ def has_macros(text: str, env: TimSandboxedEnvironment):
 # To create a new filter,
 #  1. make a class or function
 #  2. and map it in create_environment
+
+
+@pass_context
+def local(ctx: Context, name: Any, default: Any = None) -> Any | None:
+    """
+    Get a local variable from the current context.
+
+    :param ctx: Current context
+    :param name: Name of the variable
+    :param default: Default value if not found
+    :return: Value of the variable or None if not found
+    """
+    if not isinstance(name, str):
+        return None
+    return ctx.get(name, default)
 
 
 def genfields(flds, attrs="", stemfield="stem"):
@@ -562,6 +578,7 @@ tim_filters = {
     "Pz": Pz,
     "gfields": genfields,
     "gfrange": gfrange,
+    "local": local,
     "srange": srange,
     "now": now,
     "w2date": week_to_date,
