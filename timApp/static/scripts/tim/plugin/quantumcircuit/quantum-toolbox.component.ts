@@ -9,7 +9,7 @@ import {
 @Component({
     selector: "tim-quantum-toolbox",
     template: `
-        <div class="toolbox">
+        <div class="toolbox" [class.toolbox-static-height]="isToolboxStaticHeight">
             <div class="gate-info" *ngIf="activeGateInfo && !activeGateInfo.hide">
                 <div class="gate-info-header">
                     <div>{{activeGateInfo.description}}</div>
@@ -57,6 +57,9 @@ import {
 export class QuantumToolboxComponent implements OnInit, OnChanges {
     @Input()
     activeGateInfo?: ActiveGateInfo;
+
+    @Input()
+    isToolboxStaticHeight: boolean = true;
 
     matrixTable: TableCellData[][] = [];
     controlsString: string = "";
