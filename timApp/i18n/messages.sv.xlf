@@ -6864,14 +6864,6 @@
           <context context-type="linenumber">191</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8839747277544341839" datatype="html">
-        <source>Answer number <x id="PH" equiv-text="answerNumber"/> is out of range for this task and user.</source>
-        <target state="translated">Svaret nummer <x id="PH" equiv-text="answerNumber"/> är utom räckhåll för denna uppgift och användare.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
-          <context context-type="linenumber">1112</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6024069868401376720" datatype="html">
         <source>Delete this answer?</source>
         <target state="translated">Ta bort det här svaret?</target>
@@ -8820,6 +8812,13 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1720</context>
+        </context-group>
+      </trans-unit>      <trans-unit id="1691418146394662141" datatype="html">
+        <source>Answer number <x id="PH" equiv-text="answerNumber"/> is out of range for task <x id="PH_1" equiv-text="this.taskId.docTask()"/> for user <x id="PH_2" equiv-text="this.user?.name"/>.</source>
+        <target state="translated">Svaret nummer <x id="PH" equiv-text="answerNumber"/> är utom räckhåll för uppgift <x id="PH_1" equiv-text="this.taskId.docTask()"/> för användare <x id="PH_2" equiv-text="this.user?.name"/>.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1375,1374</context>
         </context-group>
       </trans-unit>
     </body>

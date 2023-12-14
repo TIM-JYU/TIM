@@ -1372,7 +1372,9 @@ export class AnswerBrowserComponent
                 return true;
             } else {
                 void showMessageDialog(
-                    $localize`Answer number ${answerNumber} is out of range for this task and user.`
+                    $localize`Answer number ${answerNumber} is out of range for task ${this.taskId.docTask()} for user ${
+                        this.user?.name
+                    }.`
                 );
             }
         }
