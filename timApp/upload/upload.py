@@ -430,6 +430,9 @@ def upload_file():
     try:
         attachment_params = json.loads(request.form.get("attachmentParams"))
         autostamp = attachment_params[len(attachment_params) - 1]
+        # TODO: Notify the user that the file type cannot be stamped
+        if file.mimetype not in STAMPABLE_MIMETYPES and autostamp:
+            raise StampDataInvalidError("Cannot stamp file")
     except:
         # Just go on with normal upload if necessary conditions are not met.
         return upload_image_or_file(d, file)
@@ -541,6 +544,9 @@ def upload_document(folder, file):
     doc = import_document(content, path, get_current_user_group_object())
     db.session.commit()
     return json_response({"id": doc.id})
+
+
+STAMPABLE_MIMETYPES = {"application/pdf", "application/x-pdf"}
 
 
 def upload_and_stamp_attachment(
