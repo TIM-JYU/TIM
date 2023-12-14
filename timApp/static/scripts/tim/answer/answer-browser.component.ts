@@ -436,9 +436,12 @@ export class AnswerBrowserComponent
         // Answer changes are handled by viewctrl, so don't bother querying them here
         if (!this.formMode) {
             const answs = await this.getAnswers();
+            if (answs) {
+                this.answers = answs;
+            }
+            const updated = this.updateAnswerFromURL();
             if (answs && answs.length > 0) {
                 this.answers = answs;
-                const updated = this.updateAnswerFromURL();
                 if (!updated) {
                     this.handleAnswerFetch(this.answers);
                 }
