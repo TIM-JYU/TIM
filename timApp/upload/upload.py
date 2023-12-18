@@ -50,7 +50,7 @@ from timApp.upload.uploadedfile import (
     is_script_safe_mimetype,
 )
 from timApp.user.user import User
-from timApp.util.file_utils import guess_image_type
+from timApp.util.file_utils import guess_image_type, guess_image_mime
 from timApp.util.flask.requesthelper import (
     use_model,
     RouteException,
@@ -699,11 +699,11 @@ def get_image(image_id: str, image_filename: str) -> Response:
     verify_view_access(f, check_parents=True)
     if image_filename != f.filename:
         raise NotExist("Image not found")
-    imgtype = guess_image_type(f.filesystem_path)
+    imgtype = guess_image_mime(f.filesystem_path)
     # Redirect if we can't deduce the image type
     if not imgtype:
         return safe_redirect(
             url_for("upload.get_file", file_id=image_id, file_filename=image_filename)
         )
     f = io.BytesIO(f.data)
-    return send_file(f, mimetype="image/" + imgtype)
+    return send_file(f, mimetype=imgtype)
