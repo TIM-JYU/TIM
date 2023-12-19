@@ -1937,6 +1937,10 @@ export class ImageXComponent
         }
         return this.getContent() !== this.prevAnswer;
     }
+
+    get markup(): Readonly<t.TypeOf<typeof ImageXMarkup>> {
+        return {...super.markup, answerBrowser: {showValidOnly: false}};
+    }
 }
 
 @NgModule({
