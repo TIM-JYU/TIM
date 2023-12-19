@@ -1198,7 +1198,7 @@ def post_answer_impl(
 
             # Validity info can be different from error (e.g. answer can be valid but error is given by postprogram)
             result["valid"] = is_valid
-            if not is_valid:
+            if not is_valid and explanation:
                 result_errors.append(explanation)
         elif save_teacher:
             # Getting points from teacher ignores points automatically computed by the task
