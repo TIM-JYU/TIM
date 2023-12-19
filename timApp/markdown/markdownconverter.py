@@ -1,6 +1,7 @@
 """Provides functions for converting markdown-formatted text to HTML."""
 from __future__ import annotations
 
+import random
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
@@ -574,6 +575,25 @@ def slugify_str(s: Any, underscore: Any = None) -> str:
     return s
 
 
+def shuffle(s: Any, seed: Any = None) -> Any:
+    """
+    Shuffles the given iterable.
+
+    :param s: Iterable to shuffle.
+    :param seed: Seed for the random number generator.
+    :return: Shuffled iterable.
+    """
+    try:
+        tmp_list = list(s)
+    except TypeError:
+        return s
+    if seed is None:
+        random.shuffle(tmp_list)
+    else:
+        random.Random(seed).shuffle(tmp_list)
+    return tmp_list
+
+
 tim_filters = {
     "Pz": Pz,
     "gfields": genfields,
@@ -594,6 +614,7 @@ tim_filters = {
     "docpath": get_document_path,
     "urlquote": url_quote,
     "endvalue": end_value,
+    "shuffle": shuffle,
 }
 
 
