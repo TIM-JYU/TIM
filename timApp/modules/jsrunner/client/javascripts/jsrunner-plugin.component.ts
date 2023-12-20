@@ -15,6 +15,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {
     AnswerReturnBrowser,
     ErrorList,
@@ -169,7 +170,11 @@ export class JsRunnerPluginComponent
             return;
         }
         if (this.attrsall.markup.confirmText) {
-            if (!window.confirm(this.attrsall.markup.confirmText)) {
+            const res = await showConfirm(
+                $localize`Confirm`,
+                this.attrsall.markup.confirmText
+            );
+            if (!res) {
                 return;
             }
         }
