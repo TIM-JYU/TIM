@@ -93,6 +93,8 @@ interface AnswerReturnSuccess {
         outdata?: {
             exportdata?: ExportData;
             areaVisibility?: Record<string, boolean>;
+            refresh?: boolean;
+            refreshRunJSRunners?: string[];
             md?: string;
             html?: string;
         };
