@@ -531,12 +531,18 @@ export class ViewCtrl implements IController {
         });
     }
 
-    public processAreaVisibility(newVisibility?: Record<string, boolean>) {
+    public processAreaVisibility(
+        newVisibility?: Record<string, boolean>,
+        saveState: boolean = true
+    ) {
         const d = new TimStorage(
             "areaVisibility",
             t.record(t.string, t.record(t.string, t.boolean))
         );
-        const currentVisibilities = d.get() ?? {};
+        let currentVisibilities = d.get() ?? {};
+        if (!saveState) {
+            currentVisibilities = {};
+        }
         // io-ts doesn't automatically convert number keys to strings so we use docId as string directly
         const docId = `${this.docId}`;
         let currentDoc = currentVisibilities[docId] ?? {};
@@ -564,7 +570,9 @@ export class ViewCtrl implements IController {
         if (hasAreas) {
             currentVisibilities[docId] = currentDoc;
         }
-        d.set(currentVisibilities);
+        if (saveState) {
+            d.set(currentVisibilities);
+        }
     }
 
     public findUserByName(userName: string) {

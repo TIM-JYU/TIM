@@ -23,6 +23,8 @@ import {PurifyModule} from "tim/util/purify.module";
 import {getKeyCode, KEY_LEFT, KEY_RIGHT} from "tim/util/keycodes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {Users} from "tim/user/userService";
+import type {IUser} from "tim/user/IUser";
 import type {Iframesettings} from "../../cs/js/jsframe";
 import {VideoLinkComponent} from "./video-link.component";
 
@@ -114,6 +116,7 @@ const ShowFileMarkup = t.intersection([
         width: t.number,
         defaultSubtitles: t.string,
         autoplay: t.boolean,
+        endJSRunner: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -213,6 +216,8 @@ const ShowFileAll = t.type({
                        controls
                        (loadedmetadata)="metadataloaded()"
                        (timeupdate)="timeupdate()"
+                       (pause)="handlePause()"
+                       (ended)="handleEnded()"
                        [style.width.px]="width"
                        [style.height.px]="height"
                        [src]="videosettings.src"
@@ -696,6 +701,34 @@ export class VideoComponent extends AngularPluginBase<
             v.pause();
             this.watchEnd = 1000000;
         }
+    }
+
+    handlePause() {
+        const videoEl = this.video?.nativeElement;
+        if (!videoEl) {
+            return;
+        }
+
+        const curTime = Math.floor(videoEl.currentTime);
+        const end = this.end ?? Math.floor(videoEl.duration);
+        // Account for the case where the video is continued beyond the end
+        if (curTime >= end) {
+            this.handleEnded();
+        }
+    }
+
+    handleEnded() {
+        this.markVideoCompleted();
+    }
+
+    markVideoCompleted() {
+        if (this.markup.endJSRunner) {
+            this.vctrl.runJsRunner(
+                this.markup.endJSRunner,
+                Users.getSessionUsers().map((u: IUser) => u.name)
+            );
+        }
+        // this.vctrl.runJsRunner();
     }
 
     getDefaultMarkup() {
