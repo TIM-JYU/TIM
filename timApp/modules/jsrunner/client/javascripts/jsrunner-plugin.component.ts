@@ -241,7 +241,10 @@ export class JsRunnerPluginComponent
                     return;
                 }
                 this.processExportData(tempd.outdata.exportdata);
-                this.vctrl.processAreaVisibility(tempd.outdata.areaVisibility);
+                this.vctrl.processAreaVisibility(
+                    tempd.outdata.areaVisibility,
+                    tempd.outdata.saveAreaVisibility ?? true
+                );
 
                 if (tempd.outdata.refresh) {
                     if (tempd.outdata.refreshRunJSRunners) {
