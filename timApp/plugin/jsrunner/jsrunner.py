@@ -72,6 +72,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     overrideGrade: bool = False
     showInView: bool = False
     canOverwritePoints: bool = False
+    canOverwriteValidity: bool = False
     confirmText: str | Missing = missing
     timeout: int | Missing = missing
     updateFields: list[str] | Missing = missing
