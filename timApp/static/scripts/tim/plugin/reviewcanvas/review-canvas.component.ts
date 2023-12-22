@@ -527,7 +527,7 @@ export class ReviewCanvasComponent
                 "Cannot save answer; no files have been uploaded.";
             return {saved: false, message: this.userErrorMessage};
         }
-
+        this.error = undefined;
         this.userErrorMessage = undefined;
         this.connectionErrorMessage = undefined;
 
@@ -539,14 +539,16 @@ export class ReviewCanvasComponent
             },
         };
 
-        const r = await this.postAnswer<IReviewCanvasAnswerInput>(
+        const r = await this.postAnswer<{
+            web: {result: string; error?: string};
+        }>(
             params,
             new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})
         );
 
         if (r.ok) {
             const data = r.result;
-            this.error = data.errors?.join("\n");
+            this.error = data.web.error;
             this.changes = false;
             if (r.result.savedNew) {
                 this.updatePDFDownloadUrl(r.result.savedNew);
