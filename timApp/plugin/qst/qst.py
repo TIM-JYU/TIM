@@ -121,7 +121,7 @@ class QstMarkupModel(GenericMarkupModel):
     maxpoints: float | Missing = missing
     # TODO: Set proper types
     answerFieldType: str | None | Missing = missing
-    expl: Any | Missing = missing
+    expl: dict[Any, Any] | None | Missing = missing
     headers: Any | Missing = missing
     matrixType: str | None | Missing = missing
     questionText: str | None | Missing = missing
@@ -226,7 +226,8 @@ def qst_answer_jso(m: QstAnswerModel):
         # TODO: Schema?
         answers = {"c": answers, "order": rand_arr}
         m.markup.rows = qst_set_array_order(m.markup.rows, rand_arr)
-        m.markup.expl = qst_pick_expls(m.markup.expl, rand_arr)
+        if m.markup.expl is not missing:
+            m.markup.expl = qst_pick_expls(m.markup.expl, rand_arr)
 
     result = False
     if (
