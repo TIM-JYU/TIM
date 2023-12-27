@@ -8914,7 +8914,7 @@
       </trans-unit>
       <trans-unit id="1691418146394662141" datatype="html">
         <source>Answer number <x id="PH" equiv-text="answerNumber"/> is out of range for task <x id="PH_1" equiv-text="this.taskId.docTask()"/> for user <x id="PH_2" equiv-text="this.user?.name"/>.</source>
-        <target state="translated">Vastaus numero <x id="PH" equiv-text="answerNumber"/> ei löydy tehtävälle <x id="PH_1" equiv-text="this.taskId.docTask()"/> käyttäjälle <x id="PH_2" equiv-text="this.user?.name"/>.</target>
+        <target state="translated">Vastausta numero <x id="PH" equiv-text="answerNumber"/> ei löydy tehtävälle <x id="PH_1" equiv-text="this.taskId.docTask()"/> käyttäjälle <x id="PH_2" equiv-text="this.user?.name"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1375,1374</context>
