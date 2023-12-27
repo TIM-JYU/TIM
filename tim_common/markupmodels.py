@@ -161,15 +161,15 @@ class KnownMarkupFields(HiddenFieldsMixin):
             return self.showPoints
         return True
 
-    def tries_text(self) -> str:
+    def tries_text(self) -> str | None:
         if isinstance(self.triesText, str):
             return self.triesText
-        return "Tries left:"
+        return None
 
-    def points_text(self) -> str:
+    def points_text(self) -> str | None:
         if isinstance(self.pointsText, str):
             return self.pointsText
-        return "Points:"
+        return None
 
 
 def asdict_skip_missing(obj: Any) -> dict[str, Any]:

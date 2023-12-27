@@ -1712,6 +1712,14 @@ export class AnswerBrowserComponent
         );
     }
 
+    getPointsText() {
+        return this.taskInfo?.pointsText ?? $localize`Points:`;
+    }
+
+    getTriesText() {
+        return this.taskInfo?.triesText ?? $localize`Tries left:`;
+    }
+
     public setInfo(info: ITaskInfo) {
         this.taskInfo = info;
     }
