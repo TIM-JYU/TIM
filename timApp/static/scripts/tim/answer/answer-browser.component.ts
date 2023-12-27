@@ -1712,8 +1712,16 @@ export class AnswerBrowserComponent
         );
     }
 
+    pointsTextVisible() {
+        return !!(this.taskInfo && this.getPointsText() != "");
+    }
+
     getPointsText() {
         return this.taskInfo?.pointsText ?? $localize`Points:`;
+    }
+
+    triesTextVisible() {
+        return !!(this.taskInfo && this.getTriesText() != "");
     }
 
     getTriesText() {
