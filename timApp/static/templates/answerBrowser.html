@@ -118,8 +118,8 @@
 <!--in ab-option-row span elements have right margin-->
                             <div *ngIf="selectedAnswer">
 
-                            <span class="inline" *ngIf="points !== null && !(showTeacher() || (giveCustomPoints && allowCustomPoints())) && taskInfo?.pointsText">
-                        {{ taskInfo?.pointsText }} {{ points }} <span i18n *ngIf="!taskInfo?.showPoints">(only visible to teachers)</span>
+                            <span class="inline" *ngIf="points !== null && !(showTeacher() || (giveCustomPoints && allowCustomPoints())) && taskInfo">
+                        {{ getPointsText() }} {{ points }} <span i18n *ngIf="!taskInfo?.showPoints">(only visible to teachers)</span>
                     </span>
                             <span *ngIf="taskInfo?.maxPoints && points !== null">/ {{ taskInfo?.maxPoints }}</span>
                             <span i18n *ngIf="!selectedAnswer.valid && points !== null">(invalid)</span>
@@ -280,7 +280,7 @@
             </div>
     <ng-container *ngIf="taskInfo">
                 <span class="triesLeft"
-                      *ngIf="taskInfo.answerLimit && taskInfo.triesText">{{ taskInfo.triesText }} {{ getTriesLeft() }}</span>
+                      *ngIf="taskInfo.answerLimit">{{ getTriesText() }} {{ getTriesLeft() }}</span>
 
             <span class="answeringTime" *ngIf="taskInfo.starttime || taskInfo.deadline">
         <ng-container i18n>Answering time:</ng-container>

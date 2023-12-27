@@ -8814,6 +8814,14 @@
           <context context-type="linenumber">860,859</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4943336698756715857" datatype="html">
+        <source>Tries left:</source>
+        <target state="translated">Försöker kvar:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1720</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
