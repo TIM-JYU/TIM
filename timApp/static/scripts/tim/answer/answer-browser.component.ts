@@ -156,7 +156,16 @@ export class AnswerBrowserComponent
 {
     @Input() public taskId!: TaskId;
     @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
-    @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
+    private feedBackElement?: ElementRef<HTMLDivElement>;
+    @ViewChild("feedbackDiv") set feedbackDiv(
+        el: ElementRef<HTMLDivElement> | undefined
+    ) {
+        if (!el || this.feedBackElement == el) {
+            return;
+        }
+        this.feedBackElement = el;
+        ParCompiler.processAllMath($(el.nativeElement));
+    }
     peerReviewResizeWidth = "";
     peerReviewResizeHeight = "";
     peerReviewResizeObserver?: ResizeObserver;
