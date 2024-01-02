@@ -436,9 +436,12 @@ export class AnswerBrowserComponent
         // Answer changes are handled by viewctrl, so don't bother querying them here
         if (!this.formMode) {
             const answs = await this.getAnswers();
+            if (answs) {
+                this.answers = answs;
+            }
+            const updated = this.updateAnswerFromURL();
             if (answs && answs.length > 0) {
                 this.answers = answs;
-                const updated = this.updateAnswerFromURL();
                 if (!updated) {
                     this.handleAnswerFetch(this.answers);
                 }
@@ -1369,7 +1372,9 @@ export class AnswerBrowserComponent
                 return true;
             } else {
                 void showMessageDialog(
-                    $localize`Answer number ${answerNumber} is out of range for this task and user.`
+                    $localize`Answer number ${answerNumber} is out of range for task ${this.taskId.docTask()} for user ${
+                        this.user?.name
+                    }.`
                 );
             }
         }

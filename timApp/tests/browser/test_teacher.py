@@ -1,6 +1,6 @@
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support import expected_conditions as ec, expected_conditions
 
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.tests.db.timdbtest import (
@@ -170,3 +170,42 @@ initword: empty
         self.assertIn(TEST_USER_1_NAME, texts)
         self.assertIn(TEST_USER_2_NAME, texts)
         self.assertNotIn(TEST_USER_3_NAME, texts)
+
+    def test_user_urlparam(self):
+        # Check that first loaded answers come from user in url parameter
+        # also check that answer out of range dialog pops up properly
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+#- {plugin=textfield #text1}
+form: false
+
+#- {plugin=textfield #text2}
+form: false
+                        """,
+        )
+        self.add_answer(d, "text1", "tu1@text1")
+        self.add_answer(d, "text2", "tu2@text2", user=self.test_user_2)
+        db.session.commit()
+        self.goto_document(
+            d,
+            "teacher",
+            query={"answerNumber": 1, "task": "text1", "user": "testuser2"},
+        )
+        input_selector = "#text1 .textfieldNoSaveDiv input"
+        self.wait_until_present_and_vis(input_selector)
+        ele = self.find_element(input_selector)
+        self.assertEqual(ele.get_attribute("value"), "")
+        input_selector = "#text2 .textfieldNoSaveDiv input"
+        self.wait_until_present_and_vis(input_selector)
+        ele = self.find_element(input_selector)
+        self.assertEqual(ele.get_attribute("value"), "tu2@text2")
+        modal_selector = "tim-dialog-frame span"
+        self.wait_until_present_and_vis(modal_selector)
+        self.wait.until(
+            expected_conditions.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, modal_selector),
+                f"Answer number 1 is out of range for task {d.id}.text1 for user testuser2.",
+            )
+        )
