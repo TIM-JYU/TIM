@@ -212,7 +212,7 @@ def qst_handle_randomization(jso: dict) -> None:
             )
     if rand_arr is not None:  # specific order found in prev.ans or markup
         markup["rows"] = qst_set_array_order(rows, rand_arr)
-        markup["expl"] = qst_pick_expls(markup["expl"], rand_arr)
+        markup["expl"] = qst_pick_expls(markup.get("expl"), rand_arr)
         points = markup.get("points")
         if points:
             question_type = markup.get("questionType")
