@@ -312,7 +312,7 @@
     </div>
     <div *ngIf="feedback">
         <tim-alert [severity]="'warning'" [closeable]="true" (closing)="showFeedback('')">
-            <div #feedBack [innerHTML]="feedback | purify"></div>
+            <div #feedbackDiv [innerHTML]="feedback | purify"></div>
         </tim-alert>
     </div>
 </div>
