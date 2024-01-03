@@ -39,6 +39,8 @@ def getproxy(
         r = requests.get(url, headers=headers)
     except (MissingSchema, InvalidURL):
         raise RouteException("Invalid URL")
+    except requests.exceptions.ConnectionError as e:
+        raise RouteException(f"Connection error to {e.request.url}: {e}")
     if raw:
         mimetype = mimetype or r.headers.get("Content-Type", None)
         resp = Response(
