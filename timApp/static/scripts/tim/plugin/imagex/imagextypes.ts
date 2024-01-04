@@ -172,6 +172,8 @@ const CommonProps = t.partial({
     borderWidth: nullable(t.number),
     color: nullable(t.string),
     id: t.string,
+    correctColor: nullable(t.string),
+    incorrectColor: nullable(t.string),
     position: ValidCoord,
     size: Size,
     type: nullable(ObjectType),
@@ -295,10 +297,13 @@ export const ImageXMarkup = t.intersection([
     }),
 ]);
 
-export const RightAnswer = t.type({
-    id: t.string,
-    position: ValidCoord,
-});
+export const RightAnswer = t.intersection([
+    t.type({
+        id: t.string,
+        position: ValidCoord,
+    }),
+    t.partial({lineColor: t.string}),
+]);
 
 export interface RightAnswerT extends t.TypeOf<typeof RightAnswer> {}
 
@@ -336,7 +341,9 @@ export type OptionalCommonPropNames =
     | "textboxproperties"
     | "vectorproperties"
     | "color"
-    | "borderWidth";
+    | "borderWidth"
+    | "correctColor"
+    | "incorrectColor";
 export type OptionalFixedObjPropNames = OptionalCommonPropNames;
 export type OptionalDragObjectPropNames =
     | OptionalFixedObjPropNames
