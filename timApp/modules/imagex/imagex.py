@@ -285,6 +285,9 @@ class ImagexServer(TimServer):
                             target["position"][1] + target["snapOffset"][1],
                         ]
                         # Empty dict between loops.
+                color = target.get("lineColor")
+                if color:
+                    obj["lineColor"] = color
                 answertable.append(obj)
                 obj = {}
 
