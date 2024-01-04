@@ -8,6 +8,8 @@ import {getParContainerElem} from "tim/document/structure/create";
 import type {IItem} from "tim/item/IItem";
 import {RightNames} from "tim/user/IRights";
 import {isInViewport} from "tim/util/utils";
+import {isDocumentGlobals, someglobals} from "tim/util/globals";
+import {Users} from "tim/user/userService";
 
 export function getElementByParId(id: string) {
     return $("#" + id);
@@ -25,10 +27,23 @@ export function addElementToParagraphMargin(par: ParContext, el: Element) {
 
 export function canEditPar(item: IItem, par: ParContext) {
     const edit = par.par.attrs.edit;
+    let res: boolean;
     if (!RightNames.is(edit)) {
-        return item.rights.editable;
+        res = item.rights.editable;
+    } else {
+        res = item.rights[edit];
     }
-    return item.rights[edit];
+
+    const globals = someglobals();
+    if (isDocumentGlobals(globals) && globals.docSettings.parAuthorOnlyEdit) {
+        const authorInfo = par.getAuthorInfo();
+        const userName = Users.getCurrent().name;
+        if (!item.rights.owner && !authorInfo?.usernames?.includes(userName)) {
+            res = false;
+        }
+    }
+
+    return res;
 }
 
 export function canSeeSource(item: IItem, par: ParContext) {
