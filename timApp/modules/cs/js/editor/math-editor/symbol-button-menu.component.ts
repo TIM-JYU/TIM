@@ -242,6 +242,8 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
                 y: event.touches[0].clientY,
             };
         }
+        // FIXME: We stop events here to prevent extra autosaves on some plugins, but it also prevents
+        //  "click" read marking on the paragraph from being processed
         event.preventDefault();
         event.stopPropagation();
     }
