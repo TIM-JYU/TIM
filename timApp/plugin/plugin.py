@@ -82,6 +82,7 @@ NO_ANSWERBROWSER_PLUGINS = {
     "userSelect",
     "calendar",
     "timMenu",
+    "symbolbutton",
 }
 
 ALLOW_STYLES_PLUGINS = {"textfield", "numericfield", "drag", "dropdown"}

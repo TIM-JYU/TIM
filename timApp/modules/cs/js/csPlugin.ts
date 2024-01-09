@@ -481,7 +481,7 @@ interface IUploadResponse {
     block: number;
 }
 
-const TemplateButton = t.intersection([
+export const TemplateButton = t.intersection([
     t.type({
         data: t.string,
         text: t.string,

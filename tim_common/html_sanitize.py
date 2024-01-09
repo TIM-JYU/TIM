@@ -95,6 +95,7 @@ TIM_SAFE_TAGS = [
     "importdata-runner",
     "tim-table",
     "group-join",
+    "symbolbutton-runner"
     # raw AngularJS components:
     "tim-rights-editor",
     "tim-self-expire",

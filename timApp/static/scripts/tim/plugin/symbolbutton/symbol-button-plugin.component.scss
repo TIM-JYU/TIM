@@ -1,0 +1,27 @@
+@import "../../../../stylesheets/variables";
+
+.symbol-button-plugin-float {
+  position: fixed;
+  top: 2em;
+}
+
+.symbol-button-plugin-filler {
+  height: 1em;
+}
+
+.symbol-button-plugin-float {
+    position: fixed;
+    z-index: 1200;
+}
+
+@media screen and (min-width: $screen-lg-min) {
+  .symbol-button-plugin-float {
+    left: 75%;
+  }
+}
+
+@media screen and (max-width: $screen-lg-min) {
+  .symbol-button-plugin-float {
+    right: 1em;
+  }
+}
