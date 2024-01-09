@@ -445,8 +445,9 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
         staleness_attempts=1,
         parent: WebElement | None = None,
     ) -> WebElement:
+        node_scope = "." if parent else ""
         return self.find_element_avoid_staleness(
-            xpath=f"//{element}[contains(text(),'{text}')]",
+            xpath=f"{node_scope}//{element}[contains(text(),'{text}')]",
             parent=parent,
             tries=staleness_attempts,
         )
