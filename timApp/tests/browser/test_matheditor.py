@@ -144,7 +144,7 @@ buttons: |!!
         quick_button.click()
         tim_button.click()
         get_out_of_the_way_please = self.find_element(
-            xpath="//div[@class='readline hover click']"
+            xpath="//div[@class='readline hover']"
         )
         get_out_of_the_way_please.click()
         expand_symbol_menu_button = self.find_element(
