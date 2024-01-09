@@ -6,7 +6,12 @@ __authors__ = ["Daniel Juola"]
 __license__ = "MIT"
 __date__ = "31.3.2023"
 
+from selenium.common import StaleElementReferenceException
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
+
+from timApp.answer.answers import save_answer
+from timApp.plugin.taskid import TaskId
 from timApp.tests.browser.browsertest import BrowserTest
 from time import sleep
 
@@ -160,3 +165,128 @@ buttons: |!!
         save_formula_button.click()
         ace_input = self.find_element(xpath="//div[@class='ace_line'][1]")
         self.assertEqual("\\sin\\cos\\tan\\frac{$\\sin\\tan$}{}", ace_input.text)
+
+    def test_symbolbutton_plugin(self):
+        """Tests external symbolbutton on different plugins:
+        -   Selected text is replaced correctly
+        -   Cursor is repositioned correctly
+        -   Clicking the external editor does not generate extra autosaves"""
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {plugin="symbolbutton"}
+buttons: |!!
+[ "$", "$⁞$", "$ $", "t" ]
+!!
+mdButtons:
+ - text: \[ \pi \]
+   data: \pi
+   expl: \pi
+   type: q
+```
+``` {#textfield plugin="textfield"}
+autosave: true
+```
+``` {#cstiny plugin="csPlugin"}
+type: text/tiny
+autosave: true
+```
+``` {#csnormal plugin="csPlugin"}
+type: text
+autosave: true
+```
+``` {#cshighlight plugin="csPlugin"}
+type: text
+autosave: true
+```
+            """
+        )
+        save_answer(
+            [self.test_user_1],
+            TaskId.parse(f"{d.id}.textfield"),
+            content={"c": "0987654321"},
+            points=None,
+        )
+        save_answer(
+            [self.test_user_1],
+            TaskId.parse(f"{d.id}.cstiny"),
+            content={"usercode": "0987654321"},
+            points=None,
+        )
+        save_answer(
+            [self.test_user_1],
+            TaskId.parse(f"{d.id}.csnormal"),
+            content={"usercode": "0987654321"},
+            points=None,
+        )
+        save_answer(
+            [self.test_user_1],
+            TaskId.parse(f"{d.id}.cshighlight"),
+            content={"usercode": "0987654321"},
+            points=None,
+        )
+        self.goto_document(d)
+        self.wait_until_text_present("#cshighlight", "Highlight")
+        hightlight_parent = self.find_element("#cshighlight")
+        self.find_element_by_text("Highlight", parent=hightlight_parent).click()
+        dollar_button = self.find_element('[title="$ $"]')
+        self.wait_until_present_and_vis("#textfield input")
+        element = self.find_element("#textfield input")
+        element.click()
+        ActionChains(self.drv).send_keys(Keys.END).key_down(Keys.SHIFT).send_keys(
+            Keys.LEFT
+        ).send_keys(Keys.LEFT).key_up(Keys.SHIFT).perform()
+        dollar_button.click()
+        ActionChains(self.drv).send_keys("A").perform()
+        self.wait_until_present_and_vis("#cstiny input")
+        element = self.find_element("#cstiny input")
+        element.click()
+        ActionChains(self.drv).send_keys(Keys.END).send_keys(Keys.LEFT).key_down(
+            Keys.SHIFT
+        ).send_keys(Keys.LEFT).send_keys(Keys.LEFT).key_up(Keys.SHIFT).perform()
+        dollar_button.click()
+        ActionChains(self.drv).send_keys("A").perform()
+        self.wait_until_present_and_vis("#csnormal textarea")
+        element = self.find_element("#csnormal textarea")
+        element.click()
+        ActionChains(self.drv).send_keys(Keys.END).send_keys(Keys.LEFT).send_keys(
+            Keys.LEFT
+        ).key_down(Keys.SHIFT).send_keys(Keys.LEFT).send_keys(Keys.LEFT).key_up(
+            Keys.SHIFT
+        ).perform()
+        dollar_button.click()
+        ActionChains(self.drv).send_keys("A").perform()
+        self.wait_until_present_and_vis("#cshighlight cs-ace-editor")
+        element = self.find_element("#cshighlight cs-ace-editor")
+        element.click()
+        ActionChains(self.drv).send_keys(Keys.END).send_keys(Keys.LEFT).send_keys(
+            Keys.LEFT
+        ).send_keys(Keys.LEFT).key_down(Keys.SHIFT).send_keys(Keys.LEFT).send_keys(
+            Keys.LEFT
+        ).key_up(
+            Keys.SHIFT
+        ).perform()
+        dollar_button.click()
+        ActionChains(self.drv).send_keys("A").perform()
+        self.get_uninteractable_element().click()
+        self.goto_document(d)
+        check = self.find_element_avoid_staleness("#textfield input")
+        self.assertEqual("09876543$A$", check.get_attribute("value"))
+        check = self.find_element_avoid_staleness("#cstiny input")
+        self.assertEqual("0987654$A$1", check.get_attribute("value"))
+        check = self.find_element_avoid_staleness("#csnormal .ace_line")
+        try:
+            self.assertEqual("098765$A$21", check.text)
+        except StaleElementReferenceException:
+            check = self.find_element_avoid_staleness("#csnormal .ace_line")
+            self.assertEqual("098765$A$21", check.text)
+        check = self.find_element_avoid_staleness("#cshighlight .ace_line")
+        try:
+            self.assertEqual("09876$A$321", check.text)
+        except StaleElementReferenceException:
+            check = self.find_element_avoid_staleness("#cshighlight .ace_line")
+            self.assertEqual("09876$A$321", check.text)
+        for i in ["textfield", "cstiny", "csnormal", "cshighlight"]:
+            answers = self.get_task_answers(f"{d.id}.{i}", self.test_user_1)
+            self.assertEqual(len(answers), 1)
