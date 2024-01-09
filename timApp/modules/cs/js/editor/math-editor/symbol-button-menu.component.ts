@@ -90,7 +90,8 @@ export class SymbolsPipe implements PipeTransform {
                     </div>
 
                     <div class="common-symbol-buttons math display"
-                         [class.common-symbol-buttons-small]="!formulaEditorOpen">
+                         [class.common-symbol-buttons-small]="!formulaEditorOpen"
+                         [class.common-symbol-buttons-mini]="mini">
                         <button
                                 [hidden]="formulaEditorOpen"
                                 class="symbol-button"
