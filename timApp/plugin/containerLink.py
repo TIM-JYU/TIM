@@ -226,6 +226,12 @@ def get_plugins() -> dict[str, PluginReg]:
             port=qst_port,
             path="/quantumCircuit/",
         ),
+        PluginReg(
+            name="symbolbutton",
+            domain=internal_domain,
+            port=qst_port,
+            path="/symbolbutton/",
+        ),
     ]
     plugins = {p.name: p for p in plugin_list}
     return plugins

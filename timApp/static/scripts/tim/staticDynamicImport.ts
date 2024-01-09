@@ -96,6 +96,10 @@ export function staticDynamicImport(s: string) {
             return import(
                 "tim/plugin/quantumcircuit/quantum-circuit.component"
             );
+        case "symbolbutton":
+            return import(
+                "tim/plugin/symbolbutton/symbol-button-plugin.component"
+            );
     }
     throw Error(`Module was not statically known: ${s}`);
 }

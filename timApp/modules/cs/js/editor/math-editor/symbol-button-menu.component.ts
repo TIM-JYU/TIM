@@ -76,10 +76,10 @@ export class SymbolsPipe implements PipeTransform {
 @Component({
     selector: "symbol-button-menu",
     template: `
-        <div class="symbol-menu-container" [class.symbol-menu-container-open]="isOpen()">
+        <div class="symbol-menu-container" [class.symbol-menu-container-mini]="mini" [class.symbol-menu-container-open]="isOpen()">
             <div class="button-menu-container">
                 <div class="button-menu-left">
-                    <div [hidden]="formulaEditorOpen" class="formula-controls">
+                    <div [hidden]="formulaEditorOpen" *ngIf="!mini" class="formula-controls">
                         <button class="timButton formula-button" (click)="toggleFormulaEditor()" i18n
                                 title="Ctrl+e">Open formula editor
                         </button>
@@ -94,6 +94,7 @@ export class SymbolsPipe implements PipeTransform {
                         <button
                                 [hidden]="formulaEditorOpen"
                                 class="symbol-button"
+                                [class.symbol-button-mini]="mini"
                                 *ngFor="let item of templateButtons | symbols:'t'"
                                 title="{{item.expl}}"
                                 (mouseup)="addFormula($event, item.data)"
@@ -103,6 +104,7 @@ export class SymbolsPipe implements PipeTransform {
                         >{{item.text}}</button>
                         <button
                                 class="symbol-button"
+                                [class.symbol-button-mini]="mini"
                                 *ngFor="let item of templateButtons | symbols:'q'"
                                 title="{{item.expl}}"
                                 (mouseup)="addFormula($event, item.data)"
@@ -113,7 +115,7 @@ export class SymbolsPipe implements PipeTransform {
                     </div>
                 </div>
 
-                <div class="button-menu-right">
+                <div *ngIf="!mini" class="button-menu-right">
 
                     <button *ngIf="!isOpen(); else elseBlock" type="button" class="btn btn-default" (click)="openMenu()"
                             title="Show more symbols" i18n-title>
@@ -171,6 +173,7 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
 
     @Input() formulaEditorOpen: boolean = false;
     @Input() templateButtons!: ITemplateButton[];
+    @Input() mini?: boolean;
 
     @Output() setFormula = new EventEmitter<FormulaEvent>();
 
@@ -239,6 +242,8 @@ export class SymbolButtonMenuComponent implements AfterViewInit {
                 y: event.touches[0].clientY,
             };
         }
+        event.preventDefault();
+        event.stopPropagation();
     }
 
     /**

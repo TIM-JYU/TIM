@@ -791,7 +791,20 @@ export class ViewCtrl implements IController {
         this.syncAnswerBrowsers =
             (this.docSettings.sync_answerbrowsers ?? this.syncAnswerBrowsers) ||
             getViewName() === "review";
+        window.addEventListener("focus", this.focusChanged, true);
     }
+
+    lastActiveInput?: HTMLInputElement | HTMLTextAreaElement;
+
+    focusChanged = () => {
+        const ele = document.activeElement;
+        if (
+            (ele instanceof HTMLInputElement && ele.type == "text") ||
+            ele instanceof HTMLTextAreaElement
+        ) {
+            this.lastActiveInput = ele;
+        }
+    };
 
     /**
      * Registers a table controller to the view controller.

@@ -60,6 +60,10 @@ symbol-menu-container-open {
 
 }
 
+.symbol-menu-container-mini {
+  width: fit-content;
+}
+
 .symbol-button {
   border: none;
   background: none;
@@ -68,10 +72,26 @@ symbol-menu-container-open {
   margin: 1px;
 }
 
+.symbol-button-mini {
+  font-size: 2em;
+  padding: 0 0.3em;
+}
+
+
 .symbol-button:active {
   background-color: #C0C0C0;
 }
 
+.symbol-menu-container-mini {
+  border: 2px solid black;
+  border-radius: 1em;
+  padding: 0;
+  background-color: var(--material-bg);
+}
+
+.symbol-menu-container-mini .button-menu-container {
+  padding: unset;
+}
 
 @media (hover: hover) {
   .symbol-button:hover {
