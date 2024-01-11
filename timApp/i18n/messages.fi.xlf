@@ -6962,14 +6962,6 @@
           <context context-type="linenumber">191</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8839747277544341839" datatype="html">
-        <source>Answer number <x id="PH" equiv-text="answerNumber"/> is out of range for this task and user.</source>
-        <target state="translated">Vastausta numero <x id="PH" equiv-text="answerNumber"/> ei löydy tälle tehtävälle ja käyttäjälle.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
-          <context context-type="linenumber">1112</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6024069868401376720" datatype="html">
         <source>Delete this answer?</source>
         <target state="translated">Poista tämä vastaus?</target>
@@ -8910,6 +8902,22 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">860,859</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4943336698756715857" datatype="html">
+        <source>Tries left:</source>
+        <target state="translated">Vastauskertoja jäljellä:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1720</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1691418146394662141" datatype="html">
+        <source>Answer number <x id="PH" equiv-text="answerNumber"/> is out of range for task <x id="PH_1" equiv-text="this.taskId.docTask()"/> for user <x id="PH_2" equiv-text="this.user?.name"/>.</source>
+        <target state="translated">Vastausta numero <x id="PH" equiv-text="answerNumber"/> ei löydy tehtävälle <x id="PH_1" equiv-text="this.taskId.docTask()"/> käyttäjälle <x id="PH_2" equiv-text="this.user?.name"/>.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1375,1374</context>
         </context-group>
       </trans-unit>
     </body>

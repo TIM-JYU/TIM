@@ -13,6 +13,28 @@ def guess_image_type(p: PathLike | str | bytes) -> str | None:
     :param p:  Path to file or bytes content of file.
     :return:  Image type or None.
     """
+    mime = guess_image_mime(p)
+
+    if not mime:
+        return None
+
+    ext = guess_extension(mime)
+
+    if not ext:
+        return None
+
+    return ext.lstrip(".")
+
+
+def guess_image_mime(p: PathLike | str | bytes) -> str | None:
+    """
+    Guess the image mime type of file.
+
+    If the file is not an image, return None.
+
+    :param p:  Path to file or bytes content of file.
+    :return:  Image mime type or None.
+    """
     m = magic.Magic(mime=True)
 
     if isinstance(p, bytes):
@@ -23,9 +45,4 @@ def guess_image_type(p: PathLike | str | bytes) -> str | None:
     if not mime.startswith("image/"):
         return None
 
-    ext = guess_extension(mime)
-
-    if not ext:
-        return None
-
-    return ext.lstrip(".")
+    return mime

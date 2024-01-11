@@ -1,6 +1,7 @@
 """Provides functions for converting markdown-formatted text to HTML."""
 from __future__ import annotations
 
+import random
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
@@ -8,7 +9,8 @@ from re import Pattern
 from typing import TYPE_CHECKING, Iterable, Any
 from urllib.parse import quote_plus
 
-from jinja2 import TemplateSyntaxError
+from jinja2 import TemplateSyntaxError, pass_context
+from jinja2.runtime import Context
 from lxml import html, etree
 from sqlalchemy.orm import load_only, lazyload
 
@@ -49,6 +51,21 @@ def has_macros(text: str, env: TimSandboxedEnvironment):
 # To create a new filter,
 #  1. make a class or function
 #  2. and map it in create_environment
+
+
+@pass_context
+def local(ctx: Context, name: Any, default: Any = None) -> Any | None:
+    """
+    Get a local variable from the current context.
+
+    :param ctx: Current context
+    :param name: Name of the variable
+    :param default: Default value if not found
+    :return: Value of the variable or None if not found
+    """
+    if not isinstance(name, str):
+        return None
+    return ctx.get(name, default)
 
 
 def genfields(flds, attrs="", stemfield="stem"):
@@ -558,10 +575,30 @@ def slugify_str(s: Any, underscore: Any = None) -> str:
     return s
 
 
+def shuffle(s: Any, seed: Any = None) -> Any:
+    """
+    Shuffles the given iterable.
+
+    :param s: Iterable to shuffle.
+    :param seed: Seed for the random number generator.
+    :return: Shuffled iterable.
+    """
+    try:
+        tmp_list = list(s)
+    except TypeError:
+        return s
+    if seed is None:
+        random.shuffle(tmp_list)
+    else:
+        random.Random(seed).shuffle(tmp_list)
+    return tmp_list
+
+
 tim_filters = {
     "Pz": Pz,
     "gfields": genfields,
     "gfrange": gfrange,
+    "local": local,
     "srange": srange,
     "now": now,
     "w2date": week_to_date,
@@ -577,6 +614,7 @@ tim_filters = {
     "docpath": get_document_path,
     "urlquote": url_quote,
     "endvalue": end_value,
+    "shuffle": shuffle,
 }
 
 

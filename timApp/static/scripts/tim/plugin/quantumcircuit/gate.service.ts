@@ -203,7 +203,11 @@ export class GateService {
         if (!gate) {
             return 1;
         }
-        const sideLength = gate.size()[0];
+        return this.getMatrixSize(gate);
+    }
+
+    getMatrixSize(mat: Matrix) {
+        const sideLength = mat.size()[0];
         return Math.floor(Math.log2(sideLength));
     }
 

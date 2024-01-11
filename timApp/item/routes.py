@@ -837,11 +837,19 @@ def render_doc_view(
         no_question_auto_numbering = doc_settings.auto_number_questions()
 
     current_list_user: User | None = None
-    # teacher view sorts user by real name and selects the lowest - ensure first loaded answer matches the user
     if user_list:
-        current_list_user = min(
-            user_list, key=lambda u: (u["user"].real_name or "").lower()
-        )["user"]
+        if m.user:
+            for u in user_list:
+                if u["user"].name == m.user:
+                    current_list_user = u["user"]
+                    break
+                # Don't flash about missing user here, warning is handled client-side
+        # In default case teacher view sorts user by real name and selects the lowest
+        # - ensure first loaded answer matches the user
+        if not current_list_user:
+            current_list_user = min(
+                user_list, key=lambda u: (u["user"].real_name or "").lower()
+            )["user"]
 
     raw_css = doc_settings.css()
     if raw_css:

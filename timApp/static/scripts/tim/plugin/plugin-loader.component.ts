@@ -99,7 +99,7 @@ function isElement(n: Node): n is Element {
         </ng-template>
         <div *ngIf="feedback">
             <tim-alert [severity]="'warning'" [closeable]="true" (closing)="showFeedback('')">
-                <div #feedBack [innerHTML]="feedback | purify"></div>
+                <div class="math" #feedbackDiv [innerHTML]="feedback | purify"></div>
             </tim-alert>
         </div>
 
@@ -111,7 +111,16 @@ function isElement(n: Node): n is Element {
 export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild("pluginPlacement", {read: ViewContainerRef, static: false})
     pluginPlacement!: ViewContainerRef;
-    @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
+    private feedBackElement?: ElementRef<HTMLDivElement>;
+    @ViewChild("feedbackDiv") set feedbackDiv(
+        el: ElementRef<HTMLDivElement> | undefined
+    ) {
+        if (!el || this.feedBackElement == el) {
+            return;
+        }
+        this.feedBackElement = el;
+        ParCompiler.processAllMath($(el.nativeElement));
+    }
     private compiled = false;
     activated = false;
     lazyActivated = false;

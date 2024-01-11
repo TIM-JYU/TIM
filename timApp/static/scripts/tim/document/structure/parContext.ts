@@ -133,6 +133,22 @@ export class ParContext {
         return this.par.htmlElement.querySelector(".parContent")!;
     }
 
+    getAuthorInfo() {
+        const e = this.par.htmlElement.querySelector(".authorinfo");
+        if (!e) {
+            return null;
+        }
+
+        const usernameList = e.getAttribute("data-usernames");
+        if (!usernameList) {
+            return null;
+        }
+
+        return {
+            usernames: usernameList.split(",").map((s) => s.trim()),
+        };
+    }
+
     isSetting() {
         return this.par.isSetting();
     }

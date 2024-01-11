@@ -1,6 +1,7 @@
+import unittest
 from unittest import TestCase
 
-from timApp.markdown.markdownconverter import end_value
+from timApp.markdown.markdownconverter import end_value, shuffle
 
 
 class TestEndValue(TestCase):
@@ -59,3 +60,15 @@ class TestEndValue(TestCase):
     def test_int_defvalue(self):
         s = "8765a"
         self.assertEqual("9", end_value(s, 9), "Not in int defvalue " + s)
+
+
+class TestShuffle(unittest.TestCase):
+    def test_shuffle(self):
+        self.assertEqual(shuffle([1, 2, 3], 1), [2, 3, 1])
+        self.assertEqual(shuffle([1, 2, 3], 10), [2, 1, 3])
+
+        self.assertEqual(shuffle("abc", 1), ["b", "c", "a"])
+
+        self.assertEqual(shuffle({1, 2, 3}, 1), [2, 3, 1])
+
+        self.assertEqual(shuffle({"a": 1, "b": 2, "c": 3}, 1), ["b", "c", "a"])

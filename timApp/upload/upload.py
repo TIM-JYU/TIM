@@ -50,7 +50,7 @@ from timApp.upload.uploadedfile import (
     is_script_safe_mimetype,
 )
 from timApp.user.user import User
-from timApp.util.file_utils import guess_image_type
+from timApp.util.file_utils import guess_image_type, guess_image_mime
 from timApp.util.flask.requesthelper import (
     use_model,
     RouteException,
@@ -430,6 +430,9 @@ def upload_file():
     try:
         attachment_params = json.loads(request.form.get("attachmentParams"))
         autostamp = attachment_params[len(attachment_params) - 1]
+        # TODO: Notify the user that the file type cannot be stamped
+        if file.mimetype not in STAMPABLE_MIMETYPES and autostamp:
+            raise StampDataInvalidError("Cannot stamp file")
     except:
         # Just go on with normal upload if necessary conditions are not met.
         return upload_image_or_file(d, file)
@@ -541,6 +544,9 @@ def upload_document(folder, file):
     doc = import_document(content, path, get_current_user_group_object())
     db.session.commit()
     return json_response({"id": doc.id})
+
+
+STAMPABLE_MIMETYPES = {"application/pdf", "application/x-pdf"}
 
 
 def upload_and_stamp_attachment(
@@ -693,11 +699,11 @@ def get_image(image_id: str, image_filename: str) -> Response:
     verify_view_access(f, check_parents=True)
     if image_filename != f.filename:
         raise NotExist("Image not found")
-    imgtype = guess_image_type(f.filesystem_path)
+    imgtype = guess_image_mime(f.filesystem_path)
     # Redirect if we can't deduce the image type
     if not imgtype:
         return safe_redirect(
             url_for("upload.get_file", file_id=image_id, file_filename=image_filename)
         )
     f = io.BytesIO(f.data)
-    return send_file(f, mimetype="image/" + imgtype)
+    return send_file(f, mimetype=imgtype)

@@ -107,7 +107,7 @@
                 {{ t.output|safe }}
         </div>
         {%- if t.authorinfo -%}
-        <div class="authorinfo">
+        <div class="authorinfo" data-usernames="{{ t.authorinfo.username_list }}">
         <i class="glyphicon glyphicon-pencil"></i>
         <span class="username">{{t.authorinfo.display_name}}</span>
         <span class="timestamp">{{ t.authorinfo.time|datestr_to_relative }}</span>

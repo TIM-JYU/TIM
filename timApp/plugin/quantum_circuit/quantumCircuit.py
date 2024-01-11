@@ -10,7 +10,7 @@ import numpy as np
 import yaml
 from flask import render_template_string, request, jsonify, Response
 from qulacs import QuantumCircuit, QuantumState, QuantumGateMatrix
-from qulacs.gate import H, X, Y, Z, S, T, to_matrix_gate, DenseMatrix
+from qulacs.gate import H, X, Y, Z, S, T, SWAP, to_matrix_gate, DenseMatrix
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.tim_app import csrf
@@ -25,18 +25,6 @@ from tim_common.pluginserver_flask import (
     PluginAnswerResp,
     EditorTab,
 )
-from tim_common.utils import Missing
-
-
-@dataclass
-class SingleOrMultiQubitGateInfo:
-    name: str
-    time: int
-    target: int
-    editable: bool | Missing | None = True
-
-    def to_json(self) -> dict:
-        return asdict(self)
 
 
 @dataclass
@@ -44,25 +32,26 @@ class SwapGateInfo:
     time: int
     swap1: int
     swap2: int
-    editable: bool | Missing | None = True
+    editable: bool | None = True
+    controls: list[int] | None = None
 
     def to_json(self) -> dict:
         return asdict(self)
 
 
 @dataclass
-class ControlGateInfo:
+class NormalGateInfo:
     name: str
     time: int
     target: int
-    controls: list[int]
-    editable: bool | Missing | None = True
+    editable: bool | None = True
+    controls: list[int] | None = None
 
     def to_json(self) -> dict:
         return asdict(self)
 
 
-GateInfo = Union[SingleOrMultiQubitGateInfo, SwapGateInfo, ControlGateInfo]
+GateInfo = Union[NormalGateInfo, SwapGateInfo]
 
 
 @dataclass
@@ -347,24 +336,27 @@ def add_gates_to_circuit(
     circuit: QuantumCircuit,
     custom_gates: dict[str, np.ndarray],
 ) -> None | ErrorType:
-    # qulacs has implicit sense of time so gates need to added in correct order
+    # qulacs has implicit sense of time so gates need to be added in correct order
     for gate_def in sorted(gates, key=lambda x: x.time):
         # check nMoments limit here. nQubits limit doesn't need to be checked because
         # circuit knows it and throws error if gate_def.target violates it
         if gate_def.time >= 50:
             return TooManyMomentsError(gate_def.time, 50)
-        if isinstance(gate_def, SingleOrMultiQubitGateInfo):
+        if isinstance(gate_def, NormalGateInfo):
             gate = get_gate_matrix(gate_def.name, gate_def.target, custom_gates)
             if gate:
+                controls = gate_def.controls
+                if controls is not None:
+                    for c in controls:
+                        gate.add_control_qubit(c, 1)
                 circuit.add_gate(gate)
         elif isinstance(gate_def, SwapGateInfo):
-            circuit.add_SWAP_gate(gate_def.swap1, gate_def.swap2)
-        elif isinstance(gate_def, ControlGateInfo):
-            mat = get_gate_matrix(gate_def.name, gate_def.target, custom_gates)
-            if mat:
-                for c in gate_def.controls:
-                    mat.add_control_qubit(c, 1)
-                circuit.add_gate(mat)
+            swap = to_matrix_gate(SWAP(gate_def.swap1, gate_def.swap2))
+            controls = gate_def.controls
+            if controls is not None:
+                for c in controls:
+                    swap.add_control_qubit(c, 1)
+            circuit.add_gate(swap)
         else:
             log_warning(f"quantum: undefined gate type {gate_def}")
 
@@ -597,18 +589,25 @@ def get_gate_counts(
     counts: defaultdict[str, int] = defaultdict(int)
     circuit_names: set[str] = set()
     for gate_def in circuit:
-        if isinstance(gate_def, SingleOrMultiQubitGateInfo):
-            counts[gate_def.name] += 1
-            circuit_names.add(gate_def.name)
+        if isinstance(gate_def, NormalGateInfo):
+            if gate_def.controls and len(gate_def.controls) > 0:
+                # each gate with specific number of controls is treated as separate gate
+                n_controls = len(gate_def.controls)
+                control_gate_name = f"C{n_controls}{gate_def.name}"
+                counts[control_gate_name] += 1
+                circuit_names.add(control_gate_name)
+            else:
+                counts[gate_def.name] += 1
+                circuit_names.add(gate_def.name)
         elif isinstance(gate_def, SwapGateInfo):
-            counts["swap"] += 1
-            circuit_names.add("swap")
-        elif isinstance(gate_def, ControlGateInfo):
-            # each gate with specific number of controls is treated as separate gate
-            n_controls = len(gate_def.controls)
-            control_gate_name = f"C{n_controls}{gate_def.name}"
-            counts[control_gate_name] += 1
-            circuit_names.add(control_gate_name)
+            if gate_def.controls and len(gate_def.controls) > 0:
+                n_controls = len(gate_def.controls)
+                control_gate_name = f"C{n_controls}swap"
+                counts[control_gate_name] += 1
+                circuit_names.add(control_gate_name)
+            else:
+                counts["swap"] += 1
+                circuit_names.add("swap")
         else:
             log_warning(f"quantum: undefined gate type {gate_def}")
 

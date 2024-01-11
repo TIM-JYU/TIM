@@ -462,8 +462,17 @@ class DragTask {
         for (const d of answers) {
             const o = objects.find((obj) => obj.id === d.id);
             if (o) {
-                const line = new Line("green", 2, o, tupleToCoords(d.position));
+                const pos = tupleToCoords(d.position);
+                const line = new Line(d.lineColor ?? "green", 2, o, pos);
                 this.lines.push(line);
+                const atCorrectPlace = o.x == pos.x && o.y == pos.y;
+                if (o instanceof DragObject) {
+                    if (atCorrectPlace) {
+                        o.overrideColor = o.values.correctColor ?? undefined;
+                    } else {
+                        o.overrideColor = o.values.incorrectColor ?? undefined;
+                    }
+                }
             }
         }
         this.drawDragTask();
@@ -598,8 +607,13 @@ abstract class ObjBase<
 
     public mainShape: Shape;
 
+    private overrideColorProp: string | undefined;
     get overrideColor(): string | undefined {
-        return undefined;
+        return this.overrideColorProp;
+    }
+
+    set overrideColor(c: string | undefined) {
+        this.overrideColorProp = c;
     }
 
     // Center point of object ignoring possible pin; used in drag & drop checks.
@@ -611,7 +625,7 @@ abstract class ObjBase<
 
     protected constructor(
         protected ctx: CanvasRenderingContext2D,
-        protected values: T,
+        readonly values: T,
         public did: string
     ) {
         const z = values.position;
@@ -692,7 +706,7 @@ abstract class ObjBase<
                 // rectangle
                 this.mainShape = new Rectangle(
                     () => this.overrideColor ?? this.values.color ?? "black",
-                    "transparent",
+                    () => "transparent",
                     this.values.borderWidth ?? 2,
                     0,
                     s
@@ -775,7 +789,7 @@ function textboxFromProps(
     return new Textbox(
         () => overrideColorFn() ?? props.borderColor ?? values.color ?? "black",
         props.textColor ?? "black",
-        props.fillColor ?? "white",
+        () => overrideColorFn() ?? props.fillColor ?? "white",
         valueOr(props.borderWidth, 2),
         valueOr(props.cornerradius, 2),
         tupleToSizedOrDef(props.size, s),
@@ -996,7 +1010,7 @@ class Ellipse extends Shape {
 class Rectangle extends Shape {
     constructor(
         protected readonly color: () => string,
-        protected readonly fillColor: string,
+        protected readonly fillColor: () => string,
         protected readonly lineWidth: number,
         protected readonly cornerRadius: number,
         size: ISizedPartial | undefined
@@ -1016,7 +1030,7 @@ class Rectangle extends Shape {
     draw(ctx: CanvasRenderingContext2D) {
         const {width, height} = this.size;
         ctx.strokeStyle = this.color();
-        ctx.fillStyle = this.fillColor;
+        ctx.fillStyle = this.fillColor();
         ctx.lineWidth = this.lineWidth;
         ctx.beginPath();
         ctx.moveTo(-width / 2 + this.cornerRadius, -height / 2);
@@ -1073,7 +1087,7 @@ class Textbox extends Shape {
     constructor(
         protected readonly borderColor: () => string,
         protected readonly textColor: string,
-        protected readonly fillColor: string,
+        protected readonly fillColor: () => string,
         protected readonly lineWidth: number,
         protected readonly cornerRadius: number,
         size: ISizedPartial | undefined,
@@ -1784,6 +1798,7 @@ export class ImageXComponent
         this.drawing.resetDrawing();
 
         for (const obj of this.drags) {
+            obj.overrideColor = undefined;
             obj.resetPosition();
         }
 
@@ -1936,6 +1951,10 @@ export class ImageXComponent
             return false;
         }
         return this.getContent() !== this.prevAnswer;
+    }
+
+    get markup(): Readonly<t.TypeOf<typeof ImageXMarkup>> {
+        return {...super.markup, answerBrowser: {showValidOnly: false}};
     }
 }
 

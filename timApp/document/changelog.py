@@ -34,6 +34,10 @@ class AuthorInfo:
         return "; ".join(get_author_str(u, es) for u, es in self.authors.items())
 
     @property
+    def username_list(self):
+        return ",".join(u.name for u, es in self.authors.items())
+
+    @property
     def time(self):
         return max(entries[-1].time for entries in self.authors.values())
 

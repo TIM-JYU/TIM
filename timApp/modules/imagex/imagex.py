@@ -266,11 +266,13 @@ class ImagexServer(TimServer):
             self.wout(sresult)
             return
 
+        show_final_answer = False
         if (
             finalanswer
             and finalanswerquery
             and (tries >= max_tries or max_tries == max_infinity)
         ):
+            show_final_answer = True
             print("--final answer--")
             obj = {}
             answertable = []
@@ -283,6 +285,9 @@ class ImagexServer(TimServer):
                             target["position"][1] + target["snapOffset"][1],
                         ]
                         # Empty dict between loops.
+                color = target.get("lineColor")
+                if color:
+                    obj["lineColor"] = color
                 answertable.append(obj)
                 obj = {}
 
@@ -298,7 +303,10 @@ class ImagexServer(TimServer):
             save["drawings"] = drawings
         result["save"] = save
         out = "saved"
-        result["tim_info"] = {"points": points}
+        tim_info = {"points": points}
+        if show_final_answer:
+            tim_info |= {"notValid": True, "validMsg": ""}
+        result["tim_info"] = tim_info
 
         # Send stuff over to tim.
         web["tries"] = tries

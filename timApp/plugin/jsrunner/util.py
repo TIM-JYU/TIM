@@ -45,6 +45,7 @@ from timApp.user.userutils import grant_access, expire_access
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.utils import is_valid_email, approximate_real_name
 from tim_common.marshmallow_dataclass import class_schema
+from tim_common.utils import parse_bool
 
 
 class JsrunnerGroups(TypedDict, total=False):
@@ -173,16 +174,30 @@ class FieldSaveRequest(TypedDict, total=False):
     itemRightActions: dict | None
 
 
+@dataclass(slots=True)
+class AllowedOverwriteOptions:
+    points: bool = False
+    validity: bool = False
+
+    @staticmethod
+    def from_markup(markup: dict) -> "AllowedOverwriteOptions":
+        return AllowedOverwriteOptions(
+            points=parse_bool(markup.get("canOverwritePoints", False)),
+            validity=parse_bool(markup.get("canOverwriteValidity", False)),
+        )
+
+
 def save_fields(
     jsonresp: FieldSaveRequest,
     curr_user: User,
     current_doc: DocInfo | None = None,
     allow_non_teacher: bool = False,
     add_users_to_group: str | None = None,
-    overwrite_previous_points: bool = False,
+    overwrite_opts: AllowedOverwriteOptions | None = None,
     pr_data: str | None = None,
     view_ctx: ViewContext | None = None,
 ) -> FieldSaveResult:
+    overwrite_opts = overwrite_opts or AllowedOverwriteOptions()
     save_obj = jsonresp.get("savedata")
     ignore_missing = jsonresp.get("ignoreMissing", False)
     allow_missing = jsonresp.get("allowMissing", False)
@@ -399,62 +414,80 @@ def save_fields(
             content = {}
             new_answer = False
             points_changed = False
+            validity_changed = False
+            # We specifically do not use an.valid as the value for valid,
+            # since otherwise any new answers would have the same validity as the previous answer (e.g., invalid).
+            # Therefore, we change the validity only if the user explicitly sets it
+            # TODO: Add option to specify default validity for new answers
+            #  (e.g., valid, invalid, or inherit from previous answer)
+            valid = True
             if an:
                 points = an.points
                 content = json.loads(an.content)
             lastfield = "c"
             for c_field, c_value in contents.items():  # type: str, Any
                 lastfield = c_field
-                if c_field == "points":
-                    if c_value == "":
-                        c_value = None
-                    else:
-                        try:
-                            c_value = float(c_value)
-                        except ValueError:
-                            raise RouteException(
-                                f"Value {c_value} is not valid point value for task {task_id.task_name}"
-                            )
-                    if points != c_value:
-                        points_changed = True
-                    points = c_value
-                elif c_field == "styles":
-                    if isinstance(c_value, str):
-                        try:
-                            c_value = json.loads(c_value or "null")
-                        except json.decoder.JSONDecodeError:
-                            raise RouteException(
-                                f"Value {c_value} is not valid style syntax for task {task_id.task_name}"
-                            )
-                    plug = cpf.find(task_id)
-                    if not plug:
-                        continue
-                    if plug.allow_styles_field():
-                        if not an or content.get(c_field) != c_value:
-                            new_answer = True
-                        if c_value is None:
-                            content.pop(c_field, None)
+                match c_field:
+                    case "points":
+                        if c_value == "":
+                            c_value = None
                         else:
-                            content[c_field] = c_value
+                            try:
+                                c_value = float(c_value)
+                            except ValueError:
+                                raise RouteException(
+                                    f"Value {c_value} is not valid point value for task {task_id.task_name}"
+                                )
+                        if points != c_value:
+                            points_changed = True
+                        points = c_value
+                    case "JSSTRING":  # TODO check if this should be ALL!  No this is for settings using string
+                        if not an or json.dumps(content) != c_value:
+                            new_answer = True
+                        content = json.loads(c_value)  # TODO: should this be inside if
+                    case "valid":
+                        c_b_value = parse_bool(c_value)
+                        validity_changed = True
+                        valid = c_b_value
+                    case "styles":
+                        if isinstance(c_value, str):
+                            try:
+                                c_value = json.loads(c_value or "null")
+                            except json.decoder.JSONDecodeError:
+                                raise RouteException(
+                                    f"Value {c_value} is not valid style syntax for task {task_id.task_name}"
+                                )
+                        plug = cpf.find(task_id)
+                        if not plug:
+                            continue
+                        if plug.allow_styles_field():
+                            if not an or content.get(c_field) != c_value:
+                                new_answer = True
+                            if c_value is None:
+                                content.pop(c_field, None)
+                            else:
+                                content[c_field] = c_value
 
-                        # Ensure there's always a content field even when setting styles to an empty answer.
-                        c_field = task_content_name_map[f"{task_id.doc_task}.{c_field}"]
-                        if c_field not in content:
-                            content[c_field] = None
-                elif (
-                    c_field == "JSSTRING"
-                ):  # TODO check if this should be ALL!  No this is for settings using string
-                    if not an or json.dumps(content) != c_value:
-                        new_answer = True
-                    content = json.loads(c_value)  # TODO: should this be inside if
-                else:
-                    if not an or content.get(c_field, "") != c_value:
-                        new_answer = True
-                    content[c_field] = c_value
+                            # Ensure there's always a content field even when setting styles to an empty answer.
+                            c_field = task_content_name_map[
+                                f"{task_id.doc_task}.{c_field}"
+                            ]
+                            if c_field not in content:
+                                content[c_field] = None
+                    case _:
+                        if not an or content.get(c_field, "") != c_value:
+                            new_answer = True
+                        content[c_field] = c_value
 
             if points_changed:
-                if an and not new_answer and overwrite_previous_points:
+                if an and not new_answer and overwrite_opts.points:
                     an.points = points
+                else:
+                    new_answer = True
+
+            if validity_changed:
+                if an and not new_answer and overwrite_opts.validity:
+                    an.valid = valid
                 else:
                     new_answer = True
 
@@ -478,7 +511,7 @@ def save_fields(
                 points=points,
                 task_id=task_id.doc_task,
                 users=[u],
-                valid=True,
+                valid=valid,
                 saver=curr_user,
             )
             db.session.add(ans)

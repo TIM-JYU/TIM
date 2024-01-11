@@ -496,6 +496,8 @@ class Plugin:
         :return: True if the answer should be considered valid, False otherwise.
 
         """
+        if tim_info.get("notValid", None):
+            return False, tim_info.get("validMsg", "Answer is not valid")
         answer_limit = self.answer_limit()
         if answer_limit is not None and (answer_limit <= old_answers):
             return False, "You have exceeded the answering limit."
@@ -509,8 +511,6 @@ class Plugin:
             < get_current_time()
         ):
             return False, "The deadline for submitting answers has passed."
-        if tim_info.get("notValid", None):
-            return False, tim_info.get("validMsg", "Answer is not valid")
         valid = tim_info.get("valid", True)
         valid_msg = tim_info.get("validMsg", "")
         return valid, valid_msg

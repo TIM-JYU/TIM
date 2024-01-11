@@ -156,7 +156,16 @@ export class AnswerBrowserComponent
 {
     @Input() public taskId!: TaskId;
     @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
-    @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
+    private feedBackElement?: ElementRef<HTMLDivElement>;
+    @ViewChild("feedbackDiv") set feedbackDiv(
+        el: ElementRef<HTMLDivElement> | undefined
+    ) {
+        if (!el || this.feedBackElement == el) {
+            return;
+        }
+        this.feedBackElement = el;
+        ParCompiler.processAllMath($(el.nativeElement));
+    }
     peerReviewResizeWidth = "";
     peerReviewResizeHeight = "";
     peerReviewResizeObserver?: ResizeObserver;
@@ -436,9 +445,12 @@ export class AnswerBrowserComponent
         // Answer changes are handled by viewctrl, so don't bother querying them here
         if (!this.formMode) {
             const answs = await this.getAnswers();
+            if (answs) {
+                this.answers = answs;
+            }
+            const updated = this.updateAnswerFromURL();
             if (answs && answs.length > 0) {
                 this.answers = answs;
-                const updated = this.updateAnswerFromURL();
                 if (!updated) {
                     this.handleAnswerFetch(this.answers);
                 }
@@ -1369,7 +1381,9 @@ export class AnswerBrowserComponent
                 return true;
             } else {
                 void showMessageDialog(
-                    $localize`Answer number ${answerNumber} is out of range for this task and user.`
+                    $localize`Answer number ${answerNumber} is out of range for task ${this.taskId.docTask()} for user ${
+                        this.user?.name
+                    }.`
                 );
             }
         }
@@ -1710,6 +1724,22 @@ export class AnswerBrowserComponent
                 this.answers.filter((a) => a.valid).length,
             0
         );
+    }
+
+    pointsTextVisible() {
+        return !!(this.taskInfo && this.getPointsText() != "");
+    }
+
+    getPointsText() {
+        return this.taskInfo?.pointsText ?? $localize`Points:`;
+    }
+
+    triesTextVisible() {
+        return !!(this.taskInfo && this.getTriesText() != "");
+    }
+
+    getTriesText() {
+        return this.taskInfo?.triesText ?? $localize`Tries left:`;
     }
 
     public setInfo(info: ITaskInfo) {

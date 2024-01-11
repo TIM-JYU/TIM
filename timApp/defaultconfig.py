@@ -520,3 +520,11 @@ RESTRICT_ROBOTS_METHODS = {
         "otherbot": [],
     },
 }
+
+
+# LaTeX printing settings
+
+PRINT_MAX_LATEX_MEMORY = 5000000
+"""
+Maximum amount of memory that can be used by a single LaTeX process to typeset PDFs.
+"""

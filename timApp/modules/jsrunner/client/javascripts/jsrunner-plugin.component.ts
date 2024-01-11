@@ -15,6 +15,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {
     AnswerReturnBrowser,
     ErrorList,
@@ -169,7 +170,11 @@ export class JsRunnerPluginComponent
             return;
         }
         if (this.attrsall.markup.confirmText) {
-            if (!window.confirm(this.attrsall.markup.confirmText)) {
+            const res = await showConfirm(
+                $localize`Confirm`,
+                this.attrsall.markup.confirmText
+            );
+            if (!res) {
                 return;
             }
         }
@@ -236,7 +241,33 @@ export class JsRunnerPluginComponent
                     return;
                 }
                 this.processExportData(tempd.outdata.exportdata);
-                this.vctrl.processAreaVisibility(tempd.outdata.areaVisibility);
+                this.vctrl.processAreaVisibility(
+                    tempd.outdata.areaVisibility,
+                    tempd.outdata.saveAreaVisibility ?? true
+                );
+
+                if (tempd.outdata.refresh) {
+                    if (tempd.outdata.refreshRunJSRunners) {
+                        const urlParams = new URLSearchParams(
+                            window.location.search
+                        );
+                        urlParams.set(
+                            "run_jsrunners",
+                            tempd.outdata.refreshRunJSRunners.join(",")
+                        );
+                        const currentUrl = window.location.href;
+                        const url = new URL(window.location.href);
+                        url.search = urlParams.toString();
+                        const newUrl = url.toString();
+                        if (newUrl != currentUrl) {
+                            window.location.href = newUrl;
+                        } else {
+                            location.reload();
+                        }
+                    } else {
+                        location.reload();
+                    }
+                }
             }
         } else {
             this.error = {

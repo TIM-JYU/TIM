@@ -99,7 +99,7 @@ from timApp.plugin.jsrunner.jsrunner import (
     JsRunnerAnswerModel,
     JsRunnerAnswerSchema,
 )
-from timApp.plugin.jsrunner.util import save_fields
+from timApp.plugin.jsrunner.util import save_fields, AllowedOverwriteOptions
 from timApp.plugin.plugin import (
     Plugin,
     PluginWrap,
@@ -958,8 +958,8 @@ def post_answer_impl(
 
     if "savedata" in jsonresp:
         siw = answer_call_data.get("markup", {}).get("showInView", False)
-        overwrite_points = answer_call_data.get("markup", {}).get(
-            "canOverwritePoints", False
+        overwrite_opts = AllowedOverwriteOptions.from_markup(
+            answer_call_data.get("markup", {})
         )
         add_group = None
         if plugin.type == "importData":
@@ -972,7 +972,7 @@ def post_answer_impl(
             allow_non_teacher=siw,
             add_users_to_group=add_group,
             pr_data=pr_data,
-            overwrite_previous_points=overwrite_points,
+            overwrite_opts=overwrite_opts,
             view_ctx=view_ctx,
         )
 
@@ -1198,7 +1198,7 @@ def post_answer_impl(
 
             # Validity info can be different from error (e.g. answer can be valid but error is given by postprogram)
             result["valid"] = is_valid
-            if not is_valid:
+            if not is_valid and explanation:
                 result_errors.append(explanation)
         elif save_teacher:
             # Getting points from teacher ignores points automatically computed by the task
