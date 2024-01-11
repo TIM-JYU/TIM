@@ -16,6 +16,7 @@ from timApp.messaging.messagelist.messagelist_utils import (
     sync_message_list_on_add,
     sync_message_list_on_expire,
 )
+from timApp.notification.group_notification import send_group_join_message
 from timApp.sisu.parse_display_name import (
     parse_sisu_group_display_name,
     SisuDisplayName,
@@ -508,6 +509,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
         update_mailing_list_address(old, new)
 
     for added_user in added_users:
+        send_group_join_message(added_user, ug)
         sync_message_list_on_add(added_user, ug)
 
     for expired_membership in expired_memberships:
