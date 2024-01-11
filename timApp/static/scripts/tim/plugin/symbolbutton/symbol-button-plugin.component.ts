@@ -117,6 +117,7 @@ export class SymbolButtonPluginComponent
             if (parent) {
                 const acee = ace.edit(parent);
                 this.aceInsert(formulaInput.text, acee);
+                txtarea.focus();
                 return;
             }
         }
@@ -152,6 +153,7 @@ export class SymbolButtonPluginComponent
         }
         txtarea.value = ret;
         txtarea.dispatchEvent(new Event("input", {bubbles: true}));
+        txtarea.focus();
     }
 
     aceInsert(str: string, aceEditor: IAceEditor, strPos?: number): void {
