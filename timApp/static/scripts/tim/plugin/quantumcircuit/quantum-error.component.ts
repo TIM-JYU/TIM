@@ -44,7 +44,7 @@ interface AnswerIncorrectRow {
                 </label>
                 
                 <p i18n>Circuit gives wrong probabilities with input:</p>
-                <div>{{error.bitstring}}</div>
+                <div>{{answerIncorrectInput}}</div>
 
                 <p i18n>Output probabilities were:</p>
                 <div class="table-container">
@@ -113,6 +113,7 @@ export class QuantumErrorComponent implements OnChanges {
 
     answerIncorrectShowAll: boolean = false;
     answerIncorrectRows!: AnswerIncorrectRow[];
+    answerIncorrectInput!: string;
 
     indexToBitstring(i: number, nQubits: number) {
         return i.toString(2).padStart(nQubits, "0");
@@ -145,6 +146,12 @@ export class QuantumErrorComponent implements OnChanges {
             this.answerIncorrectRows = [];
             const actual = this.reverseResultQubitOrder(this.error.actual);
             const expected = this.reverseResultQubitOrder(this.error.expected);
+
+            this.answerIncorrectInput = this.error.bitstring
+                .split("")
+                .reverse()
+                .join("");
+
             for (let i = 0; i < actual.length; i++) {
                 const actualI = actual[i];
                 const expectedI = expected[i];
@@ -156,10 +163,7 @@ export class QuantumErrorComponent implements OnChanges {
 
                 if (this.answerIncorrectShowAll || !correct) {
                     this.answerIncorrectRows.push({
-                        output: this.indexToBitstring(i, nQubits)
-                            .split("")
-                            .reverse()
-                            .join(""),
+                        output: this.indexToBitstring(i, nQubits),
                         expected: expectedI,
                         actual: actualI,
                         correct: correct,
