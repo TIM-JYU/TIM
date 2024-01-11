@@ -37,7 +37,6 @@ const SymbolButtonMarkupFields = t.intersection([
     t.partial({
         buttons: t.string,
         mdButtons: nullable(t.array(TemplateButton)),
-        mini: t.boolean,
         float: t.boolean,
     }),
     GenericPluginMarkup,
