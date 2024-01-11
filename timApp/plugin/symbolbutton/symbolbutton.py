@@ -29,7 +29,6 @@ class MdButtonType:
 class SymbolButtonMarkup(GenericMarkupModel):
     buttons: str | Missing = missing
     mdButtons: list[MdButtonType] | Missing = missing
-    mini: bool | Missing = missing
     float: bool | Missing = missing
 
 
