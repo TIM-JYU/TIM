@@ -49,6 +49,7 @@ from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
+from timApp.tim_app import app
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
@@ -1090,6 +1091,8 @@ def _decode_result(s):
 
 
 def run_latex(outputfile, latex_file, new_env, string_input):
+    with app.app_context():
+        max_memory = app.config["PRINT_MAX_LATEX_MEMORY"]
     try:
         filedir = os.path.dirname(outputfile)
         args = [
@@ -1097,6 +1100,7 @@ def run_latex(outputfile, latex_file, new_env, string_input):
             "-g",
             "-f",
             "-pdfxe",
+            f"-pdfxelatex=xelatex -cnf-line=extra_mem_top={max_memory} -cnf-line=extra_mem_bot={max_memory} -cnf-line=main_memory={max_memory}",
             f"-output-directory={filedir}",  # '-file-line-error',
             "-interaction=nonstopmode",
             latex_file,
