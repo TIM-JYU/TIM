@@ -81,8 +81,8 @@ export abstract class QuantumCircuitSimulator {
         }
     }
 
-    protected indexToBitstring(i: number) {
-        return i.toString(2).padStart(this.board.nQubits, "0");
+    static indexToBitstring(i: number, nQubits: number) {
+        return i.toString(2).padStart(nQubits, "0");
     }
 
     /**
@@ -90,10 +90,15 @@ export abstract class QuantumCircuitSimulator {
      * probability(001) -> probability(100)
      * @param result result with qubit order changed
      */
-    protected reverseResultQubitOrder<T>(result: T[]): T[] {
+    static reverseResultQubitOrder<T>(result: T[]): T[] {
         const rev = [];
-        for (let i = 0; i < 2 ** this.board.length; i++) {
-            const bitString = this.indexToBitstring(i);
+        const nQubits = Math.floor(Math.log2(result.length));
+
+        for (let i = 0; i < 2 ** nQubits; i++) {
+            const bitString = QuantumCircuitSimulator.indexToBitstring(
+                i,
+                nQubits
+            );
             const bitStringReversed = bitString.split("").reverse().join("");
             const j = parseInt(bitStringReversed, 2);
             rev.push(result[j]);
@@ -115,7 +120,10 @@ export abstract class QuantumCircuitSimulator {
         if (output !== undefined) {
             return {
                 input: input,
-                output: this.indexToBitstring(output),
+                output: QuantumCircuitSimulator.indexToBitstring(
+                    output,
+                    this.board.length
+                ),
                 value: output,
             };
         }
@@ -213,7 +221,10 @@ export abstract class QuantumCircuitSimulator {
             if (sampleSize === undefined && measurements === undefined) {
                 probabilities[dataIndex] = value * 100;
             }
-            labels[dataIndex] = this.indexToBitstring(i);
+            labels[dataIndex] = QuantumCircuitSimulator.indexToBitstring(
+                i,
+                this.board.length
+            );
             dataIndex++;
         });
         return {
@@ -605,8 +616,12 @@ export class ServerQuantumCircuitSimulator extends QuantumCircuitSimulator {
             const res = r.result.web.result;
             const stateVector = r.result.web.stateVector;
             if (res && stateVector) {
-                this.result = this.reverseResultQubitOrder(res);
-                this.stateVector = this.reverseResultQubitOrder(stateVector);
+                this.result =
+                    QuantumCircuitSimulator.reverseResultQubitOrder(res);
+                this.stateVector =
+                    QuantumCircuitSimulator.reverseResultQubitOrder(
+                        stateVector
+                    );
             }
         } else {
             return Promise.resolve({ok: false, result: r.result.error.error});

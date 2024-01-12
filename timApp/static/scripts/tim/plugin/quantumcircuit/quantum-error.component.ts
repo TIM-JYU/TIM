@@ -2,6 +2,7 @@ import type {OnChanges, SimpleChanges} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {equal} from "mathjs";
 import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
 
 interface AnswerIncorrectRow {
     output: string;
@@ -115,27 +116,6 @@ export class QuantumErrorComponent implements OnChanges {
     answerIncorrectRows!: AnswerIncorrectRow[];
     answerIncorrectInput!: string;
 
-    indexToBitstring(i: number, nQubits: number) {
-        return i.toString(2).padStart(nQubits, "0");
-    }
-
-    /**
-     * Bits in result should be in reverse order in terms of qubits.
-     * probability(001) -> probability(100)
-     * @param result result with qubit order changed
-     */
-    protected reverseResultQubitOrder(result: number[]) {
-        const rev = [];
-        const nQubits = Math.floor(Math.log2(result.length));
-        for (let i = 0; i < 2 ** nQubits; i++) {
-            const bitString = this.indexToBitstring(i, nQubits);
-            const bitStringReversed = bitString.split("").reverse().join("");
-            const j = parseInt(bitStringReversed, 2);
-            rev.push(result[j]);
-        }
-        return rev;
-    }
-
     /**
      * Create fields necessary to display answer error
      */
@@ -144,8 +124,12 @@ export class QuantumErrorComponent implements OnChanges {
             const nQubits = Math.floor(Math.log2(this.error.actual.length));
 
             this.answerIncorrectRows = [];
-            const actual = this.reverseResultQubitOrder(this.error.actual);
-            const expected = this.reverseResultQubitOrder(this.error.expected);
+            const actual = QuantumCircuitSimulator.reverseResultQubitOrder(
+                this.error.actual
+            );
+            const expected = QuantumCircuitSimulator.reverseResultQubitOrder(
+                this.error.expected
+            );
 
             this.answerIncorrectInput = this.error.bitstring
                 .split("")
@@ -163,7 +147,10 @@ export class QuantumErrorComponent implements OnChanges {
 
                 if (this.answerIncorrectShowAll || !correct) {
                     this.answerIncorrectRows.push({
-                        output: this.indexToBitstring(i, nQubits),
+                        output: QuantumCircuitSimulator.indexToBitstring(
+                            i,
+                            nQubits
+                        ),
                         expected: expectedI,
                         actual: actualI,
                         correct: correct,
