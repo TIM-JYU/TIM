@@ -4,6 +4,8 @@ from timApp import tim_celery
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
+from timApp.notification.group_notification import JOIN_MESSAGE_TASKID
+from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
@@ -494,4 +496,61 @@ class GroupTest3(TimRouteTest):
             "/groups/create/kurssit/tie/ohj2/2021s",
             expect_status=403,
             expect_content={"error": "You cannot create documents in this folder."},
+        )
+
+
+class GroupNotificationsTest(TimRouteTest):
+    """
+    Tests that various group notifications work.
+    """
+
+    def test_group_join_message(self) -> None:
+        self.make_admin(self.test_user_1)
+        self.login_test1()
+
+        gname = "group_join_msg_test1"
+
+        self.get(f"/groups/create/{gname}")
+
+        ug = UserGroup.get_by_name(gname)
+        self.assertIsNotNone(ug)
+
+        ug_doc: DocEntry = ug.admin_doc.docentries[0]
+
+        self.add_answer(
+            ug_doc, JOIN_MESSAGE_TASKID, content="Test message!", content_key="usercode"
+        )
+        db.session.commit()
+
+        self.json_post(
+            f"/groups/addmember/{gname}",
+            {"names": f"testuser2".split(",")},
+            expect_status=200,
+        )
+        self.assertEqual(1, len(sent_mails_in_testing), "Should send welcome mail.")
+        self.assertEqual(
+            sent_mails_in_testing[0]["subject"],
+            f"TIM: You were added to group '{gname}'",
+        )
+        self.assertEqual(
+            sent_mails_in_testing[0]["msg"],
+            "Test message!",
+        )
+
+        self.json_post(
+            f"/groups/removemember/{gname}",
+            {"names": f"testuser2".split(",")},
+            expect_status=200,
+        )
+        self.assertEqual(
+            1, len(sent_mails_in_testing), "Should not send welcome mail after removal."
+        )
+
+        self.json_post(
+            f"/groups/addmember/{gname}",
+            {"names": f"testuser2".split(",")},
+            expect_status=200,
+        )
+        self.assertEqual(
+            2, len(sent_mails_in_testing), "Should send welcome mail again."
         )

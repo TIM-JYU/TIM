@@ -1,5 +1,6 @@
 ``` {settings=""}
 form_mode: true
+disable_answer: view
 macros:
   fields:
     - info
@@ -65,3 +66,27 @@ emailUsersButtonText: "Lähetä sähköpostia"
 
 #- {.hidden-print}
 Ryhmiä ei voi poistaa.
+
+## Muita asetuksia {.hidden-print}
+
+``` {#GLO_join_message plugin="csPlugin" .hidden-print}
+type: text
+stem: |!!
+md:
+**Tervetuloviesti**
+
+Alla oleva viesti lähetetään automaattisesti kaikille ryhmään lisätyille käyttäjille.
+
+Voit määritellä viestin otsikon lisäämällä alkuun `Subject:`.\
+Malli:
+
+~~~
+Subject: Viestin otsikko
+
+Tervetuloa!
+~~~
+
+!!
+button: Tallenna
+rows: 10
+```

@@ -908,7 +908,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         self,
         ug: UserGroup,
         added_by: Optional["User"],
-        sync_mailing_lists=True,
+        sync_mailing_lists: bool = True,
     ) -> bool:
         """
         Adds the user to a group.
@@ -922,7 +922,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         from timApp.messaging.messagelist.messagelist_utils import (
             sync_message_list_on_add,
         )
+        from timApp.notification.group_notification import send_group_join_message
 
+        add_membership = False
         existing: UserGroupMember = (
             self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
         )
@@ -930,6 +932,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             if existing.membership_end is not None:
                 existing.membership_added = get_current_time()
                 existing.adder = added_by
+                add_membership = True
+
             existing.membership_end = None
             new_add = False
         else:
@@ -937,6 +941,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self.memberships.append(ugm)
             db.session.add(ugm)
             new_add = True
+            add_membership = True
+
+        if add_membership:
+            send_group_join_message(self, ug)
+
         # On changing of group, sync this person to the user group's message lists.
         if sync_mailing_lists:
             sync_message_list_on_add(self, ug)
