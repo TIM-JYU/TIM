@@ -115,6 +115,13 @@ export class NormalEditorComponent implements IEditor {
         const endPos = strPos ?? txtarea.selectionEnd ?? 0;
         strPos = strPos ?? txtarea.selectionStart ?? 0;
 
+        const insertionPoint = "${0}";
+        const insertionPointCi = str.indexOf(insertionPoint);
+        if (insertionPointCi >= 0) {
+            const replacement = txtarea.value.slice(strPos, endPos);
+            str = str.replace(insertionPoint, replacement);
+        }
+
         let back = 0;
         const ci = str.indexOf(CURSOR);
         if (ci >= 0) {
