@@ -210,6 +210,8 @@ class QuantumCircuitMarkup(GenericMarkupModel):
 
     feedbackText: FeedbackTextType | None = None
 
+    feedbackShowTable: bool | None = None
+
 
 @dataclass
 class QuantumCircuitStateModel:

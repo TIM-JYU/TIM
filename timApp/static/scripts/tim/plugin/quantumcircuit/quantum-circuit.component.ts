@@ -172,6 +172,7 @@ const QuantumCircuitMarkup = t.intersection([
         leftAxisLabel: withDefault(t.string, "Qubit"),
         middleAxisLabel: withDefault(t.string, "Step"),
         rightAxisLabel: withDefault(t.string, "Output"),
+        feedbackShowTable: withDefault(t.boolean, true),
     }),
 ]);
 
@@ -357,7 +358,7 @@ export interface CircuitOptions {
                 </div>
 
                 <tim-loading *ngIf="isResultCheckingRunning"></tim-loading>
-                <tim-quantum-error *ngIf="error" [error]="error"></tim-quantum-error>
+                <tim-quantum-error *ngIf="error" [error]="error" [feedbackShowTable]="feedbackShowTable"></tim-quantum-error>
                 <pre class="circuit-error" *ngIf="errorString" [innerHTML]="errorString | purify"></pre>
                 <pre *ngIf="result" [innerHTML]="result | purify"></pre>
             </ng-container>
@@ -509,6 +510,10 @@ export class QuantumCircuitComponent
 
     get middleAxisLabel() {
         return this.markup.middleAxisLabel;
+    }
+
+    get feedbackShowTable() {
+        return this.markup.feedbackShowTable;
     }
 
     parseError(e: string) {

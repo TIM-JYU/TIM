@@ -39,7 +39,7 @@ interface AnswerIncorrectRow {
 
 
             <div *ngIf="error.errorType === 'answer-incorrect'">
-                <label>
+                <label *ngIf="feedbackShowTable">
                     <ng-container i18n>Show all rows</ng-container>
                     <input type="checkbox" [(ngModel)]="answerIncorrectShowAll" (ngModelChange)="createAnswerDisplayData()">
                 </label>
@@ -47,8 +47,8 @@ interface AnswerIncorrectRow {
                 <p i18n>Circuit gives wrong probabilities with input:</p>
                 <div>{{answerIncorrectInput}}</div>
 
-                <p i18n>Output probabilities were:</p>
-                <div class="table-container">
+                <p *ngIf="feedbackShowTable" i18n>Output probabilities were:</p>
+                <div class="table-container" *ngIf="feedbackShowTable">
                     <table class="answer-table">
                         <thead>
                         <tr>
@@ -112,6 +112,9 @@ export class QuantumErrorComponent implements OnChanges {
     @Input()
     error!: IServerError;
 
+    @Input()
+    feedbackShowTable!: boolean;
+
     answerIncorrectShowAll: boolean = false;
     answerIncorrectRows!: AnswerIncorrectRow[];
     answerIncorrectInput!: string;
@@ -120,42 +123,47 @@ export class QuantumErrorComponent implements OnChanges {
      * Create fields necessary to display answer error
      */
     createAnswerDisplayData() {
-        if (this.error.errorType === "answer-incorrect") {
-            const nQubits = Math.floor(Math.log2(this.error.actual.length));
+        if (this.error.errorType !== "answer-incorrect") {
+            return;
+        }
 
-            this.answerIncorrectRows = [];
-            const actual = QuantumCircuitSimulator.reverseResultQubitOrder(
-                this.error.actual
-            );
-            const expected = QuantumCircuitSimulator.reverseResultQubitOrder(
-                this.error.expected
-            );
+        this.answerIncorrectInput = this.error.bitstring
+            .split("")
+            .reverse()
+            .join("");
 
-            this.answerIncorrectInput = this.error.bitstring
-                .split("")
-                .reverse()
-                .join("");
+        if (!this.feedbackShowTable) {
+            return;
+        }
+        const nQubits = Math.floor(Math.log2(this.error.actual.length));
 
-            for (let i = 0; i < actual.length; i++) {
-                const actualI = actual[i];
-                const expectedI = expected[i];
-                let correct = true;
-                const res = equal(actualI, expectedI);
-                if (typeof res === "boolean") {
-                    correct = res;
-                }
+        this.answerIncorrectRows = [];
+        const actual = QuantumCircuitSimulator.reverseResultQubitOrder(
+            this.error.actual
+        );
+        const expected = QuantumCircuitSimulator.reverseResultQubitOrder(
+            this.error.expected
+        );
 
-                if (this.answerIncorrectShowAll || !correct) {
-                    this.answerIncorrectRows.push({
-                        output: QuantumCircuitSimulator.indexToBitstring(
-                            i,
-                            nQubits
-                        ),
-                        expected: expectedI,
-                        actual: actualI,
-                        correct: correct,
-                    });
-                }
+        for (let i = 0; i < actual.length; i++) {
+            const actualI = actual[i];
+            const expectedI = expected[i];
+            let correct = true;
+            const res = equal(actualI, expectedI);
+            if (typeof res === "boolean") {
+                correct = res;
+            }
+
+            if (this.answerIncorrectShowAll || !correct) {
+                this.answerIncorrectRows.push({
+                    output: QuantumCircuitSimulator.indexToBitstring(
+                        i,
+                        nQubits
+                    ),
+                    expected: expectedI,
+                    actual: actualI,
+                    correct: correct,
+                });
             }
         }
     }
