@@ -24,6 +24,7 @@ from timApp.document.docparagraph import (
 )
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import dereference_pars, Document
+from timApp.document.docviewparams import DocPrintParams
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.post_process import process_areas
 from timApp.document.preloadoption import PreloadOption
@@ -36,6 +37,8 @@ from timApp.document.viewcontext import (
 )
 from timApp.document.yamlblock import strip_code_block
 from timApp.folder.folder import Folder
+from timApp.item.partitioning import get_area_range, RequestedViewRange
+from timApp.item.routes import get_document
 from timApp.markdown.autocounters import AutoCounters
 from timApp.markdown.markdownconverter import (
     expand_macros,
@@ -53,6 +56,7 @@ from timApp.tim_app import app
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
+from timApp.util.flask.responsehelper import to_json_str
 from timApp.util.utils import cache_folder_path
 from tim_common.html_sanitize import sanitize_html
 
@@ -181,6 +185,7 @@ class DocumentPrinter:
         view_ctx: ViewContext,
         plugins_user_print: bool = False,
         target_format: PrintFormat = PrintFormat.PLAIN,
+        urlparams: DocPrintParams = DocPrintParams(),
     ) -> str:
         """
         Gets the content of the DocEntry assigned for this DocumentPrinter object.
@@ -225,14 +230,27 @@ class DocumentPrinter:
         """
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
-        pars = self._doc_entry.document.get_paragraphs(include_preamble=True)
+        r_view_range = None
+        if urlparams.area:
+            area = get_area_range(self._doc_entry, urlparams.area, view_ctx)
+            if area is not None:
+                # In some print cases (e.g. video subtitles) empty paragraphs can break some functionality
+                # thus we don't print area start or area end paragraphs (RequestedViewRange(b=area[0]+1, e=area[1])
+                r_view_range = RequestedViewRange(b=area[0] + 1, e=area[1], size=None)
+        if r_view_range is not None:
+            pars, _ = get_document(self._doc_entry, r_view_range)
+        else:
+            pars = self._doc_entry.document.get_paragraphs(include_preamble=True)
         self._doc_entry.document.preload_option = PreloadOption.all
         pars = dereference_pars(
             pars, context_doc=self._doc_entry.document, view_ctx=view_ctx
         )
         pars_to_print = []
-        self.texplain = settings.is_texplain()
-        self.textplain = settings.is_textplain()
+        self.textplain = (
+            urlparams.textplain
+            if urlparams.textplain is not None
+            else settings.is_textplain()
+        )
 
         self.texfiles = settings.get_texmacroinfo(view_ctx).get_macros().get("texfiles")
         if self.texfiles and self.texfiles is str:
@@ -565,6 +583,7 @@ class DocumentPrinter:
         path: Path,
         plugins_user_print: bool = False,
         eol_type: str = "native",
+        urlparams: DocPrintParams = DocPrintParams(),
     ):
         """
         Converts the document to latex and returns the converted document as a bytearray
@@ -604,6 +623,7 @@ class DocumentPrinter:
                 view_ctx,
                 plugins_user_print=plugins_user_print,
                 target_format=target_format,
+                urlparams=urlparams,
             )
 
             # see: https://regex101.com/r/latest
@@ -681,6 +701,7 @@ class DocumentPrinter:
         view_ctx: ViewContext,
         file_type: PrintFormat,
         plugins_user_print: bool = False,
+        urlparams: DocPrintParams | None = None,
     ) -> Path:
         """
         Formulates the printing path for the given document
@@ -692,7 +713,9 @@ class DocumentPrinter:
         """
 
         print_hash = self.hash_doc_print(
-            plugins_user_print=plugins_user_print, url_macros=view_ctx.url_macros_dict
+            plugins_user_print=plugins_user_print,
+            url_macros=view_ctx.url_macros_dict,
+            urlparams=urlparams,
         )
 
         path = (
@@ -838,7 +861,10 @@ class DocumentPrinter:
         return doc_v_fst + doc_v_snd / 10
 
     def hash_doc_print(
-        self, plugins_user_print: bool = False, url_macros: dict[str, str] | None = None
+        self,
+        plugins_user_print: bool = False,
+        url_macros: dict[str, str] | None = None,
+        urlparams: DocPrintParams | None = None,
     ) -> str:
         thash = ""
         if self._template_to_use:
@@ -854,6 +880,8 @@ class DocumentPrinter:
         if url_macros:
             # dict key ordering is stable in starting from python 3.7
             content += str(url_macros)
+        if urlparams:
+            content += to_json_str(urlparams)
         if plugins_user_print:
             content += str(plugins_user_print) + str(get_current_user_object().id)
 
@@ -864,6 +892,7 @@ class DocumentPrinter:
         file_type: PrintFormat,
         plugins_user_print: bool = False,
         url_macros: dict[str, str] | None = None,
+        urlparams: DocPrintParams | None = None,
     ) -> str | None:
         existing_print: PrintedDoc | None = (
             run_sql(
@@ -873,7 +902,9 @@ class DocumentPrinter:
                     template_doc_id=self.get_template_id(),
                     file_type=file_type.value,
                     version=self.hash_doc_print(
-                        plugins_user_print=plugins_user_print, url_macros=url_macros
+                        plugins_user_print=plugins_user_print,
+                        url_macros=url_macros,
+                        urlparams=urlparams,
                     ),
                 )
                 .order_by(PrintedDoc.id.desc())

@@ -295,3 +295,44 @@ The end.
             expect_status=200,
             expect_content="WEBVTT\n\n1\n00:00:00.000 --> 00:00:02.610\nWelcome!\n\n2\n00:00:02.750 --> 00:00:03.300\nThe end.",
         )
+
+    def test_multiple_subtitles(self):
+        self.login_test1()
+        doc = self.create_doc(
+            initial_par="""
+#-
+filler content
+#- {area="en"}
+#-
+WEBVTT
+#-
+1
+00:00:00.000 --> 00:00:02.610
+Welcome!
+#- {area_end="en"}
+#-
+filler between
+#- {area="fi"}
+#-
+WEBVTT
+#-
+1
+00:00:00.000 --> 00:00:02.610
+Tervetuloa!
+#- {area_end="fi"}
+#-
+more fillers
+"""
+        )
+        self.get(
+            f"/print/{doc.path}",
+            query_string={"area": "fi", "textplain": True},
+            expect_status=200,
+            expect_content="WEBVTT\n\n1\n00:00:00.000 --> 00:00:02.610\nTervetuloa!",
+        )
+        self.get(
+            f"/print/{doc.path}",
+            query_string={"area": "en", "textplain": True},
+            expect_status=200,
+            expect_content="WEBVTT\n\n1\n00:00:00.000 --> 00:00:02.610\nWelcome!",
+        )
