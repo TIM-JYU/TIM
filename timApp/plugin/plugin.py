@@ -894,7 +894,7 @@ class CachedInlinePluginFinder(InlinePluginFinder):
         if cached is not missing:
             res = cached
         else:
-            res = list(super().find_inline_plugins(block))
+            res = list(super(CachedInlinePluginFinder, self).find_inline_plugins(block))
             self.plugin_map[key] = res
         for r in res:
             yield r
