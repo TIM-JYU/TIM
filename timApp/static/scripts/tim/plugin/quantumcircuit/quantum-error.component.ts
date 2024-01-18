@@ -2,6 +2,7 @@ import type {OnChanges, SimpleChanges} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {equal} from "mathjs";
 import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
 
 interface AnswerIncorrectRow {
     output: string;
@@ -38,16 +39,16 @@ interface AnswerIncorrectRow {
 
 
             <div *ngIf="error.errorType === 'answer-incorrect'">
-                <label>
+                <label *ngIf="feedbackShowTable">
                     <ng-container i18n>Show all rows</ng-container>
                     <input type="checkbox" [(ngModel)]="answerIncorrectShowAll" (ngModelChange)="createAnswerDisplayData()">
                 </label>
                 
                 <p i18n>Circuit gives wrong probabilities with input:</p>
-                <div>{{error.bitstring}}</div>
+                <div>{{answerIncorrectInput}}</div>
 
-                <p i18n>Output probabilities were:</p>
-                <div class="table-container">
+                <p *ngIf="feedbackShowTable" i18n>Output probabilities were:</p>
+                <div class="table-container" *ngIf="feedbackShowTable">
                     <table class="answer-table">
                         <thead>
                         <tr>
@@ -111,60 +112,58 @@ export class QuantumErrorComponent implements OnChanges {
     @Input()
     error!: IServerError;
 
+    @Input()
+    feedbackShowTable!: boolean;
+
     answerIncorrectShowAll: boolean = false;
     answerIncorrectRows!: AnswerIncorrectRow[];
-
-    indexToBitstring(i: number, nQubits: number) {
-        return i.toString(2).padStart(nQubits, "0");
-    }
-
-    /**
-     * Bits in result should be in reverse order in terms of qubits.
-     * probability(001) -> probability(100)
-     * @param result result with qubit order changed
-     */
-    protected reverseResultQubitOrder(result: number[]) {
-        const rev = [];
-        const nQubits = Math.floor(Math.log2(result.length));
-        for (let i = 0; i < 2 ** nQubits; i++) {
-            const bitString = this.indexToBitstring(i, nQubits);
-            const bitStringReversed = bitString.split("").reverse().join("");
-            const j = parseInt(bitStringReversed, 2);
-            rev.push(result[j]);
-        }
-        return rev;
-    }
+    answerIncorrectInput!: string;
 
     /**
      * Create fields necessary to display answer error
      */
     createAnswerDisplayData() {
-        if (this.error.errorType === "answer-incorrect") {
-            const nQubits = Math.floor(Math.log2(this.error.actual.length));
+        if (this.error.errorType !== "answer-incorrect") {
+            return;
+        }
 
-            this.answerIncorrectRows = [];
-            const actual = this.reverseResultQubitOrder(this.error.actual);
-            const expected = this.reverseResultQubitOrder(this.error.expected);
-            for (let i = 0; i < actual.length; i++) {
-                const actualI = actual[i];
-                const expectedI = expected[i];
-                let correct = true;
-                const res = equal(actualI, expectedI);
-                if (typeof res === "boolean") {
-                    correct = res;
-                }
+        this.answerIncorrectInput = this.error.bitstring
+            .split("")
+            .reverse()
+            .join("");
 
-                if (this.answerIncorrectShowAll || !correct) {
-                    this.answerIncorrectRows.push({
-                        output: this.indexToBitstring(i, nQubits)
-                            .split("")
-                            .reverse()
-                            .join(""),
-                        expected: expectedI,
-                        actual: actualI,
-                        correct: correct,
-                    });
-                }
+        if (!this.feedbackShowTable) {
+            return;
+        }
+        const nQubits = Math.floor(Math.log2(this.error.actual.length));
+
+        this.answerIncorrectRows = [];
+        const actual = QuantumCircuitSimulator.reverseResultQubitOrder(
+            this.error.actual
+        );
+        const expected = QuantumCircuitSimulator.reverseResultQubitOrder(
+            this.error.expected
+        );
+
+        for (let i = 0; i < actual.length; i++) {
+            const actualI = actual[i];
+            const expectedI = expected[i];
+            let correct = true;
+            const res = equal(actualI, expectedI);
+            if (typeof res === "boolean") {
+                correct = res;
+            }
+
+            if (this.answerIncorrectShowAll || !correct) {
+                this.answerIncorrectRows.push({
+                    output: QuantumCircuitSimulator.indexToBitstring(
+                        i,
+                        nQubits
+                    ),
+                    expected: expectedI,
+                    actual: actualI,
+                    correct: correct,
+                });
             }
         }
     }
