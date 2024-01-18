@@ -6,10 +6,23 @@ from tim_common.marshmallow_dataclass import class_schema
 
 
 @dataclass(frozen=True, eq=True)
-class DocViewParams:
-    """View route parameters that affect document rendering."""
+class DocCommonParams:
+    """Route parameters that affect both view and print"""
 
     area: str | None = None
+
+
+@dataclass(frozen=True, eq=True)
+class DocPrintParams(DocCommonParams):
+    """Print route parameters"""
+
+    textplain: bool | None = None
+
+
+@dataclass(frozen=True, eq=True)
+class DocViewParams(DocCommonParams):
+    """View route parameters that affect document rendering."""
+
     b: int | str | None = None
     e: int | str | None = None
     edit: str | None = None
@@ -36,3 +49,4 @@ class DocViewParams:
 
 
 ViewModelSchema = class_schema(DocViewParams)()
+PrintModelSchema = class_schema(DocPrintParams)()
