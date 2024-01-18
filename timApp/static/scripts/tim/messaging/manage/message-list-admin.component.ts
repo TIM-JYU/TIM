@@ -808,6 +808,11 @@ export class MessageListAdminComponent implements OnInit {
                 (g) => g.groupName === this.currentGroup
             );
             if (groupAndMembers) {
+                groupAndMembers.members.sort((a, b) =>
+                    a.name
+                        .toLocaleLowerCase()
+                        .localeCompare(b.name.toLocaleUpperCase())
+                );
                 this.groupMembers = groupAndMembers.members;
             }
         }
