@@ -14,6 +14,7 @@ from flask import g
 from flask import make_response
 from flask import request
 from flask import send_file, Response
+from marshmallow import EXCLUDE
 
 from timApp.auth import sessioninfo
 from timApp.auth.accesshelper import (
@@ -24,6 +25,7 @@ from timApp.auth.accesshelper import (
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.docviewparams import DocPrintParams, PrintModelSchema
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, ViewRoute, ViewContext
 from timApp.document.yamlblock import YamlBlock
@@ -162,12 +164,15 @@ def print_document(
         view_ctx = default_view_ctx
         url_macros = None
 
+    urlparams: DocPrintParams = PrintModelSchema.load(request.args, unknown=EXCLUDE)
+
     existing_doc = check_print_cache(
         doc_entry=doc,
         template=template_doc,
         file_type=print_type,
         plugins_user_print=plugins_user_print,
         url_macros=url_macros,
+        urlparams=urlparams,
     )
 
     #  print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
@@ -254,7 +259,11 @@ def get_printed_document(
     doc: DocInfo = g.doc_entry
     doc_settings = doc.document.get_settings()
     def_file_type = "pdf"
-    if doc_settings.is_textplain():
+    urlparams: DocPrintParams = PrintModelSchema.load(request.args, unknown=EXCLUDE)
+    if urlparams.textplain is not None:
+        if urlparams.textplain:
+            def_file_type = "plain"
+    elif doc_settings.is_textplain():
         def_file_type = "plain"
 
     file_type = file_type or def_file_type
@@ -296,13 +305,13 @@ def get_printed_document(
     else:
         view_ctx = default_view_ctx
         url_macros = None
-
     cached = check_print_cache(
         doc_entry=doc,
         template=template_doc,
         file_type=print_type,
         plugins_user_print=plugins_user_code,
         url_macros=url_macros,
+        urlparams=urlparams,
     )
 
     if force or showerror:
@@ -322,6 +331,7 @@ def get_printed_document(
                 plugins_user_print=plugins_user_code,
                 urlroot="http://localhost:5000/print/",
                 eol_type=eol_type,
+                urlparams=urlparams,
             )  # request.url_root+'print/')
         except PrintingError as err:
             raise RouteException(str(err))
@@ -336,6 +346,7 @@ def get_printed_document(
         file_type=print_type,
         plugins_user_print=plugins_user_code,
         url_macros=url_macros,
+        urlparams=urlparams,
     )
     if (pdferror and showerror) or not cached:
         if not pdferror:
@@ -608,6 +619,7 @@ def check_print_cache(
     file_type: PrintFormat,
     plugins_user_print: bool = False,
     url_macros: dict[str, str] | None = None,
+    urlparams: DocPrintParams | None = None,
 ) -> str | None:
     """
     Fetches the given document from the database.
@@ -632,6 +644,7 @@ def check_print_cache(
         file_type=file_type,
         plugins_user_print=plugins_user_print,
         url_macros=url_macros,
+        urlparams=urlparams,
     )
     if path is not None and os.path.exists(path):
         return path
@@ -654,6 +667,7 @@ def create_printed_doc(
     plugins_user_print: bool = False,
     urlroot: str = "",
     eol_type: str = "native",
+    urlparams: DocPrintParams = DocPrintParams(),
 ) -> str:
     """
     Adds a marking for a printed document to the db
@@ -674,7 +688,10 @@ def create_printed_doc(
         doc_entry=doc_entry, template_to_use=template_doc, urlroot=urlroot
     )
     path = printer.get_print_path(
-        view_ctx, file_type=file_type, plugins_user_print=plugins_user_print
+        view_ctx,
+        file_type=file_type,
+        plugins_user_print=plugins_user_print,
+        urlparams=urlparams,
     )
     if path.exists():
         path.unlink()
@@ -689,6 +706,7 @@ def create_printed_doc(
             path=path,
             plugins_user_print=plugins_user_print,
             eol_type=eol_type,
+            urlparams=urlparams,
         )
         pdferror = None
     except LaTeXError as err:
@@ -700,7 +718,9 @@ def create_printed_doc(
         doc_id=doc_entry.id,
         template_doc_id=printer.get_template_id(),
         version=printer.hash_doc_print(
-            plugins_user_print=plugins_user_print, url_macros=view_ctx.url_macros_dict
+            plugins_user_print=plugins_user_print,
+            url_macros=view_ctx.url_macros_dict,
+            urlparams=urlparams,
         ),
         path_to_file=path.as_posix(),
         file_type=file_type.value,

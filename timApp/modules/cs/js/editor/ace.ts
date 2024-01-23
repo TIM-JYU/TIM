@@ -190,6 +190,14 @@ export class AceEditorComponent implements IEditor {
             return;
         }
         const sess = this.aceEditor.getSession();
+
+        const insertionPoint = "${0}";
+        const insertionPointCi = str.indexOf(insertionPoint);
+        if (insertionPointCi >= 0) {
+            const replacement = sess.getTextRange(sess.selection.getRange());
+            str = str.replace(insertionPoint, replacement);
+        }
+
         let cursor;
         let back = -1;
         const ci = str.indexOf(CURSOR); // check if there is a cursor marker

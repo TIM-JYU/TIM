@@ -4,6 +4,7 @@ import {getVisibilityVars} from "tim/timRoot";
 import {getViewName, TimStorage} from "tim/util/utils";
 import {getAvailableViews} from "tim/header/utils";
 import * as t from "io-ts";
+import {isDocumentGlobals, someglobals} from "tim/util/globals";
 
 @Component({
     selector: "tim-site-header",
@@ -79,6 +80,15 @@ export class SiteHeaderComponent implements OnInit {
         this.activeView = availableViews.find(
             (view) => view.route == currentView
         )?.title;
+
+        const globals = someglobals();
+        if (isDocumentGlobals(globals)) {
+            if (globals.docSettings.displayViewInitialState !== undefined) {
+                this.displayViewHeader =
+                    globals.docSettings.displayViewInitialState;
+            }
+        }
+
         this.updateHeaderMenuVisibility();
     }
 }

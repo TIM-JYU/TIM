@@ -82,6 +82,7 @@ NO_ANSWERBROWSER_PLUGINS = {
     "userSelect",
     "calendar",
     "timMenu",
+    "symbolbutton",
 }
 
 ALLOW_STYLES_PLUGINS = {"textfield", "numericfield", "drag", "dropdown"}
@@ -867,6 +868,40 @@ def find_inline_plugins_from_str(
         yield task_id, p_yaml, p_range, md
 
 
+@dataclass(slots=True)
+class InlinePluginFinder:
+    macro_info: MacroInfo
+
+    def find_inline_plugins(
+        self, block: DocParagraph
+    ) -> Generator[tuple[UnvalidatedTaskId, str | None, Range, str], None, None]:
+        md = block.get_expanded_markdown(macroinfo=self.macro_info)
+        return find_inline_plugins_from_str(md)
+
+
+@dataclass(slots=True)
+class CachedInlinePluginFinder(InlinePluginFinder):
+    plugin_map: dict[
+        tuple[int, str],
+        list[tuple[UnvalidatedTaskId, str | None, Range, str]],
+    ] = field(default_factory=dict)
+
+    def find_inline_plugins(
+        self, block: DocParagraph
+    ) -> Generator[tuple[UnvalidatedTaskId, str | None, Range, str], None, None]:
+        key = (block.get_doc_id(), block.get_id())
+        cached = self.plugin_map.get(key, missing)
+        if cached is not missing:
+            res = cached
+        else:
+            res = list(super(CachedInlinePluginFinder, self).find_inline_plugins(block))
+            self.plugin_map[key] = res
+        for r in res:
+            yield r
+
+
+# TODO: This method is deprecated and should be removed
+#   Use InlinePluginFinder API instead
 def find_inline_plugins(
     block: DocParagraph, macroinfo: MacroInfo
 ) -> Generator[tuple[UnvalidatedTaskId, str | None, Range, str], None, None]:
@@ -880,6 +915,7 @@ def maybe_get_plugin_from_par(
     u: UserContext,
     view_ctx: ViewContext,
     match_exact_document: bool = False,
+    inline_plugin_finder: InlinePluginFinder | None = None,
 ) -> Plugin | None:
     t_attr = p.get_attr("taskId")
     if t_attr and p.get_attr("plugin"):
@@ -899,9 +935,11 @@ def maybe_get_plugin_from_par(
     def_plug = p.get_attr("defaultplugin")
     if def_plug:
         settings = p.doc.get_settings()
-        for p_task_id, p_yaml, p_range, md in find_inline_plugins(
-            block=p,
-            macroinfo=settings.get_macroinfo(view_ctx, user_ctx=u),
+        plugin_finder = inline_plugin_finder or InlinePluginFinder(
+            settings.get_macroinfo(view_ctx, user_ctx=u)
+        )
+        for p_task_id, p_yaml, p_range, md in plugin_finder.find_inline_plugins(
+            block=p
         ):
             try:
                 p_task_id = p_task_id.validate()
@@ -937,6 +975,20 @@ class CachedPluginFinder:
     curr_user: UserContext
     view_ctx: ViewContext
     cache: dict[str, Plugin | None] = field(default_factory=dict)
+    inline_plugin_finder_map: dict[int, CachedInlinePluginFinder] = field(
+        default_factory=dict
+    )
+
+    def _get_cached_inline_plugin_finder(self, doc_id: int) -> CachedInlinePluginFinder:
+        cached = self.inline_plugin_finder_map.get(doc_id, missing)
+        if cached is not missing:
+            return cached
+        doc = self.doc_map[doc_id]
+        cached = CachedInlinePluginFinder(
+            doc.document.get_settings().get_macroinfo(self.view_ctx, self.curr_user)
+        )
+        self.inline_plugin_finder_map[doc_id] = cached
+        return cached
 
     def find(self, task_id: TaskId) -> Plugin | None:
         cached = self.cache.get(task_id.doc_task, missing)
@@ -948,6 +1000,9 @@ class CachedPluginFinder:
                 task_id,
                 self.curr_user,
                 self.view_ctx,
+                inline_plugin_finder=self._get_cached_inline_plugin_finder(
+                    task_id.doc_id
+                ),
             )
         except TaskNotFoundException:
             self.cache[task_id.doc_task] = None
@@ -958,7 +1013,11 @@ class CachedPluginFinder:
 
 
 def find_plugin_from_document(
-    d: Document, task_id: TaskId, u: UserContext, view_ctx: ViewContext
+    d: Document,
+    task_id: TaskId,
+    u: UserContext,
+    view_ctx: ViewContext,
+    inline_plugin_finder: InlinePluginFinder | None = None,
 ) -> Plugin:
     d.insert_preamble_pars()
     used_hint = False
@@ -974,10 +1033,19 @@ def find_plugin_from_document(
                     continue
                 else:
                     for rp in ref_pars:
-                        plug = maybe_get_plugin_from_par(rp, task_id, u, view_ctx, True)
+                        plug = maybe_get_plugin_from_par(
+                            rp,
+                            task_id,
+                            u,
+                            view_ctx,
+                            True,
+                            inline_plugin_finder=inline_plugin_finder,
+                        )
                         if plug:
                             return plug
-            plug = maybe_get_plugin_from_par(p, task_id, u, view_ctx)
+            plug = maybe_get_plugin_from_par(
+                p, task_id, u, view_ctx, inline_plugin_finder=inline_plugin_finder
+            )
             if plug:
                 return plug
 
@@ -1020,6 +1088,7 @@ def find_task_ids(
     view_ctx: ViewContext,
     user_ctx: UserContext,
     check_access=True,
+    inline_plugin_finder: InlinePluginFinder | None = None,
 ) -> tuple[list[TaskId], int, list[TaskId]]:
     """Finds all task plugins from the given list of paragraphs and returns their ids.
     :param user_ctx:
@@ -1054,9 +1123,10 @@ def find_task_ids(
                     continue
                 task_ids.append(tid)
         elif block.get_attr("defaultplugin"):
-            for task_id, _, _, _ in find_inline_plugins(
-                block, block.doc.get_settings().get_macroinfo(view_ctx, user_ctx)
-            ):
+            inline_plugin_finder = inline_plugin_finder or InlinePluginFinder(
+                block.doc.get_settings().get_macroinfo(view_ctx, user_ctx)
+            )
+            for task_id, _, _, _ in inline_plugin_finder.find_inline_plugins(block):
                 try:
                     task_id = task_id.validate()
                 except PluginException:
