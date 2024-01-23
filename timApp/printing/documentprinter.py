@@ -394,7 +394,11 @@ class DocumentPrinter:
                         env=pdoc_macro_env,
                         ignore_errors=False,
                     )
-                classes = p.classes
+
+                classes = None
+                # Don't add classes when in tex(t)plain mode, as they can mess up the output
+                if not self.texplain and not self.textplain:
+                    classes = p.classes
 
                 if classes:
                     endraw = ""
