@@ -55,6 +55,7 @@ import {Users} from "tim/user/userService";
 import {InstanceofModule} from "tim/util/instanceof.module";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
+import type {ITimComponent} from "tim/document/viewctrl";
 
 export interface QubitOutput {
     value: string;
@@ -377,7 +378,7 @@ export class QuantumCircuitComponent
         t.TypeOf<typeof QuantumCircuitFields>,
         typeof QuantumCircuitFields
     >
-    implements OnInit, AfterViewInit
+    implements OnInit, AfterViewInit, ITimComponent
 {
     @ViewChild("qcContainer")
     qcContainer!: ElementRef<HTMLElement>;
@@ -531,7 +532,7 @@ export class QuantumCircuitComponent
      */
     async save() {
         if (!this.board) {
-            return;
+            return {saved: false, message: undefined};
         }
         const userCircuit = this.serializerService.serializeUserCircuit(
             this.board
@@ -606,9 +607,11 @@ export class QuantumCircuitComponent
                 this.error = undefined;
                 this.errorString = "";
             }
+            return {saved: true, message: e};
         } else {
             this.result = "";
             this.errorString = r.result.error.error;
+            return {saved: false, message: r.result.error.error};
         }
     }
 
@@ -1435,6 +1438,7 @@ export class QuantumCircuitComponent
         // but make sure to catch or check passive event listener support
         // regarding this code running on other platforms.
         window.addEventListener("touchmove", () => {}, {passive: false});
+        this.vctrl.addTimComponent(this);
     }
 
     getAttributeType() {
@@ -1443,6 +1447,14 @@ export class QuantumCircuitComponent
 
     getDefaultMarkup() {
         return {};
+    }
+
+    getContent() {
+        return ""; // TODO
+    }
+
+    isUnSaved() {
+        return false; // TODO
     }
 }
 
