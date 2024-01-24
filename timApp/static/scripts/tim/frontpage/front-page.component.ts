@@ -11,6 +11,7 @@ import {$http} from "tim/util/ngimport";
 import {to, to2} from "tim/util/utils";
 import type {IVisibilityVars} from "tim/timRoot";
 import {getVisibilityVars} from "tim/timRoot";
+import {showCreateCourse} from "tim/showCreateCourse";
 
 @Component({
     selector: "tim-start",
@@ -59,18 +60,18 @@ import {getVisibilityVars} from "tim/timRoot";
                         <a (click)="openCourseListDialog()" href="#" i18n>Available courses</a>
                     </li>
                     <li *ngIf="isLoggedIn()" class="h5">
-                        <a (click)="enableCreate()" href="#" i18n>Create a new document</a>
+                        <a (click)="$event.preventDefault(); createCourse()" href="" i18n>Create a new course</a>
                     </li>
                 </ul>
                 <bootstrap-panel *ngIf="creatingNew"
-                                 title="Create a new document"
+                                 title="Create a new course"
                                  i18n-title
                                  [showClose]="true"
                                  (closed)="cancelCreate()">
-                    <create-item itemTitle="My document"
+                    <create-item itemTitle="Course name"
                                  i18n-itemTitle
                                  itemLocation="{{getCurrentUserFolderPath()}}"
-                                 itemType="document">
+                                 itemType="course">
                     </create-item>
                 </bootstrap-panel>
             </div>
@@ -139,6 +140,10 @@ export class FrontPageComponent implements IController {
 
     enableCreate() {
         this.creatingNew = true;
+    }
+
+    async createCourse() {
+        await showCreateCourse();
     }
 
     openLoginDialog(signup: boolean) {

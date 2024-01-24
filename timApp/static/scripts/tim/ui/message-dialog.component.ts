@@ -12,10 +12,9 @@ import {CommonModule} from "@angular/common";
                 Message
             </ng-container>
             <ng-container body>
-                <span [innerHTML]="data"></span>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" type="button" (click)="close({})">OK</button>
+                <button i18n class="btn btn-default" type="button" (click)="done()">Close</button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -25,6 +24,10 @@ export class MessageDialogComponent extends AngularDialogComponent<
     unknown
 > {
     protected dialogName = "Message";
+
+    done() {
+        this.dismiss();
+    }
 }
 
 @NgModule({

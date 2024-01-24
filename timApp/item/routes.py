@@ -83,6 +83,7 @@ from timApp.folder.folder_view import try_return_folder
 from timApp.item.block import BlockType, Block
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.item.item import Item
+from timApp.item.manage import copy_folder_endpoint, do_copy_folder
 from timApp.item.partitioning import (
     get_piece_size_from_cookie,
     decide_view_range,
@@ -140,7 +141,7 @@ from timApp.util.flask.responsehelper import (
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.timtiming import taketime
-from timApp.util.utils import get_error_message, cache_folder_path
+from timApp.util.utils import get_error_message, cache_folder_path, slugify
 from timApp.util.utils import remove_path_special_chars, seq_to_str
 from timApp.velp.velpgroups import set_default_velp_group_selected_and_visible
 from tim_common.html_sanitize import sanitize_css
@@ -1316,6 +1317,7 @@ def create_item_route(
     copy: int | None = None,
     template: str | None = None,
     use_template: bool = True,
+    part_names: list[str] | None = None,
 ):
     if (
         not app.config["ALLOW_CREATE_DOCUMENTS"]
@@ -1331,6 +1333,7 @@ def create_item_route(
             copy,
             template,
             use_template,
+            part_names,
         )
     )
 
@@ -1366,11 +1369,31 @@ def create_item_direct(
     copy: int | None = None,
     template: str | None = None,
     use_template: bool = True,
+    part_names: list[str] | None = None,
 ):
     cite_id, copy_id, template_name = cite, copy, template
 
     if use_template is None:
         use_template = True
+
+    if item_type == "course":
+        print(item_path, item_type, item_title, part_names)
+        prev = Item.find_by_path(item_path)
+        if prev:
+            raise RouteException("Item already exists at " + item_path)
+        folder = Folder.find_by_path("/mallikurssi")
+        if folder:
+            df, errors = do_copy_folder(folder.id, item_path, None)
+            df.title = item_title
+            if part_names:
+                for p in part_names:
+                    if p:
+                        sl = slugify(p)
+                        path = df.path + "/" + sl
+                        created = create_item_direct(path, "document", sl)
+                        created.document.add_text("# " + p)
+            db.session.commit()
+            return df
 
     if cite_id:
         item = create_citation_doc(cite_id, item_path, item_title)
