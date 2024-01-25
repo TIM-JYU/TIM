@@ -175,6 +175,7 @@ ErrorType = Union[
 class FeedbackTextType:
     correct: str | None = None
     wrong: str | None = None
+    conditionWrong: str | None = None
 
 
 @dataclass

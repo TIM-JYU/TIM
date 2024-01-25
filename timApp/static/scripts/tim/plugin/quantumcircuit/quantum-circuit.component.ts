@@ -148,6 +148,7 @@ const QuantumCircuitMarkup = t.intersection([
             t.partial({
                 correct: nullable(t.string),
                 wrong: nullable(t.string),
+                conditionWrong: nullable(t.string),
             })
         ),
     }),
@@ -580,14 +581,21 @@ export class QuantumCircuitComponent
                 try {
                     this.error = this.parseError(e);
                     const customMessage = this.markup.feedbackText?.wrong;
-                    // show user defined error message as feedback if the error was caused by answer being incorrect
+                    const customConditionIncorrectMessage =
+                        this.markup.feedbackText?.conditionWrong;
+                    // show user defined error message as feedback if defined
                     if (
                         customMessage &&
-                        (this.error.errorType === "answer-incorrect" ||
-                            this.error.errorType === "condition-not-satisfied")
+                        this.error.errorType === "answer-incorrect"
                     ) {
                         this.error = undefined;
                         this.showErrorMessage(customMessage);
+                    } else if (
+                        customConditionIncorrectMessage &&
+                        this.error.errorType === "condition-not-satisfied"
+                    ) {
+                        this.error = undefined;
+                        this.showErrorMessage(customConditionIncorrectMessage);
                     }
                 } catch (err) {
                     // We got an error, but it either was not valid JSON or it was not a valid ServerError instance
