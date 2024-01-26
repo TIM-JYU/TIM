@@ -187,11 +187,7 @@ export class QuantumCellComponent implements OnInit, AfterViewInit, OnChanges {
 
         this.cellWidth = baseWidth;
 
-        if (this.cell?.editable === false) {
-            this.rx = 0;
-        } else {
-            this.rx = this.circuitOptions.gateBorderRadius;
-        }
+        this.rx = this.circuitOptions.gateBorderRadius;
     }
 
     ngAfterViewInit(): void {

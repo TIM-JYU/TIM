@@ -62,9 +62,9 @@ interface AnswerIncorrectRow {
                         <tr *ngFor="let row of answerIncorrectRows">
                             <td class="answer-table-td">{{row.output}}</td>
                             <td class="answer-table-td"
-                                [title]="row.expected">{{row.expected | number: '1.1-3'}}</td>
+                                [title]="row.expected">{{row.expected | number: '1.1-3': 'en-US'}}</td>
                             <td class="answer-table-td" [title]="row.actual"
-                                [class.incorrect]="!row.correct">{{row.actual | number: '1.1-3'}}</td>
+                                [class.incorrect]="!row.correct">{{row.actual | number: '1.1-3': 'en-US'}}</td>
                         </tr>
                         </tbody>
                     </table>
