@@ -60,16 +60,14 @@ import {showCreateCourse} from "tim/showCreateCourse";
                         <a (click)="openCourseListDialog()" href="#" i18n>Available courses</a>
                     </li>
                     <li *ngIf="isLoggedIn()" class="h5">
-                        <a (click)="$event.preventDefault(); createCourse()" href="" i18n>Create a new course</a>
+                        <a (click)="$event.preventDefault(); createCourse()" href="">Create a new course</a>
                     </li>
                 </ul>
                 <bootstrap-panel *ngIf="creatingNew"
                                  title="Create a new course"
-                                 i18n-title
                                  [showClose]="true"
                                  (closed)="cancelCreate()">
                     <create-item itemTitle="Course name"
-                                 i18n-itemTitle
                                  itemLocation="{{getCurrentUserFolderPath()}}"
                                  itemType="course">
                     </create-item>
