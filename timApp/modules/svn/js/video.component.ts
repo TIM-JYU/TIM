@@ -544,8 +544,17 @@ export class VideoComponent extends AngularPluginBase<
     }
 
     zoom(mult: number, $event: Event | undefined = undefined) {
+        console.log("zoom", mult, this.width, this.height);
         if ($event) {
             $event.preventDefault();
+        }
+        if (
+            this.video &&
+            this.width === undefined &&
+            this.height === undefined
+        ) {
+            this.width = this.video.nativeElement.clientWidth;
+            this.height = this.video.nativeElement.clientHeight;
         }
         if (mult === 0) {
             this.width = this.origWidth;
