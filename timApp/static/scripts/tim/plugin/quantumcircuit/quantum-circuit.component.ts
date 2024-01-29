@@ -380,6 +380,8 @@ export class QuantumCircuitComponent
     >
     implements OnInit, AfterViewInit, ITimComponent
 {
+    private static dndPolyfillApplied = false;
+
     @ViewChild("qcContainer")
     qcContainer!: ElementRef<HTMLElement>;
 
@@ -1423,9 +1425,20 @@ export class QuantumCircuitComponent
 
         this.hasEditRights = item?.rights.editable ?? false;
 
+        this.applyPolyfill();
+
         // don't render unnecessary height for gate info if there isn't any viewable gate info
         this.isToolboxStaticHeight = this.checkViewableGateInfo();
 
+        this.vctrl.addTimComponent(this);
+    }
+
+    private applyPolyfill() {
+        // TODO: This should be a TIM global polyfill instead of per-component
+        if (QuantumCircuitComponent.dndPolyfillApplied) {
+            return;
+        }
+        QuantumCircuitComponent.dndPolyfillApplied = true;
         // apply polyfills to make drag-and-drop work for touch screen devices
         polyfill({
             // Use this to make use of the scroll behaviour.
