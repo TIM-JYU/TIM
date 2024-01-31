@@ -745,4 +745,4 @@ def _handle_mail_to_send(mail: list[MailToSendData]) -> None:
         subject = new_mail_info["subject"]
         body = new_mail_info["body"]
 
-        multi_send_email(";".join(to_lst), subject, body)
+        multi_send_email(";".join(to_lst), subject, body, with_signature=True)
