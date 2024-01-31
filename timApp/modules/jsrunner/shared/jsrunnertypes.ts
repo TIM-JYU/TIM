@@ -66,6 +66,12 @@ export interface IGroupData {
     remove?: Record<string, number[]>;
 }
 
+export interface IMailSendData {
+    to: string;
+    subject: string;
+    body: string;
+}
+
 export interface IItemRightActionData
     extends t.TypeOf<typeof ItemRightActionT> {
     item: string;
@@ -104,6 +110,7 @@ interface AnswerReturnSuccess {
     groups: IGroupData;
     itemRightActions: IItemRightActionData[];
     newUsers: NewUserData[];
+    mailToSend: IMailSendData[];
 }
 
 interface AnswerReturnError {

@@ -15,6 +15,7 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     verify_task_access,
     verify_teacher_access,
+    check_admin_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
@@ -28,6 +29,7 @@ from timApp.messaging.messagelist.messagelist_utils import (
     UserGroupDiff,
     sync_usergroup_messagelist_members,
 )
+from timApp.notification.send_email import multi_send_email
 from timApp.peerreview.util.peerreview_utils import change_peerreviewers_for_user
 from timApp.plugin.importdata.importData import MissingUser, MissingUserSchema
 from timApp.plugin.plugin import TaskNotFoundException, CachedPluginFinder, Plugin
@@ -163,6 +165,12 @@ class FieldSaveUserEntry(TypedDict):
     fields: dict[str, str]
 
 
+class MailToSendData(TypedDict):
+    to: str
+    subject: str
+    body: str
+
+
 class FieldSaveRequest(TypedDict, total=False):
     savedata: list[FieldSaveUserEntry] | None
     ignoreMissing: bool | None
@@ -172,6 +180,7 @@ class FieldSaveRequest(TypedDict, total=False):
     groups: JsrunnerGroups | None
     newUsers: dict | None
     itemRightActions: dict | None
+    mailToSend: list[MailToSendData] | None
 
 
 @dataclass(slots=True)
@@ -204,6 +213,15 @@ def save_fields(
     ignore_fields: dict[str, bool] = {}
     groups = jsonresp.get("groups")
     view_ctx = view_ctx or default_view_ctx
+
+    mail_to_send = jsonresp.get("mailToSend")
+    if mail_to_send:
+        ug = UserGroup.get_teachers_group()
+        if ug not in curr_user.groups and not check_admin_access(user=curr_user):
+            raise AccessDenied(
+                f"You must be a teacher or admin to send mail via JSRunner."
+            )
+        _handle_mail_to_send(mail_to_send)
 
     new_users_json: dict | None = jsonresp.get("newUsers")
     if new_users_json:
@@ -690,3 +708,41 @@ def _handle_item_right_actions(
 
     # Flush so that access rights are correct for any other JSRunner operations
     db.session.flush()
+
+
+def _handle_mail_to_send(mail: list[MailToSendData]) -> None:
+    mail_to_send: dict[tuple[str, str], dict[str, Any]] = {}
+    user_cache: dict[str, User | None] = {}
+
+    # Try to merge mails with the same subject and body
+    # This way, we can send one mail to multiple recipients instead of one mail per recipient
+    for m in mail:
+        to = m["to"]
+        subject = m["subject"]
+        body = m["body"]
+
+        if not (u := user_cache.get(to)):
+            u = User.get_by_name(to)
+            user_cache[to] = u
+        if u:
+            to = u.email
+
+        if not is_valid_email(to):
+            continue  # TODO: Log error
+
+        if not (mail_info := mail_to_send.get((subject, body))):
+            mail_info = {
+                "to": set(),
+                "subject": subject,
+                "body": body,
+            }
+            mail_to_send[(subject, body)] = mail_info
+
+        mail_info["to"].add(to)
+
+    for new_mail_info in mail_to_send.values():
+        to_lst: set[str] = new_mail_info["to"]
+        subject = new_mail_info["subject"]
+        body = new_mail_info["body"]
+
+        multi_send_email(";".join(to_lst), subject, body)
