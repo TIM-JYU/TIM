@@ -13,7 +13,12 @@ export function countWords(str: string): number {
     if (s.length === 1 && s[0].length === 0) {
         return 0;
     }
-    return s.length;
+    // ignore punctuation characters that appear on their own, as the grammar/syntax in some languages (notably, French)
+    // dictates whitespace before some punctuation, like question/exclamation marks etc.
+    const ans = s.filter((e: string) => !e.match(/^\p{P}/gu));
+
+    // return s.length;
+    return ans.length;
 }
 
 export function getInt(s: string | number) {
