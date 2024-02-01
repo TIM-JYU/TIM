@@ -13,6 +13,7 @@ import type {
     IGroupData,
     IItemRightActionData,
     IJsRunnerMarkup,
+    IMailSendData,
 } from "../../shared/jsrunnertypes";
 import type {
     AliasDataT,
@@ -68,6 +69,7 @@ type RunnerResult =
           groups: IGroupData;
           itemRightActions: IItemRightActionData[];
           newUsers: NewUserData[];
+          mailToSend: IMailSendData[];
       }
     | {output: string; fatalError: IError; errorprg: string};
 
@@ -216,6 +218,7 @@ function runner(d: IRunnerData): RunnerResult {
             groups: gtools.groups,
             itemRightActions: gtools.itemRightActions,
             newUsers: gtools.newUsers,
+            mailToSend: gtools.mailToSend,
         };
     } catch (e) {
         const err = e as Error;
@@ -337,6 +340,7 @@ router.put("/", async (req, res, next) => {
                 groups: result.groups,
                 itemRightActions: result.itemRightActions,
                 newUsers: result.newUsers,
+                mailToSend: result.mailToSend,
                 web: {
                     output: result.output,
                     errors: result.errors,

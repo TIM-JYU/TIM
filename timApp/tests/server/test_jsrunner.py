@@ -9,6 +9,7 @@ from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
+from timApp.notification.send_email import sent_mails_in_testing
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
@@ -1737,3 +1738,75 @@ tools.print(tools.getUserName());
             user_input={"userNames": ["testuser3"]},
             expect_content={"web": {"errors": [], "output": "", "outdata": {}}},
         )
+
+
+class TestJSRunnerSendMail(JsRunnerTestBase):
+    def test_send_mail(self):
+        self.login_test1()
+        sent_mails_in_testing.clear()
+
+        d = self.create_jsrun(
+            """
+fields: []
+groups:
+  - testuser1
+  - testuser2
+  - testuser3
+program: |!!
+gtools.sendMail(tools.getUserName(), "Test subject", "Test Body");
+!!
+postprogram: |!!
+gtools.sendMail("test_email@email.com", "Test subject", "Test Body");
+!!"""
+        )
+
+        # Testuser1 is not a teacher
+        self.do_jsrun(d, expect_status=403)
+
+        self.test_user_1.add_to_group(
+            UserGroup.get_teachers_group(), None, sync_mailing_lists=False
+        )
+        db.session.commit()
+
+        # Testuser1 is now a teacher and can send mail
+        self.do_jsrun(
+            d,
+            expect_content={"web": {"errors": [], "output": "", "outdata": {}}},
+        )
+
+        # Only one message should be sent
+        self.assertEqual(len(sent_mails_in_testing), 1)
+        mail1 = sent_mails_in_testing[0]
+        self.assertEqual(
+            set(mail1["rcpt"].split(";")),
+            {
+                self.test_user_1.email,
+                self.test_user_2.email,
+                self.test_user_3.email,
+                "test_email@email.com",
+            },
+        )
+        self.assertEqual(mail1["subject"], "Test subject")
+        self.assertEqual(mail1["msg"], "Test Body")
+
+        sent_mails_in_testing.clear()
+
+        d = self.create_jsrun(
+            """
+fields: []
+groups:
+  - testuser1
+program: |!!
+gtools.sendMail(tools.getUserName(), "Test subject", "Test Body");
+gtools.sendMail(tools.getUserName(), "Test subject", "Test Body");
+gtools.sendMail(tools.getUserName(), "Test subject 2", "Test Body 2");
+!!"""
+        )
+
+        self.do_jsrun(
+            d,
+            expect_content={"web": {"errors": [], "output": "", "outdata": {}}},
+        )
+
+        # Only two messages must be sent, the first one is merged
+        self.assertEqual(len(sent_mails_in_testing), 2)

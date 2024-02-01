@@ -79,6 +79,7 @@ def multi_send_email(
     reply_to: str = app.config["NOREPLY_EMAIL"],
     bcc: str = "",
     reply_all: bool = False,
+    with_signature: bool = False,
 ) -> None:
     if is_testing():
         sent_mails_in_testing.append(locals())
@@ -86,7 +87,17 @@ def multi_send_email(
 
     Thread(
         target=multi_send_email_impl,
-        args=(app, rcpt, subject, msg, mail_from, reply_to, bcc, reply_all),
+        args=(
+            app,
+            rcpt,
+            subject,
+            msg,
+            mail_from,
+            reply_to,
+            bcc,
+            reply_all,
+            with_signature,
+        ),
     ).start()
 
 
@@ -99,6 +110,7 @@ def multi_send_email_impl(
     reply_to: str = app.config["NOREPLY_EMAIL"],
     bcc: str = "",
     reply_all: bool = False,
+    with_signature: bool = False,
 ) -> None:
     with flask_app.app_context():
         s = smtplib.SMTP(flask_app.config["MAIL_HOST"]) if not is_localhost() else None
@@ -124,8 +136,11 @@ def multi_send_email_impl(
                     if rcp == bcc:
                         send_extra = extra
                     mime_msg = MIMEText(
-                        msg + send_extra
-                    )  # + flask_app.config['MAIL_SIGNATURE'])
+                        msg
+                        + send_extra
+                        + (flask_app.config["MAIL_SIGNATURE"] if with_signature else "")
+                    )
+
                     mime_msg["Subject"] = subject
                     mime_msg["From"] = mail_from
                     mime_msg["Bcc"] = bccmail
