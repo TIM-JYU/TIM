@@ -15,7 +15,7 @@ export function countWords(str: string): number {
     }
     // ignore punctuation characters that appear on their own, as the grammar/syntax in some languages (notably, French)
     // dictates whitespace before some punctuation, like question/exclamation marks etc.
-    const ans = s.filter((e) => e.match(/\p{P}?\w/u));
+    const ans = s.filter((e) => e.match(/\w/u));
 
     // return s.length;
     return ans.length;
