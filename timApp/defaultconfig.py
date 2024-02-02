@@ -383,7 +383,7 @@ VERIFICATION_REACTED_CLEANUP_INTERVAL = 30 * 24 * 60 * 60
 # Database entries for languages are created when TIM is started/re-started.
 # Pre-existing entries are skipped.
 # Default list includes languages supported by the translation service
-# DeepL: https://https://www.deepl.com/docs-api/translating-text/
+# DeepL: https://www.deepl.com/docs-api/translating-text/
 # Custom language syntax is the following:
 # {
 #   "lang_code": "<standardized tag>",
@@ -401,6 +401,7 @@ LANGUAGES = [
     "American English",
     "British English",
     "Spanish",
+    "English",
     "Estonian",
     "Finnish",
     "French",
