@@ -238,7 +238,13 @@ def create_translation_route(
 
     # Run automatic translation if requested
     if translator != "Manual":
-        translate_full_document(tr, src_doc, language, translator)
+        # If src_doc id does not match tr_doc_id, the translation process was initiated
+        # from an existing translation. We should use that translation as the basis
+        # for the new one, instead of forcing the source to be the original document.
+        if tr_doc_id != src_doc.doc_id:
+            translate_full_document(tr, doc.document, language, translator)
+        else:
+            translate_full_document(tr, src_doc, language, translator)
 
     # Copy source document search relevance value to translation
     set_relevance(tr.id, get_document_relevance(doc))
