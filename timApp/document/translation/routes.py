@@ -102,7 +102,10 @@ def translate_full_document(
     source_paragraphs = list(
         filter(
             lambda x: not x.is_setting(),
-            tr.document.get_source_document().get_paragraphs(),
+            # tr.document.get_source_document().get_paragraphs(),
+            # Instead of fetching the original document's pars,
+            # get the pars from the document specified by src_doc parameter
+            src_doc.get_paragraphs(),
         ),
     )
 
