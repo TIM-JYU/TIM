@@ -237,6 +237,24 @@ export const ItemRightActionT = t.intersection([
     }),
 ]);
 
+const TSendGradesToSisuData = t.partial({
+    partial: t.boolean,
+    sendMailTo: t.array(t.string),
+    users: t.array(t.string),
+});
+
+export interface SendGradesToSisuData
+    extends t.TypeOf<typeof TSendGradesToSisuData> {
+    destCourse: string;
+}
+
+const DefaultSendGradesToSisuData: SendGradesToSisuData = {
+    partial: true,
+    sendMailTo: [],
+    users: [],
+    destCourse: "",
+};
+
 // const dummyGTools: GTools = new GTools(
 
 class WithGtools {
@@ -1066,6 +1084,7 @@ export class GTools extends ToolsBase {
     itemRightActions: IItemRightActionData[] = [];
     newUsers: NewUserData[] = [];
     mailToSend: IMailSendData[] = [];
+    sendToSisu?: SendGradesToSisuData;
 
     constructor(
         currDoc: string,
@@ -1254,6 +1273,49 @@ export class GTools extends ToolsBase {
         }
 
         this.mailToSend.push({to, subject, body});
+    }
+
+    /**
+     * Trigger sending grades to Sisu after this script has finished.
+     * Calling this function multiple times will update the options.
+     *
+     * To send grades to Sisu, the following must apply:
+     *   - destCourse must be set in the JSRunner's markup
+     *   - The student must have a value in the "grade" (course grade) field.
+     *   - The student must have a value in the "credit" (course credits) field.
+     *   - The student must have a value in the "completionDate" (course completion date) field.
+     *
+     * By default, grades for all students specified in the "group" markup field will be sent to Sisu.
+     * Use the "users" option to specify the specific users for which to send grades.
+     * You can use the "sentGrade" field to determine the last grade that was sent to Sisu.
+     *
+     *
+     * @param opts Options for sending grades to Sisu. The available options are:
+     *            - users: If specified, only send grades for these users. This must be a list of user IDs.
+     *            - sendMailTo: If specified, send a notification email to these addresses after the grades have been sent.
+     *            - partial: If true, send grades only for students who have all information specified (grade, credits, completion date).
+     */
+    sendGradesToSisu(opts: unknown) {
+        if (!this.markup.destCourse) {
+            throw Error(
+                "sendGradesToSisu: destCourse must be set to send grades to Sisu"
+            );
+        }
+        if (!opts) {
+            opts = DefaultSendGradesToSisuData;
+        }
+        if (!TSendGradesToSisuData.is(opts)) {
+            throw genericTypeError("opts", opts);
+        }
+        if (!this.sendToSisu) {
+            this.sendToSisu = {
+                ...DefaultSendGradesToSisuData,
+                ...opts,
+                destCourse: this.markup.destCourse,
+            };
+        } else {
+            this.sendToSisu = {...this.sendToSisu, ...opts};
+        }
     }
 }
 

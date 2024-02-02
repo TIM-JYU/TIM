@@ -79,6 +79,8 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     nextRunner: str | Missing = missing
     timeZoneDiff: int | Missing = missing
     peerReview: bool | Missing = missing
+    destCourse: str | Missing = missing
+    destCourseName: str | Missing = missing
 
     @validates_schema(skip_on_field_errors=True)
     def validate_schema(self, data: dict, **_: dict) -> None:
