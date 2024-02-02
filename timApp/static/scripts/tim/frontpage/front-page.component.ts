@@ -67,10 +67,10 @@ import {showCreateCourse} from "tim/showCreateCourse";
                                  title="Create a new course"
                                  [showClose]="true"
                                  (closed)="cancelCreate()">
-                    <create-item itemTitle="Course name"
-                                 itemLocation="{{getCurrentUserFolderPath()}}"
-                                 itemType="course">
-                    </create-item>
+<!--                    <create-item itemTitle="Course name"-->
+<!--                                 itemLocation="{{getCurrentUserFolderPath()}}"-->
+<!--                                 itemType="course">-->
+<!--                    </create-item>-->
                 </bootstrap-panel>
             </div>
         </div>

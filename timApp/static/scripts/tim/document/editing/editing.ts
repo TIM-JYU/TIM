@@ -75,6 +75,7 @@ import type {
     ITags,
 } from "tim/document/editing/edittypes";
 import {EditType, extraDataForServer} from "tim/document/editing/edittypes";
+import {showCreateItemDialog} from "tim/showCreateItemDialog";
 
 export interface IParEditorOptions {
     forcedClasses?: string[];
@@ -233,6 +234,10 @@ export class EditingHandler {
                 );
             });
         }
+        onClick(".createOscar", ($this, e) => {
+            this.viewctrl.closePopupIfOpen();
+            showCreateItemDialog();
+        });
     }
 
     setSelection(s: UserSelection | undefined) {

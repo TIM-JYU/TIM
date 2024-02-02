@@ -30,6 +30,7 @@ import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {CommonModule} from "@angular/common";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
+import {CreateItemComponent} from "tim/item/create-item.component";
 
 @NgModule({
     providers: [SessionVerify],
@@ -60,6 +61,7 @@ import {PrintButtonComponent} from "tim/ui/print-button.component";
         MarkAllAsReadComponent,
         SwitchButtonComponent,
         PrintButtonComponent,
+        CreateItemComponent,
     ],
     exports: [
         MarkupErrorComponent,
@@ -86,6 +88,7 @@ import {PrintButtonComponent} from "tim/ui/print-button.component";
         CapitalizePipe,
         BookmarkNamePipe,
         SwitchButtonComponent,
+        CreateItemComponent,
     ],
     imports: [CommonModule, FormsModule],
 })

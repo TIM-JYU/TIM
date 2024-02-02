@@ -68,10 +68,10 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
 
         <tabset *ngIf="canCreate">
             <tab heading="Create a new document" [active]="false">
-                <create-item itemType="document" itemLocation="{{ item.path }}"></create-item>
+<!--                <create-item itemType="document" itemLocation="{{ item.path }}"></create-item>-->
             </tab>
             <tab heading="Create a new folder" [active]="false">
-                <create-item itemType="folder" itemLocation="{{ item.path }}"></create-item>
+<!--                <create-item itemType="folder" itemLocation="{{ item.path }}"></create-item>-->
             </tab>
         </tabset>
     `,

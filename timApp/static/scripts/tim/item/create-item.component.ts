@@ -46,7 +46,7 @@ import {NgModel} from "@angular/forms";
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group" timErrorState>
+            <div class="form-group" timErrorState *ngIf="showLocation">
                 <label>
                     Location: <input size="50" [disabled]="force" class="form-control" type="text"
                                      timLocation [(ngModel)]="itemLocation" name="itemLocation"
@@ -57,7 +57,7 @@ import {NgModel} from "@angular/forms";
             <tim-alert *ngFor="let alert of alerts" [severity]="alert.type">
                 {{ alert.msg }}
             </tim-alert>
-            <button class="timButton" [disabled]="f.invalid || creating || !canCopy" (click)="createItem()" type="button">
+            <button *ngIf="showCreateButton" class="timButton" [disabled]="f.invalid || creating || !canCopy" (click)="createItem()" type="button">
                 Create {{ itemType }}
             </button>
             <span *ngIf="creating">Creating...</span>
@@ -78,6 +78,8 @@ export class CreateItemComponent implements OnInit {
     @Input() private template?: string;
     @ViewChild("f", {static: true}) form!: NgModel;
     tagsWithExpirations = false;
+    @Input() showLocation: boolean = true;
+    @Input() showCreateButton: boolean = true;
 
     canCopy: boolean = true;
     private originalLocation?: string;
@@ -152,6 +154,8 @@ export class CreateItemComponent implements OnInit {
 
     async createItem() {
         this.creating = true;
+        console.log("type", this.itemType);
+        console.log("title", this.itemTitle);
         const r = await toPromise(
             this.http.post<{path: string}>("/createItem", {
                 item_path: this.itemLocation + "/" + this.itemName,
