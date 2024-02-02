@@ -9,6 +9,7 @@ from typing import Union
 import numpy as np
 import yaml
 from flask import render_template_string, request, jsonify, Response
+from flask_babel import gettext
 from qulacs import QuantumCircuit, QuantumState, QuantumGateMatrix
 from qulacs.gate import H, X, Y, Z, S, T, SWAP, to_matrix_gate, DenseMatrix
 
@@ -251,6 +252,12 @@ class QuantumCircuitHtmlModel(
 
 
 def render_static_quantum_circuit(m: QuantumCircuitHtmlModel) -> str:
+    markup_vars = asdict(m.markup)
+    if markup_vars["lazyBody"]:
+        markup_vars["message"] = markup_vars.get("lazyBody")
+    else:
+        markup_vars["message"] = gettext("Expand by moving mouse over the exercise or by clicking")
+
     return render_template_string(
         """
         <div class="panel panel-default">
@@ -264,15 +271,11 @@ def render_static_quantum_circuit(m: QuantumCircuitHtmlModel) -> str:
                     <p>{{ stem }}</p>
                 {% endif %}
 
-                {% if lazyBody %}
-                    <p class="alert alert-info">{{lazyBody}}</p>                
-                {% else %}
-                    <p class="alert alert-info">Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla.</p>
-                {% endif %}
+                <p class="alert alert-info">{{message}}</p>                
             </div>
         </div>
     """.strip(),
-        **asdict(m.markup),
+        **markup_vars,
     )
 
 

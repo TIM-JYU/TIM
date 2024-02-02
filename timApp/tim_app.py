@@ -15,12 +15,14 @@ from flask_wtf import CSRFProtect
 from sqlalchemy import func
 from sqlalchemy.sql.ddl import CreateTable
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_babel import Babel
 
 from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.auth.oauth2.models import OAuth2Token, OAuth2AuthorizationCode
 from timApp.auth.session.model import UserSession
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.celery_sqlalchemy_scheduler import (
     IntervalSchedule,
     CrontabSchedule,
@@ -267,6 +269,20 @@ app.jinja_env.filters["timdate"] = timdate
 app.jinja_env.filters["timtimedelta"] = humanize_timedelta
 app.jinja_env.filters["timreldatetime"] = humanize_datetime
 app.jinja_env.add_extension("jinja2.ext.do")
+app.jinja_env.add_extension("jinja2.ext.i18n")
+
+
+def get_locale():
+    print("hello")
+    with app.app_context():
+        u = get_current_user_object()
+        print(u)
+        prefs = u.get_prefs()
+        print("kieli", prefs.language)
+    return prefs.language
+
+
+babel = Babel(app, locale_selector=get_locale)
 
 mimetypes.add_type("text/plain", ".scss")
 # Caddy sets the following headers:
