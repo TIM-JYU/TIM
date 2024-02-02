@@ -151,6 +151,7 @@ const QuantumCircuitMarkup = t.intersection([
                 conditionWrong: nullable(t.string),
             })
         ),
+        lazyBody: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
