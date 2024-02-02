@@ -17,6 +17,7 @@ import type {
     IGroupData,
     IItemRightActionData,
     IJsRunnerMarkup,
+    IMailSendData,
     INumbersObject,
 } from "../../shared/jsrunnertypes";
 import type {
@@ -1064,6 +1065,7 @@ export class GTools extends ToolsBase {
     groups: IGroupData = {};
     itemRightActions: IItemRightActionData[] = [];
     newUsers: NewUserData[] = [];
+    mailToSend: IMailSendData[] = [];
 
     constructor(
         currDoc: string,
@@ -1238,6 +1240,20 @@ export class GTools extends ToolsBase {
             throw genericTypeError("action", action);
         }
         this.itemRightActions.push({item, group, ...action});
+    }
+
+    sendMail(to: string, subject: string, body: string) {
+        if (!checkString(to)) {
+            throw genericTypeError("to", to);
+        }
+        if (!checkString(subject)) {
+            throw genericTypeError("subject", subject);
+        }
+        if (!checkString(body)) {
+            throw genericTypeError("body", body);
+        }
+
+        this.mailToSend.push({to, subject, body});
     }
 }
 

@@ -48,6 +48,7 @@ const TimMenuMarkup = t.intersection([
         basicColors: withDefault(t.boolean, false),
         separator: withDefault(t.string, "&nbsp;"), // Non-breaking space
         openingSymbol: withDefault(t.string, "&#9662;"), // Caret
+        closeOnLinkClick: withDefault(t.boolean, false),
     }),
 ]);
 
@@ -256,6 +257,12 @@ export class TimMenuPluginComponent
             this.markup.hoverOpen && !this.userPrefersHoverDisabled;
         this.userRights = this.vctrl.item.rights;
         this.setBarStyles();
+
+        if (this.markup.closeOnLinkClick) {
+            $(this.element).on("click", "a", (e) => {
+                this.closeMenus();
+            });
+        }
     }
 
     ngAfterViewInit() {

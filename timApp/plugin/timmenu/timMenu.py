@@ -132,6 +132,7 @@ class TimMenuMarkupModel(GenericMarkupModel):
     textColor: str | Missing | None = "black"
     topMenu: bool | Missing | None = False
     topMenuTriggerHeight: int | Missing | None = 200
+    closeOnLinkClick: bool | Missing | None = False
 
 
 class TimMenuError(Exception):
