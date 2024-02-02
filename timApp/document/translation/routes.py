@@ -501,7 +501,7 @@ def remove_api_key() -> Response:
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
-    db.session.execution(
+    run_sql(
         delete(TranslationServiceKey)
         .filter(
             (key == TranslationServiceKey.api_key)
