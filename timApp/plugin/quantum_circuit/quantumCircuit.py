@@ -213,6 +213,8 @@ class QuantumCircuitMarkup(GenericMarkupModel):
 
     feedbackShowTable: bool | None = None
 
+    lazyBody: str | None = None
+
 
 @dataclass
 class QuantumCircuitStateModel:
@@ -261,7 +263,12 @@ def render_static_quantum_circuit(m: QuantumCircuitHtmlModel) -> str:
                 {% if stem %}
                     <p>{{ stem }}</p>
                 {% endif %}
-                <p class="alert alert-info">Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla.</p>
+
+                {% if lazyBody %}
+                    <p class="alert alert-info">{{lazyBody}}</p>                
+                {% else %}
+                    <p class="alert alert-info">Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla.</p>
+                {% endif %}
             </div>
         </div>
     """.strip(),
