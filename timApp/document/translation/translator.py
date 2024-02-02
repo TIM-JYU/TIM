@@ -184,6 +184,8 @@ class TranslationService(db.Model):
             if lang_code in ["pt-BR", "pt-PT"]:
                 return "pt"
 
+        return lang_code
+
     # Polymorphism allows querying multiple objects by their class e.g.
     # `TranslationService.query`.
     __mapper_args__ = {"polymorphic_on": "service_name"}

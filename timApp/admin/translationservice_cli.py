@@ -17,6 +17,7 @@ from flask.cli import AppGroup
 from sqlalchemy import select
 
 from timApp.document.translation.translator import TranslationService
+from timApp.document.translation.deepl import purge_languages_cache
 from timApp.tim_app import app
 from timApp.timdb.sqa import db, run_sql
 
@@ -70,3 +71,19 @@ def add_all_tr_services_to_session(log: bool = False) -> None:
             if log:
                 click.echo(f"Adding new translation service '{service_name}'")
             db.session.add(service)
+
+
+@tr_service_cli.command()
+def purge_deepl_lang_cache(log: bool = False) -> None:
+    """
+    Purge supported languages cache.
+
+    Purge supported LanguagePairings cache for DeeplTranslationService,
+    so that it will be refreshed as soon as supported languages are checked.
+
+    :return: None.
+    """
+    purge_languages_cache()
+
+    if log:
+        click.echo(f"Purged cache for supported languages in DeeplTranslationService")
