@@ -489,28 +489,63 @@ test
         d = self.create_doc(
             initial_par="""
 ``` {plugin="csPlugin"}
-data: '<svg>contents</svg>'
+data: '<svg>contents 1</svg>'
 height: 120
 task: false
 type: drawio
-```"""
+```
+
+``` {plugin="csPlugin"}
+data: '<svg>contents 2</svg>'
+height: 120
+task: false
+type: drawio
+```
+
+"""
         )
-        orig_par = d.document.get_last_par()
+        orig_pars = d.document.get_paragraphs()
         t = self.create_translation(d)
-        par = t.document.get_last_par()
+        pars = t.document.get_paragraphs()
+        self.post_par(
+            t.document,
+            f"""       
+``` {{r="tr" rp="{orig_pars[1].id}" rt="MHgxZGQ0NGU4"}}
+data: '<svg>contents 2</svg>'
+height: 130
+task: false
+type: drawio
+```
+""",
+            pars[1].id,
+        )
         self.json_put(
             "/jsframe/drawIOData",
             json_data={
-                "data": "<svg>translated contents</svg>",
-                "par_id": par.id,
+                "data": "<svg>translated contents 1</svg>",
+                "par_id": pars[0].id,
+                "doc_id": t.id,
+            },
+        )
+        self.json_put(
+            "/jsframe/drawIOData",
+            json_data={
+                "data": "<svg>translated contents 2</svg>",
+                "par_id": pars[1].id,
                 "doc_id": t.id,
             },
         )
         t.document.clear_mem_cache()
-        par = t.document.get_last_par()
+        pars = t.document.get_paragraphs()
+        # untranslated task gets all its plugin attributes from the original
         self.assertEqual(
-            par.get_exported_markdown().replace("\n", ""),
-            f'``` {{r="tr" rp="{orig_par.id}"}}data: <svg>translated contents</svg>height: 120task: falsetype: drawio```',
+            pars[0].get_exported_markdown().replace("\n", ""),
+            f'``` {{r="tr" rp="{orig_pars[0].id}"}}data: <svg>translated contents 1</svg>height: 120task: falsetype: drawio```',
+        )
+        # translated task gets updated height attribute from the translation
+        self.assertEqual(
+            pars[1].get_exported_markdown().replace("\n", ""),
+            f'``` {{r="tr" rp="{orig_pars[1].id}" rt="MHgxZGQ0NGU4"}}data: <svg>translated contents 2</svg>height: 130task: falsetype: drawio```',
         )
 
 
