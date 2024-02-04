@@ -484,6 +484,35 @@ test
         self.get(f"/getBlock/{d_id}/{par_ids[1]}", expect_status=403)
         self.get(f"/getBlock/{d_id}/{par_ids[2]}")
 
+    def test_save_translated_drawio(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {plugin="csPlugin"}
+data: '<svg>contents</svg>'
+height: 120
+task: false
+type: drawio
+```"""
+        )
+        orig_par = d.document.get_last_par()
+        t = self.create_translation(d)
+        par = t.document.get_last_par()
+        self.json_put(
+            "/jsframe/drawIOData",
+            json_data={
+                "data": "<svg>translated contents</svg>",
+                "par_id": par.id,
+                "doc_id": t.id,
+            },
+        )
+        t.document.clear_mem_cache()
+        par = t.document.get_last_par()
+        self.assertEqual(
+            par.get_exported_markdown().replace("\n", ""),
+            f'``` {{r="tr" rp="{orig_par.id}"}}data: <svg>translated contents</svg>height: 120task: falsetype: drawio```',
+        )
+
 
 class TimTableEditTest(TimRouteTest):
     def test_timtable_edit(self):
