@@ -252,7 +252,6 @@ export class EditingHandler {
             }
             this.createItemVisible = true;
             showCreateItem(itemParams).finally(() => {
-                console.log("vis to false");
                 this.createItemVisible = false;
             });
         });
