@@ -19,7 +19,7 @@ import {NgModel} from "@angular/forms";
                 <p>Only document contents will be copied. No history or rights will be preserved.</p>
                 <p>If you need to have the same document to appear in multiple folders, define multiple short names instead.</p>
             </div>
-            <div class="form-group" timErrorState>
+            <div class="form-group title" timErrorState>
                 <label>
                     Title:
                     <input class="form-control" required [(ngModel)]="itemTitle" name="itemTitle"
@@ -27,7 +27,7 @@ import {NgModel} from "@angular/forms";
                 </label>
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group" timErrorState>
+            <div class="form-group shortname" timErrorState>
                 <label>
                     Short name:
                     <input [disabled]="force" class="form-control" timShortName required
@@ -46,7 +46,7 @@ import {NgModel} from "@angular/forms";
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group" timErrorState>
+            <div class="form-group location" timErrorState>
                 <label>
                     Location: <input size="50" [disabled]="force" class="form-control" type="text"
                                      timLocation [(ngModel)]="itemLocation" name="itemLocation"
