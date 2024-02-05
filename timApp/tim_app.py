@@ -22,7 +22,6 @@ from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.auth.oauth2.models import OAuth2Token, OAuth2AuthorizationCode
 from timApp.auth.session.model import UserSession
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.celery_sqlalchemy_scheduler import (
     IntervalSchedule,
     CrontabSchedule,
@@ -120,6 +119,7 @@ from timApp.util.flask.filters import (
 from timApp.util.flask.user_agent import SimpleUserAgent
 from timApp.util.logger import setup_logging
 from timApp.util.utils import datestr_to_relative, date_to_relative
+from timApp.util.locale import get_locale
 from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import (
     Velp,
@@ -272,17 +272,14 @@ app.jinja_env.add_extension("jinja2.ext.do")
 app.jinja_env.add_extension("jinja2.ext.i18n")
 
 
-def get_locale():
-    print("hello")
-    with app.app_context():
-        u = get_current_user_object()
-        print(u)
-        prefs = u.get_prefs()
-        print("kieli", prefs.language)
-    return prefs.language
+def babel_get_locale():
+    locale = get_locale()
+    if locale == "en-US":
+        return "en"
+    return locale
 
 
-babel = Babel(app, locale_selector=get_locale)
+babel = Babel(app, locale_selector=babel_get_locale)
 
 mimetypes.add_type("text/plain", ".scss")
 # Caddy sets the following headers:

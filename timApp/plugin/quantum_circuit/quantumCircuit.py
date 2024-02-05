@@ -256,7 +256,9 @@ def render_static_quantum_circuit(m: QuantumCircuitHtmlModel) -> str:
     if markup_vars["lazyBody"]:
         markup_vars["message"] = markup_vars.get("lazyBody")
     else:
-        markup_vars["message"] = gettext("Expand by moving mouse over the exercise or by clicking")
+        markup_vars["message"] = gettext(
+            "Expand by moving mouse over the exercise or by clicking"
+        )
 
     return render_template_string(
         """
