@@ -75,6 +75,8 @@ import type {
     ITags,
 } from "tim/document/editing/edittypes";
 import {EditType, extraDataForServer} from "tim/document/editing/edittypes";
+import type {ICreateItemDialogParams} from "tim/item/showCreateItemDialog";
+import {showCreateItem} from "tim/item/showCreateItemDialog";
 
 export interface IParEditorOptions {
     forcedClasses?: string[];
@@ -131,6 +133,7 @@ export class EditingHandler {
     private currentEditor?: PareditorController;
     private editorLoad?: Promise<IModalInstance<PareditorController>>;
     selection?: UserSelection;
+    createItemVisible = false;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -233,6 +236,25 @@ export class EditingHandler {
                 );
             });
         }
+        onClick(".createItem", ($this, e) => {
+            if (this.createItemVisible) {
+                return;
+            }
+            this.viewctrl.closePopupIfOpen();
+            const [_, options] = prepareOptions($this[0], "addAbove");
+            let itemParams: ICreateItemDialogParams | undefined;
+            if (options.initialText) {
+                try {
+                    itemParams = JSON.parse(
+                        options.initialText
+                    ) as ICreateItemDialogParams;
+                } catch {}
+            }
+            this.createItemVisible = true;
+            showCreateItem(itemParams).finally(() => {
+                this.createItemVisible = false;
+            });
+        });
     }
 
     setSelection(s: UserSelection | undefined) {
