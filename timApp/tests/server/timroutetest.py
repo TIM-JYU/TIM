@@ -145,7 +145,8 @@ class TimRouteTestBase(TimDbTest):
         with app.app_context():
             # Default language on create_translation NOTE not same as british or
             # american english.
-            cls.add_language("english")
+            # NOTE: going forward, generic English will be added automatically via the config list LANGUAGES
+            # cls.add_language("english")
             db.session.commit()
             db.session.expire_all()
 
