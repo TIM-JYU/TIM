@@ -1133,10 +1133,10 @@ def find_task_ids(
                     continue
                 task_ids.append(tid)
         elif block.get_attr("defaultplugin"):
-            inline_plugin_finder = inline_plugin_finder or InlinePluginFinder(
+            plugin_finder = inline_plugin_finder or InlinePluginFinder(
                 block.doc.get_settings().get_macroinfo(view_ctx, user_ctx)
             )
-            for task_id, _, _, _ in inline_plugin_finder.find_inline_plugins(block):
+            for task_id, _, _, _ in plugin_finder.find_inline_plugins(block):
                 try:
                     task_id = task_id.validate()
                 except PluginException:
