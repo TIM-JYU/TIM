@@ -4,7 +4,6 @@ import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HeaderComponent} from "tim/header/header.component";
 import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
-import {CreateItemComponent} from "tim/item/create-item.component";
 import {ErrorStateDirective} from "tim/ui/error-state.directive";
 import {ShortNameDirective} from "tim/ui/short-name.directive";
 import {LocationDirective} from "tim/ui/location.directive";
@@ -46,7 +45,6 @@ import {RoleInfoComponent} from "tim/header/role-info.component";
 
 @NgModule({
     declarations: [
-        CreateItemComponent,
         ErrorStateDirective,
         CopyFolderComponent,
         HeaderComponent,

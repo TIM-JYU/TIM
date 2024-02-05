@@ -11,7 +11,7 @@ import {NgModel} from "@angular/forms";
 @Component({
     selector: "create-item",
     template: `
-        <form name="itemForm" #f="ngForm">
+        <form name="itemForm" #form #f="ngForm">
             <tim-alert severity="warning" *ngIf="tagsWithExpirations">
                 The source document has tags with expiration dates which may need to be updated manually.
             </tim-alert>
@@ -57,7 +57,7 @@ import {NgModel} from "@angular/forms";
             <tim-alert *ngFor="let alert of alerts" [severity]="alert.type">
                 {{ alert.msg }}
             </tim-alert>
-            <button class="timButton" [disabled]="f.invalid || creating || !canCopy" (click)="createItem()" type="button">
+            <button class="timButton" *ngIf="showButton" [disabled]="f.invalid || creating || !canCopy" (click)="createItem()" type="button">
                 Create {{ itemType }}
             </button>
             <span *ngIf="creating">Creating...</span>
@@ -72,12 +72,18 @@ export class CreateItemComponent implements OnInit {
     @Input() itemName?: string;
     alerts: Array<{type: AlertSeverity; msg: string}> = [];
     @Input() itemType!: string;
-    @Input() params?: {template?: string; copy?: number};
+    @Input() params?: {
+        template?: string;
+        copy?: number;
+        source?: string;
+    };
     @Input() force = false;
     creating = false;
     @Input() private template?: string;
     @ViewChild("f", {static: true}) form!: NgModel;
     tagsWithExpirations = false;
+    @Input() sourceLocation?: string;
+    @Input() showButton = true;
 
     canCopy: boolean = true;
     private originalLocation?: string;
