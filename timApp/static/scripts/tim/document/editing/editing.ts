@@ -237,7 +237,6 @@ export class EditingHandler {
             });
         }
         onClick(".createItem", ($this, e) => {
-            console.log("vis?", this.createItemVisible);
             if (this.createItemVisible) {
                 return;
             }
