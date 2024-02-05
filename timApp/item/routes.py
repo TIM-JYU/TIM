@@ -1378,7 +1378,6 @@ def create_item_direct(
         use_template = True
 
     if item_type == "course" and source:
-        print(item_path, item_type, item_title)
         prev = Item.find_by_path(item_path)
         if prev:
             raise RouteException(
