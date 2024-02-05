@@ -102,7 +102,10 @@ def translate_full_document(
     source_paragraphs = list(
         filter(
             lambda x: not x.is_setting(),
-            tr.document.get_source_document().get_paragraphs(),
+            # tr.document.get_source_document().get_paragraphs(),
+            # Instead of fetching the original document's pars,
+            # get the pars from the document specified by src_doc parameter
+            src_doc.get_paragraphs(),
         ),
     )
 
@@ -238,7 +241,13 @@ def create_translation_route(
 
     # Run automatic translation if requested
     if translator != "Manual":
-        translate_full_document(tr, src_doc, language, translator)
+        # If src_doc id does not match tr_doc_id, the translation process was initiated
+        # from an existing translation. We should use that translation as the basis
+        # for the new one, instead of forcing the source to be the original document.
+        if tr_doc_id != src_doc.doc_id:
+            translate_full_document(tr, doc.document, language, translator)
+        else:
+            translate_full_document(tr, src_doc, language, translator)
 
     # Copy source document search relevance value to translation
     set_relevance(tr.id, get_document_relevance(doc))

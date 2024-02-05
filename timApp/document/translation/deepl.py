@@ -516,3 +516,12 @@ class DeeplProTranslationService(DeeplTranslationService):
 
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL Pro"}
+
+
+def purge_languages_cache() -> None:
+    """
+    Purges the cached LanguagePairings from the DeeplTranslationService.
+    Mostly needed when new languages are added, but the cache has not refreshed yet.
+    :return: None
+    """
+    cache.delete_memoized(DeeplTranslationService.languages)

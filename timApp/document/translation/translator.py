@@ -166,6 +166,26 @@ class TranslationService(db.Model):
         """
         raise NotImplementedError
 
+    def ensure_compatible_source_lang_variant(self, lang_code: str) -> str:
+        """
+        Return compatible source language code for this translation service.
+        This is a workaround for translation services that do not accept certain
+        language variants as the source (such as en-GB, en-US, etc.).
+        :param lang_code: Language code to check and possibly modify
+        :return: compatible language code
+        """
+        # TODO fetch up-to-date supported source languages from DeepL API, and
+        #      do the conversion on the fly instead of hard-coded values
+        if "DeepL" in self.service_name:
+            # Variants for English
+            if lang_code in ["en-GB", "en-US"]:
+                return "en"
+            # Variants for Portuguese
+            if lang_code in ["pt-BR", "pt-PT"]:
+                return "pt"
+
+        return lang_code
+
     # Polymorphism allows querying multiple objects by their class e.g.
     # `TranslationService.query`.
     __mapper_args__ = {"polymorphic_on": "service_name"}
@@ -293,7 +313,8 @@ class TranslateProcessor:
         ):
             translator.register(user_group)
 
-        source_lang_ = Language.query_by_code(s_lang)
+        source_language = translator.ensure_compatible_source_lang_variant(s_lang)
+        source_lang_ = Language.query_by_code(source_language)
         target_lang_ = Language.query_by_code(t_lang)
 
         if not translator.supports(source_lang_, target_lang_):
