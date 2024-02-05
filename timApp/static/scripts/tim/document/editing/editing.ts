@@ -991,7 +991,10 @@ auto_number_headings: 0${CURSOR}
                     desc: "Edit question",
                     show:
                         /* this.viewctrl.lectureMode && */ parEditable &&
-                        qstPar, // TODO: Condition also that par is a question
+                        qstPar && // TODO: Condition also that par is a question
+                        !par.originalPar.isTranslation(),
+                    // TODO: getQuestionByParId is able to find the question,
+                    //  but saving breaks the translation reference
                 },
                 this.getAddLectureQuestionItem(addAbovePos),
                 {
