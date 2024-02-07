@@ -15,7 +15,7 @@ import type {ICreateItemDialogParams} from "tim/item/showCreateItemDialog";
     template: `
         <tim-dialog-frame>
             <ng-container header>
-                Create a course
+                Create a {{itemType}}
             </ng-container>
             <ng-container body>
                     <create-item #creator [itemType]="itemType" [params]="{source}" [itemLocation]="itemLocation" [showButton]="false"></create-item>
@@ -38,7 +38,7 @@ export class CreateItemDialogComponent
     creating = false;
     error = "";
     @ViewChild(CreateItemComponent) creator!: CreateItemComponent;
-    itemType = "";
+    itemType = "document";
 
     constructor(private http: HttpClient) {
         super();
