@@ -1384,7 +1384,7 @@ def create_item_direct(
                 'Course "' + item_title + '" already exists at ' + item_path
             )
         folder = Folder.find_by_path(source)
-        if Folder is None:
+        if folder is None:
             raise RouteException(f"Source folder {source} not found")
         df, errors = do_copy_folder(
             folder.id, item_path, None, CopyOptions(apply_default_rights=True)
