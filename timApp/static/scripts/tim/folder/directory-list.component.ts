@@ -65,12 +65,17 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
             </tbody>
         </table>
         <p *ngIf="itemList.length == 0">There are no items to show.</p>
-
         <tabset *ngIf="canCreate">
-            <tab heading="Create a new document" [active]="false">
+            <tab [active]="false">
+                        <ng-template tabHeading>
+                            <span>Create a new document</span>&ngsp;  <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                        </ng-template>
                 <create-item itemType="document" itemLocation="{{ item.path }}"></create-item>
             </tab>
-            <tab heading="Create a new folder" [active]="false">
+            <tab [active]="false">
+                        <ng-template tabHeading>
+                            <span>Create a new folder</span>&ngsp; <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+                        </ng-template>
                 <create-item itemType="folder" itemLocation="{{ item.path }}"></create-item>
             </tab>
         </tabset>
