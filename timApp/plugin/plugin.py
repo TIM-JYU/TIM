@@ -248,10 +248,14 @@ class Plugin:
         par: DocParagraph, view_ctx: ViewContext, user: UserContext | None = None
     ):
         doc = par.doc
-        if not par.is_plugin():
+        original_par = par
+        is_translation = par.is_translation()
+        if is_translation:
+            original_par = par.get_referenced_pars()[0]
+        if not original_par.is_plugin():
             raise PluginException(f"The paragraph {par.get_id()} is not a plugin.")
-        task_id_name = par.get_attr("taskId")
-        plugin_name = par.get_attr("plugin")
+        task_id_name = original_par.get_attr("taskId")
+        plugin_name = original_par.get_attr("plugin")
         rnd_seed = get_simple_hash_from_par_and_user(
             par, user
         )  # TODO: RND_SEED get users rnd_seed for this plugin
@@ -262,6 +266,7 @@ class Plugin:
             par,
             global_attrs=doc.get_settings().global_plugin_attrs(),
             macroinfo=doc.get_settings().get_macroinfo(view_ctx, user),
+            use_exported=is_translation,
         )
         p = Plugin(
             TaskId.parse(task_id_name, require_doc_id=False, allow_block_hint=False)
@@ -376,9 +381,10 @@ class Plugin:
         attrs = {}
         if self.par:
             attrs = self.par.attrs
-        if self.task_id:
-            attrs["task_id"] = self.task_id.task_name
-        attrs["plugin"] = self.type
+        if not self.par or not self.par.is_translation():
+            if self.task_id:
+                attrs["task_id"] = self.task_id.task_name
+            attrs["plugin"] = self.type
 
         return DocParagraph.create(
             self.par.doc, par_id=self.par.get_id(), md=text, attrs=attrs
@@ -745,6 +751,7 @@ def parse_plugin_values_macros(
     global_attrs: dict[str, str],
     macros: dict[str, object],
     env: TimSandboxedEnvironment,
+    use_exported=False,
 ) -> dict:
     """
     Parses the markup values for a plugin paragraph, taking document attributes and macros into account.
@@ -755,12 +762,14 @@ def parse_plugin_values_macros(
     :param env: macro environment
     :return: The parsed markup values.
     """
-    yaml_str = expand_macros_for_plugin(par, macros, env)
+    yaml_str = expand_macros_for_plugin(par, macros, env, use_exported)
     return load_markup_from_yaml(yaml_str, global_attrs, par.get_attr("plugin"))
 
 
-def expand_macros_for_plugin(par: DocParagraph, macros, env: TimSandboxedEnvironment):
-    par_md = par.get_markdown()
+def expand_macros_for_plugin(
+    par: DocParagraph, macros, env: TimSandboxedEnvironment, use_exported=False
+):
+    par_md = par.get_exported_markdown() if use_exported else par.get_markdown()
     rnd_macros = par.get_rands()
     if rnd_macros:
         macros = {**macros, **rnd_macros}
@@ -844,9 +853,10 @@ def parse_plugin_values(
     par: DocParagraph,
     global_attrs: dict[str, str],
     macroinfo: MacroInfo,
+    use_exported=False,
 ) -> dict:
     return parse_plugin_values_macros(
-        par, global_attrs, macroinfo.get_macros(), macroinfo.jinja_env
+        par, global_attrs, macroinfo.get_macros(), macroinfo.jinja_env, use_exported
     )
 
 
@@ -1123,10 +1133,10 @@ def find_task_ids(
                     continue
                 task_ids.append(tid)
         elif block.get_attr("defaultplugin"):
-            inline_plugin_finder = inline_plugin_finder or InlinePluginFinder(
+            plugin_finder = inline_plugin_finder or InlinePluginFinder(
                 block.doc.get_settings().get_macroinfo(view_ctx, user_ctx)
             )
-            for task_id, _, _, _ in inline_plugin_finder.find_inline_plugins(block):
+            for task_id, _, _, _ in plugin_finder.find_inline_plugins(block):
                 try:
                     task_id = task_id.validate()
                 except PluginException:

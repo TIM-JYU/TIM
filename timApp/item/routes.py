@@ -35,6 +35,7 @@ from timApp.auth.accesshelper import (
     verify_route_access,
     verify_admin,
 )
+from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.login import log_in_as_anonymous
@@ -83,6 +84,7 @@ from timApp.folder.folder_view import try_return_folder
 from timApp.item.block import BlockType, Block
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.item.item import Item
+from timApp.item.manage import do_copy_folder, CopyOptions
 from timApp.item.partitioning import (
     get_piece_size_from_cookie,
     decide_view_range,
@@ -126,7 +128,7 @@ from timApp.user.usergroup import (
     UserGroupWithSisuInfo,
 )
 from timApp.user.users import get_rights_holders_all
-from timApp.user.userutils import DeletedUserException
+from timApp.user.userutils import DeletedUserException, grant_access
 from timApp.util.flask.requesthelper import (
     view_ctx_with_urlmacros,
     RouteException,
@@ -1316,6 +1318,7 @@ def create_item_route(
     copy: int | None = None,
     template: str | None = None,
     use_template: bool = True,
+    source: str | None = None,
 ):
     if (
         not app.config["ALLOW_CREATE_DOCUMENTS"]
@@ -1331,6 +1334,7 @@ def create_item_route(
             copy,
             template,
             use_template,
+            source,
         )
     )
 
@@ -1366,11 +1370,32 @@ def create_item_direct(
     copy: int | None = None,
     template: str | None = None,
     use_template: bool = True,
+    source: str | None = None,
 ):
     cite_id, copy_id, template_name = cite, copy, template
 
     if use_template is None:
         use_template = True
+
+    if item_type == "course" and source:
+        prev = Item.find_by_path(item_path)
+        if prev:
+            raise RouteException(
+                'Course "' + item_title + '" already exists at ' + item_path
+            )
+        folder = Folder.find_by_path(source)
+        if folder is None:
+            raise RouteException(f"Source folder {source} not found")
+        df, errors = do_copy_folder(
+            folder.id, item_path, None, CopyOptions(apply_default_rights=True)
+        )
+        if errors:
+            raise RouteException(errors)
+        df.title = item_title
+        # TODO: Anonymous access granted for current use case, in future this should be removed
+        grant_access(UserGroup.get_anonymous_group(), df, AccessType.view)
+        db.session.commit()
+        return df
 
     if cite_id:
         item = create_citation_doc(cite_id, item_path, item_title)

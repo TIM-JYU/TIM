@@ -23,7 +23,12 @@ import type {
 } from "../servertypes";
 import {JsrunnerAnswer} from "../servertypes";
 import {ivmRequest} from "../util/request";
-import type {IToolsResult, NewUserData, ToolsBase} from "./tools";
+import type {
+    IToolsResult,
+    NewUserData,
+    SendGradesToSisuData,
+    ToolsBase,
+} from "./tools";
 import {GTools, numberLines, Tools} from "./tools";
 
 console.log("answer");
@@ -70,6 +75,7 @@ type RunnerResult =
           itemRightActions: IItemRightActionData[];
           newUsers: NewUserData[];
           mailToSend: IMailSendData[];
+          sendSisuAssessments?: SendGradesToSisuData;
       }
     | {output: string; fatalError: IError; errorprg: string};
 
@@ -219,6 +225,7 @@ function runner(d: IRunnerData): RunnerResult {
             itemRightActions: gtools.itemRightActions,
             newUsers: gtools.newUsers,
             mailToSend: gtools.mailToSend,
+            sendSisuAssessments: gtools.sendToSisu,
         };
     } catch (e) {
         const err = e as Error;
@@ -341,6 +348,7 @@ router.put("/", async (req, res, next) => {
                 itemRightActions: result.itemRightActions,
                 newUsers: result.newUsers,
                 mailToSend: result.mailToSend,
+                sendSisuAssessments: result.sendSisuAssessments,
                 web: {
                     output: result.output,
                     errors: result.errors,

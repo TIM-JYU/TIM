@@ -974,6 +974,7 @@ def post_answer_impl(
             pr_data=pr_data,
             overwrite_opts=overwrite_opts,
             view_ctx=view_ctx,
+            saver_plugin=plugin,
         )
 
         # TODO: Could report the result to other plugins too.

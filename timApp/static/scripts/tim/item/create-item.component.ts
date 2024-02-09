@@ -11,7 +11,7 @@ import {NgModel} from "@angular/forms";
 @Component({
     selector: "create-item",
     template: `
-        <form name="itemForm" #f="ngForm">
+        <form name="itemForm" #form #f="ngForm">
             <tim-alert severity="warning" *ngIf="tagsWithExpirations">
                 The source document has tags with expiration dates which may need to be updated manually.
             </tim-alert>
@@ -19,15 +19,15 @@ import {NgModel} from "@angular/forms";
                 <p>Only document contents will be copied. No history or rights will be preserved.</p>
                 <p>If you need to have the same document to appear in multiple folders, define multiple short names instead.</p>
             </div>
-            <div class="form-group" timErrorState>
+            <div class="form-group title" timErrorState>
                 <label>
-                    Title:
+                    {{itemType | titlecase}} title:
                     <input class="form-control" required [(ngModel)]="itemTitle" name="itemTitle"
                            type="text" (input)="titleChanged()">
                 </label>
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group" timErrorState>
+            <div class="form-group shortname" timErrorState>
                 <label>
                     Short name:
                     <input [disabled]="force" class="form-control" timShortName required
@@ -46,9 +46,9 @@ import {NgModel} from "@angular/forms";
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group" timErrorState>
+            <div class="form-group location" timErrorState>
                 <label>
-                    Location: <input size="50" [disabled]="force" class="form-control" type="text"
+                    {{itemType | titlecase}} location: <input size="50" [disabled]="force" class="form-control" type="text"
                                      timLocation [(ngModel)]="itemLocation" name="itemLocation"
                                      (ngModelChange)="checkCopyValidity()">
                 </label>
@@ -57,7 +57,7 @@ import {NgModel} from "@angular/forms";
             <tim-alert *ngFor="let alert of alerts" [severity]="alert.type">
                 {{ alert.msg }}
             </tim-alert>
-            <button class="timButton" [disabled]="f.invalid || creating || !canCopy" (click)="createItem()" type="button">
+            <button class="timButton" *ngIf="showButton" [disabled]="f.invalid || creating || !canCopy" (click)="createItem()" type="button">
                 Create {{ itemType }}
             </button>
             <span *ngIf="creating">Creating...</span>
@@ -72,12 +72,18 @@ export class CreateItemComponent implements OnInit {
     @Input() itemName?: string;
     alerts: Array<{type: AlertSeverity; msg: string}> = [];
     @Input() itemType!: string;
-    @Input() params?: {template?: string; copy?: number};
+    @Input() params?: {
+        template?: string;
+        copy?: number;
+        source?: string;
+    };
     @Input() force = false;
     creating = false;
     @Input() private template?: string;
     @ViewChild("f", {static: true}) form!: NgModel;
     tagsWithExpirations = false;
+    @Input() sourceLocation?: string;
+    @Input() showButton = true;
 
     canCopy: boolean = true;
     private originalLocation?: string;

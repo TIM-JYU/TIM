@@ -9,6 +9,7 @@ import type {
     ItemRightActionT,
     IToolsResult,
     NewUserData,
+    SendGradesToSisuData,
 } from "../server/routes/tools";
 
 export {IncludeUsersOption} from "tim/plugin/attributes";
@@ -41,6 +42,8 @@ export const JsrunnerMarkup = t.intersection([
         confirmText: t.string,
         nextRunner: t.string,
         timeZoneDiff: t.number,
+        destCourse: t.string,
+        destCourseName: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -111,6 +114,7 @@ interface AnswerReturnSuccess {
     itemRightActions: IItemRightActionData[];
     newUsers: NewUserData[];
     mailToSend: IMailSendData[];
+    sendSisuAssessments?: SendGradesToSisuData;
 }
 
 interface AnswerReturnError {

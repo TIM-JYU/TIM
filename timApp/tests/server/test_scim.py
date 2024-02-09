@@ -15,6 +15,7 @@ from timApp.notification.send_email import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.sisu.sisu import call_sisu_assessments
+from timApp.tests.server.test_jsrunner import JsRunnerTestBase
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
@@ -1883,11 +1884,8 @@ class SendGradeTestBase(TimRouteTest):
             )
             return
         with responses.RequestsMock() as m:
-            m.add(
-                "POST",
-                f'{app.config["SISU_ASSESSMENTS_URL"]}{grade_params["destCourse"]}',
-                body=json.dumps(mock_sisu_response),
-                status=mock_sisu_status,
+            self.add_sisu_assessments_mock(
+                m, grade_params, mock_sisu_response, mock_sisu_status
             )
             self.json_post(
                 "/sisu/sendGrades",
@@ -1895,6 +1893,20 @@ class SendGradeTestBase(TimRouteTest):
                 expect_content=expect_content,
                 expect_status=expect_status,
             )
+
+    def add_sisu_assessments_mock(
+        self,
+        m: responses.RequestsMock,
+        grade_params: dict[str, Any],
+        mock_sisu_response: dict[str, Any],
+        mock_sisu_status=200,
+    ):
+        m.add(
+            "POST",
+            f'{app.config["SISU_ASSESSMENTS_URL"]}{grade_params["destCourse"]}',
+            body=json.dumps(mock_sisu_response),
+            status=mock_sisu_status,
+        )
 
 
 class StrCreditTest(SendGradeTestBase):
@@ -2600,3 +2612,117 @@ class SendGradeTest(SendGradeTestBase):
             mock_sisu_status=207,
             expect_status=200,
         )
+
+
+class SendGradeJSRunnerTest(SendGradeTestBase, JsRunnerTestBase):
+    def test_send_grade_jsrunner(self):
+        sent_mails_in_testing.clear()
+        self.login_test1()
+        d = self.create_jsrun(
+            """
+groups:
+  - studentgroup123
+fields:
+  - grade
+  - credit
+  - completionDate
+destCourse: "jy-CUR-1234"
+destCourseName: "Test course"
+program: |!!
+// These fields must be set for the user in order for sendGradesToSisu to work.
+tools.setString("grade", "5");
+tools.setString("credit", "5");
+tools.setString("completionDate", "2024-02-02");
+!!
+postprogram: |!!
+gtools.sendGradesToSisu({
+  users: [ "testuser2" ],
+  sendMailTo: [ "testuser1" ]
+});
+!!
+"""
+        )
+
+        d.document.add_text(
+            """
+#- { defaultplugin="textfield" }
+
+{#grade #} Grade  
+{#credit #} Credit
+{#completionDate #} Completion date        
+"""
+        )
+
+        ug_d = self.create_doc()
+        ug = UserGroup.create("studentgroup123")
+        ug.admin_doc = ug_d.block
+        self.test_user_2.add_to_group(ug, None, False)
+        db.session.commit()
+
+        t = UserGroup.get_teachers_group()
+        self.test_user_1.add_to_group(t, None, False)
+        db.session.commit()
+
+        self.do_jsrun(
+            d,
+            expect_status=403,
+            expect_content={
+                "error": "You are neither a responsible teacher nor an administrative person "
+                "of the course jy-CUR-1234."
+            },
+        )
+
+        ug = UserGroup.create("course1234")
+        ug.external_id = ScimUserGroup(external_id="jy-CUR-1234-responsible-teachers")
+        ug.users.append(self.test_user_1)
+        db.session.commit()
+
+        def add_sisu_ok_mock(m: responses.RequestsMock):
+            self.add_sisu_assessments_mock(
+                m, {"destCourse": "jy-CUR-1234"}, {"body": {"assessments": {}}}
+            )
+
+        def add_sisu_err_mock(m: responses.RequestsMock):
+            self.add_sisu_assessments_mock(
+                m,
+                {"destCourse": "jy-CUR-1234"},
+                {
+                    "body": {
+                        "assessments": {
+                            0: {
+                                "userName": {
+                                    "code": 40002,
+                                    "reason": "Ilmoittautumista toteutukseen ei löytynyt",
+                                }
+                            }
+                        }
+                    }
+                },
+                mock_sisu_status=207,
+            )
+
+        self.do_jsrun(
+            d,
+            expect_status=200,
+            expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
+            init_mock=add_sisu_ok_mock,
+        )
+
+        self.assertEqual(len(sent_mails_in_testing), 1)
+        msg = sent_mails_in_testing[0]
+        self.assertIn(
+            'The course "Test course" has 1 new grades sent to Sisu.', msg["msg"]
+        )
+
+        sent_mails_in_testing.clear()
+
+        self.do_jsrun(
+            d,
+            expect_status=200,
+            expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
+            init_mock=add_sisu_err_mock,
+        )
+
+        self.assertEqual(len(sent_mails_in_testing), 1)
+        msg = sent_mails_in_testing[0]
+        self.assertIn("Grades could not be sent for 1 students", msg["msg"])
