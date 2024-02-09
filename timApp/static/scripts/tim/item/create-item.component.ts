@@ -21,7 +21,7 @@ import {NgModel} from "@angular/forms";
             </div>
             <div class="form-group title" timErrorState>
                 <label>
-                    Title:
+                    {{itemType | titlecase}} title:
                     <input class="form-control" required [(ngModel)]="itemTitle" name="itemTitle"
                            type="text" (input)="titleChanged()">
                 </label>
@@ -48,7 +48,7 @@ import {NgModel} from "@angular/forms";
             </div>
             <div class="form-group location" timErrorState>
                 <label>
-                    Location: <input size="50" [disabled]="force" class="form-control" type="text"
+                    {{itemType | titlecase}} location: <input size="50" [disabled]="force" class="form-control" type="text"
                                      timLocation [(ngModel)]="itemLocation" name="itemLocation"
                                      (ngModelChange)="checkCopyValidity()">
                 </label>
