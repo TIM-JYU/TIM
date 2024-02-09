@@ -42,6 +42,10 @@ class MacroInfo:
     def with_field_macros(self) -> Self:
         doc = self.doc
         if doc is not None:
+            orig_doc = doc.get_source_document()
+            # Lookup fields in relation to original doc, since original doc has the answers
+            if orig_doc:
+                doc = orig_doc
             docinfo = doc.get_docinfo()
             fieldmacros = doc.get_settings().fieldmacros()
             if fieldmacros and self.user_ctx:
