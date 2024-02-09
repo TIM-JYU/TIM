@@ -103,6 +103,7 @@ class DocSettingTypes:
     lazyAnswers: bool
     uiLangOverride: str
     allowedDocsettingMacroAttributes: list[str] | str
+    need_view_for_answers: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -689,6 +690,9 @@ class DocSettings:
 
     def allowed_docsetting_macro_attributes(self) -> list[str] | str:
         return self.get_setting_or_default("allowedDocsettingMacroAttributes", [])
+
+    def need_view_for_answers(self) -> bool:
+        return self.get_setting_or_default("need_view_for_answers", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
