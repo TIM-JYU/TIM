@@ -68,18 +68,21 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
         <tabset *ngIf="canCreate">
             <tab [active]="false">
                         <ng-template tabHeading>
-                            <span>Create a new document</span>&ngsp;  <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                            <span>Create a new document</span>
+                            <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
                         </ng-template>
                 <create-item itemType="document" itemLocation="{{ item.path }}"></create-item>
             </tab>
             <tab [active]="false">
                         <ng-template tabHeading>
-                            <span>Create a new folder</span>&ngsp; <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+                            <span>Create a new folder</span>
+                            <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
                         </ng-template>
                 <create-item itemType="folder" itemLocation="{{ item.path }}"></create-item>
             </tab>
         </tabset>
     `,
+    styleUrls: ["directory-list.component.scss"],
 })
 export class DirectoryListComponent {
     itemList: DocumentOrFolder[];
