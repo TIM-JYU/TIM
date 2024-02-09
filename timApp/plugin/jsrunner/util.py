@@ -45,6 +45,10 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.user.userutils import grant_access, expire_access
 from timApp.util.flask.requesthelper import RouteException, NotExist
+from timApp.util.get_fields import (
+    ALL_ANSWERED_WILDCARD,
+    MembershipFilter,
+)
 from timApp.util.utils import is_valid_email, approximate_real_name
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.utils import parse_bool
@@ -171,6 +175,13 @@ class MailToSendData(TypedDict):
     body: str
 
 
+class SendAssessmentsToSisuData(TypedDict):
+    partial: bool
+    sendMailTo: list[str]
+    users: list[str]
+    destCourse: str
+
+
 class FieldSaveRequest(TypedDict, total=False):
     savedata: list[FieldSaveUserEntry] | None
     ignoreMissing: bool | None
@@ -181,6 +192,7 @@ class FieldSaveRequest(TypedDict, total=False):
     newUsers: dict | None
     itemRightActions: dict | None
     mailToSend: list[MailToSendData] | None
+    sendSisuAssessments: SendAssessmentsToSisuData | None
 
 
 @dataclass(slots=True)
@@ -205,6 +217,7 @@ def save_fields(
     overwrite_opts: AllowedOverwriteOptions | None = None,
     pr_data: str | None = None,
     view_ctx: ViewContext | None = None,
+    saver_plugin: Plugin | None = None,
 ) -> FieldSaveResult:
     overwrite_opts = overwrite_opts or AllowedOverwriteOptions()
     save_obj = jsonresp.get("savedata")
@@ -213,6 +226,11 @@ def save_fields(
     ignore_fields: dict[str, bool] = {}
     groups = jsonresp.get("groups")
     view_ctx = view_ctx or default_view_ctx
+
+    # For now, we only support sending assessments to Sisu from a proper plugin (e.g. a JSRunner plugin)
+    sisu_assessments = jsonresp.get("sendSisuAssessments")
+    if sisu_assessments and current_doc:
+        _verify_sisu_assessments(curr_user, current_doc, saver_plugin, sisu_assessments)
 
     mail_to_send = jsonresp.get("mailToSend")
     if mail_to_send:
@@ -538,7 +556,125 @@ def save_fields(
             if task_id.is_global:
                 for uid in user_map.keys():
                     answer_map[uid][ans.task_id] = ans
+
+    if sisu_assessments and current_doc:
+        _handle_send_sisu_assessments(
+            sisu_assessments, curr_user, current_doc, saver_plugin
+        )
     return saveresult
+
+
+def _verify_sisu_assessments(
+    curr_user: User,
+    current_doc: DocInfo,
+    plugin: Plugin | None,
+    sisu_assessments: SendAssessmentsToSisuData,
+) -> None:
+    from timApp.sisu.sisu import get_sisu_assessments
+
+    jsrunner_groups: list[str] | None = (
+        plugin.values.get("groups", None) if plugin else None
+    )
+    if jsrunner_groups:
+        jsrunner_groups = [g for g in jsrunner_groups if g != ALL_ANSWERED_WILDCARD]
+    if not jsrunner_groups:
+        jsrunner_groups = None  # Let deduce from the current document
+    jsrunner_users: list[str] | None = sisu_assessments["users"]
+    if not jsrunner_users:
+        jsrunner_users = None
+    # We try to get sisu assessments to make sure the user can actually send them
+    _ = get_sisu_assessments(
+        sisu_assessments["destCourse"],
+        curr_user,
+        current_doc,
+        jsrunner_groups,
+        jsrunner_users,
+        membership_filter=MembershipFilter.Current,
+    )
+
+
+def _handle_send_sisu_assessments(
+    sisu_assessments: SendAssessmentsToSisuData,
+    curr_user: User,
+    current_doc: DocInfo,
+    plugin: Plugin | None,
+) -> None:
+    from timApp.sisu.sisu import send_grades_to_sisu, DefaultCompletionDate
+
+    jsrunner_groups: list[str] | None = (
+        plugin.values.get("groups", None) if plugin else None
+    )
+    if jsrunner_groups:
+        jsrunner_groups = [g for g in jsrunner_groups if g != ALL_ANSWERED_WILDCARD]
+    if not jsrunner_groups:
+        jsrunner_groups = None  # Let deduce from the current document
+    jsrunner_users: list[str] | None = sisu_assessments["users"]
+    if not jsrunner_users:
+        jsrunner_users = None
+
+    result = send_grades_to_sisu(
+        sisu_assessments["destCourse"],
+        curr_user,
+        current_doc,
+        sisu_assessments["partial"],
+        False,
+        None,
+        jsrunner_users,
+        jsrunner_groups,
+        membership_filter=MembershipFilter.Current,
+        default_completion_date=DefaultCompletionDate.FromField,
+    )
+
+    sent_count = len(result.sent_assessments)
+    err_users_count = len({e.assessment.user.id for e in result.assessment_errors})
+
+    send_emails = set()
+    for m in sisu_assessments["sendMailTo"]:
+        u = User.get_by_name(m)
+        email = m
+        if u:
+            email = u.email
+        if is_valid_email(email):
+            send_emails.add(email)
+
+    if send_emails and (sent_count or err_users_count):
+        course_name = plugin.values.get("destCourseName", None) if plugin else None
+        if not course_name:
+            course_name = sisu_assessments["destCourse"]
+        # TODO: Allow to edit this
+        multi_send_email(
+            ";".join(send_emails),
+            f"TIM: {sent_count} arvosanaa kurssille '{course_name}' lähetetty Sisuun / {sent_count} grades for course '{course_name}' sent to Sisu",
+            f"""
+Hei,
+
+(message in English below)
+
+Kurssilla "{course_name}" on {sent_count} uutta arvosanaa, jotka on lähetetty Sisuun.
+
+Arvosanat tulee vahvistaa Sisussa ennen kuin ne näkyvät opiskelijoille. 
+Vahvista arvosanat osoitteessa:
+
+https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{sisu_assessments['destCourse']}/ng-evaluation/confirmation
+
+{f'''
+Arvosanoja ei voitu viedä {err_users_count} opiskelijalle virheiden takia. Tarkista heidän tiedot TIMissa.
+''' if err_users_count else ""}
+***
+
+The course "{course_name}" has {sent_count} new grades sent to Sisu.
+
+The grades need to be confirmed in Sisu before they are visible to students.
+Confirm the grades at:
+
+https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{sisu_assessments['destCourse']}/ng-evaluation/confirmation
+
+{f'''
+Grades could not be sent for {err_users_count} students due to errors. Check their details on TIM.
+''' if err_users_count else ""}
+""".strip(),
+            with_signature=True,
+        )
 
 
 def _create_new_users(

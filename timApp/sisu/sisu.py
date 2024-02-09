@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from enum import Enum
 from json import JSONDecodeError
 from textwrap import dedent
-from typing import Any, Generator
+from typing import Any, Generator, TypedDict
 
 import requests
 from flask import Blueprint, current_app, request, Response
@@ -27,6 +28,7 @@ from timApp.item.validation import (
     validate_item,
 )
 from timApp.notification.send_email import send_email
+from timApp.plugin.jsrunner.util import FieldSaveUserEntry
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.sisu.parse_display_name import (
@@ -570,6 +572,41 @@ class AssessmentError:
     assessment: CandidateAssessment
 
 
+class DefaultCompletionDate(Enum):
+    """
+    The default completion date to use if the completion date is not set when sending grades to Sisu.
+    """
+
+    Now = 1
+    """
+    Use the current date as the completion date.
+    """
+    FromField = 2
+    """
+    Use the completion date from the document's completionDate field.
+    """
+
+
+@dataclass
+class SendGradesResult:
+    """
+    Result of saved grades.
+    """
+
+    sent_assessments: list[CandidateAssessment]
+    """
+    Assessments that were successfully sent to Sisu.
+    """
+    assessment_errors: list[AssessmentError]
+    """
+    Errors that occurred when sending the assessments to Sisu.
+    """
+    default_selection: list[int]
+    """
+    The user IDs to mark as successfully sent if the grades were saved successfully.
+    """
+
+
 def send_grades_to_sisu(
     sisu_id: str,
     teacher: User,
@@ -580,14 +617,34 @@ def send_grades_to_sisu(
     filter_users: list[str] | None,
     groups: list[str] | None,
     membership_filter: MembershipFilter,
-) -> dict[str, Any]:
+    default_completion_date: DefaultCompletionDate = DefaultCompletionDate.Now,
+) -> SendGradesResult:
+    """
+    Send student grades to Sisu via the S2S Assessments API.
+
+    :param sisu_id: Sisu course implementation ID to send the grades to.
+    :param teacher: The teacher sending the grades.
+    :param doc: Document that contains the fields with grades and credits.
+    :param partial: Whether to send the grades partially (i.e. if some of the grades are invalid, send the valid ones).
+    :param dry_run: Whether to perform a dry run (i.e. to just run validation checks on S2S API side).
+    :param completion_date: The date when the grades were completed.
+    :param filter_users: The users to send the grades for. If None, send for all users.
+    :param groups: The groups to send the grades for. If None, the group will be fetched from the document settings.
+    :param membership_filter: The membership filter to use when fetching the users.
+    :param default_completion_date: The default completion date to use if the completion date is not set in the document.
+    :return: Result of saved grades.
+    """
     assessments = get_sisu_assessments(
         sisu_id, teacher, doc, groups, filter_users, membership_filter
     )
     if not completion_date:
-        completion_date = get_current_time().date()
+        completion_date = (
+            get_current_time().date()
+            if default_completion_date == DefaultCompletionDate.Now
+            else None
+        )
     users_to_update = {a.user.id for a in assessments if a.is_passing_grade}
-    completion_date_iso = completion_date.isoformat()
+    completion_date_iso = completion_date.isoformat() if completion_date else None
     validation_errors = []
     try:
         AssessmentSchema(many=True).load(
@@ -619,11 +676,11 @@ def send_grades_to_sisu(
             for i, a in msgs.items()
         ]
         if not partial:
-            return {
-                "sent_assessments": [],
-                "default_selection": [],
-                "assessment_errors": validation_errors,
-            }
+            return SendGradesResult(
+                sent_assessments=[],
+                default_selection=[],
+                assessment_errors=validation_errors,
+            )
         invalid_assessments_indices = {i for i in msgs.keys()}
         assessments = [
             a for i, a in enumerate(assessments) if i not in invalid_assessments_indices
@@ -662,7 +719,11 @@ def send_grades_to_sisu(
     ]
     if not dry_run and r.status_code < 400:
         for a in ok_assessments:
-            a.completionDate = completion_date_iso
+            a.completionDate = (
+                completion_date_iso
+                if default_completion_date == DefaultCompletionDate.Now
+                else a.completionDate
+            )
             a.sentGrade = a.gradeId
             a.sentCredit = a.completionCredits
 
@@ -671,10 +732,10 @@ def send_grades_to_sisu(
         save_fields(
             {
                 "savedata": [
-                    {
-                        "fields": get_assessment_fields_to_save(doc, a),
-                        "user": a.user.id,
-                    }
+                    FieldSaveUserEntry(
+                        fields=get_assessment_fields_to_save(doc, a),
+                        user=a.user.id,
+                    )
                     for a in ok_assessments
                 ],
                 "allowMissing": True,
@@ -693,11 +754,11 @@ def send_grades_to_sisu(
     ]
     all_errors = errs + validation_errors
     error_users = {a.assessment.user.id for a in all_errors}
-    return {
-        "sent_assessments": ok_assessments if r.status_code < 400 else [],
-        "assessment_errors": all_errors,
-        "default_selection": sorted(list(users_to_update - error_users)),
-    }
+    return SendGradesResult(
+        sent_assessments=ok_assessments if r.status_code < 400 else [],
+        assessment_errors=all_errors,
+        default_selection=sorted(list(users_to_update - error_users)),
+    )
 
 
 def list_reasons(codes: AssessmentErrors) -> Generator[str, None, None]:
