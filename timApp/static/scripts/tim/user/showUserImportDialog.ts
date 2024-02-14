@@ -1,6 +1,6 @@
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import type {GroupMember} from "tim/ui/group-management.component";
-import {UserImportDialogParams} from "tim/user/user-import-dialog.component";
+import type {UserImportDialogParams} from "tim/user/user-import-dialog.component";
 
 export async function showUserImportDialog(
     params?: UserImportDialogParams
