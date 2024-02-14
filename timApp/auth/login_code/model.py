@@ -117,6 +117,9 @@ class UserLoginCode(db.Model):
         """
         ulc: UserLoginCode = run_sql(select(UserLoginCode).filter_by(id=_id).limit(1)).scalars().first()  # type: ignore
         ulc.code = UserLoginCode.generate_code()
+        if ulc.code:
+            return True
+        return False
 
     @staticmethod
     def generate_code() -> str:
