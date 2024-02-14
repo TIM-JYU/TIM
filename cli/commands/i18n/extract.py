@@ -21,6 +21,7 @@ def run_pybabel(cmds: List[str]) -> None:
             "--rm",
             "--workdir",
             "/service/timApp",
+            "--no-deps",
             "tim",
             "pybabel",
             *cmds,
