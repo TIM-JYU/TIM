@@ -4464,14 +4464,6 @@
           <context context-type="linenumber">31</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2000929266442515663" datatype="html">
-        <source>Enter the location or leave empty</source>
-        <target state="translated">Anna sijainti tai jätä tyhjäksi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
-          <context context-type="linenumber">51</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3322954622926844982" datatype="html">
         <source> Name should not contain the slash character. </source>
         <target state="translated"> Nimi ei saa sisältää kauttaviivaa. </target>
@@ -8922,7 +8914,7 @@
       </trans-unit>
       <trans-unit id="7131697983125883532" datatype="html">
         <source> Generate login codes </source>
-        <target state="translated"> Luo kirjautumiskoodit</target>
+        <target state="translated"> Luo kirjautumiskoodit </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -8954,6 +8946,306 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
           <context context-type="linenumber">120,121</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5610292640913590235" datatype="html">
+        <source>All groups</source>
+        <target state="translated">Kaikki ryhmät</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2893868725430878365" datatype="html">
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                (change)=&quot;toggleAllGroupsVisible()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span style=&quot;padding-left: 2em;&quot;>"/>List all existing groups<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                (change)=&quot;toggleAllGroupsVisible()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span style=&quot;padding-left: 2em;&quot;>"/>Luettele kaikki ryhmät<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">120,123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8937443382042319765" datatype="html">
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllGroups&quot; [(ngModel)]=&quot;allGroupsSelected&quot;                                            (change)=&quot;toggleAllGroupsSelected()&quot;/>"/></source>
+        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllGroups&quot; [(ngModel)]=&quot;allGroupsSelected&quot;                                            (change)=&quot;toggleAllGroupsSelected()&quot;/>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">138,140</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">215,218</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2041629809382689328" datatype="html">
+        <source>Group name</source>
+        <target state="translated">Ryhmän nimi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">140,141</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5394139990516849326" datatype="html">
+        <source>Group document</source>
+        <target state="translated">Ryhmädokumentti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">141,142</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3304972143698843178" datatype="html">
+        <source>Event</source>
+        <target state="translated">Tapahtuma</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">143,144</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2507348948753734044" datatype="html">
+        <source>Timeslot</source>
+        <target state="translated">Aikaväli</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">144,145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2486858558607450865" datatype="html">
+        <source>Copy selected group </source>
+        <target state="translated">Kopioi valittu ryhmä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">172,173</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7671126537692003077" datatype="html">
+        <source>Delete selected groups </source>
+        <target state="translated">Poista valittu ryhmä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">175,176</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1050618851807049316" datatype="html">
+        <source>Generate login codes </source>
+        <target state="translated">Luo kirjautumiskoodit </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">178,179</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3432046743330103045" datatype="html">
+        <source>Print login codes </source>
+        <target state="translated">Tulosta kirjautumiskoodit </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">181,182</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4788666697426129732" datatype="html">
+        <source>Group members</source>
+        <target state="translated">Ryhmän jäsenet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">201</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="187187500641108332" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="ngs.extraInfoTitle ?? &quot;Extra info&quot;}}"/></source>
+        <target state="translated">{ngs.extraInfoTitle ?? "Lisätietoja"}}}</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">221,223</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">83,84</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
+          <context context-type="linenumber">65,66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1919972235845496858" datatype="html">
+        <source>Login code</source>
+        <target state="translated">Kirjautumiskoodi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">224,225</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6955490026273536125" datatype="html">
+        <source> Add new student </source>
+        <target state="translated"> Lisää uusi oppilas </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">249</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="952211910163814535" datatype="html">
+        <source> Import students from Wilma </source>
+        <target state="translated"> Tuo oppilaat Wilmasta </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">252</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4577471393150449596" datatype="html">
+        <source> Copy students to group </source>
+        <target state="translated"> Kopioi oppilaat ryhmään </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">259</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5381230309143012956" datatype="html">
+        <source> Remove selected </source>
+        <target state="translated"> Poista valittu </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">271</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7159138444614684422" datatype="html">
+        <source>Delete groups</source>
+        <target state="translated">Poista ryhmät</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">603</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8747608565346608086" datatype="html">
+        <source>Are you certain you wish to delete the following groups?
+This action cannot be undone!
+
+Groups to be deleted:
+</source>
+        <target state="translated">Haluatko varmasti poistaa seuraavat ryhmät?
+Tätä toimintoa ei voi peruuttaa!
+
+Poistettavat ryhmät:
+</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">604</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1397367236021319842" datatype="html">
+        <source> Create user </source>
+        <target state="translated"> Luo käyttäjä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3438398600349705966" datatype="html">
+        <source>Enter a username for the user</source>
+        <target state="translated">Anna käyttäjänimi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">50,51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="321211703452449732" datatype="html">
+        <source>First name(s)</source>
+        <target state="translated">Etunimet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">56,57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7259493919346164577" datatype="html">
+        <source>User's given name, list first and middle names in order</source>
+        <target state="translated">Käyttäjän etunimet, listaa etunimi ja keskimmäinen nimi järjestyksessä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">64,65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2045112409653231798" datatype="html">
+        <source>Surname</source>
+        <target state="translated">Sukunimi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">69,70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1873235879343846913" datatype="html">
+        <source>User's surname</source>
+        <target state="translated">Käyttäjän sukunimi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">78,79</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3797679965749234166" datatype="html">
+        <source>Additional information related to the user, eg. class or group name</source>
+        <target state="translated">Lisätietoa käyttäjästä, esim. luokka tai opetusryhmä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">89,90</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5118443923593151399" datatype="html">
+        <source>User's email</source>
+        <target state="translated">Käyttäjän sähköpostiosoite</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">100,101</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3191375468946657151" datatype="html">
+        <source> First name is required. </source>
+        <target state="translated"> Etunimi on vaadittu tieto. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">108</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8576076545194079732" datatype="html">
+        <source> First name should not contain the slash character. </source>
+        <target state="translated"> Etunimi ei voi sisältää vinoviivaa. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">111</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1382265866050618696" datatype="html">
+        <source> Surname is required. </source>
+        <target state="translated"> Sukunimi on vaadittu tieto. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2813752041544956779" datatype="html">
+        <source> Surname should not contain the slash character. </source>
+        <target state="translated"> Sukunimi ei voi sisältää vinoviivaa. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">120</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6213502996886086330" datatype="html">
+        <source> Import users </source>
+        <target state="translated"> Tuo käyttäjiä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-import-dialog.component.ts</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3749696270508655809" datatype="html">
+        <source><x id="START_TAG_SPAN" ctype="x-span"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> The required format for the input is as follows: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> For example: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span"/> Jos koulussanne käytetään Wilmaa, voit tuoda oppilaita leikkaa-liimaamalla oppilaslistan Wilmasta. <x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Listan pitää noudattaa seuraavaa muotoa: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; luokka &gt; &lt; sukunimi &gt; &lt; etunimi &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> Esimerkki: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Ankka Aku<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Ankka Iines<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Ankka Roope<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> Jokainen oppilas on omalla rivillään rivinvaihdolla erotettuna. Jokainen tietokenttä (luokka, sukunimi, etunimi) erotetaan yhdellä välilyönnillä. <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-import-dialog.component.ts</context>
+          <context context-type="linenumber">31,40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6018067703223481846" datatype="html">
+        <source>Enter student information in the format &lt;class&gt; &lt;last name&gt; &lt;first name&gt;, one student per line.</source>
+        <target state="translated">Syötä oppilaan tiedot muodossa &lt;luokka&gt; &lt;sukunimi&gt; &lt;etunimi&gt;, yksi oppilas per rivi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-import-dialog.component.ts</context>
+          <context context-type="linenumber">47</context>
         </context-group>
       </trans-unit>
     </body>

@@ -5462,14 +5462,6 @@
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2000929266442515663" datatype="html">
-        <source>Enter the location or leave empty</source>
-        <target state="translated">Ange platsen eller lämna tomt</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
-          <context context-type="linenumber">51</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3323415564519831786" datatype="html">
         <source> Name is required. </source>
         <target state="translated"> Namn krävs. </target>
@@ -8813,7 +8805,8 @@
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1720</context>
         </context-group>
-      </trans-unit>      <trans-unit id="1691418146394662141" datatype="html">
+      </trans-unit>
+      <trans-unit id="1691418146394662141" datatype="html">
         <source>Answer number <x id="PH" equiv-text="answerNumber"/> is out of range for task <x id="PH_1" equiv-text="this.taskId.docTask()"/> for user <x id="PH_2" equiv-text="this.user?.name"/>.</source>
         <target state="translated">Svaret nummer <x id="PH" equiv-text="answerNumber"/> är utom räckhåll för uppgift <x id="PH_1" equiv-text="this.taskId.docTask()"/> för användare <x id="PH_2" equiv-text="this.user?.name"/>.</target>
         <context-group purpose="location">
@@ -8823,7 +8816,7 @@
       </trans-unit>
       <trans-unit id="7131697983125883532" datatype="html">
         <source> Generate login codes </source>
-        <target state="translated"> Generera inloggningskoder</target>
+        <target state="translated"> Generera inloggningskoder </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -8855,6 +8848,306 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
           <context context-type="linenumber">120,121</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5610292640913590235" datatype="html">
+        <source>All groups</source>
+        <target state="translated">Alla grupper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2893868725430878365" datatype="html">
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                (change)=&quot;toggleAllGroupsVisible()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span style=&quot;padding-left: 2em;&quot;>"/>List all existing groups<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                (change)=&quot;toggleAllGroupsVisible()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span style=&quot;padding-left: 2em;&quot;>"/>Visa en lista över alla befintliga grupper<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">120,123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8937443382042319765" datatype="html">
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllGroups&quot; [(ngModel)]=&quot;allGroupsSelected&quot;                                            (change)=&quot;toggleAllGroupsSelected()&quot;/>"/></source>
+        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllGroups&quot; [(ngModel)]=&quot;allGroupsSelected&quot;                                            (change)=&quot;toggleAllGroupsSelected()&quot;/>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">138,140</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">215,218</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2041629809382689328" datatype="html">
+        <source>Group name</source>
+        <target state="translated">Gruppens namn</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">140,141</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5394139990516849326" datatype="html">
+        <source>Group document</source>
+        <target state="translated">Gruppdokument</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">141,142</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3304972143698843178" datatype="html">
+        <source>Event</source>
+        <target state="translated">Händelse</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">143,144</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2507348948753734044" datatype="html">
+        <source>Timeslot</source>
+        <target state="translated">Tidsperiod</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">144,145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2486858558607450865" datatype="html">
+        <source>Copy selected group </source>
+        <target state="translated">Kopiera vald grupp </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">172,173</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7671126537692003077" datatype="html">
+        <source>Delete selected groups </source>
+        <target state="translated">Radera valda grupper </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">175,176</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1050618851807049316" datatype="html">
+        <source>Generate login codes </source>
+        <target state="translated">Generera inloggningskoder </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">178,179</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3432046743330103045" datatype="html">
+        <source>Print login codes </source>
+        <target state="translated">Skriv ut inloggningskoder </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">181,182</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4788666697426129732" datatype="html">
+        <source>Group members</source>
+        <target state="translated">Gruppmedlemmar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">201</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="187187500641108332" datatype="html">
+        <source><x id="INTERPOLATION" equiv-text="ngs.extraInfoTitle ?? &quot;Extra info&quot;}}"/></source>
+        <target state="translated">{ngs.extraInfoTitle ?? "Extra information"}}}</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">221,223</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">83,84</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
+          <context context-type="linenumber">65,66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1919972235845496858" datatype="html">
+        <source>Login code</source>
+        <target state="translated">Inloggningskod</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">224,225</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6955490026273536125" datatype="html">
+        <source> Add new student </source>
+        <target state="translated"> Lägg till ny elev </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">249</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="952211910163814535" datatype="html">
+        <source> Import students from Wilma </source>
+        <target state="translated"> Importera elever från Wilma </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">252</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4577471393150449596" datatype="html">
+        <source> Copy students to group </source>
+        <target state="translated"> Kopiera elever till grupp </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">259</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5381230309143012956" datatype="html">
+        <source> Remove selected </source>
+        <target state="translated"> Ta bort markerade </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">271</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7159138444614684422" datatype="html">
+        <source>Delete groups</source>
+        <target state="translated">Ta bort grupper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">603</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8747608565346608086" datatype="html">
+        <source>Are you certain you wish to delete the following groups?
+This action cannot be undone!
+
+Groups to be deleted:
+</source>
+        <target state="translated">Är du säker att du vill ta bort följände grupper?
+Den här åtgärden kan inte ångras!
+
+Grupper som ska raderas:
+</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
+          <context context-type="linenumber">604</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1397367236021319842" datatype="html">
+        <source> Create user </source>
+        <target state="translated"> Skapa användare </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3438398600349705966" datatype="html">
+        <source>Enter a username for the user</source>
+        <target state="translated">Ange ett användarnamn för användare</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">50,51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="321211703452449732" datatype="html">
+        <source>First name(s)</source>
+        <target state="translated">Förnamn</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">56,57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7259493919346164577" datatype="html">
+        <source>User's given name, list first and middle names in order</source>
+        <target state="translated">Användarens förnamn, lista för- och mellannamn i ordning</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">64,65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2045112409653231798" datatype="html">
+        <source>Surname</source>
+        <target state="translated">Efternamn</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">69,70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1873235879343846913" datatype="html">
+        <source>User's surname</source>
+        <target state="translated">Användarens efternamn</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">78,79</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3797679965749234166" datatype="html">
+        <source>Additional information related to the user, eg. class or group name</source>
+        <target state="translated">Ytterligare information relaterad till användaren, t.ex. klass- eller gruppnamn</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">89,90</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5118443923593151399" datatype="html">
+        <source>User's email</source>
+        <target state="translated">Användarens e-postadress</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">100,101</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3191375468946657151" datatype="html">
+        <source> First name is required. </source>
+        <target state="translated"> Förnamn är obligatoriskt. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">108</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8576076545194079732" datatype="html">
+        <source> First name should not contain the slash character. </source>
+        <target state="translated"> Förnamnet får inte innehålla snedstrecket. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">111</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1382265866050618696" datatype="html">
+        <source> Surname is required. </source>
+        <target state="translated"> Efternamn är obligatoriskt. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2813752041544956779" datatype="html">
+        <source> Surname should not contain the slash character. </source>
+        <target state="translated"> Efternamnet får inte innehålla snedstrecket. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">120</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6213502996886086330" datatype="html">
+        <source> Import users </source>
+        <target state="translated"> Importera användare </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-import-dialog.component.ts</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3749696270508655809" datatype="html">
+        <source><x id="START_TAG_SPAN" ctype="x-span"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> The required format for the input is as follows: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> For example: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span"/> Om din läroanstalt använder Wilma kan du importera studerande genom att kopiera och klistra in elevlistan från Wilma. <x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Det format som krävs för indata är följande: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; klass &gt; &lt; efternamn &gt; &lt; förnamn &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> Till exempel: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Anka Kalle<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Anka Kajsa<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Anka Joakim<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> Deltagarna avgränsas med radbrytningar så att en textrad representerar en deltagare. Varje del av informationen (klass, efternamn, förnamn) avgränsas med ett enda mellanslag. <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-import-dialog.component.ts</context>
+          <context context-type="linenumber">31,40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6018067703223481846" datatype="html">
+        <source>Enter student information in the format &lt;class&gt; &lt;last name&gt; &lt;first name&gt;, one student per line.</source>
+        <target state="translated">Ange elevinformation i formatet &lt;klass&gt; &lt;efternamn&gt; &lt;förnamn&gt;, en elev per rad.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-import-dialog.component.ts</context>
+          <context context-type="linenumber">47</context>
         </context-group>
       </trans-unit>
     </body>
