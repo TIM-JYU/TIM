@@ -273,14 +273,15 @@ app.jinja_env.add_extension("jinja2.ext.i18n")
 
 
 def babel_get_locale():
-    locale = get_locale()
-    if locale == "en-US":
-        return "en"
-    return locale
+    return get_locale().replace("-", "_")
 
 
-babel = Babel(
-    app, locale_selector=babel_get_locale, default_translation_directories="i18n"
+babel = Babel()
+babel.init_app(
+    app,
+    default_locale="en_US",
+    locale_selector=babel_get_locale,
+    default_translation_directories="i18n",
 )
 
 mimetypes.add_type("text/plain", ".scss")
