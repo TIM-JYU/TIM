@@ -151,6 +151,8 @@ export interface IDocumentGlobals extends IItemGlobals {
     requires_login?: boolean;
     showValidAnswersOnly: boolean;
     hideNamesRequested: boolean;
+    useLoginCodes: boolean;
+    loginMessage: string | null;
 }
 
 export enum NotificationType {
