@@ -1831,7 +1831,7 @@ def get_answers(task_id: str, user_id: int) -> Response:
                 if not has_review_access(d, curr_user, None, user):
                     raise AccessDenied()
 
-        elif d.document.get_settings().get("need_view_for_answers", False):
+        elif d.document.get_settings().need_view_for_answers():
             verify_view_access(d)
         user_answers = user.get_answers_for_task(tid.doc_task).all()
         user_context = user_context_with_logged_in(user)

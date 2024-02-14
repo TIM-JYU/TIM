@@ -157,6 +157,7 @@ class GetFieldsAccess(Enum):
     RequireTeacher = 0
     AllowMaybeNonTeacher = 1
     AllowAlwaysNonTeacher = 2
+    RequireView = 3
 
     @staticmethod
     def from_bool(b: bool):
@@ -225,8 +226,12 @@ def get_fields_and_users(
     :param access_option: option specifying who is allowed to access fields (non-teachers, teachers)
     :return: fielddata, aliases, field_names
     """
+    # TODO: Instead of allow_non_teacher flag, access_option should be used directly
     allow_non_teacher = False
-    if access_option == GetFieldsAccess.AllowAlwaysNonTeacher:
+    if (
+        access_option == GetFieldsAccess.AllowAlwaysNonTeacher
+        or access_option == GetFieldsAccess.RequireView
+    ):
         allow_non_teacher = True
     elif access_option == GetFieldsAccess.AllowMaybeNonTeacher:
         allow_non_teacher = not requested_groups.include_all_answered
@@ -309,12 +314,13 @@ def get_fields_and_users(
         if did in doc_map:
             continue
         dib = get_doc_or_abort(did, f"Document {did} not found")
-        if not (current_user.has_teacher_access(dib) or allow_non_teacher):
+        if not allow_non_teacher and not current_user.has_teacher_access(dib):
             raise AccessDenied(f"Missing teacher access for document {dib.id}")
-        elif dib.document.get_settings().get(
-            "need_view_for_answers", False
+        elif (
+            dib.document.get_settings().need_view_for_answers()
+            or access_option == GetFieldsAccess.RequireView
         ) and not current_user.has_view_access(dib):
-            raise AccessDenied("Sorry, you don't have permission to use this resource.")
+            raise AccessDenied(f"Missing view access for document {dib.id}")
         doc_map[did] = dib
 
     cpf = CachedPluginFinder(

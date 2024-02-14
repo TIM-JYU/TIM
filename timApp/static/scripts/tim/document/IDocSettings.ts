@@ -48,7 +48,6 @@ export interface IDocSettings {
     translator?: string;
     sync_answerbrowsers?: boolean;
     answerBrowser?: IAnswerBrowserSettings;
-    loginMessage?: string;
     buttons?: string;
     mdButtons?: ITemplateButton[];
     lazyAnswers?: boolean;

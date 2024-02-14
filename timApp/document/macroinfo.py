@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from html import escape
 from typing import TYPE_CHECKING, Any, Mapping
 
-from flask import session
+from flask import session, has_request_context, flash
 from marshmallow import missing
 from typing_extensions import Self
 
@@ -40,8 +40,14 @@ class MacroInfo:
      (instead of replacing them with empty values)."""
 
     def with_field_macros(self) -> Self:
+        from timApp.auth.accesshelper import AccessDenied
+
         doc = self.doc
         if doc is not None:
+            orig_doc = doc.get_source_document()
+            # Lookup fields in relation to original doc, since original doc has the answers
+            if orig_doc:
+                doc = orig_doc
             docinfo = doc.get_docinfo()
             fieldmacros = doc.get_settings().fieldmacros()
             if fieldmacros and self.user_ctx:
@@ -51,19 +57,24 @@ class MacroInfo:
                     GetFieldsAccess,
                 )
 
-                field_data, _, _, _ = get_fields_and_users(
-                    fieldmacros,
-                    RequestedGroups(
-                        groups=[self.user_ctx.user.get_personal_group()],
-                        include_all_answered=False,
-                    ),
-                    docinfo,
-                    self.user_ctx.logged_user,
-                    self.view_ctx,
-                    autoalias=True,
-                    add_missing_fields=False,
-                    access_option=GetFieldsAccess.AllowAlwaysNonTeacher,
-                )
+                try:
+                    field_data, _, _, _ = get_fields_and_users(
+                        fieldmacros,
+                        RequestedGroups(
+                            groups=[self.user_ctx.user.get_personal_group()],
+                            include_all_answered=False,
+                        ),
+                        docinfo,
+                        self.user_ctx.logged_user,
+                        self.view_ctx,
+                        autoalias=True,
+                        add_missing_fields=False,
+                        access_option=GetFieldsAccess.RequireView,
+                    )
+                except AccessDenied as e:
+                    if has_request_context():
+                        flash(f"Could not fetch fieldmacros because: {e}", "error")
+                    field_data = None
 
                 if field_data:
                     data = field_data[0]
