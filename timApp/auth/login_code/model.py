@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, registry
 from timApp.timdb.sqa import db
 from timApp.timdb.types import datetime_tz
 from timApp.util.utils import get_current_time
+from timApp.timdb.sqa import run_sql
 
 mapper_registry = registry()
 
@@ -82,6 +83,7 @@ class UserLoginCode(db.Model):
         activation_start: datetime_tz | None = None,
         activation_end: datetime_tz | None = None,
         activation_status: ActivationStatus | None = None,
+        create_code: bool = False,
     ) -> "UserLoginCode":
         """Creates a new login code for a user.
 
@@ -91,11 +93,12 @@ class UserLoginCode(db.Model):
                                  ie. earliest time when the code can be used.
         :param activation_end: optional time when the code should expire.
         :param activation_status: activation status of the code.
+        :param create_code: whether to create a code for the user upon creating the UserLoginCode entry.
         :returns: Created UserLoginCode object.
         """
 
         ulc = UserLoginCode(
-            code=UserLoginCode.generate_code(),
+            code=UserLoginCode.generate_code() if create_code else None,
             id=_id,
             extra_info=extra_info,
             activation_start=activation_start,
@@ -104,6 +107,16 @@ class UserLoginCode(db.Model):
         )
         db.session.add(ulc)
         return ulc
+
+    @staticmethod
+    def create_code(_id: int) -> bool:
+        """
+        Creates a login code for a specific user, identified by the user's personal group id.
+        :param _id: personal usergroup id of the target User
+        :return: True if code was generated successfully, otherwise False
+        """
+        ulc: UserLoginCode = run_sql(select(UserLoginCode).filter_by(id=_id).limit(1)).scalars().first()  # type: ignore
+        ulc.code = UserLoginCode.generate_code()
 
     @staticmethod
     def generate_code() -> str:

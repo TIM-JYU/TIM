@@ -29,7 +29,7 @@ export interface UserCreationDialogParams {
     hiddenFields?: string[];
 }
 
-// TODO input validation
+// TODO input validation for conditionally hidden fields
 @Component({
     selector: "tim-user-creation-dialog",
     template: `
@@ -43,11 +43,8 @@ export interface UserCreationDialogParams {
                         <div class="form-group">
                             <label i18n for="username" class="col-sm-2 control-label">Username</label>
                             <div class="col-sm-10">
-                                <input i18n-placeholder type="text" required
+                                <input i18n-placeholder type="text" 
                                        [(ngModel)]="username"
-                                       #ngModelName="ngModel"
-                                       (ngModelChange)="setMessage()"
-                                       pattern="[^/]*"
                                        id="username" name="username"
                                        class="form-control"
                                        placeholder="Enter a username for the user"/>
@@ -59,7 +56,7 @@ export interface UserCreationDialogParams {
                         <label i18n for="given_name" class="col-sm-2 control-label">First name(s)</label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text" required
-                                   [(ngModel)]="given_name" #ngModelName="ngModel"
+                                   [(ngModel)]="given_name" #firstName="ngModel"
                                    pattern="[^/]*"
                                    (ngModelChange)="setMessage()"
                                    id="given_name" name="given_name"
@@ -72,7 +69,7 @@ export interface UserCreationDialogParams {
                         <label i18n for="surname" class="col-sm-2 control-label">Surname</label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
-                                   [(ngModel)]="surname" #ngModelName="ngModel"
+                                   [(ngModel)]="surname" #surName="ngModel"
                                    required
                                    pattern="[^/]*"
                                    (ngModelChange)="setMessage()"
@@ -98,9 +95,6 @@ export interface UserCreationDialogParams {
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
                                    [(ngModel)]="email"
-                                   #ngModelName="ngModel"
-                                   (ngModelChange)="setMessage()"
-                                   pattern="[^/]*"
                                    id="email" name="email"
                                    class="form-control"
                                    placeholder="User's email">
@@ -109,14 +103,24 @@ export interface UserCreationDialogParams {
 
                 </form>
 
-                <tim-alert *ngIf="ngModelName.invalid && ngModelName.dirty" severity="danger">
-                    <ng-container i18n *ngIf="ngModelName.errors?.['required']">
-                        {{ngModelName.model}} is required.
+                <tim-alert *ngIf="firstName.invalid && firstName.dirty" severity="danger">
+                    <ng-container i18n *ngIf="firstName.errors?.['required']">
+                        First name is required.
                     </ng-container>
-                    <ng-container i18n *ngIf="ngModelName.errors?.['pattern']">
-                        {{ngModelName.model}} should not contain the slash character.
+                    <ng-container i18n *ngIf="firstName.errors?.['pattern']">
+                        First name should not contain the slash character.
                     </ng-container>
                 </tim-alert>
+                
+                <tim-alert *ngIf="surName.invalid && surName.dirty" severity="danger">
+                    <ng-container i18n *ngIf="surName.errors?.['required']">
+                        Surname is required.
+                    </ng-container>
+                    <ng-container i18n *ngIf="surName.errors?.['pattern']">
+                        Surname should not contain the slash character.
+                    </ng-container>
+                </tim-alert>
+
                 <tim-alert *ngIf="message" severity="danger">
                     <ng-container *ngIf="message">
                         {{message}}

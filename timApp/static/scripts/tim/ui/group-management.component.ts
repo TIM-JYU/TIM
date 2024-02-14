@@ -17,6 +17,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {showLoginCodeGenerationDialog} from "tim/user/showLoginCodeGenerationDialog";
+import {showUserImportDialog} from "tim/user/showUserImportDialog";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -52,9 +53,28 @@ export interface GroupEvent {
     documents: string[];
 }
 
-export interface UserCode {
-    id: number; // user id
-    code: string;
+/**
+ * Used to define which elements of the Group Management Component are visible.
+ */
+// type ViewOptions = Record<string, Record<string, boolean>>;
+interface ViewOptions {
+    groups: {
+        selectionControls: boolean;
+        name: boolean;
+        document: boolean;
+        fullDocPath: boolean;
+        memberCount: boolean;
+        event: boolean;
+        timeslot: boolean;
+    };
+    members: {
+        selectionControls: boolean;
+        name: boolean;
+        username: boolean;
+        email: boolean;
+        extra_info: boolean;
+        logincode: boolean;
+    };
 }
 
 /**
@@ -114,28 +134,29 @@ export interface UserCode {
                         <table>
                             <thead>
                             <tr class="member-table-row">
-                                <th i18n><input type="checkbox" name="selectAllGroups" [(ngModel)]="allGroupsSelected"
-                                                (change)="toggleAllGroupsSelected()"/></th>
-                                <th i18n>Group name</th>
-                                <th *ngIf="isAdmin()" i18n>Group document</th>
-                                <th i18n>Number of students</th>
-                                <th i18n>Event</th>
-                                <th i18n>Timeslot</th>
+                                <th i18n *ngIf="this.viewOptions.groups.selectionControls">
+                                    <input type="checkbox" name="selectAllGroups" [(ngModel)]="allGroupsSelected"
+                                           (change)="toggleAllGroupsSelected()"/></th>
+                                <th i18n *ngIf="this.viewOptions.groups.name">Group name</th>
+                                <th *ngIf="isAdmin() && this.viewOptions.groups.document" i18n>Group document</th>
+                                <th i18n *ngIf="this.viewOptions.groups.memberCount">Number of students</th>
+                                <th i18n *ngIf="this.viewOptions.groups.event">Event</th>
+                                <th i18n *ngIf="this.viewOptions.groups.timeslot">Timeslot</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr class="member-table-row" *ngFor="let group of groups">
-                                <td>
+                                <td *ngIf="this.viewOptions.groups.selectionControls">
                                     <input type="checkbox" name="toggleGroupSelection_{{group.id}}"
                                            [(ngModel)]="group.selected" (change)="toggleGroupSelection(group)"/>
                                 </td>
-                                <td>{{group.name}}</td>
-                                <td *ngIf="isAdmin()">
-                                    <a href="/view/{{group.path}}">{{group.path!.slice(group.path!.lastIndexOf('/') + 1, group.path!.length)}}</a>
+                                <td *ngIf="this.viewOptions.groups.name">{{group.name}}</td>
+                                <td *ngIf="isAdmin() && this.viewOptions.groups.document">
+                                    <a href="/view/{{group.path}}">{{getGroupDocPath(group)}}</a>
                                 </td>
-                                <td>{{getGroupMemberCount(group)}}</td>
-                                <td> -</td>
-                                <td> -</td>
+                                <td *ngIf="this.viewOptions.groups.memberCount">{{getGroupMemberCount(group)}}</td>
+                                <td *ngIf="this.viewOptions.groups.event"> -</td>
+                                <td *ngIf="this.viewOptions.groups.timeslot"> -</td>
                             </tr>
                             </tbody>
                         </table>
@@ -190,29 +211,31 @@ export interface UserCode {
                                         <table>
                                             <thead>
                                             <tr class="member-table-row">
-                                                <th i18n><input type="checkbox" name="selectAllMembers_{{group.id}}"
-                                                                [(ngModel)]="group.allMembersSelected"
-                                                                (change)="toggleAllMembersSelected(group)"/></th>
-                                                <th i18n>Name</th>
-                                                <th i18n>Username</th>
-                                                <!-- FIXME: This will probably not translate correctly -->
-                                                <th i18n>{{this.settings.extraInfoTitle ?? "Extra info"}}</th>
-                                                <th i18n>Email</th>
-                                                <th i18n>Login code</th>
+                                                <th i18n *ngIf="this.viewOptions.members.selectionControls">
+                                                    <input type="checkbox" name="selectAllMembers_{{group.id}}"
+                                                           [(ngModel)]="group.allMembersSelected"
+                                                           (change)="toggleAllMembersSelected(group)"/></th>
+                                                <th i18n *ngIf="this.viewOptions.members.name">Name</th>
+                                                <th i18n *ngIf="this.viewOptions.members.username">Username</th>
+                                                <th i18n
+                                                    *ngIf="this.viewOptions.members.extra_info">{{this.settings.extraInfoTitle ?? "Extra info"}}</th>
+
+                                                <th i18n *ngIf="this.viewOptions.members.email">Email</th>
+                                                <th i18n *ngIf="this.viewOptions.members.logincode">Login code</th>
                                             </tr>
                                             </thead>
                                             <tbody>
                                             <tr class="member-table-row" *ngFor="let member of members[group.name]">
-                                                <td>
+                                                <td *ngIf="this.viewOptions.members.selectionControls">
                                                     <input type="checkbox" name="toggleSelection_{{member.id}}"
                                                            [(ngModel)]="member.selected"
                                                            (change)="toggleMemberSelection(group)"/>
                                                 </td>
-                                                <td>{{member.real_name}}</td>
-                                                <td>{{member.name}}</td>
-                                                <td>{{member.extra_info}}</td>
-                                                <td>{{member.email}}</td>
-                                                <td>{{member.login_code}}</td>
+                                                <td *ngIf="this.viewOptions.members.name">{{member.real_name}}</td>
+                                                <td *ngIf="this.viewOptions.members.username">{{member.name}}</td>
+                                                <td *ngIf="this.viewOptions.members.extra_info">{{member.extra_info}}</td>
+                                                <td *ngIf="this.viewOptions.members.email">{{member.email}}</td>
+                                                <td *ngIf="this.viewOptions.members.logincode">{{member.login_code}}</td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -225,17 +248,21 @@ export interface UserCode {
                                         <button class="timButton" (click)="addMembers(group)" i18n>
                                             Add new student
                                         </button>
-                                        <button class="timButton" (click)="addExistingMembers(this.groups)" i18n>
+                                        <button class="timButton" (click)="importUsers(group)" i18n>
                                             Import students from Wilma
                                         </button>
+                                        <br/>
                                         <ng-container *ngIf="this.groups.length > 1">
-                                            <span>
-                                                <button class="timButton" (click)="copyMembers(this.copyMembersTarget)" i18n [disabled]="!anySelected(this.members[group.name])">
+                                            <span class="copy-members-field">
+                                                <button class="timButton" (click)="copyMembers(this.copyMembersTarget)"
+                                                        i18n [disabled]="!anySelected(this.members[group.name])">
                                                     Copy students to group
                                                 </button>
-                                                <select id="copyMembersTarget" name="copyMembersTarget" class="form-control"
-                                                    [(ngModel)]="this.copyMembersTarget">
-                                                    <option *ngFor="let group of this.groups" value="{{group.id}}">{{group.name}}</option>
+                                                <select id="copyMembersTarget" name="copyMembersTarget"
+                                                        class="form-control"
+                                                        [(ngModel)]="this.copyMembersTarget">
+                                                    <option *ngFor="let group of this.groups"
+                                                            value="{{group.id}}">{{group.name}}</option>
                                                 </select>
                                             </span>
                                         </ng-container>
@@ -270,7 +297,7 @@ export interface UserCode {
 })
 export class GroupManagementComponent implements OnInit {
     settings: IGroupManagementSettings = {};
-
+    viewOptions: ViewOptions;
     showAllGroups: boolean;
     // Groups that can manage login code groups, specified with document setting `groups`
     managers: Group[] = [];
@@ -303,6 +330,26 @@ export class GroupManagementComponent implements OnInit {
         // this.settings = this.viewctrl.docSettings.groupManagement ?? {}; // ngOnInit
         this.showAllGroups = false;
         this.allGroupsSelected = false;
+        // TODO set these with component/plugin attributes
+        this.viewOptions = {
+            groups: {
+                selectionControls: true,
+                name: true,
+                document: true,
+                fullDocPath: false,
+                memberCount: true,
+                event: false,
+                timeslot: true,
+            },
+            members: {
+                selectionControls: true,
+                name: true,
+                username: true,
+                email: false,
+                extra_info: true,
+                logincode: true,
+            },
+        };
     }
 
     /**
@@ -383,6 +430,19 @@ export class GroupManagementComponent implements OnInit {
                 this.groups = groups.result;
             }
         }
+    }
+
+    getGroupDocPath(group: Group): string {
+        if (group !== undefined) {
+            if (this.viewOptions.groups.fullDocPath) {
+                return group.path!;
+            }
+            return group.path!.slice(
+                group.path!.lastIndexOf("/") + 1,
+                group.path!.length
+            );
+        }
+        return "";
     }
 
     /**
@@ -625,16 +685,16 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
+    /**
+     * Add members to the group in the currently active group members tab
+     * @param group currently active group
+     */
     async addMembers(group: Group) {
-        // Add members to the group in the currently active group members tab
-        // Should probably add members only to the group in the active tab in the group members view
-        // Should display a dialog where the user may provide a list of members to add
-        // Support adding members via an existing UserGroup in addition to username, email, and [creating new users on the spot]
-        // TODO refactor to enable import users en masse, via CSV for example
         const creationDialogParams = {
             group: group.id,
             // Defaults to "Extra info" if not set in doc settings
             extra_info: this.settings.extraInfoTitle,
+            hiddenFields: ["username", "email"],
         };
         const resp = await to2(showUserCreationDialog(creationDialogParams));
         if (resp.ok) {
@@ -643,10 +703,21 @@ export class GroupManagementComponent implements OnInit {
         }
     }
 
-    async addExistingMembers(groups: Group[]) {
-        // TODO dialog and interface for selecting users from all existing groups
-        //      so that managers don't have to create each user themselves (and also avoids
-        //      having multiple accounts for each member/user
+    /**
+     * Opens a dialog where users can input a formatted list of user information.
+     * The list will then be parsed into user attributes, which are used to create new users.
+     * The new users will then be added to the specified group.
+     * @param group Group into which new users will be added as members.
+     */
+    async importUsers(group: Group) {
+        const importDialogParams = {
+            group: group.id,
+        };
+        const resp = await to2(showUserImportDialog(importDialogParams));
+        if (resp.ok) {
+            const newUsers: GroupMember[] = resp.result;
+            this.members[group.name].push(...newUsers);
+        }
     }
 
     async copyMembers(group_id: number) {

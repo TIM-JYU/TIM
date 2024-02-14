@@ -1,0 +1,25 @@
+.col-sm-2 {
+  width: 24%;
+}
+.col-sm-10 {
+  width: 75%;
+}
+
+.instructions {
+  font-size: 10pt;
+
+  pre {
+      margin: 0 0 5px 0;
+      line-height: 1.2;
+      //text-align: left;
+      padding: 5px;
+      background-color: lightgrey;
+  }
+
+}
+
+textarea {
+  font-size: 11pt;
+  margin-top: 5px;
+
+}

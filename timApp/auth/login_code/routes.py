@@ -76,7 +76,7 @@ def get_groups(doc_id: int) -> Response:
     if not (verify_ownership(mgmnt_docinfo) or verify_admin() or verify_groupadmin()):
         return json_response(
             status_code=403,
-            jsondata={"result": {"error": f"Insufficient permissions."}},
+            jsondata={"result": {"ok": False, "error": f"Insufficient permissions."}},
         )
 
     mgmnt_doc = mgmnt_docinfo.document
@@ -131,25 +131,12 @@ def get_members(group_id: int) -> Response:
     :return: Group members of the specified group
     """
 
-    # Only admins, group admins, and specified management doc owners should be able to view group members
-    # Note: Mypy is not happy with explicit type declaration here.
-    #       Automatic formatting/Black might still break this.
-    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1)).scalars().first()  # type: ignore
-    ug_doc = get_doc_or_abort(ugd.doc_id)
-    if not (verify_ownership(ug_doc) or verify_admin() or verify_groupadmin()):
-        return json_response(
-            status_code=403,
-            jsondata={"error": f"Insufficient permissions."},
-        )
+    check_usergroup_permissions(group_id)
 
-    ug: UserGroup | None = (
-        run_sql(select(UserGroup).filter_by(id=group_id).limit(1)).scalars().first()
-    )
+    ug: UserGroup | Response = get_group_by_id(group_id)
+    if isinstance(ug, Response):
+        return ug
 
-    if not ug:
-        return json_response(
-            status_code=404, jsondata={"msg": f"Could not find group: {group_id}"}
-        )
     members: list[User] = ug.users
     data = []
     for m in members:
@@ -193,7 +180,7 @@ def get_members_from_groups() -> Response:
     if not accessible_ugdocs:
         return json_response(
             status_code=403,
-            jsondata={"error": f"Insufficient permissions."},
+            jsondata={"result": {"ok": False, "error": f"Insufficient permissions."}},
         )
 
     ugd_ids: list[int] = list(ugd.id for ugd in accessible_ugdocs)
@@ -238,14 +225,32 @@ def check_ownership(doc_id: int) -> Response:
         )
     else:
         return json_response(
-            status_code=403, jsondata={"result": {"error": "Insufficient permissions."}}
+            status_code=403,
+            jsondata={"result": {"ok": False, "error": "Insufficient permissions."}},
         )
 
 
-@login_code.get("/checkRequest")
-def debug_dialog() -> Response:
-    log_info(f"Checking http request")
-    return json_response(status_code=200, jsondata={"result": "Request success!"})
+def check_usergroup_permissions(
+    group_id: int, user: User | None = None, action: str | None = None
+) -> None | Response:
+    from timApp.user.groups import verify_groupadmin
+
+    if not user:
+        from timApp.auth.sessioninfo import get_current_user_object
+
+        user = get_current_user_object()
+    current_user = user
+    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1)).scalars().first()  # type: ignore
+    ug_doc = get_doc_or_abort(ugd.doc_id)
+
+    if not verify_groupadmin(user=current_user, action=action) or not verify_ownership(
+        b=ug_doc
+    ):
+        return json_response(
+            status_code=403,
+            jsondata={"result": {"ok": False, "error": "Insufficient permissions."}},
+        )
+    return None
 
 
 def decode_name(name: str) -> str:
@@ -277,39 +282,16 @@ def decode_name(name: str) -> str:
 @login_code.post("/addMembers/<int:group_id>")
 def create_users(group_id: int) -> Response:
     from timApp.auth.sessioninfo import get_current_user_object
-    from timApp.user.groups import verify_groupadmin
 
-    # TODO mass import from CSV, probably want a dedicated function for it
     current_user = get_current_user_object()
+    group: UserGroup | Response = get_group_by_id(group_id)
+    if isinstance(group, Response):
+        return group
 
-    group: UserGroup = run_sql(select(UserGroup).where(UserGroup.id == group_id).limit(1)).scalars().first()  # type: ignore
-    # UserGroup.name.like("b64_%"))).scalars().first()
-
-    # group = None
-    # for g in groups:
-    #     dec = decode_name(g.name)
-    #     if dec == group_name:
-    #         group = g
-    #         break
-    if not group:
-        return json_response(
-            status_code=404,
-            jsondata={
-                "result": {"error": f"No matching group: {decode_name(group.name)}."}
-            },
-        )
-
-    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1)).scalars().first()  # type: ignore
-    ug_doc = get_doc_or_abort(ugd.doc_id)
     # Check for permission to create users
     # Since we do not want to add every group manager (teacher) to Group admins groups,
     # we will allow them to create users for their own groups if they have ownership of the group
-    if not verify_groupadmin(
-        user=current_user, action=f"Creating new user"
-    ) or not verify_ownership(b=ug_doc):
-        return json_response(
-            status_code=403, jsondata={"result": {"error": "Insufficient permissions."}}
-        )
+    check_usergroup_permissions(group_id, current_user)
 
     u: dict = request.get_json()
     username: str = str(u.get("username"))
@@ -367,39 +349,129 @@ def create_users(group_id: int) -> Response:
     )
 
 
-@login_code.post("/addManyMembers/<int:group_id>")
-def add_users_to_group(group_id: int) -> Response:
-    from timApp.auth.sessioninfo import get_current_user_object
-    from timApp.user.groups import verify_groupadmin
-
-    current_user = get_current_user_object()
-
+def get_group_by_id(group_id: int) -> UserGroup | Response:
+    """
+    Fetch and return UserGroup matching the specified id, or failure Response if not found.
+    :param group_id: id
+    :return: UserGroup or Response
+    """
     group: UserGroup = run_sql(select(UserGroup).where(UserGroup.id == group_id).limit(1)).scalars().first()  # type: ignore
-
-    if not group:
+    if group:
+        return group
+    else:
         return json_response(
             status_code=404,
             jsondata={
-                "result": {"error": f"No matching group: {decode_name(group.name)}."}
+                "result": {
+                    "ok": False,
+                    "error": f"No matching group: {decode_name(group.name)}.",
+                }
             },
         )
 
-    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1)).scalars().first()  # type: ignore
-    ug_doc = get_doc_or_abort(ugd.doc_id)
 
-    if not verify_groupadmin(
-        user=current_user, action=f"Creating new user"
-    ) or not verify_ownership(b=ug_doc):
-        return json_response(
-            status_code=403, jsondata={"result": {"error": "Insufficient permissions."}}
-        )
+@login_code.post("/addManyMembers/<int:group_id>")
+def add_users_to_group(group_id: int) -> Response:
+    from timApp.auth.sessioninfo import get_current_user_object
 
+    current_user = get_current_user_object()
+
+    group: UserGroup | Response = get_group_by_id(group_id)
+    if isinstance(group, Response):
+        return group
+
+    check_usergroup_permissions(group_id, current_user)
     uids: list[int] = request.get_json().get("ids")
     users: list[User] = list(
         run_sql(select(User).where(User.id.in_(uids))).scalars().all()
     )
 
     data = []
+    for user in users:
+        user.add_to_group(group, current_user)
+        ug = user.get_personal_group()
+        ulc = get_logincode_by_id(ug.id)
+        data.append(
+            {
+                "id": ug.id,
+                "name": user.name,
+                "email": user.email,
+                "real_name": user.real_name,
+                "extra_info": ulc.extra_info if ulc else None,
+                "login_code": ulc.code if ulc else None,
+            }
+        )
+
+    db.session.commit()
+
+    return json_response(
+        status_code=200,
+        jsondata=data,
+    )
+
+
+@login_code.post("/importUsers/<int:group_id>")
+def import_users_to_group(group_id: int) -> Response:
+    group: UserGroup | Response = get_group_by_id(group_id)
+    if isinstance(group, Response):
+        return group
+
+    check_usergroup_permissions(group_id)
+    text: str = request.get_json().get("text")
+    # TODO sanitize json
+    udata = text.splitlines()
+    users: list[User] = []
+    ugs: list[(UserGroup, str)] = []
+    for data in udata:
+        einfo, lname, fname = data.split(" ")
+
+        dummy_uname: str = str(
+            base64.urlsafe_b64encode(
+                f"{einfo}{lname + fname}{time.time_ns()}".encode()
+            ),
+            encoding="utf-8",
+        )
+        dummy_pass: str = str(
+            base64.urlsafe_b64encode(
+                f"{einfo}{fname + lname}{time.time_ns()}".encode()
+            ),
+            encoding="utf-8",
+        )
+
+        dummy_email: str = str(
+            base64.urlsafe_b64encode(f"{einfo}{lname}{time.time_ns()}".encode()),
+            encoding="utf-8",
+        )
+        dummy_email = f"{dummy_email}@example.com"
+
+        ui: UserInfo = UserInfo(
+            username=dummy_uname,
+            given_name=fname,
+            last_name=lname,
+            full_name=f"{lname} {fname}",
+            email=dummy_email,
+            password=dummy_pass,
+        )
+
+        user, ug = User.create_with_group(ui)
+        users.append(user)
+        ugs.append((ug, einfo))
+
+    # TODO find a way to get rid of db commits that are currently needed
+    #      so we can get references to eg. new usergroup ids
+    db.session.commit()
+    for ug, einfo in ugs:
+        ulc = UserLoginCode.create(
+            _id=ug.id,
+            extra_info=einfo,
+        )
+        db.session.commit()
+    # db.session.commit()
+
+    data = []
+    from timApp.auth.sessioninfo import get_current_user_object
+
+    current_user = get_current_user_object()
     for user in users:
         user.add_to_group(group, current_user)
         ug = user.get_personal_group()
@@ -433,7 +505,7 @@ def generate_codes_for_members() -> Response:
     r: dict = request.get_json()
     members: list = [*r.get("members")]  # type: ignore
 
-    # TODO time should be in server time (UTC+0), it now appears to be local time
+    # TODO time should be in server time (UTC+0), currently local time is used
     act_start = datetime.datetime.fromisoformat(str(r.get("activation_start")))
     act_end = datetime.datetime.fromisoformat(str(r.get("activation_end")))
     # act_status: int = int(r.get("activation_status"))
