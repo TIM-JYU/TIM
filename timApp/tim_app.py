@@ -279,7 +279,9 @@ def babel_get_locale():
     return locale
 
 
-babel = Babel(app, locale_selector=babel_get_locale)
+babel = Babel(
+    app, locale_selector=babel_get_locale, default_translation_directories="i18n"
+)
 
 mimetypes.add_type("text/plain", ".scss")
 # Caddy sets the following headers:
