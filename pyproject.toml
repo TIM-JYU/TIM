@@ -185,7 +185,8 @@ module = [
     "mailmanclient.*",
     "httpagentparser",
     "pypandoc",
-    "gnupg"
+    "gnupg",
+    "flask_babel"
 ]
 ignore_missing_imports = true
 
