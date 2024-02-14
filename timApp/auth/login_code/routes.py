@@ -421,7 +421,7 @@ def import_users_to_group(group_id: int) -> Response:
     # TODO sanitize json
     udata = text.splitlines()
     users: list[User] = []
-    ugs: list[(UserGroup, str)] = []
+    ugs: list[tuple[UserGroup, str]] = []
     for data in udata:
         einfo, lname, fname = data.split(" ")
 
@@ -468,7 +468,8 @@ def import_users_to_group(group_id: int) -> Response:
         db.session.commit()
     # db.session.commit()
 
-    data = []
+    # For some reason Mypy gets confused here, so we will just ignore it for now
+    data = list()  # type: ignore
     from timApp.auth.sessioninfo import get_current_user_object
 
     current_user = get_current_user_object()
@@ -476,7 +477,7 @@ def import_users_to_group(group_id: int) -> Response:
         user.add_to_group(group, current_user)
         ug = user.get_personal_group()
         ulc = get_logincode_by_id(ug.id)
-        data.append(
+        data.append(  # type: ignore
             {
                 "id": ug.id,
                 "name": user.name,
@@ -488,10 +489,11 @@ def import_users_to_group(group_id: int) -> Response:
         )
 
     db.session.commit()
+    json_data = json.dumps(data)
 
     return json_response(
         status_code=200,
-        jsondata=data,
+        jsondata=json_data,
     )
 
 
