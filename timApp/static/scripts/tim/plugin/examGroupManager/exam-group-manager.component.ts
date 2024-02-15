@@ -1,6 +1,12 @@
-import {HttpClient} from "@angular/common/http";
+import {HttpClientModule} from "@angular/common/http";
 import type {OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {
+    type ApplicationRef,
+    Component,
+    type DoBootstrap,
+    Input,
+    NgModule,
+} from "@angular/core";
 import type {IGroup, IUser} from "tim/user/IUser";
 import {ADMIN_GROUPNAME} from "tim/user/IUser";
 import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
@@ -8,16 +14,31 @@ import {documentglobals} from "tim/util/globals";
 import {isAdmin, Users} from "tim/user/userService";
 import type {Require} from "tim/util/utils";
 import {to2, toPromise} from "tim/util/utils";
-import type {IGroupManagementSettings} from "tim/document/IDocSettings";
 import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {showUserCreationDialog} from "tim/user/showUserCreationDialog";
 import type {TabDirective} from "ngx-bootstrap/tabs";
+import {TabsModule} from "ngx-bootstrap/tabs";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {showLoginCodeGenerationDialog} from "tim/user/showLoginCodeGenerationDialog";
-import {showUserImportDialog} from "tim/user/showUserImportDialog";
+import {FormsModule} from "@angular/forms";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import * as t from "io-ts";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    withDefault,
+} from "tim/plugin/attributes";
+import {UserImportDialogComponent} from "tim/plugin/examGroupManager/user-import-dialog.component";
+import {showUserImportDialog} from "tim/plugin/examGroupManager/showUserImportDialog";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {UserCreationDialogComponent} from "tim/plugin/examGroupManager/user-creation-dialog.component";
+import {showUserCreationDialog} from "tim/plugin/examGroupManager/showUserCreationDialog";
+import {LoginCodeGenerationDialogComponent} from "tim/plugin/examGroupManager/login-code-generation-dialog.component";
+import {showLoginCodeGenerationDialog} from "tim/plugin/examGroupManager/showLoginCodeGenerationDialog";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -77,6 +98,23 @@ interface ViewOptions {
     };
 }
 
+const ExamManagerMarkup = t.intersection([
+    t.type({
+        managers: withDefault(t.array(t.string), []),
+        groupsPath: withDefault(t.string, ""),
+        showAllGroups: withDefault(t.boolean, false),
+    }),
+    t.partial({
+        extraInfoTitle: t.string,
+    }),
+    GenericPluginMarkup,
+]);
+
+const ExamManagerFields = t.intersection([
+    getTopLevelFields(ExamManagerMarkup),
+    t.type({}),
+]);
+
 /**
  * A group management component, that can be used to manage groups and group members.
  * It is intended for 'one-off' type situations like course exams, where it is not desirable
@@ -84,34 +122,9 @@ interface ViewOptions {
  * Instead, the component can be used to create minimal user accounts with temporary login codes for logging into TIM.
  *
  * Events (exams) can be added for groups, so that group permissions to the event documents can be propagated automatically.
- *
- * Required document setting:
- * ```
- * additional_angular_modules:
- *   - timGroupManagementModule
- * ```
- *
- * Adding the component to a document:
- * ```
- * #- {allowangular="true"}
- * <tim-group-management-console></tim-group-management-console>
- * ```
- *
- * Document settings for this component:
- *
- * ```
- * groupManagement:
- *   managers: // currently not used, this may change yet
- *     - groupname
- *   groupsPath: // path for groups created with this component
- *     - sukol/2023/testikoulu
- *   extraInfoTitle:
- *     - title // title used in the ui for extra info on members, eg. "Class", "Group", etc.
- * ```
- *
  */
 @Component({
-    selector: "tim-group-management-console",
+    selector: "tim-exam-group-manager",
     template: `
         <ng-container>
             <bootstrap-panel id="groups-panel" title="All groups" i18n-title>
@@ -218,7 +231,7 @@ interface ViewOptions {
                                                 <th i18n *ngIf="this.viewOptions.members.name">Name</th>
                                                 <th i18n *ngIf="this.viewOptions.members.username">Username</th>
                                                 <th i18n
-                                                    *ngIf="this.viewOptions.members.extra_info">{{this.settings.extraInfoTitle ?? "Extra info"}}</th>
+                                                    *ngIf="this.viewOptions.members.extra_info">{{this.markup['extraInfoTitle'] ?? "Extra info"}}</th>
 
                                                 <th i18n *ngIf="this.viewOptions.members.email">Email</th>
                                                 <th i18n *ngIf="this.viewOptions.members.logincode">Login code</th>
@@ -295,10 +308,17 @@ interface ViewOptions {
     `,
     styleUrls: ["group-management.component.scss"],
 })
-export class GroupManagementComponent implements OnInit {
-    settings: IGroupManagementSettings = {};
-    viewOptions: ViewOptions;
-    showAllGroups: boolean;
+export class ExamGroupManagerComponent
+    extends AngularPluginBase<
+        t.TypeOf<typeof ExamManagerMarkup>,
+        t.TypeOf<typeof ExamManagerFields>,
+        typeof ExamManagerFields
+    >
+    implements OnInit
+{
+    requiresTaskId = false;
+    viewOptions!: ViewOptions;
+    showAllGroups: boolean = false;
     // Groups that can manage login code groups, specified with document setting `groups`
     managers: Group[] = [];
     // Groups that are managed via the group management document
@@ -307,7 +327,7 @@ export class GroupManagementComponent implements OnInit {
     members: Record<string, GroupMember[]> = {};
 
     // Currently selected groups
-    allGroupsSelected: boolean;
+    allGroupsSelected: boolean = false;
     saveGroupSuccessMessage?: string;
     saveGroupFailMessage?: string;
 
@@ -325,7 +345,7 @@ export class GroupManagementComponent implements OnInit {
     @Input() eventHeading?: string;
     private viewctrl!: Require<ViewCtrl>;
 
-    constructor(private http: HttpClient) {
+    private initOpts() {
         this.viewctrl = vctrlInstance!;
         // this.settings = this.viewctrl.docSettings.groupManagement ?? {}; // ngOnInit
         this.showAllGroups = false;
@@ -363,10 +383,19 @@ export class GroupManagementComponent implements OnInit {
         return Users.belongsToGroup(ADMIN_GROUPNAME);
     }
 
+    getAttributeType() {
+        return ExamManagerFields;
+    }
+
+    getDefaultMarkup() {
+        return {};
+    }
+
     /**
      * Initialization procedures.
      */
     async ngOnInit() {
+        this.initOpts();
         // Load content only for logged in users who are also owners of this management document
         const isDocOwner = await toPromise(
             this.http.get(`/loginCode/checkOwner/${this.getDocId()}`)
@@ -374,9 +403,6 @@ export class GroupManagementComponent implements OnInit {
         if (!isAdmin() && (!isDocOwner.ok || !Users.isLoggedIn())) {
             return;
         }
-        this.settings = {
-            ...this.viewctrl.docSettings.groupManagement,
-        };
 
         await this.getGroups();
         this.selectedGroupTab = this.groups[0]?.name ?? "";
@@ -526,8 +552,7 @@ export class GroupManagementComponent implements OnInit {
             // TODO set these in group management docSettings
             canChooseFolder: false,
             // TODO Should be same as 'groupsPath' as it should always be set
-            defaultGroupFolder:
-                this.settings.groupsPath ?? "sukol/2023/testikoulu",
+            defaultGroupFolder: this.markup.groupsPath,
             encodeGroupName: true,
         };
         // Create a new group
@@ -693,7 +718,7 @@ export class GroupManagementComponent implements OnInit {
         const creationDialogParams = {
             group: group.id,
             // Defaults to "Extra info" if not set in doc settings
-            extra_info: this.settings.extraInfoTitle,
+            extra_info: this.markup.extraInfoTitle,
             hiddenFields: ["username", "email"],
         };
         const resp = await to2(showUserCreationDialog(creationDialogParams));
@@ -811,3 +836,31 @@ export class GroupManagementComponent implements OnInit {
         this.selectedGroupTab = groupTab.heading;
     }
 }
+
+@NgModule({
+    declarations: [
+        ExamGroupManagerComponent,
+        UserImportDialogComponent,
+        UserCreationDialogComponent,
+        LoginCodeGenerationDialogComponent,
+    ],
+    exports: [ExamGroupManagerComponent],
+    imports: [
+        CommonModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        // TimTableModule,
+        TabsModule.forRoot(),
+        DialogModule,
+    ],
+})
+export class ExamGroupManagerModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef): void {}
+}
+
+registerPlugin(
+    "tim-exam-group-manager",
+    ExamGroupManagerModule,
+    ExamGroupManagerComponent
+);
