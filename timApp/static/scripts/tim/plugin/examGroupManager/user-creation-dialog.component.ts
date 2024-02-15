@@ -1,12 +1,8 @@
-import {Component, NgModule} from "@angular/core";
-import {FormsModule} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {CommonModule} from "@angular/common";
-import type {GroupMember} from "tim/ui/group-management.component";
+import {Component} from "@angular/core";
+import {HttpClient} from "@angular/common/http";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {toPromise} from "tim/util/utils";
-import {DialogModule} from "tim/ui/angulardialog/dialog.module";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {GroupMember} from "tim/plugin/examGroupManager/exam-group-manager.component";
 
 /**
  * Defines additional parameters for creating new users via the UserCreationDialog.
@@ -198,16 +194,3 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
         this.message = message;
     }
 }
-
-@NgModule({
-    declarations: [UserCreationDialogComponent],
-    imports: [
-        DialogModule,
-        FormsModule,
-        TimUtilityModule,
-        CommonModule,
-        HttpClientModule,
-    ],
-    exports: [UserCreationDialogComponent],
-})
-export class UserCreationDialogModule {}

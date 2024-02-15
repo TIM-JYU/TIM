@@ -221,6 +221,12 @@ def get_plugins() -> dict[str, PluginReg]:
             name="calendar", domain=internal_domain, port=qst_port, path="/calendar/"
         ),
         PluginReg(
+            name="examGroupManager",
+            domain=internal_domain,
+            port=qst_port,
+            path="/examGroupManager/",
+        ),
+        PluginReg(
             name="quantumCircuit",
             domain=internal_domain,
             port=qst_port,

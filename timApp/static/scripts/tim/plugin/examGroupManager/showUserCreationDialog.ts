@@ -1,12 +1,12 @@
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import type {UserCreationDialogParams} from "tim/user/user-creation-dialog.component";
-import type {GroupMember} from "tim/ui/group-management.component";
+import type {UserCreationDialogParams} from "tim/plugin/examGroupManager/user-creation-dialog.component";
+import type {GroupMember} from "tim/plugin/examGroupManager/exam-group-manager.component";
 
 export async function showUserCreationDialog(
     params?: UserCreationDialogParams
 ): Promise<GroupMember> {
     const {UserCreationDialogComponent} = await import(
-        "tim/user/user-creation-dialog.component"
+        "./user-creation-dialog.component"
     );
     return (await angularDialog.open(UserCreationDialogComponent, params))
         .result;
