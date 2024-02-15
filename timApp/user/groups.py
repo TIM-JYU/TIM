@@ -445,6 +445,7 @@ def get_usernames(usernames: list[str]):
     return usernames
 
 
+# FIXME: SUKOL
 @groups.post("/copymemberships/<source>/<target>")
 def copy_members(source: str, target: str) -> Response:
     """
@@ -458,7 +459,7 @@ def copy_members(source: str, target: str) -> Response:
     :param target: target UserGroup name
     :return: Response with added member names, or error message
     """
-    from timApp.auth.login_code.routes import decode_name
+    from timApp.auth.logincodes.routes import decode_name
 
     if source == target:
         return json_response(

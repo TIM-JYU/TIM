@@ -122,7 +122,7 @@ blueprints = [
     groups,
     saml,
     lecture_routes,
-    login_code,
+    login_codes,
     login_page,
     manage_page,
     minutes_blueprint,
@@ -144,7 +144,6 @@ blueprints = [
     velps,
     view_page,
     scheduling,
-    login_codes,
     mailman_events,
     user_sessions,
     # plugins
