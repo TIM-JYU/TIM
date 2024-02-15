@@ -14,11 +14,7 @@ import {CommonModule} from "@angular/common";
 export interface UserGroupDialogParams {
     defaultGroupFolder?: string;
     canChooseFolder?: boolean;
-    // Whether to encode the group name in base64; avoids naming clashes as group names are required to be unique,
-    // but we still want to enable non-unique display names for certain (temporary) uses.
-    // NOTE: setting encodeGroupName to true will bypass other group naming constraints
-    //       (no non-alphanumeric or upper case characters).
-    encodeGroupName?: boolean;
+    adminDocTitle?: string;
 }
 
 @Component({
@@ -122,11 +118,15 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
     }
 
     async saveGroup(): Promise<void> {
-        const encodeName = this.data.encodeGroupName
-            ? `?encodeGroupName=${this.data.encodeGroupName.toString()}`
-            : "";
-        const request = `/groups/create/${this.getFolderName()}${encodeName}`;
-        const response = await toPromise(this.http.get<IDocument>(request));
+        let opts: Record<string, string> = {};
+        if (this.data.adminDocTitle) {
+            opts = {adminDocTitle: this.data.adminDocTitle};
+        }
+        const response = await toPromise(
+            this.http.get<IDocument>(`/groups/create/${this.getFolderName()}`, {
+                params: opts,
+            })
+        );
 
         if (response.ok) {
             this.close(response.result);

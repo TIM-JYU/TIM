@@ -174,8 +174,9 @@ def raise_group_not_found_if_none(group_name: str, ug: UserGroup | None):
         raise RouteException(f'User group "{group_name}" not found')
 
 
+# FIXME: Implement
 @groups.get("/create/<path:group_path>")
-def create_group(group_path: str) -> Response:
+def create_group(group_path: str, adminDocTitle: str | None = None) -> Response:
     """Route for creating a user group.
 
     The name of user group has the following restrictions:
@@ -443,126 +444,6 @@ def get_usernames(usernames: list[str]):
     usernames = list({n for name in usernames if (n := name.strip())})
     usernames.sort()
     return usernames
-
-
-# FIXME: SUKOL
-@groups.post("/copymemberships/<source>/<target>")
-def copy_members(source: str, target: str) -> Response:
-    """
-    Copies group memberships from one UserGroup to another.
-
-    Note: this function is intended to be used in conjunction with the group-management component,
-    see `timApp/static/scripts/tim/ui/group-management.component.ts`. We should probably limit
-    the database queries to only the base64-encoded names, since the group-management
-    component is currently configured to produce such names by default.
-    :param source: source UserGroup name
-    :param target: target UserGroup name
-    :return: Response with added member names, or error message
-    """
-    from timApp.auth.logincodes.routes import decode_name
-
-    if source == target:
-        return json_response(
-            status_code=400,
-            jsondata={
-                "result": {
-                    "error": f"Copying group members failed: source ('{source}') and target ('{target}') are the same."
-                },
-            },
-        )
-
-    # We need to do some shenanigans here because group names might be base64-encoded.
-    # Try plain names first, then base64-encoded ones.
-
-    source_group = (
-        run_sql(select(UserGroup).filter_by(name=source).limit(1)).scalars().first()
-    )
-    target_group = (
-        run_sql(select(UserGroup).filter_by(name=target).limit(1)).scalars().first()
-    )
-    if not source_group or not target_group:
-        b64groups: list[UserGroup] = list(
-            run_sql(select(UserGroup).where(UserGroup.name.like("b64_%")))
-            .scalars()
-            .all()
-        )
-        for ug in b64groups:
-            ug_plain_name = decode_name(ug.name)
-            if not source_group and ug_plain_name == source:
-                source_group = ug
-            elif not target_group and ug_plain_name == target:
-                target_group = ug
-
-        missing_groups = []
-        if not source_group:
-            missing_groups.append(source)
-        if not target_group:
-            missing_groups.append(target)
-
-        if missing_groups:
-            return json_response(
-                status_code=404,
-                jsondata={
-                    "result": {
-                        "error": f"Copying group members failed: groups {missing_groups} do not exist."
-                    },
-                },
-            )
-
-    current_user = get_current_user_object()
-
-    from timApp.auth.accesshelper import verify_ownership
-    from timApp.document.routes import get_doc_or_abort
-    from timApp.user.usergroup import UserGroupDoc
-
-    source_group_doc_id: int = (
-        run_sql(
-            select(UserGroupDoc.doc_id)
-            .where(UserGroupDoc.group_id == source_group.id)
-            .limit(1)
-        )
-        .scalars()
-        .first()
-    )
-    target_group_doc_id: int = (
-        run_sql(
-            select(UserGroupDoc.doc_id)
-            .where(UserGroupDoc.group_id == target_group.id)
-            .limit(1)
-        )
-        .scalars()
-        .first()
-    )
-
-    source_group_doc = get_doc_or_abort(source_group_doc_id)
-    target_group_doc = get_doc_or_abort(target_group_doc_id)
-
-    if (
-        not verify_groupadmin(user=current_user)
-        or not verify_ownership(b=source_group_doc)
-        or not verify_ownership(b=target_group_doc)
-    ):
-        return json_response(
-            status_code=403,
-            jsondata={
-                "result": {
-                    "error": f"Copying group members failed: insufficient permissions."
-                },
-            },
-        )
-
-    members: list[User] = list(source_group.users)
-    added_memberships = []
-    for u in members:
-        u.add_to_group(target_group, current_user)
-        added_memberships.append(u.name)
-    db.session.commit()
-    return json_response(
-        status_code=200,
-        jsondata={
-            "added_members": added_memberships,
-        },
-    )
 
 
 @groups.delete("/delete/<int:group_id>")

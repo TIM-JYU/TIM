@@ -253,6 +253,10 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         )
 
     @staticmethod
+    def get_by_id(group_id: int) -> UserGroup | None:
+        return db.session.get(UserGroup, group_id)
+
+    @staticmethod
     def get_anonymous_group() -> UserGroup:
         return (
             run_sql(select(UserGroup).filter_by(name=ANONYMOUS_GROUPNAME))
@@ -374,23 +378,6 @@ def get_groups_by_names(names: list[str]) -> list[UserGroup]:
         run_sql(select(UserGroup).filter(UserGroup.name.in_(names))).scalars().all()
     )
     return groups
-
-
-# FIXME: SUKOL
-def get_b64_group_by_plain_name(name: str) -> UserGroup | None:
-    """
-    Finds and returns a UserGroup with a base64-encoded name matching the one requested.
-    Should be used sparingly due to the additional overhead caused by iterating and decoding the names.
-    """
-    groups: list[UserGroup] = list(
-        run_sql(select(UserGroup).where(UserGroup.name.like("b64_%"))).scalars().all()
-    )
-    from timApp.auth.logincodes.routes import decode_name
-
-    for group in groups:
-        if decode_name(group.name) == name:
-            return group
-    return None
 
 
 def get_groups_by_ids(group_ids: list[int]) -> list[UserGroup]:
