@@ -8,6 +8,8 @@
             var exam_mode = {{ view_settings.exam_mode|tojson }};
             var hide_sidemenu = {{ view_settings.hide_sidemenu|tojson }};
             var requires_login = true;
+            var useLoginCodes = {{ view_settings.useLoginCodes|tojson }};
+            var loginMessage = {{ view_settings.loginMessage|tojson }};
         </script>
    {% endif %}
 {% endblock %}

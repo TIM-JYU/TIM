@@ -29,6 +29,8 @@ if TYPE_CHECKING:
 class MinimalVisibilitySettings:
     exam_mode: bool = False
     hide_sidemenu: bool = False
+    useLoginCodes: bool = False
+    loginMessage: str | None = None
 
 
 def get_minimal_visibility_settings(item: Optional["Document"]):
@@ -38,6 +40,8 @@ def get_minimal_visibility_settings(item: Optional["Document"]):
     return MinimalVisibilitySettings(
         exam_mode=settings.exam_mode() is not None,
         hide_sidemenu=settings.hide_sidemenu() is not None,
+        useLoginCodes=settings.use_login_codes(),
+        loginMessage=settings.login_message(),
     )
 
 
@@ -106,6 +110,8 @@ class DocSettingTypes:
     need_view_for_answers: bool
     # TODO simplify
     groupManagement: dict[str, str | list[str]]
+    loginCodes: bool
+    loginMessage: str
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -695,6 +701,12 @@ class DocSettings:
 
     def need_view_for_answers(self) -> bool:
         return self.get_setting_or_default("need_view_for_answers", False)
+
+    def use_login_codes(self) -> bool:
+        return self.get_setting_or_default("loginCodes", False)
+
+    def login_message(self) -> str | None:
+        return self.get_setting_or_default("loginMessage", None)
 
     def group_management_settings(self) -> dict:
         settings = self.get_setting_or_default(

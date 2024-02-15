@@ -17,6 +17,7 @@ import type {IOkResponse, Result, ToReturn} from "tim/util/utils";
 import {capitalizeFirstLetter, mapSuccess, to} from "tim/util/utils";
 import type {IDiscoveryFeedEntry} from "tim/user/haka-login.component";
 import {HakaLoginComponent, loadIdPs} from "tim/user/haka-login.component";
+import {UserCodeLoginComponent} from "tim/user/user-code-login.component";
 import type {ILoginResponse} from "tim/user/userService";
 import {Users} from "tim/user/userService";
 import {CommonModule} from "@angular/common";
@@ -63,7 +64,7 @@ interface ISimpleRegistrationResponse {
             <ng-container body>
                 <div class="row">
                     <div class="col-sm-12">
-                        <ng-container *ngIf="!showSignup && !showSimpleLogin">
+                        <ng-container *ngIf="!showSignup && !showSimpleLogin && !showLoginCodeLogin">
                             <ng-container *ngIf="!hideVars.hakaLogin">
                                 <tim-haka-login [idps]="idps"
                                                 [homeOrg]="homeOrg"
@@ -93,7 +94,7 @@ interface ISimpleRegistrationResponse {
                         </ng-container>
 
                         <!--                    Simple email login form-->
-                        <ng-container *ngIf="showSimpleLogin">
+                        <ng-container *ngIf="showSimpleLogin && !showLoginCodeLogin">
                             <div class="form-group">
                                 <label for="email" class="control-label" i18n>Email or username</label>
                                 <input class="form-control"
@@ -175,9 +176,9 @@ interface ISimpleRegistrationResponse {
                         </ng-container>
 
                         <!--                    Sign up form-->
-                        <form class="form margin-top-1" *ngIf="showSignup">
+                        <form class="form margin-top-1" *ngIf="showSignup && !showLoginCodeLogin">
                             <div class="text-center" *ngIf="!resetPassword">
-                                <p i18n>If you don't have an existing TIM or {{getHomeOrgDisplayName()}} account, you
+                                <p i18n>If you don't have an existing TIM or {{ getHomeOrgDisplayName() }} account, you
                                     can create a TIM account here.</p>
                                 <p i18n>Please input your email address to receive a temporary password.</p>
                             </div>
@@ -319,6 +320,10 @@ interface ISimpleRegistrationResponse {
                                 <tim-error-description [error]="signUpError"></tim-error-description>
                             </tim-alert>
                         </form>
+                    
+                        <ng-container *ngIf="showLoginCodeLogin">
+                            <tim-user-code-login></tim-user-code-login>
+                        </ng-container> 
                     </div>
                 </div>
             </ng-container>
@@ -375,10 +380,17 @@ export class LoginDialogComponent extends AngularDialogComponent<
     minPasswordLength = this.config.minPasswordLength;
     loginMessage?: string;
 
+    showLoginCodeLogin = false; // TODO: Add config option
+
     ngOnInit() {
         const globals = genericglobals();
         if (isDocumentGlobals(globals)) {
-            this.loginMessage = globals.docSettings.loginMessage;
+            if (globals.loginMessage) {
+                this.loginMessage = globals.loginMessage;
+            }
+            if (globals.useLoginCodes) {
+                this.showLoginCodeLogin = true;
+            }
         }
 
         if (this.config.simpleLoginCustomLoginMessage != null) {
@@ -645,7 +657,11 @@ export class LoginDialogComponent extends AngularDialogComponent<
 }
 
 @NgModule({
-    declarations: [LoginDialogComponent, HakaLoginComponent],
+    declarations: [
+        LoginDialogComponent,
+        HakaLoginComponent,
+        UserCodeLoginComponent,
+    ],
     imports: [
         CommonModule,
         DialogModule,

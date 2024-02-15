@@ -1,0 +1,26 @@
+input.code-input {
+  font-family: var(--font-family-monospace);
+  font-size: 1.6em;
+  height: 64px;
+  font-weight: bold;
+  letter-spacing: 12px;
+}
+
+.login-message {
+  margin-bottom: 1em;
+  margin-top: 1em;
+}
+
+fieldset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1em;
+}
+
+.login-progress {
+  display: flex;
+  gap: 0.5em;
+}

@@ -203,9 +203,10 @@ SIMPLE_LOGIN_USE_STUDY_INFO_MESSAGE = False
 # Custom login message to show globally when simple login is enabled
 SIMPLE_LOGIN_CUSTOM_LOGIN_MESSAGE = None
 
-# Enable generating and using login codes as a login method
-# For now, should only be enabled for specific uses
-LOGINCODES_ENABLE = False
+LOGIN_CODES_ENABLED = False
+"""
+If true, enables logging in via special temporary login codes.
+"""
 
 LOG_HOST = False
 

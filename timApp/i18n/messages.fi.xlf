@@ -9248,6 +9248,38 @@ Poistettavat ryhmät:
           <context context-type="linenumber">47</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2859819736874880280" datatype="html">
+        <source>Logging in, please wait...</source>
+        <target state="translated">Kirjaudutaan sisään, odota...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2298247937024475895" datatype="html">
+        <source>Login code not yet active. Make sure you use the correct code or ask the code to be activated.</source>
+        <target state="translated">Kirjautumiskoodi ei ole vielä aktiivinen. Tarkista, että sinulla on oikea koodi tai pyydä, että koodisi aktivoidaan.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">10,8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="563854068285277269" datatype="html">
+        <source>Login code expired. Make sure you use the correct code or ask for a new code.</source>
+        <target state="translated">Kirjautumiskoodi on umpeutunut. Tarkista, että käytit oikeaa koodia tai pyydä uusi koodi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5533111384851624507" datatype="html">
+        <source>Invalid login code. Check that you entered it correctly.</source>
+        <target state="translated">Väärä kirjautumiskoodi. Tarkista, että syötit sen oikein.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">9,8</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

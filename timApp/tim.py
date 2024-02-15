@@ -22,7 +22,7 @@ from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.access.routes import access
 from timApp.auth.login import login_page
-from timApp.auth.login_code.routes import login_code
+from timApp.auth.logincodes.routes import login_codes
 from timApp.auth.oauth2.oauth2 import init_oauth
 from timApp.auth.saml.routes import saml
 from timApp.auth.session.routes import user_sessions
@@ -144,6 +144,7 @@ blueprints = [
     velps,
     view_page,
     scheduling,
+    login_codes,
     mailman_events,
     user_sessions,
     # plugins
