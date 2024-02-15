@@ -305,7 +305,7 @@ const ExamManagerFields = t.intersection([
 
         </ng-container>
     `,
-    styleUrls: ["group-management.component.scss"],
+    styleUrls: ["exam-group-manager.component.scss"],
 })
 export class ExamGroupManagerComponent
     extends AngularPluginBase<
