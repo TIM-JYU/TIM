@@ -376,6 +376,7 @@ def get_groups_by_names(names: list[str]) -> list[UserGroup]:
     return groups
 
 
+# FIXME: SUKOL
 def get_b64_group_by_plain_name(name: str) -> UserGroup | None:
     """
     Finds and returns a UserGroup with a base64-encoded name matching the one requested.
@@ -384,7 +385,7 @@ def get_b64_group_by_plain_name(name: str) -> UserGroup | None:
     groups: list[UserGroup] = list(
         run_sql(select(UserGroup).where(UserGroup.name.like("b64_%"))).scalars().all()
     )
-    from timApp.auth.login_code.routes import decode_name
+    from timApp.auth.logincodes.routes import decode_name
 
     for group in groups:
         if decode_name(group.name) == name:
