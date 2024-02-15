@@ -108,8 +108,6 @@ class DocSettingTypes:
     uiLangOverride: str
     allowedDocsettingMacroAttributes: list[str] | str
     need_view_for_answers: bool
-    # TODO simplify
-    groupManagement: dict[str, str | list[str]]
     loginCodes: bool
     loginMessage: str
 
@@ -707,12 +705,6 @@ class DocSettings:
 
     def login_message(self) -> str | None:
         return self.get_setting_or_default("loginMessage", None)
-
-    def group_management_settings(self) -> dict:
-        settings = self.get_setting_or_default(
-            "groupManagement", {"managers": [], "groupsPath": ""}
-        )
-        return settings
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

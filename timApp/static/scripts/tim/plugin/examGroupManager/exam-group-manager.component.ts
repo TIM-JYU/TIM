@@ -10,7 +10,7 @@ import {
 import type {IGroup, IUser} from "tim/user/IUser";
 import {ADMIN_GROUPNAME} from "tim/user/IUser";
 import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
-import {documentglobals} from "tim/util/globals";
+import {documentglobals, someglobals} from "tim/util/globals";
 import {isAdmin, Users} from "tim/user/userService";
 import type {Require} from "tim/util/utils";
 import {to2, toPromise} from "tim/util/utils";
@@ -100,7 +100,6 @@ interface ViewOptions {
 
 const ExamManagerMarkup = t.intersection([
     t.type({
-        managers: withDefault(t.array(t.string), []),
         groupsPath: withDefault(t.string, ""),
         showAllGroups: withDefault(t.boolean, false),
     }),
@@ -396,11 +395,11 @@ export class ExamGroupManagerComponent
      */
     async ngOnInit() {
         this.initOpts();
-        // Load content only for logged in users who are also owners of this management document
-        const isDocOwner = await toPromise(
-            this.http.get(`/loginCode/checkOwner/${this.getDocId()}`)
-        );
-        if (!isAdmin() && (!isDocOwner.ok || !Users.isLoggedIn())) {
+
+        const globals = someglobals();
+        const rights = globals.curr_item?.rights;
+        if (!isAdmin() && !Users.isLoggedIn() && !rights?.owner) {
+            // TODO: Emit error message
             return;
         }
 
@@ -412,49 +411,26 @@ export class ExamGroupManagerComponent
         }
     }
 
-    async getManagers() {
-        // let managers = this.settings.managers;
-        // if (!managers) {
-        //     managers = ["sukoladmin1", "sukoladmin2"];
-        // }
-        const doc_id = this.getDocId();
-        const res = await to2(
-            toPromise(this.http.get<Group[]>(`/loginCode/managers/${doc_id}`))
-        );
-        if (res.ok && res.result.ok) {
-            this.managers = res.result.result;
-        }
-
-        // return;
-    }
-
     /**
      * Fetches the groups that the current user is allowed to manage.
      * Note: current user must be member of one the document's manager groups
      *       specified with the document setting `groupManagement.managers`.
      */
     async getGroups() {
-        const doc_id = this.getDocId();
-        // check that current user has ownership to this manage document
-        const resp = await toPromise(
-            this.http.get(`/loginCode/checkOwner/${doc_id}`)
+        // Filter out groups to which the current user does not have owner rights,
+        // unless the (UI option? could be doc setting as well?) option 'List all existing groups' is active.
+        // In general, group managers should not have access to groups they did not create,
+        // but there are exceptions (for instance, a group manager might need to be substituted suddenly).
+        const groups = await toPromise(
+            this.http.get<Group[]>(`/examGroupManager/groups`, {
+                params: {
+                    showAllGroups: this.showAllGroups,
+                    ...this.getPar()!.par.getJsonForServer(),
+                },
+            })
         );
-        if (resp.ok) {
-            // Filter out groups to which the current user does not have owner rights,
-            // unless the (UI option? could be doc setting as well?) option 'List all existing groups' is active.
-            // In general, group managers should not have access to groups they did not create,
-            // but there are exceptions (for instance, a group manager might need to be substituted suddenly).
-            const showAllGroups: string = this.showAllGroups
-                ? `?showAllGroups=${this.showAllGroups.toString()}`
-                : "";
-            const groups = await toPromise<Group[]>(
-                this.http.get<Group[]>(
-                    `/loginCode/groups/${doc_id}${showAllGroups}`
-                )
-            );
-            if (groups.ok) {
-                this.groups = groups.result;
-            }
+        if (groups.ok) {
+            this.groups = groups.result;
         }
     }
 
@@ -532,7 +508,7 @@ export class ExamGroupManagerComponent
         const groups = this.getSelectedGroups();
         const group_ids = groups.map((g) => g.id);
 
-        const url = `/loginCode/members/from_groups`;
+        const url = `/examGroupManager/members/from_groups`;
         const response = await toPromise(
             this.http.post<GroupMember[]>(url, {
                 ids: group_ids,
@@ -553,7 +529,6 @@ export class ExamGroupManagerComponent
             canChooseFolder: false,
             // TODO Should be same as 'groupsPath' as it should always be set
             defaultGroupFolder: this.markup.groupsPath,
-            encodeGroupName: true,
         };
         // Create a new group
         const res = await to2(showUserGroupDialog(params));
@@ -606,7 +581,7 @@ export class ExamGroupManagerComponent
 
                 const copyres = await toPromise(
                     this.http.post(
-                        `/groups/copymemberships/${selected.name}/${group.name}`,
+                        `/examGroupManager/copymemberships/${selected.name}/${group.name}`,
                         {}
                     )
                 );
@@ -669,7 +644,7 @@ export class ExamGroupManagerComponent
                 // fetch login codes for the UI
             }
 
-            // const url = `/loginCode/generateCodes`;
+            // const url = `/examGroupManager/generateCodes`;
             // const response = await toPromise(
             //     this.http.post<UserCode[]>(url, {
             //         members: members,
@@ -703,7 +678,9 @@ export class ExamGroupManagerComponent
      */
     async getGroupMembers(group: Group) {
         const resp = await toPromise(
-            this.http.get<GroupMember[]>(`/loginCode/members/${group.id}`)
+            this.http.get<GroupMember[]>(
+                `/examGroupManager/members/${group.id}`
+            )
         );
         if (resp.ok) {
             this.members[group.name] = resp.result;
@@ -757,7 +734,7 @@ export class ExamGroupManagerComponent
         if (source !== undefined && target !== undefined) {
             const selected = this.getSelectedMembers(source);
             const uids = selected.map((m) => m.id);
-            const url = `/loginCode/addManyMembers/${group_id}`;
+            const url = `/examGroupManager/addManyMembers/${group_id}`;
             const b = {ids: uids};
             const response = await toPromise(
                 this.http.post<GroupMember[]>(url, b)
