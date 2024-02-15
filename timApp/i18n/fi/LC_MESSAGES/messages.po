@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-02-14 12:32+0200\n"
+"POT-Creation-Date: 2024-02-15 14:36+0200\n"
 "PO-Revision-Date: 2024-02-14 12:34+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fi\n"
@@ -21,4 +21,8 @@ msgstr ""
 #: plugin/quantum_circuit/quantumCircuit.py:259
 msgid "Expand by moving mouse over the exercise or by clicking"
 msgstr "Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla"
+
+#: templates/create_new.jinja2:2
+msgid "This page does not yet exist."
+msgstr "Tätä sivua ei ole vielä olemassa."
 
