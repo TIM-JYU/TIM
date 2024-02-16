@@ -9,12 +9,10 @@ import {
 } from "@angular/core";
 import type {IGroup, IUser} from "tim/user/IUser";
 import {ADMIN_GROUPNAME} from "tim/user/IUser";
-import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
 import {documentglobals, someglobals} from "tim/util/globals";
 import {isAdmin, Users} from "tim/user/userService";
 import type {Require} from "tim/util/utils";
 import {to2, toPromise} from "tim/util/utils";
-import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import type {TabDirective} from "ngx-bootstrap/tabs";
 import {TabsModule} from "ngx-bootstrap/tabs";
@@ -39,6 +37,8 @@ import {UserCreationDialogComponent} from "tim/plugin/examGroupManager/user-crea
 import {showUserCreationDialog} from "tim/plugin/examGroupManager/showUserCreationDialog";
 import {LoginCodeGenerationDialogComponent} from "tim/plugin/examGroupManager/login-code-generation-dialog.component";
 import {showLoginCodeGenerationDialog} from "tim/plugin/examGroupManager/showLoginCodeGenerationDialog";
+import {ExamGroupCreateDialogComponent} from "tim/plugin/examGroupManager/exam-group-create-dialog.component";
+import {showExamGroupCreateDialog} from "tim/plugin/examGroupManager/showExamGroupCreateDialog";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -54,12 +54,14 @@ export interface GroupMember extends IUser {
     selected: boolean;
 }
 
-export interface Group extends IGroup {
+export interface ExamGroup extends IGroup {
     // Group's doc path, eg. 'test/group01'
-    path?: string;
+    admin_doc_path?: string;
+    readableName: string;
     events?: GroupEvent[];
-    selected: boolean;
-    allMembersSelected: boolean;
+    isDirectOwner: boolean;
+    selected?: boolean;
+    allMembersSelected?: boolean;
 }
 
 /**
@@ -104,6 +106,7 @@ const ExamManagerMarkup = t.intersection([
     t.partial({
         extraInfoTitle: t.string,
         show: ViewOptionsT,
+        groupNamePrefix: t.string,
     }),
     GenericPluginMarkup,
 ]);
@@ -127,10 +130,10 @@ const ExamManagerFields = t.intersection([
         <ng-container>
             <bootstrap-panel id="groups-panel" title="All exam groups" i18n-title>
                 <div id="list-all-groups-setting">
-                    <label for="showAllGroups" class="form-control" i18n>
+                    <label for="showAllGroups" i18n>
                         <input type="checkbox" id="showAllGroups" [(ngModel)]="showAllGroups"
-                               (change)="toggleAllGroupsVisible()"/>
-                        <span style="padding-left: 2em;">List all school's exam groups</span>
+                               (ngModelChange)="refreshVisibleGroups()"/>
+                        <span>Show all school's exam groups</span>
                     </label>
                 </div>
                 <div id="groups-list">
@@ -156,16 +159,16 @@ const ExamManagerFields = t.intersection([
                             </tr>
                             </thead>
                             <tbody>
-                            <tr class="member-table-row" *ngFor="let group of groups">
+                            <tr class="member-table-row" *ngFor="let group of visibleGroups">
                                 <td *ngIf="this.viewOptions?.groups?.selectionControls">
                                     <input type="checkbox" name="toggleGroupSelection_{{group.id}}"
                                            [(ngModel)]="group.selected" (change)="toggleGroupSelection(group)"/>
                                 </td>
-                                <td *ngIf="this.viewOptions?.groups?.name">{{group.name}}</td>
+                                <td *ngIf="this.viewOptions?.groups?.name">{{ group.readableName }}</td>
                                 <td *ngIf="isAdmin() && this.viewOptions?.groups?.document">
-                                    <a href="/view/{{group.path}}">{{getGroupDocPath(group)}}</a>
+                                    <a href="/view/{{group.admin_doc_path}}">{{ getGroupDocPath(group) }}</a>
                                 </td>
-                                <td *ngIf="this.viewOptions?.groups?.memberCount">{{getGroupMemberCount(group)}}</td>
+                                <td *ngIf="this.viewOptions?.groups?.memberCount">{{ getGroupMemberCount(group) }}</td>
                                 <td *ngIf="this.viewOptions?.groups?.event"> -</td>
                                 <td *ngIf="this.viewOptions?.groups?.timeslot"> -</td>
                             </tr>
@@ -179,40 +182,41 @@ const ExamManagerFields = t.intersection([
                 <div id="groups-list-controls">
                     <div class="flex">
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new exam group</button>
-                        <button class="timButton" (click)="copyGroup(this.groups)"
-                                [disabled]="!oneSelected(this.groups)" i18n>Copy selected group
+                        <button class="timButton" (click)="copyGroup(this.visibleGroups)"
+                                [disabled]="!oneSelected(this.visibleGroups)" i18n>Copy selected group
                         </button>
-                        <button class="timButton btn-danger" (click)="deleteSelectedGroups(this.groups)"
-                                [disabled]="!anySelected(this.groups)" i18n>Delete selected groups
+                        <button class="timButton btn-danger" (click)="deleteSelectedGroups(this.visibleGroups)"
+                                [disabled]="!anySelected(this.visibleGroups)" i18n>Delete selected groups
                         </button>
                         <button class="timButton" (click)="generateLoginCodes()"
-                                [disabled]="!anySelected(this.groups)" i18n>Generate login codes
+                                [disabled]="!anySelected(this.visibleGroups)" i18n>Generate login codes
                         </button>
-                        <button class="timButton" (click)="printLoginCodes(this.groups)"
-                                [disabled]="!anySelected(this.groups)" i18n>Print login codes
+                        <button class="timButton" (click)="printLoginCodes(this.visibleGroups)"
+                                [disabled]="!anySelected(this.visibleGroups)" i18n>Print login codes
                         </button>
                     </div>
                     <tim-alert severity="success"
-                               *ngIf="saveGroupSuccessMessage">{{saveGroupSuccessMessage}}</tim-alert>
-                    <tim-alert severity="danger" *ngIf="saveGroupFailMessage">{{saveGroupFailMessage}}</tim-alert>
+                               *ngIf="saveGroupSuccessMessage">{{ saveGroupSuccessMessage }}
+                    </tim-alert>
+                    <tim-alert severity="danger" *ngIf="saveGroupFailMessage">{{ saveGroupFailMessage }}</tim-alert>
                 </div>
-                <div>
-                    <ng-container *ngIf="anySelected(this.groups)">
-                        <p>Selected groups:</p>
-                        <ol>
-                            <ng-container *ngFor="let group of groups">
-                                <li *ngIf="group.selected">{{group.name}}</li>
-                            </ng-container>
-                        </ol>
-                    </ng-container>
-                </div>
+                <!--                <div>-->
+                <!--                    <ng-container *ngIf="anySelected(this.groups)">-->
+                <!--                        <p>Selected groups:</p>-->
+                <!--                        <ol>-->
+                <!--                            <ng-container *ngFor="let group of groups">-->
+                <!--                                <li *ngIf="group.selected">{{group.name}}</li>-->
+                <!--                            </ng-container>-->
+                <!--                        </ol>-->
+                <!--                    </ng-container>-->
+                <!--                </div>-->
             </bootstrap-panel>
             <form>
                 <fieldset [disabled]="savingGroupMembers">
                     <bootstrap-panel title="Group members" i18n-title>
                         <tabset class="merged">
                             <!-- Create a new tab for each group that is visible to the current user -->
-                            <tab *ngFor="let group of groups" heading="{{group.name}}"
+                            <tab *ngFor="let group of visibleGroups" heading="{{group.readableName}}"
                                  class="grid-tab tab-form" (selectTab)="onGroupTabSelected($event)">
                                 <ng-container>
                                     <!-- Member list, with sort and selection controls -->
@@ -229,7 +233,8 @@ const ExamManagerFields = t.intersection([
                                                 <th i18n *ngIf="this.viewOptions?.members?.name">Name</th>
                                                 <th i18n *ngIf="this.viewOptions?.members?.username">Username</th>
                                                 <th i18n
-                                                    *ngIf="this.viewOptions?.members?.extraInfo">{{this.markup['extraInfoTitle'] ?? "Extra info"}}</th>
+                                                    *ngIf="this.viewOptions?.members?.extraInfo">{{ this.markup['extraInfoTitle'] ?? "Extra info" }}
+                                                </th>
 
                                                 <th i18n *ngIf="this.viewOptions?.members?.email">Email</th>
                                                 <th i18n *ngIf="this.viewOptions?.members?.loginCode">Login code</th>
@@ -242,11 +247,11 @@ const ExamManagerFields = t.intersection([
                                                            [(ngModel)]="member.selected"
                                                            (change)="toggleMemberSelection(group)"/>
                                                 </td>
-                                                <td *ngIf="this.viewOptions?.members?.name">{{member.real_name}}</td>
-                                                <td *ngIf="this.viewOptions?.members?.username">{{member.name}}</td>
-                                                <td *ngIf="this.viewOptions?.members?.extraInfo">{{member.extra_info}}</td>
-                                                <td *ngIf="this.viewOptions?.members?.email">{{member.email}}</td>
-                                                <td *ngIf="this.viewOptions?.members?.loginCode">{{member.login_code}}</td>
+                                                <td *ngIf="this.viewOptions?.members?.name">{{ member.real_name }}</td>
+                                                <td *ngIf="this.viewOptions?.members?.username">{{ member.name }}</td>
+                                                <td *ngIf="this.viewOptions?.members?.extraInfo">{{ member.extra_info }}</td>
+                                                <td *ngIf="this.viewOptions?.members?.email">{{ member.email }}</td>
+                                                <td *ngIf="this.viewOptions?.members?.loginCode">{{ member.login_code }}</td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -263,7 +268,7 @@ const ExamManagerFields = t.intersection([
                                             Import students from Wilma
                                         </button>
                                         <br/>
-                                        <ng-container *ngIf="this.groups.length > 1">
+                                        <ng-container *ngIf="this.visibleGroups.length > 1">
                                             <span class="copy-members-field">
                                                 <button class="timButton" (click)="copyMembers(this.copyMembersTarget)"
                                                         i18n [disabled]="!anySelected(this.members[group.name])">
@@ -272,8 +277,8 @@ const ExamManagerFields = t.intersection([
                                                 <select id="copyMembersTarget" name="copyMembersTarget"
                                                         class="form-control"
                                                         [(ngModel)]="this.copyMembersTarget">
-                                                    <option *ngFor="let group of this.groups"
-                                                            value="{{group.id}}">{{group.name}}</option>
+                                                    <option *ngFor="let group of this.visibleGroups"
+                                                            value="{{group.id}}">{{ group.name }}</option>
                                                 </select>
                                             </span>
                                         </ng-container>
@@ -282,16 +287,18 @@ const ExamManagerFields = t.intersection([
                                             Remove selected
                                         </button>
                                         <tim-alert severity="success"
-                                                   *ngIf="saveMembersSuccessMessage">{{saveMembersSuccessMessage}}</tim-alert>
+                                                   *ngIf="saveMembersSuccessMessage">{{ saveMembersSuccessMessage }}
+                                        </tim-alert>
                                         <tim-alert severity="danger"
-                                                   *ngIf="saveMembersFailMessage">{{saveMembersFailMessage}}</tim-alert>
+                                                   *ngIf="saveMembersFailMessage">{{ saveMembersFailMessage }}
+                                        </tim-alert>
                                     </div>
                                 </ng-container>
                                 <ng-container *ngIf="anySelected(this.members[group.name])">
                                     <p>Selected members:</p>
                                     <ol>
                                         <ng-container *ngFor="let member of this.members[group.name]">
-                                            <li *ngIf="member.selected">{{member.name}}</li>
+                                            <li *ngIf="member.selected">{{ member.name }}</li>
                                         </ng-container>
                                     </ol>
                                 </ng-container>
@@ -318,9 +325,10 @@ export class ExamGroupManagerComponent
     viewOptions?: ViewOptions;
     showAllGroups: boolean = false;
     // Groups that can manage login code groups, specified with document setting `groups`
-    managers: Group[] = [];
+    managers: ExamGroup[] = [];
     // Groups that are managed via the group management document
-    groups: Group[] = [];
+    visibleGroups: ExamGroup[] = [];
+    allGroups: ExamGroup[] = [];
     // Members visible on the currently active group tab (in the group members table)
     members: Record<string, GroupMember[]> = {};
 
@@ -385,11 +393,11 @@ export class ExamGroupManagerComponent
         }
 
         await this.getGroups();
-        this.selectedGroupTab = this.groups[0]?.name ?? "";
+        this.selectedGroupTab = this.visibleGroups[0]?.name ?? "";
 
-        for (const g of this.groups) {
-            await this.getGroupMembers(g);
-        }
+        // for (const g of this.visibleGroups) {
+        //     await this.getGroupMembers(g);
+        // }
     }
 
     /**
@@ -403,26 +411,26 @@ export class ExamGroupManagerComponent
         // In general, group managers should not have access to groups they did not create,
         // but there are exceptions (for instance, a group manager might need to be substituted suddenly).
         const groups = await toPromise(
-            this.http.get<Group[]>(`/examGroupManager/groups`, {
+            this.http.get<ExamGroup[]>(`/examGroupManager/groups`, {
                 params: {
-                    showAllGroups: this.showAllGroups,
                     ...this.getPar()!.par.getJsonForServer(),
                 },
             })
         );
         if (groups.ok) {
-            this.groups = groups.result;
+            this.allGroups = groups.result;
         }
+        this.refreshVisibleGroups();
     }
 
-    getGroupDocPath(group: Group): string {
+    getGroupDocPath(group: ExamGroup): string {
         if (group !== undefined) {
             if (this.viewOptions?.groups?.fullDocPath) {
-                return group.path!;
+                return group.admin_doc_path!;
             }
-            return group.path!.slice(
-                group.path!.lastIndexOf("/") + 1,
-                group.path!.length
+            return group.admin_doc_path!.slice(
+                group.admin_doc_path!.lastIndexOf("/") + 1,
+                group.admin_doc_path!.length
             );
         }
         return "";
@@ -432,7 +440,7 @@ export class ExamGroupManagerComponent
      * Checks that at least one Group or GroupMember is selected.
      * @param selectables list of selectable Groups or GroupMembers
      */
-    anySelected(selectables: GroupMember[] | Group[]) {
+    anySelected(selectables: GroupMember[] | ExamGroup[]) {
         return selectables?.some((s) => s.selected) ?? false;
     }
 
@@ -440,7 +448,7 @@ export class ExamGroupManagerComponent
      * Checks that exactly one Group is selected.
      * @param groups list of selectable Groups
      */
-    oneSelected(groups: Group[]) {
+    oneSelected(groups: ExamGroup[]) {
         let count = 0;
         for (const g of groups) {
             if (g.selected) {
@@ -453,25 +461,25 @@ export class ExamGroupManagerComponent
         return count == 1;
     }
 
-    async toggleAllGroupsVisible() {
-        this.showAllGroups = !this.showAllGroups;
-        // refresh
-        await this.getGroups();
+    refreshVisibleGroups() {
+        this.visibleGroups = this.showAllGroups
+            ? this.allGroups
+            : this.allGroups.filter((g) => g.isDirectOwner);
     }
 
-    toggleGroupSelection(group: Group) {
-        this.allGroupsSelected = this.groups.every((g) => g.selected);
+    toggleGroupSelection(group: ExamGroup) {
+        this.allGroupsSelected = this.visibleGroups.every((g) => g.selected);
     }
 
     toggleAllGroupsSelected() {
-        for (const g of this.groups) {
+        for (const g of this.visibleGroups) {
             g.selected = this.allGroupsSelected;
         }
     }
 
-    private getSelectedGroups(): Group[] {
-        const selected: Group[] = [];
-        for (const g of this.groups) {
+    private getSelectedGroups(): ExamGroup[] {
+        const selected: ExamGroup[] = [];
+        for (const g of this.visibleGroups) {
             if (g.selected) {
                 selected.push(g);
             }
@@ -479,7 +487,7 @@ export class ExamGroupManagerComponent
         return selected;
     }
 
-    getGroupMemberCount(group: Group): number {
+    getGroupMemberCount(group: ExamGroup): number {
         return this.members[group.name] !== undefined
             ? this.members[group.name].length
             : 0;
@@ -501,23 +509,14 @@ export class ExamGroupManagerComponent
     }
 
     async createNewGroup() {
-        const params: UserGroupDialogParams = {
-            canChooseFolder: false,
-            defaultGroupFolder: this.markup.groupsPath,
-        };
-        // Create a new group
-        const res = await to2(showUserGroupDialog(params));
+        const res = await to2(
+            showExamGroupCreateDialog({
+                folderPath: this.markup.groupsPath,
+                groupPrefix: this.markup.groupNamePrefix,
+            })
+        );
         if (res.ok) {
-            // add new group to list
-            const group = res.result;
-
-            this.groups.push({
-                id: group.id,
-                name: group.name,
-                path: group.path,
-                selected: false,
-                allMembersSelected: false,
-            });
+            this.visibleGroups.push(res.result);
         }
     }
 
@@ -525,8 +524,8 @@ export class ExamGroupManagerComponent
      * Copies the selected Group (including memberships) into a new Group.
      * @param groups
      */
-    async copyGroup(groups: Group[]) {
-        let selected: Group | undefined;
+    async copyGroup(groups: ExamGroup[]) {
+        let selected: ExamGroup | undefined;
         for (const g of groups) {
             if (g.selected) {
                 selected = g;
@@ -534,24 +533,15 @@ export class ExamGroupManagerComponent
             }
         }
         if (selected) {
-            const path = selected.path;
-            const folder = path
-                ? path.slice(path.indexOf("/") + 1, path.lastIndexOf("/"))
-                : "";
-            const params: UserGroupDialogParams = {
-                canChooseFolder: false,
-                defaultGroupFolder: folder,
-            };
-            const res = await to2(showUserGroupDialog(params));
+            const res = await to2(
+                showExamGroupCreateDialog({
+                    folderPath: this.markup.groupsPath,
+                    groupPrefix: this.markup.groupNamePrefix,
+                })
+            );
             if (res.ok) {
-                const group: Group = {
-                    id: res.result.id,
-                    name: res.result.name,
-                    path: res.result.path,
-                    selected: false,
-                    allMembersSelected: false,
-                };
-                this.groups.push(group);
+                const group = res.result;
+                this.visibleGroups.push(group);
 
                 const copyres = await toPromise(
                     this.http.post(
@@ -571,9 +561,9 @@ export class ExamGroupManagerComponent
      * Delete selected groups from the database
      * @param groups
      */
-    async deleteSelectedGroups(groups: Group[]) {
+    async deleteSelectedGroups(groups: ExamGroup[]) {
         // Delete selected groups
-        const selected: Group[] = this.getSelectedGroups();
+        const selected: ExamGroup[] = this.getSelectedGroups();
         const confirmTitle = $localize`Delete groups`;
         const confirmMessage = $localize`Are you certain you wish to delete the following groups?\nThis action cannot be undone!\n\nGroups to be deleted:\n`;
         const confirmGroups = selected.map((g) => g.name).join("\n");
@@ -595,12 +585,14 @@ export class ExamGroupManagerComponent
             // remove from group record
             selected.map((group) => delete this.members[group.name]);
             // remove group from groups array
-            const indices = selected.map((group) => this.groups.indexOf(group));
-            indices.map((index) => this.groups.splice(index, 1));
+            const indices = selected.map((group) =>
+                this.visibleGroups.indexOf(group)
+            );
+            indices.map((index) => this.visibleGroups.splice(index, 1));
 
             // update ui
             await this.getGroups();
-            this.selectedGroupTab = this.groups[0]?.name ?? "";
+            this.selectedGroupTab = this.visibleGroups[0]?.name ?? "";
         }
     }
 
@@ -650,7 +642,7 @@ export class ExamGroupManagerComponent
      * Fetches users belonging to the specified group
      * @param group
      */
-    async getGroupMembers(group: Group) {
+    async getGroupMembers(group: ExamGroup) {
         const resp = await toPromise(
             this.http.get<GroupMember[]>(
                 `/examGroupManager/members/${group.id}`
@@ -665,7 +657,7 @@ export class ExamGroupManagerComponent
      * Add members to the group in the currently active group members tab
      * @param group currently active group
      */
-    async addMembers(group: Group) {
+    async addMembers(group: ExamGroup) {
         const creationDialogParams = {
             group: group.id,
             // Defaults to "Extra info" if not set in doc settings
@@ -685,7 +677,7 @@ export class ExamGroupManagerComponent
      * The new users will then be added to the specified group.
      * @param group Group into which new users will be added as members.
      */
-    async importUsers(group: Group) {
+    async importUsers(group: ExamGroup) {
         const importDialogParams = {
             group: group.id,
         };
@@ -697,11 +689,11 @@ export class ExamGroupManagerComponent
     }
 
     async copyMembers(group_id: number) {
-        const source: Group = this.groups.filter(
+        const source: ExamGroup = this.visibleGroups.filter(
             (g) => g.name === this.selectedGroupTab
         )[0];
         // FIXME: the value returned from option.value is not really a number, but a string
-        const target: Group = this.groups.filter(
+        const target: ExamGroup = this.visibleGroups.filter(
             (g) => String(g.id) === String(group_id)
         )[0];
 
@@ -720,7 +712,7 @@ export class ExamGroupManagerComponent
         }
     }
 
-    async removeMembers(group: Group) {
+    async removeMembers(group: ExamGroup) {
         // Remove selected members from the currently active group
         // Note: remember to clear selectedMembers after deletion from the group
         const selected = this.getSelectedMembers(group);
@@ -764,11 +756,11 @@ export class ExamGroupManagerComponent
         }
     }
 
-    private getSelectedMembers(group: Group): GroupMember[] {
+    private getSelectedMembers(group: ExamGroup): GroupMember[] {
         return this.members[group.name].filter((m) => m.selected);
     }
 
-    toggleMemberSelection(group: Group) {
+    toggleMemberSelection(group: ExamGroup) {
         // if selecting a member results in all of the group's members being selected,
         // set the corresponding flag value to reflect that
         group.allMembersSelected = this.members[group.name].every(
@@ -776,9 +768,9 @@ export class ExamGroupManagerComponent
         );
     }
 
-    toggleAllMembersSelected(group: Group) {
+    toggleAllMembersSelected(group: ExamGroup) {
         for (const m of this.members[group.name]) {
-            m.selected = group.allMembersSelected;
+            m.selected = group.allMembersSelected ?? false;
         }
     }
 
@@ -794,6 +786,7 @@ export class ExamGroupManagerComponent
         UserImportDialogComponent,
         UserCreationDialogComponent,
         LoginCodeGenerationDialogComponent,
+        ExamGroupCreateDialogComponent,
     ],
     exports: [ExamGroupManagerComponent],
     imports: [

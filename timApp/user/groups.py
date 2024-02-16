@@ -46,7 +46,6 @@ USER_NOT_FOUND = "User not found"
 class NameValidationFlags(Flag):
     RequireDigits = 1
     AllowUpperCase = 2
-    AllowBase64 = 4
 
 
 def verify_groupadmin(
@@ -176,7 +175,7 @@ def raise_group_not_found_if_none(group_name: str, ug: UserGroup | None):
 
 # FIXME: Implement
 @groups.get("/create/<path:group_path>")
-def create_group(group_path: str, adminDocTitle: str | None = None) -> Response:
+def create_group(group_path: str) -> Response:
     """Route for creating a user group.
 
     The name of user group has the following restrictions:
@@ -192,43 +191,23 @@ def create_group(group_path: str, adminDocTitle: str | None = None) -> Response:
      2. lowercase ASCII strings (Korppi users) with length being in range [2,8].
 
     """
-    encode_name = request.args.get("encodeGroupName")
-    _, doc = do_create_group(group_path, encode_name)
+    _, doc = do_create_group(group_path)
     db.session.commit()
     return json_response(doc)
 
 
-def do_create_group(
-    group_path: str, encode_name: bool | None = None
-) -> tuple[UserGroup, DocInfo]:
+def do_create_group(group_path: str) -> tuple[UserGroup, DocInfo]:
     group_path = group_path.strip("/ ")
 
     # The name of the user group is separated from the path.
     # Does not check whether a name or a path is missing.
     group_name = group_path.split("/")[-1]
 
-    validation_flags = None
-    if encode_name:
-        timestamp: int = int(time.time_ns() / 1_000_000)
-
-        # We need a prefix marker to signify that the group name is in encoded form
-        encoding = "b64_"
-        encoded_name_str = str(
-            base64.standard_b64encode(f"{group_name}_{timestamp}".encode()),
-            encoding="utf-8",
-        )
-        name = f"{encoding}{encoded_name_str}"
-        group_name = name
-        validation_flags = (
-            NameValidationFlags.AllowBase64 | NameValidationFlags.AllowUpperCase
-        )
-
     if UserGroup.get_by_name(group_name):
         raise RouteException("User group already exists.")
 
     verify_groupadmin(action=f"Creating group {group_name}")
-
-    validate_groupname(group_name, validation_flags)
+    validate_groupname(group_name)
 
     # To support legacy code:
     # The group administrator has always writing permission to the groups' root folder.
@@ -241,8 +220,6 @@ def do_create_group(
         else UserGroup.get_admin_group()
     )
 
-    # TODO Will special chars in encoded group name be a problem for creating related
-    #      folders/documents?
     doc = create_document(
         f"groups/{remove_path_special_chars(group_path)}",
         group_name,
@@ -285,38 +262,17 @@ def update_group_doc_settings(
     doc.document.add_setting("macros", s)
 
 
-def validate_groupname(group_name: str, flags: NameValidationFlags | None = None):
+def validate_groupname(group_name: str):
     has_digits = False
     has_letters = False
     has_upper_letters = False
     has_non_alnum = False
-    # Note: If future expansion is needed, create a new variable to hold the chars,
-    #       do *not* expand the existing one unless the leveraged spec for Base64 has changed.
-    # TODO: Should we make this a configurable property?
-    # TODO: allowing special chars is now probably redundant since we are using urlsafe_base64en/decode,
-    #       which substitutes '+' and '/' with '-' and '_' respectively (and '=' is explicitly allowed)
-    base64_chars = "+/=" if flags and NameValidationFlags.AllowBase64 in flags else ""
-    allowed_special_chars = f"-_{base64_chars}"
     for c in group_name:
         has_digits = has_digits or c.isdigit()
         has_letters = has_letters or c.isalpha()
         has_upper_letters = has_upper_letters or c.isupper()
-        has_non_alnum = has_non_alnum or not (
-            c.isalnum() or c.isspace() or c in allowed_special_chars
-        )
-    if flags:
-        if (
-            (NameValidationFlags.RequireDigits in flags and not has_digits)
-            or not has_letters
-            or has_non_alnum
-            or (NameValidationFlags.AllowUpperCase not in flags and has_upper_letters)
-        ):
-            raise RouteException(
-                'User group must contain at least one digit and one letter and must not have uppercase or special chars: "'
-                + group_name
-                + '"'
-            )
-    elif not has_digits or not has_letters or has_non_alnum or has_upper_letters:
+        has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace() or c in "-_")
+    if not has_digits or not has_letters or has_non_alnum or has_upper_letters:
         raise RouteException(
             'User group must contain at least one digit and one letter and must not have uppercase or special chars: "'
             + group_name

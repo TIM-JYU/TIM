@@ -25,7 +25,7 @@ from timApp.document.viewcontext import ViewRoute
 from timApp.folder.folder import Folder
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.sqa import db, run_sql
-from timApp.user.groups import verify_groupadmin
+from timApp.user.groups import verify_groupadmin, do_create_group
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
@@ -36,6 +36,7 @@ from timApp.util.flask.requesthelper import (
 )
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.utils import slugify
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
@@ -83,6 +84,7 @@ class ExamGroupManagerMarkup(GenericMarkupModel):
     extraInfoTitle: str | Missing = missing
     showAllGroups: bool = False
     show: ViewOptionsMarkup = field(default_factory=ViewOptionsMarkup)
+    groupNamePrefix: str | Missing = missing
 
 
 ExamGroupManagerMarkupSchema = class_schema(
@@ -131,9 +133,6 @@ def _get_plugin_markup(par: GlobalParId) -> tuple[ExamGroupManagerMarkup, UserCo
 def get_groups(
     doc_id: int,
     par_id: str,
-    show_all_groups: bool = field(
-        default=False, metadata={"data_key": "showAllGroups"}
-    ),
 ) -> Response:
     """
     Fetch exam groups that can be managed by the current user in the current plugin.
@@ -145,6 +144,7 @@ def get_groups(
     """
     markup, user_ctx = _get_plugin_markup(GlobalParId(doc_id, par_id))
     user = user_ctx.user
+    curr_user: UserGroup = user.get_personal_group()
 
     if markup.groupsPath is missing:
         raise RouteException("groupsPath is missing from the plugin markup")
@@ -157,14 +157,6 @@ def get_groups(
         raise NotExist(f"Group folder {fpath} does not exist.")
 
     ug_docs: dict[int, DocInfo] = {d.id: d for d in folder.get_all_documents()}
-    if not show_all_groups:
-        curr_user: UserGroup = user.get_personal_group()
-        ug_docs = {
-            ug_doc.id: ug_doc
-            for ug_doc in ug_docs.values()
-            if curr_user in ug_doc.owners
-        }
-
     groups_docs: Sequence[Row[tuple[UserGroup, int]]] = (
         run_sql(
             select(UserGroup, UserGroupDoc.doc_id)
@@ -178,11 +170,33 @@ def get_groups(
         [
             {
                 "id": g.id,
-                "name": ug_docs[admin_doc_id].title,
+                "name": g.name,
+                "readableName": ug_docs[admin_doc_id].title,
                 "path": ug_docs[admin_doc_id].path,
+                "isDirectOwner": curr_user in ug_docs[admin_doc_id].owners,
             }
             for g, admin_doc_id in groups_docs
         ]
+    )
+
+
+@exam_group_manager_plugin.post("/createGroup")
+def create_group(
+    name: str,
+    group_folder_path: str,
+    group_prefix: str = "",
+) -> Response:
+    group_name = f"{group_prefix}-{slugify(name)}"
+    group_path = f"{group_folder_path}/{group_name}"
+    ug, doc = do_create_group(group_path)
+    doc.title = name
+    db.session.commit()
+    return json_response(
+        ug.to_json()
+        | {
+            "readableName": doc.title,
+            "isDirectOwner": True,
+        }
     )
 
 
