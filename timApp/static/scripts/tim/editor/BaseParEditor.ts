@@ -103,6 +103,20 @@ export abstract class BaseParEditor {
             this.forceWrap(false);
         });
     }
+
+    formatBlockTemplate(text: string): string {
+        const pos = this.getPosition();
+        const isBlock = text.startsWith("```");
+        if (
+            isBlock &&
+            pos[0] == pos[1] &&
+            pos[0] > 0 &&
+            this.getEditorText()[pos[0] - 1] != "\n"
+        ) {
+            text = "\n" + text;
+        }
+        return text;
+    }
 }
 
 export const CURSOR = "⁞";
