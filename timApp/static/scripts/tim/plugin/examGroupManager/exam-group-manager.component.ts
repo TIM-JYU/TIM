@@ -74,29 +74,27 @@ export interface GroupEvent {
     documents: string[];
 }
 
-/**
- * Used to define which elements of the Group Management Component are visible.
- */
-// type ViewOptions = Record<string, Record<string, boolean>>;
-interface ViewOptions {
-    groups: {
-        selectionControls: boolean;
-        name: boolean;
-        document: boolean;
-        fullDocPath: boolean;
-        memberCount: boolean;
-        event: boolean;
-        timeslot: boolean;
-    };
-    members: {
-        selectionControls: boolean;
-        name: boolean;
-        username: boolean;
-        email: boolean;
-        extra_info: boolean;
-        logincode: boolean;
-    };
-}
+const ViewOptionsT = t.partial({
+    groups: t.partial({
+        selectionControls: t.boolean,
+        name: t.boolean,
+        document: t.boolean,
+        fullDocPath: t.boolean,
+        memberCount: t.boolean,
+        event: t.boolean,
+        timeslot: t.boolean,
+    }),
+    members: t.partial({
+        selectionControls: t.boolean,
+        name: t.boolean,
+        username: t.boolean,
+        email: t.boolean,
+        extraInfo: t.boolean,
+        loginCode: t.boolean,
+    }),
+});
+
+interface ViewOptions extends t.TypeOf<typeof ViewOptionsT> {}
 
 const ExamManagerMarkup = t.intersection([
     t.type({
@@ -105,6 +103,7 @@ const ExamManagerMarkup = t.intersection([
     }),
     t.partial({
         extraInfoTitle: t.string,
+        show: ViewOptionsT,
     }),
     GenericPluginMarkup,
 ]);
@@ -126,12 +125,12 @@ const ExamManagerFields = t.intersection([
     selector: "tim-exam-group-manager",
     template: `
         <ng-container>
-            <bootstrap-panel id="groups-panel" title="All groups" i18n-title>
+            <bootstrap-panel id="groups-panel" title="All exam groups" i18n-title>
                 <div id="list-all-groups-setting">
                     <label for="showAllGroups" class="form-control" i18n>
                         <input type="checkbox" id="showAllGroups" [(ngModel)]="showAllGroups"
                                (change)="toggleAllGroupsVisible()"/>
-                        <span style="padding-left: 2em;">List all existing groups</span>
+                        <span style="padding-left: 2em;">List all school's exam groups</span>
                     </label>
                 </div>
                 <div id="groups-list">
@@ -146,29 +145,29 @@ const ExamManagerFields = t.intersection([
                         <table>
                             <thead>
                             <tr class="member-table-row">
-                                <th i18n *ngIf="this.viewOptions.groups.selectionControls">
+                                <th i18n *ngIf="this.viewOptions?.groups?.selectionControls">
                                     <input type="checkbox" name="selectAllGroups" [(ngModel)]="allGroupsSelected"
                                            (change)="toggleAllGroupsSelected()"/></th>
-                                <th i18n *ngIf="this.viewOptions.groups.name">Group name</th>
-                                <th *ngIf="isAdmin() && this.viewOptions.groups.document" i18n>Group document</th>
-                                <th i18n *ngIf="this.viewOptions.groups.memberCount">Number of students</th>
-                                <th i18n *ngIf="this.viewOptions.groups.event">Event</th>
-                                <th i18n *ngIf="this.viewOptions.groups.timeslot">Timeslot</th>
+                                <th i18n *ngIf="this.viewOptions?.groups?.name">Group name</th>
+                                <th *ngIf="isAdmin() && this.viewOptions?.groups?.document" i18n>Group document</th>
+                                <th i18n *ngIf="this.viewOptions?.groups?.memberCount">Number of students</th>
+                                <th i18n *ngIf="this.viewOptions?.groups?.event">Event</th>
+                                <th i18n *ngIf="this.viewOptions?.groups?.timeslot">Timeslot</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr class="member-table-row" *ngFor="let group of groups">
-                                <td *ngIf="this.viewOptions.groups.selectionControls">
+                                <td *ngIf="this.viewOptions?.groups?.selectionControls">
                                     <input type="checkbox" name="toggleGroupSelection_{{group.id}}"
                                            [(ngModel)]="group.selected" (change)="toggleGroupSelection(group)"/>
                                 </td>
-                                <td *ngIf="this.viewOptions.groups.name">{{group.name}}</td>
-                                <td *ngIf="isAdmin() && this.viewOptions.groups.document">
+                                <td *ngIf="this.viewOptions?.groups?.name">{{group.name}}</td>
+                                <td *ngIf="isAdmin() && this.viewOptions?.groups?.document">
                                     <a href="/view/{{group.path}}">{{getGroupDocPath(group)}}</a>
                                 </td>
-                                <td *ngIf="this.viewOptions.groups.memberCount">{{getGroupMemberCount(group)}}</td>
-                                <td *ngIf="this.viewOptions.groups.event"> -</td>
-                                <td *ngIf="this.viewOptions.groups.timeslot"> -</td>
+                                <td *ngIf="this.viewOptions?.groups?.memberCount">{{getGroupMemberCount(group)}}</td>
+                                <td *ngIf="this.viewOptions?.groups?.event"> -</td>
+                                <td *ngIf="this.viewOptions?.groups?.timeslot"> -</td>
                             </tr>
                             </tbody>
                         </table>
@@ -179,7 +178,7 @@ const ExamManagerFields = t.intersection([
                 <!-- style="display: inline-block" -->
                 <div id="groups-list-controls">
                     <div class="flex">
-                        <button class="timButton" (click)="createNewGroup()" i18n>Create a new group</button>
+                        <button class="timButton" (click)="createNewGroup()" i18n>Create a new exam group</button>
                         <button class="timButton" (click)="copyGroup(this.groups)"
                                 [disabled]="!oneSelected(this.groups)" i18n>Copy selected group
                         </button>
@@ -223,31 +222,31 @@ const ExamManagerFields = t.intersection([
                                         <table>
                                             <thead>
                                             <tr class="member-table-row">
-                                                <th i18n *ngIf="this.viewOptions.members.selectionControls">
+                                                <th i18n *ngIf="this.viewOptions?.members?.selectionControls">
                                                     <input type="checkbox" name="selectAllMembers_{{group.id}}"
                                                            [(ngModel)]="group.allMembersSelected"
                                                            (change)="toggleAllMembersSelected(group)"/></th>
-                                                <th i18n *ngIf="this.viewOptions.members.name">Name</th>
-                                                <th i18n *ngIf="this.viewOptions.members.username">Username</th>
+                                                <th i18n *ngIf="this.viewOptions?.members?.name">Name</th>
+                                                <th i18n *ngIf="this.viewOptions?.members?.username">Username</th>
                                                 <th i18n
-                                                    *ngIf="this.viewOptions.members.extra_info">{{this.markup['extraInfoTitle'] ?? "Extra info"}}</th>
+                                                    *ngIf="this.viewOptions?.members?.extraInfo">{{this.markup['extraInfoTitle'] ?? "Extra info"}}</th>
 
-                                                <th i18n *ngIf="this.viewOptions.members.email">Email</th>
-                                                <th i18n *ngIf="this.viewOptions.members.logincode">Login code</th>
+                                                <th i18n *ngIf="this.viewOptions?.members?.email">Email</th>
+                                                <th i18n *ngIf="this.viewOptions?.members?.loginCode">Login code</th>
                                             </tr>
                                             </thead>
                                             <tbody>
                                             <tr class="member-table-row" *ngFor="let member of members[group.name]">
-                                                <td *ngIf="this.viewOptions.members.selectionControls">
+                                                <td *ngIf="this.viewOptions?.members?.selectionControls">
                                                     <input type="checkbox" name="toggleSelection_{{member.id}}"
                                                            [(ngModel)]="member.selected"
                                                            (change)="toggleMemberSelection(group)"/>
                                                 </td>
-                                                <td *ngIf="this.viewOptions.members.name">{{member.real_name}}</td>
-                                                <td *ngIf="this.viewOptions.members.username">{{member.name}}</td>
-                                                <td *ngIf="this.viewOptions.members.extra_info">{{member.extra_info}}</td>
-                                                <td *ngIf="this.viewOptions.members.email">{{member.email}}</td>
-                                                <td *ngIf="this.viewOptions.members.logincode">{{member.login_code}}</td>
+                                                <td *ngIf="this.viewOptions?.members?.name">{{member.real_name}}</td>
+                                                <td *ngIf="this.viewOptions?.members?.username">{{member.name}}</td>
+                                                <td *ngIf="this.viewOptions?.members?.extraInfo">{{member.extra_info}}</td>
+                                                <td *ngIf="this.viewOptions?.members?.email">{{member.email}}</td>
+                                                <td *ngIf="this.viewOptions?.members?.loginCode">{{member.login_code}}</td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -316,7 +315,7 @@ export class ExamGroupManagerComponent
     implements OnInit
 {
     requiresTaskId = false;
-    viewOptions!: ViewOptions;
+    viewOptions?: ViewOptions;
     showAllGroups: boolean = false;
     // Groups that can manage login code groups, specified with document setting `groups`
     managers: Group[] = [];
@@ -349,26 +348,7 @@ export class ExamGroupManagerComponent
         // this.settings = this.viewctrl.docSettings.groupManagement ?? {}; // ngOnInit
         this.showAllGroups = false;
         this.allGroupsSelected = false;
-        // TODO set these with component/plugin attributes
-        this.viewOptions = {
-            groups: {
-                selectionControls: true,
-                name: true,
-                document: true,
-                fullDocPath: false,
-                memberCount: true,
-                event: false,
-                timeslot: true,
-            },
-            members: {
-                selectionControls: true,
-                name: true,
-                username: true,
-                email: false,
-                extra_info: true,
-                logincode: true,
-            },
-        };
+        this.viewOptions = this.markup.show;
     }
 
     /**
@@ -394,6 +374,7 @@ export class ExamGroupManagerComponent
      * Initialization procedures.
      */
     async ngOnInit() {
+        super.ngOnInit();
         this.initOpts();
 
         const globals = someglobals();
@@ -436,7 +417,7 @@ export class ExamGroupManagerComponent
 
     getGroupDocPath(group: Group): string {
         if (group !== undefined) {
-            if (this.viewOptions.groups.fullDocPath) {
+            if (this.viewOptions?.groups?.fullDocPath) {
                 return group.path!;
             }
             return group.path!.slice(
@@ -520,14 +501,8 @@ export class ExamGroupManagerComponent
     }
 
     async createNewGroup() {
-        // Disable setting group folder and provide a default path for it
-        // TODO: give owner permissions to the created group
-        //  for groups listed under the doc setting managers,
-        //  so that we don't have to set permissions manually
         const params: UserGroupDialogParams = {
-            // TODO set these in group management docSettings
             canChooseFolder: false,
-            // TODO Should be same as 'groupsPath' as it should always be set
             defaultGroupFolder: this.markup.groupsPath,
         };
         // Create a new group
@@ -566,7 +541,6 @@ export class ExamGroupManagerComponent
             const params: UserGroupDialogParams = {
                 canChooseFolder: false,
                 defaultGroupFolder: folder,
-                encodeGroupName: true,
             };
             const res = await to2(showUserGroupDialog(params));
             if (res.ok) {

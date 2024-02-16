@@ -595,7 +595,6 @@ export class SettingsTabComponent implements OnInit {
         const params: UserGroupDialogParams = {
             defaultGroupFolder: "",
             canChooseFolder: true,
-            encodeGroupName: false,
         };
         const doc = await to2(showUserGroupDialog(params));
         if (doc.ok) {

@@ -128,6 +128,7 @@ export abstract class AngularPluginBase<
 
     ngOnInit() {
         const parsed = JSON.parse(atob(this.json)) as unknown;
+        console.log(parsed);
         const validated = this.getAttributeType().decode(parsed);
 
         if (isLeft(validated)) {

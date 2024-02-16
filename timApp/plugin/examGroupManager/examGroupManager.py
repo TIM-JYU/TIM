@@ -51,10 +51,38 @@ exam_group_manager_plugin = TypedBlueprint(
 
 
 @dataclass
+class GroupViewOptionsMarkup:
+    selectionControls: bool = True
+    name: bool = True
+    document: bool = False
+    fullDocPath: bool = False
+    memberCount: bool = True
+    event: bool = False
+    timeslot: bool = False
+
+
+@dataclass
+class MemberViewOptionsMarkup:
+    selectionControls: bool = True
+    name: bool = True
+    username: bool = False
+    email: bool = False
+    extraInfo: bool = True
+    loginCode: bool = True
+
+
+@dataclass
+class ViewOptionsMarkup:
+    groups: GroupViewOptionsMarkup = field(default_factory=GroupViewOptionsMarkup)
+    members: MemberViewOptionsMarkup = field(default_factory=MemberViewOptionsMarkup)
+
+
+@dataclass
 class ExamGroupManagerMarkup(GenericMarkupModel):
     groupsPath: str | Missing = missing
     extraInfoTitle: str | Missing = missing
     showAllGroups: bool = False
+    show: ViewOptionsMarkup = field(default_factory=ViewOptionsMarkup)
 
 
 ExamGroupManagerMarkupSchema = class_schema(
