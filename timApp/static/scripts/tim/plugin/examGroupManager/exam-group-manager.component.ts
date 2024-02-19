@@ -156,6 +156,8 @@ const ExamManagerFields = t.intersection([
                                 <th i18n *ngIf="this.viewOptions?.groups?.memberCount">Number of students</th>
                                 <th i18n *ngIf="this.viewOptions?.groups?.event">Event</th>
                                 <th i18n *ngIf="this.viewOptions?.groups?.timeslot">Timeslot</th>
+                                <th i18n>Actions</th>
+                                <th i18n>Delete</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -171,6 +173,24 @@ const ExamManagerFields = t.intersection([
                                 <td *ngIf="this.viewOptions?.groups?.memberCount">{{ getGroupMemberCount(group) }}</td>
                                 <td *ngIf="this.viewOptions?.groups?.event"> -</td>
                                 <td *ngIf="this.viewOptions?.groups?.timeslot"> -</td>
+                                <td>
+                                    <button
+                                            class="btn btn-primary btn-xs"
+                                            title="Copy group"
+                                            (click)="copyGroup(group)"
+                                    >
+                                        <i class="glyphicon glyphicon-duplicate"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    <button
+                                            class="btn btn-danger btn-xs"
+                                            title="Delete group"
+                                            (click)="deleteGroup(group)"
+                                    >
+                                        <i class="glyphicon glyphicon-trash"></i>
+                                    </button>
+                                </td>
                             </tr>
                             </tbody>
                         </table>
@@ -182,12 +202,7 @@ const ExamManagerFields = t.intersection([
                 <div id="groups-list-controls">
                     <div class="flex">
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new exam group</button>
-                        <button class="timButton" (click)="copyGroup(this.visibleGroups)"
-                                [disabled]="!oneSelected(this.visibleGroups)" i18n>Copy selected group
-                        </button>
-                        <button class="timButton btn-danger" (click)="deleteSelectedGroups(this.visibleGroups)"
-                                [disabled]="!anySelected(this.visibleGroups)" i18n>Delete selected groups
-                        </button>
+
                         <button class="timButton" (click)="generateLoginCodes()"
                                 [disabled]="!anySelected(this.visibleGroups)" i18n>Generate login codes
                         </button>
@@ -465,6 +480,12 @@ export class ExamGroupManagerComponent
         this.visibleGroups = this.showAllGroups
             ? this.allGroups
             : this.allGroups.filter((g) => g.isDirectOwner);
+        if (
+            !this.selectedGroupTab ||
+            !this.visibleGroups.find((g) => g.name === this.selectedGroupTab)
+        ) {
+            this.selectedGroupTab = this.visibleGroups[0].name;
+        }
     }
 
     toggleGroupSelection(group: ExamGroup) {
@@ -522,78 +543,60 @@ export class ExamGroupManagerComponent
 
     /**
      * Copies the selected Group (including memberships) into a new Group.
-     * @param groups
      */
-    async copyGroup(groups: ExamGroup[]) {
-        let selected: ExamGroup | undefined;
-        for (const g of groups) {
-            if (g.selected) {
-                selected = g;
-                break;
-            }
+    async copyGroup(fromGroup: ExamGroup) {
+        const res = await to2(
+            showExamGroupCreateDialog({
+                folderPath: this.markup.groupsPath,
+                groupPrefix: this.markup.groupNamePrefix,
+            })
+        );
+        if (!res.ok) {
+            return;
         }
-        if (selected) {
-            const res = await to2(
-                showExamGroupCreateDialog({
-                    folderPath: this.markup.groupsPath,
-                    groupPrefix: this.markup.groupNamePrefix,
-                })
+        const toGroup = res.result;
+        this.allGroups.push(toGroup);
+        this.refreshVisibleGroups();
+        const copyRes = await toPromise(
+            this.http.post(`/examGroupManager/copyMembers`, {
+                from_id: fromGroup.id,
+                to_id: toGroup.id,
+            })
+        );
+        if (!copyRes.ok) {
+            await showMessageDialog(
+                $localize`Could not copy group members. Details: ${copyRes.result.error}`
             );
-            if (res.ok) {
-                const group = res.result;
-                this.visibleGroups.push(group);
-
-                const copyres = await toPromise(
-                    this.http.post(
-                        `/examGroupManager/copymemberships/${selected.name}/${group.name}`,
-                        {}
-                    )
-                );
-                if (copyres.ok) {
-                    // refresh group members
-                    await this.getGroupMembers(group);
-                }
-            }
+            return;
         }
+        await this.getGroupMembers(toGroup);
     }
 
     /**
-     * Delete selected groups from the database
-     * @param groups
+     * Delete the exam group.
      */
-    async deleteSelectedGroups(groups: ExamGroup[]) {
-        // Delete selected groups
-        const selected: ExamGroup[] = this.getSelectedGroups();
-        const confirmTitle = $localize`Delete groups`;
-        const confirmMessage = $localize`Are you certain you wish to delete the following groups?\nThis action cannot be undone!\n\nGroups to be deleted:\n`;
-        const confirmGroups = selected.map((g) => g.name).join("\n");
+    async deleteGroup(group: ExamGroup) {
+        const confirmTitle = $localize`Delete exam group`;
+        const confirmMessage = $localize`Are you sure you want to delete group '${group.readableName}'?\nThis action cannot be undone!\n`;
 
-        const res = await to2<boolean>(
-            showConfirm(confirmTitle, `${confirmMessage}${confirmGroups}`)
-        );
-
-        const group_ids = selected.map((g) => g.id);
-
-        if (res.ok) {
-            if (!selected.length) {
-                return;
-            } else {
-                await toPromise(
-                    this.http.delete(`/groups/delete`, {body: {ids: group_ids}})
-                );
-            }
-            // remove from group record
-            selected.map((group) => delete this.members[group.name]);
-            // remove group from groups array
-            const indices = selected.map((group) =>
-                this.visibleGroups.indexOf(group)
-            );
-            indices.map((index) => this.visibleGroups.splice(index, 1));
-
-            // update ui
-            await this.getGroups();
-            this.selectedGroupTab = this.visibleGroups[0]?.name ?? "";
+        const deleteOk = await showConfirm(confirmTitle, `${confirmMessage}`);
+        if (!deleteOk) {
+            return;
         }
+
+        const res = await toPromise(
+            this.http.post(`/examGroupManager/deleteGroup`, {
+                group_id: group.id,
+            })
+        );
+        if (!res.ok) {
+            await showMessageDialog(
+                $localize`Could not delete group. Details ${res.result.error}`
+            );
+            return;
+        }
+        // update ui
+        await this.getGroups();
     }
 
     async generateLoginCodes() {

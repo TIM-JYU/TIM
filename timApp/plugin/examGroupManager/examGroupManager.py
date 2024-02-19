@@ -8,7 +8,7 @@ from typing import Sequence
 
 from flask import Response, request
 from marshmallow import missing
-from sqlalchemy import select, Row
+from sqlalchemy import select, Row, delete
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -23,12 +23,19 @@ from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute
 from timApp.folder.folder import Folder
+from timApp.item.deleting import soft_delete_document
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.sqa import db, run_sql
-from timApp.user.groups import verify_groupadmin, do_create_group
-from timApp.user.user import User, UserInfo
-from timApp.user.usergroup import UserGroup
+from timApp.user.groups import (
+    verify_groupadmin,
+    do_create_group,
+    verify_group_edit_access,
+    verify_group_access,
+)
+from timApp.user.user import User, UserInfo, owner_access_set, manage_access_set
+from timApp.user.usergroup import UserGroup, get_groups_by_ids
 from timApp.user.usergroupdoc import UserGroupDoc
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import (
     view_ctx_with_urlmacros,
     RouteException,
@@ -129,6 +136,13 @@ def _get_plugin_markup(par: GlobalParId) -> tuple[ExamGroupManagerMarkup, UserCo
     return model, user_ctx
 
 
+def _verify_exam_group_access(
+    ug: UserGroup, user: User | None = None, require: bool = True
+) -> bool:
+    # TODO: check that the group is an exam group
+    return verify_group_access(ug, manage_access_set, user, require=require)
+
+
 @exam_group_manager_plugin.get("/groups")
 def get_groups(
     doc_id: int,
@@ -198,6 +212,55 @@ def create_group(
             "isDirectOwner": True,
         }
     )
+
+
+@exam_group_manager_plugin.post("/deleteGroup")
+def delete_exam_group(group_id: int) -> Response:
+    """Route for deleting an exam group.
+    Permanently deletes a UserGroup from the database.
+    When calling this function, user should be notified that the operation cannot be undone.
+
+    The group documents will remain in the TIM 'trash' folder, but without database entries they
+    should not be able to reference any data.
+
+    :param group_id: ID of the group that should be deleted
+    """
+    do_delete_exam_groups([group_id])
+    db.session.commit()
+    return ok_response()
+
+
+def do_delete_exam_groups(group_ids: list[int]) -> None:
+    del_groups = get_groups_by_ids(group_ids)
+
+    for g in del_groups:
+        _verify_exam_group_access(g)
+
+    admin_docs = [g.admin_doc.docentries[0] for g in del_groups]
+
+    run_sql(
+        delete(UserGroupDoc)
+        .where(UserGroupDoc.group_id.in_(group_ids))
+        .execution_options(synchronize_session="auto")
+    )
+
+    run_sql(
+        delete(UserGroupMember)
+        .where(UserGroupMember.usergroup_id.in_(group_ids))
+        .execution_options(synchronize_session="auto")
+    )
+
+    run_sql(
+        delete(UserGroup)
+        .where(UserGroup.id.in_(group_ids))
+        .execution_options(synchronize_session="auto")
+    )
+
+    # Flush to trigger any database errors
+    db.session.flush()
+
+    for doc in admin_docs:
+        soft_delete_document(doc)
 
 
 # FIXME: Review
@@ -322,9 +385,8 @@ def check_usergroup_permissions(
     return None
 
 
-# FIXME: Review
-@exam_group_manager_plugin.post("/copymemberships/<source>/<target>")
-def copy_members(source: str, target: str) -> Response:
+@exam_group_manager_plugin.post("/copyMembers")
+def copy_members(from_id: int, to_id: int) -> Response:
     """
     Copies group memberships from one UserGroup to another.
 
@@ -332,109 +394,32 @@ def copy_members(source: str, target: str) -> Response:
     see `timApp/static/scripts/tim/ui/group-management.component.ts`. We should probably limit
     the database queries to only the base64-encoded names, since the group-management
     component is currently configured to produce such names by default.
-    :param source: source UserGroup name
-    :param target: target UserGroup name
+    :param from_id: source UserGroup ID
+    :param to_id: target UserGroup ID
     :return: Response with added member names, or error message
     """
-    if source == target:
-        return json_response(
-            status_code=400,
-            jsondata={
-                "result": {
-                    "error": f"Copying group members failed: source ('{source}') and target ('{target}') are the same."
-                },
-            },
-        )
+    cur_user = get_current_user_object()
+    if from_id == to_id:
+        raise RouteException("Cannot copy members from a group to itself.")
 
-    # We need to do some shenanigans here because group names might be base64-encoded.
-    # Try plain names first, then base64-encoded ones.
+    source_group = UserGroup.get_by_id(from_id)
+    if not source_group:
+        raise NotExist(f"Group with ID {from_id} does not exist.")
 
-    source_group = (
-        run_sql(select(UserGroup).filter_by(name=source).limit(1)).scalars().first()
-    )
-    target_group = (
-        run_sql(select(UserGroup).filter_by(name=target).limit(1)).scalars().first()
-    )
-    if not source_group or not target_group:
-        b64groups: list[UserGroup] = list(
-            run_sql(select(UserGroup).where(UserGroup.name.like("b64_%")))
-            .scalars()
-            .all()
-        )
-        for ug in b64groups:
-            # ug_plain_name = decode_name(ug.name)
-            ug_plain_name = ug.name
-            if not source_group and ug_plain_name == source:
-                source_group = ug
-            elif not target_group and ug_plain_name == target:
-                target_group = ug
+    target_group = UserGroup.get_by_id(to_id)
+    if not target_group:
+        raise NotExist(f"Group with ID {to_id} does not exist.")
 
-        missing_groups = []
-        if not source_group:
-            missing_groups.append(source)
-        if not target_group:
-            missing_groups.append(target)
-
-        if missing_groups:
-            return json_response(
-                status_code=404,
-                jsondata={
-                    "result": {
-                        "error": f"Copying group members failed: groups {missing_groups} do not exist."
-                    },
-                },
-            )
-
-    current_user = get_current_user_object()
-
-    source_group_doc_id: int = (
-        run_sql(
-            select(UserGroupDoc.doc_id)
-            .where(UserGroupDoc.group_id == source_group.id)
-            .limit(1)
-        )
-        .scalars()
-        .first()
-    )
-    target_group_doc_id: int = (
-        run_sql(
-            select(UserGroupDoc.doc_id)
-            .where(UserGroupDoc.group_id == target_group.id)
-            .limit(1)
-        )
-        .scalars()
-        .first()
-    )
-
-    source_group_doc = get_doc_or_abort(source_group_doc_id)
-    target_group_doc = get_doc_or_abort(target_group_doc_id)
-
-    if (
-        not verify_groupadmin(user=current_user)
-        or not verify_ownership(b=source_group_doc)
-        or not verify_ownership(b=target_group_doc)
-    ):
-        return json_response(
-            status_code=403,
-            jsondata={
-                "result": {
-                    "error": f"Copying group members failed: insufficient permissions."
-                },
-            },
-        )
+    _verify_exam_group_access(source_group)
+    _verify_exam_group_access(target_group)
 
     members: list[User] = list(source_group.users)
     added_memberships = []
     for u in members:
-        u.add_to_group(target_group, current_user)
+        u.add_to_group(target_group, cur_user)
         added_memberships.append(u.name)
     db.session.commit()
-    return json_response(
-        status_code=200,
-        jsondata={
-            "added_members": added_memberships,
-        },
-    )
+    return ok_response()
 
 
 # FIXME: Review
