@@ -1,6 +1,7 @@
 import base64
 import datetime
 import json
+import secrets
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -25,6 +26,7 @@ from timApp.document.viewcontext import ViewRoute
 from timApp.folder.folder import Folder
 from timApp.item.deleting import soft_delete_document
 from timApp.plugin.plugin import Plugin
+from timApp.tim_app import app
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import (
     verify_groupadmin,
@@ -423,33 +425,38 @@ def copy_members(from_id: int, to_id: int) -> Response:
 
 
 # FIXME: Review
-@exam_group_manager_plugin.post("/addMembers/<int:group_id>")
-def create_users(group_id: int) -> Response:
-    from timApp.auth.sessioninfo import get_current_user_object
-
+@exam_group_manager_plugin.post("/addMember/<int:group_id>")
+def create_users(
+    group_id: int,
+    given_name: str,
+    surname: str,
+    extra_info: str,
+) -> Response:
     current_user = get_current_user_object()
     group: UserGroup = UserGroup.get_by_id(group_id)
     if not group:
         raise NotExist(f"Group with ID {group_id} does not exist.")
 
-    # Check for permission to create users
-    # Since we do not want to add every group manager (teacher) to Group admins groups,
-    # we will allow them to create users for their own groups if they have ownership of the group
-    check_usergroup_permissions(group_id, current_user)
+    if not given_name.strip():
+        raise RouteException("Name is required.")
+    if not surname.strip():
+        raise RouteException("Surname is required.")
 
-    u: dict = request.get_json()
-    username: str = str(u.get("username"))
-    given_name: str = str(u.get("given_name"))
-    surname: str = str(u.get("surname"))
-    email: str = str(u.get("email"))
-    extra_info: str = str(u.get("extra_info"))
+    # Check permission for the group
+    # Only users with manage access to the group can create and add new members
+    _verify_exam_group_access(group, current_user)
 
-    # Create dummy password (for now), we do not want teacher-managed users to have
-    # personal passwords as we are using temporary login codes.
-    dummy_pass: str = str(
-        base64.urlsafe_b64encode(f"{email}{username}{time.time_ns()}".encode()),
-        encoding="utf-8",
+    no_reply_email_name, no_reply_email_domain = app.config["NOREPLY_EMAIL"].split(
+        "@", 1
     )
+
+    while True:
+        username = (
+            f"{slugify(given_name)}.{slugify(surname)}_{secrets.token_urlsafe(16)}"
+        )
+        email = f"{no_reply_email_name}+{username}@{no_reply_email_domain}"
+        if not User.get_by_name(username):
+            break
 
     ui: UserInfo = UserInfo(
         username=username,
@@ -457,24 +464,15 @@ def create_users(group_id: int) -> Response:
         last_name=surname,
         full_name=f"{surname} {given_name}",
         email=email,
-        password=dummy_pass,
     )
 
-    user, ug = User.create_with_group(ui)
+    user, _ = User.create_with_group(ui)
     user.add_to_group(group, current_user)
-    db.session.flush()
-
     db.session.commit()
-    return json_response(
-        status_code=200,
-        jsondata={
-            "id": ug.id,
-            "name": user.name,
-            "email": user.email,
-            "real_name": user.real_name,
-            "extra_info": extra_info,
-        },
-    )
+
+    # TODO: Add extra info to the user group
+
+    return json_response(user)
 
 
 # FIXME: Review

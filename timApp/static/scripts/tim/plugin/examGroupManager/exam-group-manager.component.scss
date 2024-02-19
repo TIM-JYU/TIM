@@ -158,15 +158,15 @@ tbody {
   // table and by extension the page unnecessarily long, so add scrolling to table's body.
   overflow: scroll;
   max-height: 40em;
-  size: auto;
 }
 
 .not-implemented {
   color: #b3b3b3;
 }
 
-.groups-list-controls {
+.button-controls {
   display: flex;
+  gap: 0.25em;
 }
 
 .group-table {
