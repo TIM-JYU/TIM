@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from subprocess import PIPE
 from typing import Optional, Set
 
+from cli.commands.i18n.compile import compile_translations
 from cli.commands.js import js
 from cli.commands.rust import build_rust
 from cli.commands.up import up
@@ -104,6 +105,9 @@ def all() -> None:
 
     log_info("Rebuilding Rust dependencies")
     build_rust()
+
+    log_info("Compiling translations")
+    compile_translations()
 
     log_info("Updating TIM frontend")
     js(True, [])
