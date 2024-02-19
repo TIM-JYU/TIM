@@ -39,6 +39,7 @@ import {LoginCodeGenerationDialogComponent} from "tim/plugin/examGroupManager/lo
 import {showLoginCodeGenerationDialog} from "tim/plugin/examGroupManager/showLoginCodeGenerationDialog";
 import {ExamGroupCreateDialogComponent} from "tim/plugin/examGroupManager/exam-group-create-dialog.component";
 import {showExamGroupCreateDialog} from "tim/plugin/examGroupManager/showExamGroupCreateDialog";
+import {PurifyModule} from "tim/util/purify.module";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -127,30 +128,36 @@ const ExamManagerFields = t.intersection([
 @Component({
     selector: "tim-exam-group-manager",
     template: `
-        <ng-container>
-            <bootstrap-panel id="groups-panel" title="All exam groups" i18n-title>
-                <div id="list-all-groups-setting">
-                    <label for="showAllGroups" i18n>
-                        <input type="checkbox" id="showAllGroups" [(ngModel)]="showAllGroups"
-                               (ngModelChange)="refreshVisibleGroups()"/>
-                        <span>Show all school's exam groups</span>
-                    </label>
-                </div>
-                <div id="groups-list">
-                    <!-- List groups here, include checkboxes for selecting groups to manage -->
+        <form>
+            <div class="info-box">
+                <tim-alert *ngIf="error">
+                    <div [innerHTML]="error | purify"></div>
+                </tim-alert>
+                <span *ngIf="loading" class="loading-spinner">
+                    <tim-loading></tim-loading> 
+                    <ng-container i18n>Loading, please wait...</ng-container>
+                </span>
+            </div>
+            <fieldset [disabled]="loading">
+                <bootstrap-panel id="groups-panel" title="All exam groups" i18n-title>
+                    <div id="list-all-groups-setting">
+                        <label for="showAllGroups" i18n>
+                            <input type="checkbox" id="showAllGroups" [(ngModel)]="showAllGroups"
+                                   (ngModelChange)="refreshVisibleGroups()"/>
+                            <span>Show all school's exam groups</span>
+                        </label>
+                    </div>
+                    <div id="groups-list">
+                        <!-- List groups here, include checkboxes for selecting groups to manage -->
 
-                    <!-- Mock groups list -->
-                    <div class="pull-left">
+                        <!-- Mock groups list -->
                         <!-- TODO: Implement as TimTable -->
                         <!-- TODO: Event and Timeslot should be combined in the future,
                                    so that we can list multiple events for a specific group
                                    in a sensible way. -->
-                        <table>
+                        <table class="group-table">
                             <thead>
                             <tr class="member-table-row">
-                                <th i18n *ngIf="this.viewOptions?.groups?.selectionControls">
-                                    <input type="checkbox" name="selectAllGroups" [(ngModel)]="allGroupsSelected"
-                                           (change)="toggleAllGroupsSelected()"/></th>
                                 <th i18n *ngIf="this.viewOptions?.groups?.name">Group name</th>
                                 <th *ngIf="isAdmin() && this.viewOptions?.groups?.document" i18n>Group document</th>
                                 <th i18n *ngIf="this.viewOptions?.groups?.memberCount">Number of students</th>
@@ -162,10 +169,6 @@ const ExamManagerFields = t.intersection([
                             </thead>
                             <tbody>
                             <tr class="member-table-row" *ngFor="let group of visibleGroups">
-                                <td *ngIf="this.viewOptions?.groups?.selectionControls">
-                                    <input type="checkbox" name="toggleGroupSelection_{{group.id}}"
-                                           [(ngModel)]="group.selected" (change)="toggleGroupSelection(group)"/>
-                                </td>
                                 <td *ngIf="this.viewOptions?.groups?.name">{{ group.readableName }}</td>
                                 <td *ngIf="isAdmin() && this.viewOptions?.groups?.document">
                                     <a href="/view/{{group.admin_doc_path}}">{{ getGroupDocPath(group) }}</a>
@@ -176,7 +179,8 @@ const ExamManagerFields = t.intersection([
                                 <td>
                                     <button
                                             class="btn btn-primary btn-xs"
-                                            title="Copy group"
+                                            title="Duplicate group"
+                                            i18n-title
                                             (click)="copyGroup(group)"
                                     >
                                         <i class="glyphicon glyphicon-duplicate"></i>
@@ -194,137 +198,109 @@ const ExamManagerFields = t.intersection([
                             </tr>
                             </tbody>
                         </table>
+                        <!-- END groups list-->
                     </div>
-                    <!-- END groups list-->
-
-                </div>
-                <!-- style="display: inline-block" -->
-                <div id="groups-list-controls">
-                    <div class="flex">
+                    <div class="groups-list-controls">
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new exam group</button>
-
-                        <button class="timButton" (click)="generateLoginCodes()"
-                                [disabled]="!anySelected(this.visibleGroups)" i18n>Generate login codes
-                        </button>
-                        <button class="timButton" (click)="printLoginCodes(this.visibleGroups)"
-                                [disabled]="!anySelected(this.visibleGroups)" i18n>Print login codes
-                        </button>
                     </div>
-                    <tim-alert severity="success"
-                               *ngIf="saveGroupSuccessMessage">{{ saveGroupSuccessMessage }}
-                    </tim-alert>
-                    <tim-alert severity="danger" *ngIf="saveGroupFailMessage">{{ saveGroupFailMessage }}</tim-alert>
-                </div>
-                <!--                <div>-->
-                <!--                    <ng-container *ngIf="anySelected(this.groups)">-->
-                <!--                        <p>Selected groups:</p>-->
-                <!--                        <ol>-->
-                <!--                            <ng-container *ngFor="let group of groups">-->
-                <!--                                <li *ngIf="group.selected">{{group.name}}</li>-->
-                <!--                            </ng-container>-->
-                <!--                        </ol>-->
-                <!--                    </ng-container>-->
-                <!--                </div>-->
-            </bootstrap-panel>
-            <form>
-                <fieldset [disabled]="savingGroupMembers">
-                    <bootstrap-panel title="Group members" i18n-title>
-                        <tabset class="merged">
-                            <!-- Create a new tab for each group that is visible to the current user -->
-                            <tab *ngFor="let group of visibleGroups" heading="{{group.readableName}}"
-                                 class="grid-tab tab-form" (selectTab)="onGroupTabSelected($event)">
-                                <ng-container>
-                                    <!-- Member list, with sort and selection controls -->
+                    <!--                <div>-->
+                    <!--                    <ng-container *ngIf="anySelected(this.groups)">-->
+                    <!--                        <p>Selected groups:</p>-->
+                    <!--                        <ol>-->
+                    <!--                            <ng-container *ngFor="let group of groups">-->
+                    <!--                                <li *ngIf="group.selected">{{group.name}}</li>-->
+                    <!--                            </ng-container>-->
+                    <!--                        </ol>-->
+                    <!--                    </ng-container>-->
+                    <!--                </div>-->
+                </bootstrap-panel>
+                <bootstrap-panel title="Group members" i18n-title>
+                    <tabset class="merged">
+                        <!-- Create a new tab for each group that is visible to the current user -->
+                        <tab *ngFor="let group of visibleGroups" heading="{{group.readableName}}"
+                             class="grid-tab tab-form" (selectTab)="onGroupTabSelected($event)">
+                            <ng-container>
+                                <!-- Member list, with sort and selection controls -->
 
-                                    <div>
-                                        <!-- TODO: Implement as TimTable -->
-                                        <table>
-                                            <thead>
-                                            <tr class="member-table-row">
-                                                <th i18n *ngIf="this.viewOptions?.members?.selectionControls">
-                                                    <input type="checkbox" name="selectAllMembers_{{group.id}}"
-                                                           [(ngModel)]="group.allMembersSelected"
-                                                           (change)="toggleAllMembersSelected(group)"/></th>
-                                                <th i18n *ngIf="this.viewOptions?.members?.name">Name</th>
-                                                <th i18n *ngIf="this.viewOptions?.members?.username">Username</th>
-                                                <th i18n
-                                                    *ngIf="this.viewOptions?.members?.extraInfo">{{ this.markup['extraInfoTitle'] ?? "Extra info" }}
-                                                </th>
+                                <div>
+                                    <!-- TODO: Implement as TimTable -->
+                                    <table class="group-table">
+                                        <thead>
+                                        <tr class="member-table-row">
+                                            <th i18n *ngIf="this.viewOptions?.members?.selectionControls">
+                                                <input type="checkbox" name="selectAllMembers_{{group.id}}"
+                                                       [(ngModel)]="group.allMembersSelected"
+                                                       (change)="toggleAllMembersSelected(group)"/></th>
+                                            <th i18n *ngIf="this.viewOptions?.members?.name">Name</th>
+                                            <th i18n *ngIf="this.viewOptions?.members?.username">Username</th>
+                                            <th i18n
+                                                *ngIf="this.viewOptions?.members?.extraInfo">{{ this.markup['extraInfoTitle'] ?? "Extra info" }}
+                                            </th>
 
-                                                <th i18n *ngIf="this.viewOptions?.members?.email">Email</th>
-                                                <th i18n *ngIf="this.viewOptions?.members?.loginCode">Login code</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <tr class="member-table-row" *ngFor="let member of members[group.name]">
-                                                <td *ngIf="this.viewOptions?.members?.selectionControls">
-                                                    <input type="checkbox" name="toggleSelection_{{member.id}}"
-                                                           [(ngModel)]="member.selected"
-                                                           (change)="toggleMemberSelection(group)"/>
-                                                </td>
-                                                <td *ngIf="this.viewOptions?.members?.name">{{ member.real_name }}</td>
-                                                <td *ngIf="this.viewOptions?.members?.username">{{ member.name }}</td>
-                                                <td *ngIf="this.viewOptions?.members?.extraInfo">{{ member.extra_info }}</td>
-                                                <td *ngIf="this.viewOptions?.members?.email">{{ member.email }}</td>
-                                                <td *ngIf="this.viewOptions?.members?.loginCode">{{ member.login_code }}</td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <!-- END members list-->
+                                            <th i18n *ngIf="this.viewOptions?.members?.email">Email</th>
+                                            <th i18n *ngIf="this.viewOptions?.members?.loginCode">Login code
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr class="member-table-row" *ngFor="let member of members[group.name]">
+                                            <td *ngIf="this.viewOptions?.members?.selectionControls">
+                                                <input type="checkbox" name="toggleSelection_{{member.id}}"
+                                                       [(ngModel)]="member.selected"
+                                                       (change)="toggleMemberSelection(group)"/>
+                                            </td>
+                                            <td *ngIf="this.viewOptions?.members?.name">{{ member.real_name }}</td>
+                                            <td *ngIf="this.viewOptions?.members?.username">{{ member.name }}</td>
+                                            <td *ngIf="this.viewOptions?.members?.extraInfo">{{ member.extra_info }}</td>
+                                            <td *ngIf="this.viewOptions?.members?.email">{{ member.email }}</td>
+                                            <td *ngIf="this.viewOptions?.members?.loginCode">{{ member.login_code }}</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- END members list-->
 
-                                </ng-container>
-                                <ng-container>
-                                    <div id="members-controls">
-                                        <button class="timButton" (click)="addMembers(group)" i18n>
-                                            Add new student
-                                        </button>
-                                        <button class="timButton" (click)="importUsers(group)" i18n>
-                                            Import students from Wilma
-                                        </button>
-                                        <br/>
-                                        <ng-container *ngIf="this.visibleGroups.length > 1">
-                                            <span class="copy-members-field">
-                                                <button class="timButton" (click)="copyMembers(this.copyMembersTarget)"
-                                                        i18n [disabled]="!anySelected(this.members[group.name])">
-                                                    Copy students to group
-                                                </button>
-                                                <select id="copyMembersTarget" name="copyMembersTarget"
-                                                        class="form-control"
-                                                        [(ngModel)]="this.copyMembersTarget">
-                                                    <option *ngFor="let group of this.visibleGroups"
-                                                            value="{{group.id}}">{{ group.name }}</option>
-                                                </select>
-                                            </span>
-                                        </ng-container>
-                                        <button class="timButton btn-danger" (click)="removeMembers(group)"
-                                                [disabled]="!anySelected(this.members[group.name])" i18n>
-                                            Remove selected
-                                        </button>
-                                        <tim-alert severity="success"
-                                                   *ngIf="saveMembersSuccessMessage">{{ saveMembersSuccessMessage }}
-                                        </tim-alert>
-                                        <tim-alert severity="danger"
-                                                   *ngIf="saveMembersFailMessage">{{ saveMembersFailMessage }}
-                                        </tim-alert>
-                                    </div>
-                                </ng-container>
-                                <ng-container *ngIf="anySelected(this.members[group.name])">
-                                    <p>Selected members:</p>
-                                    <ol>
-                                        <ng-container *ngFor="let member of this.members[group.name]">
-                                            <li *ngIf="member.selected">{{ member.name }}</li>
-                                        </ng-container>
-                                    </ol>
-                                </ng-container>
-                            </tab>
-                        </tabset>
-
-                    </bootstrap-panel>
-                </fieldset>
-            </form>
-
-        </ng-container>
+                            </ng-container>
+                            <ng-container>
+                                <div id="members-controls">
+                                    <button class="timButton" (click)="addMembers(group)" i18n>
+                                        Add new student
+                                    </button>
+                                    <button class="timButton" (click)="importUsers(group)" i18n>
+                                        Import students from Wilma
+                                    </button>
+                                    <button class="timButton" (click)="generateLoginCodes()"
+                                            [disabled]="!anySelected(this.visibleGroups)" i18n>Generate login
+                                        codes
+                                    </button>
+                                    <button class="timButton" (click)="printLoginCodes(this.visibleGroups)"
+                                            [disabled]="!anySelected(this.visibleGroups)" i18n>Print login codes
+                                    </button>
+                                    <button class="timButton btn-danger" (click)="removeMembers(group)"
+                                            [disabled]="!anySelected(this.members[group.name])" i18n>
+                                        Remove selected
+                                    </button>
+                                    <tim-alert severity="success"
+                                               *ngIf="saveMembersSuccessMessage">{{ saveMembersSuccessMessage }}
+                                    </tim-alert>
+                                    <tim-alert severity="danger"
+                                               *ngIf="saveMembersFailMessage">{{ saveMembersFailMessage }}
+                                    </tim-alert>
+                                </div>
+                            </ng-container>
+                            <ng-container *ngIf="anySelected(this.members[group.name])">
+                                <p>Selected members:</p>
+                                <ol>
+                                    <ng-container *ngFor="let member of this.members[group.name]">
+                                        <li *ngIf="member.selected">{{ member.name }}</li>
+                                    </ng-container>
+                                </ol>
+                            </ng-container>
+                        </tab>
+                    </tabset>
+                </bootstrap-panel>
+            </fieldset>
+        </form>
     `,
     styleUrls: ["exam-group-manager.component.scss"],
 })
@@ -346,11 +322,10 @@ export class ExamGroupManagerComponent
     allGroups: ExamGroup[] = [];
     // Members visible on the currently active group tab (in the group members table)
     members: Record<string, GroupMember[]> = {};
+    error?: string;
 
     // Currently selected groups
     allGroupsSelected: boolean = false;
-    saveGroupSuccessMessage?: string;
-    saveGroupFailMessage?: string;
 
     // currently selected members
     selectedGroupTab?: string;
@@ -361,7 +336,7 @@ export class ExamGroupManagerComponent
     copyMembersTarget: number = -1;
 
     // status info for group members table
-    savingGroupMembers?: boolean;
+    loading: boolean = false;
 
     @Input() eventHeading?: string;
     private viewctrl!: Require<ViewCtrl>;
@@ -421,6 +396,8 @@ export class ExamGroupManagerComponent
      *       specified with the document setting `groupManagement.managers`.
      */
     async getGroups() {
+        this.loading = true;
+        this.error = undefined;
         // Filter out groups to which the current user does not have owner rights,
         // unless the (UI option? could be doc setting as well?) option 'List all existing groups' is active.
         // In general, group managers should not have access to groups they did not create,
@@ -434,8 +411,11 @@ export class ExamGroupManagerComponent
         );
         if (groups.ok) {
             this.allGroups = groups.result;
+        } else {
+            this.error = $localize`Could not fetch groups. Details: ${groups.result.error}`;
         }
         this.refreshVisibleGroups();
+        this.loading = false;
     }
 
     getGroupDocPath(group: ExamGroup): string {
@@ -536,9 +516,11 @@ export class ExamGroupManagerComponent
                 groupPrefix: this.markup.groupNamePrefix,
             })
         );
-        if (res.ok) {
-            this.visibleGroups.push(res.result);
+        if (!res.ok) {
+            return;
         }
+        this.allGroups.push(res.result);
+        this.refreshVisibleGroups();
     }
 
     /**
@@ -554,6 +536,8 @@ export class ExamGroupManagerComponent
         if (!res.ok) {
             return;
         }
+        this.loading = true;
+        this.error = undefined;
         const toGroup = res.result;
         this.allGroups.push(toGroup);
         this.refreshVisibleGroups();
@@ -567,15 +551,18 @@ export class ExamGroupManagerComponent
             await showMessageDialog(
                 $localize`Could not copy group members. Details: ${copyRes.result.error}`
             );
+            this.loading = false;
             return;
         }
         await this.getGroupMembers(toGroup);
+        this.loading = false;
     }
 
     /**
      * Delete the exam group.
      */
     async deleteGroup(group: ExamGroup) {
+        this.error = undefined;
         const confirmTitle = $localize`Delete exam group`;
         const confirmMessage = $localize`Are you sure you want to delete group '${group.readableName}'?\nThis action cannot be undone!\n`;
 
@@ -584,6 +571,7 @@ export class ExamGroupManagerComponent
             return;
         }
 
+        this.loading = true;
         const res = await toPromise(
             this.http.post(`/examGroupManager/deleteGroup`, {
                 group_id: group.id,
@@ -593,10 +581,12 @@ export class ExamGroupManagerComponent
             await showMessageDialog(
                 $localize`Could not delete group. Details ${res.result.error}`
             );
+            this.loading = false;
             return;
         }
         // update ui
         await this.getGroups();
+        this.loading = false;
     }
 
     async generateLoginCodes() {
@@ -646,13 +636,17 @@ export class ExamGroupManagerComponent
      * @param group
      */
     async getGroupMembers(group: ExamGroup) {
+        this.loading = true;
+        this.error = undefined;
         const resp = await toPromise(
             this.http.get<GroupMember[]>(
                 `/examGroupManager/members/${group.id}`
             )
         );
+        this.loading = false;
         if (resp.ok) {
             this.members[group.name] = resp.result;
+        } else {
         }
     }
 
@@ -688,30 +682,6 @@ export class ExamGroupManagerComponent
         if (resp.ok) {
             const newUsers: GroupMember[] = resp.result;
             this.members[group.name].push(...newUsers);
-        }
-    }
-
-    async copyMembers(group_id: number) {
-        const source: ExamGroup = this.visibleGroups.filter(
-            (g) => g.name === this.selectedGroupTab
-        )[0];
-        // FIXME: the value returned from option.value is not really a number, but a string
-        const target: ExamGroup = this.visibleGroups.filter(
-            (g) => String(g.id) === String(group_id)
-        )[0];
-
-        if (source !== undefined && target !== undefined) {
-            const selected = this.getSelectedMembers(source);
-            const uids = selected.map((m) => m.id);
-            const url = `/examGroupManager/addManyMembers/${group_id}`;
-            const b = {ids: uids};
-            const response = await toPromise(
-                this.http.post<GroupMember[]>(url, b)
-            );
-            if (response.ok) {
-                const newMembers = response.result;
-                this.members[target.name].push(...newMembers);
-            }
         }
     }
 
@@ -800,6 +770,7 @@ export class ExamGroupManagerComponent
         // TimTableModule,
         TabsModule.forRoot(),
         DialogModule,
+        PurifyModule,
     ],
 })
 export class ExamGroupManagerModule implements DoBootstrap {
