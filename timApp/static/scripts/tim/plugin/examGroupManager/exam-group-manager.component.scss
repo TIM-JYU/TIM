@@ -14,6 +14,15 @@ tabset.merged ::ng-deep .tab-content {
   }
 }
 
+.info-box {
+  margin-bottom: 1em;
+}
+
+.loading-spinner {
+  display: flex;
+  gap: 0.5em;
+}
+
 .info-text {
   color: #4c4c4c;
   pointer-events: none;
@@ -141,9 +150,7 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 .member-table-row {
-  //font-size: 0.8em;
-  font-size: initial;
-  font-weight: normal;
+  font-size: 0.9em;
 }
 
 tbody {
@@ -158,13 +165,12 @@ tbody {
   color: #b3b3b3;
 }
 
-#groups-list-controls {
-  display: inline-flex;
+.groups-list-controls {
+  display: flex;
 }
 
-#groups-list-controls > div {
-  display: flex;
-  flex-wrap: wrap;
+.group-table {
+  margin: 1em 0;
 }
 
 .copy-members-field {

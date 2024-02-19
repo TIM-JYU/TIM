@@ -478,44 +478,6 @@ def create_users(group_id: int) -> Response:
 
 
 # FIXME: Review
-@exam_group_manager_plugin.post("/addManyMembers/<int:group_id>")
-def add_users_to_group(group_id: int) -> Response:
-    from timApp.auth.sessioninfo import get_current_user_object
-
-    current_user = get_current_user_object()
-
-    group = UserGroup.get_by_id(group_id)
-    if not group:
-        raise NotExist(f"Group with ID {group_id} does not exist.")
-
-    check_usergroup_permissions(group_id, current_user)
-    uids: list[int] = request.get_json().get("ids")
-    users: list[User] = list(
-        run_sql(select(User).where(User.id.in_(uids))).scalars().all()
-    )
-
-    data = []
-    for user in users:
-        user.add_to_group(group, current_user)
-        ug = user.get_personal_group()
-        data.append(
-            {
-                "id": ug.id,
-                "name": user.name,
-                "email": user.email,
-                "real_name": user.real_name,
-            }
-        )
-
-    db.session.commit()
-
-    return json_response(
-        status_code=200,
-        jsondata=data,
-    )
-
-
-# FIXME: Review
 @exam_group_manager_plugin.post("/importUsers/<int:group_id>")
 def import_users_to_group(group_id: int) -> Response:
     group = UserGroup.get_by_id(group_id)
