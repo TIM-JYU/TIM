@@ -158,7 +158,7 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
     }
 
     async saveUser(): Promise<void> {
-        const url = `/loginCode/addMembers/${this.getGroup()}`;
+        const url = `/examGroupManager/addMember/${this.data.group}`;
         const response = await toPromise(
             this.http.post<GroupMember>(url, {
                 username: this.username,
@@ -174,10 +174,6 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
         } else {
             this.setMessage(response.result.error.error);
         }
-    }
-
-    private getGroup(): number {
-        return this.data.group;
     }
 
     getExtraInfoTitle(): string {
