@@ -214,7 +214,7 @@ const ExamManagerFields = t.intersection([
                     <!--                    </ng-container>-->
                     <!--                </div>-->
                 </bootstrap-panel>
-                <bootstrap-panel title="Group members" i18n-title>
+                <bootstrap-panel title="Exam group members" i18n-title>
                     <tabset class="merged">
                         <!-- Create a new tab for each group that is visible to the current user -->
                         <tab *ngFor="let group of visibleGroups" heading="{{group.readableName}}"
