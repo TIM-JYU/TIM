@@ -19,7 +19,7 @@ export interface ServiceGate {
     name: string;
     matrix: Matrix;
     hidden: boolean;
-    group: "basic" | "phase" | "swap" | "control" | "custom";
+    group: "basic" | "phase" | "swap" | "control" | "antiControl" | "custom";
     info: string;
     color?: string;
     textColor?: string;
@@ -150,6 +150,13 @@ export class GateService {
                 hidden: false,
                 group: "control",
                 info: "Control",
+            },
+            {
+                name: "antiControl",
+                matrix: this.identityMatrix,
+                hidden: false,
+                group: "antiControl",
+                info: "anti control",
             },
         ];
 

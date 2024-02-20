@@ -38,6 +38,11 @@ import {
                     <ng-container i18n>Controls</ng-container>:
                     {{controlsString}}
                 </p>
+                
+                <p *ngIf="antiControlsString" class="anti-controls">
+                    <ng-container i18n>Anti-controls</ng-container>:
+                    {{antiControlsString}}
+                </p>
 
                 <p *ngIf="swapString">
                     Swap:
@@ -63,6 +68,7 @@ export class QuantumToolboxComponent implements OnInit, OnChanges {
 
     matrixTable: TableCellData[][] = [];
     controlsString: string = "";
+    antiControlsString: string = "";
     swapString: string = "";
 
     qubitString: string = "";
@@ -84,6 +90,8 @@ export class QuantumToolboxComponent implements OnInit, OnChanges {
         this.matrixTable = this.activeGateInfo.formatMatrixAsTable();
         if (this.activeGateInfo instanceof CircuitActiveGateInfo) {
             this.controlsString = this.activeGateInfo.formatControlsAsString();
+            this.antiControlsString =
+                this.activeGateInfo.formatAntiControlsAsString();
             this.swapString = this.activeGateInfo.formatSwapAsString();
 
             this.qubitString = this.activeGateInfo.formatQubitAsString();
@@ -91,6 +99,7 @@ export class QuantumToolboxComponent implements OnInit, OnChanges {
             this.showEditableInfo = !this.activeGateInfo.editable;
         } else {
             this.controlsString = "";
+            this.antiControlsString = "";
             this.swapString = "";
             this.qubitString = "";
             this.timeString = "";

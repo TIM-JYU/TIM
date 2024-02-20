@@ -126,7 +126,7 @@ export interface GateBeingDragged {
                                   [attr.x2]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
                                   [attr.y2]="c.target * circuitOptions.baseSize + circuitOptions.baseSize / 2 + circuitOptions.gateSize / 2"
                             ></line>
-
+                            
                             <g *ngIf="gate|instanceof: Swap as s">
                                 <line *ngIf="s.target > i"
                                       [attr.stroke]="circuitOptions.colors.dark"

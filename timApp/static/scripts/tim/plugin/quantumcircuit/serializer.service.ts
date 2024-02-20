@@ -22,29 +22,50 @@ export class SerializerService {
             for (let timeI = 0; timeI < board.board[targetI].length; timeI++) {
                 const cell = board.board[targetI][timeI];
                 if (cell instanceof Gate || cell instanceof MultiQubitGate) {
-                    const controls = board.getControls({
-                        target: targetI,
-                        time: timeI,
-                    });
-
+                    const controls = board.getControls(
+                        {
+                            target: targetI,
+                            time: timeI,
+                        },
+                        false
+                    );
+                    const antiControls = board.getControls(
+                        {
+                            target: targetI,
+                            time: timeI,
+                        },
+                        true
+                    );
                     userCircuit.push({
                         name: cell.name,
                         editable: cell.editable,
                         target: targetI,
                         time: timeI,
                         controls: controls,
+                        antiControls: antiControls,
                     });
                 } else if (cell instanceof Swap && targetI < cell.target) {
-                    const controls = board.getControls({
-                        target: targetI,
-                        time: timeI,
-                    });
+                    const controls = board.getControls(
+                        {
+                            target: targetI,
+                            time: timeI,
+                        },
+                        false
+                    );
+                    const antiControls = board.getControls(
+                        {
+                            target: targetI,
+                            time: timeI,
+                        },
+                        true
+                    );
                     userCircuit.push({
                         swap1: targetI,
                         swap2: cell.target,
                         time: timeI,
                         editable: cell.editable,
                         controls: controls,
+                        antiControls: antiControls,
                     });
                 }
             }
