@@ -44,6 +44,7 @@ from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import load_data_from_req, JSONException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning, log_info
+from timApp.util.utils import slugify
 from tim_common.marshmallow_dataclass import class_schema
 
 scim = Blueprint("scim", __name__, url_prefix="/scim")
@@ -250,9 +251,9 @@ def get_groups(args: GetGroupsModel) -> Response:
 def derive_scim_group_name(s: SCIMGroupModel) -> str:
     x = parse_sisu_group_display_name_or_error(s)
     if x.period:
-        return f"{x.coursecode.lower()}-{x.year[2:]}{x.period.lower()}-{x.desc_slug}"
+        return f"{slugify(x.coursecode)}-{x.year[2:]}{x.period.lower()}-{x.desc_slug}"
     else:
-        return f"{x.coursecode.lower()}-{x.year[2:]}{x.month}{x.day}-{x.desc_slug}"
+        return f"{slugify(x.coursecode)}-{x.year[2:]}{x.month}{x.day}-{x.desc_slug}"
 
 
 @csrf.exempt
