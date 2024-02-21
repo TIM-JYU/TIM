@@ -1,5 +1,6 @@
 import {HttpClientModule} from "@angular/common/http";
-import type {OnInit} from "@angular/core";
+import type {OnInit, PipeTransform} from "@angular/core";
+import {Pipe} from "@angular/core";
 import {
     type ApplicationRef,
     Component,
@@ -12,6 +13,7 @@ import {ADMIN_GROUPNAME} from "tim/user/IUser";
 import {documentglobals, someglobals} from "tim/util/globals";
 import {isAdmin, Users} from "tim/user/userService";
 import type {Require} from "tim/util/utils";
+import {formatNumberCode} from "tim/util/utils";
 import {to2, toPromise} from "tim/util/utils";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import type {TabDirective} from "ngx-bootstrap/tabs";
@@ -36,10 +38,10 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {UserCreationDialogComponent} from "tim/plugin/examGroupManager/user-creation-dialog.component";
 import {showUserCreationDialog} from "tim/plugin/examGroupManager/showUserCreationDialog";
 import {LoginCodeGenerationDialogComponent} from "tim/plugin/examGroupManager/login-code-generation-dialog.component";
-import {showLoginCodeGenerationDialog} from "tim/plugin/examGroupManager/showLoginCodeGenerationDialog";
 import {ExamGroupCreateDialogComponent} from "tim/plugin/examGroupManager/exam-group-create-dialog.component";
 import {showExamGroupCreateDialog} from "tim/plugin/examGroupManager/showExamGroupCreateDialog";
 import {PurifyModule} from "tim/util/purify.module";
+import {SPLIT_EVERY} from "tim/user/user-code-login.component";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -50,7 +52,7 @@ export interface GroupMember extends IUser {
     // such as name of class, homegroup, etc.
     extra_info: string;
     // login codes will need to be treated like passwords
-    login_code: string;
+    login_code?: string;
 
     selected: boolean;
 }
@@ -117,6 +119,21 @@ const ExamManagerFields = t.intersection([
     t.type({}),
 ]);
 
+const DEFAULT_USERCODE_DURATION = 60 * 24 * 120; // 3 months
+
+@Pipe({
+    name: "formatLoginCode",
+    pure: true,
+})
+class FormatLoginCodePipe implements PipeTransform {
+    transform(value?: string): string | undefined {
+        if (!value) {
+            return value;
+        }
+        return formatNumberCode(value, SPLIT_EVERY);
+    }
+}
+
 /**
  * A group management component, that can be used to manage groups and group members.
  * It is intended for 'one-off' type situations like course exams, where it is not desirable
@@ -133,7 +150,7 @@ const ExamManagerFields = t.intersection([
                 <tim-alert *ngIf="error">
                     <div [innerHTML]="error | purify"></div>
                 </tim-alert>
-                <span *ngIf="loading" class="loading-spinner">
+                <span [class.invisible]="!loading" class="loading-spinner">
                     <tim-loading></tim-loading> 
                     <ng-container i18n>Loading, please wait...</ng-container>
                 </span>
@@ -255,7 +272,9 @@ const ExamManagerFields = t.intersection([
                                             <td *ngIf="this.viewOptions?.members?.username">{{ member.name }}</td>
                                             <td *ngIf="this.viewOptions?.members?.extraInfo">{{ member.extra_info }}</td>
                                             <td *ngIf="this.viewOptions?.members?.email">{{ member.email }}</td>
-                                            <td *ngIf="this.viewOptions?.members?.loginCode">{{ member.login_code }}</td>
+                                            <td *ngIf="this.viewOptions?.members?.loginCode">
+                                                <code>{{ member.login_code | formatLoginCode }}</code>
+                                            </td>
                                             <td>
                                                 <button
                                                         class="btn btn-danger btn-xs"
@@ -288,7 +307,7 @@ const ExamManagerFields = t.intersection([
                                 <h4 i18n>Login codes</h4>
                                 <div class="button-controls">
                                     <button class="timButton" (click)="generateLoginCodes(group)" i18n>
-                                        Generate login codes
+                                        Generate new login codes
                                     </button>
                                     <button class="timButton" (click)="printLoginCodes(group)" i18n>
                                         Print login codes
@@ -600,36 +619,39 @@ export class ExamGroupManagerComponent
     }
 
     async generateLoginCodes(group: ExamGroup) {
-        // Generate temporary login codes for members of the currently selected groups
-        // The codes are linked to the individual users via a database table
-        // TODO: Should check for existing and still valid codes before refreshing
-        //       to avoid accidentally changing valid ones (also display a warning).
-        // TODO: dialog that allows to set the activation_start and activation_end properties
-        // const members = await this.getMembersFromSelectedGroups();
-        const params = {members: []};
-        const res = await to2(showLoginCodeGenerationDialog(params));
-        if (res.ok) {
-            // fetch login codes for the UI
+        this.loading = true;
+        this.error = undefined;
+
+        const hasSomeWithCode = this.members[group.name].some(
+            (m) => m.login_code
+        );
+        if (hasSomeWithCode) {
+            const confirmTitle = $localize`Generate new login codes`;
+            const confirmMessage = $localize`Some students already have login codes if exam group '${group.readableName}'.\nGenerating new codes will overwrite the existing ones.\n\nProceed?`;
+            const generateOk = await showConfirm(confirmTitle, confirmMessage);
+            if (!generateOk) {
+                this.loading = false;
+                return;
+            }
         }
 
-        // const url = `/examGroupManager/generateCodes`;
-        // const response = await toPromise(
-        //     this.http.post<UserCode[]>(url, {
-        //         members: members,
-        //     })
-        // );
-        // if (response.ok) {
-        //     // const usercodes = response.result;
-        //     // for (const code of usercodes) {
-        //     //     const m = members.find((me) => me.id == code.id);
-        //     //     if (m !== undefined) {
-        //     //         m.login_code = code.code;
-        //     //     }
-        //     // }
-        //     //
-        //     // const msg = `${"Created user codes:\n" + usercodes}`;
-        //     // await to2(showMessageDialog(msg));
-        // }
+        const res = await toPromise(
+            this.http.post("/examGroupManager/generateCodes", {
+                group_id: group.id,
+                active_duration: DEFAULT_USERCODE_DURATION, // TODO: Ask for duration
+            })
+        );
+
+        if (!res.ok) {
+            await showMessageDialog(
+                $localize`Could not generate login codes. Details: ${res.result.error.error}`
+            );
+            this.loading = false;
+            return;
+        }
+
+        await this.getGroupMembers(group);
+        this.loading = false;
     }
 
     printLoginCodes(groups: ExamGroup) {
@@ -806,6 +828,7 @@ export class ExamGroupManagerComponent
         UserCreationDialogComponent,
         LoginCodeGenerationDialogComponent,
         ExamGroupCreateDialogComponent,
+        FormatLoginCodePipe,
     ],
     exports: [ExamGroupManagerComponent],
     imports: [

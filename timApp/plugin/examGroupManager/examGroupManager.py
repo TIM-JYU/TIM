@@ -4,12 +4,12 @@ import json
 import secrets
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Sequence
 
 from flask import Response, request
 from marshmallow import missing
-from sqlalchemy import select, Row, delete
+from sqlalchemy import select, Row, delete, update
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -45,7 +45,7 @@ from timApp.util.flask.requesthelper import (
 )
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import slugify
+from timApp.util.utils import slugify, get_current_time
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
@@ -278,12 +278,16 @@ def get_members(group_id: int) -> Response:
     if not ug:
         raise NotExist(f"Group with id {group_id} does not exist.")
 
-    members: list[User] = ug.users
+    members: list[User] = list(ug.users)
     data = []
+    now = get_current_time()
+
     login_codes: Sequence[UserLoginCode] = (
         run_sql(
             select(UserLoginCode).filter(
                 UserLoginCode.user_id.in_([u.id for u in members])
+                & (UserLoginCode.name == ug.name)
+                & (UserLoginCode.active_to > now)
             )
         )
         .scalars()
@@ -298,7 +302,7 @@ def get_members(group_id: int) -> Response:
                 "name": m.name,
                 "email": m.email,
                 "real_name": m.real_name,
-                "extra_info": ulc.extra_info if ulc else None,
+                "extra_info": None,
                 "login_code": ulc.code if ulc else None,
             }
         )
@@ -555,31 +559,35 @@ def import_users_to_group(group_id: int) -> Response:
 
 # FIXME: Review
 @exam_group_manager_plugin.post("/generateCodes")
-def generate_codes_for_members() -> Response:
+def generate_codes_for_members(group_id: int, active_duration: int) -> Response:
     """
     Updates UserLoginCode properties.
     Note: this function will always overwrite previous values
     :return: Response
     """
-    r: dict = request.get_json()
-    members: list = [*r.get("members")]  # type: ignore
+    ug = UserGroup.get_by_id(group_id)
+    if not ug:
+        raise NotExist(f"Group with ID {group_id} does not exist.")
 
-    # TODO time should be in server time (UTC+0), currently local time is used
-    act_start = datetime.datetime.fromisoformat(str(r.get("activation_start")))
-    act_end = datetime.datetime.fromisoformat(str(r.get("activation_end")))
-    # act_status: int = int(r.get("activation_status"))
+    _verify_exam_group_access(ug)
 
-    for m in members:
-        user_id: int = int(m.get("id"))
-        extra_info = str(m.get("extra_info"))
+    ug_members = list(ug.users)
 
-        # TODO: Deactivate previous codes
-        u = User.get_by_id(user_id)
+    # Disable previous codes of the members
+    # TODO: Instead provide option on whether to disable previous codes
+    run_sql(
+        update(UserLoginCode)
+        .where(UserLoginCode.user_id.in_([u.id for u in ug_members]))
+        .values(active_to=datetime.now())
+    )
+    db.session.flush()
+
+    for m in ug_members:
         UserLoginCode.generate_new(
-            user=u,
-            active_from=act_start,
-            active_to=act_end,
-            name=extra_info,
+            user=m,
+            active_from=None,
+            active_to=datetime.now() + timedelta(minutes=active_duration),
+            name=ug.name,
         )
 
     db.session.commit()

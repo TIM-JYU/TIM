@@ -1043,3 +1043,20 @@ export function closest(arr: number[], val: number): number {
         Math.abs(curr - val) < Math.abs(prev - val) ? curr : prev
     );
 }
+
+export function formatNumberCode(
+    numCode: string,
+    splitEvery: number,
+    targetLength?: number,
+    separator: string = "-"
+) {
+    targetLength = targetLength ?? numCode.length;
+    let newCode = "";
+    for (let i = 0; i < targetLength; i++) {
+        if (i > 0 && i % splitEvery === 0) {
+            newCode += separator;
+        }
+        newCode += numCode[i] || " ";
+    }
+    return newCode;
+}
