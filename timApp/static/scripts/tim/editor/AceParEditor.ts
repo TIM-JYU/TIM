@@ -604,6 +604,7 @@ export class AceParEditor extends BaseParEditor implements IEditor {
 
     @focusAfter
     insertTemplate(text: string) {
+        text = this.formatBlockTemplate(text);
         const pluginnamehere = "PLUGINNAMEHERE";
         const firstLine = text.split("\n")[0];
         const hasPluginName = firstLine.includes(pluginnamehere);
