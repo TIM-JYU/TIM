@@ -565,8 +565,8 @@ def generate_codes_for_members() -> Response:
     members: list = [*r.get("members")]  # type: ignore
 
     # TODO time should be in server time (UTC+0), currently local time is used
-    act_start = datetime.datetime.fromisoformat(str(r.get("activation_start")))
-    act_end = datetime.datetime.fromisoformat(str(r.get("activation_end")))
+    act_start = datetime.fromisoformat(str(r.get("activation_start")))
+    act_end = datetime.fromisoformat(str(r.get("activation_end")))
     # act_status: int = int(r.get("activation_status"))
 
     for m in members:

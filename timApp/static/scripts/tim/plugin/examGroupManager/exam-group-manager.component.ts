@@ -497,6 +497,11 @@ export class ExamGroupManagerComponent
         }
         return selected;
     }
+    private getSelectedGroup(): ExamGroup {
+        return this.visibleGroups.filter(
+            (g) => g.name === this.selectedGroupTab
+        )[0];
+    }
 
     getGroupMemberCount(group: ExamGroup): number {
         return this.members[group.name] !== undefined
@@ -606,7 +611,13 @@ export class ExamGroupManagerComponent
         //       to avoid accidentally changing valid ones (also display a warning).
         // TODO: dialog that allows to set the activation_start and activation_end properties
         // const members = await this.getMembersFromSelectedGroups();
-        const params = {members: []};
+        const selectedMembers = this.getSelectedMembers(
+            this.getSelectedGroup()
+        );
+
+        const params = {
+            members: selectedMembers,
+        };
         const res = await to2(showLoginCodeGenerationDialog(params));
         if (res.ok) {
             // fetch login codes for the UI
