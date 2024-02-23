@@ -107,13 +107,14 @@ export abstract class BaseParEditor {
     formatBlockTemplate(text: string): string {
         const pos = this.getPosition();
         const isBlock = text.startsWith("```");
-        if (
-            isBlock &&
-            pos[0] == pos[1] &&
-            pos[0] > 0 &&
-            this.getEditorText()[pos[0] - 1] != "\n"
-        ) {
-            text = "\n" + text;
+        if (isBlock && pos[0] == pos[1]) {
+            if (pos[0] > 0 && this.getEditorText()[pos[0] - 1] != "\n") {
+                text = "\n" + text;
+            }
+            const next = this.getEditorText()[pos[0]];
+            if (next != undefined && next != "\n") {
+                text = text + "\n";
+            }
         }
         return text;
     }
