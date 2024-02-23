@@ -82,7 +82,7 @@ export class LoginCodeGenerationDialogComponent extends AngularDialogComponent<
     }
 
     async generateCodes(): Promise<void> {
-        const url = `/loginCode/generateCodes`;
+        const url = `/examGroupManager/generateCodes`;
 
         const response = await toPromise(
             this.http.post<undefined>(url, {

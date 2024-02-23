@@ -516,6 +516,11 @@ export class ExamGroupManagerComponent
         }
         return selected;
     }
+    private getSelectedGroup(): ExamGroup {
+        return this.visibleGroups.filter(
+            (g) => g.name === this.selectedGroupTab
+        )[0];
+    }
 
     getGroupMemberCount(group: ExamGroup): number {
         return this.members[group.name] !== undefined
