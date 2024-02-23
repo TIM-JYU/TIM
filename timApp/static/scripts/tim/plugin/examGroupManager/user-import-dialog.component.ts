@@ -72,7 +72,7 @@ export class UserImportDialogComponent extends AngularDialogComponent<
     ngOnInit() {}
 
     async saveUser(): Promise<void> {
-        const url = `/loginCode/importUsers/${this.getGroup()}`;
+        const url = `/examGroupManager/importUsers/${this.getGroup()}`;
         const response = await toPromise(
             this.http.post<GroupMember[]>(url, {
                 // TODO sanitize
