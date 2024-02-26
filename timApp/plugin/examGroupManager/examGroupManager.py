@@ -491,63 +491,6 @@ def get_members(group_id: int) -> Response:
 
 
 # FIXME: Review
-@exam_group_manager_plugin.post("/members/from_groups")
-def get_members_from_groups() -> Response:
-    """
-    :return: Group members of all listed groups
-    """
-
-    r: dict = request.get_json()
-    group_ids: list[int] = [*r.get("ids")]  # type: ignore
-
-    ugds: list[UserGroupDoc] = list(
-        run_sql(select(UserGroupDoc).where(UserGroupDoc.group_id.in_(group_ids)))
-        .scalars()
-        .all()
-    )
-    ug_docs = list(get_doc_or_abort(u.doc_id) for u in ugds)
-    accessible_ugdocs: list[DocInfo] = list()
-
-    for ugd in ug_docs:
-        accessible_ugdocs.append(ugd) if (
-            verify_ownership(ugd) or verify_admin() or verify_groupadmin()
-        ) else None
-
-    if not accessible_ugdocs:
-        return json_response(
-            status_code=403,
-            jsondata={"result": {"ok": False, "error": f"Insufficient permissions."}},
-        )
-
-    ugd_ids: list[int] = list(ugd.id for ugd in accessible_ugdocs)
-    accessible_group_ids: list[int] = list(
-        g.group_id for g in ugds if g.doc_id in ugd_ids
-    )
-
-    ugs: list[UserGroup] = list(
-        run_sql(select(UserGroup).where(UserGroup.id.in_(accessible_group_ids)))
-        .scalars()
-        .all()
-    )
-
-    members: list[User] = [u for ug in ugs for u in ug.users]
-    # for ug in ugs:
-    #     for u in ug.users:
-    #         members.extend(u)
-
-    data = [
-        {
-            "id": m.id,
-            "name": m.name,
-            "email": m.email,
-            "real_name": m.real_name,
-        }
-        for m in members
-    ]
-    return json_response(status_code=200, jsondata=data)
-
-
-# FIXME: Review
 def check_usergroup_permissions(
     group_id: int, user: User | None = None, action: str | None = None
 ) -> None | Response:
