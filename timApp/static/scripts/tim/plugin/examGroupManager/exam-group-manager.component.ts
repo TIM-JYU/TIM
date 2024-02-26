@@ -65,6 +65,7 @@ export interface ExamGroup extends IGroup {
     isDirectOwner: boolean;
     selected?: boolean;
     allMembersSelected?: boolean;
+    examDocId?: number;
 }
 
 /**
@@ -86,7 +87,7 @@ const ViewOptionsT = t.partial({
         document: t.boolean,
         fullDocPath: t.boolean,
         memberCount: t.boolean,
-        event: t.boolean,
+        exam: t.boolean,
         timeslot: t.boolean,
     }),
     members: t.partial({
@@ -101,10 +102,19 @@ const ViewOptionsT = t.partial({
 
 interface ViewOptions extends t.TypeOf<typeof ViewOptionsT> {}
 
+const ExamT = t.type({
+    name: t.string,
+    docId: t.number,
+    url: t.union([t.string, t.null]),
+});
+
+export interface Exam extends t.TypeOf<typeof ExamT> {}
+
 const ExamManagerMarkup = t.intersection([
     t.type({
         groupsPath: withDefault(t.string, ""),
         showAllGroups: withDefault(t.boolean, false),
+        exams: withDefault(t.array(ExamT), []),
     }),
     t.partial({
         extraInfoTitle: t.string,
@@ -159,7 +169,7 @@ class FormatLoginCodePipe implements PipeTransform {
                 <bootstrap-panel id="groups-panel" title="All exam groups" i18n-title>
                     <div id="list-all-groups-setting">
                         <label for="showAllGroups" i18n>
-                            <input type="checkbox" id="showAllGroups" [(ngModel)]="showAllGroups"
+                            <input type="checkbox" id="showAllGroups" name="showAllGroups" [(ngModel)]="showAllGroups"
                                    (ngModelChange)="refreshVisibleGroups()"/>
                             <span>Show all school's exam groups</span>
                         </label>
@@ -178,7 +188,7 @@ class FormatLoginCodePipe implements PipeTransform {
                                 <th i18n *ngIf="this.viewOptions?.groups?.name">Group name</th>
                                 <th *ngIf="isAdmin() && this.viewOptions?.groups?.document" i18n>Group document</th>
                                 <th i18n *ngIf="this.viewOptions?.groups?.memberCount">Number of students</th>
-                                <th i18n *ngIf="this.viewOptions?.groups?.event">Event</th>
+                                <th i18n *ngIf="this.viewOptions?.groups?.exam">Exam</th>
                                 <th i18n *ngIf="this.viewOptions?.groups?.timeslot">Timeslot</th>
                                 <th i18n>Actions</th>
                                 <th i18n>Delete</th>
@@ -191,7 +201,7 @@ class FormatLoginCodePipe implements PipeTransform {
                                     <a href="/view/{{group.admin_doc_path}}">{{ getGroupDocPath(group) }}</a>
                                 </td>
                                 <td *ngIf="this.viewOptions?.groups?.memberCount">{{ getGroupMemberCount(group) }}</td>
-                                <td *ngIf="this.viewOptions?.groups?.event"> -</td>
+                                <td *ngIf="this.viewOptions?.groups?.exam">{{ examByDocId.get(group.examDocId ?? -1)?.name ?? "-" }}</td>
                                 <td *ngIf="this.viewOptions?.groups?.timeslot"> -</td>
                                 <td>
                                     <button
@@ -349,6 +359,7 @@ export class ExamGroupManagerComponent
     // Members visible on the currently active group tab (in the group members table)
     members: Record<string, GroupMember[]> = {};
     error?: string;
+    examByDocId = new Map<number, Exam>();
 
     // Currently selected groups
     allGroupsSelected: boolean = false;
@@ -370,6 +381,10 @@ export class ExamGroupManagerComponent
         this.showAllGroups = false;
         this.allGroupsSelected = false;
         this.viewOptions = this.markup.show;
+
+        for (const exam of this.markup.exams) {
+            this.examByDocId.set(exam.docId, exam);
+        }
     }
 
     /**
@@ -548,6 +563,7 @@ export class ExamGroupManagerComponent
             showExamGroupCreateDialog({
                 folderPath: this.markup.groupsPath,
                 groupPrefix: this.markup.groupNamePrefix,
+                exams: this.markup.exams,
             })
         );
         if (!res.ok) {

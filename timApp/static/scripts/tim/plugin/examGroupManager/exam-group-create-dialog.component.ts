@@ -1,12 +1,16 @@
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
-import type {ExamGroup} from "tim/plugin/examGroupManager/exam-group-manager.component";
+import type {
+    Exam,
+    ExamGroup,
+} from "tim/plugin/examGroupManager/exam-group-manager.component";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
 export interface ExamGroupDialogParams {
     folderPath: string;
     groupPrefix?: string;
+    exams?: Exam[];
 }
 
 @Component({
@@ -20,14 +24,22 @@ export interface ExamGroupDialogParams {
                 <form #form="ngForm" class="form-horizontal">
                     <fieldset [disabled]="loading">
                         <div class="form-group">
-                            <label i18n for="name" class="col-sm-2 control-label">Group name</label>
-                            <div class="col-sm-10">
+                            <label i18n for="name" class="col-sm-3 control-label">Group name</label>
+                            <div class="col-sm-9">
                                 <input i18n-placeholder type="text" required
                                        [(ngModel)]="name"
                                        (ngModelChange)="setMessage()"
                                        id="name" name="name"
                                        class="form-control"
                                        placeholder="Enter the name of the exam group"/>
+                            </div>
+                        </div>
+                        <div class="form-group" *ngIf="data.exams">
+                            <label i18n for="exam" class="col-sm-3 control-label" i18n>Exam</label>
+                            <div class="col-sm-9">
+                                <select id="exam" name="exam" class="form-control" [(ngModel)]="exam" required>
+                                    <option *ngFor="let exam of data.exams" [ngValue]="exam">{{exam.name}}</option>
+                                </select>
                             </div>
                         </div>
                     </fieldset>
@@ -61,6 +73,7 @@ export class ExamGroupCreateDialogComponent extends AngularDialogComponent<
 > {
     protected dialogName = "ExamGroupCreate";
     name = "";
+    exam?: Exam;
     message?: string;
     loading = false;
 
@@ -76,6 +89,7 @@ export class ExamGroupCreateDialogComponent extends AngularDialogComponent<
                 name: this.name,
                 group_folder_path: this.data.folderPath,
                 group_prefix: this.data.groupPrefix ?? "",
+                exam_doc_id: this.exam?.docId,
             })
         );
 
