@@ -302,7 +302,7 @@ def get_members(group_id: int) -> Response:
                 "name": m.name,
                 "email": m.email,
                 "real_name": m.real_name,
-                "extra_info": None,
+                # "extra_info": None,
                 "login_code": ulc.code if ulc else None,
             }
         )
@@ -436,24 +436,28 @@ def create_users(
     surname: str,
     extra_info: str,
 ) -> Response:
+    user = do_create_users(group_id, given_name, surname, extra_info)
+
+    # TODO: Add extra info to the user group
+
+    return json_response(user)
+
+
+def do_create_users(group_id: int, given_name: str, surname: str, extra_info: str = ""):
     current_user = get_current_user_object()
     group: UserGroup = UserGroup.get_by_id(group_id)
     if not group:
         raise NotExist(f"Group with ID {group_id} does not exist.")
-
     if not given_name.strip():
         raise RouteException("Name is required.")
     if not surname.strip():
         raise RouteException("Surname is required.")
-
     # Check permission for the group
     # Only users with manage access to the group can create and add new members
     _verify_exam_group_access(group, current_user)
-
     no_reply_email_name, no_reply_email_domain = app.config["NOREPLY_EMAIL"].split(
         "@", 1
     )
-
     while True:
         username = (
             f"{slugify(given_name)}.{slugify(surname)}_{secrets.token_urlsafe(16)}"
@@ -461,7 +465,6 @@ def create_users(
         email = f"{no_reply_email_name}+{username}@{no_reply_email_domain}"
         if not User.get_by_name(username):
             break
-
     ui: UserInfo = UserInfo(
         username=username,
         given_name=given_name,
@@ -469,14 +472,10 @@ def create_users(
         full_name=f"{surname} {given_name}",
         email=email,
     )
-
     user, _ = User.create_with_group(ui)
     user.add_to_group(group, current_user)
     db.session.commit()
-
-    # TODO: Add extra info to the user group
-
-    return json_response(user)
+    return user
 
 
 # FIXME: Review
@@ -495,60 +494,61 @@ def import_users_to_group(group_id: int) -> Response:
     for data in udata:
         einfo, lname, fname = data.split(" ")
 
-        dummy_uname: str = str(
-            base64.urlsafe_b64encode(
-                f"{einfo}{lname + fname}{time.time_ns()}".encode()
-            ),
-            encoding="utf-8",
-        )
-        dummy_pass: str = str(
-            base64.urlsafe_b64encode(
-                f"{einfo}{fname + lname}{time.time_ns()}".encode()
-            ),
-            encoding="utf-8",
-        )
+        # dummy_uname: str = str(
+        #     base64.urlsafe_b64encode(
+        #         f"{einfo}{lname + fname}{time.time_ns()}".encode()
+        #     ),
+        #     encoding="utf-8",
+        # )
+        # dummy_pass: str = str(
+        #     base64.urlsafe_b64encode(
+        #         f"{einfo}{fname + lname}{time.time_ns()}".encode()
+        #     ),
+        #     encoding="utf-8",
+        # )
+        #
+        # dummy_email: str = str(
+        #     base64.urlsafe_b64encode(f"{einfo}{lname}{time.time_ns()}".encode()),
+        #     encoding="utf-8",
+        # )
+        # dummy_email = f"{dummy_email}@example.com"
+        #
+        # ui: UserInfo = UserInfo(
+        #     username=dummy_uname,
+        #     given_name=fname,
+        #     last_name=lname,
+        #     full_name=f"{lname} {fname}",
+        #     email=dummy_email,
+        #     password=dummy_pass,
+        # )
+        #
+        # user, ug = User.create_with_group(ui)
+        # ugs.append((ug, einfo))
 
-        dummy_email: str = str(
-            base64.urlsafe_b64encode(f"{einfo}{lname}{time.time_ns()}".encode()),
-            encoding="utf-8",
-        )
-        dummy_email = f"{dummy_email}@example.com"
-
-        ui: UserInfo = UserInfo(
-            username=dummy_uname,
-            given_name=fname,
-            last_name=lname,
-            full_name=f"{lname} {fname}",
-            email=dummy_email,
-            password=dummy_pass,
-        )
-
-        user, ug = User.create_with_group(ui)
+        user = do_create_users(group_id, lname, fname, einfo)
         users.append(user)
-        ugs.append((ug, einfo))
 
     # TODO find a way to get rid of db commits that are currently needed
     #      so we can get references to eg. new usergroup ids
-    db.session.flush()
+    # db.session.flush()
 
     # For some reason Mypy gets confused here, so we will just ignore it for now
     data = list()  # type: ignore
-    from timApp.auth.sessioninfo import get_current_user_object
-
-    current_user = get_current_user_object()
+    # from timApp.auth.sessioninfo import get_current_user_object
+    # current_user = get_current_user_object()
     for user in users:
-        user.add_to_group(group, current_user)
-        ug = user.get_personal_group()
+        # user.add_to_group(group, current_user)
+        # ug = user.get_personal_group()
         data.append(  # type: ignore
             {
-                "id": ug.id,
+                "id": user.get_personal_group().id,
                 "name": user.name,
                 "email": user.email,
                 "real_name": user.real_name,
             }
         )
 
-    db.session.commit()
+    # db.session.commit()
     json_data = json.dumps(data)
 
     return json_response(
