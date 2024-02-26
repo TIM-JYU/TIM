@@ -543,21 +543,6 @@ export class ExamGroupManagerComponent
             : 0;
     }
 
-    private async getMembersFromSelectedGroups() {
-        const groups = this.getSelectedGroups();
-        const group_ids = groups.map((g) => g.id);
-
-        const url = `/examGroupManager/members/from_groups`;
-        const response = await toPromise(
-            this.http.post<GroupMember[]>(url, {
-                ids: group_ids,
-            })
-        );
-        if (response.ok) {
-            return response.result;
-        }
-    }
-
     async createNewGroup() {
         const res = await to2(
             showExamGroupCreateDialog({
