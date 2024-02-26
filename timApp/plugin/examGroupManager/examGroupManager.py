@@ -3,9 +3,10 @@ import datetime
 import json
 import secrets
 import time
+from collections import defaultdict
 from dataclasses import dataclass, field, fields
 from datetime import datetime, timedelta
-from typing import Sequence, TypedDict, Iterable
+from typing import Sequence, TypedDict, Iterable, Any
 
 from flask import Response, request
 from marshmallow import missing, ValidationError
@@ -197,7 +198,7 @@ exam_group_data_user_fields: dict[str, Field] = {
 EXAM_GROUP_DATA_USER_FIELDS = {f.name for f in fields(ExamGroupDataUser)}
 
 
-def _get_any_latest_fields(task_fields: Iterable[str]) -> Sequence[Answer]:
+def _get_latest_fields_any(task_fields: Iterable[str]) -> Sequence[Answer]:
     latest_answers_sub = (
         select(func.max(Answer.id))
         .select_from(Answer)
@@ -215,11 +216,18 @@ def _get_any_latest_fields(task_fields: Iterable[str]) -> Sequence[Answer]:
 
 
 def _get_latest_fields_usergroup(
-    ug: UserGroup, task_fields: Iterable[str]
-) -> dict[int, Answer]:
-    ug_users_sub = ug.memberships.filter(membership_current).with_entities(
-        UserGroupMember.user_id
-    )
+    task_fields: Iterable[str],
+    user: User | None = None,
+    user_group: UserGroup | None = None,
+) -> dict[int, list[Answer]]:
+    if not user and not user_group:
+        raise ValueError("Either u or ug must be provided")
+    if user:
+        ug_users_sub: Any = [user.id]
+    else:
+        ug_users_sub = user_group.memberships.filter(membership_current).with_entities(
+            UserGroupMember.user_id
+        )
 
     latest_answers_sub = (
         select(
@@ -239,7 +247,12 @@ def _get_latest_fields_usergroup(
         .join(latest_answers_sub, Answer.id == latest_answers_sub.c.answer_id)
     )
 
-    return {uid: ans for uid, ans in run_sql(latest_users_stmt).all()}
+    result: dict[int, list[Answer]] = defaultdict(list)
+
+    for uid, a in run_sql(latest_users_stmt).all():
+        result[uid].append(a)
+
+    return dict(result)
 
 
 def _update_exam_group_data_global(ug: UserGroup, data: ExamGroupDataGlobal) -> None:
@@ -251,7 +264,7 @@ def _update_exam_group_data_global(ug: UserGroup, data: ExamGroupDataGlobal) -> 
 
     globals_dict: dict[str, Answer] = {
         a.task_id: a
-        for a in _get_any_latest_fields(
+        for a in _get_latest_fields_any(
             [f"{doc.id}.GLO_{f}" for f in glo_fields_to_update]
         )
     }
@@ -275,11 +288,11 @@ def _get_exam_group_data_global(ug: UserGroup) -> ExamGroupDataGlobal:
     doc = ug.admin_doc
 
     result = ExamGroupDataGlobal()
-    for a in _get_any_latest_fields(
+    for a in _get_latest_fields_any(
         [f"{doc.id}.GLO_{f}" for f in EXAM_GROUP_DATA_GLOBAL_FIELDS]
     ):
         field_name = a.task_id.split(".")[-1][4:]
-        data = json.loads(a.content).get("c")
+        data = json.loads(json.loads(a.content).get("c"))
         try:
             data_val = exam_group_data_fields[field_name].deserialize(data)
         except ValidationError:
@@ -294,13 +307,13 @@ def _get_exam_group_data_user(ug: UserGroup) -> dict[int, ExamGroupDataUser]:
     doc = ug.admin_doc
 
     result: dict[int, ExamGroupDataUser] = {}
-    for uid, a in _get_latest_fields_usergroup(
-        ug, [f"{doc.id}.{f}" for f in EXAM_GROUP_DATA_USER_FIELDS]
+    for uid, answers in _get_latest_fields_usergroup(
+        [f"{doc.id}.{f}" for f in EXAM_GROUP_DATA_USER_FIELDS], user_group=ug
     ).items():
-        data = json.loads(a.content).get("c")
         user_data = ExamGroupDataUser()
-        for f in fields(ExamGroupDataUser):
-            field_name = f.name
+        for a in answers:
+            field_name = a.task_id.split(".")[-1]
+            data = json.loads(json.loads(a.content).get("c"))
             try:
                 data_val = exam_group_data_user_fields[field_name].deserialize(data)
             except ValidationError:
@@ -309,6 +322,37 @@ def _get_exam_group_data_user(ug: UserGroup) -> dict[int, ExamGroupDataUser]:
         result[uid] = user_data
 
     return result
+
+
+def _update_exam_group_data_user(
+    u: User, ug: UserGroup, data: ExamGroupDataUser
+) -> None:
+    doc = ug.admin_doc
+
+    user_fields_to_update = {
+        f for f in EXAM_GROUP_DATA_USER_FIELDS if getattr(data, f) is not missing
+    }
+
+    user_fields: list[Answer] = _get_latest_fields_usergroup(
+        [f"{doc.id}.{f}" for f in user_fields_to_update], user=u
+    ).get(u.id, [])
+
+    answer_by_field = {a.task_id.split(".")[-1]: a for a in user_fields}
+
+    for f in fields(data):
+        if f.name not in user_fields_to_update:
+            continue
+        new_json = json.dumps({"c": json.dumps(getattr(data, f.name))})
+        task_id = f"{doc.id}.{f.name}"
+        ans = answer_by_field.get(f.name, None)
+        if not ans:
+            ans = Answer(
+                task_id=task_id,
+                valid=True,
+            )
+            db.session.add(ans)
+        ans.content = new_json
+        ans.users_all.append(u)
 
 
 @exam_group_manager_plugin.get("/groups")
@@ -561,14 +605,16 @@ def create_users(
     surname: str,
     extra_info: str,
 ) -> Response:
-    user = do_create_users(group_id, given_name, surname, extra_info)
+    user, extra_data = do_create_users(group_id, given_name, surname, extra_info)
 
     # TODO: Add extra info to the user group
 
-    return json_response(user)
+    return json_response(user.to_json() | extra_data.to_json())
 
 
-def do_create_users(group_id: int, given_name: str, surname: str, extra_info: str = ""):
+def do_create_users(
+    group_id: int, given_name: str, surname: str, extra_info: str = ""
+) -> tuple[User, ExamGroupDataUser]:
     current_user = get_current_user_object()
     group: UserGroup = UserGroup.get_by_id(group_id)
     if not group:
@@ -603,8 +649,14 @@ def do_create_users(group_id: int, given_name: str, surname: str, extra_info: st
 
     user, _ = User.create_with_group(ui)
     user.add_to_group(group, current_user)
+    # Flush to make user be member of the group
+    db.session.flush()
+
+    extra_data = ExamGroupDataUser(extraInfo=extra_info)
+    _update_exam_group_data_user(user, group, extra_data)
+
     db.session.commit()
-    return user
+    return user, extra_data
 
 
 # FIXME: Review

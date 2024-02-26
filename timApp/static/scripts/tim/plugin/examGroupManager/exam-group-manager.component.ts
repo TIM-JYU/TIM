@@ -50,7 +50,7 @@ export interface GroupMember extends IUser {
     real_name: string;
     // additional information on the member not conveyed by other properties,
     // such as name of class, homegroup, etc.
-    extra_info: string;
+    extraInfo?: string;
     // login codes will need to be treated like passwords
     login_code?: string;
 
@@ -280,7 +280,7 @@ class FormatLoginCodePipe implements PipeTransform {
                                             </td>
                                             <td *ngIf="this.viewOptions?.members?.name">{{ member.real_name }}</td>
                                             <td *ngIf="this.viewOptions?.members?.username">{{ member.name }}</td>
-                                            <td *ngIf="this.viewOptions?.members?.extraInfo">{{ member.extra_info }}</td>
+                                            <td *ngIf="this.viewOptions?.members?.extraInfo">{{ member.extraInfo }}</td>
                                             <td *ngIf="this.viewOptions?.members?.email">{{ member.email }}</td>
                                             <td *ngIf="this.viewOptions?.members?.loginCode">
                                                 <code>{{ member.login_code | formatLoginCode }}</code>
