@@ -63,7 +63,7 @@ TIDETaskInfoSchema = class_schema(TIDETaskInfo)()
 
 def get_user_tasks_by_bookmarks(user: User) -> list[json]:
     """
-    Get all TIDE-tasks from the courses user has bookmarked
+    Get all TIDE-tasks from the courses user has bookmarked in TIM-front page
     :param user: Logged-in user
     :return: List JSON with all TIDE-tasks from the courses user has bookmarked
     """
