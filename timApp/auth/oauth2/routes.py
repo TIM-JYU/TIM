@@ -67,7 +67,7 @@ def get_user_profile() -> Response:
     )
 
 @oauth.get("ideTasksByBooksmarks")
-@require_oauth(Scope.profile.name)  # TODO: Change to correct scope
+@require_oauth(Scope.profile.name)  # TODO: Change to correct scopes
 def get_all_tasks() -> Response:
     """
     Get all tasks that the user has bookmarked in TIM-front page
