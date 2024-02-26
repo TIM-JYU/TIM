@@ -3,14 +3,18 @@ import datetime
 import json
 import secrets
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import datetime, timedelta
-from typing import Sequence
+from typing import Sequence, TypedDict, Iterable
 
 from flask import Response, request
-from marshmallow import missing
-from sqlalchemy import select, Row, delete, update
+from marshmallow import missing, ValidationError
+from marshmallow.fields import Field
+from sqlalchemy import select, Row, delete, update, func
 
+from cli.commands.tool.angularjs2angular import TypeScriptSrcEditor
+from timApp.answer.answer import Answer
+from timApp.answer.routes import get_answers_for_tasks
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_ownership,
@@ -47,7 +51,7 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import slugify, get_current_time
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.marshmallow_dataclass import class_schema
+from tim_common.marshmallow_dataclass import class_schema, field_for_schema
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
     PluginReqs,
@@ -67,7 +71,7 @@ class GroupViewOptionsMarkup:
     document: bool = False
     fullDocPath: bool = False
     memberCount: bool = True
-    event: bool = False
+    exam: bool = True
     timeslot: bool = False
 
 
@@ -88,12 +92,20 @@ class ViewOptionsMarkup:
 
 
 @dataclass
+class Exam:
+    docId: int
+    name: str
+    url: str | None = None
+
+
+@dataclass
 class ExamGroupManagerMarkup(GenericMarkupModel):
     groupsPath: str | Missing = missing
     extraInfoTitle: str | Missing = missing
     showAllGroups: bool = False
     show: ViewOptionsMarkup = field(default_factory=ViewOptionsMarkup)
     groupNamePrefix: str | Missing = missing
+    exams: list[Exam] = field(default_factory=list)
 
 
 ExamGroupManagerMarkupSchema = class_schema(
@@ -145,6 +157,85 @@ def _verify_exam_group_access(
     return verify_group_access(ug, manage_access_set, user, require=require)
 
 
+@dataclass
+class ExamGroupDataGlobal:
+    examDocId: int | Missing = field(default=missing)
+
+    def to_json(self) -> dict:
+        res = {}
+        for f in fields(self):
+            v = getattr(self, f.name)
+            if v is not missing:
+                res[f.name] = v
+        return res
+
+
+exam_group_data_fields: dict[str, Field] = {
+    f.name: field_for_schema(f.type) for f in fields(ExamGroupDataGlobal)
+}
+EXAM_GROUP_DATA_GLOBAL = {f.name for f in fields(ExamGroupDataGlobal)}
+
+
+def _get_latest_global_fields(doc: DocInfo, fields: Iterable[str]) -> Sequence[Answer]:
+    latest_answers_sub = (
+        select(func.max(Answer.id))
+        .select_from(Answer)
+        .filter(Answer.task_id.in_([f"{doc.id}.GLO_{f}" for f in fields]))
+        .group_by(Answer.task_id)
+    )
+
+    latest_globals: Sequence[Answer] = (
+        run_sql(select(Answer).filter(Answer.id.in_(latest_answers_sub)))
+        .scalars()
+        .all()
+    )
+
+    return latest_globals
+
+
+def _update_exam_group_data(ug: UserGroup, data: ExamGroupDataGlobal) -> None:
+    doc = ug.admin_doc
+
+    glo_fields_to_update = {
+        f for f in EXAM_GROUP_DATA_GLOBAL if getattr(data, f) is not missing
+    }
+
+    globals_dict: dict[str, Answer] = {
+        a.task_id: a for a in _get_latest_global_fields(doc, glo_fields_to_update)
+    }
+
+    for f in fields(data):
+        if f.name not in glo_fields_to_update:
+            continue
+        new_json = json.dumps({"c": json.dumps(getattr(data, f.name))})
+        task_id = f"{doc.id}.GLO_{f.name}"
+        ans = globals_dict.get(task_id, None)
+        if not ans:
+            ans = Answer(
+                task_id=task_id,
+                valid=True,
+            )
+            db.session.add(ans)
+        ans.content = new_json
+
+
+def _get_exam_group_data(ug: UserGroup) -> ExamGroupDataGlobal:
+    doc = ug.admin_doc
+
+    result = ExamGroupDataGlobal()
+    for a in _get_latest_global_fields(doc, EXAM_GROUP_DATA_GLOBAL):
+        field_name = a.task_id.split(".")[-1][4:]
+        data = json.loads(a.content).get("c")
+        try:
+            data_val = exam_group_data_fields[field_name].deserialize(data)
+        except ValidationError:
+            continue
+
+        setattr(result, field_name, data_val)
+
+    return result
+
+
 @exam_group_manager_plugin.get("/groups")
 def get_groups(
     doc_id: int,
@@ -190,6 +281,7 @@ def get_groups(
                 "readableName": ug_docs[admin_doc_id].title,
                 "path": ug_docs[admin_doc_id].path,
                 "isDirectOwner": curr_user in ug_docs[admin_doc_id].owners,
+                **_get_exam_group_data(g).to_json(),
             }
             for g, admin_doc_id in groups_docs
         ]
@@ -201,11 +293,20 @@ def create_group(
     name: str,
     group_folder_path: str,
     group_prefix: str = "",
+    exam_doc_id: int | None = None,
 ) -> Response:
-    group_name = f"{group_prefix}-{slugify(name)}"
+    group_name = (
+        f"{slugify(group_prefix)}-{slugify(name)}-{slugify(secrets.token_urlsafe(8))}"
+    )
     group_path = f"{group_folder_path}/{group_name}"
     ug, doc = do_create_group(group_path)
     doc.title = name
+
+    extra_data = {}
+    if exam_doc_id:
+        extra_data = {"examDocId": exam_doc_id}
+        _update_exam_group_data(ug, ExamGroupDataGlobal(examDocId=exam_doc_id))
+
     db.session.commit()
     return json_response(
         ug.to_json()
@@ -213,6 +314,7 @@ def create_group(
             "readableName": doc.title,
             "isDirectOwner": True,
         }
+        | extra_data
     )
 
 
