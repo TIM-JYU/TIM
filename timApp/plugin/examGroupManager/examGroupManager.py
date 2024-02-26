@@ -14,6 +14,7 @@ from sqlalchemy import select, Row, delete, update, func
 
 from cli.commands.tool.angularjs2angular import TypeScriptSrcEditor
 from timApp.answer.answer import Answer
+from timApp.answer.answer_models import UserAnswer
 from timApp.answer.routes import get_answers_for_tasks
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -41,7 +42,7 @@ from timApp.user.groups import (
 from timApp.user.user import User, UserInfo, owner_access_set, manage_access_set
 from timApp.user.usergroup import UserGroup, get_groups_by_ids
 from timApp.user.usergroupdoc import UserGroupDoc
-from timApp.user.usergroupmember import UserGroupMember
+from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import (
     view_ctx_with_urlmacros,
     RouteException,
@@ -173,14 +174,34 @@ class ExamGroupDataGlobal:
 exam_group_data_fields: dict[str, Field] = {
     f.name: field_for_schema(f.type) for f in fields(ExamGroupDataGlobal)
 }
-EXAM_GROUP_DATA_GLOBAL = {f.name for f in fields(ExamGroupDataGlobal)}
+EXAM_GROUP_DATA_GLOBAL_FIELDS = {f.name for f in fields(ExamGroupDataGlobal)}
 
 
-def _get_latest_global_fields(doc: DocInfo, fields: Iterable[str]) -> Sequence[Answer]:
+@dataclass
+class ExamGroupDataUser:
+    extraInfo: str | Missing = field(default=missing)
+    extraTime: bool | Missing = field(default=missing)
+
+    def to_json(self) -> dict:
+        res = {}
+        for f in fields(self):
+            v = getattr(self, f.name)
+            if v is not missing:
+                res[f.name] = v
+        return res
+
+
+exam_group_data_user_fields: dict[str, Field] = {
+    f.name: field_for_schema(f.type) for f in fields(ExamGroupDataUser)
+}
+EXAM_GROUP_DATA_USER_FIELDS = {f.name for f in fields(ExamGroupDataUser)}
+
+
+def _get_any_latest_fields(task_fields: Iterable[str]) -> Sequence[Answer]:
     latest_answers_sub = (
         select(func.max(Answer.id))
         .select_from(Answer)
-        .filter(Answer.task_id.in_([f"{doc.id}.GLO_{f}" for f in fields]))
+        .filter(Answer.task_id.in_(task_fields))
         .group_by(Answer.task_id)
     )
 
@@ -193,15 +214,46 @@ def _get_latest_global_fields(doc: DocInfo, fields: Iterable[str]) -> Sequence[A
     return latest_globals
 
 
-def _update_exam_group_data(ug: UserGroup, data: ExamGroupDataGlobal) -> None:
+def _get_latest_fields_usergroup(
+    ug: UserGroup, task_fields: Iterable[str]
+) -> dict[int, Answer]:
+    ug_users_sub = ug.memberships.filter(membership_current).with_entities(
+        UserGroupMember.user_id
+    )
+
+    latest_answers_sub = (
+        select(
+            UserAnswer.user_id.label("user_id"),
+            func.max(Answer.id).label("answer_id"),
+        )
+        .select_from(Answer)
+        .join(UserAnswer, UserAnswer.answer_id == Answer.id)
+        .filter(Answer.task_id.in_(task_fields) & UserAnswer.user_id.in_(ug_users_sub))
+        .group_by(UserAnswer.user_id, Answer.task_id)
+        .subquery()
+    )
+
+    latest_users_stmt = (
+        select(latest_answers_sub.c.user_id, Answer)
+        .select_from(Answer)
+        .join(latest_answers_sub, Answer.id == latest_answers_sub.c.answer_id)
+    )
+
+    return {uid: ans for uid, ans in run_sql(latest_users_stmt).all()}
+
+
+def _update_exam_group_data_global(ug: UserGroup, data: ExamGroupDataGlobal) -> None:
     doc = ug.admin_doc
 
     glo_fields_to_update = {
-        f for f in EXAM_GROUP_DATA_GLOBAL if getattr(data, f) is not missing
+        f for f in EXAM_GROUP_DATA_GLOBAL_FIELDS if getattr(data, f) is not missing
     }
 
     globals_dict: dict[str, Answer] = {
-        a.task_id: a for a in _get_latest_global_fields(doc, glo_fields_to_update)
+        a.task_id: a
+        for a in _get_any_latest_fields(
+            [f"{doc.id}.GLO_{f}" for f in glo_fields_to_update]
+        )
     }
 
     for f in fields(data):
@@ -219,11 +271,13 @@ def _update_exam_group_data(ug: UserGroup, data: ExamGroupDataGlobal) -> None:
         ans.content = new_json
 
 
-def _get_exam_group_data(ug: UserGroup) -> ExamGroupDataGlobal:
+def _get_exam_group_data_global(ug: UserGroup) -> ExamGroupDataGlobal:
     doc = ug.admin_doc
 
     result = ExamGroupDataGlobal()
-    for a in _get_latest_global_fields(doc, EXAM_GROUP_DATA_GLOBAL):
+    for a in _get_any_latest_fields(
+        [f"{doc.id}.GLO_{f}" for f in EXAM_GROUP_DATA_GLOBAL_FIELDS]
+    ):
         field_name = a.task_id.split(".")[-1][4:]
         data = json.loads(a.content).get("c")
         try:
@@ -232,6 +286,27 @@ def _get_exam_group_data(ug: UserGroup) -> ExamGroupDataGlobal:
             continue
 
         setattr(result, field_name, data_val)
+
+    return result
+
+
+def _get_exam_group_data_user(ug: UserGroup) -> dict[int, ExamGroupDataUser]:
+    doc = ug.admin_doc
+
+    result: dict[int, ExamGroupDataUser] = {}
+    for uid, a in _get_latest_fields_usergroup(
+        ug, [f"{doc.id}.{f}" for f in EXAM_GROUP_DATA_USER_FIELDS]
+    ).items():
+        data = json.loads(a.content).get("c")
+        user_data = ExamGroupDataUser()
+        for f in fields(ExamGroupDataUser):
+            field_name = f.name
+            try:
+                data_val = exam_group_data_user_fields[field_name].deserialize(data)
+            except ValidationError:
+                continue
+            setattr(user_data, field_name, data_val)
+        result[uid] = user_data
 
     return result
 
@@ -281,7 +356,7 @@ def get_groups(
                 "readableName": ug_docs[admin_doc_id].title,
                 "path": ug_docs[admin_doc_id].path,
                 "isDirectOwner": curr_user in ug_docs[admin_doc_id].owners,
-                **_get_exam_group_data(g).to_json(),
+                **_get_exam_group_data_global(g).to_json(),
             }
             for g, admin_doc_id in groups_docs
         ]
@@ -305,7 +380,7 @@ def create_group(
     extra_data = {}
     if exam_doc_id:
         extra_data = {"examDocId": exam_doc_id}
-        _update_exam_group_data(ug, ExamGroupDataGlobal(examDocId=exam_doc_id))
+        _update_exam_group_data_global(ug, ExamGroupDataGlobal(examDocId=exam_doc_id))
 
     db.session.commit()
     return json_response(
@@ -367,7 +442,6 @@ def do_delete_exam_groups(group_ids: list[int]) -> None:
         soft_delete_document(doc)
 
 
-# FIXME: Review
 @exam_group_manager_plugin.get("/members/<int:group_id>")
 def get_members(group_id: int) -> Response:
     """
@@ -396,16 +470,20 @@ def get_members(group_id: int) -> Response:
         .all()
     )
     login_code_per_user = {lc.user_id: lc for lc in login_codes}
+    exam_group_fields_per_user = _get_exam_group_data_user(ug)
+
     for m in members:
         ulc: UserLoginCode = login_code_per_user.get(m.id, None)
+        exam_fields = exam_group_fields_per_user.get(m.id, None)
+        exam_fields_json = exam_fields.to_json() if exam_fields else {}
         data.append(
             {
                 "id": m.id,
                 "name": m.name,
                 "email": m.email,
                 "real_name": m.real_name,
-                "extra_info": None,
                 "login_code": ulc.code if ulc else None,
+                **exam_fields_json,
             }
         )
 
@@ -520,6 +598,8 @@ def copy_members(from_id: int, to_id: int) -> Response:
 
     _verify_exam_group_access(source_group)
     _verify_exam_group_access(target_group)
+
+    # TODO: Copy extra infos
 
     members: list[User] = list(source_group.users)
     added_memberships = []
