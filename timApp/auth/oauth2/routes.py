@@ -70,7 +70,7 @@ def get_user_profile() -> Response:
 @require_oauth(Scope.profile.name)  # TODO: Change to correct scope
 def get_all_tasks() -> Response:
     """
-    Get all tasks that the user has bookmarked
+    Get all tasks that the user has bookmarked in TIM-front page
 
     :return: JSON response with all tasks
     """
