@@ -134,7 +134,7 @@ def get_user_plugin_data(doc: DocInfo, par, user_ctx: UserContext) -> json:
         ide_files = IdeFileSchema.load(
             plugin_json["markup"]["files"], many=True, unknown=EXCLUDE
         )
-    # If the plugin has only one filee TODO: check if this is correct
+    # If the plugin has only one filee
     else:
         ide_files = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
 
