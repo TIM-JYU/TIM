@@ -65,3 +65,17 @@ def get_user_profile() -> Response:
             "username": user.name,
         }
     )
+
+@oauth.get("ideTasksByBooksmarks")
+@require_oauth(Scope.profile.name)  # TODO: Change to correct scope
+def get_all_tasks() -> Response:
+    """
+    Get all tasks that the user has bookmarked
+
+    :return: JSON response with all tasks
+    """
+    user: User = current_token.user
+
+    tasks = get_user_tasks_by_bookmarks(user)
+
+    return json_response(tasks)
