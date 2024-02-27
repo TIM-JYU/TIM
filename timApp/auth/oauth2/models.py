@@ -20,7 +20,10 @@ if TYPE_CHECKING:
 
 
 class Scope(Enum):
+    user_courses = "user_courses"
+    user_tasks = "user_tasks"
     profile = "profile"
+
 
 
 @dataclass

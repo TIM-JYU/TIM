@@ -63,7 +63,7 @@ TIDETaskInfoSchema = class_schema(TIDETaskInfo)()
 
 def get_user_tasks_by_bookmarks(user: User) -> list[json]:
     """
-    Get all TIDE-tasks from the courses user has bookmarked in TIM-front page
+    Get all TIDE-tasks from the courses user has bookmarked
     :param user: Logged-in user
     :return: List JSON with all TIDE-tasks from the courses user has bookmarked
     """
@@ -80,8 +80,8 @@ def get_user_tasks_by_bookmarks(user: User) -> list[json]:
             pars = doc.document.get_paragraphs()
 
             for p in pars:
-                if p.attrs["plugin"] == "csPlugin":
-                    # Checks the plugin type to be csPlugin TODO: additional check for TIDE-task?
+                if p.attrs["plugin"] == "csPlugin" and p.attrs.get("tide") == "true":
+                    # Checks the plugin type to be csPlugin TODO: additional check for TIDE-task, now only with tide attribute
                     user_plugin_datas.append(
                         get_user_plugin_data(
                             doc,
@@ -93,18 +93,39 @@ def get_user_tasks_by_bookmarks(user: User) -> list[json]:
     return user_plugin_datas
 
 
-def get_user_plugin_data(doc: DocInfo, par, user_ctx: UserContext) -> json:
+def get_task_by_id(doc_id: int, par_id: str, user: User) -> json:
+    """
+    Get the TIDE-task by task id
+    :param user: Authenticated user
+    :param par_id: id of the paragraph
+    :param doc_id: Document id
+    :return:
+    """
+
+    user_ctx = UserContext.from_one_user(user)
+    doc = DocEntry.find_by_id(doc_id=doc_id)
+    par = doc.document.get_paragraph(par_id=par_id)
+
+    return get_user_plugin_data(doc=doc, par=par, user_ctx=user_ctx)
+
+
+def get_user_plugin_data(
+        doc: DocInfo, par, user_ctx: UserContext, plugin: Plugin = None
+) -> json:
     """
     Get the TIDE-task information from the plugin
+    :param plugin: Tim plugin
     :param doc: TIM document
     :param par: Paragraph from the document
     :param user_ctx: User context
     :return: JSON with TIDE-task ide-files, task info and task id
     """
+
     view_ctx = default_view_ctx
 
     # Get the plugin from the paragraph
-    plugin = Plugin.from_paragraph(par, view_ctx, user_ctx)
+    if plugin is None:
+        plugin = Plugin.from_paragraph(par, view_ctx, user_ctx)
 
     # Plugin render options
     plugin_opts = PluginRenderOptions(
@@ -134,7 +155,7 @@ def get_user_plugin_data(doc: DocInfo, par, user_ctx: UserContext) -> json:
         ide_files = IdeFileSchema.load(
             plugin_json["markup"]["files"], many=True, unknown=EXCLUDE
         )
-    # If the plugin has only one filee
+    # If the plugin has only one file TODO: check if this is correct
     else:
         ide_files = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
 
@@ -142,5 +163,6 @@ def get_user_plugin_data(doc: DocInfo, par, user_ctx: UserContext) -> json:
         "ide_files": ide_files,
         "task_info": task_info,
         "task_id": task_id,
+        "document_id": doc.id,
+        "paragraph_id": par.id,
     }
-

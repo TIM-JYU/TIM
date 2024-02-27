@@ -1,14 +1,19 @@
-from typing import Union
-
+import datetime
 from authlib.integrations.flask_oauth2 import current_token
 from authlib.oauth2 import OAuth2Error
 from authlib.oauth2.rfc6749 import BaseGrant, scope_to_list
-from flask import Response, render_template
+from flask import Response, render_template, request
+
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.oauth2.models import OAuth2Client, Scope
 from timApp.auth.oauth2.oauth2 import auth_server, require_oauth
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
+
+from timApp.tide_support.routes import (
+    get_user_tasks_by_bookmarks,
+    get_task_by_id,
+)
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import json_response, safe_redirect
@@ -66,11 +71,12 @@ def get_user_profile() -> Response:
         }
     )
 
+
 @oauth.get("ideTasksByBooksmarks")
-@require_oauth(Scope.profile.name)  # TODO: Change to correct scope
+@require_oauth(Scope.user_tasks.value)
 def get_all_tasks() -> Response:
     """
-    Get all tasks that the user has bookmarked in TIM-front page
+    Get all tasks that the user has bookmarked
 
     :return: JSON response with all tasks
     """
@@ -79,3 +85,42 @@ def get_all_tasks() -> Response:
     tasks = get_user_tasks_by_bookmarks(user)
 
     return json_response(tasks)
+
+
+@oauth.get("ideTaskById/<int:doc_id>/<string:par_id>")
+@require_oauth(Scope.user_tasks.value)
+def get_task(doc_id: int, par_id: str) -> Response:
+    """
+    Get a specific task by paragraph id and task id
+    :return: JSON response with the task
+    """
+    user: User = current_token.user
+
+    return json_response(get_task_by_id(doc_id=doc_id, par_id=par_id, user=user))
+
+
+@oauth.get("courses")
+@require_oauth(Scope.user_courses.value)
+def get_courses() -> Response:
+    """
+    Get all courses that the user has bookmarked
+    :return: JSON response with all courses
+    """
+    user: User = current_token.user
+    courses = user.bookmarks.bookmark_data[2]["My courses"]
+
+    return json_response(courses)
+
+
+@oauth.get("tokenIsValid")
+@require_oauth(Scope.profile.value)
+def token_is_valid() -> Response:
+    """
+    Check if the token is valid
+    :return: JSON response with the token status and validity time (hours:minutes:seconds)
+    """
+
+    # Convert seconds to hours:minutes:seconds
+    convert = str(datetime.timedelta(seconds=current_token.expires_in))
+
+    return json_response({"tokenIsValid": True, "validityTime": convert})
