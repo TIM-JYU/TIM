@@ -1,5 +1,6 @@
 import {HttpClientModule} from "@angular/common/http";
 import type {OnInit, PipeTransform} from "@angular/core";
+import {EventEmitter, Output} from "@angular/core";
 import {Pipe} from "@angular/core";
 import {
     type ApplicationRef,
@@ -42,6 +43,7 @@ import {ExamGroupCreateDialogComponent} from "tim/plugin/examGroupManager/exam-g
 import {showExamGroupCreateDialog} from "tim/plugin/examGroupManager/showExamGroupCreateDialog";
 import {PurifyModule} from "tim/util/purify.module";
 import {SPLIT_EVERY} from "tim/user/user-code-login.component";
+import {ButtonsModule} from "ngx-bootstrap/buttons";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -141,6 +143,47 @@ class FormatLoginCodePipe implements PipeTransform {
             return value;
         }
         return formatNumberCode(value, SPLIT_EVERY);
+    }
+}
+
+@Component({
+    selector: "tim-toggle",
+    template: `
+        <div class="btn-group btn-group-xs">
+            <button [disabled]="disabled" type="button" class="btn"
+                    [class.btn-default]="value" [class.btn-danger]="!value"
+                    (click)="toggle()"
+            >
+                <code>O</code>   
+            </button>
+            <button [disabled]="disabled" type="button" class="btn"
+                    [class.btn-default]="!value" [class.btn-success]="value"
+                    (click)="toggle()"
+            >
+                <code>I</code>
+            </button>
+        </div>
+    `,
+    styles: [
+        `
+            code {
+                font-size: 1.8em !important;
+            }
+            button {
+                outline: none !important;
+            }
+        `,
+    ],
+})
+export class ToggleComponent {
+    @Input() value: boolean = false;
+    @Output() valueChange: EventEmitter<boolean> = new EventEmitter();
+
+    @Input() disabled: boolean = false;
+
+    toggle() {
+        this.value = !this.value;
+        this.valueChange.emit(this.value);
     }
 }
 
@@ -246,9 +289,11 @@ class FormatLoginCodePipe implements PipeTransform {
                         <!-- Create a new tab for each group that is visible to the current user -->
                         <tab *ngFor="let group of visibleGroups"
                              heading="{{group.readableName}}"
+                             [active]="group.selected ?? false"
                              [id]="group.name"
                              class="grid-tab tab-form"
-                             (selectTab)="onGroupTabSelected($event)">
+                             (selectTab)="group.selected = true; onGroupTabSelected($event)"
+                             (deselect)="group.selected = false">
                             <ng-container>
                                 <!-- Member list, with sort and selection controls -->
                                 <div>
@@ -335,6 +380,100 @@ class FormatLoginCodePipe implements PipeTransform {
                         </tab>
                     </tabset>
                 </bootstrap-panel>
+                <bootstrap-panel title="Organize exam" i18n-title>
+                    <tabset class="merged">
+                        <tab *ngFor="let group of visibleGroups"
+                             heading="{{group.readableName}}"
+                             [active]="group.selected ?? false"
+                             [id]="group.name"
+                             (selectTab)="group.selected = true; onGroupTabSelected($event)"
+                             (deselect)="group.selected = false">
+
+                            <div>
+                                <!-- TODO: MD text here -->
+                            </div>
+
+                            <fieldset>
+                                <h5>Exam checklist</h5>
+
+                                <p>Complete each step to start the exam.</p>
+
+                                <div class="checklist">
+                                    <div>
+                                        <div class="cb">
+                                            <input type="checkbox" title="Mark as done">
+                                        </div>
+                                        <div>
+                                            <div class="toggle-button"><span>Activate login codes</span>
+                                            </div>
+                                            <div class="small">Activate the login codes so that the students can log
+                                                in
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <tim-toggle [disabled]="false"></tim-toggle>
+                                        </div>
+                                    </div>
+                                    <div class="disabled">
+                                        <div class="cb">
+                                            <input disabled type="checkbox" title="Mark as done">
+                                        </div>
+                                        <div>
+                                            <div>Ask students to log in to the exam page:
+                                                <a href="https://tim.jyu.fi"><code>https://url</code></a>
+                                            </div>
+                                        </div>
+                                        <div></div>
+                                    </div>
+                                    <div class="disabled">
+                                        <div class="cb">
+                                            <input disabled type="checkbox" title="Mark as done">
+                                        </div>
+                                        <div>
+                                            Check that the students have logged in and are ready to begin the exam
+                                        </div>
+                                        <div></div>
+                                    </div>
+                                    <div class="disabled">
+                                        <div class="cb">
+                                            <input disabled type="checkbox" title="Mark as done">
+                                        </div>
+                                        <div>
+                                            <span>Begin exam</span>
+                                        </div>
+                                        <div>
+                                            <tim-toggle [disabled]="true"></tim-toggle>
+                                        </div>
+                                    </div>
+                                    <div class="disabled">
+                                        <div class="cb">
+                                            <input disabled type="checkbox" title="Mark as done">
+                                        </div>
+                                        <div>
+                                            Monitor exam with the table below
+                                        </div>
+                                        <div></div>
+                                    </div>
+                                    <div class="disabled">
+                                        <div class="cb">
+                                            <input disabled type="checkbox" title="Mark as done">
+                                        </div>
+                                        <div>
+                                            <div>End the exam for all except people without additional time:</div>
+                                            <div>
+                                                <button disabled class="btn btn-default">End exam for students without extra
+                                                    time
+                                                </button>
+                                                <button disabled class="btn btn-default">End exam for all students</button>
+                                            </div>
+                                        </div>
+                                        <div></div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </tab>
+                    </tabset>
+                </bootstrap-panel>
             </fieldset>
         </form>
     `,
@@ -348,6 +487,7 @@ export class ExamGroupManagerComponent
     >
     implements OnInit
 {
+    radioValue = "false";
     requiresTaskId = false;
     viewOptions?: ViewOptions;
     showAllGroups: boolean = false;
@@ -503,6 +643,7 @@ export class ExamGroupManagerComponent
         );
         if (!this.selectedGroupTab || !curGroup) {
             this.selectedGroupTab = this.visibleGroups[0].name;
+            this.visibleGroups[0].selected = true;
         }
         curGroup = this.visibleGroups.find(
             (g) => g.name === this.selectedGroupTab
@@ -835,6 +976,7 @@ export class ExamGroupManagerComponent
         LoginCodeGenerationDialogComponent,
         ExamGroupCreateDialogComponent,
         FormatLoginCodePipe,
+        ToggleComponent,
     ],
     exports: [ExamGroupManagerComponent],
     imports: [
@@ -846,6 +988,7 @@ export class ExamGroupManagerComponent
         TabsModule.forRoot(),
         DialogModule,
         PurifyModule,
+        ButtonsModule,
     ],
 })
 export class ExamGroupManagerModule implements DoBootstrap {

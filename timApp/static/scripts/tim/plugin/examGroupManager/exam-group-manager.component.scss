@@ -100,7 +100,7 @@ tim-alert {
 }
 
 .add-members-help {
-    margin-left: 0.5em;
+  margin-left: 0.5em;
 }
 
 #current-members-tab .contents {
@@ -175,4 +175,44 @@ tbody {
 
 .copy-members-field {
   display: inline-flex;;
+}
+
+.checklist {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-auto-rows: 1fr;
+
+
+  & > div {
+    display: contents;
+
+    & > * {
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+
+      &:last-child {
+        padding-right: 1em;
+      }
+
+      &:first-child {
+        padding-left: 1em;
+      }
+    }
+
+    &.disabled > * {
+      background: #efefef;
+      color: #717171;
+    }
+  }
+
+  .cb {
+    padding-right: 1em;
+  }
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+  }
 }
