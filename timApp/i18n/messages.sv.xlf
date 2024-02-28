@@ -8854,6 +8854,14 @@
           <context context-type="linenumber">9,8</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8157087931446896313" datatype="html">
+        <source>Anti-controls</source>
+        <target state="new">Anti-controls</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
+          <context context-type="linenumber">43</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

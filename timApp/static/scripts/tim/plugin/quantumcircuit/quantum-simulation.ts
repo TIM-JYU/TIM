@@ -261,17 +261,17 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
      * Builds a controlled gate matrix using gate at specified cell.
      * @param target qubit index to build gate for
      * @param time time
-     * @param controls control qubits for this gate
+     * @param nControls number of control qubits for this gate
      */
     private buildControlledGate(
         target: number,
         time: number,
-        controls: number[]
+        nControls: number
     ) {
         const cell = this.board.get(target, time);
         const cellMatrix = this.getCellMatrix(cell);
         const matrixSize = this.gateService.getMatrixSize(cellMatrix);
-        const size = 2 ** (controls.length + matrixSize);
+        const size = 2 ** (nControls + matrixSize);
 
         const res = identity(size) as Matrix;
         const [rows, cols] = cellMatrix.size();
@@ -284,8 +284,9 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
     /**
      * Get list of controls for each qubit at given time.
      * @param colI time
+     * @param anti return anti controls if true else normal controls
      */
-    private getGateControls(colI: number) {
+    private getGateControls(colI: number, anti: boolean) {
         // initialize so that each gate has no controls
         const gateControls: number[][] = [];
         for (const _ of this.board.board) {
@@ -294,7 +295,7 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
         // add controls to gates
         for (let i = 0; i < this.board.length; i++) {
             const cell = this.board.get(i, colI);
-            if (cell instanceof Control) {
+            if (cell instanceof Control && cell.anti === anti) {
                 const controlled = cell.target;
                 gateControls[controlled].push(i);
             }
@@ -305,10 +306,12 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
     /**
      * Takes all uncontrolled single and multi-qubit gates in column and makes a matrix out of them.
      * @param gateControls controls for each qubit at given time
+     * @param gateAntiControls anti controls for each qubit at given time
      * @param colI time
      */
     private buildColumnFromAdjacentGates(
         gateControls: number[][],
+        gateAntiControls: number[][],
         colI: number
     ) {
         let columnMatrix;
@@ -317,15 +320,28 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
             const cell = this.board.get(i, colI);
             let gateMatrix = this.gateService.identityMatrix;
 
-            if (cell instanceof Gate && gateControls[i].length === 0) {
+            if (
+                cell instanceof Gate &&
+                gateControls[i].length === 0 &&
+                gateAntiControls[i].length === 0
+            ) {
                 gateMatrix = this.getCellMatrix(cell);
                 i++;
             } else if (
                 cell instanceof MultiQubitGate &&
-                gateControls[i].length === 0
+                gateControls[i].length === 0 &&
+                gateAntiControls[i].length === 0
             ) {
                 gateMatrix = this.getCellMatrix(cell);
                 i += cell.size;
+            }
+            // apply the negation transformation here. It's the same as having single X gate at this position
+            else if (cell instanceof Control && cell.anti) {
+                const maybeMatrix = this.gateService.getMatrix("X");
+                if (maybeMatrix) {
+                    gateMatrix = maybeMatrix;
+                }
+                i++;
             } else {
                 i++;
             }
@@ -438,14 +454,59 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
     }
 
     /**
+     * Applies X gate to each anti control in this colI.
+     * @param input current state to apply the transformation to
+     * @param colI column to get matrix for
+     */
+    private applyAntiControlInversion(input: Matrix, colI: number) {
+        // apply X gate transform to anti controls
+        let columnMatrix;
+        for (let i = 0; i < this.board.nQubits; i++) {
+            const cell = this.board.get(i, colI);
+            if (cell instanceof Control && cell.anti) {
+                if (columnMatrix) {
+                    columnMatrix = kron(
+                        columnMatrix,
+                        this.gateService.getMatrix("X") ??
+                            this.gateService.identityMatrix
+                    );
+                } else {
+                    columnMatrix =
+                        this.gateService.getMatrix("X") ??
+                        this.gateService.identityMatrix;
+                }
+            } else {
+                if (columnMatrix) {
+                    columnMatrix = kron(
+                        columnMatrix,
+                        this.gateService.identityMatrix
+                    );
+                } else {
+                    columnMatrix = this.gateService.identityMatrix;
+                }
+            }
+        }
+        if (columnMatrix) {
+            // apply all anti control X gate inversions
+            return multiply(columnMatrix, input);
+        }
+        return input;
+    }
+
+    /**
      * Build matrix associated to given column and multiplies it with output.
      * @param colI column to get matrix for
      * @param output vector to do matrix multiplication with
      */
     private applyColumnMatrix(colI: number, output: Matrix) {
-        const gateControls = this.getGateControls(colI);
+        const gateControls = this.getGateControls(colI, false);
+        const gateAntiControls = this.getGateControls(colI, true);
         // apply all non controlled gates
-        let result = this.buildColumnFromAdjacentGates(gateControls, colI);
+        let result = this.buildColumnFromAdjacentGates(
+            gateControls,
+            gateAntiControls,
+            colI
+        );
         if (!result) {
             return undefined;
         }
@@ -455,9 +516,10 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
         for (let i = 0; i < gateControls.length; i++) {
             const cell = this.board.get(i, colI);
 
-            if (gateControls[i].length > 0) {
+            if (gateControls[i].length + gateAntiControls[i].length > 0) {
                 // add qubits that the gate occupies (controls and gate qubits)
-                const qubits = [...gateControls[i]];
+                const qubits = [...gateControls[i], ...gateAntiControls[i]];
+                qubits.sort((a, b) => a - b);
                 if (cell instanceof MultiQubitGate) {
                     for (let mi = i; mi < i + cell.size; mi++) {
                         qubits.push(mi);
@@ -473,11 +535,14 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
                     qubits.push(i);
                 }
 
-                const gate = this.buildControlledGate(i, colI, gateControls[i]);
+                const nControls =
+                    gateControls[i].length + gateAntiControls[i].length;
+                const gate = this.buildControlledGate(i, colI, nControls);
                 result = this.applyMultiQubitGate(qubits, gate, result);
             } else if (
                 cell instanceof Swap &&
                 gateControls[i].length === 0 &&
+                gateAntiControls[i].length === 0 &&
                 cell.target > i
             ) {
                 const qubits = [i, cell.target];
@@ -488,6 +553,9 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
                 );
             }
         }
+
+        result = this.applyAntiControlInversion(result, colI);
+
         return result;
     }
 

@@ -62,6 +62,7 @@ export class CircuitActiveGateInfo extends ActiveGateInfo {
     target: number;
     time: number;
     controls: number[];
+    antiControls: number[];
     qubits: Qubit[];
     editable: boolean;
     swap?: [number, number];
@@ -72,6 +73,7 @@ export class CircuitActiveGateInfo extends ActiveGateInfo {
      * @param name the name of gate
      * @param mat actual matrix presentation of the gate
      * @param controls indices of qubits that control this gate if any or just an empty array
+     * @param antiControls indices of qubits that anti control this gate if any or just an empty array
      * @param qubits qubit objects used to get names of qubits
      * @param description more detailed info about gate than its name
      * @param swap pair of qubit indices for swap gate
@@ -84,6 +86,7 @@ export class CircuitActiveGateInfo extends ActiveGateInfo {
         name: string,
         mat: Matrix,
         controls: number[],
+        antiControls: number[],
         qubits: Qubit[],
         description: string,
         editable: boolean,
@@ -95,12 +98,17 @@ export class CircuitActiveGateInfo extends ActiveGateInfo {
         this.time = time;
         this.qubits = qubits;
         this.controls = controls;
+        this.antiControls = antiControls;
         this.editable = editable;
         this.swap = swap;
     }
 
     formatControlsAsString() {
         return this.controls.map((ci) => this.qubits[ci].name).join(", ");
+    }
+
+    formatAntiControlsAsString() {
+        return this.antiControls.map((ci) => this.qubits[ci].name).join(", ");
     }
 
     formatSwapAsString() {
