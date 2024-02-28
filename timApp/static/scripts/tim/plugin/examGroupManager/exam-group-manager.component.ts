@@ -122,6 +122,7 @@ const ExamManagerMarkup = t.intersection([
         extraInfoTitle: t.string,
         show: ViewOptionsT,
         groupNamePrefix: t.string,
+        loginCodesPrintCss: t.string,
     }),
     GenericPluginMarkup,
 ]);
@@ -801,11 +802,19 @@ export class ExamGroupManagerComponent
         this.loading = false;
     }
 
-    printLoginCodes(groups: ExamGroup) {
-        // Print login codes for selected groups
-        // Generate a HTML table and show browser print dialog,
-        // optionally export as PDF.
-        // see https://developer.mozilla.org/en-US/docs/Web/Guide/Printing
+    printLoginCodes(group: ExamGroup) {
+        const group_id = group.id;
+        const doc_par_id = this.getPar()!.par.getJsonForServer();
+
+        // TODO find a better way to do this
+        let w2 = window.open("", "_blank");
+        w2!.location.href =
+            "/examGroupManager/printCodes/" +
+            group_id +
+            "/" +
+            doc_par_id.doc_id +
+            "/" +
+            doc_par_id.par_id;
     }
 
     /**

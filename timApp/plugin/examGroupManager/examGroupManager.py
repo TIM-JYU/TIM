@@ -8,7 +8,7 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime, timedelta
 from typing import Sequence, TypedDict, Iterable, Any
 
-from flask import Response, request
+from flask import Response, request, make_response, render_template
 from marshmallow import missing, ValidationError
 from marshmallow.fields import Field
 from sqlalchemy import select, Row, delete, update, func
@@ -49,9 +49,15 @@ from timApp.util.flask.requesthelper import (
     RouteException,
     NotExist,
 )
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import (
+    json_response,
+    ok_response,
+    add_no_cache_headers,
+    add_csp_header,
+)
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import slugify, get_current_time
+from tim_common.html_sanitize import sanitize_html
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema, field_for_schema
 from tim_common.pluginserver_flask import (
@@ -108,6 +114,7 @@ class ExamGroupManagerMarkup(GenericMarkupModel):
     show: ViewOptionsMarkup = field(default_factory=ViewOptionsMarkup)
     groupNamePrefix: str | Missing = missing
     exams: list[Exam] = field(default_factory=list)
+    loginCodesPrintCss: str | Missing = missing
 
 
 ExamGroupManagerMarkupSchema = class_schema(
@@ -773,6 +780,42 @@ def generate_codes_for_members(group_id: int, active_duration: int) -> Response:
 
     db.session.commit()
     return ok_response()
+
+
+@exam_group_manager_plugin.get("/printCodes/<int:group_id>/<int:doc_id>/<par_id>")
+def print_login_codes(group_id: int, doc_id: int, par_id: str) -> str:
+    markup, _ = _get_plugin_markup(GlobalParId(doc_id, par_id))
+    styles = markup.loginCodesPrintCss
+
+    # TODO get domain and examdocid
+    # TODO maybe use pre-made shortened urls (r.jyu.fi)?
+    timDomain = ""
+    examDocId = ""
+    exam = {"url": f"{timDomain}/view/{examDocId}"}
+    if not styles or not len(styles):
+        # Default styles, plugin setting `loginCodesPrintCss` overrides these
+        styles = """
+                    @page {
+                      size: A4;
+                      margin: 0.5cm;
+                    }
+                    ul {
+                      display: flex;
+                      flex-wrap: wrap;
+                      padding: 0;
+                      width: 20cm;
+                    }
+                    li {
+                      padding: 0.3em;
+                      width: calc(5cm - 5px - 0.6em);
+                      border: 1px solid black;
+                      list-style-type: none;
+                    }
+                  """
+    users = get_members(group_id=group_id).json
+    return render_template(
+        "examgroupmanager/print_codes.jinja2", users=users, exam=exam, styles=styles
+    )
 
 
 def reqs_handle() -> PluginReqs:
