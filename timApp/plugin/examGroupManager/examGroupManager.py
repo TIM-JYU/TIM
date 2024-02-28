@@ -713,7 +713,7 @@ def import_users_to_group(group_id: int) -> Response:
         # user, ug = User.create_with_group(ui)
         # ugs.append((ug, einfo))
 
-        user = do_create_users(group_id, lname, fname, einfo)
+        user, _ = do_create_users(group_id, lname, fname, einfo)
         users.append(user)
 
     # TODO find a way to get rid of db commits that are currently needed
@@ -813,6 +813,7 @@ def print_login_codes(group_id: int, doc_id: int, par_id: str) -> str:
                     }
                   """
     users = get_members(group_id=group_id).json
+
     return render_template(
         "examgroupmanager/print_codes.jinja2", users=users, exam=exam, styles=styles
     )

@@ -16,9 +16,15 @@
     <ul>
     {% for user in users %}
         <li>
-            <p>Nimi: {{ user.real_name }} <br/>
-               Kirjautumiskoodi: {{ user.login_code }} <br/>
-               Kokeen osoite: {{ exam.url }}
+            <p>Name: {{ user.real_name }} <br/>
+{#            For some reason, the replace filter ends up replacing the digits when getting rid of whitespace #}
+{#               Login code: {{ user.code | slice(3) | join("-") | replace("'","") | replace(",","") | replace("[","") | replace("]","") | replace(" ","") }}#}
+               Login code: <br/>
+                {% for part in user.login_code | slice(3) %}
+                  {{ part | join }}
+                {% endfor %}
+                <br/>
+               Exam address: {{ exam.url }}
             </p>
         </li>
     {% endfor %}
