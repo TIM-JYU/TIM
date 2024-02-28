@@ -121,9 +121,9 @@ bash -c "${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 # JDK
-ENV JDK_VERSION=20.0.1
+ENV JDK_VERSION=21.0.2
 # Grab this path from download links of https://jdk.java.net/
-ENV OPENJDK_DL_PATH=b4887098932d415489976708ad6d1a4b/9
+ENV OPENJDK_DL_PATH=f2283984656d49d69e91c558476027ac/13
 RUN wget -q https://download.java.net/java/GA/jdk${JDK_VERSION}/${OPENJDK_DL_PATH}/GPL/openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  tar -xf openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  rm openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz
@@ -135,7 +135,7 @@ RUN java -version
 # run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
 
 # JavaFX for OpenJDK
-ENV OPENJFX_VERSION=20
+ENV OPENJFX_VERSION=21.0.2
 RUN wget -q https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip

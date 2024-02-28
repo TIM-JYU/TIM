@@ -4,9 +4,8 @@ import attr
 
 from timApp.util.utils import remove_path_special_chars, slugify
 
-# Note: Course code may sometimes contain spaces, e.g. "Quantum computing - part A"
 display_name_re = re.compile(
-    r"(?P<coursecode>.+?) ((?P<period>P\d) )?(?P<dates>(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})--\d{4}-\d{2}-\d{2}): (?P<desc>.+)"
+    r"(?P<coursecode>[A-Z]+\d+) ((?P<period>P\d) )?(?P<dates>(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})--\d{4}-\d{2}-\d{2}): (?P<desc>.+)"
 )
 
 # These are for converting the Sisu display name into English.
