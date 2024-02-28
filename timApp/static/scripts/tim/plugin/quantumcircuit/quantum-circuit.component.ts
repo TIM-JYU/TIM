@@ -1082,7 +1082,8 @@ export class QuantumCircuitComponent
                         time: gateData.time,
                     },
                     gateData.editable,
-                    gateData.controls
+                    gateData.controls,
+                    gateData.antiControls
                 );
             } else {
                 if (!this.gateService.getGate(gateData.name)) {
