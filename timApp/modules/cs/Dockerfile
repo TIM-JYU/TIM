@@ -409,6 +409,34 @@ RUN $PYTHON -m pip install SpeechRecognition soundfile && bash -c "${APT_CLEANUP
 # Install Google Translate API library
 RUN $PYTHON -m pip install --pre googletrans && bash -c "${APT_CLEANUP}"
 
+# Install OCaml
+RUN bash -c "${APT_INSTALL} ocaml opam && ${APT_CLEANUP}"
+# Set up custom root and switch to install opam globally
+ENV OPAMROOT=/opam
+ENV OPAMSWITCH=system
+# Running OPAM as root is okay (e.g. in dev mode)
+ENV OPAMROOTISOK=1
+RUN bash -c "mkdir /opam && \
+    opam init --yes --bare --disable-sandboxing && \
+    opam switch create system ocaml-system && \
+    eval $(opam env)"
+
+# Install Coq
+ENV COQ_VERSION=8.18.0
+RUN bash -c "${APT_INSTALL} libc6-dev libgmp-dev autoconf && ${APT_CLEANUP}"
+RUN bash -c "opam repo add --all-switches --set-default coq-released https://coq.inria.fr/opam/released && \
+    opam pin add -y -k version -j $(nproc) coq $COQ_VERSION && \
+    opam install -y -j $(nproc) \
+    coq-stdlib \
+    coq-bignums \
+    coq-equations \
+    coq-quickchick \
+    coq-hott \
+    coq-ext-lib \
+    coq-stdpp \
+    coq-math-classes && \
+    opam clean -a -c -s --logs"
+
 USER agent
 
 FROM complete as sudo
