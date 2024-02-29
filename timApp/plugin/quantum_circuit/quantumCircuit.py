@@ -533,7 +533,7 @@ def run_all_simulations(
             return
         if not check_input_valid:
             continue
-        input_list = [int(d) for d in bitstring]
+        input_list = [int(d) for d in bitstring_reversed]
         try:
             success1, expected = run_simulation(
                 model_circuit, input_list, n_qubits, custom_gates
