@@ -907,7 +907,7 @@ export class ExamGroupManagerComponent
         const doc_par_id = this.getPar()!.par.getJsonForServer();
 
         // TODO find a better way to do this
-        let w2 = window.open("", "_blank");
+        const w2 = window.open("", "_blank");
         w2!.location.href =
             "/examGroupManager/printCodes/" +
             group_id +
