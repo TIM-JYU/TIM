@@ -32,6 +32,13 @@ class IdeFile:
     path: str | None = None
     """ Path of the file for folder structure """
 
+    # Convert to json and set code based on 'by' or 'byCode'
+    def to_json(self):
+        return {
+            "code": self.by or self.byCode,
+            "path": self.path,
+        }
+
 
 IdeFileSchema = class_schema(IdeFile)()
 
@@ -61,55 +68,78 @@ class TIDETaskInfo:
 TIDETaskInfoSchema = class_schema(TIDETaskInfo)()
 
 
-def get_user_tasks_by_bookmarks(user: User) -> list[json]:
+def user_ide_courses(user: User, attr_name) -> list[json]:
     """
-    Get all TIDE-tasks from the courses user has bookmarked
+    Gets all courses that have a tasks with TIDE-parameter and are bookmarked by the user
+    :param attr_name: Name of the attribute that identifies the TIDE-task
     :param user: Logged-in user
     :return: List JSON with all TIDE-tasks from the courses user has bookmarked
     """
     user_courses = user.bookmarks.bookmark_data[2]["My courses"]
 
-    user_plugin_datas = []
+    ide_courses = []
 
     for course_dict in user_courses:
         for course_name, course_path in course_dict.items():
             # Get the document by path, remove /view/ from the beginning of path
             doc = DocEntry.find_by_path(course_path.split("view/")[1:])
-
+            # TODO: Does this work with multiple subfolders
             # Get all paragraphs from the document
             pars = doc.document.get_paragraphs()
+            if any(p.attrs.get(attr_name) is not None for p in pars):
+                ide_courses.append(
+                    {"course_name": course_name, "course_id": doc.document.doc_id}
+                )
 
-            for p in pars:
-                if p.attrs["plugin"] == "csPlugin" and p.attrs.get("tide") == "true":
-                    # Checks the plugin type to be csPlugin TODO: additional check for TIDE-task, now only with tide attribute
-                    user_plugin_datas.append(
-                        get_user_plugin_data(
-                            doc,
-                            p,
-                            UserContext.from_one_user(user),
-                        )
-                    )
-
-    return user_plugin_datas
+    return ide_courses
 
 
-def get_task_by_id(doc_id: int, par_id: str, user: User) -> json:
+def ide_tasks_from_document(document_id: int, attr_name, user) -> json:
+    """
+    Get all TIDE-tasks from the courses user has bookmarked
+    :param attr_name:
+    :param document_id: Document id
+    :param user: Logged-in user
+    :return: List JSON with all TIDE-tasks from the courses user has bookmarked
+    """
+    doc = DocEntry.find_by_id(doc_id=document_id)
+    # TODO: Should here be a test if the user has right to access the document?
+    pars = doc.document.get_paragraphs()
+    ide_task_ids = []
+
+    for p in pars:
+        if p.attrs.get(attr_name) is not None:
+            ide_task_ids.append(p.attrs.get(attr_name))
+
+    return {"ide_task_ids": ide_task_ids, "doc.id": doc.id}
+
+
+def ide_task_by_id(user: User, ide_task_id: str, doc_id: int, attr_name: str) -> json:
     """
     Get the TIDE-task by task id
+    :param attr_name: Name of the attribute that identifies the ide-task
+    :param ide_task_id: Ide-task id
     :param user: Authenticated user
-    :param par_id: id of the paragraph
     :param doc_id: Document id
     :return:
     """
 
-    user_ctx = UserContext.from_one_user(user)
+    user_ctx = UserContext.from_one_user(u=user)
     doc = DocEntry.find_by_id(doc_id=doc_id)
-    par = doc.document.get_paragraph(par_id=par_id)
+    pars = doc.document.get_paragraphs()
 
-    return get_user_plugin_data(doc=doc, par=par, user_ctx=user_ctx)
+    tasks = []
+
+    for par in pars:
+        if par.attrs.get(attr_name) == ide_task_id:
+            tasks.append(user_plugin_data(doc=doc, par=par, user_ctx=user_ctx))
+
+    # TODO: Multiple tasks with the same id -> Combine code files for the same task
+    # TODO: Paths according the language
+    return tasks
 
 
-def get_user_plugin_data(
+def user_plugin_data(
         doc: DocInfo, par, user_ctx: UserContext, plugin: Plugin = None
 ) -> json:
     """
@@ -150,7 +180,7 @@ def get_user_plugin_data(
 
     task_id = plugin_json["taskID"]
 
-    # If the plugin doesn't have files
+    # If the plugin has files attribute
     if plugin_json["markup"].get("files"):
         ide_files = IdeFileSchema.load(
             plugin_json["markup"]["files"], many=True, unknown=EXCLUDE
@@ -160,7 +190,7 @@ def get_user_plugin_data(
         ide_files = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
 
     return {
-        "ide_files": ide_files,
+        "ide_files": ide_files.to_json(),
         "task_info": task_info,
         "task_id": task_id,
         "document_id": doc.id,

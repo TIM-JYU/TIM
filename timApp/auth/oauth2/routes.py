@@ -11,8 +11,9 @@ from timApp.auth.oauth2.oauth2 import auth_server, require_oauth
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
 
 from timApp.tide_support.routes import (
-    get_user_tasks_by_bookmarks,
-    get_task_by_id,
+    user_ide_courses,
+    ide_tasks_from_document,
+    ide_task_by_id,
 )
 from timApp.tim_app import csrf
 from timApp.user.user import User
@@ -50,6 +51,20 @@ def issue_token() -> Response:
     return auth_server.create_token_response()
 
 
+@oauth.get("token-validity")
+@require_oauth(Scope.profile.value)
+def token_is_valid() -> Response:
+    """
+    Check if the token is valid
+    :return: JSON response with the token status and validity time (hours:minutes:seconds)
+    """
+
+    # Convert seconds to hours:minutes:seconds
+    convert = str(datetime.timedelta(seconds=current_token.expires_in))
+
+    return json_response({"validityTime": convert})
+
+
 @oauth.get("profile")
 @require_oauth(Scope.profile.name)
 def get_user_profile() -> Response:
@@ -72,55 +87,63 @@ def get_user_profile() -> Response:
     )
 
 
-@oauth.get("ideTasksByBooksmarks")
-@require_oauth(Scope.user_tasks.value)
-def get_all_tasks() -> Response:
-    """
-    Get all tasks that the user has bookmarked
-
-    :return: JSON response with all tasks
-    """
-    user: User = current_token.user
-
-    tasks = get_user_tasks_by_bookmarks(user)
-
-    return json_response(tasks)
-
-
-@oauth.get("ideTaskById/<int:doc_id>/<string:par_id>")
-@require_oauth(Scope.user_tasks.value)
-def get_task(doc_id: int, par_id: str) -> Response:
-    """
-    Get a specific task by paragraph id and task id
-    :return: JSON response with the task
-    """
-    user: User = current_token.user
-
-    return json_response(get_task_by_id(doc_id=doc_id, par_id=par_id, user=user))
-
-
-@oauth.get("courses")
+@oauth.get("bookmarked-courses")
 @require_oauth(Scope.user_courses.value)
 def get_courses() -> Response:
     """
-    Get all courses that the user has bookmarked
+    Gets all courses that the user has bookmarked
     :return: JSON response with all courses
     """
     user: User = current_token.user
     courses = user.bookmarks.bookmark_data[2]["My courses"]
 
-    return json_response(courses)
+    res = [
+        {"course_name": list(course.keys())[0], "path": list(course.values())[0]}
+        for course in courses
+    ]
+
+    return json_response(res)
 
 
-@oauth.get("tokenIsValid")
-@require_oauth(Scope.profile.value)
-def token_is_valid() -> Response:
+@oauth.get("bookmarked-ide-courses")
+@require_oauth(Scope.user_tasks.value)
+def get_all_ide_courses() -> Response:
     """
-    Check if the token is valid
-    :return: JSON response with the token status and validity time (hours:minutes:seconds)
+    Get all courses that the user has bookmarked and have ide task/s
+    :return: JSON response with all tasks
     """
+    user: User = current_token.user
 
-    # Convert seconds to hours:minutes:seconds
-    convert = str(datetime.timedelta(seconds=current_token.expires_in))
+    tasks = user_ide_courses(user=user, attr_name="ideTask")
 
-    return json_response({"tokenIsValid": True, "validityTime": convert})
+    return json_response(tasks)
+
+
+@oauth.get("ide-tasks-by-document-id/<int:document_id>")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_tasks_by_doc_id(document_id: int) -> Response:
+    """
+    Get all ide-tasks by document id
+    :return: JSON response with the task
+    """
+    user: User = current_token.user
+
+    return json_response(
+        ide_tasks_from_document(user=user, document_id=document_id, attr_name="ideTask")
+    )
+
+
+@oauth.get("ide-task-by-id/<int:doc_id>/<string:ide_task_id>")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_task_by_id(doc_id: int, ide_task_id: str) -> Response:
+    """
+    Get a specific task by doc id and task id
+    :return: JSON response with the task
+    """
+    user: User = current_token.user
+
+    return json_response(
+        ide_task_by_id(
+            user=user, ide_task_id=ide_task_id, doc_id=doc_id, attr_name="ideTask"
+        )
+    )
