@@ -4,21 +4,18 @@ import secrets
 from collections import defaultdict
 from dataclasses import dataclass, field, fields
 from datetime import datetime, timedelta
-from typing import Sequence, TypedDict, Iterable, Any
+from typing import Sequence, Iterable, Any
 
 from flask import Response, request, render_template
 from marshmallow import missing, ValidationError
 from marshmallow.fields import Field
 from sqlalchemy import select, Row, delete, update, func
 
-from cli.commands.tool.angularjs2angular import TypeScriptSrcEditor
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
-from timApp.answer.routes import get_answers_for_tasks
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_ownership,
-    verify_admin,
     verify_logged_in,
 )
 from timApp.auth.logincodes.model import UserLoginCode
@@ -33,12 +30,10 @@ from timApp.plugin.plugin import Plugin
 from timApp.tim_app import app
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import (
-    verify_groupadmin,
     do_create_group,
-    verify_group_edit_access,
     verify_group_access,
 )
-from timApp.user.user import User, UserInfo, owner_access_set, manage_access_set
+from timApp.user.user import User, UserInfo, manage_access_set
 from timApp.user.usergroup import UserGroup, get_groups_by_ids
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
@@ -50,12 +45,9 @@ from timApp.util.flask.requesthelper import (
 from timApp.util.flask.responsehelper import (
     json_response,
     ok_response,
-    add_no_cache_headers,
-    add_csp_header,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import slugify, get_current_time
-from tim_common.html_sanitize import sanitize_html
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema, field_for_schema
 from tim_common.pluginserver_flask import (
