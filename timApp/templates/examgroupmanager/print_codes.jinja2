@@ -7,19 +7,35 @@
     <meta http-equiv='X-UA-Compatible' content='ie=edge'>
     <title>{{ title }}</title>
     <link href='/static/images/favicon.ico' rel='shortcut icon' type='image/x-icon'/>
-{#    <link rel='stylesheet' href='/static/generated/default.css'>#}
     <style>
-        {{ styles }}
+        @page {
+            size: A4;
+            margin: 0.5cm;
+        }
+
+        ul {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 0;
+            width: 20cm;
+        }
+
+        li {
+            padding: 0.3em;
+            width: calc(5cm - 5px - 0.6em);
+            border: 1px solid black;
+            list-style-type: none;
+        }
+
     </style>
 </head>
 <body>
     <ul>
     {% for user in users %}
         <li>
-{#        TODO localize #}
-            <p>Name: {{ user.real_name }} <br/>
-               Login code: {{ user.login_code | slice(3) | join("-") | replace("'","") | replace(",","") | replace("[","") | replace("]","") | replace(" ","") }}<br/>
-               Exam address: {{ exam.url }}
+            <p>{{ gettext("Name") }}: {{ user.real_name }} <br/>
+               {{ gettext("Login code") }}: {{ user.login_code | slice(3) | join("-") | replace("'","") | replace(",","") | replace("[","") | replace("]","") | replace(" ","") }}<br/>
+               {{ gettext("Exam address") }}: {{ exam.url }}
             </p>
         </li>
     {% endfor %}

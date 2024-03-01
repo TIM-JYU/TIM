@@ -1211,6 +1211,24 @@ class CComtest(Language):
         return code, out, err, pwddir
 
 
+class Coq(Language):
+    ttype = ["coq"]
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.v"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"./{self.filename}.v"
+        self.fileext = ".v"
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(
+            ["opam", "exec", "--", "coqc", self.pure_exename],
+        )
+
+        return code, out, err, pwddir
+
+
 class RunTest(Language, Modifier):
     ttype = "runtest"
 
@@ -1457,6 +1475,45 @@ class NodeJS(Language):
         if self.is_jjs:
             err = f"JJS engine has been deprecated. Change language type from `jjs` to `nodejs`.\n{err}"
         return code, out, err, pwddir
+
+
+class OCaml(Language):
+    ttype = ["ocaml"]
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.compiler = "ocamlopt"
+        self.fileext = "ml"
+        self.filedext = ".ml"
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.ml"
+        self.exename = f"/tmp/{self.basename}/{self.filename}.exe"
+        self.source_extensions = [".ml"]
+
+    def sources(self, main: str = None):
+        # TODO: This should probably be in Language class
+        files = " ".join(
+            file.path
+            for file in self.sourcefiles
+            if any(file.path.endswith(ext) for ext in self.source_extensions)
+        )
+        sourcefiles = self.markup.get("sourcefiles", None)
+        if sourcefiles:
+            files = files + " " + sourcefiles
+        if main:
+            files = main + " " + sourcefiles
+
+        return files
+
+    def get_cmdline(self):
+        cmdline = f"{self.compiler} -o {self.exename} {self.sources()}"
+        return cmdline
+
+    def run(self, result, sourcelines, points_rule):
+        return self.runself([self.pure_exename])
+
+    @staticmethod
+    def supports_multifiles():
+        return True
 
 
 class TS(Language):

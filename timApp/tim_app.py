@@ -15,6 +15,7 @@ from flask_wtf import CSRFProtect
 from sqlalchemy import func
 from sqlalchemy.sql.ddl import CreateTable
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_babel import Babel
 
 from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
@@ -119,6 +120,7 @@ from timApp.util.flask.filters import (
 from timApp.util.flask.user_agent import SimpleUserAgent
 from timApp.util.logger import setup_logging
 from timApp.util.utils import datestr_to_relative, date_to_relative
+from timApp.util.locale import get_locale
 from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import (
     Velp,
@@ -269,6 +271,20 @@ app.jinja_env.filters["timdate"] = timdate
 app.jinja_env.filters["timtimedelta"] = humanize_timedelta
 app.jinja_env.filters["timreldatetime"] = humanize_datetime
 app.jinja_env.add_extension("jinja2.ext.do")
+app.jinja_env.add_extension("jinja2.ext.i18n")
+
+
+def babel_get_locale():
+    return get_locale().replace("-", "_")
+
+
+babel = Babel()
+babel.init_app(
+    app,
+    default_locale="en_US",
+    locale_selector=babel_get_locale,
+    default_translation_directories="i18n",
+)
 
 mimetypes.add_type("text/plain", ".scss")
 # Caddy sets the following headers:

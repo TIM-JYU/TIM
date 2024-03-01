@@ -6,7 +6,7 @@ from re import Pattern
 from typing import Any
 
 import requests
-from flask import current_app
+from flask import current_app, has_request_context
 from requests import Response
 
 from timApp.document.docsettings import DocSettings
@@ -14,6 +14,7 @@ from timApp.plugin.plugin import Plugin, AUTOMD
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.timtable import timTable
+from timApp.util.locale import get_locale
 from timApp.util.logger import log_warning
 from tim_common.dumboclient import call_dumbo, DumboOptions
 from tim_common.timjsonencoder import TimJsonEncoder
@@ -269,6 +270,13 @@ def call_plugin_generic(
         plug = get_plugin("qst")
         host = plug.host + plugin + "/"
     url = host + route
+    # Pass current locale if we are in a request context
+    # This allows translating any server text via plugins if they support it
+    if has_request_context():
+        locale = get_locale()
+        if headers is None:
+            headers = {}
+        headers["Accept-Language"] = locale
     try:
         r = do_request(method, url, data, params, headers, read_timeout)
     except (

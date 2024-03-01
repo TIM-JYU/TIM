@@ -74,6 +74,7 @@ python-gnupg = "^0.5.0"
 pysaml2 = "^7.2.1"
 cachelib = "<0.10.0"
 qulacs = "^0.6.1"
+flask-babel = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"
@@ -95,6 +96,7 @@ black = {extras = ["d"], version = "^23.3.0"}
 types-pysaml2 = "^1.0.0"
 qulacs = "^0.6.1"
 SQLAlchemy = "^2.0.19"
+flask-babel = "^4.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -183,7 +185,8 @@ module = [
     "mailmanclient.*",
     "httpagentparser",
     "pypandoc",
-    "gnupg"
+    "gnupg",
+    "flask_babel"
 ]
 ignore_missing_imports = true
 

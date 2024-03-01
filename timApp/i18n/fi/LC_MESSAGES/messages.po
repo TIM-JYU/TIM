@@ -1,0 +1,40 @@
+# Finnish translations for PROJECT.
+# Copyright (C) 2024 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2024-03-01 14:34+0000\n"
+"PO-Revision-Date: 2024-03-01 16:36+0200\n"
+"Last-Translator: \n"
+"Language-Team: fi <LL@li.org>\n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Generated-By: Babel 2.12.1\n"
+"X-Generator: Poedit 3.4.2\n"
+
+#: plugin/quantum_circuit/quantumCircuit.py:261
+msgid "Expand by moving mouse over the exercise or by clicking"
+msgstr "Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla"
+
+#: templates/create_new.jinja2:2
+msgid "This page does not yet exist."
+msgstr "Tätä sivua ei ole vielä olemassa."
+
+#: templates/examgroupmanager/print_codes.jinja2:36
+msgid "Name"
+msgstr "Nimi"
+
+#: templates/examgroupmanager/print_codes.jinja2:37
+msgid "Login code"
+msgstr "Kirjautumiskoodi"
+
+#: templates/examgroupmanager/print_codes.jinja2:38
+msgid "Exam address"
+msgstr "Kokeen osoite"

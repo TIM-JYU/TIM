@@ -127,7 +127,6 @@ const ExamManagerMarkup = t.intersection([
         extraInfoTitle: t.string,
         show: ViewOptionsT,
         groupNamePrefix: t.string,
-        loginCodesPrintCss: t.string,
     }),
     GenericPluginMarkup,
 ]);
@@ -908,7 +907,7 @@ export class ExamGroupManagerComponent
         const doc_par_id = this.getPar()!.par.getJsonForServer();
 
         // TODO find a better way to do this
-        const w2 = window.open("", "_blank");
+        let w2 = window.open("", "_blank");
         w2!.location.href =
             "/examGroupManager/printCodes/" +
             group_id +

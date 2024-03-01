@@ -80,3 +80,7 @@ build_docs.sh
 /.env
 /docker-compose.yml
 /docker-compose.dev.yml
+
+# babel translation files
+*.mo
+*.pot
