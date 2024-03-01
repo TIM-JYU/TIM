@@ -122,7 +122,6 @@ const ExamManagerMarkup = t.intersection([
         extraInfoTitle: t.string,
         show: ViewOptionsT,
         groupNamePrefix: t.string,
-        loginCodesPrintCss: t.string,
     }),
     GenericPluginMarkup,
 ]);
