@@ -190,9 +190,12 @@ tbody {
       display: inline-flex;
       flex-direction: column;
       justify-content: center;
+      padding-bottom: 0.5em;
+      padding-top: 0.5em;
 
       &:last-child {
         padding-right: 1em;
+        align-items: end;
       }
 
       &:first-child {
@@ -215,4 +218,10 @@ tbody {
     height: 16px;
     margin: 0;
   }
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
 }

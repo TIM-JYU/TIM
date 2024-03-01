@@ -169,6 +169,7 @@ def _verify_exam_group_access(
 @dataclass
 class ExamGroupDataGlobal:
     examDocId: int | Missing = field(default=missing)
+    examState: int = 0
 
     def to_json(self) -> dict:
         res = {}
