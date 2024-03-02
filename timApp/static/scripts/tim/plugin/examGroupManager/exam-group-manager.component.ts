@@ -453,7 +453,7 @@ export class ToggleComponent {
                                         </div>
                                         <div>
                                             <div>Ask students to log in to the exam page:
-                                                <a href="https://tim.jyu.fi"><code>https://url</code></a>
+                                                <a [href]="getGroupSelectedExamUrl(group)"><code>{{getGroupSelectedExamUrl(group)}}</code></a>
                                             </div>
                                         </div>
                                         <div></div>
@@ -679,6 +679,9 @@ export class ExamGroupManagerComponent
             })
         );
         if (groups.ok) {
+            for (const group of groups.result) {
+                this.refreshGroupExamState(group);
+            }
             this.allGroups = groups.result;
         } else {
             this.error = $localize`Could not fetch groups. Details: ${groups.result.error}`;
@@ -1067,51 +1070,48 @@ export class ExamGroupManagerComponent
         const el = event.target as HTMLInputElement;
         const checked = el.checked;
         if (checked) {
-            if (state == 0) {
-                el.checked = false;
-                await showMessageDialog(
-                    $localize`Activate login codes by pressing the toggle button on the right.`,
-                    true
-                );
-                return;
-            }
-            if (state == 1) {
-                group.examState = 2;
-            }
-            if (state == 2) {
-                group.examState = 3;
-            }
-            if (state == 3) {
-                el.checked = false;
-                await showMessageDialog(
-                    $localize`Begin exam by pressing the toggle button on the right.`,
-                    true
-                );
-                return;
-            }
-            if (state == 4) {
-                el.checked = false;
-                await showMessageDialog(
-                    $localize`End the exam by pressing the toggle button on the right.`,
-                    true
-                );
-                return;
-            }
-            if (state == 5) {
-                el.checked = false;
-                await showMessageDialog(
-                    $localize`End the exam by pressing the toggle button on the right.`,
-                    true
-                );
-                return;
-            }
-            if (state == 6) {
-                el.checked = false;
-                await showMessageDialog(
-                    $localize`Disable login codes by pressing the toggle button on the right.`,
-                    true
-                );
-                return;
+            switch (state) {
+                case 0:
+                    el.checked = false;
+                    await showMessageDialog(
+                        $localize`Activate login codes by pressing the toggle button on the right.`,
+                        true
+                    );
+                    return;
+                case 1:
+                    await this.setExamState(group, 2);
+                    break;
+                case 2:
+                    await this.setExamState(group, 3);
+                    break;
+                case 3:
+                    el.checked = false;
+                    await showMessageDialog(
+                        $localize`Begin exam by pressing the toggle button on the right.`,
+                        true
+                    );
+                    return;
+                case 4:
+                    el.checked = false;
+                    await showMessageDialog(
+                        $localize`End the exam by pressing the toggle button on the right.`,
+                        true
+                    );
+                    return;
+                case 5:
+                    el.checked = false;
+                    await showMessageDialog(
+                        $localize`End the exam by pressing the toggle button on the right.`,
+                        true
+                    );
+                    return;
+                case 6:
+                    el.checked = false;
+                    await showMessageDialog(
+                        $localize`Disable login codes by pressing the toggle button on the right.`,
+                        true
+                    );
+                    return;
             }
         } else {
             if (group.examState > 5 && state <= 5) {
@@ -1147,14 +1147,16 @@ export class ExamGroupManagerComponent
                 return;
             }
 
-            if (state == 1) {
-                group.examState = 1;
-            }
-            if (state == 2) {
-                group.examState = 2;
-            }
-            if (state == 4) {
-                group.examState = 4;
+            switch (state) {
+                case 1:
+                    await this.setExamState(group, 1);
+                    break;
+                case 2:
+                    await this.setExamState(group, 2);
+                    break;
+                case 4:
+                    await this.setExamState(group, 4);
+                    break;
             }
         }
     }
@@ -1170,11 +1172,10 @@ export class ExamGroupManagerComponent
         }
 
         if (group.examState == 0) {
-            // Activate
-            group.examState = 1;
+            await this.setExamState(group, 1);
             return;
         }
-        group.examState = 0;
+        await this.setExamState(group, 0);
     }
 
     async toggleBeginExam(group: ExamGroup) {
@@ -1199,10 +1200,10 @@ export class ExamGroupManagerComponent
 
         if (group.examState == 3) {
             // Begin
-            group.examState = 4;
+            await this.setExamState(group, 4);
             return;
         }
-        group.examState = 3;
+        await this.setExamState(group, 3);
     }
 
     async toggleEndExamMainGroup(group: ExamGroup) {
@@ -1225,10 +1226,10 @@ export class ExamGroupManagerComponent
             }
         }
         if (group.examState == 4) {
-            group.examState = 5;
+            await this.setExamState(group, 5);
             return;
         }
-        group.examState = 4;
+        await this.setExamState(group, 4);
     }
 
     async toggleEndExamAll(group: ExamGroup) {
@@ -1243,18 +1244,74 @@ export class ExamGroupManagerComponent
             }
         }
         if (group.examState == 5) {
-            group.examState = 6;
+            await this.setExamState(group, 6);
             return;
         }
-        group.examState = 5;
+        await this.setExamState(group, 5);
     }
 
-    disableLoginCodesAndResetExam(group: ExamGroup) {
+    async disableLoginCodesAndResetExam(group: ExamGroup) {
+        await this.setExamState(group, 0);
+        this.refreshGroupExamState(group);
+    }
+
+    getGroupExamInfo(group: ExamGroup) {
+        if (group.examDocId) {
+            return this.examByDocId.get(group.examDocId);
+        }
+        return {
+            name: "Mock exam",
+            docId: 1,
+        } as Exam;
+    }
+
+    getGroupSelectedExamUrl(group: ExamGroup) {
+        // TODO: Support mock exam
+        const exam = this.getGroupExamInfo(group)!;
+        if (exam.url) {
+            return exam.url;
+        }
+        const baseUrl = window.location.origin;
+        return `${baseUrl}/view/${exam.docId}`;
+    }
+
+    async setExamState(group: ExamGroup, newState: number) {
+        this.loading = true;
+        const res = await toPromise(
+            this.http.post(`/examGroupManager/setExamState`, {
+                group_id: group.id,
+                new_state: newState,
+            })
+        );
+        this.loading = false;
+        if (!res.ok) {
+            await showMessageDialog(
+                $localize`Could not set exam state. Details: ${res.result.error.error}`
+            );
+            this.refreshGroupExamState(group);
+            return;
+        }
+        group.examState = newState;
+        this.refreshGroupExamState(group);
+    }
+
+    refreshGroupExamState(group: ExamGroup) {
         group.loginCodesActive = false;
         group.examEnded = false;
         group.examMainGroupEnded = false;
         group.examStarted = false;
-        group.examState = 0;
+        if (group.examState >= 1) {
+            group.loginCodesActive = true;
+        }
+        if (group.examState >= 4) {
+            group.examStarted = true;
+        }
+        if (group.examState >= 5) {
+            group.examMainGroupEnded = true;
+        }
+        if (group.examState >= 6) {
+            group.examEnded = true;
+        }
     }
 }
 

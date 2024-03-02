@@ -4,11 +4,12 @@ import secrets
 from collections import defaultdict
 from dataclasses import dataclass, field, fields
 from datetime import datetime, timedelta
-from typing import Sequence, Iterable, Any
+from typing import Sequence, Iterable, Any, Callable
 
 from flask import Response, request, render_template
 from marshmallow import missing, ValidationError
 from marshmallow.fields import Field
+from numpy import sign
 from sqlalchemy import select, Row, delete, update, func
 
 from timApp.answer.answer import Answer
@@ -594,7 +595,6 @@ def copy_members(from_id: int, to_id: int) -> Response:
     return ok_response()
 
 
-# FIXME: Review
 @exam_group_manager_plugin.post("/addMember/<int:group_id>")
 def create_users(
     group_id: int,
@@ -603,9 +603,6 @@ def create_users(
     extra_info: str,
 ) -> Response:
     user, extra_data = do_create_users(group_id, given_name, surname, extra_info)
-
-    # TODO: Add extra info to the user group
-
     return json_response(user.to_json() | extra_data.to_json())
 
 
@@ -731,7 +728,6 @@ def import_users_to_group(group_id: int) -> Response:
     )
 
 
-# FIXME: Review
 @exam_group_manager_plugin.post("/generateCodes")
 def generate_codes_for_members(group_id: int, active_duration: int) -> Response:
     """
@@ -785,6 +781,67 @@ def print_login_codes(group_id: int, doc_id: int, par_id: str) -> str:
         users=users,
         exam=exam,
     )
+
+
+def _enable_login_codes(ug: UserGroup) -> None:
+    print("Enabling login codes for", ug.name)
+
+
+def _disable_login_codes(ug: UserGroup) -> None:
+    print("Disabling login codes for", ug.name)
+
+
+def _do_nothing(ug: UserGroup) -> None:
+    pass
+
+
+_state_apply_functions: list[Callable[[UserGroup], None]] = [
+    _enable_login_codes,  # 0 -> 1
+    _do_nothing,  # 1 -> 2
+    _do_nothing,  # 2 -> 3
+    _do_nothing,  # 3 -> 4
+    _do_nothing,  # 4 -> 5
+    _do_nothing,  # 5 -> 6
+]
+
+_state_revert_functions: list[Callable[[UserGroup], None]] = [
+    _do_nothing,  # 0 -> 0, needed so that the range() loop works
+    _disable_login_codes,  # 1 -> 0
+    _do_nothing,  # 2 -> 1
+    _do_nothing,  # 3 -> 2
+    _do_nothing,  # 4 -> 3
+    _do_nothing,  # 5 -> 4
+    _do_nothing,  # 6 -> 5
+]
+
+
+@exam_group_manager_plugin.post("/setExamState")
+def set_exam_state(group_id: int, new_state: int) -> Response:
+    ug = UserGroup.get_by_id(group_id)
+    if not ug:
+        raise NotExist(f"Group with ID {group_id} does not exist.")
+
+    _verify_exam_group_access(ug)
+    exam_group_data = _get_exam_group_data_global(ug)
+
+    new_state = max(0, min(len(_state_apply_functions), new_state))
+
+    direction: int = sign(new_state - exam_group_data.examState)
+    if direction == 0:
+        return ok_response()
+
+    step_functions = (
+        _state_apply_functions if direction > 0 else _state_revert_functions
+    )
+
+    for i in range(exam_group_data.examState, new_state, direction):
+        step_functions[i](ug)
+
+    exam_group_data.examState = new_state
+    _update_exam_group_data_global(ug, exam_group_data)
+
+    db.session.commit()
+    return ok_response()
 
 
 def reqs_handle() -> PluginReqs:
