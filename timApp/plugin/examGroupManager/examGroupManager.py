@@ -768,7 +768,7 @@ def generate_codes_for_members(group_id: int, active_duration: int) -> Response:
     return ok_response()
 
 
-@exam_group_manager_plugin.get("/printCodes/<int:group_id>/<int:doc_id>/<par_id>")
+@exam_group_manager_plugin.get("/printCodes/<int:group_id>")
 def print_login_codes(group_id: int, doc_id: int, par_id: str) -> str:
     markup, _ = _get_plugin_markup(GlobalParId(doc_id, par_id))
 

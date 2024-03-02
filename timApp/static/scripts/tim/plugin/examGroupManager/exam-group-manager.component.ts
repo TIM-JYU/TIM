@@ -903,18 +903,9 @@ export class ExamGroupManagerComponent
     }
 
     printLoginCodes(group: ExamGroup) {
-        const group_id = group.id;
-        const doc_par_id = this.getPar()!.par.getJsonForServer();
-
-        // TODO find a better way to do this
-        const w2 = window.open("", "_blank");
-        w2!.location.href =
-            "/examGroupManager/printCodes/" +
-            group_id +
-            "/" +
-            doc_par_id.doc_id +
-            "/" +
-            doc_par_id.par_id;
+        const {doc_id, par_id} = this.getPar()!.par.getJsonForServer();
+        const url = `/examGroupManager/printCodes/${group.id}?doc_id=${doc_id}&par_id=${par_id}`;
+        window.open(url, "_blank");
     }
 
     /**
