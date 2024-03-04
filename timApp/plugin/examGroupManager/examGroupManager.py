@@ -765,15 +765,8 @@ def generate_codes_for_members(group_id: int, active_duration: int) -> Response:
 
 
 @exam_group_manager_plugin.get("/printCodes/<int:group_id>")
-def print_login_codes(group_id: int, doc_id: int, par_id: str) -> str:
-    markup, _ = _get_plugin_markup(GlobalParId(doc_id, par_id))
-
-    # TODO get domain and examdocid
-    # TODO maybe use pre-made shortened urls (r.jyu.fi)?
-    timDomain = ""
-    examDocId = ""
-    exam = {"url": f"{timDomain}/view/{examDocId}"}
-
+def print_login_codes(group_id: int, exam_url: str) -> str:
+    exam = {"url": f"{exam_url}"}
     users = get_members(group_id=group_id).json
 
     return render_template(
