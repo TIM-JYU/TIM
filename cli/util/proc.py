@@ -1,6 +1,6 @@
 import shlex
 import subprocess
-from typing import Any, List
+from typing import Any, List, Optional
 
 from cli.util.logging import log_debug
 
@@ -11,7 +11,15 @@ def sh_join(split_command: List[str]) -> str:
 
 
 def run_cmd(
-    args: List[str], check: bool = True, capture_output: bool = False, **kwargs: Any
+    args: List[str],
+    check: bool = True,
+    capture_output: Optional[bool] = None,
+    **kwargs: Any,
 ) -> subprocess.CompletedProcess:
     log_debug(f"cmd: {sh_join(args)}")
-    return subprocess.run(args, check=check, capture_output=capture_output, **kwargs)
+    return subprocess.run(
+        args,
+        check=check,
+        capture_output=capture_output if capture_output else False,
+        **kwargs,
+    )
