@@ -80,7 +80,7 @@ def run_compose(
     with_compose_file: bool = True,
     override_profile: bool = True,
     extra_env: Optional[Dict[str, str]] = None,
-    capture_output: Optional[bool] = False,
+    capture_output: Optional[bool] = None,
 ) -> subprocess.CompletedProcess:
     compose_args = get_compose_cmd(args, profile, with_compose_file, override_profile)
     env = dict(os.environ)
