@@ -73,6 +73,8 @@ export interface ExamGroup extends IGroup {
     examStarted: boolean;
     examMainGroupEnded: boolean;
     examEnded: boolean;
+    studentsLoggedIn: boolean;
+    studentsReady: boolean;
 }
 
 /**
@@ -419,15 +421,19 @@ export class ToggleComponent {
                                         <div class="cb">
                                             <input type="checkbox" title="Mark as done"
                                                    [checked]="group.examState > 0"
-                                                   (change)="checkExamState(group, 0, $event)"
+                                                   (change)="checkExamStateEvent(group, 0, $event)"
                                             >
                                         </div>
                                         <div>
-                                            <div class="toggle-button"><span>Activate login codes</span>
+                                            <div>
+                                                <span i18n>Activate login codes</span>
                                             </div>
-                                            <div class="small">
+                                            <div class="small" *ngIf="group.examState <= 0">
                                                 Press the toggle button to activate login codes for the exam group
                                             </div>
+                                            <strong class="small text-success" *ngIf="group.examState > 0">
+                                                The login codes are active!
+                                            </strong>
                                         </div>
                                         <div>
                                             <tim-toggle [(value)]="group.loginCodesActive"
@@ -442,33 +448,51 @@ export class ToggleComponent {
                                     </div>
                                     <div [class.disabled]="group.examState < 1">
                                         <div class="cb">
-                                            <input [disabled]="group.examState < 1"
+                                            <input #cbStudentsLoggedIn [disabled]="group.examState < 1"
                                                    type="checkbox"
                                                    title="Mark as done"
                                                    [checked]="group.examState > 1"
-                                                   (change)="checkExamState(group, 1, $event)"
+                                                   (change)="checkExamStateEvent(group, 1, $event)"
                                             >
                                         </div>
                                         <div>
                                             <div>Ask students to log in to the exam page:
-                                                <a [href]="getGroupSelectedExamUrl(group)"><code>{{getGroupSelectedExamUrl(group)}}</code></a>
+                                                <a [href]="getGroupSelectedExamUrl(group)"><code>{{ getGroupSelectedExamUrl(group) }}</code></a>
                                             </div>
                                         </div>
-                                        <div></div>
+                                        <div>
+                                            <tim-toggle [(value)]="group.studentsLoggedIn"
+                                                        (valueChange)="checkExamStateElement(group, 1, cbStudentsLoggedIn, $event)"
+                                                        [disabled]="group.examState < 1"
+                                                        enabledButton="Mark as done"
+                                                        i18n-enabledButton
+                                                        disabledButton="Mark not done"
+                                                        i18n-disabledButton
+                                            ></tim-toggle>
+                                        </div>
                                     </div>
                                     <div [class.disabled]="group.examState < 2">
                                         <div class="cb">
-                                            <input [disabled]="group.examState < 2"
+                                            <input #cbStudentsReady [disabled]="group.examState < 2"
                                                    type="checkbox"
                                                    title="Mark as done"
                                                    [checked]="group.examState > 2"
-                                                   (change)="checkExamState(group, 2, $event)"
+                                                   (change)="checkExamStateEvent(group, 2, $event)"
                                             >
                                         </div>
                                         <div>
                                             Check that the students have logged in and are ready to begin the exam
                                         </div>
-                                        <div></div>
+                                        <div>
+                                            <tim-toggle [(value)]="group.studentsReady"
+                                                        (valueChange)="checkExamStateElement(group, 2, cbStudentsReady, $event)"
+                                                        [disabled]="group.examState < 1"
+                                                        enabledButton="Mark as done"
+                                                        i18n-enabledButton
+                                                        disabledButton="Mark not done"
+                                                        i18n-disabledButton
+                                            ></tim-toggle>
+                                        </div>
                                     </div>
                                     <div [class.disabled]="group.examState < 3">
                                         <div class="cb">
@@ -476,11 +500,17 @@ export class ToggleComponent {
                                                    type="checkbox"
                                                    title="Mark as done"
                                                    [checked]="group.examState > 3"
-                                                   (change)="checkExamState(group, 3, $event)"
+                                                   (change)="checkExamStateEvent(group, 3, $event)"
                                             >
                                         </div>
                                         <div>
                                             <span>Begin exam</span>
+                                            <div class="small" *ngIf="group.examState <= 3">
+                                                Press the toggle button to start the exam
+                                            </div>
+                                            <strong class="small text-success" *ngIf="group.examState > 3">
+                                                The exam has started!
+                                            </strong>
                                         </div>
                                         <div>
                                             <tim-toggle [(value)]="group.examStarted"
@@ -499,11 +529,18 @@ export class ToggleComponent {
                                                    type="checkbox"
                                                    title="Mark as done"
                                                    [checked]="group.examState > 4"
-                                                   (change)="checkExamState(group, 4, $event)"
+                                                   (change)="checkExamStateEvent(group, 4, $event)"
                                             >
                                         </div>
                                         <div>
                                             <div>End the exam for all except students with additional time</div>
+                                            <div class="small" *ngIf="group.examState <= 4">
+                                                Press the toggle button to end the exam for the main student group
+                                            </div>
+                                            <strong class="small text-success" *ngIf="group.examState > 4">
+                                                Exam ended for main group! Students with additional time can continue
+                                                the exam.
+                                            </strong>
                                         </div>
                                         <div>
                                             <tim-toggle [(value)]="group.examMainGroupEnded"
@@ -522,11 +559,17 @@ export class ToggleComponent {
                                                    type="checkbox"
                                                    title="Mark as done"
                                                    [checked]="group.examState > 5"
-                                                   (change)="checkExamState(group, 5, $event)"
+                                                   (change)="checkExamStateEvent(group, 5, $event)"
                                             >
                                         </div>
                                         <div>
                                             <div>End the exam for all students</div>
+                                            <div class="small" *ngIf="group.examState <= 5">
+                                                Press the toggle button to end the exam for all students
+                                            </div>
+                                            <strong class="small text-success" *ngIf="group.examState > 5">
+                                                Exam ended for all students! Remember to disable the login codes.
+                                            </strong>
                                         </div>
                                         <div>
                                             <tim-toggle [(value)]="group.examEnded"
@@ -545,11 +588,14 @@ export class ToggleComponent {
                                                    type="checkbox"
                                                    title="Mark as done"
                                                    [checked]="group.examState > 6"
-                                                   (change)="checkExamState(group, 6, $event)"
+                                                   (change)="checkExamStateEvent(group, 6, $event)"
                                             >
                                         </div>
                                         <div>
                                             <div>Disable login codes</div>
+                                            <div class="small">
+                                                Remember to disable the login codes after the exam has ended
+                                            </div>
                                         </div>
                                         <div>
                                             <button [disabled]="group.examState < 6"
@@ -1064,18 +1110,19 @@ export class ExamGroupManagerComponent
         }
     }
 
-    async checkExamState(group: ExamGroup, state: number, event: Event) {
-        const el = event.target as HTMLInputElement;
-        const checked = el.checked;
+    async handleExamStateToggle(
+        group: ExamGroup,
+        state: number,
+        checked: boolean
+    ) {
         if (checked) {
             switch (state) {
                 case 0:
-                    el.checked = false;
                     await showMessageDialog(
                         $localize`Activate login codes by pressing the toggle button on the right.`,
                         true
                     );
-                    return;
+                    return false;
                 case 1:
                     await this.setExamState(group, 2);
                     break;
@@ -1083,66 +1130,58 @@ export class ExamGroupManagerComponent
                     await this.setExamState(group, 3);
                     break;
                 case 3:
-                    el.checked = false;
                     await showMessageDialog(
                         $localize`Begin exam by pressing the toggle button on the right.`,
                         true
                     );
-                    return;
+                    return false;
                 case 4:
-                    el.checked = false;
                     await showMessageDialog(
                         $localize`End the exam by pressing the toggle button on the right.`,
                         true
                     );
-                    return;
+                    return false;
                 case 5:
-                    el.checked = false;
                     await showMessageDialog(
                         $localize`End the exam by pressing the toggle button on the right.`,
                         true
                     );
-                    return;
+                    return false;
                 case 6:
-                    el.checked = false;
                     await showMessageDialog(
                         $localize`Disable login codes by pressing the toggle button on the right.`,
                         true
                     );
-                    return;
+                    return false;
             }
         } else {
             if (group.examState > 5 && state <= 5) {
-                el.checked = true;
                 await showMessageDialog(
                     $localize`You first need to resume the exam by using the "Resume exam for all students" button.`,
                     true
                 );
-                return;
+                return true;
             }
             if (group.examState > 4 && state <= 4) {
-                el.checked = true;
                 await showMessageDialog(
                     $localize`You first need to resume the exam by using the "Resume exam for main group" button.`,
                     true
                 );
-                return;
+                return true;
             }
             if (group.examState > 3 && state <= 3) {
-                el.checked = true;
                 await showMessageDialog(
                     $localize`You first need to interrupt the exam by using the "Interrupt exam" button.`,
                     true
                 );
-                return;
+                return true;
             }
             if (state == 0) {
-                el.checked = true;
                 await showMessageDialog(
                     $localize`Disable login codes by pressing the toggle button on the right.`,
                     true
                 );
-                return;
+                return true;
             }
 
             switch (state) {
@@ -1157,6 +1196,30 @@ export class ExamGroupManagerComponent
                     break;
             }
         }
+
+        return checked;
+    }
+
+    async checkExamStateEvent(group: ExamGroup, state: number, event: Event) {
+        await this.checkExamStateElement(
+            group,
+            state,
+            event.target as HTMLInputElement
+        );
+    }
+
+    async checkExamStateElement(
+        group: ExamGroup,
+        state: number,
+        el: HTMLInputElement,
+        checked?: boolean
+    ) {
+        el.checked = await this.handleExamStateToggle(
+            group,
+            state,
+            checked ?? el.checked
+        );
+        this.refreshGroupExamState(group);
     }
 
     async toggleActivateLoginCodes(group: ExamGroup) {
@@ -1298,8 +1361,16 @@ export class ExamGroupManagerComponent
         group.examEnded = false;
         group.examMainGroupEnded = false;
         group.examStarted = false;
+        group.studentsLoggedIn = false;
+        group.studentsReady = false;
         if (group.examState >= 1) {
             group.loginCodesActive = true;
+        }
+        if (group.examState >= 2) {
+            group.studentsLoggedIn = true;
+        }
+        if (group.examState >= 3) {
+            group.studentsReady = true;
         }
         if (group.examState >= 4) {
             group.examStarted = true;
