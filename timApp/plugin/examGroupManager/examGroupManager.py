@@ -25,11 +25,13 @@ from timApp.auth.accesshelper import (
 from timApp.auth.accesstype import AccessType
 from timApp.auth.logincodes.model import UserLoginCode
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute
 from timApp.folder.folder import Folder
+from timApp.item.block import Block
 from timApp.item.deleting import soft_delete_document
 from timApp.plugin.plugin import Plugin
 from timApp.tim_app import app
@@ -505,18 +507,7 @@ def _get_current_login_codes(ug: UserGroup) -> Sequence[UserLoginCode]:
     )
 
 
-@exam_group_manager_plugin.get("/members/<int:group_id>")
-def get_members(group_id: int) -> Response:
-    """
-    :return: Group members of the specified group
-    """
-
-    check_usergroup_permissions(group_id)
-
-    ug = UserGroup.get_by_id(group_id)
-    if not ug:
-        raise NotExist(f"Group with id {group_id} does not exist.")
-
+def _get_exam_group_members_json(ug: UserGroup) -> list[dict]:
     data = []
     login_codes = _get_current_login_codes(ug)
     login_code_per_user = {lc.user_id: lc for lc in login_codes}
@@ -536,6 +527,22 @@ def get_members(group_id: int) -> Response:
                 **exam_fields_json,
             }
         )
+
+    return data
+
+
+@exam_group_manager_plugin.get("/members/<int:group_id>")
+def get_members(group_id: int) -> Response:
+    """
+    :return: Group members of the specified group
+    """
+    ug = UserGroup.get_by_id(group_id)
+    if not ug:
+        raise NotExist(f"Group with id {group_id} does not exist.")
+
+    _verify_exam_group_access(ug)
+
+    data = _get_exam_group_members_json(ug)
 
     return json_response(status_code=200, jsondata=data)
 
@@ -774,13 +781,22 @@ def generate_codes_for_members(group_id: int) -> Response:
 
 @exam_group_manager_plugin.get("/printCodes/<int:group_id>")
 def print_login_codes(group_id: int, exam_url: str) -> str:
-    exam = {"url": f"{exam_url}"}
-    users = get_members(group_id=group_id).json
+    ug = UserGroup.get_by_id(group_id)
+    if not ug:
+        raise NotExist(f"Group with id {group_id} does not exist.")
+
+    _verify_exam_group_access(ug)
+
+    users = _get_exam_group_members_json(ug)
+
+    admin_block: Block = ug.admin_doc
+    admin_doc: DocEntry = admin_block.docentries[0]
 
     return render_template(
         "examgroupmanager/print_codes.jinja2",
         users=users,
-        exam=exam,
+        exam_url=exam_url,
+        title=gettext("Exam group: %(group_name)s", group_name=admin_doc.title),
     )
 
 

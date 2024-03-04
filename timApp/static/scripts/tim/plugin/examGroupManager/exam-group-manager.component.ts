@@ -385,8 +385,11 @@ export class ToggleComponent {
                                     <button class="timButton" (click)="generateLoginCodes(group)" i18n>
                                         Generate new login codes
                                     </button>
-                                    <button class="timButton" (click)="printLoginCodes(group)" i18n>
-                                        Print login codes
+                                    <button class="timButton" *ngIf="group.examDocId" (click)="printLoginCodes(group, group.examDocId)" i18n>
+                                        Print login codes (Main exam)
+                                    </button>
+                                    <button class="timButton" *ngIf="markup['practiceExam']" (click)="printLoginCodes(group, markup['practiceExam'].docId)" i18n>
+                                        Print login codes (Practice exam)
                                     </button>
                                 </div>
                             </ng-container>
@@ -977,11 +980,16 @@ export class ExamGroupManagerComponent
         this.loading = false;
     }
 
-    printLoginCodes(group: ExamGroup) {
-        const examUrl = this.getGroupSelectedExamUrl(group);
-        const url = `/examGroupManager/printCodes/${group.id}?exam_url=${examUrl}`;
-
-        window.open(url, "_blank");
+    printLoginCodes(group: ExamGroup, examDocId: number) {
+        const urlParams = new URLSearchParams();
+        urlParams.append(
+            "exam_url",
+            this.getExamUrl(this.examByDocId.get(examDocId)!)
+        );
+        window.open(
+            `/examGroupManager/printCodes/${group.id}?${urlParams.toString()}`,
+            "_blank"
+        );
     }
 
     /**
@@ -1353,16 +1361,20 @@ export class ExamGroupManagerComponent
         return undefined;
     }
 
-    getGroupSelectedExamUrl(group: ExamGroup) {
-        const exam = this.getGroupCurrentExamInfo(group);
-        if (!exam) {
-            return $localize`Not selected`;
-        }
+    getExamUrl(exam: Exam) {
         if (exam.url) {
             return exam.url;
         }
         const baseUrl = window.location.origin;
         return `${baseUrl}/view/${exam.docId}`;
+    }
+
+    getGroupSelectedExamUrl(group: ExamGroup) {
+        const exam = this.getGroupCurrentExamInfo(group);
+        if (!exam) {
+            return $localize`Not selected`;
+        }
+        return this.getExamUrl(exam);
     }
 
     async setExamState(group: ExamGroup, newState: number) {

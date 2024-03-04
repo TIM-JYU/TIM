@@ -13,32 +13,70 @@
             margin: 0.5cm;
         }
 
-        ul {
+        * {
+            font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+        }
+
+        section {
             display: flex;
             flex-wrap: wrap;
             padding: 0;
-            width: 20cm;
         }
 
-        li {
+        .student-card {
             padding: 0.3em;
-            width: calc(5cm - 5px - 0.6em);
-            border: 1px solid black;
-            list-style-type: none;
+            outline: 1px dashed black;
+            margin-top: 1px;
+            margin-left: 1px;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        .code {
+            justify-self: center;
+            font-family: monospace;
+            font-size: 2em;
+        }
+
+        .name-title, .url-title, .code-title {
+            font-weight: bold;
+            font-size: 0.8em;
+            margin-top: 0.8em;
+            margin-bottom: 0.3em;
+        }
+
+        .code-title {
+            align-self: center;
+        }
+
+        .student-card > *:last-child {
+            margin-bottom: 0;
+        }
+
+        .student-card > *:first-child {
+            margin-top: 0;
         }
 
     </style>
 </head>
 <body>
-    <ul>
+<main>
+    <h1>{{ title }}</h1>
+</main>
+<section>
     {% for user in users %}
-        <li>
-            <p>{{ gettext("Name") }}: {{ user.real_name }} <br/>
-               {{ gettext("Login code") }}: {{ user.login_code | slice(3) | join("-") | replace("'","") | replace(",","") | replace("[","") | replace("]","") | replace(" ","") }}<br/>
-               {{ gettext("Exam address") }}: {{ exam.url }}
-            </p>
-        </li>
+        <div class="student-card">
+            <div class="name-title" style="grid-area: name-title;">{{ gettext("Name") }}</div>
+            <div class="name" style="grid-area: name;">{{ user.real_name }}</div>
+            <div class="url-title" style="grid-area: url-title;">{{ gettext("Exam address") }}</div>
+            <div class="url" style="grid-area: url;">{{ exam_url }}</div>
+            <div class="code-title" style="grid-area: code-title;">{{ gettext("Login code") }}</div>
+            <div class="code"
+                 style="grid-area: code;">{{ user.login_code | slice(3) | join("-") | replace("'","") | replace(",","") | replace("[","") | replace("]","") | replace(" ","") }}</div>
+        </div>
     {% endfor %}
-    </ul>
+</section>
 </body>
 </html>
