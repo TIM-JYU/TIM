@@ -903,8 +903,9 @@ export class ExamGroupManagerComponent
     }
 
     printLoginCodes(group: ExamGroup) {
-        const {doc_id, par_id} = this.getPar()!.par.getJsonForServer();
-        const url = `/examGroupManager/printCodes/${group.id}?doc_id=${doc_id}&par_id=${par_id}`;
+        const examUrl = this.getGroupSelectedExamUrl(group);
+        const url = `/examGroupManager/printCodes/${group.id}?exam_url=${examUrl}`;
+
         window.open(url, "_blank");
     }
 
