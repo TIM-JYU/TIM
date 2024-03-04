@@ -11,7 +11,7 @@ def sh_join(split_command: List[str]) -> str:
 
 
 def run_cmd(
-    args: List[str], check: bool = True, **kwargs: Any
+    args: List[str], check: bool = True, capture_output: bool = False, **kwargs: Any
 ) -> subprocess.CompletedProcess:
     log_debug(f"cmd: {sh_join(args)}")
-    return subprocess.run(args, check=check, **kwargs)
+    return subprocess.run(args, check=check, capture_output=capture_output, **kwargs)
