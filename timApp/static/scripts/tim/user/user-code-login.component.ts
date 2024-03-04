@@ -9,6 +9,7 @@ const loginErrors: Record<string, string> = {
     InvalidLoginCode: $localize`Invalid login code. Check that you entered it correctly.`,
     LoginCodeNotYetActive: $localize`Login code not yet active. Make sure you use the correct code or ask the code to be activated.`,
     LoginCodeExpired: $localize`Login code expired. Make sure you use the correct code or ask for a new code.`,
+    LoginCodeNotValid: $localize`Login code has been disabled. Make sure you use the correct code or ask for a new code.`,
 };
 
 export const CODE_LENGTH = 12;

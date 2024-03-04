@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from typing import Sequence, Iterable, Any, Callable
 
 from flask import Response, request, render_template
+from flask_babel import gettext
 from marshmallow import missing, ValidationError
 from marshmallow.fields import Field
 from numpy import sign
@@ -18,7 +19,10 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_ownership,
     verify_logged_in,
+    has_teacher_access,
+    AccessDenied,
 )
+from timApp.auth.accesstype import AccessType
 from timApp.auth.logincodes.model import UserLoginCode
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
@@ -38,6 +42,7 @@ from timApp.user.user import User, UserInfo, manage_access_set
 from timApp.user.usergroup import UserGroup, get_groups_by_ids
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
+from timApp.user.userutils import grant_access, expire_access
 from timApp.util.flask.requesthelper import (
     view_ctx_with_urlmacros,
     RouteException,
@@ -484,6 +489,20 @@ def do_delete_exam_groups(group_ids: list[int]) -> None:
         soft_delete_document(doc)
 
 
+def _get_current_login_codes(ug: UserGroup) -> Sequence[UserLoginCode]:
+    return (
+        run_sql(
+            select(UserLoginCode).filter(
+                UserLoginCode.user_id.in_([u.id for u in ug.users])
+                & (UserLoginCode.name == ug.name)
+                & (UserLoginCode.valid.is_(True))
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+
 @exam_group_manager_plugin.get("/members/<int:group_id>")
 def get_members(group_id: int) -> Response:
     """
@@ -496,25 +515,12 @@ def get_members(group_id: int) -> Response:
     if not ug:
         raise NotExist(f"Group with id {group_id} does not exist.")
 
-    members: list[User] = list(ug.users)
     data = []
-    now = get_current_time()
-
-    login_codes: Sequence[UserLoginCode] = (
-        run_sql(
-            select(UserLoginCode).filter(
-                UserLoginCode.user_id.in_([u.id for u in members])
-                & (UserLoginCode.name == ug.name)
-                & (UserLoginCode.active_to > now)
-            )
-        )
-        .scalars()
-        .all()
-    )
+    login_codes = _get_current_login_codes(ug)
     login_code_per_user = {lc.user_id: lc for lc in login_codes}
     exam_group_fields_per_user = _get_exam_group_data_user(ug)
 
-    for m in members:
+    for m in ug.users:
         ulc: UserLoginCode = login_code_per_user.get(m.id, None)
         exam_fields = exam_group_fields_per_user.get(m.id, None)
         exam_fields_json = exam_fields.to_json() if exam_fields else {}
@@ -729,7 +735,7 @@ def import_users_to_group(group_id: int) -> Response:
 
 
 @exam_group_manager_plugin.post("/generateCodes")
-def generate_codes_for_members(group_id: int, active_duration: int) -> Response:
+def generate_codes_for_members(group_id: int) -> Response:
     """
     Updates UserLoginCode properties.
     Note: this function will always overwrite previous values
@@ -748,7 +754,7 @@ def generate_codes_for_members(group_id: int, active_duration: int) -> Response:
     run_sql(
         update(UserLoginCode)
         .where(UserLoginCode.user_id.in_([u.id for u in ug_members]))
-        .values(active_to=datetime.now())
+        .values(active_to=datetime.now(), valid=False)
     )
     db.session.flush()
 
@@ -756,7 +762,7 @@ def generate_codes_for_members(group_id: int, active_duration: int) -> Response:
         UserLoginCode.generate_new(
             user=m,
             active_from=None,
-            active_to=datetime.now() + timedelta(minutes=active_duration),
+            active_to=datetime.now(),
             name=ug.name,
         )
 
@@ -783,35 +789,137 @@ def print_login_codes(group_id: int, doc_id: int, par_id: str) -> str:
     )
 
 
-def _enable_login_codes(ug: UserGroup) -> None:
-    print("Enabling login codes for", ug.name)
+LOGIN_CODE_ACTIVE_DURATION = timedelta(days=30)
 
 
-def _disable_login_codes(ug: UserGroup) -> None:
-    print("Disabling login codes for", ug.name)
+def _enable_login_codes(ug: UserGroup, _: ExamGroupDataGlobal) -> None:
+    login_codes = list(_get_current_login_codes(ug))
+    if not login_codes:
+        raise RouteException(
+            gettext(
+                "No login codes found for the group. Generate login codes before starting the exam."
+            )
+        )
+
+    now = get_current_time()
+    for lc in login_codes:
+        lc.active_from = now
+        lc.active_to = now + LOGIN_CODE_ACTIVE_DURATION
 
 
-def _do_nothing(ug: UserGroup) -> None:
+def _disable_login_codes(ug: UserGroup, _: ExamGroupDataGlobal) -> None:
+    login_codes = list(_get_current_login_codes(ug))
+    if not login_codes:
+        return
+
+    now = get_current_time()
+    for lc in login_codes:
+        lc.active_from = None
+        lc.active_to = now
+
+
+def _get_exam_doc(extra: ExamGroupDataGlobal) -> DocInfo:
+    doc_id = extra.examDocId
+    if not doc_id:
+        raise RouteException(
+            gettext(
+                "No exam document is set for the group. This group cannot be used for exams."
+            )
+        )
+    doc = get_doc_or_abort(doc_id)
+
+    # Require just teacher access, since teachers should not have high rights to the exam document
+    # FIXME: Additional flags for exam management, since this is lower than the manage right
+    if not has_teacher_access(doc):
+        raise AccessDenied(gettext("You do not have access to the exam document."))
+
+    return doc
+
+
+def _begin_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+    doc = _get_exam_doc(extra)
+    # TODO: Maybe set duration?
+    for u in ug.users:  # type: User
+        ug = u.get_personal_group()
+        grant_access(ug, doc, AccessType.view)
+
+
+def _interrupt_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+    doc = _get_exam_doc(extra)
+    for u in ug.users:  # type: User
+        ug = u.get_personal_group()
+        expire_access(ug, doc, AccessType.view)
+
+
+def _end_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+    doc = _get_exam_doc(extra)
+
+    extra_data_by_uid = _get_exam_group_data_user(ug)
+
+    for u in ug.users:  # type: User
+        extra_data = extra_data_by_uid[u.id]
+
+        if not extra_data.extraTime:
+            expire_access(u.get_personal_group(), doc, AccessType.view)
+
+
+def _resume_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+    doc = _get_exam_doc(extra)
+
+    extra_data_by_uid = _get_exam_group_data_user(ug)
+
+    for u in ug.users:  # type: User
+        extra_data = extra_data_by_uid[u.id]
+
+        if not extra_data.extraTime:
+            grant_access(u.get_personal_group(), doc, AccessType.view)
+
+
+def _end_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+    doc = _get_exam_doc(extra)
+
+    extra_data_by_uid = _get_exam_group_data_user(ug)
+
+    for u in ug.users:  # type: User
+        extra_data = extra_data_by_uid[u.id]
+
+        if extra_data.extraTime:
+            expire_access(u.get_personal_group(), doc, AccessType.view)
+
+
+def _resume_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+    doc = _get_exam_doc(extra)
+
+    extra_data_by_uid = _get_exam_group_data_user(ug)
+
+    for u in ug.users:  # type: User
+        extra_data = extra_data_by_uid[u.id]
+
+        if extra_data.extraTime:
+            grant_access(u.get_personal_group(), doc, AccessType.view)
+
+
+def _do_nothing(*_) -> None:
     pass
 
 
-_state_apply_functions: list[Callable[[UserGroup], None]] = [
-    _enable_login_codes,  # 0 -> 1
-    _do_nothing,  # 1 -> 2
-    _do_nothing,  # 2 -> 3
-    _do_nothing,  # 3 -> 4
-    _do_nothing,  # 4 -> 5
-    _do_nothing,  # 5 -> 6
+_state_apply_functions: list[Callable[[UserGroup, ExamGroupDataGlobal], None]] = [
+    _enable_login_codes,  # 0 -> 1, activate login codes
+    _do_nothing,  # 1 -> 2, students log in
+    _do_nothing,  # 2 -> 3, check that students log in
+    _begin_exam,  # 3 -> 4, begin exam
+    _end_exam_main_group,  # 4 -> 5, end exam for main students
+    _end_exam_extra_time,  # 5 -> 6, end exam for students with extra time
 ]
 
-_state_revert_functions: list[Callable[[UserGroup], None]] = [
+_state_revert_functions: list[Callable[[UserGroup, ExamGroupDataGlobal], None]] = [
     _do_nothing,  # 0 -> 0, needed so that the range() loop works
-    _disable_login_codes,  # 1 -> 0
-    _do_nothing,  # 2 -> 1
-    _do_nothing,  # 3 -> 2
-    _do_nothing,  # 4 -> 3
-    _do_nothing,  # 5 -> 4
-    _do_nothing,  # 6 -> 5
+    _disable_login_codes,  # 1 -> 0, deactivate login codes
+    _do_nothing,  # 2 -> 1, check
+    _do_nothing,  # 3 -> 2, check
+    _interrupt_exam,  # 4 -> 3, interrupt exam
+    _resume_exam_main_group,  # 5 -> 4, resume exam for main students
+    _resume_exam_extra_time,  # 6 -> 5, resume exam for students with extra time
 ]
 
 
@@ -835,7 +943,7 @@ def set_exam_state(group_id: int, new_state: int) -> Response:
     )
 
     for i in range(exam_group_data.examState, new_state, direction):
-        step_functions[i](ug)
+        step_functions[i](ug, exam_group_data)
 
     exam_group_data.examState = new_state
     _update_exam_group_data_global(ug, exam_group_data)

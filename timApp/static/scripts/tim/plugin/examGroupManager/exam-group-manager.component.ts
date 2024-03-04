@@ -136,8 +136,6 @@ const ExamManagerFields = t.intersection([
     t.type({}),
 ]);
 
-const DEFAULT_USERCODE_DURATION = 60 * 24 * 120; // 3 months
-
 @Pipe({
     name: "formatLoginCode",
     pure: true,
@@ -889,7 +887,6 @@ export class ExamGroupManagerComponent
         const res = await toPromise(
             this.http.post("/examGroupManager/generateCodes", {
                 group_id: group.id,
-                active_duration: DEFAULT_USERCODE_DURATION, // TODO: Ask for duration
             })
         );
 

@@ -42,13 +42,18 @@ def verify_login_code() -> None:
     login_code_session = session.get("login_code_session")
     if not login_code_session:
         return
-    inactive_after: datetime | None = run_sql(
-        select(UserLoginCode.active_to).filter(
+    res: tuple[datetime, bool] | None = run_sql(
+        select(UserLoginCode.active_to, UserLoginCode.valid).filter(
             UserLoginCode.session_code == login_code_session
         )
-    ).scalar_one_or_none()
+    ).one_or_none()
 
-    if inactive_after is None or get_current_time() > inactive_after:
+    if res is None:
+        clear_session()
+        return
+
+    inactive_after, valid = res
+    if not valid or get_current_time() > inactive_after:
         clear_session()
 
 
@@ -90,6 +95,9 @@ def logincode_login(login_code: str) -> dict:
     elif now > user_logincode.active_to:
         log_warning(f"Login code expired: {login_code}")
         error_msg = "LoginCodeExpired"
+    elif not user_logincode.valid:
+        log_warning(f"Login code not valid: {login_code}")
+        error_msg = "LoginCodeNotValid"
 
     if user_logincode and not error_msg:
         user = user_logincode.user
