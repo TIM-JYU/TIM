@@ -225,3 +225,13 @@ tbody {
   flex-direction: column;
   gap: 0.5em;
 }
+
+.select-exam {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+
+  & label {
+    text-wrap: nowrap;
+  }
+}

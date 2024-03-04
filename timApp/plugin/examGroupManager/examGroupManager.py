@@ -110,6 +110,7 @@ class ExamGroupManagerMarkup(GenericMarkupModel):
     show: ViewOptionsMarkup = field(default_factory=ViewOptionsMarkup)
     groupNamePrefix: str | Missing = missing
     exams: list[Exam] = field(default_factory=list)
+    practiceExam: Exam | Missing = missing
 
 
 ExamGroupManagerMarkupSchema = class_schema(
@@ -165,6 +166,7 @@ def _verify_exam_group_access(
 class ExamGroupDataGlobal:
     examDocId: int | Missing = field(default=missing)
     examState: int = 0
+    currentExamDoc: int | None = None
 
     def to_json(self) -> dict:
         res = {}
@@ -811,12 +813,12 @@ def _disable_login_codes(ug: UserGroup, _: ExamGroupDataGlobal) -> None:
         lc.active_to = now
 
 
-def _get_exam_doc(extra: ExamGroupDataGlobal) -> DocInfo:
-    doc_id = extra.examDocId
+def _get_current_exam_doc(extra: ExamGroupDataGlobal) -> DocInfo:
+    doc_id = extra.currentExamDoc
     if not doc_id:
         raise RouteException(
             gettext(
-                "No exam document is set for the group. This group cannot be used for exams."
+                "The group is currently not in an exam. Please set the exam document first."
             )
         )
     doc = get_doc_or_abort(doc_id)
@@ -830,7 +832,7 @@ def _get_exam_doc(extra: ExamGroupDataGlobal) -> DocInfo:
 
 
 def _begin_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
-    doc = _get_exam_doc(extra)
+    doc = _get_current_exam_doc(extra)
     # TODO: Maybe set duration?
     for u in ug.users:  # type: User
         ug = u.get_personal_group()
@@ -838,14 +840,14 @@ def _begin_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
 
 
 def _interrupt_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
-    doc = _get_exam_doc(extra)
+    doc = _get_current_exam_doc(extra)
     for u in ug.users:  # type: User
         ug = u.get_personal_group()
         expire_access(ug, doc, AccessType.view)
 
 
 def _end_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
-    doc = _get_exam_doc(extra)
+    doc = _get_current_exam_doc(extra)
 
     extra_data_by_uid = _get_exam_group_data_user(ug)
 
@@ -857,7 +859,7 @@ def _end_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
 
 
 def _resume_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
-    doc = _get_exam_doc(extra)
+    doc = _get_current_exam_doc(extra)
 
     extra_data_by_uid = _get_exam_group_data_user(ug)
 
@@ -869,7 +871,7 @@ def _resume_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
 
 
 def _end_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
-    doc = _get_exam_doc(extra)
+    doc = _get_current_exam_doc(extra)
 
     extra_data_by_uid = _get_exam_group_data_user(ug)
 
@@ -881,7 +883,7 @@ def _end_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
 
 
 def _resume_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
-    doc = _get_exam_doc(extra)
+    doc = _get_current_exam_doc(extra)
 
     extra_data_by_uid = _get_exam_group_data_user(ug)
 
@@ -916,20 +918,14 @@ _state_revert_functions: list[Callable[[UserGroup, ExamGroupDataGlobal], None]] 
 ]
 
 
-@exam_group_manager_plugin.post("/setExamState")
-def set_exam_state(group_id: int, new_state: int) -> Response:
-    ug = UserGroup.get_by_id(group_id)
-    if not ug:
-        raise NotExist(f"Group with ID {group_id} does not exist.")
-
-    _verify_exam_group_access(ug)
-    exam_group_data = _get_exam_group_data_global(ug)
-
+def _set_exam_state_impl(
+    ug: UserGroup, exam_group_data: ExamGroupDataGlobal, new_state: int
+) -> None:
     new_state = max(0, min(len(_state_apply_functions), new_state))
 
     direction: int = sign(new_state - exam_group_data.examState)
     if direction == 0:
-        return ok_response()
+        return
 
     step_functions = (
         _state_apply_functions if direction > 0 else _state_revert_functions
@@ -941,8 +937,51 @@ def set_exam_state(group_id: int, new_state: int) -> Response:
     exam_group_data.examState = new_state
     _update_exam_group_data_global(ug, exam_group_data)
 
+
+@exam_group_manager_plugin.post("/setExamState")
+def set_exam_state(group_id: int, new_state: int) -> Response:
+    ug = UserGroup.get_by_id(group_id)
+    if not ug:
+        raise NotExist(f"Group with ID {group_id} does not exist.")
+
+    _verify_exam_group_access(ug)
+    exam_group_data = _get_exam_group_data_global(ug)
+
+    _set_exam_state_impl(ug, exam_group_data, new_state)
+
     db.session.commit()
     return ok_response()
+
+
+@exam_group_manager_plugin.post("/setExamDoc")
+def set_exam_doc(group_id: int, exam_doc: int | None) -> Response:
+    ug = UserGroup.get_by_id(group_id)
+    if not ug:
+        raise NotExist(f"Group with ID {group_id} does not exist.")
+
+    _verify_exam_group_access(ug)
+    exam_group_data = _get_exam_group_data_global(ug)
+
+    if exam_doc is not None:
+        doc = get_doc_or_abort(exam_doc)
+        if not has_teacher_access(doc):
+            raise AccessDenied(
+                gettext(
+                    "You do not have sufficient access to the exam document to set it."
+                )
+            )
+
+        if (
+            exam_group_data.currentExamDoc
+            and exam_group_data.currentExamDoc != exam_doc
+        ):
+            _set_exam_state_impl(ug, exam_group_data, 0)
+
+    exam_group_data.currentExamDoc = exam_doc
+    _update_exam_group_data_global(ug, exam_group_data)
+
+    db.session.commit()
+    return json_response(exam_group_data.to_json())
 
 
 def reqs_handle() -> PluginReqs:

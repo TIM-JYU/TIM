@@ -14,6 +14,7 @@ import {ADMIN_GROUPNAME} from "tim/user/IUser";
 import {documentglobals, someglobals} from "tim/util/globals";
 import {isAdmin, Users} from "tim/user/userService";
 import type {Require} from "tim/util/utils";
+import {timeout} from "tim/util/utils";
 import {formatNumberCode} from "tim/util/utils";
 import {to2, toPromise} from "tim/util/utils";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -68,6 +69,7 @@ export interface ExamGroup extends IGroup {
     selected?: boolean;
     allMembersSelected?: boolean;
     examDocId?: number;
+    currentExamDoc?: number;
     examState: number;
     loginCodesActive: boolean;
     examStarted: boolean;
@@ -129,6 +131,7 @@ const ExamManagerMarkup = t.intersection([
         extraInfoTitle: t.string,
         show: ViewOptionsT,
         groupNamePrefix: t.string,
+        practiceExam: ExamT,
     }),
     GenericPluginMarkup,
 ]);
@@ -407,17 +410,36 @@ export class ToggleComponent {
                              (selectTab)="group.selected = true; onGroupTabSelected($event)"
                              (deselect)="group.selected = false">
 
-                            <div>
-                                <!-- TODO: MD text here -->
+                            <p *ngIf="!group.currentExamDoc">
+                                Begin by selecting the exam to be organized for the group.
+                            </p>
+                            <div class="select-exam">
+                                <label for="current-exam-doc">Select exam</label>
+                                <select id="current-exam-doc" name="current-exam-doc" class="form-control" 
+                                        [ngModel]="group.currentExamDoc"
+                                        (ngModelChange)="confirmSelectExam(group, $event)">
+                                    <option *ngIf="markup['practiceExam']"
+                                            [ngValue]="markup['practiceExam'].docId">
+                                        {{ markup['practiceExam'].name }}
+                                    </option>
+                                    <option *ngIf="group.examDocId && examByDocId.get(group.examDocId)"
+                                            [ngValue]="examByDocId.get(group.examDocId)?.docId">
+                                        {{ examByDocId.get(group.examDocId)?.name }}
+                                    </option>
+                                </select>
                             </div>
 
-                            <fieldset>
+                            <div>
+                                <!-- TODO: Exam instructions here -->
+                            </div>
+
+                            <fieldset [disabled]="!group.currentExamDoc">
                                 <h5>Exam checklist</h5>
 
                                 <p>Complete each step to start the exam.</p>
 
                                 <div class="checklist">
-                                    <div>
+                                    <div [class.disabled]="!group.currentExamDoc">
                                         <div class="cb">
                                             <input type="checkbox" title="Mark as done"
                                                    [checked]="group.examState > 0"
@@ -457,7 +479,8 @@ export class ToggleComponent {
                                         </div>
                                         <div>
                                             <div>Ask students to log in to the exam page:
-                                                <a [href]="getGroupSelectedExamUrl(group)"><code>{{ getGroupSelectedExamUrl(group) }}</code></a>
+                                                <a *ngIf="group.currentExamDoc; else noExam" [href]="getGroupSelectedExamUrl(group)"><code>{{ getGroupSelectedExamUrl(group) }}</code></a>
+                                                <ng-template #noExam>Not selected</ng-template>
                                             </div>
                                         </div>
                                         <div>
@@ -660,6 +683,12 @@ export class ExamGroupManagerComponent
 
         for (const exam of this.markup.exams) {
             this.examByDocId.set(exam.docId, exam);
+        }
+        if (this.markup.practiceExam) {
+            this.examByDocId.set(
+                this.markup.practiceExam.docId,
+                this.markup.practiceExam
+            );
         }
     }
 
@@ -1313,22 +1342,22 @@ export class ExamGroupManagerComponent
 
     async disableLoginCodesAndResetExam(group: ExamGroup) {
         await this.setExamState(group, 0);
+        await this.selectExam(group, null);
         this.refreshGroupExamState(group);
     }
 
-    getGroupExamInfo(group: ExamGroup) {
-        if (group.examDocId) {
-            return this.examByDocId.get(group.examDocId);
+    getGroupCurrentExamInfo(group: ExamGroup) {
+        if (group.currentExamDoc) {
+            return this.examByDocId.get(group.currentExamDoc);
         }
-        return {
-            name: "Mock exam",
-            docId: 1,
-        } as Exam;
+        return undefined;
     }
 
     getGroupSelectedExamUrl(group: ExamGroup) {
-        // TODO: Support mock exam
-        const exam = this.getGroupExamInfo(group)!;
+        const exam = this.getGroupCurrentExamInfo(group);
+        if (!exam) {
+            return $localize`Not selected`;
+        }
         if (exam.url) {
             return exam.url;
         }
@@ -1381,6 +1410,48 @@ export class ExamGroupManagerComponent
         if (group.examState >= 6) {
             group.examEnded = true;
         }
+    }
+
+    async selectExam(group: ExamGroup, examDoc: number | null) {
+        this.loading = true;
+        const res = await toPromise(
+            this.http.post<Partial<ExamGroup>>("/examGroupManager/setExamDoc", {
+                group_id: group.id,
+                exam_doc: examDoc,
+            })
+        );
+        this.loading = false;
+        if (!res.ok) {
+            await showMessageDialog(
+                $localize`Could not set the exam. Details: ${res.result.error.error}`
+            );
+            return;
+        }
+        Object.assign(group, res.result);
+        this.refreshGroupExamState(group);
+    }
+
+    async confirmSelectExam(group: ExamGroup, examDoc: number) {
+        const prevExam = group.currentExamDoc;
+
+        if (
+            prevExam !== undefined &&
+            prevExam != examDoc &&
+            group.examState > 0
+        ) {
+            const res = await showConfirm(
+                $localize`Change exam?`,
+                $localize`The exam has already been started.\nChanging the exam will reset the exam.\n\nAre you sure you want to change the exam?`
+            );
+            if (!res) {
+                group.currentExamDoc = undefined;
+                await timeout();
+                group.currentExamDoc = prevExam;
+                return;
+            }
+        }
+
+        await this.selectExam(group, examDoc);
     }
 }
 
