@@ -233,10 +233,10 @@ export class ToggleComponent {
             <fieldset [disabled]="loading">
                 <bootstrap-panel id="groups-panel" title="All exam groups" i18n-title>
                     <div id="list-all-groups-setting">
-                        <label for="showAllGroups" i18n>
+                        <label for="showAllGroups">
                             <input type="checkbox" id="showAllGroups" name="showAllGroups" [(ngModel)]="showAllGroups"
                                    (ngModelChange)="refreshVisibleGroups()"/>
-                            <span>Show all school's exam groups</span>
+                            <span i18n>Show all school's exam groups</span>
                         </label>
                     </div>
                     <div id="groups-list">
@@ -365,6 +365,7 @@ export class ToggleComponent {
                                                 <button
                                                         class="btn btn-danger btn-xs"
                                                         title="Delete member"
+                                                        i18n-title
                                                         (click)="removeMember(group, member)"
                                                 >
                                                     <i class="glyphicon glyphicon-trash"></i>
@@ -425,11 +426,11 @@ export class ToggleComponent {
                              (selectTab)="group.selected = true; onGroupTabSelected($event)"
                              (deselect)="group.selected = false">
 
-                            <p *ngIf="!group.currentExamDoc">
+                            <p *ngIf="!group.currentExamDoc" i18n>
                                 Begin by selecting the exam to be organized for the group.
                             </p>
                             <div class="select-exam">
-                                <label for="current-exam-doc">Select exam</label>
+                                <label for="current-exam-doc" i18n>Select exam</label>
                                 <select id="current-exam-doc" name="current-exam-doc" class="form-control"
                                         [ngModel]="group.currentExamDoc"
                                         (ngModelChange)="confirmSelectExam(group, $event)">
@@ -443,9 +444,14 @@ export class ToggleComponent {
                                     </option>
                                 </select>
                             </div>
-
-                            <div>
-                                <!-- TODO: Exam instructions here -->
+                            
+                            <div *ngIf="group.currentExamDoc" class="button-controls mt">
+                                <a target="exam-doc" class="timButton" href="/view/{{group.currentExamDoc}}" i18n>
+                                    View exam document
+                                </a>
+                                <a target="exam-doc" class="timButton" href="/teacher/{{group.currentExamDoc}}?group={{group.name}}" i18n>
+                                    Review and correct student answers
+                                </a>
                             </div>
 
                             <fieldset [disabled]="!group.currentExamDoc">
@@ -459,7 +465,7 @@ export class ToggleComponent {
                                 <div class="checklist">
                                     <div [class.disabled]="!group.currentExamDoc">
                                         <div class="cb">
-                                            <input type="checkbox" title="Mark as done"
+                                            <input type="checkbox" title="Mark as done" i18n-title
                                                    [checked]="group.examState > 0"
                                                    (change)="checkExamStateEvent(group, 0, $event)"
                                             >
@@ -468,10 +474,10 @@ export class ToggleComponent {
                                             <div>
                                                 <span i18n>Activate login codes</span>
                                             </div>
-                                            <div class="small" *ngIf="group.examState <= 0">
+                                            <div class="small" *ngIf="group.examState <= 0" i18n>
                                                 Press the toggle button to activate login codes for the exam group
                                             </div>
-                                            <strong class="small text-success" *ngIf="group.examState > 0">
+                                            <strong class="small text-success" *ngIf="group.examState > 0" i18n>
                                                 The login codes are active! Students can now log in using the login
                                                 codes.
                                             </strong>
@@ -492,15 +498,16 @@ export class ToggleComponent {
                                             <input #cbStudentsLoggedIn [disabled]="group.examState < 1"
                                                    type="checkbox"
                                                    title="Mark as done"
+                                                   i18n-title
                                                    [checked]="group.examState > 1"
                                                    (change)="checkExamStateEvent(group, 1, $event)"
                                             >
                                         </div>
                                         <div>
-                                            <div>Ask students to log in to the exam page:
+                                            <div><ng-container i18n>Ask students to log in to the exam page:</ng-container>
                                                 <a *ngIf="group.currentExamDoc; else noExam"
                                                    [href]="getGroupSelectedExamUrl(group)"><code>{{ getGroupSelectedExamUrl(group) }}</code></a>
-                                                <ng-template #noExam>Not selected</ng-template>
+                                                <ng-template #noExam><ng-container i18n>Not selected</ng-container></ng-template>
                                             </div>
                                         </div>
                                         <div>
@@ -519,11 +526,12 @@ export class ToggleComponent {
                                             <input #cbStudentsReady [disabled]="group.examState < 2"
                                                    type="checkbox"
                                                    title="Mark as done"
+                                                   i18n-title
                                                    [checked]="group.examState > 2"
                                                    (change)="checkExamStateEvent(group, 2, $event)"
                                             >
                                         </div>
-                                        <div>
+                                        <div i18n>
                                             Check that the students have logged in and are ready to begin the exam
                                         </div>
                                         <div>
@@ -542,16 +550,17 @@ export class ToggleComponent {
                                             <input [disabled]="group.examState < 3"
                                                    type="checkbox"
                                                    title="Mark as done"
+                                                   i18n-title
                                                    [checked]="group.examState > 3"
                                                    (change)="checkExamStateEvent(group, 3, $event)"
                                             >
                                         </div>
                                         <div>
-                                            <span>Begin exam</span>
-                                            <div class="small" *ngIf="group.examState <= 3">
+                                            <span i18n>Begin exam</span>
+                                            <div class="small" *ngIf="group.examState <= 3" i18n>
                                                 Press the toggle button to start the exam
                                             </div>
-                                            <strong class="small text-success" *ngIf="group.examState > 3">
+                                            <strong class="small text-success" *ngIf="group.examState > 3" i18n>
                                                 The exam has started! Students can now access the exam.
                                             </strong>
                                         </div>
@@ -571,16 +580,17 @@ export class ToggleComponent {
                                             <input [disabled]="group.examState < 4"
                                                    type="checkbox"
                                                    title="Mark as done"
+                                                   i18n-title
                                                    [checked]="group.examState > 4"
                                                    (change)="checkExamStateEvent(group, 4, $event)"
                                             >
                                         </div>
                                         <div>
-                                            <div>End the exam for all except students with additional time</div>
-                                            <div class="small" *ngIf="group.examState <= 4">
+                                            <div i18n>End the exam for all except students with additional time</div>
+                                            <div class="small" *ngIf="group.examState <= 4" i18n>
                                                 Press the toggle button to end the exam for the main student group
                                             </div>
-                                            <strong class="small text-success" *ngIf="group.examState > 4">
+                                            <strong class="small text-success" *ngIf="group.examState > 4" i18n>
                                                 Exam ended for main group! Students with additional time can continue
                                                 the exam.
                                             </strong>
@@ -606,11 +616,11 @@ export class ToggleComponent {
                                             >
                                         </div>
                                         <div>
-                                            <div>End the exam for all students</div>
-                                            <div class="small" *ngIf="group.examState <= 5">
+                                            <div i18n>End the exam for all students</div>
+                                            <div class="small" *ngIf="group.examState <= 5" i18n>
                                                 Press the toggle button to end the exam for all students
                                             </div>
-                                            <strong class="small text-success" *ngIf="group.examState > 5">
+                                            <strong class="small text-success" *ngIf="group.examState > 5" i18n>
                                                 Exam ended for all students! Remember to disable the login codes.
                                             </strong>
                                         </div>
@@ -630,20 +640,21 @@ export class ToggleComponent {
                                             <input [disabled]="group.examState < 6"
                                                    type="checkbox"
                                                    title="Mark as done"
+                                                   i18n-title
                                                    [checked]="group.examState > 6"
                                                    (change)="checkExamStateEvent(group, 6, $event)"
                                             >
                                         </div>
                                         <div>
-                                            <div>Disable login codes</div>
-                                            <div class="small">
+                                            <div i18n>Disable login codes</div>
+                                            <div class="small" i18n>
                                                 Remember to disable the login codes after the exam has ended
                                             </div>
                                         </div>
                                         <div>
                                             <button [disabled]="group.examState < 6"
                                                     (click)="disableLoginCodesAndResetExam(group)"
-                                                    class="btn btn-success">
+                                                    class="btn btn-success" i18n>
                                                 Disable login codes
                                             </button>
                                         </div>
