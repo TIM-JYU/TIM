@@ -8890,14 +8890,6 @@
           <context context-type="linenumber">120,121</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8937443382042319765" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllMembers_{{group.id}}&quot;                                                        [(ngModel)]=&quot;group.allMembersSelected&quot;                                                        (change)=&quot;toggleAllMembersSelected(group)&quot;/>"/></source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllMembers_{{group.id}}&quot;                                                        [(ngModel)]=&quot;group.allMembersSelected&quot;                                                        (change)=&quot;toggleAllMembersSelected(group)&quot;/>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">307,310</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2041629809382689328" datatype="html">
         <source>Group name</source>
         <target state="translated">Gruppens namn</target>
@@ -8923,12 +8915,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="foTitle()}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="foTitle()}}"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">79,80</context>
-        </context-group>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -9122,14 +9110,6 @@
           <context context-type="linenumber">213</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6840480235571678283" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; name=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                    (ngModelChange)=&quot;refreshVisibleGroups()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>Show all school's exam groups<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; name=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                    (ngModelChange)=&quot;refreshVisibleGroups()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>Visa skolans alla tentamensgrupper<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">216,219</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3193976279273491157" datatype="html">
         <source>Actions</source>
         <target state="translated">Åtgärder</target>
@@ -9194,22 +9174,6 @@
           <context context-type="linenumber">366</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4295273754794447591" datatype="html">
-        <source> Print login codes </source>
-        <target state="translated"> Skriv ut inloggningskoder </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">369</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6243193752072487142" datatype="html">
-        <source>Organize exam</source>
-        <target state="translated">Organisera tentamen</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">384</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1867936196876545067" datatype="html">
         <source>Could not fetch groups. Details: <x id="PH" equiv-text="groups.result.error"/></source>
         <target state="translated">Det gick inte att hämta grupper. Detaljer: <x id="PH" equiv-text="groups.result.error"/></target>
@@ -9262,20 +9226,6 @@ Det går inte att ångra den här åtgärden!
           <context context-type="linenumber">777</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4721371081496580609" datatype="html">
-        <source>Some students already have login codes if exam group '<x id="PH" equiv-text="group.readableName"/>'.
-Generating new codes will overwrite the existing ones.
-
-Proceed?</source>
-        <target state="translated">En del studenter har redan inloggningskoder i tentamensgrupp '<x id="PH" equiv-text="group.readableName"/>'.
-Generering av nya koder kommer att skriva över de befintliga.
-
-Fortsätta?</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">778</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1644716588254009314" datatype="html">
         <source>Could not generate login codes. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
         <target state="translated">Det gick inte att generera inloggningskoder. Detaljer: <x id="PH" equiv-text="res.result.error.error"/></target>
@@ -9314,6 +9264,544 @@ Fortsätta?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">893,892</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2564339447423195125" datatype="html">
+        <source>Show all school&apos;s exam groups</source>
+        <target state="new">Show all school&apos;s exam groups</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">239,240</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2746761227052331667" datatype="html">
+        <source>Extra time?</source>
+        <target state="new">Extra time?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">336,337</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4522126822651023664" datatype="html">
+        <source>Delete member</source>
+        <target state="new">Delete member</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">367,368</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="235606749866925302" datatype="html">
+        <source> Print login codes (Main exam) </source>
+        <target state="new"> Print login codes (Main exam) </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">401</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3948357450855446073" datatype="html">
+        <source> Print login codes (Practice exam) </source>
+        <target state="new"> Print login codes (Practice exam) </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">405</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8172670412183392895" datatype="html">
+        <source>Manage exams</source>
+        <target state="new">Manage exams</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">420</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1925784578966988012" datatype="html">
+        <source> Begin by selecting the exam to be organized for the group. </source>
+        <target state="new"> Begin by selecting the exam to be organized for the group. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">430</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1428246682960506945" datatype="html">
+        <source>Select exam</source>
+        <target state="new">Select exam</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">433,434</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2349857258441587869" datatype="html">
+        <source> View exam document </source>
+        <target state="new"> View exam document </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">450</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8481761772485093570" datatype="html">
+        <source> Review and correct student answers </source>
+        <target state="new"> Review and correct student answers </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">453</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2666020517194537371" datatype="html">
+        <source>Hold an exam</source>
+        <target state="new">Hold an exam</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">458,460</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7572057044047810946" datatype="html">
+        <source> Complete each step below to hold an exam. The checklist updates automatically with the current progress. </source>
+        <target state="new"> Complete each step below to hold an exam. The checklist updates automatically with the current progress. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">461,462</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3417427108974272278" datatype="html">
+        <source>Mark as done</source>
+        <target state="new">Mark as done</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">468</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">500,501</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">517,518</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">528,529</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">541,542</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">552,553</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">582,583</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">642,643</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1704115492638984963" datatype="html">
+        <source>Activate login codes</source>
+        <target state="new">Activate login codes</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">475,476</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">489,490</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5856526190707156104" datatype="html">
+        <source> Press the toggle button to activate login codes for the exam group </source>
+        <target state="new"> Press the toggle button to activate login codes for the exam group </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">478</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7763153973602892258" datatype="html">
+        <source> The login codes are active! Students can now log in using the login codes. </source>
+        <target state="new"> The login codes are active! Students can now log in using the login codes. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">481</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2857820148807201086" datatype="html">
+        <source>Disable login codes</source>
+        <target state="new">Disable login codes</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">491,492</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">649,650</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3438605880625234523" datatype="html">
+        <source>Ask students to log in to the exam page:</source>
+        <target state="new">Ask students to log in to the exam page:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">507</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6839138864615473489" datatype="html">
+        <source>Not selected</source>
+        <target state="new">Not selected</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">510</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1403</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5847778941274205961" datatype="html">
+        <source>Mark not done</source>
+        <target state="new">Mark not done</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">519,520</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">543,544</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7947954147576231337" datatype="html">
+        <source> Check that the students have logged in and are ready to begin the exam </source>
+        <target state="new"> Check that the students have logged in and are ready to begin the exam </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">535</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2306629529416420218" datatype="html">
+        <source>Begin exam</source>
+        <target state="new">Begin exam</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">559,560</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6625041605734206208" datatype="html">
+        <source> Press the toggle button to start the exam </source>
+        <target state="new"> Press the toggle button to start the exam </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">561</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6832332803516878836" datatype="html">
+        <source> The exam has started! Students can now access the exam. </source>
+        <target state="new"> The exam has started! Students can now access the exam. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">564</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5539097211548480304" datatype="html">
+        <source>Start exam</source>
+        <target state="new">Start exam</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">571,572</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6053613986477259699" datatype="html">
+        <source>Interrupt exam</source>
+        <target state="new">Interrupt exam</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">573,574</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6588990392613062215" datatype="html">
+        <source>End the exam for all except students with additional time</source>
+        <target state="new">End the exam for all except students with additional time</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">589,590</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3733289209593188368" datatype="html">
+        <source> Press the toggle button to end the exam for the main student group </source>
+        <target state="new"> Press the toggle button to end the exam for the main student group </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">591</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5165726947967046908" datatype="html">
+        <source> Exam ended for main group! Students with additional time can continue the exam. </source>
+        <target state="new"> Exam ended for main group! Students with additional time can continue the exam. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">594</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1417286430246097816" datatype="html">
+        <source>End exam for main group</source>
+        <target state="new">End exam for main group</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">602,603</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6409869804766250910" datatype="html">
+        <source>Resume exam for main group</source>
+        <target state="new">Resume exam for main group</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">604,605</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1330946910288373720" datatype="html">
+        <source>End the exam for all students</source>
+        <target state="new">End the exam for all students</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">619,620</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2040009335604991778" datatype="html">
+        <source> Press the toggle button to end the exam for all students </source>
+        <target state="new"> Press the toggle button to end the exam for all students </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">621</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4878559838788327137" datatype="html">
+        <source> Exam ended for all students! Remember to disable the login codes. </source>
+        <target state="new"> Exam ended for all students! Remember to disable the login codes. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">624</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1822532497533207549" datatype="html">
+        <source>End exam for all students</source>
+        <target state="new">End exam for all students</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">631,632</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3927514884221500695" datatype="html">
+        <source>Resume exam for all students</source>
+        <target state="new">Resume exam for all students</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">633,634</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5702368508125388245" datatype="html">
+        <source> Remember to disable the login codes after the exam has ended </source>
+        <target state="new"> Remember to disable the login codes after the exam has ended </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">651</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2612225160178031374" datatype="html">
+        <source> Disable login codes </source>
+        <target state="new"> Disable login codes </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">658</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7203468454678983743" datatype="html">
+        <source>Some students already have login codes in exam group &apos;<x id="PH" equiv-text="group.readableName"/>&apos;.
+Generating new codes will overwrite the existing ones.
+
+Proceed?</source>
+        <target state="new">Some students already have login codes in exam group &apos;<x id="PH" equiv-text="group.readableName"/>&apos;.
+Generating new codes will overwrite the existing ones.
+
+Proceed?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">985</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="261459206310215803" datatype="html">
+        <source>Activate login codes by pressing the toggle button on the right.</source>
+        <target state="new">Activate login codes by pressing the toggle button on the right.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1187,1186</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4376405961214089585" datatype="html">
+        <source>Begin exam by pressing the toggle button on the right.</source>
+        <target state="new">Begin exam by pressing the toggle button on the right.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1199,1198</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7106920937073324447" datatype="html">
+        <source>End the exam by pressing the toggle button on the right.</source>
+        <target state="new">End the exam by pressing the toggle button on the right.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1205,1204</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1211,1210</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5684094525201516969" datatype="html">
+        <source>Disable login codes by pressing the toggle button on the right.</source>
+        <target state="new">Disable login codes by pressing the toggle button on the right.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1217,1216</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1246,1245</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4724136087546200841" datatype="html">
+        <source>You first need to resume the exam by using the &quot;Resume exam for all students&quot; button.</source>
+        <target state="new">You first need to resume the exam by using the &quot;Resume exam for all students&quot; button.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1225,1224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7423988897349876240" datatype="html">
+        <source>You first need to resume the exam by using the &quot;Resume exam for main group&quot; button.</source>
+        <target state="new">You first need to resume the exam by using the &quot;Resume exam for main group&quot; button.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1232,1231</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="80885656053579115" datatype="html">
+        <source>You first need to interrupt the exam by using the &quot;Interrupt exam&quot; button.</source>
+        <target state="new">You first need to interrupt the exam by using the &quot;Interrupt exam&quot; button.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1239,1238</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1293,1292</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5284153462863049949" datatype="html">
+        <source>You can&apos;t resume the exam that has already ended. End the exam and restart it if needed.</source>
+        <target state="new">You can&apos;t resume the exam that has already ended. End the exam and restart it if needed.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1310,1309</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1338,1337</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4185398656374961480" datatype="html">
+        <source>Interrupt exam?</source>
+        <target state="new">Interrupt exam?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1318,1317</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5367871428395336991" datatype="html">
+        <source>Are you sure you want to interrupt the exam while it is running?
+If you want to end the exam, use the &quot;End exam&quot; buttons.</source>
+        <target state="new">Are you sure you want to interrupt the exam while it is running?
+If you want to end the exam, use the &quot;End exam&quot; buttons.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1319,1317</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3111870776224528219" datatype="html">
+        <source>Resume exam?</source>
+        <target state="new">Resume exam?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1346,1345</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1364,1363</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9133149587385579712" datatype="html">
+        <source>Are you sure you want resume the exam?</source>
+        <target state="new">Are you sure you want resume the exam?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1347,1345</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1365,1363</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2105262130592136450" datatype="html">
+        <source>Could not set exam state. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
+        <target state="new">Could not set exam state. Details: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1419,1418</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7732233340906437861" datatype="html">
+        <source>Could not set the exam. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
+        <target state="new">Could not set the exam. Details: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1466,1465</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2126800274179483393" datatype="html">
+        <source>Change exam?</source>
+        <target state="new">Change exam?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1483,1482</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2890363215125414329" datatype="html">
+        <source>The exam has already been started.
+Changing the exam will reset the exam.
+
+Are you sure you want to change the exam?</source>
+        <target state="new">The exam has already been started.
+Changing the exam will reset the exam.
+
+Are you sure you want to change the exam?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1484,1482</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7171621283964913478" datatype="html">
+        <source>Could not update member info. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
+        <target state="new">Could not update member info. Details: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1516,1515</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8337472758421691661" datatype="html">
+        <source>Login code has been disabled. Make sure you use the correct code or ask for a new code.</source>
+        <target state="new">Login code has been disabled. Make sure you use the correct code or ask for a new code.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">12</context>
         </context-group>
       </trans-unit>
     </body>

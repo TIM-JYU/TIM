@@ -295,16 +295,6 @@ export class ToggleComponent {
                     <div class="button-controls">
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new exam group</button>
                     </div>
-                    <!--                <div>-->
-                    <!--                    <ng-container *ngIf="anySelected(this.groups)">-->
-                    <!--                        <p>Selected groups:</p>-->
-                    <!--                        <ol>-->
-                    <!--                            <ng-container *ngFor="let group of groups">-->
-                    <!--                                <li *ngIf="group.selected">{{group.name}}</li>-->
-                    <!--                            </ng-container>-->
-                    <!--                        </ol>-->
-                    <!--                    </ng-container>-->
-                    <!--                </div>-->
                 </bootstrap-panel>
                 <bootstrap-panel title="Manage exam groups" i18n-title>
                     <tabset class="merged">
@@ -324,7 +314,7 @@ export class ToggleComponent {
                                     <table class="group-table">
                                         <thead>
                                         <tr class="member-table-row">
-                                            <th i18n *ngIf="this.viewOptions?.members?.selectionControls">
+                                            <th *ngIf="this.viewOptions?.members?.selectionControls">
                                                 <input type="checkbox" name="selectAllMembers_{{group.id}}"
                                                        [(ngModel)]="group.allMembersSelected"
                                                        (change)="toggleAllMembersSelected(group)"/></th>

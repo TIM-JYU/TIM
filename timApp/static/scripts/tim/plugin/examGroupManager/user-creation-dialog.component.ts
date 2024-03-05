@@ -76,7 +76,7 @@ export interface UserCreationDialogParams {
                     </div>
 
                     <div class="form-group" *ngIf="!isHidden('extra_info')">
-                        <label i18n for="extra_info" class="col-sm-2 control-label">{{getExtraInfoTitle()}}</label>
+                        <label for="extra_info" class="col-sm-2 control-label">{{getExtraInfoTitle()}}</label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
                                    [(ngModel)]="extra_info"

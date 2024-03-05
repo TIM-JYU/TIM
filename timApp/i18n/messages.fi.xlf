@@ -8948,34 +8948,6 @@
           <context context-type="linenumber">120,121</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5610292640913590235" datatype="html">
-        <source>All groups</source>
-        <target state="translated">Kaikki ryhmät</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">117</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2893868725430878365" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                (change)=&quot;toggleAllGroupsVisible()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span style=&quot;padding-left: 2em;&quot;>"/>List all existing groups<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                (change)=&quot;toggleAllGroupsVisible()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span style=&quot;padding-left: 2em;&quot;>"/>Luettele kaikki ryhmät<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">120,123</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8937443382042319765" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllGroups&quot; [(ngModel)]=&quot;allGroupsSelected&quot;                                            (change)=&quot;toggleAllGroupsSelected()&quot;/>"/></source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllGroups&quot; [(ngModel)]=&quot;allGroupsSelected&quot;                                            (change)=&quot;toggleAllGroupsSelected()&quot;/>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">138,140</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">215,218</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2041629809382689328" datatype="html">
         <source>Group name</source>
         <target state="translated">Ryhmän nimi</target>
@@ -8992,14 +8964,6 @@
           <context context-type="linenumber">141,142</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3304972143698843178" datatype="html">
-        <source>Event</source>
-        <target state="translated">Tapahtuma</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">143,144</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2507348948753734044" datatype="html">
         <source>Timeslot</source>
         <target state="translated">Aikaväli</target>
@@ -9008,60 +8972,12 @@
           <context context-type="linenumber">144,145</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2486858558607450865" datatype="html">
-        <source>Copy selected group </source>
-        <target state="translated">Kopioi valittu ryhmä </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">172,173</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7671126537692003077" datatype="html">
-        <source>Delete selected groups </source>
-        <target state="translated">Poista valittu ryhmä </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">175,176</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1050618851807049316" datatype="html">
-        <source>Generate login codes </source>
-        <target state="translated">Luo kirjautumiskoodit </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">178,179</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3432046743330103045" datatype="html">
-        <source>Print login codes </source>
-        <target state="translated">Tulosta kirjautumiskoodit </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">181,182</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4788666697426129732" datatype="html">
-        <source>Group members</source>
-        <target state="translated">Ryhmän jäsenet</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">201</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="ngs.extraInfoTitle ?? &quot;Extra info&quot;}}"/></source>
-        <target state="translated">{ngs.extraInfoTitle ?? "Lisätietoja"}}}</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">221,223</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">83,84</context>
-        </context-group>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
-          <context context-type="linenumber">65,66</context>
+          <context context-type="linenumber">61,62</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1919972235845496858" datatype="html">
@@ -9086,46 +9002,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
           <context context-type="linenumber">252</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4577471393150449596" datatype="html">
-        <source> Copy students to group </source>
-        <target state="translated"> Kopioi oppilaat ryhmään </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">259</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5381230309143012956" datatype="html">
-        <source> Remove selected </source>
-        <target state="translated"> Poista valittu </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">271</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7159138444614684422" datatype="html">
-        <source>Delete groups</source>
-        <target state="translated">Poista ryhmät</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">603</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8747608565346608086" datatype="html">
-        <source>Are you certain you wish to delete the following groups?
-This action cannot be undone!
-
-Groups to be deleted:
-</source>
-        <target state="translated">Haluatko varmasti poistaa seuraavat ryhmät?
-Tätä toimintoa ei voi peruuttaa!
-
-Poistettavat ryhmät:
-</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">604</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1397367236021319842" datatype="html">
@@ -9556,14 +9432,6 @@ Poistettavat ryhmät:
           <context context-type="linenumber">213</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6840480235571678283" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; name=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                    (ngModelChange)=&quot;refreshVisibleGroups()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>Show all school's exam groups<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; id=&quot;showAllGroups&quot; name=&quot;showAllGroups&quot; [(ngModel)]=&quot;showAllGroups&quot;                                    (ngModelChange)=&quot;refreshVisibleGroups()&quot;/>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>Näytä koulun kaikki koeryhmät<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">216,219</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3193976279273491157" datatype="html">
         <source>Actions</source>
         <target state="translated">Toiminnot</target>
@@ -9628,22 +9496,6 @@ Poistettavat ryhmät:
           <context context-type="linenumber">366</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4295273754794447591" datatype="html">
-        <source> Print login codes </source>
-        <target state="translated"> Tulosta kirjautumiskoodit </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">369</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6243193752072487142" datatype="html">
-        <source>Organize exam</source>
-        <target state="translated">Järjestä koe</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">384</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1867936196876545067" datatype="html">
         <source>Could not fetch groups. Details: <x id="PH" equiv-text="groups.result.error"/></source>
         <target state="translated">Ryhmiä ei voitu hakea. Yksityiskohdat: <x id="PH" equiv-text="groups.result.error"/></target>
@@ -9696,20 +9548,6 @@ Tätä toimintoa ei voi peruuttaa!
           <context context-type="linenumber">777</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4721371081496580609" datatype="html">
-        <source>Some students already have login codes if exam group '<x id="PH" equiv-text="group.readableName"/>'.
-Generating new codes will overwrite the existing ones.
-
-Proceed?</source>
-        <target state="translated">Joillakin oppilailla ryhmässä '<x id="PH" equiv-text="group.readableName"/>' on olemassaoleva kirjautumiskoodi.
-Uusien kirjautumiskoodien luominen ylikirjoittaa vanhan kirjautumiskoodin.
-
-Jatketaanko toimintoa suorittamista?</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">778</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1644716588254009314" datatype="html">
         <source>Could not generate login codes. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
         <target state="translated">Kirjautumiskoodeja ei voitu luoda. Yksityiskohdat: <x id="PH" equiv-text="res.result.error.error"/></target>
@@ -9748,6 +9586,544 @@ Jatketaanko toimintoa suorittamista?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">893,892</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2564339447423195125" datatype="html">
+        <source>Show all school's exam groups</source>
+        <target state="translated">Näytä koulun kaikki koeryhmät</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">239,240</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2746761227052331667" datatype="html">
+        <source>Extra time?</source>
+        <target state="translated">Lisäajallinen?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">336,337</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4522126822651023664" datatype="html">
+        <source>Delete member</source>
+        <target state="translated">Poista opiskelija</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">367,368</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="235606749866925302" datatype="html">
+        <source> Print login codes (Main exam) </source>
+        <target state="translated"> Tulosta kirjautumiskoodit (varsinainen koe) </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">401</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3948357450855446073" datatype="html">
+        <source> Print login codes (Practice exam) </source>
+        <target state="translated"> Tulosta kirjautumiskoodit (harjoituskoe) </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">405</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8172670412183392895" datatype="html">
+        <source>Manage exams</source>
+        <target state="translated">Hallinnoi kokeita</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">420</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1925784578966988012" datatype="html">
+        <source> Begin by selecting the exam to be organized for the group. </source>
+        <target state="translated"> Aloita valitsemalla koe, jonka aiot nyt järjestää. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">430</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1428246682960506945" datatype="html">
+        <source>Select exam</source>
+        <target state="translated">Valitse koe</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">433,434</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2349857258441587869" datatype="html">
+        <source> View exam document </source>
+        <target state="translated"> Katsele koedokumenttia </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">450</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8481761772485093570" datatype="html">
+        <source> Review and correct student answers </source>
+        <target state="translated"> Katsele ja korjaa opiskelijoiden vastauksia </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">453</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2666020517194537371" datatype="html">
+        <source>Hold an exam</source>
+        <target state="translated">Järjestä koe</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">458,460</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7572057044047810946" datatype="html">
+        <source> Complete each step below to hold an exam. The checklist updates automatically with the current progress. </source>
+        <target state="translated"> Suorita alla olevat välivaiheet aloittaaksesi koe. Tarkistuslista päivittyy automaattisesti nykytilanteen mukaan. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">461,462</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3417427108974272278" datatype="html">
+        <source>Mark as done</source>
+        <target state="translated">Merkitse tehdyksi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">468</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">500,501</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">517,518</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">528,529</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">541,542</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">552,553</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">582,583</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">642,643</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1704115492638984963" datatype="html">
+        <source>Activate login codes</source>
+        <target state="translated">Ota kirjautumiskoodit käyttöön</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">475,476</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">489,490</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5856526190707156104" datatype="html">
+        <source> Press the toggle button to activate login codes for the exam group </source>
+        <target state="translated"> Ota kirjautumiskoodit käyttöön koeryhmälle oikealla olevalla painikkeella </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">478</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7763153973602892258" datatype="html">
+        <source> The login codes are active! Students can now log in using the login codes. </source>
+        <target state="translated"> Kirjautumiskoodit ovat aktiivisia! Oppilaat voivat nyt kirjautua sisään koejärjestelmään. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">481</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2857820148807201086" datatype="html">
+        <source>Disable login codes</source>
+        <target state="translated">Poista kirjautumiskoodit käytöstä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">491,492</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">649,650</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3438605880625234523" datatype="html">
+        <source>Ask students to log in to the exam page:</source>
+        <target state="translated">Pyydä oppilaita kirjautumaan koejärjestelmään:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">507</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6839138864615473489" datatype="html">
+        <source>Not selected</source>
+        <target state="translated">Ei valittuna</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">510</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1403</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5847778941274205961" datatype="html">
+        <source>Mark not done</source>
+        <target state="translated">Merkitse tehdyksi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">519,520</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">543,544</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7947954147576231337" datatype="html">
+        <source> Check that the students have logged in and are ready to begin the exam </source>
+        <target state="translated"> Tarkista, että oppilaat kirjautuivat sisään ja ovat valmiina aloittamaan </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">535</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2306629529416420218" datatype="html">
+        <source>Begin exam</source>
+        <target state="translated">Aloita koe</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">559,560</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6625041605734206208" datatype="html">
+        <source> Press the toggle button to start the exam </source>
+        <target state="translated"> Aloita koe painamalla viereistä painiketta </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">561</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6832332803516878836" datatype="html">
+        <source> The exam has started! Students can now access the exam. </source>
+        <target state="translated"> Koe alkoi! Oppilaat voivat nyt avata kokeen! </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">564</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5539097211548480304" datatype="html">
+        <source>Start exam</source>
+        <target state="translated">Aloita koe</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">571,572</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6053613986477259699" datatype="html">
+        <source>Interrupt exam</source>
+        <target state="translated">Keskeytä koe</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">573,574</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6588990392613062215" datatype="html">
+        <source>End the exam for all except students with additional time</source>
+        <target state="translated">Lopeta koe kaikille paitsi lisäajallisille</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">589,590</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3733289209593188368" datatype="html">
+        <source> Press the toggle button to end the exam for the main student group </source>
+        <target state="translated"> Lopeta koe kaikille paitsi lisäajallisille vieressä olevalla painikkeella </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">591</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5165726947967046908" datatype="html">
+        <source> Exam ended for main group! Students with additional time can continue the exam. </source>
+        <target state="translated"> Koe lopetettu varsinaisille oppilaille! Lisäajalliset voivat jatkaa kokeen suoritusta. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">594</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1417286430246097816" datatype="html">
+        <source>End exam for main group</source>
+        <target state="translated">Lopeta koe pääjoukolle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">602,603</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6409869804766250910" datatype="html">
+        <source>Resume exam for main group</source>
+        <target state="translated">Jatka koetta pääjoukolle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">604,605</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1330946910288373720" datatype="html">
+        <source>End the exam for all students</source>
+        <target state="translated">Lopeta koe kaikille oppilaille</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">619,620</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2040009335604991778" datatype="html">
+        <source> Press the toggle button to end the exam for all students </source>
+        <target state="translated"> Lopeta koe kaikille oppilaille vieressä olevalla painikkeella </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">621</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4878559838788327137" datatype="html">
+        <source> Exam ended for all students! Remember to disable the login codes. </source>
+        <target state="translated"> Koe lopetettu kaikille oppilaille! Muista ottaa kirjautumiskoodit pois käytöstä. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">624</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1822532497533207549" datatype="html">
+        <source>End exam for all students</source>
+        <target state="translated">Lopeta koe kaikille oppilaille</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">631,632</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3927514884221500695" datatype="html">
+        <source>Resume exam for all students</source>
+        <target state="translated">Jatka koe kaikille oppilaille</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">633,634</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5702368508125388245" datatype="html">
+        <source> Remember to disable the login codes after the exam has ended </source>
+        <target state="translated"> Muista ottaa kirjautumiskoodit pois käytöstä kokeen jälkeen </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">651</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2612225160178031374" datatype="html">
+        <source> Disable login codes </source>
+        <target state="translated"> Poista kirjautumiskoodit käytöstä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">658</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7203468454678983743" datatype="html">
+        <source>Some students already have login codes in exam group '<x id="PH" equiv-text="group.readableName"/>'.
+Generating new codes will overwrite the existing ones.
+
+Proceed?</source>
+        <target state="translated">Joillakin koeryhmän '<x id="PH" equiv-text="group.readableName"/>' oppilailla on jo kirjautumiskoodi.
+Uusien koodien luominen poistaa edelliset koodit käytöstä.
+
+Jatketaanko?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">985</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="261459206310215803" datatype="html">
+        <source>Activate login codes by pressing the toggle button on the right.</source>
+        <target state="translated">Ota kirjautumiskoodit käyttöön vieressä olevalla painikkeella.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1187,1186</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4376405961214089585" datatype="html">
+        <source>Begin exam by pressing the toggle button on the right.</source>
+        <target state="translated">Ota kirjautumiskoodit käyttöön vieressä olevalla painikkeella.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1199,1198</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7106920937073324447" datatype="html">
+        <source>End the exam by pressing the toggle button on the right.</source>
+        <target state="translated">Ota kirjautumiskoodit käyttöön vieressä olevalla painikkeella.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1205,1204</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1211,1210</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5684094525201516969" datatype="html">
+        <source>Disable login codes by pressing the toggle button on the right.</source>
+        <target state="translated">Ota kirjautumiskoodit käyttöön vieressä olevalla painikkeella.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1217,1216</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1246,1245</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4724136087546200841" datatype="html">
+        <source>You first need to resume the exam by using the "Resume exam for all students" button.</source>
+        <target state="translated">Sinun tulee ensin jatka koetta käyttämällä "Jatka koe kaikille oppilaille" -painiketta.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1225,1224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7423988897349876240" datatype="html">
+        <source>You first need to resume the exam by using the "Resume exam for main group" button.</source>
+        <target state="translated">Sinun tulee jatkaa koe käyttämällä "Jatka koe pääjoukolle" -painikkeella.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1232,1231</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="80885656053579115" datatype="html">
+        <source>You first need to interrupt the exam by using the "Interrupt exam" button.</source>
+        <target state="translated">Sinun tulee keskeyttää koe käyttämällä "Keskeytä koe" -painiketta.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1239,1238</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1293,1292</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5284153462863049949" datatype="html">
+        <source>You can't resume the exam that has already ended. End the exam and restart it if needed.</source>
+        <target state="translated">Et voi jatkaa koetta sen jälkeen, kun se on loppunut. Lopeta koe kokonaan ja käynnistä se uudelleen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1310,1309</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1338,1337</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4185398656374961480" datatype="html">
+        <source>Interrupt exam?</source>
+        <target state="translated">Keskytetäänkö koe?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1318,1317</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5367871428395336991" datatype="html">
+        <source>Are you sure you want to interrupt the exam while it is running?
+If you want to end the exam, use the "End exam" buttons.</source>
+        <target state="translated">Haluatko varmasti keskeyttää menossa oleva koe?
+Jos haluat lopettaa koe, käytä "Lopeta koe" -painikkeita.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1319,1317</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3111870776224528219" datatype="html">
+        <source>Resume exam?</source>
+        <target state="translated">Jatketaanko koe?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1346,1345</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1364,1363</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9133149587385579712" datatype="html">
+        <source>Are you sure you want resume the exam?</source>
+        <target state="translated">Haluatko varmasti jatkaa lopetettu koe?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1347,1345</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1365,1363</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2105262130592136450" datatype="html">
+        <source>Could not set exam state. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
+        <target state="translated">Kokeen tilaa ei voitu päivittää. Yksityiskohdat: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1419,1418</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7732233340906437861" datatype="html">
+        <source>Could not set the exam. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
+        <target state="translated">Koetta ei voitu valita. Yksityiskohdat: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1466,1465</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2126800274179483393" datatype="html">
+        <source>Change exam?</source>
+        <target state="translated">Vaihdetaanko koe?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1483,1482</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2890363215125414329" datatype="html">
+        <source>The exam has already been started.
+Changing the exam will reset the exam.
+
+Are you sure you want to change the exam?</source>
+        <target state="translated">Nykyisen kokeen tarkistuslistaa on jo aloitettu.
+Kokeen vaihtaminen lopettaa menossa olevan kokeen.
+
+Vaihdetaanko koe?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1484,1482</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7171621283964913478" datatype="html">
+        <source>Could not update member info. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
+        <target state="translated">Käyttäjätietoja ei voitu päivittää. Lisätietoja: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1516,1515</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8337472758421691661" datatype="html">
+        <source>Login code has been disabled. Make sure you use the correct code or ask for a new code.</source>
+        <target state="translated">Kirjautumiskoodi on poistettu käytöstä. Tarkista, että sinulla on oikea koodi tai pyydä uusi koodi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
+          <context context-type="linenumber">12</context>
         </context-group>
       </trans-unit>
     </body>
