@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
-from typing import List
+from subprocess import CompletedProcess
+from typing import List, Optional
 
 from cli.docker.run import run_compose
 from cli.npm.run import run_npm
@@ -14,8 +15,10 @@ class Arguments:
     pass
 
 
-def run_pybabel(cmds: List[str]) -> None:
-    run_compose(
+def run_pybabel(
+    cmds: List[str], capture_output: Optional[bool] = None
+) -> CompletedProcess:
+    return run_compose(
         [
             "run",
             "--rm",
@@ -25,7 +28,8 @@ def run_pybabel(cmds: List[str]) -> None:
             "tim",
             "pybabel",
             *cmds,
-        ]
+        ],
+        capture_output=capture_output if capture_output else None,
     )
 
 
