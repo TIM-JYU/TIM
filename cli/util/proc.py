@@ -17,9 +17,11 @@ def run_cmd(
     **kwargs: Any,
 ) -> subprocess.CompletedProcess:
     log_debug(f"cmd: {sh_join(args)}")
+    if capture_output:
+        kwargs["stdout"] = subprocess.PIPE
+        kwargs["stderr"] = subprocess.PIPE
     return subprocess.run(
         args,
         check=check,
-        capture_output=capture_output if capture_output else False,
         **kwargs,
     )
