@@ -8854,34 +8854,6 @@
           <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7131697983125883532" datatype="html">
-        <source> Generate login codes </source>
-        <target state="translated"> Generera inloggningskoder </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
-          <context context-type="linenumber">20</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
-          <context context-type="linenumber">56</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5115992006445027974" datatype="html">
-        <source>Activation start</source>
-        <target state="translated">Start av aktivering</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
-          <context context-type="linenumber">26,27</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8716281726980346679" datatype="html">
-        <source>Activation end</source>
-        <target state="translated">Slut på aktivering</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
-          <context context-type="linenumber">36,37</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1392223819399449504" datatype="html">
         <source>Number of students</source>
         <target state="translated">Antal elever</target>
@@ -9148,14 +9120,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">301,302</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8323422358213440128" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="up['extraInfoTitle'] ?? &quot;Extra info&quot; }}"/> </source>
-        <target state="translated">{up['extraInfoTitle'] ?? "Extra information" }}} </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">313,314</context>
         </context-group>
       </trans-unit>
       <trans-unit id="568395193731950484" datatype="html">
@@ -9802,6 +9766,14 @@ Are you sure you want to change the exam?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7708270344948043036" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ this.markup[&apos;extraInfoTitle&apos;] ?? &quot;Extra&quot; }}"/> </source>
+        <target state="new"> <x id="INTERPOLATION" equiv-text="{{ this.markup[&apos;extraInfoTitle&apos;] ?? &quot;Extra&quot; }}"/> </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">324,325</context>
         </context-group>
       </trans-unit>
     </body>

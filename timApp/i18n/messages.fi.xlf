@@ -8912,34 +8912,6 @@
           <context context-type="linenumber">1375,1374</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7131697983125883532" datatype="html">
-        <source> Generate login codes </source>
-        <target state="translated"> Luo kirjautumiskoodit </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
-          <context context-type="linenumber">20</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
-          <context context-type="linenumber">56</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5115992006445027974" datatype="html">
-        <source>Activation start</source>
-        <target state="translated">Aktivoinnin aloitus</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
-          <context context-type="linenumber">26,27</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8716281726980346679" datatype="html">
-        <source>Activation end</source>
-        <target state="translated">Aktivoinnin päättyminen</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-code-generation-dialog.component.ts</context>
-          <context context-type="linenumber">36,37</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1392223819399449504" datatype="html">
         <source>Number of students</source>
         <target state="translated">Opiskelijamäärä</target>
@@ -9198,14 +9170,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
           <context context-type="linenumber">120,121</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8937443382042319765" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllMembers_{{group.id}}&quot;                                                        [(ngModel)]=&quot;group.allMembersSelected&quot;                                                        (change)=&quot;toggleAllMembersSelected(group)&quot;/>"/></source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;selectAllMembers_{{group.id}}&quot;                                                        [(ngModel)]=&quot;group.allMembersSelected&quot;                                                        (change)=&quot;toggleAllMembersSelected(group)&quot;/>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">307,310</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2041629809382689328" datatype="html">
@@ -9470,14 +9434,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">301,302</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8323422358213440128" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="up['extraInfoTitle'] ?? &quot;Extra info&quot; }}"/> </source>
-        <target state="translated">{up['extraInfoTitle'] ?? "Lisätiedot" }}} </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">313,314</context>
         </context-group>
       </trans-unit>
       <trans-unit id="568395193731950484" datatype="html">
@@ -10124,6 +10080,14 @@ Vaihdetaanko koe?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7708270344948043036" datatype="html">
+        <source> <x id="INTERPOLATION" equiv-text="{{ this.markup['extraInfoTitle'] ?? &quot;Extra&quot; }}"/> </source>
+        <target state="translated"> {{ this.markup['extraInfoTitle'] ?? "Lisätiedot" }} </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">324,325</context>
         </context-group>
       </trans-unit>
     </body>

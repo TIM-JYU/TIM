@@ -320,7 +320,8 @@ export class ToggleComponent {
                                             <th i18n *ngIf="this.viewOptions?.members?.name">Name</th>
                                             <th i18n *ngIf="this.viewOptions?.members?.username">Username</th>
                                             <th i18n
-                                                *ngIf="this.viewOptions?.members?.extraInfo">{{ this.markup['extraInfoTitle'] ?? "Extra info" }}
+                                                *ngIf="this.viewOptions?.members?.extraInfo">
+                                                {{ this.markup['extraInfoTitle'] ?? "Extra" }}
                                             </th>
                                             <th i18n *ngIf="this.viewOptions?.members?.extraTime">Extra time?</th>
                                             <th i18n *ngIf="this.viewOptions?.members?.email">Email</th>
