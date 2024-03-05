@@ -81,9 +81,11 @@
             <div class="url">{{ exam_url }}</div>
             <div class="code-title">{{ gettext("Login code") }}</div>
             <div class="code">
-                {%- for p in (user.login_code | slice(3)) -%}
-                    {{ p | join }}{% if not loop.last %}-{% endif %}
-                {%- endfor -%}
+                {%- if user.login_code -%}
+                    {%- for p in (user.login_code | slice(3)) -%}
+                        {{ p | join }}{% if not loop.last %}-{% endif %}
+                    {%- endfor -%}
+                {%- endif -%}
             </div>
         </div>
     {% endfor %}
