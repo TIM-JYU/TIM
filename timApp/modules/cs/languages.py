@@ -1079,12 +1079,14 @@ class JComtest(Java, Modifier):
         self.hide_compile_out = True
 
     def get_cmdline(self):
-        return f"java comtest.ComTest {self.sourcefilename} && javac {self.sourcefilename} {self.testcs}"
+        return f"java comtest.ComTest {self.sourcefilename} && javac --enable-preview --release {JAVA_VERSION} {self.sourcefilename} {self.testcs}"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(
-            ["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True
+            ["java", "--enable-preview", "org.junit.runner.JUnitCore", self.testdll],
+            no_uargs=True,
         )
+        err = java_preview_warning_re.sub("", err).strip()
         out, err = check_comtest(self, "jcomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
 
