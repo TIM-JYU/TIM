@@ -9776,6 +9776,16 @@ Are you sure you want to change the exam?</target>
           <context context-type="linenumber">324</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1709400740676656154" datatype="html">
+        <source>Some students don&apos;t have a login code yet.
+Please generate login codes first.</source>
+        <target state="new">Some students don&apos;t have a login code yet.
+Please generate login codes first.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">1005,1004</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

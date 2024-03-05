@@ -999,6 +999,13 @@ export class ExamGroupManagerComponent
     }
 
     printLoginCodes(group: ExamGroup, practice: boolean = false) {
+        const members = this.getMembersOf(group);
+        if (members.some((m) => !m.login_code)) {
+            void showMessageDialog(
+                $localize`Some students don't have a login code yet.\nPlease generate login codes first.`
+            );
+            return;
+        }
         const {doc_id, par_id} = this.getPar()!.par.getJsonForServer();
         const urlParams = new URLSearchParams();
         urlParams.append("doc_id", doc_id.toString());
