@@ -89,6 +89,7 @@ class MemberViewOptionsMarkup:
     email: bool = False
     extraInfo: bool = True
     loginCode: bool = True
+    extraTime: bool = True
 
 
 @dataclass
@@ -359,7 +360,7 @@ def _update_exam_group_data_user(
             )
             db.session.add(ans)
         ans.content = new_json
-        ans.users_all.append(u)
+        ans.users_all = [u]
 
 
 @exam_group_manager_plugin.get("/groups")
@@ -1029,6 +1030,33 @@ def set_exam_doc(group_id: int, exam_doc: int | None) -> Response:
 
     db.session.commit()
     return json_response(exam_group_data.to_json())
+
+
+@exam_group_manager_plugin.post("/updateMemberInfo")
+def update_member_info(
+    group_id: int,
+    user_id: int,
+    extra_time: bool | None = field(default=None, metadata={"data_key": "extraTime"}),
+) -> Response:
+    ug = UserGroup.get_by_id(group_id)
+    if not ug:
+        raise NotExist(f"Group with ID {group_id} does not exist.")
+
+    _verify_exam_group_access(ug)
+
+    user_group_data = _get_exam_group_data_user(ug)
+
+    if user_id not in user_group_data:
+        raise NotExist(f"User with ID {user_id} is not in the group")
+
+    user_data = user_group_data[user_id]
+    if extra_time is not None:
+        user_data.extraTime = extra_time
+
+    _update_exam_group_data_user(User.get_by_id(user_id), ug, user_data)
+
+    db.session.commit()
+    return json_response(user_data.to_json())
 
 
 def reqs_handle() -> PluginReqs:

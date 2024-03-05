@@ -56,7 +56,7 @@ export interface GroupMember extends IUser {
     extraInfo?: string;
     // login codes will need to be treated like passwords
     login_code?: string;
-
+    extraTime?: boolean;
     selected: boolean;
 }
 
@@ -108,6 +108,7 @@ const ViewOptionsT = t.partial({
         email: t.boolean,
         extraInfo: t.boolean,
         loginCode: t.boolean,
+        extraTime: t.boolean,
     }),
 });
 
@@ -332,6 +333,7 @@ export class ToggleComponent {
                                             <th i18n
                                                 *ngIf="this.viewOptions?.members?.extraInfo">{{ this.markup['extraInfoTitle'] ?? "Extra info" }}
                                             </th>
+                                            <th i18n *ngIf="this.viewOptions?.members?.extraTime">Extra time?</th>
                                             <th i18n *ngIf="this.viewOptions?.members?.email">Email</th>
                                             <th i18n *ngIf="this.viewOptions?.members?.loginCode">Login code</th>
                                             <th i18n>Delete</th>
@@ -347,6 +349,14 @@ export class ToggleComponent {
                                             <td *ngIf="this.viewOptions?.members?.name">{{ member.real_name }}</td>
                                             <td *ngIf="this.viewOptions?.members?.username">{{ member.name }}</td>
                                             <td *ngIf="this.viewOptions?.members?.extraInfo">{{ member.extraInfo }}</td>
+                                            <td *ngIf="this.viewOptions?.members?.extraTime" class="text-center">
+                                                <input id="user-extra-time-{{member.id}}"
+                                                       name="user-extra-time-{{member.id}}"
+                                                       type="checkbox"
+                                                       [ngModel]="member.extraTime"
+                                                       (ngModelChange)="toggleExtraTime(group, member, $event)"
+                                                />
+                                            </td>
                                             <td *ngIf="this.viewOptions?.members?.email">{{ member.email }}</td>
                                             <td *ngIf="this.viewOptions?.members?.loginCode">
                                                 <code>{{ member.login_code | formatLoginCode }}</code>
@@ -385,10 +395,12 @@ export class ToggleComponent {
                                     <button class="timButton" (click)="generateLoginCodes(group)" i18n>
                                         Generate new login codes
                                     </button>
-                                    <button class="timButton" *ngIf="group.examDocId" (click)="printLoginCodes(group)" i18n>
+                                    <button class="timButton" *ngIf="group.examDocId" (click)="printLoginCodes(group)"
+                                            i18n>
                                         Print login codes (Main exam)
                                     </button>
-                                    <button class="timButton" *ngIf="markup['practiceExam']" (click)="printLoginCodes(group, true)" i18n>
+                                    <button class="timButton" *ngIf="markup['practiceExam']"
+                                            (click)="printLoginCodes(group, true)" i18n>
                                         Print login codes (Practice exam)
                                     </button>
                                 </div>
@@ -404,7 +416,7 @@ export class ToggleComponent {
                         </tab>
                     </tabset>
                 </bootstrap-panel>
-                <bootstrap-panel title="Organize exam" i18n-title>
+                <bootstrap-panel title="Manage exams" i18n-title>
                     <tabset class="merged">
                         <tab *ngFor="let group of visibleGroups"
                              heading="{{group.readableName}}"
@@ -418,7 +430,7 @@ export class ToggleComponent {
                             </p>
                             <div class="select-exam">
                                 <label for="current-exam-doc">Select exam</label>
-                                <select id="current-exam-doc" name="current-exam-doc" class="form-control" 
+                                <select id="current-exam-doc" name="current-exam-doc" class="form-control"
                                         [ngModel]="group.currentExamDoc"
                                         (ngModelChange)="confirmSelectExam(group, $event)">
                                     <option *ngIf="markup['practiceExam']"
@@ -437,9 +449,12 @@ export class ToggleComponent {
                             </div>
 
                             <fieldset [disabled]="!group.currentExamDoc">
-                                <h5>Exam checklist</h5>
+                                <h5 i18n>Hold an exam</h5>
 
-                                <p>Complete each step to start the exam.</p>
+                                <p i18n>
+                                    Complete each step below to hold an exam.
+                                    The checklist updates automatically with the current progress.
+                                </p>
 
                                 <div class="checklist">
                                     <div [class.disabled]="!group.currentExamDoc">
@@ -457,7 +472,8 @@ export class ToggleComponent {
                                                 Press the toggle button to activate login codes for the exam group
                                             </div>
                                             <strong class="small text-success" *ngIf="group.examState > 0">
-                                                The login codes are active!
+                                                The login codes are active! Students can now log in using the login
+                                                codes.
                                             </strong>
                                         </div>
                                         <div>
@@ -482,7 +498,8 @@ export class ToggleComponent {
                                         </div>
                                         <div>
                                             <div>Ask students to log in to the exam page:
-                                                <a *ngIf="group.currentExamDoc; else noExam" [href]="getGroupSelectedExamUrl(group)"><code>{{ getGroupSelectedExamUrl(group) }}</code></a>
+                                                <a *ngIf="group.currentExamDoc; else noExam"
+                                                   [href]="getGroupSelectedExamUrl(group)"><code>{{ getGroupSelectedExamUrl(group) }}</code></a>
                                                 <ng-template #noExam>Not selected</ng-template>
                                             </div>
                                         </div>
@@ -535,7 +552,7 @@ export class ToggleComponent {
                                                 Press the toggle button to start the exam
                                             </div>
                                             <strong class="small text-success" *ngIf="group.examState > 3">
-                                                The exam has started!
+                                                The exam has started! Students can now access the exam.
                                             </strong>
                                         </div>
                                         <div>
@@ -954,7 +971,7 @@ export class ExamGroupManagerComponent
         const hasSomeWithCode = members.some((m) => m.login_code);
         if (hasSomeWithCode) {
             const confirmTitle = $localize`Generate new login codes`;
-            const confirmMessage = $localize`Some students already have login codes if exam group '${group.readableName}'.\nGenerating new codes will overwrite the existing ones.\n\nProceed?`;
+            const confirmMessage = $localize`Some students already have login codes in exam group '${group.readableName}'.\nGenerating new codes will overwrite the existing ones.\n\nProceed?`;
             const generateOk = await showConfirm(confirmTitle, confirmMessage);
             if (!generateOk) {
                 this.loading = false;
@@ -1464,6 +1481,40 @@ export class ExamGroupManagerComponent
         }
 
         await this.selectExam(group, examDoc);
+    }
+
+    async toggleExtraTime(
+        group: ExamGroup,
+        member: GroupMember,
+        toggle: boolean
+    ) {
+        this.loading = true;
+        const res = await toPromise(
+            this.http.post<Partial<GroupMember>>(
+                "/examGroupManager/updateMemberInfo",
+                {
+                    group_id: group.id,
+                    user_id: member.id,
+                    extraTime: toggle,
+                }
+            )
+        );
+        this.loading = false;
+        if (!res.ok) {
+            await showMessageDialog(
+                $localize`Could not update member info. Details: ${res.result.error.error}`
+            );
+            await timeout();
+            const prev = member.extraTime;
+            member.extraTime = undefined;
+            await timeout();
+            member.extraTime = prev;
+            return;
+        }
+
+        Object.assign(member, res.result);
+        await timeout();
+        member.extraTime = toggle;
     }
 }
 
