@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from cli.commands.i18n.extract import run_pybabel
 from cli.docker.run import run_compose
+from cli.util.errors import CLIError
 from cli.util.logging import log_info
 
 info = {
@@ -20,30 +21,21 @@ def init_catalog(lang: str) -> None:
 
 def run(args: Arguments) -> None:
     if not args.language:
-        log_info("No language specified.")
         log_info("Please provide a CLDR compliant language code.")
         log_info(
             "See https://cldr.unicode.org/index/cldr-spec/picking-the-right-language-code for details."
         )
-        return
+        raise CLIError(f"No language specified.")
 
     if not check_locale(args.language):
-        log_info(f"Unknown language code: {args.language}")
-        return
+        raise CLIError(f"Unknown language code: {args.language}")
 
     init_catalog(args.language)
 
 
 def check_locale(lang: str) -> bool:
-    locales = run_compose(
+    locales = run_pybabel(
         [
-            "run",
-            "--rm",
-            "--workdir",
-            "/service/timApp",
-            "--no-deps",
-            "tim",
-            "pybabel",
             "--list-locales",
         ],
         capture_output=True,
