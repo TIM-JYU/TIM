@@ -61,6 +61,7 @@ cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 
 JAVAFX_VERSION = os.environ.get("OPENJFX_VERSION", "19")
+JAVA_VERSION = os.environ.get("JDK_VERSION", "20").split(".")[0]
 
 
 def sanitize_filename(s):
@@ -931,6 +932,11 @@ class Ping(Shell):
         return 0, "Ping", "", ""
 
 
+java_preview_warning_re = re.compile(
+    r"Note: .+ uses preview features of Java SE \d+\.\n?Note: Recompile with -Xlint:preview for details.\n?"
+)
+
+
 class Java(Language):
     ttype = "java"
 
@@ -954,8 +960,8 @@ class Java(Language):
 
     def get_cmdline(self):
         return (
-            f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib"
-            + f" --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}"
+            f"javac --enable-preview --release {JAVA_VERSION} --module-path /javafx-sdk-{JAVAFX_VERSION}/lib"
+            + f" --add-modules=ALL-MODULE-PATH -Xlint:all -Xlint:-preview -cp {self.classpath}"
             + f" {self.javaname}"
         )
 
@@ -963,6 +969,7 @@ class Java(Language):
         code, out, err, pwddir = self.runself(
             [
                 "java",
+                "--enable-preview",
                 "--module-path",
                 f"/javafx-sdk-{JAVAFX_VERSION}/lib",
                 "--add-modules=ALL-MODULE-PATH",
@@ -972,6 +979,7 @@ class Java(Language):
             ],
             ulimit=df(self.ulimit, "ulimit -f 10000"),
         )
+        err = java_preview_warning_re.sub("", err).strip()
         return code, out, err, pwddir
 
 
