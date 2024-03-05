@@ -39,7 +39,7 @@
         }
 
         .code {
-            justify-self: center;
+            align-self: center;
             font-family: monospace;
             font-size: 2em;
         }
@@ -75,13 +75,16 @@
 <section>
     {% for user in users %}
         <div class="student-card">
-            <div class="name-title" style="grid-area: name-title;">{{ gettext("Name") }}</div>
-            <div class="name" style="grid-area: name;">{{ user.real_name }}</div>
-            <div class="url-title" style="grid-area: url-title;">{{ gettext("Exam address") }}</div>
-            <div class="url" style="grid-area: url;">{{ exam_url }}</div>
-            <div class="code-title" style="grid-area: code-title;">{{ gettext("Login code") }}</div>
-            <div class="code"
-                 style="grid-area: code;">{{ user.login_code | slice(3) | join("-") | replace("'","") | replace(",","") | replace("[","") | replace("]","") | replace(" ","") }}</div>
+            <div class="name-title">{{ gettext("Name") }}</div>
+            <div class="name">{{ user.real_name }}</div>
+            <div class="url-title">{{ gettext("Exam address") }}</div>
+            <div class="url">{{ exam_url }}</div>
+            <div class="code-title">{{ gettext("Login code") }}</div>
+            <div class="code">
+                {%- for p in (user.login_code | slice(3)) -%}
+                    {{ p | join }}{% if not loop.last %}-{% endif %}
+                {%- endfor -%}
+            </div>
         </div>
     {% endfor %}
 </section>
