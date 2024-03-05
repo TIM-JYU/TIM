@@ -518,7 +518,7 @@ def _get_exam_group_members_json(ug: UserGroup) -> list[dict]:
     exam_group_fields_per_user = _get_exam_group_data_user(ug)
 
     for m in ug.users:
-        ulc: UserLoginCode = login_code_per_user[m.id]
+        ulc = login_code_per_user.get(m.id, None)
         exam_fields = exam_group_fields_per_user.get(m.id, None)
         exam_fields_json = exam_fields.to_json() if exam_fields else {}
         data.append(
