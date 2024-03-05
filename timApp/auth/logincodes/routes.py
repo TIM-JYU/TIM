@@ -2,14 +2,13 @@
 Routes for managing and using login codes
 """
 
-import datetime
 import random
 from datetime import datetime
 from time import sleep
 
 from flask import Response
 from flask import session
-from sqlalchemy import select
+from sqlalchemy import select, Row
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import AccessDenied, verify_ip_ok
@@ -42,7 +41,7 @@ def verify_login_code() -> None:
     login_code_session = session.get("login_code_session")
     if not login_code_session:
         return
-    res: tuple[datetime, bool] | None = run_sql(
+    res: Row[tuple[datetime, bool]] | None = run_sql(
         select(UserLoginCode.active_to, UserLoginCode.valid).filter(
             UserLoginCode.session_code == login_code_session
         )

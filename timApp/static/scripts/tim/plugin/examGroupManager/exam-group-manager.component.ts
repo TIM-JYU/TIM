@@ -39,7 +39,6 @@ import {showUserImportDialog} from "tim/plugin/examGroupManager/showUserImportDi
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {UserCreationDialogComponent} from "tim/plugin/examGroupManager/user-creation-dialog.component";
 import {showUserCreationDialog} from "tim/plugin/examGroupManager/showUserCreationDialog";
-import {LoginCodeGenerationDialogComponent} from "tim/plugin/examGroupManager/login-code-generation-dialog.component";
 import {ExamGroupCreateDialogComponent} from "tim/plugin/examGroupManager/exam-group-create-dialog.component";
 import {showExamGroupCreateDialog} from "tim/plugin/examGroupManager/showExamGroupCreateDialog";
 import {PurifyModule} from "tim/util/purify.module";
@@ -1524,7 +1523,6 @@ export class ExamGroupManagerComponent
         ExamGroupManagerComponent,
         UserImportDialogComponent,
         UserCreationDialogComponent,
-        LoginCodeGenerationDialogComponent,
         ExamGroupCreateDialogComponent,
         FormatLoginCodePipe,
         ToggleComponent,

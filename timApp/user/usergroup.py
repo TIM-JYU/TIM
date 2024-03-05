@@ -188,7 +188,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
         self.personal_user = User.get_by_name(self.name)
 
-    def to_json(self):
+    def to_json(self) -> dict:
         r = {
             "id": self.id,
             "name": self.name,

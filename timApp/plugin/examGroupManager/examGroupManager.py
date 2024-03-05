@@ -1,4 +1,3 @@
-import datetime
 import json
 import secrets
 from collections import defaultdict
@@ -232,7 +231,7 @@ def _get_latest_fields_usergroup(
         raise ValueError("Either u or ug must be provided")
     if user:
         ug_users_sub: Any = [user.id]
-    else:
+    elif user_group:
         ug_users_sub = user_group.memberships.filter(membership_current).with_entities(
             UserGroupMember.user_id
         )
@@ -265,6 +264,7 @@ def _get_latest_fields_usergroup(
 
 def _update_exam_group_data_global(ug: UserGroup, data: ExamGroupDataGlobal) -> None:
     doc = ug.admin_doc
+    assert doc is not None
 
     glo_fields_to_update = {
         f for f in EXAM_GROUP_DATA_GLOBAL_FIELDS if getattr(data, f) is not missing
@@ -294,6 +294,7 @@ def _update_exam_group_data_global(ug: UserGroup, data: ExamGroupDataGlobal) -> 
 
 def _get_exam_group_data_global(ug: UserGroup) -> ExamGroupDataGlobal:
     doc = ug.admin_doc
+    assert doc is not None
 
     result = ExamGroupDataGlobal()
     for a in _get_latest_fields_any(
@@ -313,6 +314,7 @@ def _get_exam_group_data_global(ug: UserGroup) -> ExamGroupDataGlobal:
 
 def _get_exam_group_data_user(ug: UserGroup) -> dict[int, ExamGroupDataUser]:
     doc = ug.admin_doc
+    assert doc is not None
 
     result: dict[int, ExamGroupDataUser] = {}
     for uid, answers in _get_latest_fields_usergroup(
@@ -336,6 +338,7 @@ def _update_exam_group_data_user(
     u: User, ug: UserGroup, data: ExamGroupDataUser
 ) -> None:
     doc = ug.admin_doc
+    assert doc is not None
 
     user_fields_to_update = {
         f for f in EXAM_GROUP_DATA_USER_FIELDS if getattr(data, f) is not missing
@@ -384,7 +387,7 @@ def get_groups(
         raise RouteException("groupsPath is missing from the plugin markup")
 
     fpath = markup.groupsPath
-    if not markup.groupsPath.startswith("groups"):
+    if not fpath or isinstance(fpath, Missing) or not fpath.startswith("groups"):
         fpath = f"groups/{markup.groupsPath}"
     folder = Folder.find_by_path(fpath)
     if not folder:
@@ -467,7 +470,7 @@ def do_delete_exam_groups(group_ids: list[int]) -> None:
     for g in del_groups:
         _verify_exam_group_access(g)
 
-    admin_docs = [g.admin_doc.docentries[0] for g in del_groups]
+    admin_docs = [g.admin_doc.docentries[0] for g in del_groups if g.admin_doc]
 
     run_sql(
         delete(UserGroupDoc)
@@ -515,7 +518,7 @@ def _get_exam_group_members_json(ug: UserGroup) -> list[dict]:
     exam_group_fields_per_user = _get_exam_group_data_user(ug)
 
     for m in ug.users:
-        ulc: UserLoginCode = login_code_per_user.get(m.id, None)
+        ulc: UserLoginCode = login_code_per_user[m.id]
         exam_fields = exam_group_fields_per_user.get(m.id, None)
         exam_fields_json = exam_fields.to_json() if exam_fields else {}
         data.append(
@@ -626,7 +629,7 @@ def do_create_users(
     group_id: int, given_name: str, surname: str, extra_info: str = ""
 ) -> tuple[User, ExamGroupDataUser]:
     current_user = get_current_user_object()
-    group: UserGroup = UserGroup.get_by_id(group_id)
+    group = UserGroup.get_by_id(group_id)
     if not group:
         raise NotExist(f"Group with ID {group_id} does not exist.")
     if not given_name.strip():
@@ -803,23 +806,25 @@ def print_login_codes(
 
     exam = (
         exams_by_doc_id.get(extra_data.examDocId, None)
-        if not practice
+        if not practice and not isinstance(extra_data.examDocId, Missing)
         else plugin.practiceExam
     )
     exam_url: str | None = None
     exam_title: str | None = None
-    if exam:
+    if exam and not isinstance(exam, Missing):
         exam_url = exam.url
         exam_title = exam.name
 
     if not exam_url or not exam_title:
+        assert not isinstance(extra_data.examDocId, Missing)
         doc = get_doc_or_abort(extra_data.examDocId)
         if not exam_url:
             exam_url = doc.get_url_for_view("view")
         if not exam_title:
             exam_title = doc.title
 
-    admin_block: Block = ug.admin_doc
+    admin_block: Block | None = ug.admin_doc
+    assert admin_block is not None
     admin_doc: DocEntry = admin_block.docentries[0]
     group_name: str = admin_doc.title
 
@@ -942,7 +947,7 @@ def _resume_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
             grant_access(u.get_personal_group(), doc, AccessType.view)
 
 
-def _do_nothing(*_) -> None:
+def _do_nothing(*_: Any) -> None:
     pass
 
 
@@ -1053,7 +1058,9 @@ def update_member_info(
     if extra_time is not None:
         user_data.extraTime = extra_time
 
-    _update_exam_group_data_user(User.get_by_id(user_id), ug, user_data)
+    u = User.get_by_id(user_id)
+    assert u is not None
+    _update_exam_group_data_user(u, ug, user_data)
 
     db.session.commit()
     return json_response(user_data.to_json())
