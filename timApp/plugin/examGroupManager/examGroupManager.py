@@ -780,23 +780,54 @@ def generate_codes_for_members(group_id: int) -> Response:
 
 
 @exam_group_manager_plugin.get("/printCodes/<int:group_id>")
-def print_login_codes(group_id: int, exam_url: str) -> str:
+def print_login_codes(
+    group_id: int,
+    doc_id: int,
+    par_id: str,
+    practice: bool = False,
+) -> str:
     ug = UserGroup.get_by_id(group_id)
     if not ug:
         raise NotExist(f"Group with id {group_id} does not exist.")
 
     _verify_exam_group_access(ug)
-
+    extra_data = _get_exam_group_data_global(ug)
     users = _get_exam_group_members_json(ug)
+
+    plugin, _ = _get_plugin_markup(GlobalParId(doc_id, par_id))
+    if practice and not plugin.practiceExam:
+        raise NotExist(gettext("Practice exam not set in the plugin markup."))
+
+    exams_by_doc_id = {e.docId: e for e in plugin.exams}
+
+    exam = (
+        exams_by_doc_id.get(extra_data.examDocId, None)
+        if not practice
+        else plugin.practiceExam
+    )
+    exam_url: str | None = None
+    exam_title: str | None = None
+    if exam:
+        exam_url = exam.url
+        exam_title = exam.name
+
+    if not exam_url or not exam_title:
+        doc = get_doc_or_abort(extra_data.examDocId)
+        if not exam_url:
+            exam_url = doc.get_url_for_view("view")
+        if not exam_title:
+            exam_title = doc.title
 
     admin_block: Block = ug.admin_doc
     admin_doc: DocEntry = admin_block.docentries[0]
+    group_name: str = admin_doc.title
 
     return render_template(
         "examgroupmanager/print_codes.jinja2",
         users=users,
         exam_url=exam_url,
-        title=gettext("Exam group: %(group_name)s", group_name=admin_doc.title),
+        group_name=group_name,
+        exam_title=exam_title,
     )
 
 

@@ -385,10 +385,10 @@ export class ToggleComponent {
                                     <button class="timButton" (click)="generateLoginCodes(group)" i18n>
                                         Generate new login codes
                                     </button>
-                                    <button class="timButton" *ngIf="group.examDocId" (click)="printLoginCodes(group, group.examDocId)" i18n>
+                                    <button class="timButton" *ngIf="group.examDocId" (click)="printLoginCodes(group)" i18n>
                                         Print login codes (Main exam)
                                     </button>
-                                    <button class="timButton" *ngIf="markup['practiceExam']" (click)="printLoginCodes(group, markup['practiceExam'].docId)" i18n>
+                                    <button class="timButton" *ngIf="markup['practiceExam']" (click)="printLoginCodes(group, true)" i18n>
                                         Print login codes (Practice exam)
                                     </button>
                                 </div>
@@ -980,12 +980,12 @@ export class ExamGroupManagerComponent
         this.loading = false;
     }
 
-    printLoginCodes(group: ExamGroup, examDocId: number) {
+    printLoginCodes(group: ExamGroup, practice: boolean = false) {
+        const {doc_id, par_id} = this.getPar()!.par.getJsonForServer();
         const urlParams = new URLSearchParams();
-        urlParams.append(
-            "exam_url",
-            this.getExamUrl(this.examByDocId.get(examDocId)!)
-        );
+        urlParams.append("doc_id", doc_id.toString());
+        urlParams.append("par_id", par_id.toString());
+        urlParams.append("practice", practice.toString());
         window.open(
             `/examGroupManager/printCodes/${group.id}?${urlParams.toString()}`,
             "_blank"
