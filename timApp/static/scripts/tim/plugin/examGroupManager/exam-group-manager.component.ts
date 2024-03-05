@@ -319,9 +319,9 @@ export class ToggleComponent {
                                                        (change)="toggleAllMembersSelected(group)"/></th>
                                             <th i18n *ngIf="this.viewOptions?.members?.name">Name</th>
                                             <th i18n *ngIf="this.viewOptions?.members?.username">Username</th>
-                                            <th i18n
-                                                *ngIf="this.viewOptions?.members?.extraInfo">
-                                                {{ this.markup['extraInfoTitle'] ?? "Extra" }}
+                                            <th *ngIf="this.viewOptions?.members?.extraInfo">
+                                                <ng-container *ngIf="this.markup['extraInfoTitle']; else defaultExtraTitle">{{ this.markup['extraInfoTitle'] }}</ng-container>
+                                                <ng-template #defaultExtraTitle><ng-container i18n>Extra</ng-container></ng-template>
                                             </th>
                                             <th i18n *ngIf="this.viewOptions?.members?.extraTime">Extra time?</th>
                                             <th i18n *ngIf="this.viewOptions?.members?.email">Email</th>

@@ -9768,12 +9768,12 @@ Are you sure you want to change the exam?</target>
           <context context-type="linenumber">12</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7708270344948043036" datatype="html">
-        <source> <x id="INTERPOLATION" equiv-text="{{ this.markup[&apos;extraInfoTitle&apos;] ?? &quot;Extra&quot; }}"/> </source>
-        <target state="new"> <x id="INTERPOLATION" equiv-text="{{ this.markup[&apos;extraInfoTitle&apos;] ?? &quot;Extra&quot; }}"/> </target>
+      <trans-unit id="7419412790104674886" datatype="html">
+        <source>Extra</source>
+        <target state="new">Extra</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">324,325</context>
+          <context context-type="linenumber">324</context>
         </context-group>
       </trans-unit>
     </body>

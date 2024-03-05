@@ -177,7 +177,7 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
     }
 
     getExtraInfoTitle(): string {
-        return this.data.extraInfoTitle ?? "Extra info";
+        return this.data.extraInfoTitle ?? $localize`Extra`;
     }
 
     isHidden(fieldName: string): boolean {
