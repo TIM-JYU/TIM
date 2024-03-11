@@ -59,6 +59,11 @@ class GroupSelfJoinSettings:
         return GroupSelfJoinSettings()
 
 
+@dataclass
+class IdeDocument:
+    path: str
+
+
 # TODO: Start moving DocSettings keys to this dataclass
 @dataclass
 class DocSettingTypes:
@@ -103,7 +108,7 @@ class DocSettingTypes:
     lazyAnswers: bool
     uiLangOverride: str
     allowedDocsettingMacroAttributes: list[str] | str
-    need_view_for_answers: bool
+    ideCourse: list[IdeDocument]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -217,7 +222,7 @@ class DocSettings:
         return self.__dict.get(self.css_key)
 
     def get_macroinfo(
-        self, view_ctx: ViewContext, user_ctx: UserContext | None = None
+            self, view_ctx: ViewContext, user_ctx: UserContext | None = None
     ) -> MacroInfo:
         cache_key = (
             view_ctx,
@@ -247,7 +252,7 @@ class DocSettings:
         return mi.with_field_macros()
 
     def get_texmacroinfo(
-        self, view_ctx: ViewContext, user_ctx: UserContext | None = None
+            self, view_ctx: ViewContext, user_ctx: UserContext | None = None
     ) -> MacroInfo:
         return MacroInfo(
             view_ctx,
@@ -691,8 +696,8 @@ class DocSettings:
     def allowed_docsetting_macro_attributes(self) -> list[str] | str:
         return self.get_setting_or_default("allowedDocsettingMacroAttributes", [])
 
-    def need_view_for_answers(self) -> bool:
-        return self.get_setting_or_default("need_view_for_answers", False)
+    def ide_course(self) -> list[IdeDocument]:
+        return self.get_setting_or_default("ideCourse", [])
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
@@ -701,7 +706,7 @@ def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
 
 
 def __resolve_final_settings_impl(
-    pars: Iterable[DocParagraph],
+        pars: Iterable[DocParagraph],
 ) -> tuple[YamlBlock, bool]:
     result = YamlBlock()
     had_settings = False

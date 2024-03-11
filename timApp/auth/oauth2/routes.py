@@ -12,7 +12,8 @@ from timApp.auth.sessioninfo import get_current_user_object, logged_in
 
 from timApp.tide_support.routes import (
     user_ide_courses,
-    ide_tasks_from_document,
+    demos_by_doc,
+    ide_tasks,
     ide_task_by_id,
 )
 from timApp.tim_app import csrf
@@ -59,7 +60,7 @@ def token_is_valid() -> Response:
     :return: JSON response with the token status and validity time (hours:minutes:seconds)
     """
 
-    # Convert seconds to hours:minutes:seconds
+    # Convert seconds to days: hours:minutes:seconds
     convert = str(datetime.timedelta(seconds=current_token.expires_in))
 
     return json_response({"validityTime": convert})
@@ -92,7 +93,7 @@ def get_user_profile() -> Response:
 def get_courses() -> Response:
     """
     Gets all courses that the user has bookmarked
-    :return: JSON response with all courses
+    :return: JSON response with all courses TODO: Remove if not needed
     """
     user: User = current_token.user
     courses = user.bookmarks.bookmark_data[2]["My courses"]
@@ -105,45 +106,107 @@ def get_courses() -> Response:
     return json_response(res)
 
 
-@oauth.get("bookmarked-ide-courses")
+@oauth.get("ide-courses")
 @require_oauth(Scope.user_tasks.value)
-def get_all_ide_courses() -> Response:
+def get_user_ide_courses() -> Response:
     """
-    Get all courses that the user has bookmarked and have ide task/s
-    :return: JSON response with all tasks
+    Get all courses that the user has bookmarked and have ideCourse tah
+    :return: JSON response with all courses and their demo folders
     """
+
     user: User = current_token.user
-
-    tasks = user_ide_courses(user=user, attr_name="ideTask")
-
-    return json_response(tasks)
+    return json_response(user_ide_courses(user=user))
 
 
-@oauth.get("ide-tasks-by-document-id/<int:document_id>")
+@oauth.get("demos-by-doc-id")
 @require_oauth(Scope.user_tasks.value)
-def get_ide_tasks_by_doc_id(document_id: int) -> Response:
+def get_ide_demos_by_doc_id() -> Response:
     """
-    Get all ide-tasks by document id
+    Get all demos by document id
     :return: JSON response with the task
     """
+
+    doc_id = request.json.get("doc_id")
+    if not doc_id:
+        return json_response({"error": "No doc_id provided"})
+
+    return json_response(demos_by_doc(doc_id=doc_id))
+
+
+@oauth.get("demos-by-doc-path")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_demos_by_doc_path() -> Response:
+    """
+    Get all demos by document path
+    :return: JSON response with the task
+    """
+
+    doc_path = request.json.get("doc_path")
+    if not doc_path:
+        return json_response({"error": "No doc_path provided"})
+
+    return json_response(demos_by_doc(doc_path=doc_path))
+
+
+@oauth.get("tasks-by-doc-path")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_tasks_by_doc_path() -> Response:
+    """
+    Get all tasks by demo folder path
+    :return: JSON response with the task
+    """
+    doc_path = request.json.get("doc_path")
+    if not doc_path:
+        return json_response({"error": "No demo_path provided"})
+
     user: User = current_token.user
 
     return json_response(
-        ide_tasks_from_document(user=user, document_id=document_id, attr_name="ideTask")
+        ide_tasks(demo_path=doc_path, user=user, ide_task_tag="ideTask")
     )
 
 
-@oauth.get("ide-task-by-id/<int:doc_id>/<string:ide_task_id>")
+@oauth.get("tasks-by-doc-id")
 @require_oauth(Scope.user_tasks.value)
-def get_ide_task_by_id(doc_id: int, ide_task_id: str) -> Response:
+def get_ide_tasks_by_doc_id() -> Response:
     """
-    Get a specific task by doc id and task id
+    Get all tasks by demo folder doc_id
     :return: JSON response with the task
     """
+    doc_id = request.json.get("doc_id")
+    if not doc_id:
+        return json_response({"error": "No doc_id provided"})
+
+    user: User = current_token.user
+
+    return json_response(ide_tasks(doc_id=doc_id, user=user, ide_task_tag="ideTask"))
+
+
+@oauth.get("tasks-by-ide-task-id")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_tasks_by_ide_task_id() -> Response:
+    """
+    Get all tasks by demo folder path
+    :return: JSON response with the task
+    """
+    ide_task_id = request.json.get("ide_task_id")
+    doc_id = request.json.get("doc_id")
+    doc_path = request.json.get("doc_path")
+
+    if not ide_task_id:
+        return json_response({"error": "No ide_task_id provided"})
+
+    if not doc_id and not doc_path:
+        return json_response({"error": "No doc_id or doc_path provided"})
+
     user: User = current_token.user
 
     return json_response(
         ide_task_by_id(
-            user=user, ide_task_id=ide_task_id, doc_id=doc_id, attr_name="ideTask"
+            ide_task_id=ide_task_id,
+            doc_id=doc_id,
+            user=user,
+            ide_task_tag="ideTask",
+            doc_path=doc_path,
         )
     )

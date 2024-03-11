@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from bs4 import BeautifulSoup
 from marshmallow import EXCLUDE
 
+from timApp.bookmark.bookmarks import MY_COURSES_GROUP
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
@@ -68,82 +69,175 @@ class TIDETaskInfo:
 TIDETaskInfoSchema = class_schema(TIDETaskInfo)()
 
 
-def user_ide_courses(user: User, attr_name) -> list[json]:
+def user_ide_courses(user: User) -> list[json]:
     """
-    Gets all courses that have a tasks with TIDE-parameter and are bookmarked by the user
-    :param attr_name: Name of the attribute that identifies the TIDE-task
+    Gets all courses that have parameter for Ide course in course settings and are bookmarked by the user
     :param user: Logged-in user
     :return: List JSON with all TIDE-tasks from the courses user has bookmarked
     """
-    user_courses = user.bookmarks.bookmark_data[2]["My courses"]
-
+    user_courses = user.bookmarks.bookmark_data[2][MY_COURSES_GROUP]
     ide_courses = []
 
     for course_dict in user_courses:
         for course_name, course_path in course_dict.items():
             # Get the document by path, remove /view/ from the beginning of path
-            doc = DocEntry.find_by_path(course_path.split("view/")[1:])
-            # TODO: Does this work with multiple subfolders
-            # Get all paragraphs from the document
-            pars = doc.document.get_paragraphs()
-            if any(p.attrs.get(attr_name) is not None for p in pars):
-                ide_courses.append(
-                    {"course_name": course_name, "course_id": doc.document.doc_id}
-                )
+            doc = DocInfo.find_by_path(course_path.split("view/")[1:][0])
+
+            if doc is None:
+                continue
+
+            demo_paths = doc.document.get_settings().ide_course()
+
+            if demo_paths is None:
+                continue
+
+            ide_courses.append(
+                {
+                    "course_name": course_name,
+                    "course_id": doc.document.doc_id,
+                    "course_path": course_path,
+                    "demo_paths": demo_paths,
+                }
+            )
 
     return ide_courses
 
 
-def ide_tasks_from_document(document_id: int, attr_name, user) -> json:
+def demos_by_doc(doc_id: int = None, doc_path: str = None):
     """
-    Get all TIDE-tasks from the courses user has bookmarked
-    :param attr_name:
-    :param document_id: Document id
-    :param user: Logged-in user
-    :return: List JSON with all TIDE-tasks from the courses user has bookmarked
-    """
-    doc = DocEntry.find_by_id(doc_id=document_id)
-    # TODO: Should here be a test if the user has right to access the document?
-    pars = doc.document.get_paragraphs()
-    ide_task_ids = []
-
-    for p in pars:
-        if p.attrs.get(attr_name) is not None:
-            ide_task_ids.append(p.attrs.get(attr_name))
-
-    return {"ide_task_ids": ide_task_ids, "doc.id": doc.id}
-
-
-def ide_task_by_id(user: User, ide_task_id: str, doc_id: int, attr_name: str) -> json:
-    """
-    Get the TIDE-task by task id
-    :param attr_name: Name of the attribute that identifies the ide-task
-    :param ide_task_id: Ide-task id
-    :param user: Authenticated user
+    Find all TIDE-demo folders from the document
+    :param doc_path:
     :param doc_id: Document id
-    :return:
+
+    :return: List JSON with all TIDE-demo folders from the document
     """
+
+    doc_path = doc_path.lower()
+
+    if doc_id is None and doc_path is None:
+        return []
+
+    if doc_id is None:
+        doc = DocInfo.find_by_path(path=doc_path)
+    else:
+        doc = DocEntry.find_by_id(doc_id=doc_id)
+
+    if doc is None:
+        return []
+
+    demo_paths = doc.document.get_settings().ide_course()
+
+    if demo_paths is None:
+        return []
+
+    return demo_paths
+
+
+def ide_tasks(
+        user: User, ide_task_tag: str, doc_id: int = None, demo_path: str = None
+) -> json:
+    """
+    Get all TIDE-tasks from the demo folder
+    :param user: Logged-in user
+    :param doc_id:  Document id
+    :param ide_task_tag: Tag that identifies the TIDE-task
+    :param demo_path: Path to the demo folder
+    :return: List JSON with all TIDE-tasks from the demo folder
+    """
+    # TODO: Should here be a test if the user has right to access the document?
+
+    if doc_id is None and demo_path is None:
+        return []
+
+    if doc_id is None:
+        doc = DocInfo.find_by_path(path=demo_path.lower())
+    else:
+        doc = DocInfo.find_by_id(item_id=doc_id)
+
+    if doc is None:
+        return []
 
     user_ctx = UserContext.from_one_user(u=user)
-    doc = DocEntry.find_by_id(doc_id=doc_id)
+
     pars = doc.document.get_paragraphs()
 
     tasks = []
 
-    for par in pars:
-        if par.attrs.get(attr_name) == ide_task_id:
-            tasks.append(user_plugin_data(doc=doc, par=par, user_ctx=user_ctx))
+    for p in pars:
+        if p.attrs.get(ide_task_tag) is not None:
+            tasks.append(
+                user_plugin_data(
+                    doc=doc,
+                    par=p,
+                    user_ctx=user_ctx,
+                    ide_task_id=p.attrs.get(ide_task_tag),
+                )
+            )
 
-    # TODO: Multiple tasks with the same id -> Combine code files for the same task
-    # TODO: Paths according the language
     return tasks
 
 
+def ide_task_by_id(
+        user: User,
+        ide_task_id: str,
+        ide_task_tag: str,
+        doc_id: int = None,
+        doc_path: str = None,
+) -> json:
+    """
+    Get TIDE-task from the document by document id and paragraph id
+    :param ide_task_tag: Tag that identifies the TIDE-task
+    :param ide_task_id:  TIDE-task id
+    :param user: Logged-in user
+    :param doc_id:  Document id
+    :param doc_path:  Document path
+    :return: JSON with TIDE-task ide-files, task info and task id
+    """
+    if doc_id is None and doc_path is None:
+        return []
+
+    if doc_path is None:
+        doc = DocInfo.find_by_id(item_id=doc_id)
+    else:
+        doc = DocInfo.find_by_path(path=doc_path.lower())
+
+    if doc is None:
+        return []
+
+    user_ctx = UserContext.from_one_user(u=user)
+
+    pars = doc.document.get_paragraphs()
+
+    if pars is None:
+        return []
+
+    if len(pars) == 1:
+        if pars[0].attrs.get(ide_task_tag) == ide_task_id:
+            return user_plugin_data(doc=doc, par=pars[0], user_ctx=user_ctx)
+        else:
+            return []
+
+    task = []
+
+    for par_id, par in pars:
+        if par.attrs.get(ide_task_tag) == ide_task_id:
+            task.append(user_plugin_data(doc=doc, par=par, user_ctx=user_ctx))
+
+    # TODO: support if there are multiple tasks with the same id
+
+    return task
+
+
 def user_plugin_data(
-        doc: DocInfo, par, user_ctx: UserContext, plugin: Plugin = None
+        doc: DocInfo,
+        par,
+        user_ctx: UserContext,
+        plugin: Plugin = None,
+        ide_task_id: str = None,
 ) -> json:
     """
     Get the TIDE-task information from the plugin
+    :param ide_task_id:  TIDE-task id
     :param plugin: Tim plugin
     :param doc: TIM document
     :param par: Paragraph from the document
@@ -153,7 +247,6 @@ def user_plugin_data(
 
     view_ctx = default_view_ctx
 
-    # Get the plugin from the paragraph
     if plugin is None:
         plugin = Plugin.from_paragraph(par, view_ctx, user_ctx)
 
@@ -195,4 +288,19 @@ def user_plugin_data(
         "task_id": task_id,
         "document_id": doc.id,
         "paragraph_id": par.id,
+        "ide_task_id": ide_task_id,
     }
+
+
+def is_ide_course_by_tag(tag_name: str, doc: DocInfo):
+    """
+    :param tag_name: Name of the tag that identifies the TIDE-course
+    :param doc:  Document that is checked
+    :return: True if the document has the tag that identifies the TIDE-course
+    TODO: This is probably not needed
+    """
+    # Get the tags from the document
+    tags = doc.block.tags
+
+    # If the document has the tag that identifies the TIDE-task
+    return any(tag_name in str(tag) for tag in tags)

@@ -25,7 +25,6 @@ class Scope(Enum):
     profile = "profile"
 
 
-
 @dataclass
 class OAuth2Client(ClientMixin):
     """
@@ -47,7 +46,7 @@ class OAuth2Client(ClientMixin):
     allowed_scopes: list[Scope] = field(default_factory=list)
     """Resource scopes that the client can ask for. Scopes are used to limit what REST API can be used."""
 
-    token_endpoint_auth_method = "client_secret_post"
+    token_endpoint_auth_method: str = "client_secret_post"
     """How the client authenticates itself with TIM. Allowed values:
         *  "none": The client is a public client as defined in OAuth 2.0,
             and does not have a client secret.
@@ -71,7 +70,7 @@ class OAuth2Client(ClientMixin):
         * implicit
         * client_credentials
         * password
-        
+
     More custom grant types are allowed.
     """
 
