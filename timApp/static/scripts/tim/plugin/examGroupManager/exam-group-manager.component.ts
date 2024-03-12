@@ -1067,8 +1067,7 @@ export class ExamGroupManagerComponent
         };
         const resp = await to2(showUserImportDialog(importDialogParams));
         if (resp.ok) {
-            const newUsers: GroupMember[] = resp.result;
-            this.getMembersOf(group).push(...newUsers);
+            await this.getGroupMembers(group);
         }
     }
 
