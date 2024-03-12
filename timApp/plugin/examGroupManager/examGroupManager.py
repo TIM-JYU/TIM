@@ -682,7 +682,17 @@ def import_users_to_group(group_id: int) -> Response:
     users: list[User] = []
     ugs: list[tuple[UserGroup, str]] = []
     for data in udata:
-        einfo, lname, fname = data.split(" ")
+        data = data.strip()
+        if not data:
+            continue
+        parts = data.split(" ")
+        if len(parts) < 3:
+            raise RouteException(
+                f"Invalid data: {data}. Expected format: <email> <surname> <given_name>"
+            )
+        if len(parts) > 3:
+            parts = parts[:3]
+        einfo, lname, fname = parts
 
         # dummy_uname: str = str(
         #     base64.urlsafe_b64encode(
