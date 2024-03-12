@@ -23,16 +23,25 @@ export interface UserImportDialogParams {
             <ng-container body>
                 <form #form="ngForm">
                     <div class="instructions" i18n>
-                        <span>
-                            If your school uses Wilma, you can import students by copy-pasting the student list from Wilma.
-                            <br>
+                        <p>
+                            If your school uses Wilma, you can import students by copy-pasting the student list from
+                            Wilma.
+                        </p>
+                        <p>
                             The required format for the input is as follows:
+                        </p>
                         <pre>< class > < last name > < first name ></pre>
+                        <p>
                             For example:
+                        </p>
                         <pre>9b Duck Donald<br>9b Duck Daisy<br>9c Duck Scrooge</pre>
-                            Students are separated by line-breaks so that one line of text represents one student. 
+                        <p>
+                            Students are separated by line-breaks so that one line of text represents one student.
                             Each piece of information (class, last name, first name) is separated by a single space.
-                        </span>
+                        </p>
+                        <p>
+                            You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table.
+                        </p>
                     </div>
 
                     <div class="form-group">
@@ -44,7 +53,7 @@ export interface UserImportDialogParams {
 
                     </div>
                 </form>
-                
+
                 <tim-alert *ngIf="message" severity="danger">
                     <ng-container *ngIf="message">
                         {{ message }}
