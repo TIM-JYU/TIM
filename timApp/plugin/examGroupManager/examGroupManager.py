@@ -685,13 +685,11 @@ def import_users_to_group(group_id: int) -> Response:
         data = data.strip()
         if not data:
             continue
-        parts = data.split(" ")
+        parts = data.split(" ", 2)
         if len(parts) < 3:
             raise RouteException(
                 f"Invalid data: {data}. Expected format: <email> <surname> <given_name>"
             )
-        if len(parts) > 3:
-            parts = parts[:3]
         einfo, lname, fname = parts
 
         # dummy_uname: str = str(
