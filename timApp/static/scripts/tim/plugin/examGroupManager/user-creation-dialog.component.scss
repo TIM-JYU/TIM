@@ -4,3 +4,17 @@
 .col-sm-10 {
   width: 75%;
 }
+
+.mandatory {
+  color: #d10000;
+  font-size: 0.8em;
+}
+
+.mandatory-asterisk {
+  padding-left: 1em;
+}
+
+.mandatory-expl {
+    font-size: 0.8em;
+    padding-left: 1em;
+}

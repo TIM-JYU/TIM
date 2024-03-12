@@ -49,7 +49,7 @@ export interface UserCreationDialogParams {
                     </ng-container>
 
                     <div class="form-group">
-                        <label i18n for="given_name" class="col-sm-2 control-label">First name(s)</label>
+                        <label for="given_name" class="col-sm-2 control-label"><ng-container i18n>First name(s)</ng-container> <span class="mandatory-asterisk">(<i class="glyphicon glyphicon-asterisk mandatory"></i>)</span></label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text" required
                                    [(ngModel)]="given_name" #firstName="ngModel"
@@ -62,7 +62,7 @@ export interface UserCreationDialogParams {
                     </div>
 
                     <div class="form-group">
-                        <label i18n for="surname" class="col-sm-2 control-label">Surname</label>
+                        <label for="surname" class="col-sm-2 control-label"><ng-container i18n>Surname</ng-container> <span class="mandatory-asterisk">(<i class="glyphicon glyphicon-asterisk mandatory"></i>)</span></label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
                                    [(ngModel)]="surname" #surName="ngModel"
@@ -96,7 +96,10 @@ export interface UserCreationDialogParams {
                                    placeholder="User's email">
                         </div>
                     </div>
-
+                    
+                    <p class="mandatory-expl">
+                        (<i class="glyphicon glyphicon-asterisk mandatory"></i>) = <ng-container i18n>required field</ng-container>
+                    </p>
                 </form>
 
                 <tim-alert *ngIf="firstName.invalid && firstName.dirty" severity="danger">
