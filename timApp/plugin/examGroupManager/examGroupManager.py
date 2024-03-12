@@ -551,30 +551,6 @@ def get_members(group_id: int) -> Response:
     return json_response(status_code=200, jsondata=data)
 
 
-# FIXME: Review
-def check_usergroup_permissions(
-    group_id: int, user: User | None = None, action: str | None = None
-) -> None | Response:
-    from timApp.user.groups import verify_groupadmin
-
-    if not user:
-        from timApp.auth.sessioninfo import get_current_user_object
-
-        user = get_current_user_object()
-    current_user = user
-    ugd: UserGroupDoc = run_sql(select(UserGroupDoc).filter_by(group_id=group_id).limit(1)).scalars().first()  # type: ignore
-    ug_doc = get_doc_or_abort(ugd.doc_id)
-
-    if not verify_groupadmin(user=current_user, action=action) or not verify_ownership(
-        b=ug_doc
-    ):
-        return json_response(
-            status_code=403,
-            jsondata={"result": {"ok": False, "error": "Insufficient permissions."}},
-        )
-    return None
-
-
 @exam_group_manager_plugin.post("/copyMembers")
 def copy_members(from_id: int, to_id: int) -> Response:
     """
@@ -668,16 +644,14 @@ def do_create_users(
     return user, extra_data
 
 
-# FIXME: Review
 @exam_group_manager_plugin.post("/importUsers/<int:group_id>")
-def import_users_to_group(group_id: int) -> Response:
+def import_users_to_group(group_id: int, text: str) -> Response:
     group = UserGroup.get_by_id(group_id)
     if not group:
         raise NotExist(f"Group with ID {group_id} does not exist.")
 
-    check_usergroup_permissions(group_id)
-    text: str = request.get_json().get("text")
-    # TODO sanitize json
+    _verify_exam_group_access(group)
+
     udata = text.splitlines()
     users: list[User] = []
     ugs: list[tuple[UserGroup, str]] = []
@@ -692,67 +666,10 @@ def import_users_to_group(group_id: int) -> Response:
             )
         einfo, lname, fname = parts
 
-        # dummy_uname: str = str(
-        #     base64.urlsafe_b64encode(
-        #         f"{einfo}{lname + fname}{time.time_ns()}".encode()
-        #     ),
-        #     encoding="utf-8",
-        # )
-        # dummy_pass: str = str(
-        #     base64.urlsafe_b64encode(
-        #         f"{einfo}{fname + lname}{time.time_ns()}".encode()
-        #     ),
-        #     encoding="utf-8",
-        # )
-        #
-        # dummy_email: str = str(
-        #     base64.urlsafe_b64encode(f"{einfo}{lname}{time.time_ns()}".encode()),
-        #     encoding="utf-8",
-        # )
-        # dummy_email = f"{dummy_email}@example.com"
-        #
-        # ui: UserInfo = UserInfo(
-        #     username=dummy_uname,
-        #     given_name=fname,
-        #     last_name=lname,
-        #     full_name=f"{lname} {fname}",
-        #     email=dummy_email,
-        #     password=dummy_pass,
-        # )
-        #
-        # user, ug = User.create_with_group(ui)
-        # ugs.append((ug, einfo))
-
         user, _ = do_create_users(group_id, lname, fname, einfo)
         users.append(user)
 
-    # TODO find a way to get rid of db commits that are currently needed
-    #      so we can get references to eg. new usergroup ids
-    # db.session.flush()
-
-    # For some reason Mypy gets confused here, so we will just ignore it for now
-    data = list()  # type: ignore
-    # from timApp.auth.sessioninfo import get_current_user_object
-    # current_user = get_current_user_object()
-    for user in users:
-        # user.add_to_group(group, current_user)
-        # ug = user.get_personal_group()
-        data.append(  # type: ignore
-            {
-                "id": user.get_personal_group().id,
-                "name": user.name,
-                "email": user.email,
-                "real_name": user.real_name,
-            }
-        )
-
-    # db.session.commit()
-    json_data = json.dumps(data)
-
-    return json_response(
-        status_code=200,
-        jsondata=json_data,
-    )
+    return ok_response()
 
 
 @exam_group_manager_plugin.post("/generateCodes")
