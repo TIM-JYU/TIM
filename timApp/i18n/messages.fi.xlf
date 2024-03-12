@@ -8914,7 +8914,7 @@
       </trans-unit>
       <trans-unit id="1392223819399449504" datatype="html">
         <source>Number of students</source>
-        <target state="translated">Opiskelijamäärä</target>
+        <target state="translated">Oppilasmäärä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
           <context context-type="linenumber">120,121</context>
@@ -9002,7 +9002,7 @@
       </trans-unit>
       <trans-unit id="7259493919346164577" datatype="html">
         <source>User's given name, list first and middle names in order</source>
-        <target state="translated">Käyttäjän etunimet, listaa etunimi ja keskimmäinen nimi järjestyksessä</target>
+        <target state="translated">Oppilaan etunimet, listaa etunimi ja keskimmäinen nimi järjestyksessä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">64,65</context>
@@ -9018,7 +9018,7 @@
       </trans-unit>
       <trans-unit id="1873235879343846913" datatype="html">
         <source>User's surname</source>
-        <target state="translated">Käyttäjän sukunimi</target>
+        <target state="translated">Oppilaan sukunimi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">78,79</context>
@@ -9138,7 +9138,7 @@
       </trans-unit>
       <trans-unit id="1392223819399449504" datatype="html">
         <source>Number of students</source>
-        <target state="translated">Opiskelijamäärä</target>
+        <target state="translated">Oppilasmäärä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
           <context context-type="linenumber">120,121</context>
@@ -9230,7 +9230,7 @@
       </trans-unit>
       <trans-unit id="7259493919346164577" datatype="html">
         <source>User's given name, list first and middle names in order</source>
-        <target state="translated">Käyttäjän etunimet, listaa etunimi ja keskimmäinen nimi järjestyksessä</target>
+        <target state="translated">Oppilaan etunimet, listaa etunimi ja keskimmäinen nimi järjestyksessä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">64,65</context>
@@ -9246,7 +9246,7 @@
       </trans-unit>
       <trans-unit id="1873235879343846913" datatype="html">
         <source>User's surname</source>
-        <target state="translated">Käyttäjän sukunimi</target>
+        <target state="translated">Oppilaan sukunimi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">78,79</context>
@@ -9254,7 +9254,7 @@
       </trans-unit>
       <trans-unit id="3797679965749234166" datatype="html">
         <source>Additional information related to the user, eg. class or group name</source>
-        <target state="translated">Lisätietoa käyttäjästä, esim. luokka tai opetusryhmä</target>
+        <target state="translated">Lisätietoa oppilaasta, esim. luokka tai opetusryhmä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">89,90</context>
@@ -9402,7 +9402,7 @@
       </trans-unit>
       <trans-unit id="7773543288179248511" datatype="html">
         <source>Exam group members</source>
-        <target state="translated">Koeryhmän jäsenet</target>
+        <target state="translated">Koeryhmän oppilaat</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">301,302</context>
@@ -9534,7 +9534,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="4522126822651023664" datatype="html">
         <source>Delete member</source>
-        <target state="translated">Poista opiskelija</target>
+        <target state="translated">Poista oppilas</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">367,368</context>
@@ -9590,7 +9590,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="8481761772485093570" datatype="html">
         <source> Review and correct student answers </source>
-        <target state="translated"> Katsele ja korjaa opiskelijoiden vastauksia </target>
+        <target state="translated"> Katsele ja korjaa oppilaiden vastauksia </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">453</context>
@@ -9969,7 +9969,7 @@ Jatketaanko?</target>
       <trans-unit id="5367871428395336991" datatype="html">
         <source>Are you sure you want to interrupt the exam while it is running?
 If you want to end the exam, use the "End exam" buttons.</source>
-        <target state="translated">Haluatko varmasti keskeyttää menossa oleva koe?
+        <target state="translated">Haluatko varmasti keskeyttää menossa olevan kokeen?
 Jos haluat lopettaa koe, käytä "Lopeta koe" -painikkeita.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
@@ -10070,6 +10070,14 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1005,1004</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3312128942466852245" datatype="html">
+        <source>required field</source>
+        <target state="translated">vaadittu kenttä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">101</context>
         </context-group>
       </trans-unit>
     </body>

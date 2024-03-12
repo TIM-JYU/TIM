@@ -672,7 +672,10 @@ def import_users_to_group(group_id: int, text: str) -> Response:
         parts = data.split(" ", 2)
         if len(parts) < 3:
             raise RouteException(
-                f"Invalid data: {data}. Expected format: <email> <surname> <given_name>"
+                gettext(
+                    "Invalid student row: %(data)s. Expected format: <grade> <surname> <given_names>",
+                    data=data,
+                )
             )
         einfo, lname, fname = parts
 

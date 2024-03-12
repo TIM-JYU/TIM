@@ -9786,6 +9786,14 @@ Please generate login codes first.</target>
           <context context-type="linenumber">1005,1004</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3312128942466852245" datatype="html">
+        <source>required field</source>
+        <target state="new">required field</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-creation-dialog.component.ts</context>
+          <context context-type="linenumber">101</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

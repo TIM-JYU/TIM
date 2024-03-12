@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-03-05 11:32+0000\n"
-"PO-Revision-Date: 2024-03-05 16:22+0200\n"
+"POT-Creation-Date: 2024-03-12 09:45+0000\n"
+"PO-Revision-Date: 2024-03-12 12:46+0200\n"
 "Last-Translator: \n"
 "Language-Team: fi <LL@li.org>\n"
 "Language: fi\n"
@@ -19,11 +19,19 @@ msgstr ""
 "Generated-By: Babel 2.12.1\n"
 "X-Generator: Poedit 3.1\n"
 
-#: plugin/examGroupManager/examGroupManager.py:800
+#: plugin/examGroupManager/examGroupManager.py:675
+#, python-format
+msgid ""
+"Invalid student row: %(data)s. Expected format: <grade> <surname> <given_names>"
+msgstr ""
+"Vääränmuotoinen oppilasrivi: %(data)s. Odotettu muoto: <luokka> <sukunimi> "
+"<etunimet>"
+
+#: plugin/examGroupManager/examGroupManager.py:741
 msgid "Practice exam not set in the plugin markup."
 msgstr "Harjoituskoe ei ole asetettu pluginin asetuksissa."
 
-#: plugin/examGroupManager/examGroupManager.py:842
+#: plugin/examGroupManager/examGroupManager.py:785
 msgid ""
 "No login codes found for the group. Generate login codes before starting the "
 "exam."
@@ -31,17 +39,17 @@ msgstr ""
 "Kirjautumiskoodeja ei löydetty koeryhmälle. Luo uudet kirjautumiskoodit ennen "
 "kuin aloitat kokeen."
 
-#: plugin/examGroupManager/examGroupManager.py:868
+#: plugin/examGroupManager/examGroupManager.py:811
 msgid "The group is currently not in an exam. Please set the exam document first."
 msgstr ""
 "Koeryhmällä ei ole tällä hetkellä koedokumenttia. Aseta ryhmälle sopiva "
 "koedokumentti."
 
-#: plugin/examGroupManager/examGroupManager.py:877
+#: plugin/examGroupManager/examGroupManager.py:820
 msgid "You do not have access to the exam document."
 msgstr "Sinulla ei ole pääsyä koedokumenttiin."
 
-#: plugin/examGroupManager/examGroupManager.py:1017
+#: plugin/examGroupManager/examGroupManager.py:960
 msgid "You do not have sufficient access to the exam document to set it."
 msgstr "Sinulla ei ole tarpeeksi korkeaa oikeutta koedokumenttiin."
 

@@ -128,10 +128,11 @@ export interface UserCreationDialogParams {
 
             </ng-container>
             <ng-container footer>
-                <button i18n class="timButton" type="button" (click)="saveUser()" [disabled]="form.invalid">
+                <tim-loading *ngIf="loading"></tim-loading>
+                <button i18n class="timButton" type="button" (click)="saveUser()" [disabled]="form.invalid || loading">
                     Add
                 </button>
-                <button i18n class="btn btn-default" type="button" (click)="dismiss()">
+                <button i18n class="btn btn-default" type="button" (click)="dismiss()" [disabled]="loading">
                     Cancel
                 </button>
             </ng-container>
@@ -151,6 +152,7 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
     email: string = "";
     hiddenFields?: string[];
     message?: string;
+    loading = false;
 
     constructor(private http: HttpClient) {
         super();
@@ -161,6 +163,7 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
     }
 
     async saveUser(): Promise<void> {
+        this.loading = true;
         const url = `/examGroupManager/addMember/${this.data.group}`;
         const response = await toPromise(
             this.http.post<GroupMember>(url, {
@@ -171,6 +174,7 @@ export class UserCreationDialogComponent extends AngularDialogComponent<
                 extra_info: this.extra_info ?? "",
             })
         );
+        this.loading = false;
 
         if (response.ok) {
             this.close(response.result);
