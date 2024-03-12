@@ -1065,9 +1065,10 @@ export class ExamGroupManagerComponent
             group: group.id,
         };
         const resp = await to2(showUserImportDialog(importDialogParams));
-        if (resp.ok) {
-            await this.getGroupMembers(group);
+        if (!resp.ok) {
+            return;
         }
+        await this.getGroupMembers(group);
     }
 
     async removeMember(group: ExamGroup, member: GroupMember) {
