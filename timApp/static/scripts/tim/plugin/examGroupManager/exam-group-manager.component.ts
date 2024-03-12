@@ -231,7 +231,7 @@ export class ToggleComponent {
                 </span>
             </div>
             <fieldset [disabled]="loading">
-                <bootstrap-panel id="groups-panel" title="All exam groups" i18n-title>
+                <bootstrap-panel id="groups-panel" title="1. Manage exam groups" i18n-title>
                     <div id="list-all-groups-setting">
                         <label for="showAllGroups">
                             <input type="checkbox" id="showAllGroups" name="showAllGroups" [(ngModel)]="showAllGroups"
@@ -296,7 +296,7 @@ export class ToggleComponent {
                         <button class="timButton" (click)="createNewGroup()" i18n>Create a new exam group</button>
                     </div>
                 </bootstrap-panel>
-                <bootstrap-panel title="Manage exam groups" i18n-title>
+                <bootstrap-panel title="2. Manage students" i18n-title>
                     <tabset class="merged">
                         <!-- Create a new tab for each group that is visible to the current user -->
                         <tab *ngFor="let group of visibleGroups"
@@ -408,7 +408,7 @@ export class ToggleComponent {
                         </tab>
                     </tabset>
                 </bootstrap-panel>
-                <bootstrap-panel title="Manage exams" i18n-title>
+                <bootstrap-panel title="3. Manage exams" i18n-title>
                     <tabset class="merged">
                         <tab *ngFor="let group of visibleGroups"
                              heading="{{group.readableName}}"
@@ -416,7 +416,10 @@ export class ToggleComponent {
                              [id]="group.name"
                              (selectTab)="group.selected = true; onGroupTabSelected($event)"
                              (deselect)="group.selected = false">
-
+                            
+                            <tim-alert severity="success" *ngIf="examReset" i18n>
+                                The exam is now ended and login codes are disabled. You can now select and start another exam below.
+                            </tim-alert>
                             <p *ngIf="!group.currentExamDoc" i18n>
                                 Begin by selecting the exam to be organized for the group.
                             </p>
@@ -655,6 +658,9 @@ export class ToggleComponent {
                         </tab>
                     </tabset>
                 </bootstrap-panel>
+                <bootstrap-panel title="4. Show answers to students" i18n-title>
+                    <span class="text-muted" i18n>This feature will become available after April 1st</span>
+                </bootstrap-panel>
             </fieldset>
         </form>
     `,
@@ -693,6 +699,8 @@ export class ExamGroupManagerComponent
 
     // status info for group members table
     loading: boolean = false;
+
+    examReset: boolean = false;
 
     @Input() eventHeading?: string;
     private viewctrl!: Require<ViewCtrl>;
@@ -1378,6 +1386,7 @@ export class ExamGroupManagerComponent
         await this.setExamState(group, 0);
         await this.selectExam(group, null);
         this.refreshGroupExamState(group);
+        this.examReset = true;
     }
 
     getGroupCurrentExamInfo(group: ExamGroup) {
@@ -1470,6 +1479,7 @@ export class ExamGroupManagerComponent
     }
 
     async confirmSelectExam(group: ExamGroup, examDoc: number) {
+        this.examReset = false;
         const prevExam = group.currentExamDoc;
 
         if (
