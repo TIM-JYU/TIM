@@ -68,6 +68,7 @@ export interface ExamGroup extends IGroup {
     selected?: boolean;
     allMembersSelected?: boolean;
     examDocId?: number;
+    memberCount: number;
     currentExamDoc?: number;
     examState: number;
     loginCodesActive: boolean;
@@ -264,7 +265,7 @@ export class ToggleComponent {
                                 <td *ngIf="isAdmin() && this.viewOptions?.groups?.document">
                                     <a href="/view/{{group.admin_doc_path}}">{{ getGroupDocPath(group) }}</a>
                                 </td>
-                                <td *ngIf="this.viewOptions?.groups?.memberCount">{{ getGroupMemberCount(group) }}</td>
+                                <td *ngIf="this.viewOptions?.groups?.memberCount">{{ group.memberCount }}</td>
                                 <td *ngIf="this.viewOptions?.groups?.exam">{{ examByDocId.get(group.examDocId ?? -1)?.name ?? "-" }}</td>
                                 <td *ngIf="this.viewOptions?.groups?.timeslot"> -</td>
                                 <td>
@@ -420,8 +421,8 @@ export class ToggleComponent {
                                 Begin by selecting the exam to be organized for the group.
                             </p>
                             <div class="select-exam">
-                                <label for="current-exam-doc" i18n>Select exam</label>
-                                <select id="current-exam-doc" name="current-exam-doc" class="form-control"
+                                <label for="current-exam-doc-{{group.id}}" i18n>Select exam</label>
+                                <select id="current-exam-doc-{{group.id}}" name="current-exam-doc-{{group.id}}" class="form-control"
                                         [ngModel]="group.currentExamDoc"
                                         (ngModelChange)="confirmSelectExam(group, $event)">
                                     <option *ngIf="markup['practiceExam']"
@@ -747,10 +748,6 @@ export class ExamGroupManagerComponent
         }
 
         await this.getGroups();
-
-        // for (const g of this.visibleGroups) {
-        //     await this.getGroupMembers(g);
-        // }
     }
 
     /**
@@ -1035,6 +1032,7 @@ export class ExamGroupManagerComponent
             return;
         }
         this.members[group.name] = resp.result;
+        group.memberCount = resp.result.length;
     }
 
     /**
@@ -1052,6 +1050,7 @@ export class ExamGroupManagerComponent
         if (resp.ok) {
             const newUser: GroupMember = resp.result;
             this.getMembersOf(group).push(newUser);
+            group.memberCount++;
         }
     }
 
@@ -1096,6 +1095,7 @@ export class ExamGroupManagerComponent
         }
         const members = this.getMembersOf(group);
         members.splice(members.indexOf(member), 1);
+        group.memberCount--;
 
         this.loading = false;
     }
@@ -1139,6 +1139,7 @@ export class ExamGroupManagerComponent
             for (const s of selected) {
                 members.splice(members.indexOf(s), 1);
             }
+            group.memberCount = members.length;
         }
     }
 

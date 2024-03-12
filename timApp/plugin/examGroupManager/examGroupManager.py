@@ -403,6 +403,15 @@ def get_groups(
         .unique()
         .all()
     )
+    group_member_counts: Sequence[Row[tuple[int, int]]] = run_sql(
+        select(UserGroupMember.usergroup_id, func.count(UserGroupMember.user_id))
+        .filter(
+            UserGroupMember.usergroup_id.in_([g.id for g, _ in groups_docs])
+            & membership_current
+        )
+        .group_by(UserGroupMember.usergroup_id)
+    ).all()
+    group_member_counts_dict = {gid: count for gid, count in group_member_counts}
     return json_response(
         [
             {
@@ -411,6 +420,7 @@ def get_groups(
                 "readableName": ug_docs[admin_doc_id].title,
                 "path": ug_docs[admin_doc_id].path,
                 "isDirectOwner": curr_user in ug_docs[admin_doc_id].owners,
+                "memberCount": group_member_counts_dict.get(g.id, 0),
                 **_get_exam_group_data_global(g).to_json(),
             }
             for g, admin_doc_id in groups_docs
