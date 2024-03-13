@@ -683,7 +683,7 @@ def get_users_for_tasks_py(
         answer_filter = true()
 
     userid_filter: Any = true()
-    if user_ids:
+    if user_ids is not None:
         userid_filter = UserAnswer.user_id.in_(user_ids)
 
     user_answers_query = (
