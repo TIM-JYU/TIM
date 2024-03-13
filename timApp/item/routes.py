@@ -1392,8 +1392,14 @@ def create_item_direct(
         if errors:
             raise RouteException(errors)
         df.title = item_title
-        # TODO: Anonymous access granted for current use case, in future this should be removed
-        grant_access(UserGroup.get_anonymous_group(), df, AccessType.view)
+        index_page = DocEntry.find_by_path(df.path + "/index")
+        if index_page:
+            index_page.title = item_title
+        preamble = DocEntry.find_by_path(df.path + "/templates/preambles/preamble")
+        if preamble:
+            macros = preamble.document.get_settings().get_dict().get("macros", {})
+            macros["homepath"] = df.location
+            preamble.document.add_setting("macros", macros)
         db.session.commit()
         return df
 

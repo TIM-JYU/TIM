@@ -442,16 +442,26 @@ export class ReviewController {
                     !isFullCoord(placeInfo.end) ||
                     !element
                 ) {
+                    let placement: AnnotationPlacement;
+                    if (
+                        this.vctrl.getAnswerBrowser(a.answer!.task_id)?.review
+                    ) {
+                        // regular velps, but reviewhtml with <pre> tags failed to load
+                        placement = AnnotationPlacement.InMarginOnly;
+                    } else {
+                        // If the coordinates exist but the review element does not yet,
+                        // we don't know yet if the annotation can be successfully placed in text.
+                        placement =
+                            !isFullCoord(placeInfo.start) ||
+                            !isFullCoord(placeInfo.end)
+                                ? AnnotationPlacement.InMarginOnly
+                                : AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned;
+                    }
                     this.addAnnotationToMargin(
                         par,
                         a,
                         AnnotationAddReason.LoadingExisting,
-                        // If the coordinates exist but the review element does not, we don't know yet if the annotation can be
-                        // successfully placed in text.
-                        !isFullCoord(placeInfo.start) ||
-                            !isFullCoord(placeInfo.end)
-                            ? AnnotationPlacement.InMarginOnly
-                            : AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned
+                        placement
                     );
                     continue;
                 }
