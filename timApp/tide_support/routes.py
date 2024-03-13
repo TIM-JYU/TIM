@@ -1,18 +1,22 @@
 import base64
 import json
 from dataclasses import dataclass
+from typing import Union
 
 from bs4 import BeautifulSoup
 from marshmallow import EXCLUDE
 
+from timApp.answer.answers import save_answer
+from timApp.answer.routes import answers, post_answer, InputAnswer, post_answer_impl
 from timApp.bookmark.bookmarks import MY_COURSES_GROUP
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import default_view_ctx
+from timApp.document.viewcontext import default_view_ctx, OriginInfo
 from timApp.plugin.containerLink import render_plugin_multi
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, PluginWrap
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
+from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
 from tim_common.marshmallow_dataclass import class_schema
@@ -64,6 +68,10 @@ class TIDETaskInfo:
     """
     Number of answers for the task
     """
+
+    # Might be needed to require this
+    type: str | None = None
+    """ Type of the file """
 
 
 TIDETaskInfoSchema = class_schema(TIDETaskInfo)()
@@ -278,18 +286,70 @@ def user_plugin_data(
         ide_files = IdeFileSchema.load(
             plugin_json["markup"]["files"], many=True, unknown=EXCLUDE
         )
+        json_ide_files = [file.to_json() for file in ide_files]
+
     # If the plugin has only one file TODO: check if this is correct
     else:
-        ide_files = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
+        ide_file = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
+        if ide_file.path is None and task_info.type is not None:
+            ide_file.path = "main." + task_info.type
+        json_ide_files = ide_file.to_json()
 
     return {
-        "ide_files": ide_files.to_json(),
+        "ide_files": json_ide_files,
         "task_info": task_info,
         "task_id": task_id,
         "document_id": doc.id,
         "paragraph_id": par.id,
         "ide_task_id": ide_task_id,
     }
+
+
+def submit_task(user_code: str, task_id_ext: str, user: User):
+    """
+    Submit the TIDE-task
+    :param task_id_ext:
+    :param task_data:  Data from the TIDE-task
+    :return: True if the task was submitted successfully
+    """
+    task_id_ext2 = "60.pythontesti"
+
+    user_id = user.id
+
+    input = {
+        "isInput": False,
+        "nosave": False,
+        "type": "py",
+        "uploadedFiles": [],
+        "userargs": "",
+        "usercode": "print('Hello OP! JOUJOU!')",
+        "userinput": "",
+    }
+
+    origin = OriginInfo(doc_id=60, par_id="Xelt2CQGvUwL")
+
+    brow_data = {
+        "answer_id": 15,
+        "answernr": 1,
+        "giveCustomPoints": False,
+        "points": None,
+        "saveAnswer": True,
+        "saveTeacher": False,
+        "teacher": False,
+        "userId": user.id,
+    }
+
+    return post_answer_impl(
+        task_id_ext=task_id_ext2,
+        answerdata=input,
+        answer_browser_data=brow_data,
+        answer_options={},
+        curr_user=user,
+        urlmacros=(),
+        other_session_users=[],
+        origin=origin,
+        error=None,
+    )
 
 
 def is_ide_course_by_tag(tag_name: str, doc: DocInfo):

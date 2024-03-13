@@ -222,7 +222,7 @@ class DocSettings:
         return self.__dict.get(self.css_key)
 
     def get_macroinfo(
-            self, view_ctx: ViewContext, user_ctx: UserContext | None = None
+        self, view_ctx: ViewContext, user_ctx: UserContext | None = None
     ) -> MacroInfo:
         cache_key = (
             view_ctx,
@@ -252,7 +252,7 @@ class DocSettings:
         return mi.with_field_macros()
 
     def get_texmacroinfo(
-            self, view_ctx: ViewContext, user_ctx: UserContext | None = None
+        self, view_ctx: ViewContext, user_ctx: UserContext | None = None
     ) -> MacroInfo:
         return MacroInfo(
             view_ctx,
