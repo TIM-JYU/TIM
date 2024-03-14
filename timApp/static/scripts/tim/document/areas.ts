@@ -15,6 +15,7 @@ import {$http} from "tim/util/ngimport";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {onClick} from "tim/document/eventhandlers";
 import type {INameAreaOptions} from "tim/document/editing/name-area-dialog.component";
+import {instance} from "tim/plugin/timTable/toolbarUtils";
 
 export class AreaHandler {
     public selectedAreaName: string | undefined;
@@ -27,6 +28,9 @@ export class AreaHandler {
 
         onClick(".areaexpand, .areacollapse", ($this, e) => {
             if (
+                $(e.target).hasClass("no-areaexpand") ||
+                (e.target.tagName == "INPUT" &&
+                    $(e.target).parents("no-areaexpand")) ||
                 $(e.target).hasClass("readline") ||
                 $(e.target).hasClass("editline") ||
                 $(e.target).hasClass("readsection") ||
