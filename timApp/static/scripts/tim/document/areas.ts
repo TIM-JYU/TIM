@@ -15,7 +15,6 @@ import {$http} from "tim/util/ngimport";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {onClick} from "tim/document/eventhandlers";
 import type {INameAreaOptions} from "tim/document/editing/name-area-dialog.component";
-import {instance} from "tim/plugin/timTable/toolbarUtils";
 
 export class AreaHandler {
     public selectedAreaName: string | undefined;
