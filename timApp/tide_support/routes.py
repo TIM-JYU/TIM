@@ -227,11 +227,13 @@ def ide_task_by_id(
 
     task = []
 
-    for par_id, par in pars:
-        if par.attrs.get(ide_task_tag) == ide_task_id:
-            task.append(user_plugin_data(doc=doc, par=par, user_ctx=user_ctx))
+    for p in pars:
+        if p.attrs.get(ide_task_tag) == ide_task_id:
+            task.append(user_plugin_data(doc=doc, par=p, user_ctx=user_ctx))
 
-    # TODO: support if there are multiple tasks with the same id
+    # # In case multiple files with same names
+    # if len(task) > 1:
+    #     return task
 
     return task
 
@@ -305,24 +307,55 @@ def user_plugin_data(
     }
 
 
-def submit_task(user_code: str, task_id_ext: str, user: User):
+def submit_task(code_files: str | list[str], task_id_ext: str, user: User):
     """
     Submit the TIDE-task
+    :param user: Current user
+    :param code_files: Code files for the TIDE-task
     :param task_id_ext:
     :param task_data:  Data from the TIDE-task
     :return: True if the task was submitted successfully
     """
+
+    # TODO: this doesnt work yet
     task_id_ext2 = "60.pythontesti"
 
     user_id = user.id
+
+    uploaded_files = []
+
+    if code_files is None:
+        return False
+
+    # If the code_files is string, it is only one file and uploaded_files is empty list, if it is list, it is multiple
+    # files and first file is user_code
+    if code_files is str:
+        user_code = code_files
+    else:
+        uploaded_files = code_files
+        user_code = code_files[0]
+
+    # submitted_files = [
+    #     {
+    #         "source": "editor",
+    #         "path": "main.cc",
+    #         "content": '#include <stdio.h>\n#include "add.h"\n\nint main() {\n  printf("%d", add(1, 2));\n  return 0;\n}\n',
+    #     },
+    #     {
+    #         "source": "editor",
+    #         "path": "add.cc",
+    #         "content": "\nint add(int a, int b) {\n  return 0;\n}\n",
+    #     },
+    #     {"source": "editor", "path": "add.h", "content": "\nint add(int a, int b);"},
+    # ]
 
     input = {
         "isInput": False,
         "nosave": False,
         "type": "py",
-        "uploadedFiles": [],
+        "uploadedFiles": uploaded_files,
         "userargs": "",
-        "usercode": "print('Hello OP! JOUJOU!')",
+        "usercode": user_code,
         "userinput": "",
     }
 
