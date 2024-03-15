@@ -29,7 +29,7 @@ export interface UserCreationDialogParams {
 @Component({
     selector: "tim-user-creation-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [size]="'lg'">
             <ng-container i18n header>
                 Create user
             </ng-container>
