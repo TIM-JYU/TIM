@@ -1398,7 +1398,7 @@ def create_item_direct(
         preamble = DocEntry.find_by_path(df.path + "/templates/preambles/preamble")
         if preamble:
             macros = preamble.document.get_settings().get_dict().get("macros", {})
-            macros["homepath"] = df.location
+            macros["homepath"] = df.path
             preamble.document.add_setting("macros", macros)
         db.session.commit()
         return df

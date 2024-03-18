@@ -820,7 +820,7 @@ def get_sisu_assessments(
             f"Usergroup {seq_to_str(sorted(list(not_found_gs)))} not found."
         )
     for ug in ugs:
-        if not verify_group_view_access(ug, require=False):
+        if not verify_group_view_access(ug, user=teacher, require=False):
             raise AccessDenied(f'You do not have access to the group "{ug.name}".')
 
         # The group doesn't have to be a Sisu group, but if it is, perform a couple of checks.
