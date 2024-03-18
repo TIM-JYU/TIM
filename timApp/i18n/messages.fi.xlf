@@ -9002,7 +9002,7 @@
       </trans-unit>
       <trans-unit id="7259493919346164577" datatype="html">
         <source>User's given name, list first and middle names in order</source>
-        <target state="translated">Oppilaan etunimet, listaa etunimi ja keskimmäinen nimi järjestyksessä</target>
+        <target state="translated">Oppilaan etunimet, listaa etunimi ja keskimmäinen nimi tarvittaessa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">64,65</context>
