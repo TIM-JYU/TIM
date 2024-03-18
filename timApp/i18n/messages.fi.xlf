@@ -9762,7 +9762,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="1417286430246097816" datatype="html">
         <source>End exam for main group</source>
-        <target state="translated">Lopeta koe pääjoukolle</target>
+        <target state="translated">Lopeta koe ei-lisäajallisilta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">602,603</context>
@@ -9778,7 +9778,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="1330946910288373720" datatype="html">
         <source>End the exam for all students</source>
-        <target state="translated">Lopeta koe ei-lisäajallisilta</target>
+        <target state="translated">Lopeta koe kaikilta oppilailta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">619,620</context>
