@@ -9896,7 +9896,7 @@ Jatketaanko?</target>
       </trans-unit>
       <trans-unit id="7423988897349876240" datatype="html">
         <source>You first need to resume the exam by using the "Resume exam for main group" button.</source>
-        <target state="translated">Sinun tulee jatkaa koe käyttämällä "Jatka koe ei-lisäajallisille" -painikkeella.</target>
+        <target state="translated">Sinun tulee jatkaa koetta käyttämällä "Jatka koetta ei-lisäajallisille" -painiketta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1232,1231</context>
