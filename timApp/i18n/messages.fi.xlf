@@ -9574,7 +9574,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="7572057044047810946" datatype="html">
         <source> Complete each step below to hold an exam. The checklist updates automatically with the current progress. </source>
-        <target state="translated"> Suorita alla olevat välivaiheet aloittaaksesi koe. Tarkistuslista päivittyy automaattisesti nykytilanteen mukaan. </target>
+        <target state="translated"> Suorita alla olevat välivaiheet aloittaaksesi kokeen. Tarkistuslista päivittyy automaattisesti nykytilanteen mukaan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">461,462</context>
@@ -9630,7 +9630,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="5856526190707156104" datatype="html">
         <source> Press the toggle button to activate login codes for the exam group </source>
-        <target state="translated"> Ota kirjautumiskoodit käyttöön koeryhmälle oikealla olevalla painikkeella </target>
+        <target state="translated"> Ota koeryhmän kirjautumiskoodit käyttöön vieressä olevalla painikkeella </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">478</context>
@@ -9810,7 +9810,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="3927514884221500695" datatype="html">
         <source>Resume exam for all students</source>
-        <target state="translated">Jatka koe kaikille oppilaille</target>
+        <target state="translated">Jatka koetta kaikille oppilaille</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">633,634</context>
@@ -9928,7 +9928,7 @@ Jatketaanko?</target>
       </trans-unit>
       <trans-unit id="4185398656374961480" datatype="html">
         <source>Interrupt exam?</source>
-        <target state="translated">Keskytetäänkö koe?</target>
+        <target state="translated">Keskeytetäänkö koe?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1318,1317</context>
@@ -9938,7 +9938,7 @@ Jatketaanko?</target>
         <source>Are you sure you want to interrupt the exam while it is running?
 If you want to end the exam, use the "End exam" buttons.</source>
         <target state="translated">Haluatko varmasti keskeyttää menossa olevan kokeen?
-Tämä poistaa oppilailta oikeuden tallentaa vastauksia, muuta ei poista heitä koejärjestelmästä.
+Tämä poistaa oppilailta oikeuden tallentaa vastauksiaan, mutta se ei kirjaa heitä ulos koejärjestelmästä.
 Jos haluat lopettaa kokeen, käytä "Lopeta koe" -painikkeita.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
@@ -10083,7 +10083,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="5193118317089565942" datatype="html">
         <source>This feature will become available after April 1st</source>
-        <target state="translated">Tämä ominaisuus avataan 1. huhtikuuta jälkeen</target>
+        <target state="translated">Tämä ominaisuus avataan 1. huhtikuuta jälkeen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">659,660</context>
