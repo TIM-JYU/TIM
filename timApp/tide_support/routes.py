@@ -1,399 +1,146 @@
-import base64
-import json
-from dataclasses import dataclass
-from typing import Union
+from authlib.integrations.flask_oauth2 import current_token
+from flask import Response, request
 
-from bs4 import BeautifulSoup
-from marshmallow import EXCLUDE
+from timApp.auth.oauth2.models import Scope
+from timApp.auth.oauth2.oauth2 import require_oauth
 
-from timApp.answer.answers import save_answer
-from timApp.answer.routes import answers, post_answer, InputAnswer, post_answer_impl
-from timApp.bookmark.bookmarks import MY_COURSES_GROUP
-from timApp.document.docentry import DocEntry
-from timApp.document.docinfo import DocInfo
-from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import default_view_ctx, OriginInfo
-from timApp.plugin.containerLink import render_plugin_multi
-from timApp.plugin.plugin import Plugin, PluginRenderOptions, PluginWrap
-from timApp.plugin.pluginOutputFormat import PluginOutputFormat
-from timApp.plugin.taskid import TaskId
-from timApp.printing.printsettings import PrintFormat
+from timApp.tide_support.utils import (
+    user_ide_courses,
+    demos_by_doc,
+    ide_tasks,
+    ide_task_by_id,
+    submit_task,
+)
 from timApp.user.user import User
-from tim_common.marshmallow_dataclass import class_schema
+from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
+
+ide = TypedBlueprint("ide", __name__, url_prefix="/ide")
 
 
-@dataclass
-class IdeFile:
+@ide.get("ideCourses")
+@require_oauth(Scope.user_tasks.value)
+def get_user_ide_courses() -> Response:
     """
-    File that contains the code and path for one TIDE-task
-    """
-
-    by: str | None = None
-    """ Code of the file when plugin has only one file """
-
-    byCode: str | None = None
-    """ Code of the file when plugin has multiple files """
-
-    path: str | None = None
-    """ Path of the file for folder structure """
-
-    # Convert to json and set code based on 'by' or 'byCode'
-    def to_json(self):
-        return {
-            "code": self.by or self.byCode,
-            "path": self.path,
-        }
-
-
-IdeFileSchema = class_schema(IdeFile)()
-
-
-@dataclass
-class TIDETaskInfo:
-    """
-    Information about the TIDE-task
+    Get all courses that the user has bookmarked and have ideCourse tah
+    :return: JSON response with all courses and their demo folders
     """
 
-    header: str | None = None
-    """
-    Header of the plugin
-    """
+    user: User = current_token.user
+    return json_response(user_ide_courses(user=user))
 
-    stem: str | None = None
-    """
-    Stem of the plugin
-    """
 
-    answer_count: int | None = None
+@ide.get("demosByDocId")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_demos_by_doc_id() -> Response:
     """
-    Number of answers for the task
+    Get all demos by document id
+    :return: JSON response with the task
     """
 
-    # Might be needed to require this
-    type: str | None = None
-    """ Type of the file """
+    doc_id = request.json.get("doc_id")
+    if not doc_id:
+        return json_response({"error": "No doc_id provided"})
+
+    return json_response(demos_by_doc(doc_id=doc_id))
 
 
-TIDETaskInfoSchema = class_schema(TIDETaskInfo)()
-
-
-def user_ide_courses(user: User) -> list[json]:
+@ide.get("demosByDocPath")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_demos_by_doc_path() -> Response:
     """
-    Gets all courses that have parameter for Ide course in course settings and are bookmarked by the user
-    :param user: Logged-in user
-    :return: List JSON with all TIDE-tasks from the courses user has bookmarked
-    """
-    user_courses = user.bookmarks.bookmark_data[2][MY_COURSES_GROUP]
-    ide_courses = []
-
-    for course_dict in user_courses:
-        for course_name, course_path in course_dict.items():
-            # Get the document by path, remove /view/ from the beginning of path
-            doc = DocInfo.find_by_path(course_path.split("view/")[1:][0])
-
-            if doc is None:
-                continue
-
-            demo_paths = doc.document.get_settings().ide_course()
-
-            if demo_paths is None:
-                continue
-
-            ide_courses.append(
-                {
-                    "course_name": course_name,
-                    "course_id": doc.document.doc_id,
-                    "course_path": course_path,
-                    "demo_paths": demo_paths,
-                }
-            )
-
-    return ide_courses
-
-
-def demos_by_doc(doc_id: int = None, doc_path: str = None):
-    """
-    Find all TIDE-demo folders from the document
-    :param doc_path:
-    :param doc_id: Document id
-
-    :return: List JSON with all TIDE-demo folders from the document
+    Get all demos by document path
+    :return: JSON response with the task
     """
 
-    doc_path = doc_path.lower()
+    doc_path = request.json.get("doc_path")
+    if not doc_path:
+        return json_response({"error": "No doc_path provided"})
 
-    if doc_id is None and doc_path is None:
-        return []
-
-    if doc_id is None:
-        doc = DocInfo.find_by_path(path=doc_path)
-    else:
-        doc = DocEntry.find_by_id(doc_id=doc_id)
-
-    if doc is None:
-        return []
-
-    demo_paths = doc.document.get_settings().ide_course()
-
-    if demo_paths is None:
-        return []
-
-    return demo_paths
+    return json_response(demos_by_doc(doc_path=doc_path))
 
 
-def ide_tasks(
-        user: User, ide_task_tag: str, doc_id: int = None, demo_path: str = None
-) -> json:
+@ide.get("tasksByDocPath")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_tasks_by_doc_path() -> Response:
     """
-    Get all TIDE-tasks from the demo folder
-    :param user: Logged-in user
-    :param doc_id:  Document id
-    :param ide_task_tag: Tag that identifies the TIDE-task
-    :param demo_path: Path to the demo folder
-    :return: List JSON with all TIDE-tasks from the demo folder
+    Get all tasks by demo folder path
+    :return: JSON response with the task
     """
-    # TODO: Should here be a test if the user has right to access the document?
+    doc_path = request.json.get("doc_path")
+    if not doc_path:
+        return json_response({"error": "No demo_path provided"})
 
-    if doc_id is None and demo_path is None:
-        return []
+    user: User = current_token.user
 
-    if doc_id is None:
-        doc = DocInfo.find_by_path(path=demo_path.lower())
-    else:
-        doc = DocInfo.find_by_id(item_id=doc_id)
-
-    if doc is None:
-        return []
-
-    user_ctx = UserContext.from_one_user(u=user)
-
-    pars = doc.document.get_paragraphs()
-
-    tasks = []
-
-    for p in pars:
-        if p.attrs.get(ide_task_tag) is not None:
-            tasks.append(
-                user_plugin_data(
-                    doc=doc,
-                    par=p,
-                    user_ctx=user_ctx,
-                    ide_task_id=p.attrs.get(ide_task_tag),
-                )
-            )
-
-    return tasks
+    return json_response(ide_tasks(demo_path=doc_path, user=user))
 
 
-def ide_task_by_id(
-        user: User,
-        ide_task_id: str,
-        ide_task_tag: str,
-        doc_id: int = None,
-        doc_path: str = None,
-) -> json:
+@ide.get("tasksByDocId")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_tasks_by_doc_id() -> Response:
     """
-    Get TIDE-task from the document by document id and paragraph id
-    :param ide_task_tag: Tag that identifies the TIDE-task
-    :param ide_task_id:  TIDE-task id
-    :param user: Logged-in user
-    :param doc_id:  Document id
-    :param doc_path:  Document path
-    :return: JSON with TIDE-task ide-files, task info and task id
+    Get all tasks by demo folder doc_id
+    :return: JSON response with the task
     """
-    if doc_id is None and doc_path is None:
-        return []
+    doc_id = request.json.get("doc_id")
+    if not doc_id:
+        return json_response({"error": "No doc_id provided"})
 
-    if doc_path is None:
-        doc = DocInfo.find_by_id(item_id=doc_id)
-    else:
-        doc = DocInfo.find_by_path(path=doc_path.lower())
+    user: User = current_token.user
 
-    if doc is None:
-        return []
-
-    user_ctx = UserContext.from_one_user(u=user)
-
-    pars = doc.document.get_paragraphs()
-
-    if pars is None:
-        return []
-
-    if len(pars) == 1:
-        if pars[0].attrs.get(ide_task_tag) == ide_task_id:
-            return user_plugin_data(doc=doc, par=pars[0], user_ctx=user_ctx)
-        else:
-            return []
-
-    task = []
-
-    for p in pars:
-        if p.attrs.get(ide_task_tag) == ide_task_id:
-            task.append(user_plugin_data(doc=doc, par=p, user_ctx=user_ctx))
-
-    # # In case multiple files with same names
-    # if len(task) > 1:
-    #     return task
-
-    return task
+    return json_response(ide_tasks(doc_id=doc_id, user=user))
 
 
-def user_plugin_data(
-        doc: DocInfo,
-        par,
-        user_ctx: UserContext,
-        plugin: Plugin = None,
-        ide_task_id: str = None,
-) -> json:
+@ide.get("tasksByIdeTaskId")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_tasks_by_ide_task_id() -> Response:
     """
-    Get the TIDE-task information from the plugin
-    :param ide_task_id:  TIDE-task id
-    :param plugin: Tim plugin
-    :param doc: TIM document
-    :param par: Paragraph from the document
-    :param user_ctx: User context
-    :return: JSON with TIDE-task ide-files, task info and task id
+    Get all tasks by demo folder path
+    :return: JSON response with the task
     """
+    ide_task_id = request.json.get("ide_task_id")
+    doc_id = request.json.get("doc_id")
+    doc_path = request.json.get("doc_path")
 
-    view_ctx = default_view_ctx
+    if not ide_task_id:
+        return json_response({"error": "No ide_task_id provided"})
 
-    if plugin is None:
-        plugin = Plugin.from_paragraph(par, view_ctx, user_ctx)
+    if not doc_id and not doc_path:
+        return json_response({"error": "No doc_id or doc_path provided"})
 
-    # Plugin render options
-    plugin_opts = PluginRenderOptions(
-        do_lazy=False,
-        user_print=False,
-        preview=view_ctx.preview,
-        target_format=PrintFormat.JSON,
-        output_format=PluginOutputFormat.HTML,
-        user_ctx=user_ctx,
-        review=False,
-        wraptype=PluginWrap.Nothing,
-        viewmode=view_ctx.viewmode,
-    )
-    plugin.set_render_options(None, plugin_opts)
-    res = render_plugin_multi(doc.document.get_settings(), "csPlugin", [plugin])
-    plugin_htmls = json.loads(res)
-    plugin_html = BeautifulSoup(plugin_htmls[0], features="lxml")
-    element = plugin_html.select_one("cs-runner")
-    plugin_json = json.loads(base64.b64decode(element.attrs["json"]).decode("utf-8"))
+    user: User = current_token.user
 
-    task_info: TIDETaskInfo = TIDETaskInfoSchema.load(plugin.values, unknown=EXCLUDE)
-
-    task_id = plugin_json["taskID"]
-
-    # If the plugin has files attribute
-    if plugin_json["markup"].get("files"):
-        ide_files = IdeFileSchema.load(
-            plugin_json["markup"]["files"], many=True, unknown=EXCLUDE
+    return json_response(
+        ide_task_by_id(
+            ide_task_id=ide_task_id,
+            doc_id=doc_id,
+            user=user,
+            doc_path=doc_path,
         )
-        json_ide_files = [file.to_json() for file in ide_files]
-
-    # If the plugin has only one file TODO: check if this is correct
-    else:
-        ide_file = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
-        if ide_file.path is None and task_info.type is not None:
-            ide_file.path = "main." + task_info.type
-        json_ide_files = ide_file.to_json()
-
-    return {
-        "ide_files": json_ide_files,
-        "task_info": task_info,
-        "task_id": task_id,
-        "document_id": doc.id,
-        "paragraph_id": par.id,
-        "ide_task_id": ide_task_id,
-    }
-
-
-def submit_task(code_files: str | list[str], task_id_ext: str, user: User):
-    """
-    Submit the TIDE-task
-    :param user: Current user
-    :param code_files: Code files for the TIDE-task
-    :param task_id_ext:
-    :param task_data:  Data from the TIDE-task
-    :return: True if the task was submitted successfully
-    """
-
-    # TODO: this doesnt work yet
-    task_id_ext2 = "60.pythontesti"
-
-    user_id = user.id
-
-    uploaded_files = []
-
-    if code_files is None:
-        return False
-
-    # If the code_files is string, it is only one file and uploaded_files is empty list, if it is list, it is multiple
-    # files and first file is user_code
-    if code_files is str:
-        user_code = code_files
-    else:
-        uploaded_files = code_files
-        user_code = code_files[0]
-
-    # submitted_files = [
-    #     {
-    #         "source": "editor",
-    #         "path": "main.cc",
-    #         "content": '#include <stdio.h>\n#include "add.h"\n\nint main() {\n  printf("%d", add(1, 2));\n  return 0;\n}\n',
-    #     },
-    #     {
-    #         "source": "editor",
-    #         "path": "add.cc",
-    #         "content": "\nint add(int a, int b) {\n  return 0;\n}\n",
-    #     },
-    #     {"source": "editor", "path": "add.h", "content": "\nint add(int a, int b);"},
-    # ]
-
-    input = {
-        "isInput": False,
-        "nosave": False,
-        "type": "py",
-        "uploadedFiles": uploaded_files,
-        "userargs": "",
-        "usercode": user_code,
-        "userinput": "",
-    }
-
-    origin = OriginInfo(doc_id=60, par_id="Xelt2CQGvUwL")
-
-    brow_data = {
-        "answer_id": 15,
-        "answernr": 1,
-        "giveCustomPoints": False,
-        "points": None,
-        "saveAnswer": True,
-        "saveTeacher": False,
-        "teacher": False,
-        "userId": user.id,
-    }
-
-    return post_answer_impl(
-        task_id_ext=task_id_ext2,
-        answerdata=input,
-        answer_browser_data=brow_data,
-        answer_options={},
-        curr_user=user,
-        urlmacros=(),
-        other_session_users=[],
-        origin=origin,
-        error=None,
     )
 
 
-def is_ide_course_by_tag(tag_name: str, doc: DocInfo):
+@ide.get("submitTask")
+@require_oauth(Scope.user_tasks.value)
+def submit_ide_task() -> Response:
     """
-    :param tag_name: Name of the tag that identifies the TIDE-course
-    :param doc:  Document that is checked
-    :return: True if the document has the tag that identifies the TIDE-course
-    TODO: This is probably not needed
-    """
-    # Get the tags from the document
-    tags = doc.block.tags
+    Submit a task
 
-    # If the document has the tag that identifies the TIDE-task
-    return any(tag_name in str(tag) for tag in tags)
+    :return: JSON response with the task
+    """
+    user = current_token.user
+    task_id_ext = request.json.get("task_id_ext")
+    code_files = request.json.get("code_files")
+    code_language = request.json.get("code_language")
+    if not task_id_ext or not code_files:
+        return json_response({"error": "No task_id_ext or code file data provided"})
+
+    answer = submit_task(
+        code_files=code_files,
+        task_id_ext=task_id_ext,
+        code_language=code_language,
+        user=user,
+    )
+
+    return json_response(answer)

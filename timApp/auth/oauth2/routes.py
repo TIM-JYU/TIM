@@ -2,24 +2,17 @@ import datetime
 from authlib.integrations.flask_oauth2 import current_token
 from authlib.oauth2 import OAuth2Error
 from authlib.oauth2.rfc6749 import BaseGrant, scope_to_list
-from flask import Response, render_template, request
-
+from flask import Response, render_template
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.oauth2.models import OAuth2Client, Scope
 from timApp.auth.oauth2.oauth2 import auth_server, require_oauth
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
-
-from timApp.tide_support.routes import (
-    user_ide_courses,
-    demos_by_doc,
-    ide_tasks,
-    ide_task_by_id,
-)
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import json_response, safe_redirect
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from authlib.oauth2.rfc7662 import IntrospectionEndpoint
 
 oauth = TypedBlueprint("oauth", __name__, url_prefix="/oauth")
 
@@ -52,20 +45,6 @@ def issue_token() -> Response:
     return auth_server.create_token_response()
 
 
-@oauth.get("token-validity")
-@require_oauth(Scope.profile.value)
-def token_is_valid() -> Response:
-    """
-    Check if the token is valid
-    :return: JSON response with the token status and validity time (hours:minutes:seconds)
-    """
-
-    # Convert seconds to days: hours:minutes:seconds
-    convert = str(datetime.timedelta(seconds=current_token.expires_in))
-
-    return json_response({"validityTime": convert})
-
-
 @oauth.get("profile")
 @require_oauth(Scope.profile.name)
 def get_user_profile() -> Response:
@@ -88,125 +67,53 @@ def get_user_profile() -> Response:
     )
 
 
-@oauth.get("bookmarked-courses")
-@require_oauth(Scope.user_courses.value)
-def get_courses() -> Response:
+@oauth.get("tokenValidity")
+@require_oauth(Scope.profile.value)
+def token_is_valid() -> Response:
     """
-    Gets all courses that the user has bookmarked
-    :return: JSON response with all courses TODO: Remove if not needed
-    """
-    user: User = current_token.user
-    courses = user.bookmarks.bookmark_data[2]["My courses"]
-
-    res = [
-        {"course_name": list(course.keys())[0], "path": list(course.values())[0]}
-        for course in courses
-    ]
-
-    return json_response(res)
-
-
-@oauth.get("ide-courses")
-@require_oauth(Scope.user_tasks.value)
-def get_user_ide_courses() -> Response:
-    """
-    Get all courses that the user has bookmarked and have ideCourse tah
-    :return: JSON response with all courses and their demo folders
+    Check if the token is valid
+    :return: JSON response with the token status and validity time (hours:minutes:seconds)
     """
 
-    user: User = current_token.user
-    return json_response(user_ide_courses(user=user))
+    # Convert seconds to days: hours:minutes:seconds
+    convert = str(datetime.timedelta(seconds=current_token.expires_in))
+
+    return json_response({"validityTime": convert})
 
 
-@oauth.get("demos-by-doc-id")
-@require_oauth(Scope.user_tasks.value)
-def get_ide_demos_by_doc_id() -> Response:
-    """
-    Get all demos by document id
-    :return: JSON response with the task
-    """
-
-    doc_id = request.json.get("doc_id")
-    if not doc_id:
-        return json_response({"error": "No doc_id provided"})
-
-    return json_response(demos_by_doc(doc_id=doc_id))
-
-
-@oauth.get("demos-by-doc-path")
-@require_oauth(Scope.user_tasks.value)
-def get_ide_demos_by_doc_path() -> Response:
-    """
-    Get all demos by document path
-    :return: JSON response with the task
-    """
-
-    doc_path = request.json.get("doc_path")
-    if not doc_path:
-        return json_response({"error": "No doc_path provided"})
-
-    return json_response(demos_by_doc(doc_path=doc_path))
-
-
-@oauth.get("tasks-by-doc-path")
-@require_oauth(Scope.user_tasks.value)
-def get_ide_tasks_by_doc_path() -> Response:
-    """
-    Get all tasks by demo folder path
-    :return: JSON response with the task
-    """
-    doc_path = request.json.get("doc_path")
-    if not doc_path:
-        return json_response({"error": "No demo_path provided"})
-
-    user: User = current_token.user
-
-    return json_response(
-        ide_tasks(demo_path=doc_path, user=user, ide_task_tag="ideTask")
-    )
-
-
-@oauth.get("tasks-by-doc-id")
-@require_oauth(Scope.user_tasks.value)
-def get_ide_tasks_by_doc_id() -> Response:
-    """
-    Get all tasks by demo folder doc_id
-    :return: JSON response with the task
-    """
-    doc_id = request.json.get("doc_id")
-    if not doc_id:
-        return json_response({"error": "No doc_id provided"})
-
-    user: User = current_token.user
-
-    return json_response(ide_tasks(doc_id=doc_id, user=user, ide_task_tag="ideTask"))
-
-
-@oauth.get("tasks-by-ide-task-id")
-@require_oauth(Scope.user_tasks.value)
-def get_ide_tasks_by_ide_task_id() -> Response:
-    """
-    Get all tasks by demo folder path
-    :return: JSON response with the task
-    """
-    ide_task_id = request.json.get("ide_task_id")
-    doc_id = request.json.get("doc_id")
-    doc_path = request.json.get("doc_path")
-
-    if not ide_task_id:
-        return json_response({"error": "No ide_task_id provided"})
-
-    if not doc_id and not doc_path:
-        return json_response({"error": "No doc_id or doc_path provided"})
-
-    user: User = current_token.user
-
-    return json_response(
-        ide_task_by_id(
-            ide_task_id=ide_task_id,
-            doc_id=doc_id,
-            user=user,
-            ide_task_tag="ideTask",
-            doc_path=doc_path,
-        )
-    )
+# class IdeIntrospectionEndpoint(IntrospectionEndpoint):
+#     def query_token(self, token, token_type_hint):
+#         if token_type_hint == "access_token":
+#             tok = Token.query.filter_by(access_token=token).first()
+#         elif token_type_hint == "refresh_token":
+#             tok = Token.query.filter_by(refresh_token=token).first()
+#         else:
+#             # without token_type_hint
+#             tok = Token.query.filter_by(access_token=token).first()
+#             if not tok:
+#                 tok = Token.query.filter_by(refresh_token=token).first()
+#         return tok
+#
+#     def introspect_token(self, token):
+#         return {
+#             "active": True,
+#             "client_id": token.client_id,
+#             "token_type": token.token_type,
+#             "scope": token.get_scope(),
+#             "aud": token.client_id,
+#             "exp": token.expires_at,
+#             "iat": token.issued_at,
+#         }
+#
+#     def check_permission(self, token, client, request):
+#         # for example, we only allow internal client to access introspection endpoint
+#         return client.client_type == "internal"
+#
+#
+# # register it to authorization server
+# auth_server.register_endpoint(IdeIntrospectionEndpoint)
+#
+#
+# @oauth.post("introspect")
+# def introspect_token():
+#     return auth_server.create_endpoint_response(IdeIntrospectionEndpoint.ENDPOINT_NAME)
