@@ -18,6 +18,7 @@ __date__ = "25.4.2022"
 from typing import Optional
 
 import langcodes
+import requests.adapters
 from requests import post, Response
 from requests.exceptions import JSONDecodeError
 from sqlalchemy import select
@@ -38,7 +39,11 @@ from timApp.user.usergroup import UserGroup
 from timApp.util import logger
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import NotExist, RouteException
-from tim_common.vendor.requests_futures import FuturesSession, Future
+from tim_common.vendor.requests_futures import (
+    FuturesSession,
+    Future,
+    DEFAULT_MAX_WORKERS,
+)
 
 LANGUAGES_CACHE_TIMEOUT = 3600 * 24  # seconds
 
@@ -316,6 +321,8 @@ class DeeplTranslationService(RegisteredTranslationService):
         source_lang: Language | None,
         target_lang: Language,
         tag_handling: str = "xml",
+        max_workers: Optional[int] = None,
+        max_retries: Optional[int] = None,
     ) -> list[str]:
         """
         Use the DeepL API to translate text between languages.
@@ -327,6 +334,8 @@ class DeeplTranslationService(RegisteredTranslationService):
         :param tag_handling: See comment in superclass.
         :return: List of strings in target language with the non-translatable
          parts intact.
+        :param max_workers: Maximum number of workers to use for sending translation requests
+        :param max_retries: Maximum number of retries on a failed translation request
         """
         source_lang_code = source_lang.lang_code if source_lang else None
 
@@ -349,7 +358,16 @@ class DeeplTranslationService(RegisteredTranslationService):
         # https://www.deepl.com/docs-api/translating-text/large-volumes/
         translate_calls = list()
         # Initialize the session for parallel translate-calls.
-        session = FuturesSession()
+        # To avoid sending too many requests at a time, the calling function should
+        # set suitably low values for the optional parameters `max_workers` and `max_retries`.
+        session = FuturesSession(
+            max_workers=max_workers if max_workers else DEFAULT_MAX_WORKERS,
+            adapter_kwargs=dict(
+                max_retries=max_retries
+                if max_retries
+                else requests.adapters.DEFAULT_RETRIES
+            ),
+        )
         for i in range(0, len(protected_texts), 50):
             call = self._translate(
                 session,

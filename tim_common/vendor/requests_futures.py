@@ -49,12 +49,15 @@ PICKLE_ERROR = (
     "github.com/ross/requests-futures/#using-processpoolexecutor"
 )
 
+DEFAULT_MAX_WORKERS = 8
+DEFAULT_MAX_RETRIES = 3
+
 
 class FuturesSession(Session):
     def __init__(
         self,
         executor=None,
-        max_workers=8,
+        max_workers=DEFAULT_MAX_WORKERS,
         session_factory=Session,
         adapter_kwargs=None,
         *args,

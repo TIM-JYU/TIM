@@ -18,9 +18,11 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
+from typing import Optional
+
 import langcodes
 import requests
-from flask import request, Blueprint
+from flask import current_app, request, Blueprint
 from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import with_polymorphic
@@ -72,7 +74,12 @@ def is_valid_language_id(lang_id: str) -> bool:
 
 
 def translate_full_document(
-    tr: Translation, src_doc: Document, target_language: Language, translator_code: str
+    tr: Translation,
+    src_doc: Document,
+    target_language: Language,
+    translator_code: str,
+    max_workers: Optional[int] = None,
+    max_retries: Optional[int] = None,
 ) -> None:
     """
     Translate matching paragraphs of document based on an original source
@@ -83,6 +90,8 @@ def translate_full_document(
     :param target_language: The language to translate the document into.
     :param translator_code: Identifier of the translator to use (machine or "Manual"
      if empty).
+    :param max_workers: Maximum number of workers to use for sending translation requests
+    :param max_retries: Maximum number of retries on a failed translation request
     :return: None. The translation is applied to document based on the
      tr-parameter.
     """
@@ -92,6 +101,8 @@ def translate_full_document(
         src_doc.docinfo.lang_id,
         target_language,
         get_current_user_object().get_personal_group(),
+        max_workers=max_workers,
+        max_retries=max_retries,
     )
 
     # Translate the paragraphs of the document if a translator was successfully
@@ -241,13 +252,28 @@ def create_translation_route(
 
     # Run automatic translation if requested
     if translator != "Manual":
+        session_opts = current_app.config["TRANSLATION_SESSION_OPTIONS"][translator]
         # If src_doc id does not match tr_doc_id, the translation process was initiated
         # from an existing translation. We should use that translation as the basis
         # for the new one, instead of forcing the source to be the original document.
         if tr_doc_id != src_doc.doc_id:
-            translate_full_document(tr, doc.document, language, translator)
+            translate_full_document(
+                tr,
+                doc.document,
+                language,
+                translator,
+                session_opts["max_workers"],
+                session_opts["max_retries"],
+            )
         else:
-            translate_full_document(tr, src_doc, language, translator)
+            translate_full_document(
+                tr,
+                src_doc,
+                language,
+                translator,
+                session_opts["max_workers"],
+                session_opts["max_retries"],
+            )
 
     # Copy source document search relevance value to translation
     set_relevance(tr.id, get_document_relevance(doc))

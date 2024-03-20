@@ -465,6 +465,21 @@ MACHINE_TRANSLATORS = [
     # ),
 ]
 
+# FuturesSession options for machine translators,
+# used to control the number of parallel translation requests,
+# and how many times a failed request will be re-sent
+TRANSLATION_SESSION_OPTIONS = {
+    "DeepL Free": {
+        "max_workers": 4,
+        "max_retries": 4,
+    },
+    "DeepL Pro": {
+        "max_workers": 4,
+        "max_retries": 4,
+    },
+}
+
+
 # Options related to session management
 
 SESSIONS_ENABLE = False
