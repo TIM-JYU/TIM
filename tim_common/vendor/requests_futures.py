@@ -50,7 +50,6 @@ PICKLE_ERROR = (
 )
 
 DEFAULT_MAX_WORKERS = 8
-DEFAULT_MAX_RETRIES = 3
 
 
 class FuturesSession(Session):
