@@ -38,7 +38,7 @@ class IdeFile:
     # Convert to json and set code based on 'by' or 'byCode'
     def to_json(self):
         return {
-            "code": self.by or self.byCode,
+            "content": self.by or self.byCode,
             "path": self.path,
         }
 
@@ -318,7 +318,7 @@ def user_plugin_data(
         "header": task_info.header,
         "stem": task_info.stem,
         "type": task_info.type,
-        "task_id": task_id,
+        "task_id": task_id.task_name,
         "doc_id": doc.id,
         "par_id": par.id,
         "ide_task_id": ide_task_id,
