@@ -252,7 +252,7 @@ def create_translation_route(
 
     # Run automatic translation if requested
     if translator != "Manual":
-        session_opts = current_app.config["TRANSLATION_SESSION_OPTIONS"][translator]
+        session_opts = current_app.config["TRANSLATION_SESSION_OPTIONS"].get(translator)
         # If src_doc id does not match tr_doc_id, the translation process was initiated
         # from an existing translation. We should use that translation as the basis
         # for the new one, instead of forcing the source to be the original document.
@@ -262,8 +262,8 @@ def create_translation_route(
                 doc.document,
                 language,
                 translator,
-                session_opts["max_workers"],
-                session_opts["max_retries"],
+                session_opts["max_workers"] if session_opts else None,
+                session_opts["max_retries"] if session_opts else None,
             )
         else:
             translate_full_document(
@@ -271,8 +271,8 @@ def create_translation_route(
                 src_doc,
                 language,
                 translator,
-                session_opts["max_workers"],
-                session_opts["max_retries"],
+                session_opts["max_workers"] if session_opts else None,
+                session_opts["max_retries"] if session_opts else None,
             )
 
     # Copy source document search relevance value to translation
