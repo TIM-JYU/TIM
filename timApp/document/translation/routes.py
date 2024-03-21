@@ -78,8 +78,8 @@ def translate_full_document(
     src_doc: Document,
     target_language: Language,
     translator_code: str,
-    max_workers: Optional[int] = None,
-    max_retries: Optional[int] = None,
+    max_workers: int | None = None,
+    max_retries: int | None = None,
 ) -> None:
     """
     Translate matching paragraphs of document based on an original source
