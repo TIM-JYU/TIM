@@ -89,8 +89,8 @@ class TranslationService(db.Model):
         target_lang: Language,
         *,
         tag_handling: str = "",
-        max_workers: Optional[int] = None,
-        max_retries: Optional[int] = None,
+        max_workers: int | None = None,
+        max_retries: int | None = None,
     ) -> list[str]:
         """
         Translate texts from source to target language.
