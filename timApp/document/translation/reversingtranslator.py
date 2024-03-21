@@ -13,6 +13,8 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
+from typing import Optional
+
 import langcodes
 
 from timApp.document.translation.language import Language
@@ -49,6 +51,8 @@ class ReversingTranslationService(TranslationService):
         target_lang: Language,
         *,
         tag_handling: str = "",
+        max_workers: int | None = None,
+        max_retries: int | None = None,
     ) -> list[str]:
         """
         Reverse the translatable text given.
@@ -63,6 +67,8 @@ class ReversingTranslationService(TranslationService):
         :param target_lang: Only REVERSE_LANG["lang_code"] is supported.
         :param tag_handling: tags to intelligently handle during translation
          TODO XML-handling.
+        :param max_workers: Maximum number of workers to use for sending translation requests
+        :param max_retries: Maximum number of retries on a failed translation request
         :return: Texts where translatable ones have been reversed.
         """
 
