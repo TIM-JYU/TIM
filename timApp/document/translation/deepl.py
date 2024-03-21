@@ -321,8 +321,8 @@ class DeeplTranslationService(RegisteredTranslationService):
         source_lang: Language | None,
         target_lang: Language,
         tag_handling: str = "xml",
-        max_workers: Optional[int] = None,
-        max_retries: Optional[int] = None,
+        max_workers: int | None = None,
+        max_retries: int | None = None,
     ) -> list[str]:
         """
         Use the DeepL API to translate text between languages.
