@@ -288,8 +288,8 @@ class TranslateProcessor:
         s_lang: str,
         t_lang: str,
         user_group: UserGroup | None,
-        max_workers: Optional[int] = None,
-        max_retries: Optional[int] = None,
+        max_workers: int | None = None,
+        max_retries: int | None = None,
     ):
         """
         Based on a name, get the correct TranslationService from database and
