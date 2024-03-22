@@ -399,6 +399,10 @@
                     ng-show="$ctrl.hasMoreChangelog"
                     ng-click="$ctrl.showMoreChangelog()">Show more entries
             </button>
+            <button ng-disabled="$ctrl.changelogLoading" class="timButton btn-danger"
+                    ng-show="$ctrl.hasMoreChangelog"
+                    ng-click="$ctrl.showCompleteChangelog()">Show complete document history
+            </button>
         </div>
     </div>
 </div>

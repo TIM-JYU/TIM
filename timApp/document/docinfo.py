@@ -255,10 +255,10 @@ class DocInfo(Item):
 
         return preamble_docs
 
-    def get_changelog_with_names(self, length=None):
+    def get_changelog_with_names(self, length=None, complete: bool = False):
         if not length:
             length = getattr(self, "changelog_length", 100)
-        return self.document.get_changelog(length)
+        return self.document.get_changelog(length, complete)
 
     def get_notifications(self, condition) -> list[Notification]:
         items = set()
