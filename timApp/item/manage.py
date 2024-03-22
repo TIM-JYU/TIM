@@ -137,12 +137,12 @@ def manage(path: str) -> Response | str:
 def get_complete_changelog(doc_id: int, complete_history: str) -> Response:
     doc = get_doc_or_abort(doc_id)
     verify_manage_access(doc)
-    complete = bool(complete_history)  # bool("False") == TRUE, bool("") == FALSE
+    complete = bool(complete_history)
     return json_response({"versions": doc.get_changelog_with_names(complete=complete)})
 
 
 @manage_page.get("/changelog/<int:doc_id>/<int:length>")
-def get_changelog(doc_id: int, length: int, complete_history: str) -> Response:
+def get_changelog(doc_id: int, length: int) -> Response:
     doc = get_doc_or_abort(doc_id)
     verify_manage_access(doc)
     return json_response({"versions": doc.get_changelog_with_names(length)})

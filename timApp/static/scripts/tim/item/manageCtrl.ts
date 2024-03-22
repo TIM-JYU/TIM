@@ -201,9 +201,7 @@ export class PermCtrl implements IController {
 
     async showCompleteChangelog() {
         const d = this.itemAsDocument();
-
         this.changelogLoading = true;
-
         const r = await to(
             $http.get<{versions: IChangelogEntry[]}>(
                 "/changelog/" + this.item.id + "/" + "complete"
