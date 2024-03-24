@@ -108,6 +108,7 @@ class DocSettingTypes:
     lazyAnswers: bool
     uiLangOverride: str
     allowedDocsettingMacroAttributes: list[str] | str
+    need_view_for_answers: bool
     ideCourse: list[IdeDocument]
 
 
@@ -222,7 +223,7 @@ class DocSettings:
         return self.__dict.get(self.css_key)
 
     def get_macroinfo(
-        self, view_ctx: ViewContext, user_ctx: UserContext | None = None
+            self, view_ctx: ViewContext, user_ctx: UserContext | None = None
     ) -> MacroInfo:
         cache_key = (
             view_ctx,
@@ -252,7 +253,7 @@ class DocSettings:
         return mi.with_field_macros()
 
     def get_texmacroinfo(
-        self, view_ctx: ViewContext, user_ctx: UserContext | None = None
+            self, view_ctx: ViewContext, user_ctx: UserContext | None = None
     ) -> MacroInfo:
         return MacroInfo(
             view_ctx,
@@ -695,6 +696,9 @@ class DocSettings:
 
     def allowed_docsetting_macro_attributes(self) -> list[str] | str:
         return self.get_setting_or_default("allowedDocsettingMacroAttributes", [])
+
+    def need_view_for_answers(self) -> bool:
+        return self.get_setting_or_default("need_view_for_answers", False)
 
     def ide_course(self) -> list[IdeDocument]:
         return self.get_setting_or_default("ideCourse", [])
