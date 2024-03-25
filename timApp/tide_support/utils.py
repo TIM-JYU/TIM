@@ -202,13 +202,11 @@ def ide_task_folders_by_doc(
     :return: List JSON with all TIDE-task folders from the document
     """
 
-    doc_path = doc_path.lower()
-
     if doc_id is None and doc_path is None:
         return TIDEError("No document id or path given")
 
     if doc_id is None:
-        doc = DocInfo.find_by_path(path=doc_path)
+        doc = DocInfo.find_by_path(path=doc_path.lower())
     else:
         doc = DocEntry.find_by_id(doc_id=doc_id)
 
@@ -220,7 +218,11 @@ def ide_task_folders_by_doc(
     if task_paths is None:
         return TIDEError("Document not found")
 
-    return task_paths
+    paths = []
+    for path in task_paths:
+        paths.append(path.path)
+
+    return paths
 
 
 def ide_tasks(
