@@ -342,7 +342,7 @@ def ide_task_by_id(
 
 def ide_user_plugin_data(
         doc: DocInfo,
-        par,
+        par: dict,
         ide_task_id: str,
         user_ctx: UserContext,
 ) -> TIDEPluginData | TIDEError:
@@ -399,10 +399,24 @@ def ide_user_plugin_data(
 
     # If the plugin has only one file
     else:
+        # If the plugin has only one file, load the file based on 'by' or 'byCode'
         ide_file = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
+
+        # if the plugin has no code, look from markup
+        if ide_file.by is None and ide_file.byCode is None:
+            ide_file = IdeFileSchema.load(plugin_json["markup"], unknown=EXCLUDE)
+
+        # If the plugin still has no code, return error
+        if ide_file.by is None and ide_file.byCode is None:
+            return TIDEError(error="No code found in the plugin")
+
         # Give the file main.<type> name if the file has no path and the type is not None
         if ide_file.path is None and task_info.type is not None:
-            ide_file.path = "main." + task_info.type
+            if "c++" in task_info.type:
+                ide_file.path = "main.cpp"
+            else:
+                ide_file.path = "main." + task_info.type
+
         json_ide_files = [ide_file.to_json()]
 
     return TIDEPluginData(
