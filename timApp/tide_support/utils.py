@@ -432,7 +432,12 @@ def ide_user_plugin_data(
 
 
 def ide_submit_task(
-        code_files: dict[str], task_id_ext: str, code_language: str, user: User
+        code_files: dict[str],
+        task_id_ext: str,
+        code_language: str,
+        user: User,
+        user_input: str = "",
+        user_args: str = "",
 ):
     """
     Submit the TIDE-task
@@ -440,6 +445,8 @@ def ide_submit_task(
     :param code_language: Language of the code
     :param code_files: Code files for the TIDE-task
     :param task_id_ext:  "<doc_id>.<task_id>"
+    :param user_input: User input for the task
+    :param user_args: User arguments for the task
     :return: True if the task was submitted successfully
     """
 
@@ -461,9 +468,9 @@ def ide_submit_task(
         "type": code_language,
         "uploadedFiles": [],
         "submittedFiles": submitted_files,
-        "userargs": "",
+        "userargs": user_args,
         "usercode": user_code,
-        "userinput": "",
+        "userinput": user_input,
     }
 
     brow_data = {

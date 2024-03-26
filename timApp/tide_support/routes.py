@@ -106,6 +106,8 @@ def submit_ide_task() -> Response:
     task_id_ext = request.json.get("task_id_ext")
     code_files = request.json.get("code_files")
     code_language = request.json.get("code_language")
+    user_input = request.json.get("user_input")
+    user_args = request.json.get("user_args")
 
     if not task_id_ext or not code_files or not code_language:
         return json_response(
@@ -117,6 +119,8 @@ def submit_ide_task() -> Response:
         task_id_ext=task_id_ext,
         code_language=code_language,
         user=user,
+        user_input=user_input,
+        user_args=user_args,
     )
 
     return json_response(answer)
