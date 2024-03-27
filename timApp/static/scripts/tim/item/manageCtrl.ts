@@ -207,11 +207,12 @@ export class PermCtrl implements IController {
                 "/changelog/" + this.item.id + "/" + "complete"
             )
         );
-        this.changelogLoading = false;
         if (r.ok) {
+            this.changelogLoading = false;
             d.versions = r.result.data.versions;
             this.hasMoreChangelog = false;
         } else {
+            this.changelogLoading = false;
             await showMessageDialog(r.result.data.error);
         }
     }
