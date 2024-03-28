@@ -52,6 +52,12 @@ class UserLoginCode(db.Model):
     This must be always set to prevent code misuse.
     """
 
+    valid: Mapped[bool] = mapped_column(default=True)
+    """
+    Whether the code is valid for authentication.
+    This is used for soft-deleting the codes and quickly invalidating them.
+    """
+
     name: Mapped[Optional[str]]
     """
     Optional name/description for the code.
@@ -76,6 +82,7 @@ class UserLoginCode(db.Model):
         active_to: datetime_tz,
         active_from: Optional[datetime_tz] = None,
         name: Optional[str] = None,
+        valid: bool = True,
     ) -> "UserLoginCode":
         """
         Generate a new user login code for the user.
@@ -84,6 +91,7 @@ class UserLoginCode(db.Model):
         :param active_to: How long the code is active.
         :param active_from: When the code becomes active. If None, the code is not active at all.
         :param name: Optional name/description for the code.
+        :param valid: Whether the code is valid for authentication.
         :return: New user login code that is guaranteed to be unique.
         """
         attempts = 0
@@ -102,6 +110,7 @@ class UserLoginCode(db.Model):
                         active_from=active_from,
                         name=name,
                         session_code=secrets.token_urlsafe(32),
+                        valid=valid,
                     )
                     db.session.add(lc)
                     sess.commit()
