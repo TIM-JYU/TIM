@@ -839,8 +839,7 @@ def _begin_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     doc = _get_current_exam_doc(extra)
     # TODO: Maybe set duration?
     for u in ug.users:  # type: User
-        ug = u.get_personal_group()
-        grant_access(ug, doc, AccessType.view)
+        grant_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
@@ -851,8 +850,7 @@ def _begin_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
 def _interrupt_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     doc = _get_current_exam_doc(extra)
     for u in ug.users:  # type: User
-        ug = u.get_personal_group()
-        expire_access(ug, doc, AccessType.view)
+        expire_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
