@@ -89,13 +89,15 @@ def logincode_login(login_code: str) -> dict:
         log_warning(f"Invalid login code: {login_code}")
         error_msg = "InvalidLoginCode"
     elif not user_logincode.active_from or now < user_logincode.active_from:
-        log_warning(f"Login code not yet active: {login_code}")
+        log_warning(
+            f"{user_logincode.user.name}: Login code not yet active: {login_code}"
+        )
         error_msg = "LoginCodeNotYetActive"
     elif now > user_logincode.active_to:
-        log_warning(f"Login code expired: {login_code}")
+        log_warning(f"{user_logincode.user.name}: Login code expired: {login_code}")
         error_msg = "LoginCodeExpired"
     elif not user_logincode.valid:
-        log_warning(f"Login code not valid: {login_code}")
+        log_warning(f"{user_logincode.user.name}: Login code not valid: {login_code}")
         error_msg = "LoginCodeNotValid"
 
     if user_logincode and not error_msg:

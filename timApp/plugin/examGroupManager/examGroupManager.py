@@ -54,6 +54,7 @@ from timApp.util.flask.responsehelper import (
     ok_response,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.logger import log_info
 from timApp.util.utils import slugify, get_current_time
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema, field_for_schema
@@ -778,7 +779,7 @@ def print_login_codes(
 LOGIN_CODE_ACTIVE_DURATION = timedelta(days=30)
 
 
-def _enable_login_codes(ug: UserGroup, _: ExamGroupDataGlobal) -> None:
+def _enable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     login_codes = list(_get_current_login_codes(ug))
     if not login_codes:
         raise RouteException(
@@ -792,8 +793,14 @@ def _enable_login_codes(ug: UserGroup, _: ExamGroupDataGlobal) -> None:
         lc.active_from = now
         lc.active_to = now + LOGIN_CODE_ACTIVE_DURATION
 
+    u = get_current_user_object()
+    doc = _get_current_exam_doc(extra)
+    log_info(
+        f"ExamGroupManage: {u.name} enabled login codes for group {ug.name} (exam doc: {doc.path})"
+    )
 
-def _disable_login_codes(ug: UserGroup, _: ExamGroupDataGlobal) -> None:
+
+def _disable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     login_codes = list(_get_current_login_codes(ug))
     if not login_codes:
         return
@@ -802,6 +809,12 @@ def _disable_login_codes(ug: UserGroup, _: ExamGroupDataGlobal) -> None:
     for lc in login_codes:
         lc.active_from = None
         lc.active_to = now
+
+    u = get_current_user_object()
+    doc = _get_current_exam_doc(extra)
+    log_info(
+        f"ExamGroupManage: {u.name} disabled login codes for group {ug.name} (exam doc: {doc.path})"
+    )
 
 
 def _get_current_exam_doc(extra: ExamGroupDataGlobal) -> DocInfo:
@@ -829,6 +842,11 @@ def _begin_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
         ug = u.get_personal_group()
         grant_access(ug, doc, AccessType.view)
 
+    cur_u = get_current_user_object()
+    log_info(
+        f"ExamGroupManage: {cur_u.name} began exam for group {ug.name} (exam doc: {doc.path})"
+    )
+
 
 def _interrupt_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     doc = _get_current_exam_doc(extra)
@@ -836,10 +854,14 @@ def _interrupt_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
         ug = u.get_personal_group()
         expire_access(ug, doc, AccessType.view)
 
+    cur_u = get_current_user_object()
+    log_info(
+        f"ExamGroupManage: {cur_u.name} interrupted exam for group {ug.name} (exam doc: {doc.path})"
+    )
+
 
 def _end_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     doc = _get_current_exam_doc(extra)
-
     extra_data_by_uid = _get_exam_group_data_user(ug)
 
     for u in ug.users:  # type: User
@@ -847,6 +869,11 @@ def _end_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
 
         if not extra_data.extraTime:
             expire_access(u.get_personal_group(), doc, AccessType.view)
+
+    cur_u = get_current_user_object()
+    log_info(
+        f"ExamGroupManage: {cur_u.name} ended exam for main students in group {ug.name} (exam doc: {doc.path})"
+    )
 
 
 def _resume_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
@@ -860,6 +887,11 @@ def _resume_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
         if not extra_data.extraTime:
             grant_access(u.get_personal_group(), doc, AccessType.view)
 
+    cur_u = get_current_user_object()
+    log_info(
+        f"ExamGroupManage: {cur_u.name} resumed exam for main students in group {ug.name} (exam doc: {doc.path})"
+    )
+
 
 def _end_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     doc = _get_current_exam_doc(extra)
@@ -872,6 +904,11 @@ def _end_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
         if extra_data.extraTime:
             expire_access(u.get_personal_group(), doc, AccessType.view)
 
+    cur_u = get_current_user_object()
+    log_info(
+        f"ExamGroupManage: {cur_u.name} ended exam for students with extra time in group {ug.name} (exam doc: {doc.path})"
+    )
+
 
 def _resume_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     doc = _get_current_exam_doc(extra)
@@ -883,6 +920,11 @@ def _resume_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
 
         if extra_data.extraTime:
             grant_access(u.get_personal_group(), doc, AccessType.view)
+
+    cur_u = get_current_user_object()
+    log_info(
+        f"ExamGroupManage: {cur_u.name} resumed exam for students with extra time in group {ug.name} (exam doc: {doc.path})"
+    )
 
 
 def _do_nothing(*_: Any) -> None:
