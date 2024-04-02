@@ -35,7 +35,8 @@ import {CURSOR} from "./editor";
                   [(ngModel)]="content"
                   [placeholder]="placeholder"
                   [disabled]="disabled"
-                  [attr.spellcheck]="spellcheck">
+                  autocorrect="off"
+                  spellcheck="false">
         </textarea>`,
 })
 export class NormalEditorComponent implements IEditor {
