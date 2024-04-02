@@ -27,6 +27,9 @@ export class AreaHandler {
 
         onClick(".areaexpand, .areacollapse", ($this, e) => {
             if (
+                $(e.target).hasClass("no-areaexpand") ||
+                (e.target.tagName == "INPUT" &&
+                    $(e.target).parents("no-areaexpand")) ||
                 $(e.target).hasClass("readline") ||
                 $(e.target).hasClass("editline") ||
                 $(e.target).hasClass("readsection") ||

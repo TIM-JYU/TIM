@@ -69,5 +69,7 @@
     var linked_groups = {{linked_groups|tojson}};
     var showValidAnswersOnly = {{show_valid_answers_only|tojson}};
     var hideNamesRequested = {{hide_names_requested|tojson}};
+    var useLoginCodes = {{ doc_settings.use_login_codes()|tojson }};
+    var loginMessage = {{ doc_settings.login_message()|tojson }};
 </script>
 {% endblock %}

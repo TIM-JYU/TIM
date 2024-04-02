@@ -61,6 +61,7 @@ cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 
 JAVAFX_VERSION = os.environ.get("OPENJFX_VERSION", "19")
+JAVA_VERSION = os.environ.get("JDK_VERSION", "20").split(".")[0]
 
 
 def sanitize_filename(s):
@@ -931,6 +932,11 @@ class Ping(Shell):
         return 0, "Ping", "", ""
 
 
+java_preview_warning_re = re.compile(
+    r"Note: .+ uses preview features of Java SE \d+\.\n?Note: Recompile with -Xlint:preview for details.\n?"
+)
+
+
 class Java(Language):
     ttype = "java"
 
@@ -954,8 +960,8 @@ class Java(Language):
 
     def get_cmdline(self):
         return (
-            f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib"
-            + f" --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}"
+            f"javac --enable-preview --release {JAVA_VERSION} --module-path /javafx-sdk-{JAVAFX_VERSION}/lib"
+            + f" --add-modules=ALL-MODULE-PATH -Xlint:all -Xlint:-preview -cp {self.classpath}"
             + f" {self.javaname}"
         )
 
@@ -963,6 +969,7 @@ class Java(Language):
         code, out, err, pwddir = self.runself(
             [
                 "java",
+                "--enable-preview",
                 "--module-path",
                 f"/javafx-sdk-{JAVAFX_VERSION}/lib",
                 "--add-modules=ALL-MODULE-PATH",
@@ -972,6 +979,7 @@ class Java(Language):
             ],
             ulimit=df(self.ulimit, "ulimit -f 10000"),
         )
+        err = java_preview_warning_re.sub("", err).strip()
         return code, out, err, pwddir
 
 
@@ -1071,12 +1079,14 @@ class JComtest(Java, Modifier):
         self.hide_compile_out = True
 
     def get_cmdline(self):
-        return f"java comtest.ComTest {self.sourcefilename} && javac {self.sourcefilename} {self.testcs}"
+        return f"java comtest.ComTest {self.sourcefilename} && javac --enable-preview --release {JAVA_VERSION} {self.sourcefilename} {self.testcs}"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(
-            ["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True
+            ["java", "--enable-preview", "org.junit.runner.JUnitCore", self.testdll],
+            no_uargs=True,
         )
+        err = java_preview_warning_re.sub("", err).strip()
         out, err = check_comtest(self, "jcomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
 
@@ -1208,6 +1218,24 @@ class CComtest(Language):
             ["java", "-jar", "/cs_data/java/comtestcpp.jar", "-nq", self.testcs]
         )
         out, err = check_comtest(self, "ccomtest", code, out, err, result, points_rule)
+        return code, out, err, pwddir
+
+
+class Coq(Language):
+    ttype = ["coq"]
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.v"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"./{self.filename}.v"
+        self.fileext = ".v"
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(
+            ["opam", "exec", "--", "coqc", self.pure_exename],
+        )
+
         return code, out, err, pwddir
 
 
@@ -1457,6 +1485,45 @@ class NodeJS(Language):
         if self.is_jjs:
             err = f"JJS engine has been deprecated. Change language type from `jjs` to `nodejs`.\n{err}"
         return code, out, err, pwddir
+
+
+class OCaml(Language):
+    ttype = ["ocaml"]
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.compiler = "ocamlopt"
+        self.fileext = "ml"
+        self.filedext = ".ml"
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.ml"
+        self.exename = f"/tmp/{self.basename}/{self.filename}.exe"
+        self.source_extensions = [".ml"]
+
+    def sources(self, main: str = None):
+        # TODO: This should probably be in Language class
+        files = " ".join(
+            file.path
+            for file in self.sourcefiles
+            if any(file.path.endswith(ext) for ext in self.source_extensions)
+        )
+        sourcefiles = self.markup.get("sourcefiles", None)
+        if sourcefiles:
+            files = files + " " + sourcefiles
+        if main:
+            files = main + " " + sourcefiles
+
+        return files
+
+    def get_cmdline(self):
+        cmdline = f"{self.compiler} -o {self.exename} {self.sources()}"
+        return cmdline
+
+    def run(self, result, sourcelines, points_rule):
+        return self.runself([self.pure_exename])
+
+    @staticmethod
+    def supports_multifiles():
+        return True
 
 
 class TS(Language):

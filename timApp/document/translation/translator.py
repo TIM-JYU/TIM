@@ -89,6 +89,8 @@ class TranslationService(db.Model):
         target_lang: Language,
         *,
         tag_handling: str = "",
+        max_workers: int | None = None,
+        max_retries: int | None = None,
     ) -> list[str]:
         """
         Translate texts from source to target language.
@@ -105,6 +107,8 @@ class TranslationService(db.Model):
         :param tag_handling: Tag representing a way to separate or otherwise
          control translated text with the translation service. A HACKY way to
          handle special case with translating (html) tables.
+        :param max_workers: Maximum number of workers to use for sending translation requests
+        :param max_retries: Maximum number of retries on a failed translation request
         :return: List of strings found inside the items of `texts`-parameter,
          in the same order and translated.
         """
@@ -284,6 +288,8 @@ class TranslateProcessor:
         s_lang: str,
         t_lang: str,
         user_group: UserGroup | None,
+        max_workers: int | None = None,
+        max_retries: int | None = None,
     ):
         """
         Based on a name, get the correct TranslationService from database and
@@ -296,6 +302,8 @@ class TranslateProcessor:
         :param user_group: Identification of user, that can be allowed to use
          some TranslationServices (for example DeepL requires an API-key that
          the user sets to their account).
+        :param max_workers: Maximum number of workers to use for sending translation requests
+        :param max_retries: Maximum number of retries on a failed translation request
         """
 
         translator = (
@@ -326,6 +334,8 @@ class TranslateProcessor:
         self.parser = TranslationParser()
         self.source_lang = source_lang_
         self.target_lang = target_lang_
+        self.max_workers = max_workers
+        self.max_retries = max_retries
 
     def _translate_raw_texts(self, mds: list[str]) -> list[str]:
         """

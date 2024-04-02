@@ -78,6 +78,7 @@ const NormalGateInfo = t.type({
     time: t.number,
     target: t.number,
     controls: withDefault(t.array(t.number), []),
+    antiControls: withDefault(t.array(t.number), []),
     editable: withDefault(t.boolean, true),
 });
 
@@ -86,6 +87,7 @@ const SwapGateInfo = t.type({
     swap1: t.number,
     swap2: t.number,
     controls: withDefault(t.array(t.number), []),
+    antiControls: withDefault(t.array(t.number), []),
     editable: withDefault(t.boolean, true),
 });
 
@@ -444,6 +446,14 @@ export class QuantumCircuitComponent
                     selection: "#00ff00",
                 },
             ],
+            [
+                "antiControl",
+                {
+                    fill: "#000000",
+                    text: "#ffffff",
+                    selection: "#00ff00",
+                },
+            ],
         ]),
         useBraket: false,
         timeAxisHeight: 40,
@@ -759,7 +769,9 @@ export class QuantumCircuitComponent
         }
 
         if (gate.name === "control") {
-            this.board.addControl(gate, this.selectedGate);
+            this.board.addControl(gate, this.selectedGate, false);
+        } else if (gate.name === "antiControl") {
+            this.board.addControl(gate, this.selectedGate, true);
         } else if (gate.name === "swap") {
             this.board.addSwap(gate, null, true);
         } else {
@@ -899,7 +911,8 @@ export class QuantumCircuitComponent
                 swapInfo = [gate.target, cell.target];
             }
         }
-        const controls = this.board.getControls(gate);
+        const controls = this.board.getControls(gate, false);
+        const antiControls = this.board.getControls(gate, true);
 
         const editable =
             this.board.get(gate.target, gate.time)?.editable === true;
@@ -912,6 +925,7 @@ export class QuantumCircuitComponent
             name,
             gateInfo.matrix,
             controls,
+            antiControls,
             this.qubits,
             gateInfo.info,
             editable,
@@ -926,7 +940,10 @@ export class QuantumCircuitComponent
 
     handleMenuGateSelect(gateName: string) {
         const gateInfo = this.gateService.getGate(gateName);
-        if (gateInfo && gateInfo.name === "control") {
+        if (
+            gateInfo &&
+            (gateInfo.name === "control" || gateInfo.name === "antiControl")
+        ) {
             this.activeGateInfo = undefined;
         } else if (gateInfo) {
             const hide = this.isHiddenGateInfo(gateInfo.name);
@@ -1065,7 +1082,8 @@ export class QuantumCircuitComponent
                         time: gateData.time,
                     },
                     gateData.editable,
-                    gateData.controls
+                    gateData.controls,
+                    gateData.antiControls
                 );
             } else {
                 if (!this.gateService.getGate(gateData.name)) {
@@ -1106,7 +1124,29 @@ export class QuantumCircuitComponent
 
                     const control = new Control(
                         gateData.target,
-                        gateData.editable
+                        gateData.editable,
+                        false
+                    );
+                    this.board.set(controlTarget, gateData.time, control);
+                }
+
+                for (const controlTarget of gateData.antiControls) {
+                    if (controlTarget === gateData.target) {
+                        continue;
+                    }
+                    // would go in cell that is occupied by multi-qubit gate
+                    if (
+                        size > 1 &&
+                        gateData.target <= controlTarget &&
+                        controlTarget < gateData.target + size
+                    ) {
+                        continue;
+                    }
+
+                    const control = new Control(
+                        gateData.target,
+                        gateData.editable,
+                        true
                     );
                     this.board.set(controlTarget, gateData.time, control);
                 }
@@ -1370,7 +1410,7 @@ export class QuantumCircuitComponent
             colors: {
                 dark: "black",
                 medium: "grey",
-                light: "#fca534",
+                light: "white",
             },
             gateColors: this.circuitOptions.gateColors,
             useBraket: useBraket,
