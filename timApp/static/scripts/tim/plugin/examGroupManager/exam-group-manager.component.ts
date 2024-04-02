@@ -441,7 +441,7 @@ export class ToggleComponent {
                             
                             <div *ngIf="group.currentExamDoc" class="button-controls mt">
                                 <a target="exam-doc" class="timButton" href="/view/{{group.currentExamDoc}}" i18n>
-                                    View exam document
+                                    View exam document and audio/video materials
                                 </a>
                                 <a target="exam-doc" class="timButton" href="/teacher/{{group.currentExamDoc}}?group={{group.name}}" i18n>
                                     Review and correct student answers
@@ -555,7 +555,7 @@ export class ToggleComponent {
                                                 Press the toggle button to start the exam
                                             </div>
                                             <strong class="small text-success" *ngIf="group.examState > 3" i18n>
-                                                The exam has started! Students can now access the exam.
+                                                The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link.
                                             </strong>
                                         </div>
                                         <div>
@@ -659,7 +659,7 @@ export class ToggleComponent {
                     </tabset>
                 </bootstrap-panel>
                 <bootstrap-panel title="4. Show answers to students" i18n-title>
-                    <span class="text-muted" i18n>This feature will become available after April 1st</span>
+                    <span class="text-muted" i18n>This feature will become available after April 8th</span>
                 </bootstrap-panel>
             </fieldset>
         </form>
@@ -908,6 +908,7 @@ export class ExamGroupManagerComponent
             showExamGroupCreateDialog({
                 folderPath: this.markup.groupsPath,
                 groupPrefix: this.markup.groupNamePrefix,
+                exams: this.markup.exams,
             })
         );
         if (!res.ok) {

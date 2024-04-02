@@ -9300,14 +9300,6 @@
           <context context-type="linenumber">25</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3749696270508655809" datatype="html">
-        <source><x id="START_TAG_SPAN" ctype="x-span"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> The required format for the input is as follows: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> For example: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
-        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span"/> Jos koulussanne käytetään Wilmaa, voit tuoda oppilaita leikkaa-liimaamalla oppilaslistan Wilmasta. <x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Listan pitää noudattaa seuraavaa muotoa: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; luokka &gt; &lt; sukunimi &gt; &lt; etunimi &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> Esimerkki: <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Ankka Aku<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Ankka Iines<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Ankka Roope<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/> Jokainen oppilas on omalla rivillään rivinvaihdolla erotettuna. Jokainen tietokenttä (luokka, sukunimi, etunimi) erotetaan yhdellä välilyönnillä. <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-import-dialog.component.ts</context>
-          <context context-type="linenumber">31,40</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6018067703223481846" datatype="html">
         <source>Enter student information in the format &lt;class&gt; &lt;last name&gt; &lt;first name&gt;, one student per line.</source>
         <target state="translated">Syötä oppilaan tiedot muodossa &lt;luokka&gt; &lt;sukunimi&gt; &lt;etunimi&gt;, yksi oppilas per rivi.</target>
@@ -9548,14 +9540,6 @@ Tätä toimintoa ei voi peruuttaa!
           <context context-type="linenumber">433,434</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2349857258441587869" datatype="html">
-        <source> View exam document </source>
-        <target state="translated"> Katsele koedokumenttia </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">450</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="8481761772485093570" datatype="html">
         <source> Review and correct student answers </source>
         <target state="translated"> Katsele ja korjaa oppilaiden vastauksia </target>
@@ -9710,14 +9694,6 @@ Tätä toimintoa ei voi peruuttaa!
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">561</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6832332803516878836" datatype="html">
-        <source> The exam has started! Students can now access the exam. </source>
-        <target state="translated"> Koe alkoi! Oppilaat voivat nyt avata kokeen! </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">564</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5539097211548480304" datatype="html">
@@ -10081,14 +10057,6 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
           <context context-type="linenumber">658</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5193118317089565942" datatype="html">
-        <source>This feature will become available after April 1st</source>
-        <target state="translated">Tämä ominaisuus avataan 1. huhtikuuta jälkeen.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">659,660</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="4927138039966262114" datatype="html">
         <source> The exam is now ended and login codes are disabled. You can now select and start another exam below. </source>
         <target state="translated"> Koe on nyt lopetettu ja kirjautumiskoodit otettu pois käytöstä. Voit nyt valita ja aloittaa uuden kokeen alla. </target>
@@ -10103,6 +10071,30 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-import-dialog.component.ts</context>
           <context context-type="linenumber">27,45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="170669685012382621" datatype="html">
+        <source>This feature will become available after April 8th</source>
+        <target state="translated">Tämä ominaisuus avataan 8. huhtikuuta jälkeen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">662,663</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="797766670117501813" datatype="html">
+        <source> View exam document and audio/video materials </source>
+        <target state="translated"> Katsele koedokumenttia sekä audio-/videomateriaaleja </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">444</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8023863054421277417" datatype="html">
+        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link. </source>
+        <target state="translated"> Koe alkoi! Oppilaat voivat nyt avata kokeen! Audio- ja videomateriaaleja voi katsoa "Katsele koedokumenttia" -painikkeella. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">558</context>
         </context-group>
       </trans-unit>
     </body>
