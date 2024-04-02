@@ -105,6 +105,8 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [class.alertFrame]="redAlert"
                [ngStyle]="styles"
                [style.width.em]="cols"
+               autocomplete="off"
+               spellcheck="false"
                >
        <textarea
                [rows]="rows"
@@ -126,7 +128,9 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [class.warnFrame]="isUnSaved()"
                [class.alertFrame]="redAlert"
                [ngStyle]="styles"
-               [style.width.em]="cols">
+               [style.width.em]="cols"
+               autocomplete="off"
+               spellcheck="false">
                </textarea>
                <button class="timButton"
                         *ngIf="!hasButton() && saveFailed"
