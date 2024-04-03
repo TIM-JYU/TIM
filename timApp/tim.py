@@ -77,7 +77,7 @@ from timApp.scheduling.scheduling_routes import scheduling
 from timApp.securitytxt.routes import securitytxt
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
-from timApp.tide_support.routes import ide
+from timApp.idesupport.routes import ide
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload

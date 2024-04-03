@@ -11,8 +11,8 @@ import {BrowserModule} from "@angular/platform-browser";
 
 const OAUTH_SCOPES: Record<string, string> = {
     profile: $localize`Read basic profile information (username, full name, email address)`,
-    user_tasks: $localize`Access your TIM-tasks`,
-    submit_answers: $localize`Submit answers to TIM-tasks`,
+    user_tasks: $localize`Access your TIM tasks`,
+    submit_answers: $localize`Submit answers to TIM tasks`,
     user_courses: $localize`Access your TIM courses`,
 };
 

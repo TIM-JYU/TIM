@@ -7,8 +7,13 @@ from bs4 import BeautifulSoup
 from marshmallow import EXCLUDE
 from flask import current_app
 
-from timApp.answer.routes import post_answer_impl
-from timApp.auth.accesshelper import verify_ip_ok, verify_access
+from timApp.answer.routes import post_answer_impl, verify_ip_address
+from timApp.auth.accesshelper import (
+    verify_ip_ok,
+    verify_access,
+    verify_edit_access,
+    verify_view_access,
+)
 from timApp.auth.accesstype import AccessType
 from timApp.bookmark.bookmarks import MY_COURSES_GROUP, HIDDEN_COURSES_GROUP
 from timApp.document.docentry import DocEntry
@@ -21,8 +26,10 @@ from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import NotExist
+from timApp.util.flask.requesthelper import NotExist, RouteException
 from tim_common.marshmallow_dataclass import class_schema
+
+IDE_TASK_TAG = "ideTask"  # Identification tag for the TIDE-task
 
 
 @dataclass
@@ -31,20 +38,32 @@ class IdeFile:
     File that contains the code and path for one TIDE-task
     """
 
+    taskIDExt: str | None = None
+    """ Task id extension """
+
     by: str | None = None
     """ Code of the file when plugin has only one file """
 
     byCode: str | None = None
     """ Code of the file when plugin has multiple files """
 
-    path: str | None = None
-    """ Path of the file for folder structure """
+    filename: str | None = None
+    """ Name of the file """
+
+    userinput: str | None = ""
+    """ User input for the file """
+
+    userargs: str | None = ""
+    """ User arguments for the file """
 
     # Convert to json and set code based on 'by' or 'byCode'
     def to_json(self):
         return {
+            "task_id_ext": self.taskIDExt,
             "content": self.by or self.byCode,
-            "path": self.path,
+            "file_name": self.filename,
+            "user_input": self.userinput,
+            "user_args": self.userargs or "",
         }
 
 
@@ -63,9 +82,7 @@ class TIDETaskInfo:
     """
 
     stem: str | None = None
-    """
-    Stem of the plugin
-    """
+    """Stem of the plugin"""
 
     answer_count: int | None = None
     """
@@ -81,6 +98,31 @@ TIDETaskInfoSchema = class_schema(TIDETaskInfo)()
 
 
 @dataclass
+class SubmitCodeFile:
+    content: str
+    file_name: str | None = None
+    source: str = "editor"
+    task_id_ext: str | None = None  # "<doc_id>.<task_id>"
+    user_input: str | None = ""
+    user_args: str | None = ""
+
+
+@dataclass
+class TIDESubmitFile:
+    """
+    Submittable code files
+    """
+
+    code_files: list[SubmitCodeFile]
+    code_language: str
+    user_input: str = ""
+    user_args: str = ""
+
+
+TIDESubmitFileSchema = class_schema(TIDESubmitFile)()
+
+
+@dataclass
 class TIDEPluginData:
     """
     Data for the TIDE-task
@@ -89,6 +131,11 @@ class TIDEPluginData:
     task_files: List[IdeFile] | None = None
     """
     Files for the TIDE-task
+    """
+
+    path: str | None = None
+    """
+    Path to the task
     """
 
     header: str | None = None
@@ -127,83 +174,149 @@ class TIDEPluginData:
     """
 
 
-IDE_TASK_TAG = "ideTask"  # Identification tag for the TIDE-task
+@dataclass
+class TIDETaskSetDoc:
+    """
+    Document where the TIDE-task is located
+    """
+
+    name: str
+    """
+    Name of the task set document
+    """
+
+    path: str
+    """
+    Path to the task set document
+    """
+
+    doc_id: int
+    """
+    Id of the task set document
+    """
 
 
 @dataclass
-class TIDEError:
+class TIDETaskSetDocument:
     """
-    Error message for the TIDE-task
+    Document that has TIDE task sets
     """
 
-    error: str
+    path: str
 
 
-def user_ide_courses(user: User) -> list[json] | TIDEError:
+@dataclass
+class TIDECourse:
+    """
+    Course information for the TIDE-task
+    """
+
+    name: str
+    """
+    Name of the course
+    """
+
+    id: int
+    """
+    Document id
+    """
+
+    path: str
+    """
+    Path to the course
+    """
+
+    tasks: list[TIDETaskSetDoc]
+    """
+    Paths to the tasks
+    """
+
+
+def get_user_ide_courses(user: User) -> list[TIDECourse] | RouteException:
     """
     Gets all courses that have parameter for Ide course in course settings and are bookmarked by the user
     :param user: Logged-in user
-    :return: List JSON with all TIDE-tasks from the courses user has bookmarked
+    :return: List of TIDECourse from the courses user has bookmarked
     """
 
-    if not user.bookmarks.bookmark_data and len(user.bookmarks.bookmark_data) < 2:
-        raise NotExist()
+    user_courses = user.bookmarks.get_bookmarks_in_group(MY_COURSES_GROUP) or []
+    hidden_user_courses = user.bookmarks.get_bookmarks_in_group(HIDDEN_COURSES_GROUP)
 
-    user_courses = user.bookmarks.bookmark_data[2].get(MY_COURSES_GROUP)
-
-    # Add hidden courses to the list
-    if user.bookmarks.bookmark_data[2].get(HIDDEN_COURSES_GROUP):
-        user_courses.extend(user.bookmarks.bookmark_data[2][HIDDEN_COURSES_GROUP])
+    if hidden_user_courses is not None:
+        user_courses.extend(hidden_user_courses)
 
     if not user_courses:
-        return TIDEError("No courses found")
+        raise RouteException("No courses found")
 
     ide_courses = []
 
     for course_dict in user_courses:
         for course_name, course_path in course_dict.items():
             # Get the document by path, remove /view/ from the beginning of path
-            doc = DocInfo.find_by_path(course_path.split("view/")[1:][0])
+            doc = DocInfo.find_by_path(
+                course_path.split("view/")[1:][0]
+            )  # This should be lowercase
 
             if doc is None:
                 continue
 
             task_paths = doc.document.get_settings().ide_course()
-            paths = []
-            for path in task_paths:
-                paths.append(path.path)
 
             if task_paths is None:
                 continue
 
-            ide_courses.append(
-                {
-                    "name": course_name,
-                    "id": doc.document.doc_id,
-                    "path": course_path,
-                    "task_paths": paths,
-                }
+            paths = []
+
+            for path in task_paths:
+                # Get the document by path for doc id
+                task_doc = DocInfo.find_by_path(
+                    # Wont work if not converted to lowercase
+                    path.path.lower()
+                )
+
+                if task_doc is None:
+                    continue
+
+                paths.append(
+                    TIDETaskSetDoc(
+                        path=path.path,
+                        doc_id=task_doc.document.doc_id,
+                        name=task_doc.title,
+                    )
+                )
+
+            if paths is None:
+                continue
+
+            course = TIDECourse(
+                name=course_name,
+                id=doc.document.doc_id,
+                path=course_path,
+                tasks=paths,
             )
 
+            ide_courses.append(course)
+
     if not ide_courses:
-        return TIDEError("No courses found")
+        raise RouteException("No courses found")
 
     return ide_courses
 
 
-def ide_task_folders_by_doc(
-        doc_id: int = None, doc_path: str = None
-) -> list[json] | TIDEError:
+def get_ide_task_set_documents_by_doc(
+        user: User, doc_id: int | None = None, doc_path: str | None = None
+) -> list[TIDETaskSetDocument] | RouteException:
     """
-    Find all TIDE-task folders from the document
-    :param doc_path:
+    Find all TIDE-task set documents from the document
+    :param user: Current user
+    :param doc_path: Document path
     :param doc_id: Document id
 
-    :return: List JSON with all TIDE-task folders from the document
+    :return: List TIDETaskFolders with all TIDE-task documents from the document
     """
 
     if doc_id is None and doc_path is None:
-        return TIDEError("No document id or path given")
+        raise RouteException("No document id or path given")
 
     if doc_id is None:
         doc = DocInfo.find_by_path(path=doc_path.lower())
@@ -211,29 +324,33 @@ def ide_task_folders_by_doc(
         doc = DocEntry.find_by_id(doc_id=doc_id)
 
     if doc is None:
-        return TIDEError("Document not found")
+        raise RouteException("Document not found")
+
+    # Check if the user has view access to the document
+    verify_view_access(user=user, b=doc, require=True)
 
     task_paths = doc.document.get_settings().ide_course()
 
     if task_paths is None:
-        return TIDEError("Document not found")
+        raise RouteException("Document not found")
 
     paths = []
     for path in task_paths:
-        paths.append(path.path)
+        paths.append(TIDETaskSetDocument(path.path))
 
     return paths
 
 
-def ide_tasks(
-        user: User, doc_id: int = None, doc_path: str = None
-) -> list[TIDEPluginData] | TIDEError:
+def get_ide_tasks(
+        user: User, doc_id: int | None = None, doc_path: str | None = None
+) -> list[TIDEPluginData] | RouteException:
     """
-    Get all TIDE-tasks from the task folder
+    Get all TIDE-tasks from the task set document
     :param user: Logged-in user
     :param doc_id:  Document id
-    :param doc_path: Path to the task folder
-    :return: List JSON with all TIDE-tasks from the task folder
+    :param doc_path: Path to the task set document
+    :return: List of TIDEPluginData from the task set document or RouteException
+    :raise In case of an error raises RouteException
     """
 
     if doc_id is None and doc_path is None:
@@ -245,16 +362,10 @@ def ide_tasks(
         doc = DocInfo.find_by_id(item_id=doc_id)
 
     if doc is None:
-        return TIDEError("No document found")
+        raise RouteException("No document found")
 
     # Check if the user has edit access to the document
-    verify_access(
-        b=doc,
-        access_type=AccessType(2),
-        require=True,
-        message="You do not have access to this document",
-        user=user,
-    )
+    verify_edit_access(b=doc, require=True, user=user)
 
     user_ctx = UserContext.from_one_user(u=user)
 
@@ -264,34 +375,35 @@ def ide_tasks(
 
     for p in pars:
         if p.attrs.get(IDE_TASK_TAG) is not None:
-            task = ide_user_plugin_data(
+            task = get_ide_user_plugin_data(
                 doc=doc, par=p, user_ctx=user_ctx, ide_task_id=p.attrs.get(IDE_TASK_TAG)
             )
             if task:
                 tasks.append(task)
 
     if len(tasks) == 0:
-        return TIDEError("No tasks found")
+        raise RouteException("No tasks found")
 
     return tasks
 
 
-def ide_task_by_id(
+def get_ide_task_by_id(
         user: User,
         ide_task_id: str,
-        doc_id: int = None,
-        doc_path: str = None,
-) -> TIDEPluginData | TIDEError:
+        doc_id: int | None = None,
+        doc_path: str | None = None,
+) -> TIDEPluginData | RouteException:
     """
     Get TIDE-task from the document by document id and paragraph id
     :param ide_task_id:  TIDE-task id
     :param user: Logged-in user
     :param doc_id:  Document id
     :param doc_path:  Document path
-    :return: JSON with TIDE-task ide-files, task info and task id
+    :return: TIDEPluginData or TIDEError
+    :raises In case of an error raises RouteException
     """
     if doc_id is None and doc_path is None:
-        return TIDEError(error="No document id or path given")
+        raise RouteException("No document id or path given")
 
     if doc_path is None:
         doc = DocInfo.find_by_id(item_id=doc_id)
@@ -300,59 +412,52 @@ def ide_task_by_id(
 
     # If the document does not exist, raise NotExist
     if doc is None:
-        return TIDEError("No document found")
+        raise RouteException("No document found")
 
     # Check if the user has edit access to the document
-
-    verify_access(
-        b=doc,
-        access_type=AccessType(2),
-        require=True,
-        message="You do not have access to this document",
-        user=user,
-    )
+    verify_edit_access(b=doc, require=True, user=user)
 
     user_ctx = UserContext.from_one_user(u=user)
 
     pars = doc.document.get_paragraphs()
 
     if pars is None:
-        return TIDEError("No paragraphs found")
+        raise RouteException("No paragraphs found")
 
     tasks = []
 
     for p in pars:
         if p.attrs.get(IDE_TASK_TAG) == ide_task_id:
-            task = ide_user_plugin_data(
+            task = get_ide_user_plugin_data(
                 doc=doc, par=p, user_ctx=user_ctx, ide_task_id=ide_task_id
             )
             if task:
                 tasks.append(task)
 
     if len(tasks) == 0:
-        return TIDEError("No tasks found")
+        raise RouteException("No tasks found")
 
     if len(tasks) == 1:
         return tasks[0]
 
     # TODO: case where files are saved based on language base folders eg path is taken from the language package
 
-    return TIDEError("Multiple tasks found, support not implemented yet")
+    raise RouteException("Multiple tasks found, support not implemented yet")
 
 
-def ide_user_plugin_data(
+def get_ide_user_plugin_data(
         doc: DocInfo,
         par: dict,
         ide_task_id: str,
         user_ctx: UserContext,
-) -> TIDEPluginData | TIDEError:
+) -> TIDEPluginData | RouteException:
     """
     Get the TIDE-task information from the plugin
     :param ide_task_id:  TIDE-task id
     :param doc: TIM document
     :param par: Paragraph from the document
     :param user_ctx: User context
-    :return: JSON with TIDE-task ide-files, task info and task id
+    :return: TIDEPluginData or TIDEError
     """
 
     view_ctx = default_view_ctx
@@ -360,7 +465,7 @@ def ide_user_plugin_data(
     plugin = Plugin.from_paragraph(par, view_ctx, user_ctx)
 
     if plugin.type != "csPlugin":
-        return TIDEError(error="Not a csPlugin plugin")
+        raise RouteException("Not a csPlugin plugin")
 
     # Plugin render options
     plugin_opts = PluginRenderOptions(
@@ -388,14 +493,22 @@ def ide_user_plugin_data(
 
     # If plugin does not have task_id, return empty list
     if task_id is None:
-        return TIDEError(error="No task id found")
+        raise RouteException("No task id found")
 
     # If the plugin has files attribute
     if plugin_json["markup"].get("files"):
-        ide_files = IdeFileSchema.load(
-            plugin_json["markup"]["files"], many=True, unknown=EXCLUDE
-        )
-        json_ide_files = [file.to_json() for file in ide_files]
+        # TODO: Implement multiple files
+        # ide_files = IdeFileSchema.load(
+        #     plugin_json["markup"]["files"], many=True, unknown=EXCLUDE
+        # )
+        # json_ide_files = [file.to_json() for file in ide_files]
+        #
+        # if ide_files.taskIDExt is None:
+        #     if plugin_json.get("taskIDExt"):
+        #         ide_files.taskIDExt = plugin_json["taskIDExt"]
+        #     else:
+        #         raise RouteException("No taskIDExt found in the plugin")
+        raise RouteException("Multiple files not supported yet")
 
     # If the plugin has only one file
     else:
@@ -405,17 +518,28 @@ def ide_user_plugin_data(
         # if the plugin has no code, look from markup
         if ide_file.by is None and ide_file.byCode is None:
             ide_file = IdeFileSchema.load(plugin_json["markup"], unknown=EXCLUDE)
+            if ide_file.taskIDExt is None:
+                if plugin_json.get("taskIDExt"):
+                    ide_file.taskIDExt = plugin_json["taskIDExt"]
+                else:
+                    raise RouteException("No taskIDExt found in the plugin")
 
         # If the plugin still has no code, return error
         if ide_file.by is None and ide_file.byCode is None:
-            return TIDEError(error="No code found in the plugin")
+            raise RouteException("No code found in the plugin")
 
-        # Give the file main.<type> name if the file has no path and the type is not None
-        if ide_file.path is None and task_info.type is not None:
+        # if the ide_file has no filename, try to look it from the markup
+        if ide_file.filename is None:
+            ide_file.filename = plugin_json["markup"].get("filename")
+
+        # Give the file main.<type> name if the file has no filename and the type is not None
+        if ide_file.filename is None and task_info.type is not None:
             if "c++" in task_info.type:
-                ide_file.path = "main.cpp"
+                ide_file.filename = "main.cpp"
+            elif "cc" in task_info.type:
+                ide_file.filename = "main.c"
             else:
-                ide_file.path = "main." + task_info.type
+                ide_file.filename = "main." + task_info.type
 
         json_ide_files = [ide_file.to_json()]
 
@@ -424,6 +548,7 @@ def ide_user_plugin_data(
         header=task_info.header,
         stem=task_info.stem,
         type=task_info.type,
+        path=doc.path,
         task_id=task_id.task_name,
         doc_id=doc.id,
         par_id=par.id,
@@ -431,46 +556,34 @@ def ide_user_plugin_data(
     )
 
 
-def ide_submit_task(
-        code_files: dict[str],
-        task_id_ext: str,
-        code_language: str,
-        user: User,
-        user_input: str = "",
-        user_args: str = "",
-):
+def ide_submit_task(submit: TIDESubmitFile, user: User):
     """
     Submit the TIDE-task
+    :param submit: TIDESubmitFile
     :param user: Current user
-    :param code_language: Language of the code
-    :param code_files: Code files for the TIDE-task
-    :param task_id_ext:  "<doc_id>.<task_id>"
-    :param user_input: User input for the task
-    :param user_args: User arguments for the task
     :return: True if the task was submitted successfully
     """
 
     submitted_files = []
     # If the return has only one file
-    if len(code_files) == 1:
-        user_code = code_files[0].get("content")
+    if len(submit.code_files) == 1:
+        file_index = 0
     else:
-        # If the return has multiple files
-        user_code = code_files[-1].get(
-            "content"
-        )  # Apparently the last file should be here
-        for file in code_files:
+        # If the return has multiple files, files parameter is used
+        file_index = -1
+        # Apparently the last file should be here
+        for file in submit.code_files:
             submitted_files.append(file)
 
     answer_data = {
         "isInput": False,
         "nosave": False,
-        "type": code_language,
+        "type": submit.code_language,
         "uploadedFiles": [],
         "submittedFiles": submitted_files,
-        "userargs": user_args,
-        "usercode": user_code,
-        "userinput": user_input,
+        "userargs": submit.code_files[file_index].user_args,
+        "usercode": submit.code_files[file_index].content,
+        "userinput": submit.code_files[file_index].user_input,
     }
 
     brow_data = {
@@ -484,15 +597,8 @@ def ide_submit_task(
         "userId": user.id,
     }
 
-    # Check if the answer from user IP is allowed
-    blocked_msg = (
-            current_app.config["IP_BLOCK_ROUTE_MESSAGE"]
-            or "Answering is not allowed from this IP address."
-    )
-    allowed = verify_ip_ok(user=user, msg=blocked_msg)
-
     return post_answer_impl(
-        task_id_ext=task_id_ext,
+        task_id_ext=submit.code_files[file_index].task_id_ext,
         answerdata=answer_data,
         answer_browser_data=brow_data,
         answer_options={},
@@ -500,5 +606,5 @@ def ide_submit_task(
         urlmacros=(),
         other_session_users=[],
         origin=None,
-        error=blocked_msg if not allowed else None,
+        error=verify_ip_address(user),  # Check if the answer from user IP is allowed
     )

@@ -177,7 +177,7 @@ PointsType = Union[
 # TODO: loggable route (points in url?)
 @answers.put("/saveReview/<int(signed=True):user_id>/<task_id>")
 def save_review_points(
-    task_id: str, user_id: int, comment: str | None = None, points: PointsType = None
+        task_id: str, user_id: int, comment: str | None = None, points: PointsType = None
 ) -> Response:
     tid = TaskId.parse(task_id)
     curr_user_id = get_current_user_id()
@@ -325,7 +325,7 @@ def points_to_float(points: str | float | None) -> float | None:
 
 
 def get_iframehtml_answer_impl(
-    plugintype: str, task_id_ext: str, user_id: int, answer_id: int | None = None
+        plugintype: str, task_id_ext: str, user_id: int, answer_id: int | None = None
 ) -> Response:
     """
     Gets the HTML to be used in iframe.
@@ -417,7 +417,7 @@ def call_plugin_answer_and_parse(answer_call_data: dict, plugintype: str) -> dic
     "/iframehtml/<plugintype>/<task_id_ext>/<int(signed=True):user_id>/<int:answer_id>"
 )
 def get_iframehtml_answer(
-    plugintype: str, task_id_ext: str, user_id: int, answer_id: int | None = None
+        plugintype: str, task_id_ext: str, user_id: int, answer_id: int | None = None
 ) -> Response:
     return get_iframehtml_answer_impl(plugintype, task_id_ext, user_id, answer_id)
 
@@ -428,7 +428,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int) -> Response:
 
 
 def get_useranswers_for_task(
-    user: User, task_ids: list[TaskId], answer_map: dict[str, dict]
+        user: User, task_ids: list[TaskId], answer_map: dict[str, dict]
 ) -> list[Answer]:
     """
     Performs a query for latest valid answers by given user for given task
@@ -573,13 +573,13 @@ def get_answer_md(task_id: str, user_id: int) -> Response:
 
 @answers.post("/multiSendEmail/<doc_id>")
 def multisendemail(
-    doc_id: int,
-    rcpt: str,
-    subject: str,
-    msg: str,
-    bccme: bool = False,
-    replyall: bool = False,
-    reply_to: str | None = None,
+        doc_id: int,
+        rcpt: str,
+        subject: str,
+        msg: str,
+        bccme: bool = False,
+        replyall: bool = False,
+        reply_to: str | None = None,
 ) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_teacher_access(d)
@@ -610,11 +610,11 @@ InputAnswer = Union[AnswerData, list[Any], int, float, str]
 # noinspection PyShadowingBuiltins
 @answers.put("/<plugintype>/<task_id_ext>/answer")
 def post_answer(
-    plugintype: str,
-    task_id_ext: str,
-    input: InputAnswer,
-    abData: dict[str, Any] = field(default_factory=dict),
-    options: dict[str, Any] = field(default_factory=dict),
+        plugintype: str,
+        task_id_ext: str,
+        input: InputAnswer,
+        abData: dict[str, Any] = field(default_factory=dict),
+        options: dict[str, Any] = field(default_factory=dict),
 ) -> Response:
     """Saves the answer submitted by user for a plugin in the database.
 
@@ -626,11 +626,7 @@ def post_answer(
     :param abData: Data applied from answer browser
     """
     curr_user = get_current_user_object()
-    blocked_msg = (
-        current_app.config["IP_BLOCK_ROUTE_MESSAGE"]
-        or "Answering is not allowed from this IP address."
-    )
-    allowed = verify_ip_ok(user=curr_user, msg=blocked_msg)
+
     return json_response(
         post_answer_impl(
             task_id_ext,
@@ -641,9 +637,25 @@ def post_answer(
             get_urlmacros_from_request(),
             get_other_session_users_objs(),
             get_origin_from_request(),
-            error=blocked_msg if not allowed else None,
+            error=verify_ip_address(user=curr_user),
         ).result
     )
+
+
+def verify_ip_address(user: User) -> str | None:
+    """
+    Returns the error message if the user's IP address is not allowed, otherwise None.
+    :param user: Current user
+    :return: Error message if the user's IP address is not allowed, otherwise None
+    """
+
+    blocked_msg = (
+            current_app.config["IP_BLOCK_ROUTE_MESSAGE"]
+            or "Answering is not allowed from this IP address."
+    )
+    is_valid = verify_ip_ok(user=user, msg=blocked_msg)
+
+    return blocked_msg if not is_valid else None
 
 
 @dataclass
@@ -653,16 +665,16 @@ class AnswerRouteResult:
 
 
 def get_postanswer_plugin_etc(
-    d: DocInfo,
-    tid: TaskId,
-    answer_browser_data: dict,
-    curr_user: User,
-    ctx_user: User | None,
-    urlmacros: UrlMacros,
-    users: list[User] | None,
-    other_session_users: list[User],
-    origin: OriginInfo | None,
-    force_answer: bool,
+        d: DocInfo,
+        tid: TaskId,
+        answer_browser_data: dict,
+        curr_user: User,
+        ctx_user: User | None,
+        urlmacros: UrlMacros,
+        users: list[User] | None,
+        other_session_users: list[User],
+        origin: OriginInfo | None,
+        force_answer: bool,
 ) -> tuple[TaskAccessVerification, ExistingAnswersInfo, list[User], bool, bool, bool]:
     allow_save = True
     ask_new = False
@@ -674,7 +686,7 @@ def get_postanswer_plugin_etc(
     newtask = found_plugin.is_new_task()
     assert found_plugin.task_id is not None
     if (
-        found_plugin.known.useCurrentUser or found_plugin.task_id.is_global
+            found_plugin.known.useCurrentUser or found_plugin.task_id.is_global
     ):  # For plugins that is saved only for current user
         users = [curr_user]
     if users is None:
@@ -718,15 +730,15 @@ def get_postanswer_plugin_etc(
 
 
 def post_answer_impl(
-    task_id_ext: str,
-    answerdata: InputAnswer,
-    answer_browser_data: dict,
-    answer_options: dict,
-    curr_user: User,
-    urlmacros: UrlMacros,
-    other_session_users: list[User],
-    origin: OriginInfo | None,
-    error: str | None = None,
+        task_id_ext: str,
+        answerdata: InputAnswer,
+        answer_browser_data: dict,
+        answer_options: dict,
+        curr_user: User,
+        urlmacros: UrlMacros,
+        other_session_users: list[User],
+        origin: OriginInfo | None,
+        error: str | None = None,
 ) -> AnswerRouteResult:
     receive_time = get_current_time()
     tid = TaskId.parse(task_id_ext)
@@ -781,7 +793,7 @@ def post_answer_impl(
             if user_id not in (u.id for u in users) and not tid.is_global:
                 raise PluginException("userId is not associated with answer_id")
         elif (
-            user_id and user_id != curr_user.id and False
+                user_id and user_id != curr_user.id and False
         ):  # TODO: Vesa's hack to no need for belong teachers group
             teacher_group = UserGroup.get_teachers_group()
             if curr_user not in teacher_group.users:
@@ -825,9 +837,9 @@ def post_answer_impl(
         )
 
     get_task = (
-        isinstance(answerdata, dict)
-        and answerdata.get("getTask", False)
-        and plugin.ptype.can_give_task()
+            isinstance(answerdata, dict)
+            and answerdata.get("getTask", False)
+            and plugin.ptype.can_give_task()
     )
     if not (should_save_answer or get_task) or is_teacher_mode:
         verify_seeanswers_access(d, user=curr_user)
@@ -974,7 +986,6 @@ def post_answer_impl(
             pr_data=pr_data,
             overwrite_opts=overwrite_opts,
             view_ctx=view_ctx,
-            saver_plugin=plugin,
         )
 
         # TODO: Could report the result to other plugins too.
@@ -1083,13 +1094,13 @@ def post_answer_impl(
             if vr.is_invalid:
                 is_valid = False
                 explanation = (
-                    vr.invalidate_reason
-                    + " Your answer was saved but marked as invalid."
+                        vr.invalidate_reason
+                        + " Your answer was saved but marked as invalid."
                 )
             elif vr.is_expired:
                 fixed_time = (
-                    receive_time
-                    - d.document.get_settings().answer_submit_time_tolerance()
+                        receive_time
+                        - d.document.get_settings().answer_submit_time_tolerance()
                 )
                 if fixed_time > (vr.access.accessible_to or maxdate):
                     is_valid = False
@@ -1158,8 +1169,8 @@ def post_answer_impl(
 
             if (points or save_object is not None or tags) and allow_save:
                 points_changed = (
-                    answerinfo.latest_answer
-                    and answerinfo.latest_answer.points != points
+                        answerinfo.latest_answer
+                        and answerinfo.latest_answer.points != points
                 )
                 a = save_answer(
                     users,
@@ -1208,7 +1219,7 @@ def post_answer_impl(
             # points = answer_browser_data.get("points", points)
             points = points_to_float(points)
             points_changed = (
-                answerinfo.latest_answer and answerinfo.latest_answer.points != points
+                    answerinfo.latest_answer and answerinfo.latest_answer.points != points
             )
             a = save_answer(
                 users,
@@ -1269,7 +1280,7 @@ def post_answer_impl(
 
     for u in users:
         if (
-            origin and origin.doc_id != d.id
+                origin and origin.doc_id != d.id
         ):  # Origin might be different from the actual document
             clear_doc_cache(origin.doc_id, u)
         clear_doc_cache(d, u)
@@ -1288,7 +1299,7 @@ def post_answer_impl(
 
 
 def check_answerupload_file_accesses(
-    filelist: list[str], curr_user: User
+        filelist: list[str], curr_user: User
 ) -> list[AnswerUpload]:
     """
     Checks user's access to uploads by checking access to the answers associated with them
@@ -1335,11 +1346,11 @@ def check_answerupload_file_accesses(
 
 
 def preprocess_jsrunner_answer(
-    answerdata: AnswerData,
-    curr_user: User,
-    d: DocInfo,
-    plugin: Plugin,
-    view_ctx: ViewContext,
+        answerdata: AnswerData,
+        curr_user: User,
+        d: DocInfo,
+        plugin: Plugin,
+        view_ctx: ViewContext,
 ) -> None:
     """Executed before the actual jsrunner answer route is called.
     This is required to fetch the requested data from the database."""
@@ -1363,7 +1374,7 @@ def preprocess_jsrunner_answer(
             f'The following groups were not found: {", ".join(not_found_groups)}'
         )
     if (
-        runner_req.input.paramComps
+            runner_req.input.paramComps
     ):  # TODO: add paramComps to the interface, so no need to manipulate source code
         preprg = runnermarkup.preprogram or ""
         plugin.values[
@@ -1374,9 +1385,9 @@ def preprocess_jsrunner_answer(
         runnermarkup.includeUsers, MembershipFilter.Current
     )
     if (
-        not runnermarkup.selectIncludeUsers
-        and isinstance(runner_req.input.includeUsers, MembershipFilter)
-        and markup_include_opt != runner_req.input.includeUsers
+            not runnermarkup.selectIncludeUsers
+            and isinstance(runner_req.input.includeUsers, MembershipFilter)
+            and markup_include_opt != runner_req.input.includeUsers
     ):
         raise AccessDenied("Not allowed to select includeUsers option.")
 
@@ -1446,11 +1457,11 @@ answer_call_preprocessors: dict[
 
 
 def handle_points_ref(
-    answerdata: AnswerData,
-    curr_user: User,
-    d: DocInfo,
-    ptype: PluginTypeBase,
-    tid: TaskId,
+        answerdata: AnswerData,
+        curr_user: User,
+        d: DocInfo,
+        ptype: PluginTypeBase,
+        tid: TaskId,
 ) -> dict:
     verify_teacher_access(d, user=curr_user)
     given_points = answerdata.get(ptype.get_content_field_name())
@@ -1615,11 +1626,11 @@ def export_answers(doc_path: str) -> Response:
 
 @answers.post("/importAnswers")
 def import_answers(
-    exported_answers: list[ExportedAnswer],
-    allow_missing_users: bool = False,
-    match_email_case: bool = True,
-    doc_map: dict[str, str] = field(default_factory=dict),
-    group: str | None = None,
+        exported_answers: list[ExportedAnswer],
+        allow_missing_users: bool = False,
+        match_email_case: bool = True,
+        doc_map: dict[str, str] = field(default_factory=dict),
+        group: str | None = None,
 ) -> Response:
     ug: UserGroup | None = None
     if not group:
@@ -1751,12 +1762,12 @@ def import_answers(
     for a in exported_answers:
         doc_id = doc_path_map[doc_map.get(a.doc, a.doc)].id
         if (
-            doc_id,
-            a.task,
-            a.time,
-            a.valid,
-            a.points,
-            a.username,
+                doc_id,
+                a.task,
+                a.time,
+                a.valid,
+                a.points,
+                a.username,
         ) not in existing_set:
             u = users_by_name.get(a.username)
             if not u:
@@ -1831,7 +1842,7 @@ def get_answers(task_id: str, user_id: int) -> Response:
                 if not has_review_access(d, curr_user, None, user):
                     raise AccessDenied()
 
-        elif d.document.get_settings().need_view_for_answers():
+        elif d.document.get_settings().get("need_view_for_answers", False):
             verify_view_access(d)
         user_answers = user.get_answers_for_task(tid.doc_task).all()
         user_context = user_context_with_logged_in(user)
@@ -1869,15 +1880,15 @@ def get_all_answers_plain(task_id: str, options: AllAnswersOptions) -> Response:
 
 
 def get_all_answers_list_plain(
-    task_ids: list[TaskId], options: AllAnswersOptions
+        task_ids: list[TaskId], options: AllAnswersOptions
 ) -> Response:
     all_answers = get_all_answers_as_list(task_ids, options)
     if options.format == FormatOptions.JSON:
         return json_response(all_answers)
     jointext = "\n"
     print_answers = (
-        options.print == AnswerPrintOptions.ALL
-        or options.print == AnswerPrintOptions.ANSWERS
+            options.print == AnswerPrintOptions.ALL
+            or options.print == AnswerPrintOptions.ANSWERS
     )
     if print_answers:
         jointext = "\n\n----------------------------------------------------------------------------------\n"
@@ -1886,7 +1897,7 @@ def get_all_answers_list_plain(
 
 
 def get_all_answers_as_list(
-    task_ids: list[TaskId], options: AllAnswersOptions
+        task_ids: list[TaskId], options: AllAnswersOptions
 ) -> list[str]:
     verify_logged_in()
     if not task_ids:
@@ -1907,13 +1918,13 @@ def get_all_answers_as_list(
 
     # Check only for the first document since we require seeanswers for all
     if (
-        d
-        and (not has_teacher_access(d) or hide_names_in_teacher(d))
-        and options.name
-        not in (
+            d
+            and (not has_teacher_access(d) or hide_names_in_teacher(d))
+            and options.name
+            not in (
             NameOptions.ANON,
             NameOptions.PSEUDO,
-        )
+    )
     ):
         options.name = NameOptions.ANON
 
@@ -1942,7 +1953,7 @@ class FieldInfo:
 
 
 def get_plug_vals(
-    doc: DocInfo, tid: TaskId, user_ctx: UserContext, view_ctx: ViewContext
+        doc: DocInfo, tid: TaskId, user_ctx: UserContext, view_ctx: ViewContext
 ) -> FieldInfo | None:
     d, plug = get_plugin_from_request(doc.document, tid, user_ctx, view_ctx)
     flds = plug.known.fields
@@ -2042,14 +2053,14 @@ def get_model_answer(task_id: str) -> Response:
                     f"You need to attempt at least {model_answer_info.count} times before viewing the model answer"
                 )
         if (
-            model_answer_info.minPoints is not None
-            and model_answer_info.minPoints is not missing
+                model_answer_info.minPoints is not None
+                and model_answer_info.minPoints is not missing
         ):
             prev_ans = current_user.get_answers_for_task(tid.doc_task).first()
             if (
-                not prev_ans
-                or prev_ans.points is None
-                or prev_ans.points < model_answer_info.minPoints
+                    not prev_ans
+                    or prev_ans.points is None
+                    or prev_ans.points < model_answer_info.minPoints
             ):
                 raise AccessDenied(
                     f"You need at least {model_answer_info.minPoints} points from this task to view the model answer"
@@ -2092,14 +2103,14 @@ def get_model_answer(task_id: str) -> Response:
 
 @answers.get("/getState")
 def get_state(
-    user_id: int,
-    answer_id: int | None = None,
-    par_id: str | None = None,
-    doc_id: int | None = None,
-    review: bool = False,
-    task_id: str | None = None,
-    answernr: int | None = None,
-    ask_new: bool | None = False,
+        user_id: int,
+        answer_id: int | None = None,
+        par_id: str | None = None,
+        doc_id: int | None = None,
+        review: bool = False,
+        task_id: str | None = None,
+        answernr: int | None = None,
+        ask_new: bool | None = False,
 ) -> Response:
     answer = None
     user = User.get_by_id(user_id)
@@ -2129,7 +2140,7 @@ def get_state(
         tid = TaskId.parse(task_id)
         d = get_doc_or_abort(tid.doc_id)
         if get_current_user_id() != user_id and not has_review_access(
-            d, get_current_user_object(), None, user
+                d, get_current_user_object(), None, user
         ):
             verify_seeanswers_access(d)
         else:

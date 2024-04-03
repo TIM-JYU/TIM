@@ -74,16 +74,17 @@ def get_user_profile() -> Response:
 @oauth.post("introspect")
 @require_oauth()
 @csrf.exempt
-def introspect_token():
-    # TODO: Implement introspection
+def introspect_token() -> Response:
     token = current_token
-    return {
-        "active": True,
-        "client_id": token.client_id,
-        "token_type": token.token_type,
-        "username": token.user.name,
-        "scope": token.get_scope(),
-        "aud": token.client_id,
-        "exp": token.expires_in,
-        "iat": token.issued_at,
-    }
+    return json_response(
+        {
+            "active": True,
+            "client_id": token.client_id,
+            "token_type": token.token_type,
+            "username": token.user.name,
+            "scope": token.get_scope(),
+            "aud": token.client_id,
+            "exp": token.expires_in,
+            "iat": token.issued_at,
+        }
+    )

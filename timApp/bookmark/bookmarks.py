@@ -56,12 +56,12 @@ class Bookmarks:
         self.bookmark_data = self.get_bookmarks()
 
     def add_bookmark(
-        self,
-        groupname: str,
-        name: str,
-        link: str,
-        move_to_top: bool = False,
-        limit: int | None = None,
+            self,
+            groupname: str,
+            name: str,
+            link: str,
+            move_to_top: bool = False,
+            limit: int | None = None,
     ) -> "Bookmarks":
         """
         Adds a bookmark to the given bookmark group.
@@ -107,6 +107,20 @@ class Bookmarks:
                         return True
         return False
 
+    def get_bookmarks_in_group(self, groupname: str) -> Optional[BookmarkEntryList]:
+        """
+        Returns a list of bookmarks in the given group.
+
+        :param groupname: Group name.
+        :return: List of bookmarks in the group or None if the group does not exist.
+        """
+        bookmark_data = self.bookmark_data
+        for folder in bookmark_data:
+            items = folder.get(groupname)
+            if items is not None:
+                return items
+        return None
+
     def delete_bookmark(self, groupname: str, name: str) -> "Bookmarks":
         """
         Deletes a bookmark from the given group.
@@ -144,12 +158,12 @@ class Bookmarks:
         return self
 
     def _add_item_to_group(
-        self,
-        groupitems: BookmarkEntryList,
-        name: str,
-        link: str,
-        move_to_top: bool = False,
-        limit: int | None = None,
+            self,
+            groupitems: BookmarkEntryList,
+            name: str,
+            link: str,
+            move_to_top: bool = False,
+            limit: int | None = None,
     ) -> None:
         item_found = False
         for i in groupitems:

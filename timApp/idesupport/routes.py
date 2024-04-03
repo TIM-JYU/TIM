@@ -4,14 +4,11 @@ from flask import Response, request
 from timApp.auth.oauth2.models import Scope
 from timApp.auth.oauth2.oauth2 import require_oauth
 
-from timApp.tide_support.utils import (
-    user_ide_courses,
-    ide_tasks,
-    ide_task_by_id,
-    ide_task_folders_by_doc,
-    ide_submit_task,
-)
+import timApp.idesupport.utils as utils
+
+from timApp.tim_app import csrf
 from timApp.user.user import User
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -25,9 +22,7 @@ def get_user_ide_courses() -> Response:
     Get all courses that the user has bookmarked and have ideCourse tag
     :return: JSON response with all courses and their task folders
     """
-
-    user: User = current_token.user
-    return json_response(user_ide_courses(user=user))
+    return json_response(utils.get_user_ide_courses(current_token.user))
 
 
 @ide.get("taskFoldersByDoc")
@@ -42,34 +37,67 @@ def get_ide_task_folders_by_doc() -> Response:
     doc_path = request.json.get("doc_path")
 
     if not doc_id and not doc_path:
-        return json_response({"error": "No doc_id or doc_path provided"})
+        raise RouteException("No doc_id or doc_path provided")
 
-    return json_response(ide_task_folders_by_doc(doc_id=doc_id, doc_path=doc_path))
+    user = current_token.user
+
+    return json_response(
+        utils.get_ide_task_set_documents_by_doc(user, doc_id=doc_id, doc_path=doc_path)
+    )
 
 
 @ide.get("tasksByDoc")
 @require_oauth(Scope.user_tasks.value)
 def get_ide_tasks_by_doc_path() -> Response:
     """
-    Get all tasks by task folder path or doc_id
+    Get all tasks by task set document path or doc_id
     :return: JSON response with the task
     """
     doc_path = request.json.get("doc_path")
     doc_id = request.json.get("doc_id")
 
     if not doc_path and not doc_id:
-        return json_response({"error": "No doc_path or doc_id provided"})
+        raise RouteException("No doc_path or doc_id provided")
 
     user: User = current_token.user
 
-    return json_response(ide_tasks(doc_path=doc_path, doc_id=doc_id, user=user))
+    return json_response(utils.get_ide_tasks(user, doc_path=doc_path, doc_id=doc_id))
+
+
+@ide.get("tasksByCourse")
+@require_oauth(Scope.user_tasks.value)
+def get_ide_tasks_by_course() -> Response:
+    """
+    Gets all ide tasks for a given course
+    :return: JSON response with tasks in task folders
+    """
+    doc_path = request.json.get("doc_path")
+    doc_id = request.json.get("doc_id")
+
+    if not doc_path and not doc_id:
+        raise RouteException("No course path or doc id provided")
+
+    user = current_token.user
+
+    doc_paths = utils.get_ide_task_set_documents_by_doc(
+        user, doc_path=doc_path, doc_id=doc_id
+    )
+
+    user = current_token.user
+
+    tasks_by_folder = []
+    for task_set_doc in doc_paths:
+        tasks = [utils.get_ide_tasks(user, doc_path=task_set_doc.path)]
+        tasks_by_folder.append(tasks)
+
+    return json_response(tasks_by_folder)
 
 
 @ide.get("tasksByIdeTaskId")
 @require_oauth(Scope.user_tasks.value)
 def get_ide_tasks_by_ide_task_id() -> Response:
     """
-    Get all tasks by folder path or doc_id and ide_task_id
+    Get all tasks by document path or document id and ide_task_id
     :return: JSON response with the task
     """
     ide_task_id = request.json.get("ide_task_id")
@@ -77,24 +105,25 @@ def get_ide_tasks_by_ide_task_id() -> Response:
     doc_path = request.json.get("doc_path")
 
     if not ide_task_id:
-        return json_response({"error": "No ide_task_id provided"})
+        raise RouteException("No ide_task_id provided")
 
     if not doc_id and not doc_path:
-        return json_response({"error": "No doc_id or doc_path provided"})
+        raise RouteException("No doc_id or doc_path provided")
 
     user: User = current_token.user
 
     return json_response(
-        ide_task_by_id(
+        utils.get_ide_task_by_id(
+            user,
             ide_task_id=ide_task_id,
             doc_id=doc_id,
-            user=user,
             doc_path=doc_path,
         )
     )
 
 
-@ide.get("submitTask")
+@ide.put("submitTask")
+@csrf.exempt
 @require_oauth(Scope.user_tasks.value)
 def submit_ide_task() -> Response:
     """
@@ -103,24 +132,9 @@ def submit_ide_task() -> Response:
     :return: JSON response with the task
     """
     user = current_token.user
-    task_id_ext = request.json.get("task_id_ext")
-    code_files = request.json.get("code_files")
-    code_language = request.json.get("code_language")
-    user_input = request.json.get("user_input")
-    user_args = request.json.get("user_args")
 
-    if not task_id_ext or not code_files or not code_language:
-        return json_response(
-            {"error": "No task_id_ext, code file or code language provided"}
-        )
+    submit = utils.TIDESubmitFileSchema.load(request.json)
 
-    answer = ide_submit_task(
-        code_files=code_files,
-        task_id_ext=task_id_ext,
-        code_language=code_language,
-        user=user,
-        user_input=user_input,
-        user_args=user_args,
-    )
+    answer = utils.ide_submit_task(submit, user)
 
     return json_response(answer)
