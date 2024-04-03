@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from marshmallow import EXCLUDE
 from flask import current_app
 
-from timApp.answer.routes import post_answer_impl, verify_ip_address
+from timApp.answer.routes import post_answer_impl, verify_ip_address, AnswerRouteResult
 from timApp.auth.accesshelper import (
     verify_ip_ok,
     verify_access,
