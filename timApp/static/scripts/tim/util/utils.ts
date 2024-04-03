@@ -10,7 +10,7 @@ import type {Pos} from "tim/ui/pos";
 import {either} from "fp-ts/Either";
 import type {Observable} from "rxjs";
 import {lastValueFrom} from "rxjs";
-import {HttpParams} from "@angular/common/http";
+import {HttpErrorResponse, HttpParams} from "@angular/common/http";
 import type {IGroup} from "tim/user/IUser";
 import {$rootScope, $timeout} from "tim/util/ngimport";
 
@@ -397,6 +397,12 @@ export function toPromise<T, U = AngularError>(
     return lastValueFrom(observable)
         .then<Success<T>>((data: T) => ({ok: true, result: data}))
         .catch<Failure<U>>((err) => {
+            if (err instanceof HttpErrorResponse) {
+                return {
+                    ok: false,
+                    result: {error: err.message, status: err.status} as U,
+                };
+            }
             return {ok: false, result: err as U};
         });
 }
