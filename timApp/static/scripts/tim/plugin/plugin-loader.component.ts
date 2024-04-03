@@ -206,7 +206,8 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
             if (
                 (getURLParameter("task") === this.parsedTaskId.name &&
                     !this.preview) ||
-                getViewName() == "review"
+                getViewName() == "review" ||
+                getViewName() == "teacher"
             ) {
                 this.loadPluginAfterInit = true;
             }
