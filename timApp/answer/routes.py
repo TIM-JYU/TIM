@@ -112,6 +112,7 @@ from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.plugintype import PluginTypeBase
 from timApp.plugin.taskid import TaskId, TaskIdAccess
+from timApp.tim_app import csrf
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import (
@@ -609,10 +610,12 @@ InputAnswer = Union[AnswerData, list[Any], int, float, str]
 
 # noinspection PyShadowingBuiltins
 @answers.put("/<plugintype>/<task_id_ext>/answer")
+@csrf.exempt
 def post_answer(
     plugintype: str,
     task_id_ext: str,
     input: InputAnswer,
+    username: str | None = None,
     abData: dict[str, Any] = field(default_factory=dict),
     options: dict[str, Any] = field(default_factory=dict),
 ) -> Response:
@@ -625,7 +628,14 @@ def post_answer(
     :param options: Options to apply for answer saving
     :param abData: Data applied from answer browser
     """
-    curr_user = get_current_user_object()
+    if username:
+        u = User.get_by_name(username)
+        if u:
+            curr_user = u
+        else:
+            raise RouteException("Invalid username")
+    else:
+        curr_user = get_current_user_object()
     blocked_msg = (
         current_app.config["IP_BLOCK_ROUTE_MESSAGE"]
         or "Answering is not allowed from this IP address."
