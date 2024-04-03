@@ -57,7 +57,7 @@ class IdeFile:
     """ User arguments for the file """
 
     # Convert to json and set code based on 'by' or 'byCode'
-    def to_json(self):
+    def to_json(self) -> dict[str, str | None]:
         return {
             "task_id_ext": self.taskIDExt,
             "content": self.by or self.byCode,
@@ -319,7 +319,11 @@ def get_ide_task_set_documents_by_doc(
         raise RouteException("No document id or path given")
 
     if doc_id is None:
-        doc = DocInfo.find_by_path(path=doc_path.lower())
+        path = doc_path
+        if path is None:
+            raise RouteException("No document path given")
+        path = path.lower()
+        doc = DocInfo.find_by_path(path=path)
     else:
         doc = DocEntry.find_by_id(doc_id=doc_id)
 
@@ -336,14 +340,14 @@ def get_ide_task_set_documents_by_doc(
 
     paths = []
     for path in task_paths:
-        paths.append(TIDETaskSetDocument(path.path))
+        paths.append(TIDETaskSetDocument(path=path.path))
 
     return paths
 
 
 def get_ide_tasks(
         user: User, doc_id: int | None = None, doc_path: str | None = None
-) -> list[TIDEPluginData] | RouteException:
+) -> TIDEPluginData | RouteException:
     """
     Get all TIDE-tasks from the task set document
     :param user: Logged-in user
@@ -556,7 +560,9 @@ def get_ide_user_plugin_data(
     )
 
 
-def ide_submit_task(submit: TIDESubmitFile, user: User):
+def ide_submit_task(
+        submit: TIDESubmitFile, user: User
+) -> AnswerRouteResult | RouteException:
     """
     Submit the TIDE-task
     :param submit: TIDESubmitFile
