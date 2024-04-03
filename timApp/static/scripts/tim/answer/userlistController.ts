@@ -224,9 +224,9 @@ export class UserListController implements IController {
                             return;
                         }
 
-                        if (oldRowCol && oldRowCol.row === newRowCol.row) {
-                            return;
-                        }
+                        // if (oldRowCol && oldRowCol.row === newRowCol.row) {
+                        //     return;
+                        // }
                         const unsavedTimComponents =
                             this.viewctrl.checkUnSavedComponents(true);
                         if (
@@ -420,7 +420,7 @@ export class UserListController implements IController {
      * @param user user to select
      */
     changeUserWithoutFiring(user: IUserListEntry) {
-        // this.preventedChange = true;
+        this.preventedChange = true;
         this.gridApi?.selection.selectRow(user);
         // if (this.currentRowCol) {
         //     this.gridApi?.cellNav.scrollToFocus(
