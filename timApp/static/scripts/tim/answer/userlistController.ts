@@ -422,13 +422,13 @@ export class UserListController implements IController {
     changeUserWithoutFiring(user: IUserListEntry) {
         this.preventedChange = true;
         this.gridApi?.selection.selectRow(user);
-        if (this.currentRowCol) {
-            this.gridApi?.cellNav.scrollToFocus(
-                user,
-                this.currentRowCol.col.colDef
-            );
-        }
-        this.currentRowCol = this.gridApi?.cellNav.getFocusedCell();
+        // if (this.currentRowCol) {
+        //     this.gridApi?.cellNav.scrollToFocus(
+        //         user,
+        //         this.currentRowCol.col.colDef
+        //     );
+        // }
+        // this.currentRowCol = this.gridApi?.cellNav.getFocusedCell();
     }
 
     exportKorppi(options: IExportOptions) {
