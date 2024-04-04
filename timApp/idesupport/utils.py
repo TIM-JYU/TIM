@@ -17,6 +17,7 @@ from timApp.auth.accesshelper import (
 from timApp.auth.accesstype import AccessType
 from timApp.bookmark.bookmarks import MY_COURSES_GROUP, HIDDEN_COURSES_GROUP
 from timApp.document.docentry import DocEntry
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
@@ -163,7 +164,7 @@ class TIDEPluginData:
     Document id
     """
 
-    par_id: int | None = None
+    par_id: str | None = None
     """
     Paragraph id
     """
@@ -253,7 +254,7 @@ def get_user_ide_courses(user: User) -> list[TIDECourse] | RouteException:
     for course_dict in user_courses:
         for course_name, course_path in course_dict.items():
             # Get the document by path, remove /view/ from the beginning of path
-            doc = DocInfo.find_by_path(
+            doc = DocEntry.find_by_path(
                 course_path.split("view/")[1:][0]
             )  # This should be lowercase
 
@@ -269,7 +270,7 @@ def get_user_ide_courses(user: User) -> list[TIDECourse] | RouteException:
 
             for path in task_paths:
                 # Get the document by path for doc id
-                task_doc = DocInfo.find_by_path(
+                task_doc = DocEntry.find_by_path(
                     # Wont work if not converted to lowercase
                     path.path.lower()
                 )
@@ -305,7 +306,7 @@ def get_user_ide_courses(user: User) -> list[TIDECourse] | RouteException:
 
 def get_ide_task_set_documents_by_doc(
         user: User, doc_id: int | None = None, doc_path: str | None = None
-) -> list[TIDETaskSetDocument] | RouteException:
+) -> list[TIDETaskSetDocument]:
     """
     Find all TIDE-task set documents from the document
     :param user: Current user
@@ -323,7 +324,7 @@ def get_ide_task_set_documents_by_doc(
         if path is None:
             raise RouteException("No document path given")
         path = path.lower()
-        doc = DocInfo.find_by_path(path=path)
+        doc = DocEntry.find_by_path(path=path)
     else:
         doc = DocEntry.find_by_id(doc_id=doc_id)
 
@@ -339,15 +340,15 @@ def get_ide_task_set_documents_by_doc(
         raise RouteException("Document not found")
 
     paths = []
-    for path in task_paths:
-        paths.append(TIDETaskSetDocument(path=path.path))
+    for p in task_paths:
+        paths.append(TIDETaskSetDocument(path=p.path))
 
     return paths
 
 
 def get_ide_tasks(
         user: User, doc_id: int | None = None, doc_path: str | None = None
-) -> TIDEPluginData | RouteException:
+) -> list[TIDEPluginData]:
     """
     Get all TIDE-tasks from the task set document
     :param user: Logged-in user
@@ -357,13 +358,13 @@ def get_ide_tasks(
     :raise In case of an error raises RouteException
     """
 
-    if doc_id is None and doc_path is None:
-        raise NotExist()
+    if doc_path is not None:
+        doc = DocEntry.find_by_path(path=doc_path.lower())
 
-    if doc_id is None:
-        doc = DocInfo.find_by_path(path=doc_path.lower())
+    elif doc_id is not None:
+        doc = DocEntry.find_by_id(doc_id=doc_id)
     else:
-        doc = DocInfo.find_by_id(item_id=doc_id)
+        raise RouteException("No document id or path given")
 
     if doc is None:
         raise RouteException("No document found")
@@ -378,12 +379,14 @@ def get_ide_tasks(
     tasks = []
 
     for p in pars:
-        if p.attrs.get(IDE_TASK_TAG) is not None:
-            task = get_ide_user_plugin_data(
-                doc=doc, par=p, user_ctx=user_ctx, ide_task_id=p.attrs.get(IDE_TASK_TAG)
-            )
-            if task:
-                tasks.append(task)
+        if p.attrs is not None:
+            tag = p.attrs.get(IDE_TASK_TAG)
+            if tag is not None:
+                task = get_ide_user_plugin_data(
+                    doc=doc, par=p, user_ctx=user_ctx, ide_task_id=tag
+                )
+                if task:
+                    tasks.append(task)
 
     if len(tasks) == 0:
         raise RouteException("No tasks found")
@@ -406,14 +409,13 @@ def get_ide_task_by_id(
     :return: TIDEPluginData or TIDEError
     :raises In case of an error raises RouteException
     """
-    if doc_id is None and doc_path is None:
-        raise RouteException("No document id or path given")
 
-    if doc_path is None:
-        doc = DocInfo.find_by_id(item_id=doc_id)
+    if doc_id is not None:
+        doc = DocEntry.find_by_id(doc_id=doc_id)
+    elif doc_path is not None:
+        doc = DocEntry.find_by_path(path=doc_path.lower())
     else:
-        doc = DocInfo.find_by_path(path=doc_path.lower())
-
+        raise RouteException("No document id or path given")
     # If the document does not exist, raise NotExist
     if doc is None:
         raise RouteException("No document found")
@@ -431,12 +433,13 @@ def get_ide_task_by_id(
     tasks = []
 
     for p in pars:
-        if p.attrs.get(IDE_TASK_TAG) == ide_task_id:
-            task = get_ide_user_plugin_data(
-                doc=doc, par=p, user_ctx=user_ctx, ide_task_id=ide_task_id
-            )
-            if task:
-                tasks.append(task)
+        if p.attrs is not None:
+            if p.attrs.get(IDE_TASK_TAG) == ide_task_id:
+                task = get_ide_user_plugin_data(
+                    doc=doc, par=p, user_ctx=user_ctx, ide_task_id=ide_task_id
+                )
+                if task:
+                    tasks.append(task)
 
     if len(tasks) == 0:
         raise RouteException("No tasks found")
@@ -451,10 +454,10 @@ def get_ide_task_by_id(
 
 def get_ide_user_plugin_data(
         doc: DocInfo,
-        par: dict,
+        par: DocParagraph,
         ide_task_id: str,
         user_ctx: UserContext,
-) -> TIDEPluginData | RouteException:
+) -> TIDEPluginData:
     """
     Get the TIDE-task information from the plugin
     :param ide_task_id:  TIDE-task id
@@ -602,9 +605,13 @@ def ide_submit_task(
         "teacher": False,
         "userId": user.id,
     }
+    task_id_ext = submit.code_files[file_index].task_id_ext
+
+    if task_id_ext is None:
+        raise RouteException("No task id extension found in the plugin")
 
     return post_answer_impl(
-        task_id_ext=submit.code_files[file_index].task_id_ext,
+        task_id_ext=task_id_ext,
         answerdata=answer_data,
         answer_browser_data=brow_data,
         answer_options={},
