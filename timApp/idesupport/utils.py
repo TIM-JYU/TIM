@@ -305,7 +305,7 @@ def get_user_ide_courses(user: User) -> list[TIDECourse] | RouteException:
 
 
 def get_ide_task_set_documents_by_doc(
-        user: User, doc_id: int | None = None, doc_path: str | None = None
+    user: User, doc_id: int | None = None, doc_path: str | None = None
 ) -> list[TIDETaskSetDocument]:
     """
     Find all TIDE-task set documents from the document
@@ -347,7 +347,7 @@ def get_ide_task_set_documents_by_doc(
 
 
 def get_ide_tasks(
-        user: User, doc_id: int | None = None, doc_path: str | None = None
+    user: User, doc_id: int | None = None, doc_path: str | None = None
 ) -> list[TIDEPluginData]:
     """
     Get all TIDE-tasks from the task set document
@@ -395,10 +395,10 @@ def get_ide_tasks(
 
 
 def get_ide_task_by_id(
-        user: User,
-        ide_task_id: str,
-        doc_id: int | None = None,
-        doc_path: str | None = None,
+    user: User,
+    ide_task_id: str,
+    doc_id: int | None = None,
+    doc_path: str | None = None,
 ) -> TIDEPluginData | RouteException:
     """
     Get TIDE-task from the document by document id and paragraph id
@@ -453,10 +453,10 @@ def get_ide_task_by_id(
 
 
 def get_ide_user_plugin_data(
-        doc: DocInfo,
-        par: DocParagraph,
-        ide_task_id: str,
-        user_ctx: UserContext,
+    doc: DocInfo,
+    par: DocParagraph,
+    ide_task_id: str,
+    user_ctx: UserContext,
 ) -> TIDEPluginData:
     """
     Get the TIDE-task information from the plugin
@@ -564,7 +564,7 @@ def get_ide_user_plugin_data(
 
 
 def ide_submit_task(
-        submit: TIDESubmitFile, user: User
+    submit: TIDESubmitFile, user: User
 ) -> AnswerRouteResult | RouteException:
     """
     Submit the TIDE-task

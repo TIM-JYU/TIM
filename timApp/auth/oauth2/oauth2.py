@@ -49,7 +49,7 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
     TOKEN_ENDPOINT_AUTH_METHODS = ["client_secret_basic", "client_secret_post", "none"]
 
     def save_authorization_code(
-            self, code: str, request: OAuth2Request
+        self, code: str, request: OAuth2Request
     ) -> OAuth2AuthorizationCode:
         code_challenge = request.data.get("code_challenge")
         code_challenge_method = request.data.get("code_challenge_method")
@@ -67,7 +67,7 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
         return auth_code
 
     def query_authorization_code(
-            self, code: str, client: OAuth2Client
+        self, code: str, client: OAuth2Client
     ) -> OAuth2AuthorizationCode | None:
         auth_code = (
             run_sql(
@@ -83,7 +83,7 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
         return None
 
     def delete_authorization_code(
-            self, authorization_code: OAuth2AuthorizationCode
+        self, authorization_code: OAuth2AuthorizationCode
     ) -> None:
         db.session.delete(authorization_code)
         db.session.commit()

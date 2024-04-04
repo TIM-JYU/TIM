@@ -56,12 +56,12 @@ class Bookmarks:
         self.bookmark_data = self.get_bookmarks()
 
     def add_bookmark(
-            self,
-            groupname: str,
-            name: str,
-            link: str,
-            move_to_top: bool = False,
-            limit: int | None = None,
+        self,
+        groupname: str,
+        name: str,
+        link: str,
+        move_to_top: bool = False,
+        limit: int | None = None,
     ) -> "Bookmarks":
         """
         Adds a bookmark to the given bookmark group.
@@ -158,12 +158,12 @@ class Bookmarks:
         return self
 
     def _add_item_to_group(
-            self,
-            groupitems: BookmarkEntryList,
-            name: str,
-            link: str,
-            move_to_top: bool = False,
-            limit: int | None = None,
+        self,
+        groupitems: BookmarkEntryList,
+        name: str,
+        link: str,
+        move_to_top: bool = False,
+        limit: int | None = None,
     ) -> None:
         item_found = False
         for i in groupitems:

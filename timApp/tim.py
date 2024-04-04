@@ -288,8 +288,8 @@ def install_sql_hook():
             prev_exec_time = curr
             for r in traceback.format_stack():
                 if (
-                        r.startswith('  File "/service/')
-                        and not receive_before_execute.__name__ in r
+                    r.startswith('  File "/service/')
+                    and not receive_before_execute.__name__ in r
                 ):
                     print(r, end="")
             try:
@@ -335,9 +335,9 @@ def preprocess_request():
                 referrer_domain = None
             last_referrers = session.get("last_referrers", [])
             if (
-                    referrer_domain
-                    and referrer_domain != request.host
-                    and referrer_domain not in last_referrers
+                referrer_domain
+                and referrer_domain != request.host
+                and referrer_domain not in last_referrers
             ):
                 last_referrers.append(referrer_domain)
                 # Only leave the last 5 referrers.

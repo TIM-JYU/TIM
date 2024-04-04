@@ -73,7 +73,7 @@ def get_ide_tasks_by_course(doc_id: int | None, doc_path: str | None) -> Respons
 @ide.get("taskByIdeTaskId")
 @require_oauth(Scope.user_tasks.value)
 def get_ide_task_by_ide_task_id(
-        ide_task_id: str, doc_id: int | None, doc_path: str | None
+    ide_task_id: str, doc_id: int | None, doc_path: str | None
 ) -> Response:
     """
     Get all tasks by document path or document id and ide_task_id

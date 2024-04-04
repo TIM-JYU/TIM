@@ -87,12 +87,12 @@ def verify_admin_no_ret(require=True):
 
 
 def verify_edit_access(
-        b: ItemOrBlock,
-        require=True,
-        message=None,
-        check_duration=False,
-        check_parents=False,
-        user=None,
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+    user=None,
 ):
     return verify_access(
         b,
@@ -106,11 +106,11 @@ def verify_edit_access(
 
 
 def verify_manage_access(
-        b: ItemOrBlock,
-        require=True,
-        message=None,
-        check_duration=False,
-        check_parents=False,
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
 ):
     return verify_access(
         b,
@@ -123,14 +123,14 @@ def verify_manage_access(
 
 
 def verify_access(
-        b: ItemOrBlock,
-        access_type: AccessType,
-        require: bool = True,
-        message: str | None = None,
-        check_duration=False,
-        check_parents=False,
-        grace_period=timedelta(seconds=0),
-        user: User | None = None,
+    b: ItemOrBlock,
+    access_type: AccessType,
+    require: bool = True,
+    message: str | None = None,
+    check_duration=False,
+    check_parents=False,
+    grace_period=timedelta(seconds=0),
+    user: User | None = None,
 ):
     u = user or get_current_user_object()
     has_access = u.has_access(b, access_type, grace_period)
@@ -152,10 +152,10 @@ def verify_access(
 
 
 def check_inherited_right(
-        u: User,
-        b: ItemOrBlock,
-        access_type: AccessType,
-        grace_period: timedelta,
+    u: User,
+    b: ItemOrBlock,
+    access_type: AccessType,
+    grace_period: timedelta,
 ) -> BlockAccess | None:
     has_access = None
     is_docinfo = isinstance(b, DocInfo)
@@ -183,12 +183,12 @@ def get_inherited_right_blocks(b: ItemOrBlock) -> list[Block]:
 
 
 def verify_view_access(
-        b: ItemOrBlock,
-        require=True,
-        message=None,
-        check_duration=False,
-        check_parents=False,
-        user=None,
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+    user=None,
 ):
     return verify_access(
         b,
@@ -202,12 +202,12 @@ def verify_view_access(
 
 
 def verify_teacher_access(
-        b: ItemOrBlock,
-        require=True,
-        message=None,
-        check_duration=False,
-        check_parents=False,
-        user=None,
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+    user=None,
 ):
     return verify_access(
         b,
@@ -221,11 +221,11 @@ def verify_teacher_access(
 
 
 def verify_copy_access(
-        b: ItemOrBlock,
-        require=True,
-        message=None,
-        check_duration=False,
-        check_parents=False,
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
 ):
     return verify_access(
         b,
@@ -238,12 +238,12 @@ def verify_copy_access(
 
 
 def verify_seeanswers_access(
-        b: ItemOrBlock,
-        require=True,
-        message=None,
-        check_duration=False,
-        check_parents=False,
-        user=None,
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+    user=None,
 ):
     return verify_access(
         b,
@@ -261,10 +261,10 @@ class ItemLockedException(Exception):
     access that has not yet begun or the access has expired."""
 
     def __init__(
-            self,
-            access: BlockAccess,
-            msg: str | None = None,
-            next_doc: DocInfo | None = None,
+        self,
+        access: BlockAccess,
+        msg: str | None = None,
+        next_doc: DocInfo | None = None,
     ):
         self.access = access
         self.msg = msg
@@ -272,13 +272,13 @@ class ItemLockedException(Exception):
 
 
 def abort_if_not_access_and_required(
-        access_obj: BlockAccess,
-        user: User,
-        block: ItemOrBlock,
-        access_type: AccessType,
-        require=True,
-        message=None,
-        check_duration=False,
+    access_obj: BlockAccess,
+    user: User,
+    block: ItemOrBlock,
+    access_type: AccessType,
+    require=True,
+    message=None,
+    check_duration=False,
 ):
     if access_obj:
         return access_obj
@@ -467,11 +467,11 @@ def verify_logged_in() -> None:
 
 
 def verify_ownership(
-        b: ItemOrBlock,
-        require=True,
-        message=None,
-        check_duration=False,
-        check_parents=False,
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
 ):
     return verify_access(
         b,
@@ -494,11 +494,11 @@ def verify_comment_right(b: ItemOrBlock):
 
 
 def get_plugin_from_request(
-        doc: Document,
-        task_id: TaskId,
-        u: UserContext,
-        view_ctx: ViewContext,
-        answernr: int | None = None,
+    doc: Document,
+    task_id: TaskId,
+    u: UserContext,
+    view_ctx: ViewContext,
+    answernr: int | None = None,
 ) -> tuple[Document, Plugin]:
     assert doc.doc_id == task_id.doc_id
     orig_info = view_ctx.origin
@@ -524,8 +524,8 @@ def get_plugin_from_request(
     ctx_doc = (
         orig_doc
         if (
-                not orig_doc.get_docinfo().is_original_translation
-                and orig_par.is_translation()
+            not orig_doc.get_docinfo().is_original_translation
+            and orig_par.is_translation()
         )
         else doc
     )
@@ -562,14 +562,14 @@ class TaskAccessVerification:
 
 
 def verify_task_access(
-        d: DocInfo,
-        task_id: TaskId,
-        access_type: AccessType,
-        required_task_access_level: TaskIdAccess,
-        context_user: UserContext,
-        view_ctx: ViewContext,
-        allow_grace_period: bool = False,
-        answernr: int | None = None,
+    d: DocInfo,
+    task_id: TaskId,
+    access_type: AccessType,
+    required_task_access_level: TaskIdAccess,
+    context_user: UserContext,
+    view_ctx: ViewContext,
+    allow_grace_period: bool = False,
+    answernr: int | None = None,
 ) -> TaskAccessVerification:
     assert d.id == task_id.doc_id
     doc, found_plugin = get_plugin_from_request(
@@ -598,9 +598,9 @@ def verify_task_access(
         return found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly
 
     if (
-            is_readonly()
-            and required_task_access_level == TaskIdAccess.ReadWrite
-            and not ctx_user_teacher_access
+        is_readonly()
+        and required_task_access_level == TaskIdAccess.ReadWrite
+        and not ctx_user_teacher_access
     ):
         raise AccessDenied(
             f"This task/field {task_id.task_name} is readonly and thus only writable for teachers."
@@ -608,9 +608,9 @@ def verify_task_access(
     is_invalid = False
     invalidate_reason = None
     if (
-            found_plugin.is_timed()
-            and not ctx_user_teacher_access
-            and required_task_access_level == TaskIdAccess.ReadWrite
+        found_plugin.is_timed()
+        and not ctx_user_teacher_access
+        and required_task_access_level == TaskIdAccess.ReadWrite
     ):
         found_plugin.set_access_end_for_user(user=context_user.logged_user)
         if found_plugin.access_end_for_user:
@@ -621,36 +621,36 @@ def verify_task_access(
             is_invalid = True
             invalidate_reason = "You haven't started this task yet."
     if (
-            not is_invalid
-            and (found_plugin.known.modelAnswer and found_plugin.known.modelAnswer.lock)
-            and required_task_access_level == TaskIdAccess.ReadWrite
+        not is_invalid
+        and (found_plugin.known.modelAnswer and found_plugin.known.modelAnswer.lock)
+        and required_task_access_level == TaskIdAccess.ReadWrite
     ):
         found_plugin.set_access_end_for_user(user=context_user.logged_user)
         if found_plugin.access_end_for_user:
             if found_plugin.access_end_for_user < get_current_time():
                 is_invalid = True
                 invalidate_reason = (
-                        found_plugin.known.modelAnswer.lockedAnswerMessage
-                        or "You have already downloaded the model answer and can not save new answers anymore."
+                    found_plugin.known.modelAnswer.lockedAnswerMessage
+                    or "You have already downloaded the model answer and can not save new answers anymore."
                 )
     if (
-            not is_invalid
-            and found_plugin.known.accessField
-            and required_task_access_level == TaskIdAccess.ReadWrite
+        not is_invalid
+        and found_plugin.known.accessField
+        and required_task_access_level == TaskIdAccess.ReadWrite
     ):
         is_invalid = not check_access_from_field(
             context_user, found_plugin.known.accessField, found_plugin.task_id
         )
         if is_invalid:
             invalidate_reason = (
-                    found_plugin.known.accessField.error
-                    or "You have expired your access to this task."
+                found_plugin.known.accessField.error
+                or "You have expired your access to this task."
             )
     if (
-            not is_invalid
-            and found_plugin.known.previousTask
-            and not ctx_user_teacher_access
-            and required_task_access_level == TaskIdAccess.ReadWrite
+        not is_invalid
+        and found_plugin.known.previousTask
+        and not ctx_user_teacher_access
+        and required_task_access_level == TaskIdAccess.ReadWrite
     ):
         valid, reason = check_access_from_previous_task(
             context_user, view_ctx, found_plugin.known.previousTask, d.document
@@ -669,12 +669,12 @@ def verify_task_access(
 
 
 def verify_answer_access(
-        answer_id: int,
-        user_id: int,
-        view_ctx: ViewContext,
-        require_teacher_if_not_own: bool = False,
-        required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
-        allow_grace_period: bool = False,
+    answer_id: int,
+    user_id: int,
+    view_ctx: ViewContext,
+    require_teacher_if_not_own: bool = False,
+    required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
+    allow_grace_period: bool = False,
 ) -> tuple[Answer, int]:
     answer: Answer = db.session.get(Answer, answer_id)
     if answer is None:
@@ -727,7 +727,7 @@ def verify_answer_access(
 
 
 def verify_route_access(
-        doc_info: DocInfo, route: ViewRoute, require: bool = True
+    doc_info: DocInfo, route: ViewRoute, require: bool = True
 ) -> BlockAccess | None:
     match route:
         case ViewRoute.Teacher:
@@ -745,7 +745,7 @@ def verify_route_access(
 
 
 def check_access_from_field(
-        context_user: UserContext, access_field: AccessField, task_id: TaskId
+    context_user: UserContext, access_field: AccessField, task_id: TaskId
 ):
     current_user = context_user.logged_user
     field_to_check = access_field.field
@@ -769,10 +769,10 @@ def check_access_from_field(
 
 
 def check_access_from_previous_task(
-        context_user: UserContext,
-        view_ctx: ViewContext,
-        prerequisite_info: PreviousTaskInfo,
-        current_doc: Document,
+    context_user: UserContext,
+    view_ctx: ViewContext,
+    prerequisite_info: PreviousTaskInfo,
+    current_doc: Document,
 ) -> tuple[bool, str | None]:
     prerequisite_taskid = TaskId.parse(prerequisite_info.taskid, require_doc_id=False)
     prequisite_taskid_doc = current_doc
@@ -787,8 +787,8 @@ def check_access_from_previous_task(
         )
         prerequisite_plugin.set_access_end_for_user(user=context_user.logged_user)
         if (
-                not prerequisite_plugin.access_end_for_user
-                or prerequisite_plugin.access_end_for_user >= get_current_time()
+            not prerequisite_plugin.access_end_for_user
+            or prerequisite_plugin.access_end_for_user >= get_current_time()
         ):
             return False, "You need to lock the prerequisite task first"
     if prerequisite_info.count:
@@ -917,8 +917,8 @@ def verify_ip_ok(user: User | None, msg: str | None = None) -> bool:
             send_email(
                 rcpt=cfg["ERROR_EMAIL"],
                 subject=f'{cfg["TIM_HOST"]}: '
-                        f"IP {request.remote_addr} outside allowlist ({username}) "
-                        f"- {blocked_or_allowed}",
+                f"IP {request.remote_addr} outside allowlist ({username}) "
+                f"- {blocked_or_allowed}",
                 mail_from=cfg["WUFF_EMAIL"],
                 reply_to=",".join(reply_tos),
                 msg=f"""
