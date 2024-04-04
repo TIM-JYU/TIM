@@ -8984,6 +8984,30 @@
           <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6266613639885813372" datatype="html">
+        <source>Could not load task data. Check your internet connection and try again.</source>
+        <target state="translated">Tehtävän tietoja ei voitu ladata. Tarkista verkkoyhteytesi ja yritä uudelleen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1555</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1788</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="142265385893814401" datatype="html">
+        <source>There is an issue with the server. Try to save your work and reload the page.</source>
+        <target state="translated">Palvelimen kanssa on ongelmia. Yritä tallentaa työsi ja virkistä sivu.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1559</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">1792</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
