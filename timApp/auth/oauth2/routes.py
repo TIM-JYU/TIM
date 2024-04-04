@@ -1,13 +1,17 @@
-from typing import Union
-
 from authlib.integrations.flask_oauth2 import current_token
 from authlib.oauth2 import OAuth2Error
 from authlib.oauth2.rfc6749 import BaseGrant, scope_to_list
 from flask import Response, render_template
 
 from timApp.auth.accesshelper import verify_logged_in
-from timApp.auth.oauth2.models import OAuth2Client, Scope
-from timApp.auth.oauth2.oauth2 import auth_server, require_oauth
+from timApp.auth.oauth2.models import (
+    OAuth2Client,
+    Scope,
+)
+from timApp.auth.oauth2.oauth2 import (
+    auth_server,
+    require_oauth,
+)
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.tim_app import csrf
 from timApp.user.user import User
@@ -63,5 +67,24 @@ def get_user_profile() -> Response:
             "given_name": user.given_name,
             "real_name": user.real_name,
             "username": user.name,
+        }
+    )
+
+
+@oauth.post("introspect")
+@require_oauth()
+@csrf.exempt
+def introspect_token() -> Response:
+    token = current_token
+    return json_response(
+        {
+            "active": True,
+            "client_id": token.client_id,
+            "token_type": token.token_type,
+            "username": token.user.name,
+            "scope": token.get_scope(),
+            "aud": token.client_id,
+            "exp": token.expires_in,
+            "iat": token.issued_at,
         }
     )
