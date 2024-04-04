@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import List, Optional, TypeVar, Callable, Union, Tuple, Any
 from urllib.parse import ParseResult, urlparse
 
+from cli.commands.i18n.compile import compile_translations
 from cli.commands.js import js
 from cli.commands.npmi import npmi
 from cli.commands.rust import build_rust
@@ -535,6 +536,9 @@ In most cases, you can use the default value (which is the same as the TIM host)
 
     log_info("Building Rust dependencies")
     build_rust()
+
+    log_info("Compiling server translation files")
+    compile_translations()
 
     if profile != "dev":
         log_info("Building TIM scripts")

@@ -4,6 +4,7 @@ from typing import Any, Sequence
 
 from flask import render_template, flash, Response
 from flask import request
+from flask_babel import refresh
 from jinja2 import TemplateNotFound
 from sqlalchemy import select
 
@@ -109,6 +110,9 @@ def save_language_route(lang: str) -> Response:
     db.session.commit()
     r = ok_response()
     r.set_cookie("lang", lang)
+
+    refresh()
+
     return r
 
 

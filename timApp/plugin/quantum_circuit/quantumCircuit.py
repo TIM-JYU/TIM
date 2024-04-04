@@ -9,6 +9,7 @@ from typing import Union
 import numpy as np
 import yaml
 from flask import render_template_string, request, jsonify, Response
+from flask_babel import gettext
 from qulacs import QuantumCircuit, QuantumState, QuantumGateMatrix
 from qulacs.gate import H, X, Y, Z, S, T, SWAP, to_matrix_gate, DenseMatrix
 
@@ -34,6 +35,7 @@ class SwapGateInfo:
     swap2: int
     editable: bool | None = True
     controls: list[int] | None = None
+    antiControls: list[int] | None = None
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -46,6 +48,7 @@ class NormalGateInfo:
     target: int
     editable: bool | None = True
     controls: list[int] | None = None
+    antiControls: list[int] | None = None
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -251,6 +254,14 @@ class QuantumCircuitHtmlModel(
 
 
 def render_static_quantum_circuit(m: QuantumCircuitHtmlModel) -> str:
+    markup_vars = asdict(m.markup)
+    if markup_vars["lazyBody"]:
+        markup_vars["message"] = markup_vars.get("lazyBody")
+    else:
+        markup_vars["message"] = gettext(
+            "Expand by moving mouse over the exercise or by clicking"
+        )
+
     return render_template_string(
         """
         <div class="panel panel-default">
@@ -264,15 +275,11 @@ def render_static_quantum_circuit(m: QuantumCircuitHtmlModel) -> str:
                     <p>{{ stem }}</p>
                 {% endif %}
 
-                {% if lazyBody %}
-                    <p class="alert alert-info">{{lazyBody}}</p>                
-                {% else %}
-                    <p class="alert alert-info">Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla.</p>
-                {% endif %}
+                <p class="alert alert-info">{{message}}</p>                
             </div>
         </div>
     """.strip(),
-        **asdict(m.markup),
+        **markup_vars,
     )
 
 
@@ -359,13 +366,26 @@ def add_gates_to_circuit(
                 if controls is not None:
                     for c in controls:
                         gate.add_control_qubit(c, 1)
+
+                anti_controls = gate_def.antiControls
+                if anti_controls is not None:
+                    for c in anti_controls:
+                        gate.add_control_qubit(c, 0)
+
                 circuit.add_gate(gate)
         elif isinstance(gate_def, SwapGateInfo):
             swap = to_matrix_gate(SWAP(gate_def.swap1, gate_def.swap2))
+
             controls = gate_def.controls
             if controls is not None:
                 for c in controls:
                     swap.add_control_qubit(c, 1)
+
+            anti_controls = gate_def.antiControls
+            if anti_controls is not None:
+                for c in anti_controls:
+                    swap.add_control_qubit(c, 0)
+
             circuit.add_gate(swap)
         else:
             log_warning(f"quantum: undefined gate type {gate_def}")
@@ -513,7 +533,7 @@ def run_all_simulations(
             return
         if not check_input_valid:
             continue
-        input_list = [int(d) for d in bitstring]
+        input_list = [int(d) for d in bitstring_reversed]
         try:
             success1, expected = run_simulation(
                 model_circuit, input_list, n_qubits, custom_gates
@@ -600,19 +620,53 @@ def get_gate_counts(
     circuit_names: set[str] = set()
     for gate_def in circuit:
         if isinstance(gate_def, NormalGateInfo):
-            if gate_def.controls and len(gate_def.controls) > 0:
+            if (
+                gate_def.controls
+                and len(gate_def.controls) > 0
+                and gate_def.antiControls
+                and len(gate_def.antiControls) > 0
+            ):
+                # each gate with specific number of controls is treated as separate gate
+                n_controls = len(gate_def.controls)
+                n_anti_controls = len(gate_def.antiControls)
+                control_gate_name = f"C{n_controls}AC{n_anti_controls}{gate_def.name}"
+                counts[control_gate_name] += 1
+                circuit_names.add(control_gate_name)
+            elif gate_def.controls and len(gate_def.controls) > 0:
                 # each gate with specific number of controls is treated as separate gate
                 n_controls = len(gate_def.controls)
                 control_gate_name = f"C{n_controls}{gate_def.name}"
+                counts[control_gate_name] += 1
+                circuit_names.add(control_gate_name)
+            elif gate_def.antiControls and len(gate_def.antiControls) > 0:
+                # each gate with specific number of controls is treated as separate gate
+                n_anti_controls = len(gate_def.antiControls)
+                control_gate_name = f"AC{n_anti_controls}{gate_def.name}"
                 counts[control_gate_name] += 1
                 circuit_names.add(control_gate_name)
             else:
                 counts[gate_def.name] += 1
                 circuit_names.add(gate_def.name)
         elif isinstance(gate_def, SwapGateInfo):
-            if gate_def.controls and len(gate_def.controls) > 0:
+            if (
+                gate_def.controls
+                and len(gate_def.controls) > 0
+                and gate_def.antiControls
+                and len(gate_def.antiControls) > 0
+            ):
+                n_controls = len(gate_def.controls)
+                n_anti_controls = len(gate_def.antiControls)
+                control_gate_name = f"C{n_controls}AC{n_anti_controls}swap"
+                counts[control_gate_name] += 1
+                circuit_names.add(control_gate_name)
+            elif gate_def.controls and len(gate_def.controls) > 0:
                 n_controls = len(gate_def.controls)
                 control_gate_name = f"C{n_controls}swap"
+                counts[control_gate_name] += 1
+                circuit_names.add(control_gate_name)
+            elif gate_def.antiControls and len(gate_def.antiControls) > 0:
+                n_anti_controls = len(gate_def.antiControls)
+                control_gate_name = f"AC{n_anti_controls}swap"
                 counts[control_gate_name] += 1
                 circuit_names.add(control_gate_name)
             else:
@@ -629,6 +683,16 @@ def get_gate_counts(
     # also add control gate names that are in conditions
     if conditions is not None:
         for condition in conditions:
+            # C<numberOfControls>AC<numberOfAntiControls><gateName>
+            control_gate_names = re.findall(r"C\d+AC\d+\D[^><=|&() ]*", condition)
+            for name in control_gate_names:
+                if name not in circuit_names:
+                    counts[name] = 0
+            # AC<numberOfAntiControls><gateName>
+            control_gate_names = re.findall(r"AC\d+\D[^><=|&() ]*", condition)
+            for name in control_gate_names:
+                if name not in circuit_names:
+                    counts[name] = 0
             # C<numberOfControls><gateName>
             control_gate_names = re.findall(r"C\d+\D[^><=|&() ]*", condition)
             for name in control_gate_names:

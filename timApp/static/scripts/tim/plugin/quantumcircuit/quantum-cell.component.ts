@@ -61,9 +61,10 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
                     [attr.cx]="cx"
                     [attr.cy]="cy"
                     [attr.r]="circuitOptions.gateSize/4"
-                    [attr.fill]="color.fill"
-                    [attr.stroke]="circuitOptions.colors.dark"></svg:circle>
-
+                    [style.stroke]="c.anti ? color.fill : circuitOptions.colors.dark"
+                    [style.fill]="c.anti ? circuitOptions.colors.light : color.fill"
+        ></svg:circle>
+        
         <!-- Swap gate -->
         <svg:text *ngIf="cell|instanceof: Swap as s"
                   [class.gate]="s.editable"

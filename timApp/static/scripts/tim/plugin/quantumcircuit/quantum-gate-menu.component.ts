@@ -24,7 +24,7 @@ interface MenuGate {
             <div class="gate-list">
                 <div class="svg-container" *ngFor="let gate of gates" draggable="true"
                      [title]="gate.info"
-                     [style.width.px]="gate.name === 'control' || gate.name === 'swap' ? circuitOptions.gateSize : gate.width"
+                     [style.width.px]="gate.name === 'control' || gate.name == 'antiControl' || gate.name === 'swap' ? circuitOptions.gateSize : gate.width"
                      [style.height.px]="circuitOptions.gateSize"
                      (click)="handleClick($event, gate.name)"
                      (dragstart)="handleDragStart($event, gate.name)">
@@ -34,6 +34,17 @@ interface MenuGate {
                              [style.width.px]="circuitOptions.gateSize"
                         >
                             <circle [attr.fill]="gate.color.fill"
+                                    [attr.cx]="circuitOptions.gateSize/2"
+                                    [attr.cy]="circuitOptions.gateSize/2"
+                                    [attr.r]="circuitOptions.gateSize/4"/>
+                        </svg>
+                        
+                        <svg *ngSwitchCase="'antiControl'"
+                             [style.height.px]="circuitOptions.gateSize"
+                             [style.width.px]="circuitOptions.gateSize"
+                        >
+                            <circle [attr.fill]="circuitOptions.colors.light"
+                                    [attr.stroke]="gate.color.fill"
                                     [attr.cx]="circuitOptions.gateSize/2"
                                     [attr.cy]="circuitOptions.gateSize/2"
                                     [attr.r]="circuitOptions.gateSize/4"/>

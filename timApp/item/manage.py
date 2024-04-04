@@ -320,11 +320,17 @@ def add_permission_basic(
     res_message = ""
     if accs:
         a = accs[0]
-        a_info: InstanceState = inspect(a)
-        if a_info.transient or a_info.pending:
+        states: list[InstanceState] = [inspect(a) for a in accs]
+        transient, pending, modified = (
+            any(s.transient for s in states),
+            any(s.pending for s in states),
+            any(s.modified for s in states),
+        )
+
+        if transient or pending:
             log_right(f"added {a.info_str} for {username} in {i.path}")
             res_message = "Added right"
-        elif a_info.modified:
+        elif modified:
             log_right(f"updated to {a.info_str} for {username} in {i.path}")
             res_message = "Updated existing right"
         else:

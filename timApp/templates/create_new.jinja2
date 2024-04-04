@@ -1,5 +1,5 @@
 {% extends "base.jinja2" %}
-{% block title %}This page does not yet exist.{% endblock %}
+{% block title %}{{ gettext('This page does not yet exist.') }}{% endblock %}
 {% block content %}
     <p class="errormsg">{{ message or self.title() }}</p>
     {% if session.user_id %}

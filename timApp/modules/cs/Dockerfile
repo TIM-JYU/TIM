@@ -121,9 +121,9 @@ bash -c "${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 # JDK
-ENV JDK_VERSION=20.0.1
+ENV JDK_VERSION=21.0.2
 # Grab this path from download links of https://jdk.java.net/
-ENV OPENJDK_DL_PATH=b4887098932d415489976708ad6d1a4b/9
+ENV OPENJDK_DL_PATH=f2283984656d49d69e91c558476027ac/13
 RUN wget -q https://download.java.net/java/GA/jdk${JDK_VERSION}/${OPENJDK_DL_PATH}/GPL/openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  tar -xf openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  rm openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz
@@ -135,7 +135,7 @@ RUN java -version
 # run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
 
 # JavaFX for OpenJDK
-ENV OPENJFX_VERSION=20
+ENV OPENJFX_VERSION=21.0.2
 RUN wget -q https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip
@@ -408,6 +408,34 @@ RUN bash -c "${APT_INSTALL} guile-3.0 && ${APT_CLEANUP}"
 RUN $PYTHON -m pip install SpeechRecognition soundfile && bash -c "${APT_CLEANUP}"
 # Install Google Translate API library
 RUN $PYTHON -m pip install --pre googletrans && bash -c "${APT_CLEANUP}"
+
+# Install OCaml
+RUN bash -c "${APT_INSTALL} ocaml opam && ${APT_CLEANUP}"
+# Set up custom root and switch to install opam globally
+ENV OPAMROOT=/opam
+ENV OPAMSWITCH=system
+# Running OPAM as root is okay (e.g. in dev mode)
+ENV OPAMROOTISOK=1
+RUN bash -c "mkdir /opam && \
+    opam init --yes --bare --disable-sandboxing && \
+    opam switch create system ocaml-system && \
+    eval $(opam env)"
+
+# Install Coq
+ENV COQ_VERSION=8.18.0
+RUN bash -c "${APT_INSTALL} libc6-dev libgmp-dev autoconf && ${APT_CLEANUP}"
+RUN bash -c "opam repo add --all-switches --set-default coq-released https://coq.inria.fr/opam/released && \
+    opam pin add -y -k version -j $(nproc) coq $COQ_VERSION && \
+    opam install -y -j $(nproc) \
+    coq-stdlib \
+    coq-bignums \
+    coq-equations \
+    coq-quickchick \
+    coq-hott \
+    coq-ext-lib \
+    coq-stdpp \
+    coq-math-classes && \
+    opam clean -a -c -s --logs"
 
 USER agent
 

@@ -203,6 +203,11 @@ SIMPLE_LOGIN_USE_STUDY_INFO_MESSAGE = False
 # Custom login message to show globally when simple login is enabled
 SIMPLE_LOGIN_CUSTOM_LOGIN_MESSAGE = None
 
+LOGIN_CODES_ENABLED = False
+"""
+If true, enables logging in via special temporary login codes.
+"""
+
 LOG_HOST = False
 
 MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes
@@ -459,6 +464,21 @@ MACHINE_TRANSLATORS = [
     #    None,
     # ),
 ]
+
+# FuturesSession options for machine translators,
+# used to control the number of parallel translation requests,
+# and how many times a failed request will be re-sent
+TRANSLATION_SESSION_OPTIONS = {
+    "DeepL Free": {
+        "max_workers": 4,
+        "max_retries": 4,
+    },
+    "DeepL Pro": {
+        "max_workers": 4,
+        "max_retries": 4,
+    },
+}
+
 
 # Options related to session management
 

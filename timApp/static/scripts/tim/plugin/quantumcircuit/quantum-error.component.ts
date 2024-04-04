@@ -127,10 +127,7 @@ export class QuantumErrorComponent implements OnChanges {
             return;
         }
 
-        this.answerIncorrectInput = this.error.bitstring
-            .split("")
-            .reverse()
-            .join("");
+        this.answerIncorrectInput = this.error.bitstring.split("").join("");
 
         if (!this.feedbackShowTable) {
             return;

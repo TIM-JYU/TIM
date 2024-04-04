@@ -45,10 +45,12 @@ export class MultiQubitGateCell {
 export class Control {
     target: number;
     editable: boolean;
+    anti: boolean;
 
-    constructor(target: number, editable: boolean) {
+    constructor(target: number, editable: boolean, anti: boolean) {
         this.target = target;
         this.editable = editable;
+        this.anti = anti;
     }
 
     toString() {
@@ -207,13 +209,15 @@ export class QuantumBoard {
     /**
      * Get controls for a gate.
      * @param pos position of the gate
+     * @param anti return anti controls if true else normal controls
      */
-    getControls(pos: GatePos) {
+    getControls(pos: GatePos, anti: boolean) {
         const controls = [];
         for (let i = 0; i < this.board.length; i++) {
             const cell = this.get(i, pos.time);
             if (
                 cell instanceof Control &&
+                cell.anti === anti &&
                 cell.target === pos.target &&
                 i !== pos.target
             ) {
@@ -231,7 +235,8 @@ export class QuantumBoard {
      * @param gate gate to move
      */
     private moveGate(oldPos: GatePos, newPos: GatePos, gate: Gate) {
-        const controls = this.getControls(oldPos);
+        const controls = this.getControls(oldPos, false);
+        const antiControls = this.getControls(oldPos, true);
         this.remove(oldPos.target, oldPos.time);
         this.set(newPos.target, newPos.time, gate);
         if (oldPos.time !== newPos.time) {
@@ -240,7 +245,22 @@ export class QuantumBoard {
         // reconnect controls
         for (const c of controls) {
             if (c !== newPos.target) {
-                this.set(c, newPos.time, new Control(newPos.target, true));
+                this.set(
+                    c,
+                    newPos.time,
+                    new Control(newPos.target, true, false)
+                );
+            }
+        }
+
+        // reconnect anti controls
+        for (const c of antiControls) {
+            if (c !== newPos.target) {
+                this.set(
+                    c,
+                    newPos.time,
+                    new Control(newPos.target, true, true)
+                );
             }
         }
     }
@@ -271,7 +291,7 @@ export class QuantumBoard {
                 this.set(
                     newPos.target,
                     newPos.time,
-                    new Control(targetPos.target, true)
+                    new Control(targetPos.target, true, control.anti)
                 );
             } else {
                 if (newPos.target !== control.target) {
@@ -280,7 +300,7 @@ export class QuantumBoard {
                     this.set(
                         newPos.target,
                         newPos.time,
-                        new Control(control.target, true)
+                        new Control(control.target, true, control.anti)
                     );
                 }
             }
@@ -295,7 +315,7 @@ export class QuantumBoard {
                 this.set(
                     newPos.target,
                     newPos.time,
-                    new Control(targetPos.target, true)
+                    new Control(targetPos.target, true, control.anti)
                 );
             } else {
                 const target = this.findControllable(newPos);
@@ -304,7 +324,7 @@ export class QuantumBoard {
                     this.set(
                         newPos.target,
                         newPos.time,
-                        new Control(target, true)
+                        new Control(target, true, control.anti)
                     );
                 }
             }
@@ -321,7 +341,8 @@ export class QuantumBoard {
      */
     private moveSwap(oldPos: GatePos, newPos: GatePos, swap: Swap) {
         if (oldPos.time === newPos.time) {
-            const controls = this.getControls(oldPos);
+            const controls = this.getControls(oldPos, false);
+            const antiControls = this.getControls(oldPos, true);
             if (newPos.target === swap.target) {
                 return;
             }
@@ -339,7 +360,16 @@ export class QuantumBoard {
             const cTarget = Math.min(newPos.target, swap.target);
             for (const ci of controls) {
                 if (ci !== newPos.target && ci !== swap.target) {
-                    this.set(ci, newPos.time, new Control(cTarget, true));
+                    this.set(
+                        ci,
+                        newPos.time,
+                        new Control(cTarget, true, false)
+                    );
+                }
+            }
+            for (const ci of antiControls) {
+                if (ci !== newPos.target && ci !== swap.target) {
+                    this.set(ci, newPos.time, new Control(cTarget, true, true));
                 }
             }
         } else {
@@ -426,8 +456,9 @@ export class QuantumBoard {
      * Don't put control if the cell isn't empty.
      * @param pos position to put a control gate
      * @param gatePos position to set as target for the control
+     * @param anti is the control an anti control
      */
-    addControl(pos: GatePos, gatePos: GatePos | null) {
+    addControl(pos: GatePos, gatePos: GatePos | null, anti: boolean) {
         if (this.get(pos.target, pos.time)?.editable === false) {
             return;
         }
@@ -443,13 +474,13 @@ export class QuantumBoard {
                 this.set(
                     pos.target,
                     pos.time,
-                    new Control(gatePos.target, true)
+                    new Control(gatePos.target, true, anti)
                 );
             }
         } else if (!gatePos) {
             const target = this.findControllable(pos);
             if (target !== undefined) {
-                this.set(pos.target, pos.time, new Control(target, true));
+                this.set(pos.target, pos.time, new Control(target, true, anti));
             }
         }
     }
@@ -484,12 +515,14 @@ export class QuantumBoard {
      * @param pos2 position of the pair of the swap gate
      * @param editable whether the swap gate is editable
      * @param controls controls for swap gate
+     * @param antiControls anti controls for swap gate
      */
     addSwap(
         pos: GatePos,
         pos2: GatePos | null = null,
         editable: boolean,
-        controls?: number[]
+        controls?: number[],
+        antiControls?: number[]
     ) {
         if (this.get(pos.target, pos.time)?.editable === false) {
             return;
@@ -524,7 +557,21 @@ export class QuantumBoard {
                 if (pos2?.target !== undefined && pos2.target < pos.target) {
                     cTarget = pos2.target;
                 }
-                this.board[ci][pos.time] = new Control(cTarget, editable);
+                this.board[ci][pos.time] = new Control(
+                    cTarget,
+                    editable,
+                    false
+                );
+            }
+        }
+
+        if (antiControls) {
+            for (const ci of antiControls) {
+                let cTarget = pos.target;
+                if (pos2?.target !== undefined && pos2.target < pos.target) {
+                    cTarget = pos2.target;
+                }
+                this.board[ci][pos.time] = new Control(cTarget, editable, true);
             }
         }
     }

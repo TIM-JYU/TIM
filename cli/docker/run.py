@@ -80,12 +80,13 @@ def run_compose(
     with_compose_file: bool = True,
     override_profile: bool = True,
     extra_env: Optional[Dict[str, str]] = None,
+    capture_output: Optional[bool] = None,
 ) -> subprocess.CompletedProcess:
     compose_args = get_compose_cmd(args, profile, with_compose_file, override_profile)
     env = dict(os.environ)
     if extra_env:
         env.update(extra_env)
-    return run_cmd(compose_args, env=env)
+    return run_cmd(compose_args, capture_output=capture_output, env=env)
 
 
 def run_docker(args: List[str], **kwargs: Any) -> subprocess.CompletedProcess:
