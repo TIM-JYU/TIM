@@ -708,7 +708,7 @@ class DocSettings:
 
     def ide_course(self) -> list[IdeDocument]:
         return self.get_setting_or_default("ideCourse", [])
-      
+
     def use_login_codes(self) -> bool:
         return self.get_setting_or_default("loginCodes", False)
 
