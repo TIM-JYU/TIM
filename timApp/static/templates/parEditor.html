@@ -149,7 +149,7 @@
                     beside the editor </label>
             </div>
             <div class="diff border">
-                <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
+                <pre semantic-diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new" options="{ interLineDiff: true, ignoreTrailingNewLines: true }"></pre>
                 <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
             </div>
         </div>
