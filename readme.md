@@ -34,7 +34,7 @@ TIM can be used for:
 * documentation
 
 For more information about TIM, please see [our "About TIM" page](https://tim.jyu.fi/view/about/en-US).
-NOTE: this is TIM for TIDE.
+
 ## Installing and running TIM
 
 TIM can be run on systems that support Docker. To install and run TIM, refer to the following guides:
