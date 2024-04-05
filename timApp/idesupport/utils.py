@@ -247,7 +247,7 @@ def get_user_ide_courses(user: User) -> list[TIDECourse]:
         user_courses.extend(hidden_user_courses)
 
     if not user_courses:
-        raise RouteException("No courses found")
+        raise NotExist("No courses found")
 
     ide_courses = []
 
@@ -299,7 +299,7 @@ def get_user_ide_courses(user: User) -> list[TIDECourse]:
             ide_courses.append(course)
 
     if not ide_courses:
-        raise RouteException("No courses found")
+        raise NotExist("No courses found")
 
     return ide_courses
 
@@ -332,12 +332,12 @@ def get_ide_task_set_documents_by_doc(
         raise RouteException("Document not found")
 
     # Check if the user has view access to the document
-    verify_view_access(user=user, b=doc, require=True)
+    verify_view_access(doc, user=user)
 
     task_paths = doc.document.get_settings().ide_course()
 
     if task_paths is None:
-        raise RouteException("Document not found")
+        raise NotExist("Document not found")
 
     paths = []
     for p in task_paths:
@@ -367,10 +367,10 @@ def get_ide_tasks(
         raise RouteException("No document id or path given")
 
     if doc is None:
-        raise RouteException("No document found")
+        raise NotExist("Document not found")
 
     # Check if the user has edit access to the document
-    verify_edit_access(b=doc, require=True, user=user)
+    verify_view_access(doc, user=user)
 
     user_ctx = UserContext.from_one_user(u=user)
 
@@ -389,7 +389,9 @@ def get_ide_tasks(
                     tasks.append(task)
 
     if len(tasks) == 0:
-        raise RouteException("No tasks found")
+        raise NotExist(
+            "No valid IDE tasks found. A valid task must be a csPlugin and have been marked as an IDE task"
+        )
 
     return tasks
 
@@ -418,7 +420,7 @@ def get_ide_task_by_id(
         raise RouteException("No document id or path given")
     # If the document does not exist, raise NotExist
     if doc is None:
-        raise RouteException("No document found")
+        raise NotExist("No document found")
 
     # Check if the user has edit access to the document
     verify_edit_access(b=doc, require=True, user=user)
@@ -428,7 +430,7 @@ def get_ide_task_by_id(
     pars = doc.document.get_paragraphs()
 
     if pars is None:
-        raise RouteException("No paragraphs found")
+        raise NotExist("No paragraphs found")
 
     tasks = []
 
@@ -442,7 +444,9 @@ def get_ide_task_by_id(
                     tasks.append(task)
 
     if len(tasks) == 0:
-        raise RouteException("No tasks found")
+        raise RouteException(
+            "No valid IDE tasks found. A valid task must be a csPlugin and have been marked as an IDE task"
+        )
 
     if len(tasks) == 1:
         return tasks[0]
@@ -457,14 +461,14 @@ def get_ide_user_plugin_data(
     par: DocParagraph,
     ide_task_id: str,
     user_ctx: UserContext,
-) -> TIDEPluginData:
+) -> TIDEPluginData | None:
     """
     Get the TIDE-task information from the plugin
     :param ide_task_id:  TIDE-task id
     :param doc: TIM document
     :param par: Paragraph from the document
     :param user_ctx: User context
-    :return: TIDEPluginData or TIDEError
+    :return: TIDEPluginData or None if the plugin is not a TIDE-task
     """
 
     view_ctx = default_view_ctx
@@ -472,7 +476,7 @@ def get_ide_user_plugin_data(
     plugin = Plugin.from_paragraph(par, view_ctx, user_ctx)
 
     if plugin.type != "csPlugin":
-        raise RouteException("Not a csPlugin plugin")
+        return None
 
     # Plugin render options
     plugin_opts = PluginRenderOptions(
@@ -500,7 +504,7 @@ def get_ide_user_plugin_data(
 
     # If plugin does not have task_id, return empty list
     if task_id is None:
-        raise RouteException("No task id found")
+        return None
 
     # If the plugin has files attribute
     if plugin_json["markup"].get("files"):
@@ -515,7 +519,7 @@ def get_ide_user_plugin_data(
         #         ide_files.taskIDExt = plugin_json["taskIDExt"]
         #     else:
         #         raise RouteException("No taskIDExt found in the plugin")
-        raise RouteException("Multiple files not supported yet")
+        return None
 
     # If the plugin has only one file
     else:
@@ -529,7 +533,7 @@ def get_ide_user_plugin_data(
                 if plugin_json.get("taskIDExt"):
                     ide_file.taskIDExt = plugin_json["taskIDExt"]
                 else:
-                    raise RouteException("No taskIDExt found in the plugin")
+                    return None
 
         # If the plugin still has no code, return error
         if ide_file.by is None and ide_file.byCode is None:
