@@ -233,7 +233,7 @@ class TIDECourse:
     """
 
 
-def get_user_ide_courses(user: User) -> list[TIDECourse] | RouteException:
+def get_user_ide_courses(user: User) -> list[TIDECourse]:
     """
     Gets all courses that have parameter for Ide course in course settings and are bookmarked by the user
     :param user: Logged-in user
@@ -399,7 +399,7 @@ def get_ide_task_by_id(
     ide_task_id: str,
     doc_id: int | None = None,
     doc_path: str | None = None,
-) -> TIDEPluginData | RouteException:
+) -> TIDEPluginData:
     """
     Get TIDE-task from the document by document id and paragraph id
     :param ide_task_id:  TIDE-task id
@@ -563,9 +563,7 @@ def get_ide_user_plugin_data(
     )
 
 
-def ide_submit_task(
-    submit: TIDESubmitFile, user: User
-) -> AnswerRouteResult | RouteException:
+def ide_submit_task(submit: TIDESubmitFile, user: User) -> AnswerRouteResult:
     """
     Submit the TIDE-task
     :param submit: TIDESubmitFile
