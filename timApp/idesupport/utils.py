@@ -5,20 +5,15 @@ from typing import List
 
 from bs4 import BeautifulSoup
 from marshmallow import EXCLUDE
-from flask import current_app
 
 from timApp.answer.routes import post_answer_impl, verify_ip_address, AnswerRouteResult
 from timApp.auth.accesshelper import (
-    verify_ip_ok,
-    verify_access,
-    verify_edit_access,
     verify_view_access,
 )
-from timApp.auth.accesstype import AccessType
 from timApp.bookmark.bookmarks import MY_COURSES_GROUP, HIDDEN_COURSES_GROUP
 from timApp.document.docentry import DocEntry
-from timApp.document.docparagraph import DocParagraph
 from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.containerLink import render_plugin_multi
@@ -423,7 +418,7 @@ def get_ide_task_by_id(
         raise NotExist("No document found")
 
     # Check if the user has edit access to the document
-    verify_edit_access(b=doc, require=True, user=user)
+    verify_view_access(doc, user=user)
 
     user_ctx = UserContext.from_one_user(u=user)
 
