@@ -249,26 +249,26 @@ def get_user_ide_courses(user: User) -> list[TIDECourse]:
     for course_dict in user_courses:
         for course_name, course_path in course_dict.items():
             # Get the document by path, remove /view/ from the beginning of path
-            doc = DocEntry.find_by_path(
-                course_path.split("view/")[1:][0]
-            )  # This should be lowercase
+            view_str = "/view/"
+            if not course_path.startswith(view_str):
+                continue
+
+            course_path = course_path[len(view_str) :]
+            doc = DocEntry.find_by_path(course_path)
 
             if doc is None:
                 continue
 
             task_paths = doc.document.get_settings().ide_course()
 
-            if task_paths is None:
+            if not task_paths:
                 continue
 
             paths = []
 
             for path in task_paths:
                 # Get the document by path for doc id
-                task_doc = DocEntry.find_by_path(
-                    # Wont work if not converted to lowercase
-                    path.path.lower()
-                )
+                task_doc = DocEntry.find_by_path(path.path)
 
                 if task_doc is None:
                     continue
@@ -281,7 +281,7 @@ def get_user_ide_courses(user: User) -> list[TIDECourse]:
                     )
                 )
 
-            if paths is None:
+            if not paths:
                 continue
 
             course = TIDECourse(
@@ -318,7 +318,6 @@ def get_ide_task_set_documents_by_doc(
         path = doc_path
         if path is None:
             raise RouteException("No document path given")
-        path = path.lower()
         doc = DocEntry.find_by_path(path=path)
     else:
         doc = DocEntry.find_by_id(doc_id=doc_id)
@@ -354,7 +353,7 @@ def get_ide_tasks(
     """
 
     if doc_path is not None:
-        doc = DocEntry.find_by_path(path=doc_path.lower())
+        doc = DocEntry.find_by_path(path=doc_path)
 
     elif doc_id is not None:
         doc = DocEntry.find_by_id(doc_id=doc_id)
@@ -410,7 +409,7 @@ def get_ide_task_by_id(
     if doc_id is not None:
         doc = DocEntry.find_by_id(doc_id=doc_id)
     elif doc_path is not None:
-        doc = DocEntry.find_by_path(path=doc_path.lower())
+        doc = DocEntry.find_by_path(path=doc_path)
     else:
         raise RouteException("No document id or path given")
     # If the document does not exist, raise NotExist
@@ -593,10 +592,7 @@ def ide_submit_task(submit: TIDESubmitFile, user: User) -> AnswerRouteResult:
     }
 
     brow_data = {
-        "answer_id": None,
-        "answernr": None,
         "giveCustomPoints": False,
-        "points": None,
         "saveAnswer": True,
         "saveTeacher": False,
         "teacher": False,
