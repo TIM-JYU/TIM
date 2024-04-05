@@ -261,7 +261,7 @@ def get_user_ide_courses(user: User) -> list[TIDECourse]:
 
             task_paths = doc.document.get_settings().ide_course()
 
-            if task_paths == [] or task_paths is None:
+            if not task_paths:
                 continue
 
             paths = []
@@ -281,7 +281,7 @@ def get_user_ide_courses(user: User) -> list[TIDECourse]:
                     )
                 )
 
-            if paths == []:
+            if not paths:
                 continue
 
             course = TIDECourse(
@@ -592,10 +592,7 @@ def ide_submit_task(submit: TIDESubmitFile, user: User) -> AnswerRouteResult:
     }
 
     brow_data = {
-        "answer_id": None,
-        "answernr": None,
         "giveCustomPoints": False,
-        "points": None,
         "saveAnswer": True,
         "saveTeacher": False,
         "teacher": False,
