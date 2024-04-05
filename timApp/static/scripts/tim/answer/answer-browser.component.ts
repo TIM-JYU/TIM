@@ -260,7 +260,7 @@ export class AnswerBrowserComponent
     private imageReviewUrlIndex = 0;
     public oldreview: boolean = false;
     public shouldFocus: boolean = false;
-    alerts: Array<{msg: string; type: "warning" | "danger"}> = [];
+    alerts: Array<{msg: string; type: "warning" | "danger"; id?: string}> = [];
     feedback?: string;
     taskInfo: ITaskInfo | undefined;
     points: number | undefined;
@@ -1156,11 +1156,21 @@ export class AnswerBrowserComponent
         }
     }
 
-    showError(response: {data: {error: string}}) {
-        this.alerts.push({
-            msg: "Error: " + (response.data.error ?? response.data),
-            type: "danger",
-        });
+    showError(response: {data: {error: string}}, id?: string) {
+        const msg = `Error: ${response.data.error ?? response.data}`;
+        const type = "danger";
+        if (
+            this.alerts.some(
+                (a) => a.id === id || (a.msg === msg && a.type === type)
+            )
+        ) {
+            return;
+        }
+        this.alerts.push({msg, type, id});
+    }
+
+    clearError(id: string) {
+        this.alerts = this.alerts.filter((a) => a.id !== id);
     }
 
     getAnswerLink(single = false) {
@@ -1539,9 +1549,20 @@ export class AnswerBrowserComponent
 
         this.loading--;
         if (!r.ok) {
-            this.showError(r.result);
+            const status = r.result.status ?? 0;
+            if (status <= 0) {
+                r.result.data = {
+                    error: $localize`Could not load task data. Check your internet connection and try again.`,
+                };
+            } else if (status >= 500) {
+                r.result.data = {
+                    error: $localize`There is an issue with the server. Try to save your work and reload the page.`,
+                };
+            }
+            this.showError(r.result, "getAnswers");
             return undefined;
         }
+        this.clearError("getAnswers");
         this.fetchedUser = user;
         this.isAndSetShowNewTask();
         return r.result.data;
@@ -1761,9 +1782,20 @@ export class AnswerBrowserComponent
         );
         this.loading--;
         if (!r.ok) {
-            this.showError(r.result);
+            const status = r.result.status ?? 0;
+            if (status <= 0) {
+                r.result.data = {
+                    error: $localize`Could not load task data. Check your internet connection and try again.`,
+                };
+            } else if (status >= 500) {
+                r.result.data = {
+                    error: $localize`There is an issue with the server. Try to save your work and reload the page.`,
+                };
+            }
+            this.showError(r.result, "taskinfo");
             return;
         }
+        this.clearError("taskinfo");
         this.taskInfo = r.result.data;
         if (r.result.data.modelAnswer) {
             this.modelAnswer = r.result.data.modelAnswer;

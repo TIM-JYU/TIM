@@ -6,8 +6,9 @@ import random
 from datetime import datetime
 from time import sleep
 
-from flask import Response, session
-from sqlalchemy import select
+from flask import Response
+from flask import session
+from sqlalchemy import select, Row
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import AccessDenied, verify_ip_ok
@@ -40,13 +41,18 @@ def verify_login_code() -> None:
     login_code_session = session.get("login_code_session")
     if not login_code_session:
         return
-    inactive_after: datetime | None = run_sql(
-        select(UserLoginCode.active_to).filter(
+    res: Row[tuple[datetime, bool]] | None = run_sql(
+        select(UserLoginCode.active_to, UserLoginCode.valid).filter(
             UserLoginCode.session_code == login_code_session
         )
-    ).scalar_one_or_none()
+    ).one_or_none()
 
-    if inactive_after is None or get_current_time() > inactive_after:
+    if res is None:
+        clear_session()
+        return
+
+    inactive_after, valid = res
+    if not valid or get_current_time() > inactive_after:
         clear_session()
 
 
@@ -83,11 +89,16 @@ def logincode_login(login_code: str) -> dict:
         log_warning(f"Invalid login code: {login_code}")
         error_msg = "InvalidLoginCode"
     elif not user_logincode.active_from or now < user_logincode.active_from:
-        log_warning(f"Login code not yet active: {login_code}")
+        log_warning(
+            f"{user_logincode.user.name}: Login code not yet active: {login_code}"
+        )
         error_msg = "LoginCodeNotYetActive"
     elif now > user_logincode.active_to:
-        log_warning(f"Login code expired: {login_code}")
+        log_warning(f"{user_logincode.user.name}: Login code expired: {login_code}")
         error_msg = "LoginCodeExpired"
+    elif not user_logincode.valid:
+        log_warning(f"{user_logincode.user.name}: Login code not valid: {login_code}")
+        error_msg = "LoginCodeNotValid"
 
     if user_logincode and not error_msg:
         user = user_logincode.user

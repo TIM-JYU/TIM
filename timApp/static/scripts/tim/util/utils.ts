@@ -10,7 +10,7 @@ import type {Pos} from "tim/ui/pos";
 import {either} from "fp-ts/Either";
 import type {Observable} from "rxjs";
 import {lastValueFrom} from "rxjs";
-import {HttpParams} from "@angular/common/http";
+import {HttpErrorResponse, HttpParams} from "@angular/common/http";
 import type {IGroup} from "tim/user/IUser";
 import {$rootScope, $timeout} from "tim/util/ngimport";
 
@@ -397,6 +397,12 @@ export function toPromise<T, U = AngularError>(
     return lastValueFrom(observable)
         .then<Success<T>>((data: T) => ({ok: true, result: data}))
         .catch<Failure<U>>((err) => {
+            if (err instanceof HttpErrorResponse) {
+                return {
+                    ok: false,
+                    result: {error: err.message, status: err.status} as U,
+                };
+            }
             return {ok: false, result: err as U};
         });
 }
@@ -1042,4 +1048,21 @@ export function closest(arr: number[], val: number): number {
     return arr.reduce((prev, curr) =>
         Math.abs(curr - val) < Math.abs(prev - val) ? curr : prev
     );
+}
+
+export function formatNumberCode(
+    numCode: string,
+    splitEvery: number,
+    targetLength?: number,
+    separator: string = "-"
+) {
+    targetLength = targetLength ?? numCode.length;
+    let newCode = "";
+    for (let i = 0; i < targetLength; i++) {
+        if (i > 0 && i % splitEvery === 0) {
+            newCode += separator;
+        }
+        newCode += numCode[i] || " ";
+    }
+    return newCode;
 }
