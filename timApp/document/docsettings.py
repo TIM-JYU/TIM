@@ -63,6 +63,11 @@ class GroupSelfJoinSettings:
         return GroupSelfJoinSettings()
 
 
+@dataclass
+class IdeDocument:
+    path: str
+
+
 # TODO: Start moving DocSettings keys to this dataclass
 @dataclass
 class DocSettingTypes:
@@ -108,6 +113,7 @@ class DocSettingTypes:
     uiLangOverride: str
     allowedDocsettingMacroAttributes: list[str] | str
     need_view_for_answers: bool
+    ideCourse: list[IdeDocument]
     loginCodes: bool
     loginMessage: str
 
@@ -699,6 +705,9 @@ class DocSettings:
 
     def need_view_for_answers(self) -> bool:
         return self.get_setting_or_default("need_view_for_answers", False)
+
+    def ide_course(self) -> list[IdeDocument]:
+        return self.get_setting_or_default("ideCourse", [])
 
     def use_login_codes(self) -> bool:
         return self.get_setting_or_default("loginCodes", False)

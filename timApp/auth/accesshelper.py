@@ -92,6 +92,7 @@ def verify_edit_access(
     message=None,
     check_duration=False,
     check_parents=False,
+    user=None,
 ):
     return verify_access(
         b,
@@ -100,6 +101,7 @@ def verify_edit_access(
         message=message,
         check_duration=check_duration,
         check_parents=check_parents,
+        user=user,
     )
 
 

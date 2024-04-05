@@ -7,6 +7,7 @@ from authlib.integrations.sqla_oauth2 import (
 )
 from authlib.oauth2 import OAuth2Request
 from authlib.oauth2.rfc6749 import grants
+from authlib.oauth2.rfc7636 import CodeChallenge
 from flask import Flask
 from sqlalchemy import select, delete
 
@@ -45,21 +46,21 @@ class RefreshTokenGrant(grants.RefreshTokenGrant):
 
 
 class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
-    TOKEN_ENDPOINT_AUTH_METHODS = [
-        "client_secret_basic",
-        "client_secret_post",
-        # TODO: Do we need 'none'?
-    ]
+    TOKEN_ENDPOINT_AUTH_METHODS = ["client_secret_basic", "client_secret_post", "none"]
 
     def save_authorization_code(
         self, code: str, request: OAuth2Request
     ) -> OAuth2AuthorizationCode:
+        code_challenge = request.data.get("code_challenge")
+        code_challenge_method = request.data.get("code_challenge_method")
         auth_code = OAuth2AuthorizationCode(
             code=code,
             client_id=request.client.client_id,
             redirect_uri=request.redirect_uri,
             scope=request.scope,
             user_id=request.user.id,
+            code_challenge=code_challenge,
+            code_challenge_method=code_challenge_method,
         )
         db.session.add(auth_code)
         db.session.commit()
@@ -124,7 +125,7 @@ def init_oauth(app: Flask) -> None:
     ALLOWED_CLIENTS = {c.client_id: c for c in clients_obj}
 
     auth_server.init_app(app)
-    auth_server.register_grant(AuthorizationCodeGrant)
+    auth_server.register_grant(AuthorizationCodeGrant, [CodeChallenge(required=True)])
     auth_server.register_grant(RefreshTokenGrant)
 
     # TODO: Do we need to support revocation?

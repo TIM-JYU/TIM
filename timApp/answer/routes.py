@@ -626,11 +626,7 @@ def post_answer(
     :param abData: Data applied from answer browser
     """
     curr_user = get_current_user_object()
-    blocked_msg = (
-        current_app.config["IP_BLOCK_ROUTE_MESSAGE"]
-        or "Answering is not allowed from this IP address."
-    )
-    allowed = verify_ip_ok(user=curr_user, msg=blocked_msg)
+
     return json_response(
         post_answer_impl(
             task_id_ext,
@@ -641,9 +637,25 @@ def post_answer(
             get_urlmacros_from_request(),
             get_other_session_users_objs(),
             get_origin_from_request(),
-            error=blocked_msg if not allowed else None,
+            error=verify_ip_address(user=curr_user),
         ).result
     )
+
+
+def verify_ip_address(user: User) -> str | None:
+    """
+    Returns the error message if the user's IP address is not allowed, otherwise None.
+    :param user: Current user
+    :return: Error message if the user's IP address is not allowed, otherwise None
+    """
+
+    blocked_msg = (
+        current_app.config["IP_BLOCK_ROUTE_MESSAGE"]
+        or "Answering is not allowed from this IP address."
+    )
+    is_valid = verify_ip_ok(user=user, msg=blocked_msg)
+
+    return blocked_msg if not is_valid else None
 
 
 @dataclass

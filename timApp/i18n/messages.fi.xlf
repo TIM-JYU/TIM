@@ -8920,6 +8920,30 @@
           <context context-type="linenumber">1375,1374</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6616765859036665543" datatype="html">
+        <source>Access your TIM tasks</source>
+        <target state="translated">Pääsy TIM-tehtäviin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">14</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4373815573636109620" datatype="html">
+        <source>Submit answers to TIM tasks</source>
+        <target state="translated">Palauta vastaus TIM-tehtävään</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="911817603458684891" datatype="html">
+        <source>Access your TIM courses</source>
+        <target state="translated">Pääsy TIM-kursseihin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="2859819736874880280" datatype="html">
         <source>Logging in, please wait...</source>
         <target state="translated">Kirjaudutaan sisään, odota...</target>
