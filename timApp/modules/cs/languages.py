@@ -1203,21 +1203,15 @@ class CPP(CC):
         return [".h", ".hpp", ".hh", ".cpp", ".cc"], ".cpp", ".exe"
 
 
-def drop_extension(filename):
-    last_dot_index = filename.rfind('.')
-    if last_dot_index == -1:
-        return filename
-    return filename[:last_dot_index]
-
-
 class CComtest(Language):
     ttype = "ccomtest"
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = f"/tmp/{self.basename}/{drop_extension(self.filename)}.cpp"
+        base_fname, _ = os.path.splitext(self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{base_fname}.cpp"
         self.fileext = "cpp"
-        self.testcs = f"{drop_extension(self.filename):s}.cpp"
+        self.testcs = f"{base_fname:s}.cpp"
         self.hide_compile_out = True
 
     def run(self, result, sourcelines, points_rule):
