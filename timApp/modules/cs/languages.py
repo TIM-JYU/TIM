@@ -1208,9 +1208,10 @@ class CComtest(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.cpp"
+        base_fname, _ = os.path.splitext(self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{base_fname}.cpp"
         self.fileext = "cpp"
-        self.testcs = f"{self.filename:s}.cpp"
+        self.testcs = f"{base_fname:s}.cpp"
         self.hide_compile_out = True
 
     def run(self, result, sourcelines, points_rule):
