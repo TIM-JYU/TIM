@@ -659,7 +659,21 @@ export class ToggleComponent {
                     </tabset>
                 </bootstrap-panel>
                 <bootstrap-panel title="4. Show answers to students" i18n-title>
-                    <span class="text-muted" i18n>This feature will become available after April 8th</span>
+                    <tabset class="merged">
+                        <tab *ngFor="let group of visibleGroups"
+                             heading="{{group.readableName}}"
+                             [active]="group.selected ?? false"
+                             [id]="group.name"
+                             (selectTab)="group.selected = true; onGroupTabSelected($event)"
+                             (deselect)="group.selected = false">
+                            <tim-toggle 
+                                    [(value)]="allowRestrictedAccess"
+                                    (valueChange)="toggleAllowRestrictedAccess(group)"
+                            >
+                                Start answer review
+                            </tim-toggle>
+                        </tab>
+                    </tabset>
                 </bootstrap-panel>
             </fieldset>
         </form>
@@ -687,6 +701,8 @@ export class ExamGroupManagerComponent
     members: Record<string, GroupMember[]> = {};
     error?: string;
     examByDocId = new Map<number, Exam>();
+
+    allowRestrictedAccess: boolean = false;
 
     // Currently selected groups
     allGroupsSelected: boolean = false;
@@ -1535,6 +1551,22 @@ export class ExamGroupManagerComponent
         Object.assign(member, res.result);
         await timeout();
         member.extraTime = toggle;
+    }
+
+    async toggleAllowRestrictedAccess(group: ExamGroup) {
+        this.loading = true;
+        this.error = undefined;
+        const res = await toPromise(
+            this.http.post("/examGroupManager/toggleAnswerReview", {
+                group_id: group.id,
+                state: this.allowRestrictedAccess,
+            })
+        );
+        this.loading = false;
+        if (!res.ok) {
+            this.error = $localize`Could not toggle answer review. Details: ${res.result.error.error}`;
+            return;
+        }
     }
 }
 

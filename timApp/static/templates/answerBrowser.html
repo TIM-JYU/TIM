@@ -299,7 +299,7 @@
         <span i18n *ngIf="viewctrl.teacherMode && hasUserChanged() && !loading">(hover/click to update)</span>
         <!-- <img style="display: inline" src="/static/images/loading.gif" *ngIf="loading"> -->
     </div>
-    <div class="modelAnswer" #modelAnswerDiv *ngIf="modelAnswer && !hideMode    lAnswerPanel">
+    <div class="modelAnswer" #modelAnswerDiv *ngIf="modelAnswer && !hideModelAnswerPanel">
         <a i18n-title *ngIf="showModelAnswerLink()"
            title="Show model answer"
            (click)="showModelAnswer()">{{getModelAnswerLinkText()}}</a>

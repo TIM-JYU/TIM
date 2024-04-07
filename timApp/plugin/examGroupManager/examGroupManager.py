@@ -1044,6 +1044,38 @@ def update_member_info(
     return json_response(user_data.to_json())
 
 
+@exam_group_manager_plugin.post("/toggleAnswerReview")
+def set_answer_review(group_id: int, state: bool) -> Response:
+    ug = UserGroup.get_by_id(group_id)
+    if not ug:
+        raise NotExist(f"Group with ID {group_id} does not exist.")
+
+    _verify_exam_group_access(ug)
+    exam_group_data = _get_exam_group_data_global(ug)
+
+    if exam_group_data.examDocId is missing:
+        raise RouteException("No exam document set for the group.")
+
+    doc = DocEntry.find_by_id(exam_group_data.examDocId)
+
+    if state:
+        _enable_login_codes(ug, exam_group_data)
+        for u in ug.users:
+            grant_access(
+                u.get_personal_group(),
+                doc,
+                AccessType.view,
+                restricted_mode=True,
+            )
+    else:
+        _disable_login_codes(ug, exam_group_data)
+        for u in ug.users:
+            expire_access(u.get_personal_group(), doc, AccessType.view)
+
+    db.session.commit()
+    return ok_response()
+
+
 def reqs_handle() -> PluginReqs:
     return PluginReqs(
         js=["timExamGroupManager"],
