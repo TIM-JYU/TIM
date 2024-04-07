@@ -64,6 +64,7 @@ from tim_common.pluginserver_flask import (
     PluginReqs,
     register_html_routes,
 )
+from tim_common.timjsonencoder import TimJsonEncoder
 from tim_common.utils import Missing, DurationSchema
 
 exam_group_manager_plugin = TypedBlueprint(
@@ -171,6 +172,7 @@ class ExamGroupDataGlobal:
     examDocId: int | Missing = field(default=missing)
     examState: int = 0
     currentExamDoc: int | None = None
+    accessAnswersTo: datetime | None = None
 
     def to_json(self) -> dict:
         res = {}
@@ -222,6 +224,10 @@ def _get_latest_fields_any(task_fields: Iterable[str]) -> Sequence[Answer]:
     )
 
     return latest_globals
+
+
+def _clean_group_name(name: str) -> str:
+    return slugify(name).replace(".", "-").replace(",", "-")
 
 
 def _get_latest_fields_usergroup(
@@ -282,7 +288,9 @@ def _update_exam_group_data_global(ug: UserGroup, data: ExamGroupDataGlobal) -> 
     for f in fields(data):
         if f.name not in glo_fields_to_update:
             continue
-        new_json = json.dumps({"c": json.dumps(getattr(data, f.name))})
+        new_json = json.dumps(
+            {"c": json.dumps(getattr(data, f.name), cls=TimJsonEncoder)}
+        )
         task_id = f"{doc.id}.GLO_{f.name}"
         ans = globals_dict.get(task_id, None)
         if not ans:
@@ -355,7 +363,9 @@ def _update_exam_group_data_user(
     for f in fields(data):
         if f.name not in user_fields_to_update:
             continue
-        new_json = json.dumps({"c": json.dumps(getattr(data, f.name))})
+        new_json = json.dumps(
+            {"c": json.dumps(getattr(data, f.name), cls=TimJsonEncoder)}
+        )
         task_id = f"{doc.id}.{f.name}"
         ans = answer_by_field.get(f.name, None)
         if not ans:
@@ -437,9 +447,7 @@ def create_group(
     group_prefix: str = "",
     exam_doc_id: int | None = None,
 ) -> Response:
-    group_name = (
-        f"{slugify(group_prefix)}-{slugify(name)}-{slugify(secrets.token_urlsafe(8))}"
-    )
+    group_name = f"{slugify(group_prefix)}-{_clean_group_name(name)}-{slugify(secrets.token_urlsafe(8))}"
     group_path = f"{group_folder_path}/{group_name}"
     ug, doc = do_create_group(group_path)
     doc.title = name
@@ -591,13 +599,16 @@ def copy_members(from_id: int, to_id: int) -> Response:
     _verify_exam_group_access(source_group)
     _verify_exam_group_access(target_group)
 
-    # TODO: Copy extra infos
-
     members: list[User] = list(source_group.users)
-    added_memberships = []
+
+    member_extra_infos = _get_exam_group_data_user(source_group)
+
     for u in members:
-        u.add_to_group(target_group, cur_user)
-        added_memberships.append(u.name)
+        extra = member_extra_infos[u.id]
+        new_u = _create_examgroup_user(u.given_name or "", u.last_name or "")
+        new_u.add_to_group(target_group, cur_user)
+        db.session.flush()
+        _update_exam_group_data_user(new_u, target_group, extra)
     db.session.commit()
     return ok_response()
 
@@ -627,6 +638,19 @@ def do_create_users(
     # Check permission for the group
     # Only users with manage access to the group can create and add new members
     _verify_exam_group_access(group, current_user)
+    user = _create_examgroup_user(given_name, surname)
+    user.add_to_group(group, current_user)
+    # Flush to make user be member of the group
+    db.session.flush()
+
+    extra_data = ExamGroupDataUser(extraInfo=extra_info)
+    _update_exam_group_data_user(user, group, extra_data)
+
+    db.session.commit()
+    return user, extra_data
+
+
+def _create_examgroup_user(given_name: str, surname: str) -> User:
     no_reply_email_name, no_reply_email_domain = app.config["NOREPLY_EMAIL"].split(
         "@", 1
     )
@@ -645,15 +669,7 @@ def do_create_users(
         email=email,
     )
     user, _ = User.create_with_group(ui)
-    user.add_to_group(group, current_user)
-    # Flush to make user be member of the group
-    db.session.flush()
-
-    extra_data = ExamGroupDataUser(extraInfo=extra_info)
-    _update_exam_group_data_user(user, group, extra_data)
-
-    db.session.commit()
-    return user, extra_data
+    return user
 
 
 @exam_group_manager_plugin.post("/importUsers/<int:group_id>")
@@ -808,7 +824,12 @@ def _remove_review_tag(ug: UserGroup, exam_doc: DocInfo) -> None:
         db.session.delete(view_tag)
 
 
-def _enable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _enable_login_codes(
+    ug: UserGroup,
+    extra: ExamGroupDataGlobal,
+    log: bool = True,
+    duration: timedelta | None = None,
+) -> None:
     login_codes = list(_get_current_login_codes(ug))
     if not login_codes:
         raise RouteException(
@@ -820,16 +841,19 @@ def _enable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     now = get_current_time()
     for lc in login_codes:
         lc.active_from = now
-        lc.active_to = now + LOGIN_CODE_ACTIVE_DURATION
+        lc.active_to = now + (duration or LOGIN_CODE_ACTIVE_DURATION)
 
-    u = get_current_user_object()
-    doc = _get_current_exam_doc(extra)
-    log_info(
-        f"ExamGroupManage: {u.name} enabled login codes for group {ug.name} (exam doc: {doc.path})"
-    )
+    if log:
+        u = get_current_user_object()
+        doc = _get_current_exam_doc(extra)
+        log_info(
+            f"ExamGroupManage: {u.name} enabled login codes for group {ug.name} (exam doc: {doc.path})"
+        )
 
 
-def _disable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _disable_login_codes(
+    ug: UserGroup, extra: ExamGroupDataGlobal, log: bool = True
+) -> None:
     login_codes = list(_get_current_login_codes(ug))
     if not login_codes:
         return
@@ -839,11 +863,12 @@ def _disable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
         lc.active_from = None
         lc.active_to = now
 
-    u = get_current_user_object()
-    doc = _get_current_exam_doc(extra)
-    log_info(
-        f"ExamGroupManage: {u.name} disabled login codes for group {ug.name} (exam doc: {doc.path})"
-    )
+    if log:
+        u = get_current_user_object()
+        doc = _get_current_exam_doc(extra)
+        log_info(
+            f"ExamGroupManage: {u.name} disabled login codes for group {ug.name} (exam doc: {doc.path})"
+        )
 
 
 def _get_current_exam_doc(extra: ExamGroupDataGlobal) -> DocInfo:
@@ -1006,6 +1031,15 @@ def set_exam_state(group_id: int, new_state: int) -> Response:
 
     _verify_exam_group_access(ug)
     exam_group_data = _get_exam_group_data_global(ug)
+
+    if exam_group_data.accessAnswersTo:
+        now = get_current_time()
+        if now < exam_group_data.accessAnswersTo:
+            raise RouteException(
+                gettext(
+                    "Cannot change exam state while the answers are revealed. Disable answer reveal in section 4."
+                )
+            )
 
     _set_exam_state_impl(ug, exam_group_data, new_state)
 
