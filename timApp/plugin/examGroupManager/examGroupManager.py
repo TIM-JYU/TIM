@@ -63,6 +63,7 @@ from tim_common.pluginserver_flask import (
     PluginReqs,
     register_html_routes,
 )
+from tim_common.timjsonencoder import TimJsonEncoder
 from tim_common.utils import Missing, DurationSchema
 
 exam_group_manager_plugin = TypedBlueprint(
@@ -170,6 +171,7 @@ class ExamGroupDataGlobal:
     examDocId: int | Missing = field(default=missing)
     examState: int = 0
     currentExamDoc: int | None = None
+    accessAnswersTo: datetime | None = None
 
     def to_json(self) -> dict:
         res = {}
@@ -281,7 +283,9 @@ def _update_exam_group_data_global(ug: UserGroup, data: ExamGroupDataGlobal) -> 
     for f in fields(data):
         if f.name not in glo_fields_to_update:
             continue
-        new_json = json.dumps({"c": json.dumps(getattr(data, f.name))})
+        new_json = json.dumps(
+            {"c": json.dumps(getattr(data, f.name), cls=TimJsonEncoder)}
+        )
         task_id = f"{doc.id}.GLO_{f.name}"
         ans = globals_dict.get(task_id, None)
         if not ans:
@@ -354,7 +358,9 @@ def _update_exam_group_data_user(
     for f in fields(data):
         if f.name not in user_fields_to_update:
             continue
-        new_json = json.dumps({"c": json.dumps(getattr(data, f.name))})
+        new_json = json.dumps(
+            {"c": json.dumps(getattr(data, f.name), cls=TimJsonEncoder)}
+        )
         task_id = f"{doc.id}.{f.name}"
         ans = answer_by_field.get(f.name, None)
         if not ans:
@@ -978,6 +984,13 @@ def set_exam_state(group_id: int, new_state: int) -> Response:
     _verify_exam_group_access(ug)
     exam_group_data = _get_exam_group_data_global(ug)
 
+    if exam_group_data.accessAnswersTo:
+        raise RouteException(
+            gettext(
+                "Cannot change exam state while the answers are revealed. Disable answer reveal in section 4."
+            )
+        )
+
     _set_exam_state_impl(ug, exam_group_data, new_state)
 
     db.session.commit()
@@ -1053,27 +1066,43 @@ def set_answer_review(group_id: int, state: bool) -> Response:
     _verify_exam_group_access(ug)
     exam_group_data = _get_exam_group_data_global(ug)
 
+    if exam_group_data.examState > 0:
+        raise RouteException(
+            gettext(
+                "Cannot reveal answers while the exam is ongoing. Stop the exam and disable the login codes in the "
+                "section 3."
+            )
+        )
+
     if exam_group_data.examDocId is missing:
         raise RouteException("No exam document set for the group.")
 
     doc = DocEntry.find_by_id(exam_group_data.examDocId)
 
     if state:
+        now = get_current_time()
+        active_to = now + timedelta(hours=1)
         _enable_login_codes(ug, exam_group_data)
         for u in ug.users:
             grant_access(
                 u.get_personal_group(),
                 doc,
                 AccessType.view,
+                accessible_from=now,
+                accessible_to=active_to,
                 restricted_mode=True,
             )
+        exam_group_data.accessAnswersTo = active_to
     else:
         _disable_login_codes(ug, exam_group_data)
         for u in ug.users:
             expire_access(u.get_personal_group(), doc, AccessType.view)
+        exam_group_data.accessAnswersTo = None
+
+    _update_exam_group_data_global(ug, exam_group_data)
 
     db.session.commit()
-    return ok_response()
+    return json_response({"accessAnswersTo": exam_group_data.accessAnswersTo})
 
 
 def reqs_handle() -> PluginReqs:

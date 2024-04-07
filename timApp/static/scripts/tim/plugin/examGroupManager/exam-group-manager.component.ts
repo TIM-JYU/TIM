@@ -44,6 +44,7 @@ import {showExamGroupCreateDialog} from "tim/plugin/examGroupManager/showExamGro
 import {PurifyModule} from "tim/util/purify.module";
 import {SPLIT_EVERY} from "tim/user/user-code-login.component";
 import {ButtonsModule} from "ngx-bootstrap/buttons";
+import moment from "moment";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -77,6 +78,8 @@ export interface ExamGroup extends IGroup {
     examEnded: boolean;
     studentsLoggedIn: boolean;
     studentsReady: boolean;
+    accessAnswersTo?: string;
+    allowAccess: boolean;
 }
 
 /**
@@ -447,17 +450,23 @@ export class ToggleComponent {
                                     Review and correct student answers
                                 </a>
                             </div>
-
-                            <fieldset [disabled]="!group.currentExamDoc">
+                            
+                            <div *ngIf="group.allowAccess" class="mt">
+                                <tim-alert  severity="warning" i18n>
+                                    You are showing exam answers to the students.<br>
+                                    To start a new exam, stop answer reviewing in section '4. Show answers to students'.
+                                </tim-alert>
+                            </div>
+                            <fieldset [disabled]="!group.currentExamDoc || group.allowAccess">
                                 <h5 i18n>Hold an exam</h5>
 
                                 <p i18n>
                                     Complete each step below to hold an exam.
                                     The checklist updates automatically with the current progress.
                                 </p>
-
+                                
                                 <div class="checklist">
-                                    <div [class.disabled]="!group.currentExamDoc">
+                                    <div [class.disabled]="!group.currentExamDoc || group.allowAccess">
                                         <div class="cb">
                                             <input type="checkbox" title="Mark as done" i18n-title
                                                    [checked]="group.examState > 0"
@@ -666,12 +675,43 @@ export class ToggleComponent {
                              [id]="group.name"
                              (selectTab)="group.selected = true; onGroupTabSelected($event)"
                              (deselect)="group.selected = false">
+                            <tim-alert *ngIf="group.examState > 0" severity="warning" i18n>
+                                You can show answers only when they don't have an active exam running.<br>
+                                Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers.
+                            </tim-alert>
                             <tim-toggle 
-                                    [(value)]="allowRestrictedAccess"
+                                    [(value)]="group.allowAccess"
+                                    [disabled]="group.examState > 0"
                                     (valueChange)="toggleAllowRestrictedAccess(group)"
+                                    enabledButton="Begin showing answers to students"
+                                    i18n-enabledButton
+                                    disabledButton="End showing answers to students"
+                                    i18n-disabledButton
                             >
-                                Start answer review
                             </tim-toggle>
+                            <p class="mt">
+                                <strong i18n>Note: You can only show the answers for the main exam ({{ examByDocId.get(group.examDocId!)?.name }}) and not for the practice exam.</strong>
+                            </p>
+                            <p>
+                                <strong class="text-success" *ngIf="group.allowAccess" i18n>
+                                    Students can access the answers to the exam '{{ examByDocId.get(group.examDocId!)?.name }}'. The access is automatically disabled
+                                    on {{toReadableDate(group.accessAnswersTo ?? '')}}.
+                                </strong>
+                            </p>
+                            <p>
+                                <strong *ngIf="!group.allowAccess" i18n>
+                                    Press the button above to allow students to review their answers for 1 hour.
+                                </strong>
+                            </p>
+                            <h5 i18n>Guide</h5>
+                            <ol>
+                                <li i18n>Make sure the exam is ended and login codes are disabled in section '3. Manage exams'</li>
+                                <li i18n>Press the 'Begin showing answers to students' button to allow students to review their answers for 1 hour.</li>
+                                <li i18n>Ask students to log in to the exam page using their login codes: <a [href]="getExamUrl(examByDocId.get(group.examDocId!)!)"><code>{{ getExamUrl(examByDocId.get(group.examDocId!)!) }}</code></a></li>
+                                <li i18n>Students can open the exam using the 'Open exam' button.</li>
+                                <li i18n>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</li>
+                                <li i18n>To end the view right, press the 'End showing answers to students button'. The right is automatically disabled in 1 hour.</li>
+                            </ol>
                         </tab>
                     </tabset>
                 </bootstrap-panel>
@@ -1456,6 +1496,13 @@ export class ExamGroupManagerComponent
         group.examStarted = false;
         group.studentsLoggedIn = false;
         group.studentsReady = false;
+        if (group.accessAnswersTo) {
+            const d = new Date(group.accessAnswersTo);
+            const now = new Date();
+            group.allowAccess = d > now;
+        } else {
+            group.allowAccess = false;
+        }
         if (group.examState >= 1) {
             group.loginCodesActive = true;
         }
@@ -1557,16 +1604,31 @@ export class ExamGroupManagerComponent
         this.loading = true;
         this.error = undefined;
         const res = await toPromise(
-            this.http.post("/examGroupManager/toggleAnswerReview", {
-                group_id: group.id,
-                state: this.allowRestrictedAccess,
-            })
+            this.http.post<{accessAnswersTo: string}>(
+                "/examGroupManager/toggleAnswerReview",
+                {
+                    group_id: group.id,
+                    state: group.allowAccess,
+                }
+            )
         );
         this.loading = false;
         if (!res.ok) {
-            this.error = $localize`Could not toggle answer review. Details: ${res.result.error.error}`;
+            await showMessageDialog(
+                $localize`Could not toggle answer review. Details: ${res.result.error.error}`
+            );
             return;
+        } else {
+            group.accessAnswersTo = res.result.accessAnswersTo;
         }
+    }
+
+    toReadableDate(date: string): string {
+        console.log(Users.getCurrentLocale());
+        return new Date(date).toLocaleString(Users.getCurrentLocale(), {
+            dateStyle: "long",
+            timeStyle: "short",
+        });
     }
 }
 
