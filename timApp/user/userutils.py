@@ -124,6 +124,7 @@ def grant_access(
     duration_to: datetime | None = None,
     duration: timedelta | None = None,
     require_confirm: bool | None = None,
+    restricted_mode: bool | None = None,
     replace_active_duration: bool
     | ReplaceAccessAction = ReplaceAccessAction.AlwaysReplace,
 ) -> BlockAccess:
@@ -185,6 +186,7 @@ def grant_access(
         b.duration_from = duration_from
         b.duration_to = duration_to
         b.require_confirm = require_confirm
+        b.restricted = restricted_mode
         return b
     ba = BlockAccess(
         block_id=block.id,
@@ -195,6 +197,7 @@ def grant_access(
         duration_to=duration_to,
         duration=duration,
         require_confirm=require_confirm,
+        restricted=restricted_mode,
     )
     db.session.add(ba)
     group.accesses_alt[key] = ba

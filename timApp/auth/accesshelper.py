@@ -329,6 +329,7 @@ def abort_if_not_access_and_required(
                     duration_from=ba_group.duration_from,
                     duration_to=ba_group.duration_to,
                     require_confirm=ba_group.require_confirm,
+                    restricted=ba_group.restricted,
                 )
         if ba is not None:
             unlock = get_option(request, "unlock", False)

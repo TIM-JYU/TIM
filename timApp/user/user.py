@@ -1369,6 +1369,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         duration_to: datetime | None = None,
         duration: timedelta | None = None,
         require_confirm: bool | None = None,
+        restricted_mode: bool | None = None,
     ):
         return grant_access(
             group=self.get_personal_group(),
@@ -1380,6 +1381,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             duration_to=duration_to,
             duration=duration,
             require_confirm=require_confirm,
+            restricted_mode=restricted_mode,
         )
 
     def remove_access(self, block_id: int, access_type: str | AccessType) -> None:
