@@ -400,7 +400,10 @@ export function toPromise<T, U = AngularError>(
             if (err instanceof HttpErrorResponse) {
                 return {
                     ok: false,
-                    result: {error: err.message, status: err.status} as U,
+                    result: {
+                        error: err.error ?? err.message,
+                        status: err.status,
+                    } as U,
                 };
             }
             return {ok: false, result: err as U};
