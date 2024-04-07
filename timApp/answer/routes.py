@@ -4,11 +4,12 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Union, Any, Callable, TypedDict, Tuple
+from typing import Union, Any, Callable, TypedDict, Tuple, Sequence
 
 from flask import Response
 from flask import current_app
 from flask import request
+from flask_babel import gettext
 from marshmallow.utils import missing
 from sqlalchemy import func, select
 from sqlalchemy.orm import lazyload, selectinload
@@ -40,6 +41,8 @@ from timApp.auth.accesshelper import (
     verify_ip_ok,
     TaskAccessVerification,
     verify_answer_access,
+    has_view_access,
+    is_in_answer_review,
 )
 from timApp.auth.accesshelper import (
     verify_task_access,
@@ -63,6 +66,7 @@ from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.docsettings import DISABLE_ANSWER_REVIEW_MODE
 from timApp.document.document import Document, dereference_pars
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.document.usercontext import UserContext
@@ -76,6 +80,11 @@ from timApp.document.viewcontext import (
 from timApp.item.block import Block, BlockType
 from timApp.item.manage import (
     log_task_block,
+)
+from timApp.item.tag import (
+    Tag,
+    ANSWER_REVIEW_GROUP_TAG_PREFIX,
+    TAG_ACTIVE,
 )
 from timApp.item.taskblock import insert_task_block, TaskBlock
 from timApp.markdown.markdownconverter import md_to_html
@@ -754,9 +763,16 @@ def post_answer_impl(
         clear_session()
         raise AccessDenied("Please refresh the page and log in again.")
 
-    rights = get_user_rights_for_item(d, curr_user)
-    if has_no_higher_right(d.document.get_settings().disable_answer(), rights):
-        raise AccessDenied("Answering is disabled for this document.")
+    disable_answer = d.document.get_settings().disable_answer()
+    if disable_answer == DISABLE_ANSWER_REVIEW_MODE:
+        if is_in_answer_review(d, curr_user):
+            raise AccessDenied(
+                gettext("You cannot submit new answers to the document.")
+            )
+    else:
+        rights = get_user_rights_for_item(d, curr_user)
+        if has_no_higher_right(disable_answer, rights):
+            raise AccessDenied("Answering is disabled for this document.")
 
     force_answer = answer_options.get(
         "forceSave", False
@@ -1558,6 +1574,10 @@ def get_task_info(task_id: str) -> Response:
             view_ctx=view_ctx,
         )
         tim_vars = find_tim_vars(plugin)
+        disable_answer = d.document.get_settings().disable_answer()
+        if disable_answer == DISABLE_ANSWER_REVIEW_MODE:
+            if is_in_answer_review(d, user_ctx.logged_user):
+                tim_vars["showPoints"] = True
         model_answer = tim_vars.get("modelAnswer")
         if model_answer:
             set_model_answer_info(tim_vars, user_ctx, plugin)
@@ -1870,9 +1890,18 @@ def get_answers(task_id: str, user_id: int) -> Response:
             for u in answer.users_all:
                 maybe_hide_name(d, u, model_u)
     # TODO: if modelAnswer hides points then teacher access could be checked first to skip TaskBlock query
-    if p and not p.show_points() and not curr_user.has_teacher_access(d):
-        user_answers = list(map(hide_points, user_answers))
     rights = get_user_rights_for_item(d, curr_user)
+    answer_review_mode = False
+    if d.document.get_settings().disable_answer() == DISABLE_ANSWER_REVIEW_MODE:
+        if is_in_answer_review(d, curr_user):
+            answer_review_mode = True
+    if (
+        not answer_review_mode
+        and p
+        and not p.show_points()
+        and not curr_user.has_teacher_access(d)
+    ):
+        user_answers = list(map(hide_points, user_answers))
     if has_no_higher_right(d.document.get_settings().anonymize_reviewers(), rights):
         user_answers = list(map(hide_points_modifier, user_answers))
     return json_response(user_answers)
@@ -2039,7 +2068,11 @@ def get_model_answer(task_id: str) -> Response:
     is_teacher = has_teacher_access(d)
     if not is_teacher:
         answer_count: int | None = None
-        if model_answer_info.disabled:
+        if (
+            model_answer_info.disabled == "unless_review"
+            and not is_in_answer_review(d, current_user)
+            or model_answer_info.disabled == True
+        ):
             raise AccessDenied("This model answer has been disabled")
         if model_answer_info.endDate:
             if model_answer_info.endDate < get_current_time():

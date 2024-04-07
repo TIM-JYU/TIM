@@ -67,6 +67,10 @@ export interface ITaggedItem extends IItem {
     tags: ITag[];
 }
 
+export function isTaggedItem(item: IItem): item is ITaggedItem {
+    return (item as ITaggedItem).tags !== undefined;
+}
+
 export async function getItem(itemId: number) {
     const i = await to($http.get<IItem>(`/items/${itemId}`));
     if (!i.ok) {

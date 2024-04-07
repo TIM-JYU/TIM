@@ -68,6 +68,9 @@ class IdeDocument:
     path: str
 
 
+DISABLE_ANSWER_REVIEW_MODE = "answer_review"
+
+
 # TODO: Start moving DocSettings keys to this dataclass
 @dataclass
 class DocSettingTypes:

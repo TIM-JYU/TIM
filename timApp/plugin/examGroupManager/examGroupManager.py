@@ -32,6 +32,7 @@ from timApp.document.viewcontext import ViewRoute
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.deleting import soft_delete_document
+from timApp.item.tag import Tag, ANSWER_REVIEW_GROUP_TAG_PREFIX, TagType
 from timApp.plugin.plugin import Plugin
 from timApp.tim_app import app
 from timApp.timdb.sqa import db, run_sql
@@ -779,6 +780,34 @@ def print_login_codes(
 LOGIN_CODE_ACTIVE_DURATION = timedelta(days=30)
 
 
+def _add_review_tag(
+    ug: UserGroup,
+    exam_doc: DocInfo,
+    duration: timedelta | None = None,
+) -> None:
+    tag_name = f"{ANSWER_REVIEW_GROUP_TAG_PREFIX}{ug.name}"
+    view_tag: Tag | None = db.session.get(Tag, (exam_doc.id, tag_name))
+    now = get_current_time()
+    expire_date = now + (duration or LOGIN_CODE_ACTIVE_DURATION)
+    if view_tag:
+        view_tag.expires = expire_date
+    else:
+        view_tag = Tag(
+            block_id=exam_doc.id,
+            name=tag_name,
+            type=TagType.Regular,
+            expires=expire_date,
+        )
+        db.session.add(view_tag)
+
+
+def _remove_review_tag(ug: UserGroup, exam_doc: DocInfo) -> None:
+    tag_name = f"{ANSWER_REVIEW_GROUP_TAG_PREFIX}{ug.name}"
+    view_tag: Tag | None = db.session.get(Tag, (exam_doc.id, tag_name))
+    if view_tag:
+        db.session.delete(view_tag)
+
+
 def _enable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     login_codes = list(_get_current_login_codes(ug))
     if not login_codes:
@@ -1042,6 +1071,65 @@ def update_member_info(
 
     db.session.commit()
     return json_response(user_data.to_json())
+
+
+@exam_group_manager_plugin.post("/toggleAnswerReview")
+def set_answer_review(group_id: int, state: bool) -> Response:
+    ug = UserGroup.get_by_id(group_id)
+    if not ug:
+        raise NotExist(f"Group with ID {group_id} does not exist.")
+
+    _verify_exam_group_access(ug)
+    exam_group_data = _get_exam_group_data_global(ug)
+
+    if exam_group_data.examState > 0:
+        raise RouteException(
+            gettext(
+                "Cannot reveal answers while the exam is ongoing. Stop the exam and disable the login codes in the "
+                "section 3."
+            )
+        )
+
+    if isinstance(exam_group_data.examDocId, Missing):
+        raise RouteException("No exam document set for the group.")
+
+    doc = DocEntry.find_by_id(exam_group_data.examDocId)
+    if not doc:
+        raise NotExist(
+            f"Exam document with ID {exam_group_data.examDocId} does not exist."
+        )
+
+    if state:
+        now = get_current_time()
+        dt = timedelta(hours=1)
+        active_to = now + dt
+        _enable_login_codes(ug, exam_group_data, log=False, duration=dt)
+        _add_review_tag(ug, doc, duration=dt)
+        for u in ug.users:
+            grant_access(
+                u.get_personal_group(),
+                doc,
+                AccessType.view,
+                accessible_from=now,
+                accessible_to=active_to,
+            )
+        exam_group_data.accessAnswersTo = active_to
+    else:
+        _disable_login_codes(ug, exam_group_data, log=False)
+        _remove_review_tag(ug, doc)
+        for u in ug.users:
+            expire_access(u.get_personal_group(), doc, AccessType.view)
+        exam_group_data.accessAnswersTo = None
+
+    _update_exam_group_data_global(ug, exam_group_data)
+
+    u = get_current_user_object()
+    log_info(
+        f"ExamGroupManage: {u.name} {'enabled' if state else 'disabled'} answer review for group {ug.name} (exam doc: {doc.path})"
+    )
+
+    db.session.commit()
+    return json_response({"accessAnswersTo": exam_group_data.accessAnswersTo})
 
 
 def reqs_handle() -> PluginReqs:
