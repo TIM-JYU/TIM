@@ -85,6 +85,9 @@
             <span class="label label-danger"
                   uib-tooltip="{{ right.duration_to | timdate }}"
                   ng-if="$ctrl.shouldShowNotUnlockableAnymore(right)">No longer unlockable since {{ right.duration_to | timreldate }}</span>
+            <span class="label label-danger"
+                  uib-tooltip="Can see model answers, cannot submit new answers"
+                  ng-if="right.restricted">Answer view mode</span>
 
             <span class="action-btn remove" ng-if="!$ctrl.hideRemove">
                 <button class="btn btn-default btn-xs"

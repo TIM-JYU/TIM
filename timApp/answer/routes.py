@@ -9,6 +9,7 @@ from typing import Union, Any, Callable, TypedDict, Tuple
 from flask import Response
 from flask import current_app
 from flask import request
+from flask_babel import gettext
 from marshmallow.utils import missing
 from sqlalchemy import func, select
 from sqlalchemy.orm import lazyload, selectinload
@@ -40,6 +41,7 @@ from timApp.auth.accesshelper import (
     verify_ip_ok,
     TaskAccessVerification,
     verify_answer_access,
+    has_view_access,
 )
 from timApp.auth.accesshelper import (
     verify_task_access,
@@ -744,6 +746,8 @@ def post_answer_impl(
     rights = get_user_rights_for_item(d, curr_user)
     if has_no_higher_right(d.document.get_settings().disable_answer(), rights):
         raise AccessDenied("Answering is disabled for this document.")
+    if rights["restricted_mode"]:
+        raise AccessDenied(gettext("You cannot submit new answers to the document."))
 
     force_answer = answer_options.get(
         "forceSave", False
@@ -1523,7 +1527,7 @@ def get_task_info(task_id: str) -> Response:
         user_ctx = user_context_with_logged_in(None)
         view_ctx = view_ctx_with_urlmacros(ViewRoute.View)
         plugin, d = Plugin.from_task_id(task_id, user_ctx=user_ctx, view_ctx=view_ctx)
-        verify_task_access(
+        access = verify_task_access(
             d,
             plugin.task_id,
             AccessType.view,
@@ -1533,6 +1537,8 @@ def get_task_info(task_id: str) -> Response:
             view_ctx=view_ctx,
         )
         tim_vars = find_tim_vars(plugin)
+        if access.access.restricted:
+            tim_vars["showPoints"] = True
         model_answer = tim_vars.get("modelAnswer")
         if model_answer:
             set_model_answer_info(tim_vars, user_ctx, plugin)
@@ -1845,9 +1851,14 @@ def get_answers(task_id: str, user_id: int) -> Response:
             for u in answer.users_all:
                 maybe_hide_name(d, u, model_u)
     # TODO: if modelAnswer hides points then teacher access could be checked first to skip TaskBlock query
-    if p and not p.show_points() and not curr_user.has_teacher_access(d):
-        user_answers = list(map(hide_points, user_answers))
     rights = get_user_rights_for_item(d, curr_user)
+    if (
+        not rights["restricted_mode"]
+        and p
+        and not p.show_points()
+        and not curr_user.has_teacher_access(d)
+    ):
+        user_answers = list(map(hide_points, user_answers))
     if has_no_higher_right(d.document.get_settings().anonymize_reviewers(), rights):
         user_answers = list(map(hide_points_modifier, user_answers))
     return json_response(user_answers)
@@ -2010,7 +2021,14 @@ def get_model_answer(task_id: str) -> Response:
     if not model_answer_info or not model_answer_info.answer:
         raise RouteException(f"No model answer for task {task_id}")
     is_teacher = has_teacher_access(d)
-    if not is_teacher:
+    restricted_mode = False
+    if is_teacher:
+        restricted_mode = is_teacher.restricted
+    else:
+        is_view = has_view_access(d)
+        if is_view:
+            restricted_mode = is_view.restricted
+    if not is_teacher and not restricted_mode:
         answer_count: int | None = None
         if model_answer_info.disabled:
             raise AccessDenied("This model answer has been disabled")

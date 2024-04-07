@@ -52,6 +52,7 @@ class BlockAccess(db.Model):
     duration_from: Mapped[Optional[datetime_tz]]
     duration_to: Mapped[Optional[datetime_tz]]
     require_confirm: Mapped[Optional[bool]]
+    restricted: Mapped[Optional[bool]]
 
     block: Mapped["Block"] = relationship(back_populates="accesses")
     usergroup: Mapped["UserGroup"] = relationship(back_populates="accesses")
@@ -133,6 +134,8 @@ class BlockAccess(db.Model):
             r.append("expired")
         elif self.accessible_to:
             r.append(f"accessible_to={self.accessible_to.isoformat()}")
+        if self.restricted:
+            r.append(f"restricted={self.restricted}")
         attrs = ",".join(r)
         return f"{self.access_type.name}({attrs})"
 
@@ -177,6 +180,7 @@ class BlockAccess(db.Model):
             "duration_from": self.duration_from,
             "duration_to": self.duration_to,
             "require_confirm": self.require_confirm,
+            "restricted": self.restricted,
             **include_if_loaded("usergroup", self),
         }
 

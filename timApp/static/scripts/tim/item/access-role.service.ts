@@ -18,6 +18,7 @@ export interface IRight {
     accessible_from: Moment;
     usergroup: IGroupWithAdminDocPath;
     require_confirm?: boolean;
+    restricted: boolean;
 }
 
 export interface IAccessType {

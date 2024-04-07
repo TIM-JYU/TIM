@@ -9,6 +9,7 @@ const Rights = t.type({
     owner: t.boolean,
     see_answers: t.boolean,
     teacher: t.boolean,
+    restricted_mode: t.boolean,
 });
 
 export const RightNames = t.keyof(Rights.props);

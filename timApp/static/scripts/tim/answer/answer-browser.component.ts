@@ -1247,7 +1247,11 @@ export class AnswerBrowserComponent
     }
 
     showModelAnswerLink() {
-        if (!this.viewctrl?.item.rights.teacher) {
+        console.log("restricted", this.viewctrl?.item.rights.restricted_mode);
+        if (
+            !this.viewctrl?.item.rights.teacher &&
+            !this.viewctrl?.item.rights.restricted_mode
+        ) {
             if (
                 this.modelAnswer?.linkTextCount &&
                 this.modelAnswer?.linkTextCount - this.answers.length > 0
@@ -1797,12 +1801,14 @@ export class AnswerBrowserComponent
         }
         this.clearError("taskinfo");
         this.taskInfo = r.result.data;
+        console.log("modelAnswer", r.result.data.modelAnswer);
         if (r.result.data.modelAnswer) {
             this.modelAnswer = r.result.data.modelAnswer;
             // Don't show "Show model answer" when it's disabled for viewers
             if (
                 this.modelAnswer.disabled &&
-                !this.viewctrl.item.rights.teacher
+                !this.viewctrl.item.rights.teacher &&
+                !this.viewctrl.item.rights.restricted_mode
             ) {
                 this.hideModelAnswerPanel = true;
             }
