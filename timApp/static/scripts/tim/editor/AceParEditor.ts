@@ -218,8 +218,8 @@ export class AceParEditor extends BaseParEditor implements IEditor {
         this.editor.commands.addCommand({
             name: "commentBlock",
             bindKey: {
-                win: "Ctrl-Y",
-                mac: "Command-Y",
+                win: "Ctrl-Shift-K",
+                mac: "Ctrl-Shift-K",
             },
             exec: () => {
                 this.commentClicked();
