@@ -1624,6 +1624,7 @@ export class ExamGroupManagerComponent
     }
 
     toReadableDate(date: string): string {
+        console.log(date);
         return new Date(date).toLocaleString(Users.getCurrentLocale(), {
             dateStyle: "long",
             timeStyle: "short",
