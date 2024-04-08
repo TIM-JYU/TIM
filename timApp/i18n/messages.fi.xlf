@@ -8945,8 +8945,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></target>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -10114,16 +10114,16 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="8985586082248904379" datatype="html">
-        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> To start a new exam, stop answer reviewing in section &apos;4. Show answers to students&apos;. </source>
-        <target state="new"> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> To start a new exam, stop answer reviewing in section &apos;4. Show answers to students&apos;. </target>
+        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> To start a new exam, stop answer reviewing in section '4. Show answers to students'. </source>
+        <target state="translated"> Vastausten näyttäminen on päällä tälle ryhmälle.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Pysäytä vastausten näyttäminen kohdassa "4. Näytä kokeen vastaukset oppilaille" ennen kuin voit aloittaa uuden kokeen ryhmälle. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">456,457</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6383743377048106825" datatype="html">
-        <source> You can show answers only when they don&apos;t have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> Stop the exam and disable login codes in section &apos;3. Manage exams&apos; to enable showing answers. </source>
-        <target state="new"> You can show answers only when they don&apos;t have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> Stop the exam and disable login codes in section &apos;3. Manage exams&apos; to enable showing answers. </target>
+        <source> You can show answers only when they don't have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers. </source>
+        <target state="translated"> Voit näyttää vastauksia vain silloin, kun koeryhmällä ei ole menossa olevia kokeita.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Pysäytä koe ja ota pois käytöstä kirjautumiskoodit kohdassa "3. Hallinnoi kokeita" ennen kuin voit näyttää vastauksia. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">679,680</context>
@@ -10131,7 +10131,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="657151549921052159" datatype="html">
         <source>Begin showing answers to students</source>
-        <target state="new">Begin showing answers to students</target>
+        <target state="translated">Aloita vastausten näyttäminen koeryhmän oppilaille</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">686,687</context>
@@ -10139,7 +10139,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="145563783771892719" datatype="html">
         <source>End showing answers to students</source>
-        <target state="new">End showing answers to students</target>
+        <target state="translated">Lopeta vastausten näyttäminen koeryhmän oppilaille</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">688,689</context>
@@ -10147,15 +10147,15 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="5354903987559868415" datatype="html">
         <source>Note: You can only show the answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam.</source>
-        <target state="new">Note: You can only show the answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam.</target>
+        <target state="translated">Huom: Voit näyttää vain varsinaisen kokeen (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) vastaukset. Harjoituskokeen vastausten näyttämistä ei tueta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">693,694</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3471650893811159682" datatype="html">
-        <source> Students can access the answers to the exam &apos;<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>&apos;. The access is automatically disabled at <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? &apos;&apos;)}}"/>. </source>
-        <target state="new"> Students can access the answers to the exam &apos;<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>&apos;. The access is automatically disabled at <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? &apos;&apos;)}}"/>. </target>
+        <source> Students can access the answers to the exam '<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>'. The access is automatically disabled at <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </source>
+        <target state="translated"> Oppilaat pääsevät nyt katsomaan kokeen "<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>" vastauksia. Seuraa alla olevia lisäohjeita. Pääsy loppuu automaattisesti <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">697,699</context>
@@ -10163,7 +10163,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="7762631717420068201" datatype="html">
         <source> Press the button above to allow students to review their answers for 1 hour. </source>
-        <target state="new"> Press the button above to allow students to review their answers for 1 hour. </target>
+        <target state="translated"> Paina yllä olevaa painiketta aloittaaksesi vastausten näyttämistä oppilaille. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">703</context>
@@ -10171,39 +10171,39 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="3798070165070620146" datatype="html">
         <source>Guide</source>
-        <target state="new">Guide</target>
+        <target state="translated">Ohje</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">706,707</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5092731290148917173" datatype="html">
-        <source>Make sure the exam is ended and login codes are disabled in section &apos;3. Manage exams&apos;</source>
-        <target state="new">Make sure the exam is ended and login codes are disabled in section &apos;3. Manage exams&apos;</target>
+        <source>Make sure the exam is ended and login codes are disabled in section '3. Manage exams'</source>
+        <target state="translated">Varmista, että koeryhmän koe on lopetettu ja kirjautumiskoodit otettu pois käytöstä kohdassa "3. Hallinnoi kokeita"</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">708,709</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7462261835080950306" datatype="html">
-        <source>Press the &apos;Begin showing answers to students&apos; button to allow students to review their answers for 1 hour.</source>
-        <target state="new">Press the &apos;Begin showing answers to students&apos; button to allow students to review their answers for 1 hour.</target>
+        <source>Press the 'Begin showing answers to students' button to allow students to review their answers for 1 hour.</source>
+        <target state="translated">Paina "Aloita vastausten näyttäminen koeryhmän oppilaille"-painiketta. Oppilaiden kirjautumiskoodit aktivoidaan ja heille annetaan pääsyoikeus kokeeseen yhdeksi tunniksi.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">709,710</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
-        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!)!)&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)!) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;&lt;/li&gt;"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li&gt;"/></source>
-        <target state="new">Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!)!)&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)!) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;&lt;/li&gt;"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li&gt;"/></target>
+        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!)!)&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)!) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></source>
+        <target state="translated">Pyydä oppilaita kirjautumaan sisään koesivulle käyttäen heidän kirjautumiskoodinsa: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!)!)&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)!) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">710,711</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2002757117959971790" datatype="html">
-        <source>Students can open the exam using the &apos;Open exam&apos; button.</source>
-        <target state="new">Students can open the exam using the &apos;Open exam&apos; button.</target>
+        <source>Students can open the exam using the 'Open exam' button.</source>
+        <target state="translated">Oppilaat voivat omatoimisesti avata kokeen "Avaa koe" -painikkeella.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">711,712</context>
@@ -10211,15 +10211,15 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="1229716178210207066" datatype="html">
         <source>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</source>
-        <target state="new">Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</target>
+        <target state="translated">Oppilaat voivat omatoimisesti tarkastella vastauksensa. Oppilaat eivät voi lähettää uusia vastauksia, mutta he voivat katsoa mallivastauksia opettajan tapaan (jos tehtävälle on määritelty mallivastaus).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">712,713</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4643789971977071249" datatype="html">
-        <source>To end the view right, press the &apos;End showing answers to students button&apos;. The right is automatically disabled in 1 hour.</source>
-        <target state="new">To end the view right, press the &apos;End showing answers to students button&apos;. The right is automatically disabled in 1 hour.</target>
+        <source>To end the view right, press the 'End showing answers to students button'. The right is automatically disabled in 1 hour.</source>
+        <target state="translated">Kun haluat lopettaa katseluoikeuden, paina "Lopeta vastausten näyttäminen koeryhmän oppilaille" -painiketta. Koejärjestelmä lopettaa oikeuden automaattisesti yksi tunti oikeuden antamisen jälkeen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">713,714</context>
@@ -10227,7 +10227,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="9173480621811532307" datatype="html">
         <source>Could not toggle answer review. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
-        <target state="new">Could not toggle answer review. Details: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <target state="translated">Vastausten katselu ei juuri onnistu: <x id="PH" equiv-text="res.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1618,1617</context>

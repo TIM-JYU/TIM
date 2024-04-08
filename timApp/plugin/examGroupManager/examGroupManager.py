@@ -985,11 +985,13 @@ def set_exam_state(group_id: int, new_state: int) -> Response:
     exam_group_data = _get_exam_group_data_global(ug)
 
     if exam_group_data.accessAnswersTo:
-        raise RouteException(
-            gettext(
-                "Cannot change exam state while the answers are revealed. Disable answer reveal in section 4."
+        now = get_current_time()
+        if now < exam_group_data.accessAnswersTo:
+            raise RouteException(
+                gettext(
+                    "Cannot change exam state while the answers are revealed. Disable answer reveal in section 4."
+                )
             )
-        )
 
     _set_exam_state_impl(ug, exam_group_data, new_state)
 
