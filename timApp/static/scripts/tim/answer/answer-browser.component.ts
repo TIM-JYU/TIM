@@ -1247,7 +1247,6 @@ export class AnswerBrowserComponent
     }
 
     showModelAnswerLink() {
-        console.log("restricted", this.viewctrl?.item.rights.restricted_mode);
         if (
             !this.viewctrl?.item.rights.teacher &&
             !this.viewctrl?.item.rights.restricted_mode
@@ -1801,7 +1800,6 @@ export class AnswerBrowserComponent
         }
         this.clearError("taskinfo");
         this.taskInfo = r.result.data;
-        console.log("modelAnswer", r.result.data.modelAnswer);
         if (r.result.data.modelAnswer) {
             this.modelAnswer = r.result.data.modelAnswer;
             // Don't show "Show model answer" when it's disabled for viewers

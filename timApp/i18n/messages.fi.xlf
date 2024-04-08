@@ -10153,14 +10153,6 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
           <context context-type="linenumber">693,694</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3471650893811159682" datatype="html">
-        <source> Students can access the answers to the exam '<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>'. The access is automatically disabled at <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </source>
-        <target state="translated"> Oppilaat pääsevät nyt katsomaan kokeen "<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>" vastauksia. Seuraa alla olevia lisäohjeita. Pääsy loppuu automaattisesti <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">697,699</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7762631717420068201" datatype="html">
         <source> Press the button above to allow students to review their answers for 1 hour. </source>
         <target state="translated"> Paina yllä olevaa painiketta aloittaaksesi vastausten näyttämistä oppilaille. </target>
@@ -10231,6 +10223,14 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1618,1617</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1609834812747709494" datatype="html">
+        <source> Students can access the answers to the exam '<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>'. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </source>
+        <target state="translated"> Oppilaat voivat nyt omatoimisesti tarkastella kokeen "<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>" vastauksia. Pääsy kokeeseen loppuu <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">697,699</context>
         </context-group>
       </trans-unit>
     </body>

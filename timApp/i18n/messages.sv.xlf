@@ -9874,14 +9874,6 @@ Please generate login codes first.</target>
           <context context-type="linenumber">693,694</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3471650893811159682" datatype="html">
-        <source> Students can access the answers to the exam &apos;<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>&apos;. The access is automatically disabled at <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? &apos;&apos;)}}"/>. </source>
-        <target state="new"> Students can access the answers to the exam &apos;<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>&apos;. The access is automatically disabled at <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? &apos;&apos;)}}"/>. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">697,699</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7762631717420068201" datatype="html">
         <source> Press the button above to allow students to review their answers for 1 hour. </source>
         <target state="new"> Press the button above to allow students to review their answers for 1 hour. </target>
@@ -9952,6 +9944,14 @@ Please generate login codes first.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1618,1617</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1609834812747709494" datatype="html">
+        <source> Students can access the answers to the exam &apos;<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>&apos;. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? &apos;&apos;)}}"/>. </source>
+        <target state="new"> Students can access the answers to the exam &apos;<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>&apos;. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? &apos;&apos;)}}"/>. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">697,699</context>
         </context-group>
       </trans-unit>
     </body>
