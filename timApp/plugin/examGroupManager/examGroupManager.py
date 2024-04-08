@@ -786,7 +786,10 @@ LOGIN_CODE_ACTIVE_DURATION = timedelta(days=30)
 
 
 def _enable_login_codes(
-    ug: UserGroup, extra: ExamGroupDataGlobal, log: bool = True
+    ug: UserGroup,
+    extra: ExamGroupDataGlobal,
+    log: bool = True,
+    duration: timedelta | None = None,
 ) -> None:
     login_codes = list(_get_current_login_codes(ug))
     if not login_codes:
@@ -799,7 +802,7 @@ def _enable_login_codes(
     now = get_current_time()
     for lc in login_codes:
         lc.active_from = now
-        lc.active_to = now + LOGIN_CODE_ACTIVE_DURATION
+        lc.active_to = now + (duration or LOGIN_CODE_ACTIVE_DURATION)
 
     if log:
         u = get_current_user_object()
@@ -1093,8 +1096,9 @@ def set_answer_review(group_id: int, state: bool) -> Response:
 
     if state:
         now = get_current_time()
-        active_to = now + timedelta(hours=1)
-        _enable_login_codes(ug, exam_group_data, log=False)
+        dt = timedelta(hours=1)
+        active_to = now + dt
+        _enable_login_codes(ug, exam_group_data, log=False, duration=dt)
         for u in ug.users:
             grant_access(
                 u.get_personal_group(),
