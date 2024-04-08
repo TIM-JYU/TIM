@@ -225,6 +225,10 @@ def _get_latest_fields_any(task_fields: Iterable[str]) -> Sequence[Answer]:
     return latest_globals
 
 
+def _clean_group_name(name: str) -> str:
+    return slugify(name).replace(".", "-").replace(",", "-")
+
+
 def _get_latest_fields_usergroup(
     task_fields: Iterable[str],
     user: User | None = None,
@@ -442,9 +446,7 @@ def create_group(
     group_prefix: str = "",
     exam_doc_id: int | None = None,
 ) -> Response:
-    group_name = (
-        f"{slugify(group_prefix)}-{slugify(name)}-{slugify(secrets.token_urlsafe(8))}"
-    )
+    group_name = f"{slugify(group_prefix)}-{_clean_group_name(name)}-{slugify(secrets.token_urlsafe(8))}"
     group_path = f"{group_folder_path}/{group_name}"
     ug, doc = do_create_group(group_path)
     doc.title = name
