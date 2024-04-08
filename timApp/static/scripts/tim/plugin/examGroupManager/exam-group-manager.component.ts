@@ -707,7 +707,7 @@ export class ToggleComponent {
                             <ol>
                                 <li i18n>Make sure the exam is ended and login codes are disabled in section '3. Manage exams'</li>
                                 <li i18n>Press the 'Begin showing answers to students' button to allow students to review their answers for 1 hour.</li>
-                                <li i18n>Ask students to log in to the exam page using their login codes: <a [href]="getExamUrl(examByDocId.get(group.examDocId!)!)"><code>{{ getExamUrl(examByDocId.get(group.examDocId!)!) }}</code></a></li>
+                                <li i18n>Ask students to log in to the exam page using their login codes: <a [href]="getExamUrl(examByDocId.get(group.examDocId!))"><code>{{ getExamUrl(examByDocId.get(group.examDocId!)) }}</code></a></li>
                                 <li i18n>Students can open the exam using the 'Open exam' button.</li>
                                 <li i18n>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</li>
                                 <li i18n>To end the view right, press the 'End showing answers to students button'. The right is automatically disabled in 1 hour.</li>
@@ -1453,7 +1453,10 @@ export class ExamGroupManagerComponent
         return undefined;
     }
 
-    getExamUrl(exam: Exam) {
+    getExamUrl(exam?: Exam) {
+        if (!exam) {
+            return "";
+        }
         if (exam.url) {
             return exam.url;
         }
