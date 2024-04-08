@@ -785,7 +785,9 @@ def print_login_codes(
 LOGIN_CODE_ACTIVE_DURATION = timedelta(days=30)
 
 
-def _enable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _enable_login_codes(
+    ug: UserGroup, extra: ExamGroupDataGlobal, log: bool = True
+) -> None:
     login_codes = list(_get_current_login_codes(ug))
     if not login_codes:
         raise RouteException(
@@ -799,14 +801,17 @@ def _enable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
         lc.active_from = now
         lc.active_to = now + LOGIN_CODE_ACTIVE_DURATION
 
-    u = get_current_user_object()
-    doc = _get_current_exam_doc(extra)
-    log_info(
-        f"ExamGroupManage: {u.name} enabled login codes for group {ug.name} (exam doc: {doc.path})"
-    )
+    if log:
+        u = get_current_user_object()
+        doc = _get_current_exam_doc(extra)
+        log_info(
+            f"ExamGroupManage: {u.name} enabled login codes for group {ug.name} (exam doc: {doc.path})"
+        )
 
 
-def _disable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _disable_login_codes(
+    ug: UserGroup, extra: ExamGroupDataGlobal, log: bool = True
+) -> None:
     login_codes = list(_get_current_login_codes(ug))
     if not login_codes:
         return
@@ -816,11 +821,12 @@ def _disable_login_codes(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
         lc.active_from = None
         lc.active_to = now
 
-    u = get_current_user_object()
-    doc = _get_current_exam_doc(extra)
-    log_info(
-        f"ExamGroupManage: {u.name} disabled login codes for group {ug.name} (exam doc: {doc.path})"
-    )
+    if log:
+        u = get_current_user_object()
+        doc = _get_current_exam_doc(extra)
+        log_info(
+            f"ExamGroupManage: {u.name} disabled login codes for group {ug.name} (exam doc: {doc.path})"
+        )
 
 
 def _get_current_exam_doc(extra: ExamGroupDataGlobal) -> DocInfo:
@@ -1076,15 +1082,19 @@ def set_answer_review(group_id: int, state: bool) -> Response:
             )
         )
 
-    if exam_group_data.examDocId is missing:
+    if isinstance(exam_group_data.examDocId, Missing):
         raise RouteException("No exam document set for the group.")
 
     doc = DocEntry.find_by_id(exam_group_data.examDocId)
+    if not doc:
+        raise NotExist(
+            f"Exam document with ID {exam_group_data.examDocId} does not exist."
+        )
 
     if state:
         now = get_current_time()
         active_to = now + timedelta(hours=1)
-        _enable_login_codes(ug, exam_group_data)
+        _enable_login_codes(ug, exam_group_data, log=False)
         for u in ug.users:
             grant_access(
                 u.get_personal_group(),
@@ -1096,12 +1106,17 @@ def set_answer_review(group_id: int, state: bool) -> Response:
             )
         exam_group_data.accessAnswersTo = active_to
     else:
-        _disable_login_codes(ug, exam_group_data)
+        _disable_login_codes(ug, exam_group_data, log=False)
         for u in ug.users:
             expire_access(u.get_personal_group(), doc, AccessType.view)
         exam_group_data.accessAnswersTo = None
 
     _update_exam_group_data_global(ug, exam_group_data)
+
+    u = get_current_user_object()
+    log_info(
+        f"ExamGroupManage: {u.name} {'enabled' if state else 'disabled'} answer review for group {ug.name} (exam doc: {doc.path})"
+    )
 
     db.session.commit()
     return json_response({"accessAnswersTo": exam_group_data.accessAnswersTo})
