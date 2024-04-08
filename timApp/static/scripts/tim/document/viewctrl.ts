@@ -323,6 +323,10 @@ export class ViewCtrl implements IController {
         this.velpMode = dg.velpMode;
         this.scope = sc;
 
+        if (this.item.rights.restricted_mode) {
+            document.querySelector("body")?.classList.add("restricted-mode");
+        }
+
         const currSel = documentglobals().current_list_user;
         if (this.users.length > 0) {
             this.selectedUser = currSel
