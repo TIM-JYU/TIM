@@ -10171,7 +10171,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="5092731290148917173" datatype="html">
         <source>Make sure the exam is ended and login codes are disabled in section '3. Manage exams'</source>
-        <target state="translated">Varmista, että koeryhmän koe on lopetettu ja että kirjautumiskoodit on otettu poiskäytöstä kohdassa "3. Hallinnoi kokeita".</target>
+        <target state="translated">Varmista, että koeryhmän koe on lopetettu ja että kirjautumiskoodit on otettu pois käytöstä kohdassa "3. Hallinnoi kokeita".</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">708,709</context>
@@ -10187,7 +10187,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
         <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!)!)&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)!) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></source>
-        <target state="translated">Pyydä oppilaita kirjautumaan koesivulle heidän kirjautumiskoodeillansa: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!)!)&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)!) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
+        <target state="translated">Pyydä oppilaita kirjautumaan koesivulle kirjautumiskoodeillansa: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!)!)&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)!) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">710,711</context>
