@@ -598,12 +598,17 @@ def copy_members(from_id: int, to_id: int) -> Response:
     _verify_exam_group_access(source_group)
     _verify_exam_group_access(target_group)
 
-    # TODO: Copy extra infos
-
     members: list[User] = list(source_group.users)
     added_memberships = []
+
+    member_extra_infos = _get_exam_group_data_user(source_group)
+
     for u in members:
-        u.add_to_group(target_group, cur_user)
+        extra = member_extra_infos[u.id]
+        new_u = _create_examgroup_user(u.given_name or "", u.surname or "")
+        new_u.add_to_group(target_group, cur_user)
+        db.session.flush()
+        _update_exam_group_data_user(new_u, target_group, extra)
         added_memberships.append(u.name)
     db.session.commit()
     return ok_response()
@@ -634,6 +639,19 @@ def do_create_users(
     # Check permission for the group
     # Only users with manage access to the group can create and add new members
     _verify_exam_group_access(group, current_user)
+    user = _create_examgroup_user(given_name, surname)
+    user.add_to_group(group, current_user)
+    # Flush to make user be member of the group
+    db.session.flush()
+
+    extra_data = ExamGroupDataUser(extraInfo=extra_info)
+    _update_exam_group_data_user(user, group, extra_data)
+
+    db.session.commit()
+    return user, extra_data
+
+
+def _create_examgroup_user(given_name: str, surname: str) -> User:
     no_reply_email_name, no_reply_email_domain = app.config["NOREPLY_EMAIL"].split(
         "@", 1
     )
@@ -652,15 +670,7 @@ def do_create_users(
         email=email,
     )
     user, _ = User.create_with_group(ui)
-    user.add_to_group(group, current_user)
-    # Flush to make user be member of the group
-    db.session.flush()
-
-    extra_data = ExamGroupDataUser(extraInfo=extra_info)
-    _update_exam_group_data_user(user, group, extra_data)
-
-    db.session.commit()
-    return user, extra_data
+    return user
 
 
 @exam_group_manager_plugin.post("/importUsers/<int:group_id>")
