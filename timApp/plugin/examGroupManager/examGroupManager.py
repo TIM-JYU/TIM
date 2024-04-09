@@ -599,17 +599,15 @@ def copy_members(from_id: int, to_id: int) -> Response:
     _verify_exam_group_access(target_group)
 
     members: list[User] = list(source_group.users)
-    added_memberships = []
 
     member_extra_infos = _get_exam_group_data_user(source_group)
 
     for u in members:
         extra = member_extra_infos[u.id]
-        new_u = _create_examgroup_user(u.given_name or "", u.surname or "")
+        new_u = _create_examgroup_user(u.given_name or "", u.last_name or "")
         new_u.add_to_group(target_group, cur_user)
         db.session.flush()
         _update_exam_group_data_user(new_u, target_group, extra)
-        added_memberships.append(u.name)
     db.session.commit()
     return ok_response()
 
