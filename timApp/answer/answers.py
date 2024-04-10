@@ -243,6 +243,8 @@ class NameOptions(Enum):
 class SortOptions(Enum):
     USERNAME = "username"
     TASK = "task"
+    DATE_ASCENDING = "date"
+    DATE_DESCENDING = "date_desc"
 
 
 class FormatOptions(Enum):
@@ -352,6 +354,11 @@ def get_all_answers(
             stmt = stmt.order_by(User.name, Answer.task_id, Answer.answered_on)
         case SortOptions.TASK:
             stmt = stmt.order_by(Answer.task_id, User.name, Answer.answered_on)
+        case SortOptions.DATE_ASCENDING:
+            stmt = stmt.order_by(Answer.answered_on, Answer.task_id, User.name)
+        case SortOptions.DATE_DESCENDING:
+            stmt = stmt.order_by(Answer.answered_on.desc(), Answer.task_id, User.name)
+
     stmt = stmt.with_only_columns(Answer, User, sub_stmt.c.count)
     result = []
     result_json = []
