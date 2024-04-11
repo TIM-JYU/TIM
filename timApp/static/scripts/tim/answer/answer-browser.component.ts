@@ -1560,6 +1560,12 @@ export class AnswerBrowserComponent
                 };
             }
             this.showError(r.result, "getAnswers");
+            if (status <= 0 || status >= 500) {
+                // Throw error here to prevent further execution
+                // This will prevent AB from further setup and prevent losing the state
+                // FIXME: It should be possible to cancel AB refresh/load without throwing an error
+                throw new Error(r.result.data.error);
+            }
             return undefined;
         }
         this.clearError("getAnswers");
