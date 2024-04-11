@@ -217,6 +217,11 @@ class DocSettings:
         return self.__dict
 
     def get_safe_dict(self) -> dict:
+        """
+        Returns a dictionary representation of the settings that is safe to expose to the browser.
+        Any sensitive information (macros, globalmacros) is left out.
+        :return: Browser-safe dictionary representation of the settings.
+        """
         result = dict(self.__dict.values)
         result.pop("macros", None)
         result.pop("globalmacros", None)
