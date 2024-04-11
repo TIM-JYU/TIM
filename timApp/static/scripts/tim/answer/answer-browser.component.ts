@@ -736,12 +736,13 @@ export class AnswerBrowserComponent
         // get new state as long as the previous answer was not explicitly the same as the one before
         // otherwise we might not see the unanswered plugin exactly how the user sees it
         if (
-            !(
+            (!(
                 this.selectedAnswer &&
                 this.loadedAnswer &&
                 this.selectedAnswer.id == this.loadedAnswer.id &&
                 this.oldreview == this.review
-            ) ||
+            ) &&
+                this.canSafelyChangeState) ||
             forceUpdate
         ) {
             this.loading++;
@@ -1605,6 +1606,13 @@ export class AnswerBrowserComponent
 
     showTeacher() {
         return this.viewctrl.teacherMode && this.viewctrl.item.rights.teacher;
+    }
+
+    get canSafelyChangeState() {
+        // FIXME: Remove this before pushing to prod
+        // This option only works OK with exams where there is no AB visible for students
+        const plug = this.getPluginComponent();
+        return this.showTeacher() || this.review || !plug?.isUnSaved();
     }
 
     isAndSetShowNewTask() {
