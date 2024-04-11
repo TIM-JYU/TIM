@@ -219,6 +219,7 @@ class DocSettings:
     def get_safe_dict(self) -> dict:
         result = dict(self.__dict.values)
         result.pop("macros", None)
+        result.pop("globalmacros", None)
         result.pop("manageKey", None)
         return result
 
