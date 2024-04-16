@@ -372,6 +372,12 @@ export class AnswerBrowserComponent
         const isPeerReview = getViewName() == "review";
         this.isPeerReview = isPeerReview;
         this.review = isPeerReview;
+        if (
+            this.viewctrl.docSettings.force_velps &&
+            getViewName() == "teacher"
+        ) {
+            this.review = true;
+        }
         this.peerReviewEnabled = this.viewctrl.peerReviewInProcess() ?? false;
         if (!this.viewctrl.item.rights.teacher && isPeerReview) {
             this.showBrowseAnswers = false;
