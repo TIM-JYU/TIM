@@ -839,7 +839,7 @@ export class ExamGroupManagerComponent
             }
             this.allGroups = groups.result;
         } else {
-            this.error = $localize`Could not fetch groups. Details: ${groups.result.error}`;
+            this.error = $localize`Could not fetch groups. Details: ${groups.result.error.error}`;
         }
         this.refreshVisibleGroups();
         this.loading = false;
@@ -983,7 +983,7 @@ export class ExamGroupManagerComponent
         );
         if (!copyRes.ok) {
             await showMessageDialog(
-                $localize`Could not copy group members. Details: ${copyRes.result.error}`
+                $localize`Could not copy group members. Details: ${copyRes.result.error.error}`
             );
             this.loading = false;
             return;
@@ -1013,7 +1013,7 @@ export class ExamGroupManagerComponent
         );
         if (!res.ok) {
             await showMessageDialog(
-                $localize`Could not delete group. Details ${res.result.error}`
+                $localize`Could not delete group. Details ${res.result.error.error}`
             );
             this.loading = false;
             return;
