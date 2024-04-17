@@ -697,12 +697,12 @@ type: upload
 \[true, false, false\]
 
 ----------------------------------------------------------------------------------
-{'Test user 2'}; {'testuser2'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
-\[true, true, true\]
-
-----------------------------------------------------------------------------------
 {TEST_USER_1_NAME}; {'testuser1'}; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 1\.0
 \[true, false\]
+
+----------------------------------------------------------------------------------
+{'Test user 2'}; {'testuser2'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
+\[true, true, true\]
 
 ----------------------------------------------------------------------------------
 {'Test user 2'}; {'testuser2'}; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 2\.0
@@ -764,8 +764,8 @@ type: upload
             self.assertEqual(1, r["count"])
         expected = [
             "[true, false, false]",
-            "[true, true, true]",
             "[true, false]",
+            "[true, true, true]",
             "[false, false]",
         ]
         self.assertEqual(expected, [r["answer"]["content"] for r in res])
@@ -783,12 +783,12 @@ user_e26b0683f5dde1cc06e2e90a0f20293e9ea8d55e91e4fd5b1871513660badf4f; None; {re
 \[true, false, false\]
 
 ----------------------------------------------------------------------------------
-user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
-\[true, true, true\]
-
-----------------------------------------------------------------------------------
 user_e26b0683f5dde1cc06e2e90a0f20293e9ea8d55e91e4fd5b1871513660badf4f; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 1\.0
 \[true, false\]
+
+----------------------------------------------------------------------------------
+user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
+\[true, true, true\]
 
 ----------------------------------------------------------------------------------
 user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 2\.0
