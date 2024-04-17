@@ -247,6 +247,9 @@ class SortOptions(Enum):
     DATE_DESCENDING = "date_desc"
 
 
+SORT_OPTIONS_DEFAULT = "username-task-date"
+
+
 class FormatOptions(Enum):
     JSON = "json"
     TEXT = "text"
@@ -269,7 +272,7 @@ class AllAnswersOptions(AnswerPeriodOptions):
         default=ValidityOptions.VALID, metadata={"by_value": True}
     )
     name: NameOptions = field(default=NameOptions.BOTH, metadata={"by_value": True})
-    sort: SortOptions = field(default=SortOptions.TASK, metadata={"by_value": True})
+    sort: str = field(default=SORT_OPTIONS_DEFAULT, metadata={"by_value": True})
     format: FormatOptions = field(
         default=FormatOptions.TEXT, metadata={"by_value": True}
     )
@@ -349,15 +352,21 @@ def get_all_answers(
         .join(User, Answer.users)
     )
     stmt = stmt.outerjoin(PluginType).options(contains_eager(Answer.plugin_type))
-    match options.sort:
-        case SortOptions.USERNAME:
-            stmt = stmt.order_by(User.name, Answer.task_id, Answer.answered_on)
-        case SortOptions.TASK:
-            stmt = stmt.order_by(Answer.task_id, User.name, Answer.answered_on)
-        case SortOptions.DATE_ASCENDING:
-            stmt = stmt.order_by(Answer.answered_on, Answer.task_id, User.name)
-        case SortOptions.DATE_DESCENDING:
-            stmt = stmt.order_by(Answer.answered_on.desc(), Answer.task_id, User.name)
+    from sqlalchemy.sql.elements import UnaryExpression
+    from sqlalchemy.orm.base import Mapped
+
+    sort_priority: list[Mapped[str] | Mapped[datetime] | UnaryExpression] = []
+    for s_key in options.sort.split("-"):
+        match s_key:
+            case SortOptions.USERNAME.value:
+                sort_priority.append(User.name)
+            case SortOptions.TASK.value:
+                sort_priority.append(Answer.task_id)
+            case SortOptions.DATE_ASCENDING.value:
+                sort_priority.append(Answer.answered_on)
+            case SortOptions.DATE_DESCENDING.value:
+                sort_priority.append(Answer.answered_on.desc())
+    stmt = stmt.order_by(*sort_priority)
 
     stmt = stmt.with_only_columns(Answer, User, sub_stmt.c.count)
     result = []

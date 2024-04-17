@@ -14,6 +14,7 @@ import {documentglobals} from "tim/util/globals";
 import {$httpParamSerializer} from "tim/util/ngimport";
 import {TimStorage, toPromise} from "tim/util/utils";
 import {CommonModule} from "@angular/common";
+import {$localize} from "@angular/localize/init";
 
 const AnswersDialogOptions = t.intersection([
     t.type({
@@ -35,6 +36,75 @@ const AnswersDialogOptions = t.intersection([
 ]);
 
 interface IOptions extends t.TypeOf<typeof AnswersDialogOptions> {}
+
+type AnswerSortOption = {
+    key: string;
+    value: string;
+    // disabled: boolean;
+};
+type AnswerSortOptionLocalizedStrings = {
+    username: string;
+    task: string;
+    date: string;
+    date_desc: string;
+    separator: string;
+};
+const ASOLS: AnswerSortOptionLocalizedStrings = {
+    username: $localize`Username`,
+    task: $localize`Task`,
+    date: $localize`Date (oldest first)`,
+    date_desc: $localize`Date (newest first)`,
+    separator: ", ",
+};
+
+const AnswerSortOptions: AnswerSortOption[] = [
+    // When sorting by date, secondary/tertiary sort priorities will not have any effect on answer order
+    // since it is extremely unlikely for two or more answers to have been processed (saved) at the exact same time.
+    {
+        key: "date_desc",
+        value: ASOLS.date_desc,
+    },
+    {
+        key: "date",
+        value: ASOLS.date,
+    },
+    {
+        key: "username-task-date_desc",
+        value: [ASOLS.username, ASOLS.task, ASOLS.date_desc].join(
+            ASOLS.separator
+        ),
+    },
+    {
+        key: "username-task-date",
+        value: [ASOLS.username, ASOLS.task, ASOLS.date].join(ASOLS.separator),
+    },
+    {
+        key: "username-date_desc",
+        value: [ASOLS.username, ASOLS.date_desc].join(ASOLS.separator),
+    },
+    {
+        key: "username-date",
+        value: [ASOLS.username, ASOLS.date].join(ASOLS.separator),
+    },
+    {
+        key: "task-username-date_desc",
+        value: [ASOLS.task, ASOLS.username, ASOLS.date_desc].join(
+            ASOLS.separator
+        ),
+    },
+    {
+        key: "task-username-date",
+        value: [ASOLS.task, ASOLS.username, ASOLS.date].join(ASOLS.separator),
+    },
+    {
+        key: "task-date_desc",
+        value: [ASOLS.task, ASOLS.date_desc].join(ASOLS.separator),
+    },
+    {
+        key: "task-date",
+        value: [ASOLS.task, ASOLS.date].join(ASOLS.separator),
+    },
+];
 
 export interface IAllAnswersParams {
     identifier: string;
@@ -205,23 +275,24 @@ export interface IAllAnswersParams {
                             </div>
                         </div>
                     </div>
-                    <div class="form-group" *ngIf="showSort">
+<!--                    <div class="form-group" *ngIf="showSort">-->
+                    <div class="form-group padding-top-7">
                         <div class="col-sm-3">
-                            <label class="radio-inline" i18n>Sort by</label>
+                            <label class="radio-inline padding-top-0" i18n>Sort answers by</label>
                         </div>
                         <div class="col-sm-9">
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" [(ngModel)]="options.sort" name="sort" value="task">
-                                    <ng-container i18n>Task, then username</ng-container>
-                                </label>
+                            <div class="select-sort-priority">
+                                <div class="form-horz-flex margin-bottom-4">
+                                    <select id="sort-priority" name="sort-priority" class="form-control fit-width"
+                                                [(ngModel)]="options.sort">
+                                        <option *ngFor="let option of AnswerSortOptions"
+                                                [ngValue]="option.key">
+                                            {{ option.value }}
+                                        </option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" [(ngModel)]="options.sort" name="sort" value="username">
-                                    <ng-container i18n>Username, then task</ng-container>
-                                </label>
-                            </div>
+                            
                         </div>
                     </div>
                     <div class="form-group">
@@ -291,11 +362,12 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
     void
 > {
     protected dialogName = "AllAnswers";
-    showSort: boolean = false;
+    // showSort: boolean = true;
     options!: IOptions;
     private storage = new TimStorage("allAnswersOptions", AnswersDialogOptions);
     lastFetch?: ReadonlyMoment;
     activeGroups?: [string]; // TODO: if multiple groups, template ui needs selector for all groups vs specific groups
+    protected readonly AnswerSortOptions = AnswerSortOptions;
 
     constructor(private http: HttpClient) {
         super();
@@ -316,14 +388,14 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
 
     ngOnInit() {
         const options = this.data;
-        this.showSort = options.allTasks;
+        // this.showSort = options.allTasks;
         this.activeGroups = documentglobals().groups;
 
         const defs = {
             age: "max",
             valid: "1",
             name: "both",
-            sort: "username",
+            sort: "task-username-date",
             periodFrom: undefined,
             periodTo: undefined,
             consent: "any",
@@ -357,6 +429,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
         if (!this.options || !this.storage) {
             return;
         }
+
         const toSerialize: IOptions = {
             ...this.options,
             periodFrom: this.options.periodFrom,
