@@ -395,7 +395,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
             age: "max",
             valid: "1",
             name: "both",
-            sort: "task-username-date",
+            sort: "username-task-date",
             periodFrom: undefined,
             periodTo: undefined,
             consent: "any",
