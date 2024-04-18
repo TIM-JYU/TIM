@@ -297,7 +297,7 @@ export interface CircuitOptions {
             <tim-plugin-header *ngIf="header" header>
                 <span [innerHTML]="header | purify"></span>
             </tim-plugin-header>
-            <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
+            <p stem class="stem" *ngIf="stem" [innerHTML]="stem | purify"></p>
             <ng-container body>
                 <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
                     <div class="top-menu">

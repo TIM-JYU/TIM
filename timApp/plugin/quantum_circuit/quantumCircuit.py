@@ -272,7 +272,7 @@ def render_static_quantum_circuit(m: QuantumCircuitHtmlModel) -> str:
             </div>
             <div class="panel-body">
                 {% if stem %}
-                    <p>{{ stem }}</p>
+                    <p class="stem">{{ stem }}</p>
                 {% endif %}
 
                 <p class="alert alert-info">{{message}}</p>                
