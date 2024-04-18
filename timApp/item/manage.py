@@ -133,7 +133,7 @@ def manage(path: str) -> Response | str:
     )
 
 
-@manage_page.get("/changelog/<int:doc_id>/<complete_history>")
+@manage_page.get("/changelog/<int:doc_id>/complete")
 def get_complete_changelog(doc_id: int, complete_history: str) -> Response:
     doc = get_doc_or_abort(doc_id)
     verify_manage_access(doc)

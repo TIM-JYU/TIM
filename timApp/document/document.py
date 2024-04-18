@@ -1012,18 +1012,13 @@ class Document:
             return Changelog()
 
         with logname.open("r") as f:
-            if complete_history:
-                lines = f.readlines()
-                for line in lines:
-                    self.append_to_log(line, log)
-            else:
-                lc = max_entries
-                while lc != 0:
-                    line = f.readline()
-                    if not line:
-                        break
-                    self.append_to_log(line, log)
-                    lc -= 1
+            lc = max_entries
+            while lc != 0 or complete_history:
+                line = f.readline()
+                if not line:
+                    break
+                self.append_to_log(line, log)
+                lc -= 1
         return log
 
     def append_to_log(self, line: str, log: Changelog) -> None:
