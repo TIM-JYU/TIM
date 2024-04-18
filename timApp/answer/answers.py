@@ -33,8 +33,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.orm import defaultload, selectinload, contains_eager
+from sqlalchemy.orm.base import Mapped
 from sqlalchemy.sql import Select, Subquery
-from sqlalchemy.sql.elements import OperatorExpression
+from sqlalchemy.sql.elements import OperatorExpression, UnaryExpression
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -243,6 +244,11 @@ class NameOptions(Enum):
 class SortOptions(Enum):
     USERNAME = "username"
     TASK = "task"
+    DATE_ASCENDING = "date"
+    DATE_DESCENDING = "date_desc"
+
+
+SORT_OPTIONS_DEFAULT = "username-task-date"
 
 
 class FormatOptions(Enum):
@@ -267,7 +273,7 @@ class AllAnswersOptions(AnswerPeriodOptions):
         default=ValidityOptions.VALID, metadata={"by_value": True}
     )
     name: NameOptions = field(default=NameOptions.BOTH, metadata={"by_value": True})
-    sort: SortOptions = field(default=SortOptions.TASK, metadata={"by_value": True})
+    sort: str = field(default=SORT_OPTIONS_DEFAULT)
     format: FormatOptions = field(
         default=FormatOptions.TEXT, metadata={"by_value": True}
     )
@@ -347,11 +353,20 @@ def get_all_answers(
         .join(User, Answer.users)
     )
     stmt = stmt.outerjoin(PluginType).options(contains_eager(Answer.plugin_type))
-    match options.sort:
-        case SortOptions.USERNAME:
-            stmt = stmt.order_by(User.name, Answer.task_id, Answer.answered_on)
-        case SortOptions.TASK:
-            stmt = stmt.order_by(Answer.task_id, User.name, Answer.answered_on)
+
+    sort_priority: list[Mapped[str] | Mapped[datetime] | UnaryExpression] = []
+    for s_key in options.sort.split("-"):
+        match s_key:
+            case SortOptions.USERNAME.value:
+                sort_priority.append(User.name)
+            case SortOptions.TASK.value:
+                sort_priority.append(Answer.task_id)
+            case SortOptions.DATE_ASCENDING.value:
+                sort_priority.append(Answer.answered_on)
+            case SortOptions.DATE_DESCENDING.value:
+                sort_priority.append(Answer.answered_on.desc())
+    stmt = stmt.order_by(*sort_priority)
+
     stmt = stmt.with_only_columns(Answer, User, sub_stmt.c.count)
     result = []
     result_json = []
