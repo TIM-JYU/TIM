@@ -199,6 +199,24 @@ export class PermCtrl implements IController {
         }
     }
 
+    async showCompleteChangelog() {
+        const d = this.itemAsDocument();
+        this.changelogLoading = true;
+        const r = await to(
+            $http.get<{versions: IChangelogEntry[]}>(
+                "/changelog/" + this.item.id + "/" + "complete"
+            )
+        );
+        if (r.ok) {
+            this.changelogLoading = false;
+            d.versions = r.result.data.versions;
+            this.hasMoreChangelog = false;
+        } else {
+            this.changelogLoading = false;
+            await showMessageDialog(r.result.data.error);
+        }
+    }
+
     async getAliases() {
         const r = await to($http.get<IItem[]>("/alias/" + this.item.id, {}));
         if (r.ok) {

@@ -1003,26 +1003,30 @@ class Document:
         ]
         return get_index_from_html_list(html_list)
 
-    def get_changelog(self, max_entries: int = 100) -> Changelog:
+    def get_changelog(
+        self, max_entries: int = 100, complete_history: bool = False
+    ) -> Changelog:
         log = Changelog()
         logname = self.getlogfilename()
         if not logname.is_file():
             return Changelog()
 
-        lc = max_entries
         with logname.open("r") as f:
-            while lc != 0:
+            lc = max_entries
+            while lc != 0 or complete_history:
                 line = f.readline()
                 if not line:
                     break
-                try:
-                    entry = json.loads(line)
-                    log.append(ChangelogEntry(**entry))
-                except ValueError:
-                    print(f"doc id {self.doc_id}: malformed log line: {line}")
+                self.append_to_log(line, log)
                 lc -= 1
-
         return log
+
+    def append_to_log(self, line: str, log: Changelog) -> None:
+        try:
+            entry = json.loads(line)
+            log.append(ChangelogEntry(**entry))
+        except ValueError:
+            print(f"doc id {self.doc_id}: malformed log line: {line}")
 
     def delete_section(self, area_start, area_end) -> DocumentEditResult:
         result = DocumentEditResult()
