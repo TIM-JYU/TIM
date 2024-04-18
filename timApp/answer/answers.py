@@ -33,8 +33,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.orm import defaultload, selectinload, contains_eager
+from sqlalchemy.orm.base import Mapped
 from sqlalchemy.sql import Select, Subquery
-from sqlalchemy.sql.elements import OperatorExpression
+from sqlalchemy.sql.elements import OperatorExpression, UnaryExpression
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -272,7 +273,7 @@ class AllAnswersOptions(AnswerPeriodOptions):
         default=ValidityOptions.VALID, metadata={"by_value": True}
     )
     name: NameOptions = field(default=NameOptions.BOTH, metadata={"by_value": True})
-    sort: str = field(default=SORT_OPTIONS_DEFAULT, metadata={"by_value": True})
+    sort: str = field(default=SORT_OPTIONS_DEFAULT)
     format: FormatOptions = field(
         default=FormatOptions.TEXT, metadata={"by_value": True}
     )
@@ -352,8 +353,6 @@ def get_all_answers(
         .join(User, Answer.users)
     )
     stmt = stmt.outerjoin(PluginType).options(contains_eager(Answer.plugin_type))
-    from sqlalchemy.sql.elements import UnaryExpression
-    from sqlalchemy.orm.base import Mapped
 
     sort_priority: list[Mapped[str] | Mapped[datetime] | UnaryExpression] = []
     for s_key in options.sort.split("-"):

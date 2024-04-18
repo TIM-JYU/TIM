@@ -14,7 +14,6 @@ import {documentglobals} from "tim/util/globals";
 import {$httpParamSerializer} from "tim/util/ngimport";
 import {TimStorage, toPromise} from "tim/util/utils";
 import {CommonModule} from "@angular/common";
-import {$localize} from "@angular/localize/init";
 
 const AnswersDialogOptions = t.intersection([
     t.type({
@@ -362,7 +361,6 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
     void
 > {
     protected dialogName = "AllAnswers";
-    // showSort: boolean = true;
     options!: IOptions;
     private storage = new TimStorage("allAnswersOptions", AnswersDialogOptions);
     lastFetch?: ReadonlyMoment;
@@ -388,7 +386,6 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
 
     ngOnInit() {
         const options = this.data;
-        // this.showSort = options.allTasks;
         this.activeGroups = documentglobals().groups;
 
         const defs = {
