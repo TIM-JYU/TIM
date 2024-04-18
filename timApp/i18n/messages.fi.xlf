@@ -5232,30 +5232,6 @@
           <context context-type="linenumber">168</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7699622144571229146" datatype="html">
-        <source>Sort by</source>
-        <target state="translated">Lajitteluperuste</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
-          <context context-type="linenumber">175</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3309915655225296659" datatype="html">
-        <source>Task, then username</source>
-        <target state="translated">Ensin tehtävä, sitten nimi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
-          <context context-type="linenumber">181</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2384777388145535848" datatype="html">
-        <source>Username, then task</source>
-        <target state="translated">Ensin nimi, sitten tehtävä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
-          <context context-type="linenumber">187</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7049887240439736400" datatype="html">
         <source>Print</source>
         <target state="translated">Tulosta</target>
@@ -9006,6 +8982,30 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1792</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5226253559895463240" datatype="html">
+        <source>Date (oldest first)</source>
+        <target state="translated">Tallennusaika (vanhin ensin)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">54,51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6686635921104768748" datatype="html">
+        <source>Date (newest first)</source>
+        <target state="translated">Tallennusaika (uusin ensin)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">55,51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7786524874819296811" datatype="html">
+        <source>Sort answers by</source>
+        <target state="translated">Järjestä vastaukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">280,281</context>
         </context-group>
       </trans-unit>
     </body>
