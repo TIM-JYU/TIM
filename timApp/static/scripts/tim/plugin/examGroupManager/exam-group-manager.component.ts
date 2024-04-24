@@ -591,7 +591,8 @@ export class ToggleComponent {
                                         <div>
                                             <div i18n>End the exam for all except students with additional time</div>
                                             <div class="small" *ngIf="group.examState <= 4" i18n>
-                                                Press the toggle button to end the exam for the main student group
+                                                Press the toggle button to end the exam for the main student group.
+                                                <strong>Make sure students saved all their answers!</strong>
                                             </div>
                                             <strong class="small text-success" *ngIf="group.examState > 4" i18n>
                                                 Exam ended for main group! Students with additional time can continue
@@ -622,6 +623,7 @@ export class ToggleComponent {
                                             <div i18n>End the exam for all students</div>
                                             <div class="small" *ngIf="group.examState <= 5" i18n>
                                                 Press the toggle button to end the exam for all students
+                                                <strong>Make sure students saved all their answers!</strong>
                                             </div>
                                             <strong class="small text-success" *ngIf="group.examState > 5" i18n>
                                                 Exam ended for all students! Remember to disable the login codes.

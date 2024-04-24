@@ -9115,19 +9115,19 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1867936196876545067" datatype="html">
-        <source>Could not fetch groups. Details: <x id="PH" equiv-text="groups.result.error"/></source>
-        <target state="translated">Det gick inte att hämta grupper. Detaljer: <x id="PH" equiv-text="groups.result.error"/></target>
+        <source>Could not fetch groups. Details: <x id="PH" equiv-text="groups.result.error.error"/></source>
+        <target state="new">Could not fetch groups. Details: <x id="PH" equiv-text="groups.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">593</context>
+          <context context-type="linenumber">844</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6321452614407911843" datatype="html">
-        <source>Could not copy group members. Details: <x id="PH" equiv-text="copyRes.result.error"/></source>
-        <target state="translated">Det gick inte att kopiera gruppmedlemmar. Detaljer: <x id="PH" equiv-text="copyRes.result.error"/></target>
+        <source>Could not copy group members. Details: <x id="PH" equiv-text="copyRes.result.error.error"/></source>
+        <target state="new">Could not copy group members. Details: <x id="PH" equiv-text="copyRes.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">729,728</context>
+          <context context-type="linenumber">988,987</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1796772637162928200" datatype="html">
@@ -9151,11 +9151,11 @@ Det går inte att ångra den här åtgärden!
         </context-group>
       </trans-unit>
       <trans-unit id="7752545211198399953" datatype="html">
-        <source>Could not delete group. Details <x id="PH" equiv-text="res.result.error"/></source>
-        <target state="translated">Det gick inte att ta bort gruppen. Detaljer: <x id="PH" equiv-text="res.result.error"/></target>
+        <source>Could not delete group. Details <x id="PH" equiv-text="res.result.error.error"/></source>
+        <target state="new">Could not delete group. Details <x id="PH" equiv-text="res.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">759,758</context>
+          <context context-type="linenumber">1018,1017</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5913278627652922156" datatype="html">
@@ -9442,14 +9442,6 @@ Det går inte att ångra den här åtgärden!
           <context context-type="linenumber">589,590</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3733289209593188368" datatype="html">
-        <source> Press the toggle button to end the exam for the main student group </source>
-        <target state="new"> Press the toggle button to end the exam for the main student group </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">591</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5165726947967046908" datatype="html">
         <source> Exam ended for main group! Students with additional time can continue the exam. </source>
         <target state="new"> Exam ended for main group! Students with additional time can continue the exam. </target>
@@ -9480,14 +9472,6 @@ Det går inte att ångra den här åtgärden!
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">619,620</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2040009335604991778" datatype="html">
-        <source> Press the toggle button to end the exam for all students </source>
-        <target state="new"> Press the toggle button to end the exam for all students </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">621</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4878559838788327137" datatype="html">
@@ -9907,11 +9891,11 @@ Please generate login codes first.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
-        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!)!)&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)!) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;&lt;/li&gt;"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li&gt;"/></source>
-        <target state="new">Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!)!)&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)!) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;&lt;/li&gt;"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li&gt;"/></target>
+        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;&lt;/li&gt;"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li&gt;"/></source>
+        <target state="new">Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;&lt;/li&gt;"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li&gt;"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">710,711</context>
+          <context context-type="linenumber">712,713</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2002757117959971790" datatype="html">
@@ -9952,6 +9936,22 @@ Please generate login codes first.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">697,699</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2757709715920465016" datatype="html">
+        <source> Press the toggle button to end the exam for the main student group. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></source>
+        <target state="new"> Press the toggle button to end the exam for the main student group. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">594,596</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8462627312597849727" datatype="html">
+        <source> Press the toggle button to end the exam for all students <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></source>
+        <target state="new"> Press the toggle button to end the exam for all students <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">625,627</context>
         </context-group>
       </trans-unit>
     </body>
