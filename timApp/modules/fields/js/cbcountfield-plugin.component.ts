@@ -72,7 +72,7 @@ const CbcountfieldAll = t.intersection([
                class="form-control"
                [(ngModel)]="userword"
                (ngModelChange)="autoSave()"
-               [disabled]="disabled || this.attrsall['preview']"
+               [disabled]="disabled || readonly || this.attrsall['preview']"
                [tooltip]="errormessage"
                [isOpen]="errormessage !== undefined"
                >

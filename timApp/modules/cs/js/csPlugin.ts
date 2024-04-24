@@ -67,6 +67,7 @@ import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
 } from "../simcir/simcir-all";
+import type {ICsParsonsOptions} from "./cs-parsons/csparsons";
 import {CsParsonsOptions} from "./cs-parsons/csparsons";
 import type {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
@@ -1178,6 +1179,7 @@ export class CsController extends CsBase implements ITimComponent {
     currentSymbol: FormulaEvent = {text: ""};
     oneruntime?: string;
     out?: {write: () => void; writeln: () => void; canvas: Element};
+    parsons?: ICsParsonsOptions;
     postcode?: string;
     precode?: string;
     preview!: JQuery<HTMLElement>;
@@ -1401,8 +1403,8 @@ export class CsController extends CsBase implements ITimComponent {
                 .map((f) => f.path)
                 .concat(this.markup.allowedPaths ?? []);
         }
-        if (this.markup.parsons) {
-            this.markup.parsons.shuffle = this.initUserCode;
+        if (this.parsons) {
+            this.parsons.shuffle = this.initUserCode;
         }
         if (this.editor.addFormulaEditorOpenHandler) {
             this.editor.addFormulaEditorOpenHandler(() => {
@@ -2339,7 +2341,7 @@ ${fhtml}
                 this.english ? "Normal" : "Tavallinen"
             ),
             valueDefu(this.markup.highlight, "Highlight"),
-            this.markup.parsons?.menuText ?? "Parsons",
+            this.parsons?.menuText ?? "Parsons",
             this.markup.jsparsons,
         ];
         for (const c of this.markup.editorModes.toString()) {
@@ -2396,7 +2398,7 @@ ${fhtml}
         //     this.preventSave = true;
         // }
         this.fullCode = this.getCode();
-
+        this.parsons = this.markup.parsons ?? {};
         // TODO: showCodeNow() is required for viewCode: true to work.
         //  Otherwise precode and postcode won't show up until user clicks hide + show code.
         //  It's unclear if getCode should handle this already.
@@ -4188,7 +4190,7 @@ ${fhtml}
                                [wrap]="wrap"
                                [modes]="editorModes"
                                [editorIndex]="editorMode"
-                               [parsonsOptions]="markup.parsons"
+                               [parsonsOptions]="parsons"
                                (close)="onFileClose($event)"
                                (content)="onContentChange($event)"
                                [spellcheck]="spellcheck">
