@@ -134,11 +134,10 @@ def manage(path: str) -> Response | str:
 
 
 @manage_page.get("/changelog/<int:doc_id>/complete")
-def get_complete_changelog(doc_id: int, complete_history: str) -> Response:
+def get_complete_changelog(doc_id: int) -> Response:
     doc = get_doc_or_abort(doc_id)
     verify_manage_access(doc)
-    complete = bool(complete_history)
-    return json_response({"versions": doc.get_changelog_with_names(complete=complete)})
+    return json_response({"versions": doc.get_changelog_with_names(complete=True)})
 
 
 @manage_page.get("/changelog/<int:doc_id>/<int:length>")
