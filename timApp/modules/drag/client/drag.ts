@@ -149,6 +149,8 @@ export class DragComponent
     trash?: boolean;
     saveButton?: boolean;
     wordObjs: WordObject[] = [];
+    changes = false;
+    initialWords: string[] = [];
     type: string = " ";
     max!: number;
     copy?: string;
@@ -214,6 +216,7 @@ export class DragComponent
         if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
             this.styles = parseStyles(this.attrsall.state.styles);
         }
+        this.initialWords = this.getContentArray();
     }
 
     ngOnDestroy() {
@@ -294,6 +297,8 @@ export class DragComponent
         } else {
             this.createWordobjs(words);
         }
+        this.initialWords = this.getContentArray();
+        this.changes = false;
     }
 
     resetField(): undefined {
@@ -304,6 +309,7 @@ export class DragComponent
 
     handleMove(index: number) {
         this.wordObjs.splice(index, 1);
+        this.changes = true;
         if (this.markup.autoSave && !this.trash) {
             void this.save();
         }
@@ -313,6 +319,7 @@ export class DragComponent
         const taskId = this.pluginMeta.getTaskId()?.docTask();
         const word = event.data as WordObject;
         this.wordObjs.splice(event.index ?? 0, 0, word);
+        this.changes = true;
         if (
             this.markup.autoSave &&
             !this.trash &&
@@ -353,6 +360,8 @@ export class DragComponent
             if (this.markup.clearstyles) {
                 this.styles = {};
             }
+            this.changes = false;
+            this.initialWords = this.getContentArray();
         } else {
             this.error =
                 r.result.error.error ??
@@ -364,7 +373,7 @@ export class DragComponent
     }
 
     isUnSaved() {
-        return false; // TODO
+        return this.changes;
     }
 }
 
