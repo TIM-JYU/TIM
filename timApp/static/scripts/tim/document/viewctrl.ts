@@ -1286,7 +1286,7 @@ export class ViewCtrl implements IController {
             );
         }
         for (const ab of regularAbMap.values()) {
-            ab.getAnswersAndUpdate();
+            ab.getAnswersAndUpdate(true);
             ab.loadInfo();
         }
     }
