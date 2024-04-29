@@ -134,8 +134,7 @@ copy: target
             self.wait_until_hidden(f"#{task} .alertFrame")
             self.wait_until_hidden(f"#{task} bs-tooltip-container")
 
-        self.drv.execute_cdp_cmd("Network.setBlockedURLs", {"urls": ["*"]})
-        self.drv.execute_cdp_cmd("Network.enable", {})
+        self.set_network_state(False)
 
         send_input("textfield", "Hello")
         send_input("numericfield", "400")
@@ -168,8 +167,7 @@ copy: target
         check_hover("dropdown")
         check_hover("dragtarget")
 
-        self.drv.execute_cdp_cmd("Network.setBlockedURLs", {"urls": []})
-        self.drv.execute_cdp_cmd("Network.enable", {})
+        self.set_network_state(True)
 
         answer_successfully("textfield")
         answer_successfully("numericfield")

@@ -1,3 +1,5 @@
+from timApp.answer.answer import Answer
+from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
 from timApp.timdb.sqa import db
@@ -109,3 +111,55 @@ program: |!!
         self.wait_until_hidden("js-runner tim-loading")
         # updatefields triggers dimming
         check_opacities()
+
+    def test_no_state_overwrite(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {#Plugin1 plugin="csPlugin"}
+type: text
+```
+"""
+        )
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.login_browser_quick_test2()
+
+        def do_browser_check(input: str, expect: str):
+            self.goto_document(d)
+            self.wait_until_present_and_vis("#Plugin1 textarea")
+            self.set_network_state(False)
+            textarea = self.find_element_and_move_to("#Plugin1 textarea")
+            self.wait_until_present_and_vis(".alert-danger")
+            textarea.send_keys(input)
+            self.get_uninteractable_element().click()
+            self.set_network_state(True)
+            self.find_element_and_move_to("#Plugin1 textarea")
+            self.wait_until_hidden(".alert-danger")
+            val = textarea.get_attribute("value")
+            self.assertEqual(val, expect)
+            self.find_element("cs-runner button").click()
+            self.wait_until_present_and_vis("answerbrowser")
+            self.wait_until_hidden("tim-loading")
+
+        do_browser_check("Original input", "Original input")
+        do_browser_check(", New input", "Original input, New input")
+        answers = (
+            self.test_user_2.answers.filter_by(task_id=f"{d.id}.Plugin1")
+            .order_by(Answer.answered_on.desc())
+            .all()
+        )
+        self.assertEqual(answers[1].content_as_json["usercode"], "Original input")
+        self.assertEqual(
+            answers[0].content_as_json["usercode"], "Original input, New input"
+        )
+        answers[0].users_all = []
+        answers[1].valid = False
+        db.session.commit()
+        do_browser_check("New input over invalid", "New input over invalid")
+        new_ans = (
+            self.test_user_2.answers.filter_by(task_id=f"{d.id}.Plugin1")
+            .order_by(Answer.answered_on.desc())
+            .first()
+        )
+        self.assertEqual(new_ans.content_as_json["usercode"], "New input over invalid")
