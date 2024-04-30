@@ -16,11 +16,14 @@ class Arguments:
 
 
 def run_pybabel(
-    cmds: List[str], capture_output: Optional[bool] = None
+    cmds: List[str],
+    capture_output: Optional[bool] = None,
+    no_tty: bool = False,
 ) -> CompletedProcess:
     return run_compose(
         [
             "run",
+            *(["-T"] if no_tty else []),
             "--rm",
             "--workdir",
             "/service/timApp",

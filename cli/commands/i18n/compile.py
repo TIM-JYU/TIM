@@ -14,7 +14,7 @@ class Arguments:
 
 def compile_translations() -> None:
     log_info("Compiling translations")
-    run_pybabel(["compile", "-d", "i18n"])
+    run_pybabel(["compile", "-d", "i18n"], no_tty=True)
 
 
 def run(args: Arguments) -> None:
