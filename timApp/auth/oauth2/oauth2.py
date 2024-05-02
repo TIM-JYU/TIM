@@ -110,8 +110,6 @@ def delete_expired_oauth2_tokens() -> None:
     run_sql(
         delete(OAuth2Token).where(
             (OAuth2Token.expires_in + OAuth2Token.issued_at < now_time)
-            | (OAuth2Token.access_token_revoked_at < now_time)
-            | (OAuth2Token.refresh_token_revoked_at < now_time)
         )
     )
     db.session.commit()
