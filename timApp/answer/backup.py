@@ -69,7 +69,7 @@ def sync_user_group_memberships_if_enabled(user: User) -> None:
     # Do a manual query to ensure there is no relationship cache in the middle
     user_groups: list[str] = [
         ugn
-        for ugn, in (
+        for ugn in (
             run_sql(
                 select(UserGroup.name)
                 .join(
