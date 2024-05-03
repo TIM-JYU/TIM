@@ -47,7 +47,7 @@
                             <select i18n-title class="form-control answer-select"
                                     title="List of answers"
                                     [(ngModel)]="selectedAnswer"
-                                    (ngModelChange)="changeAnswer()">
+                                    (ngModelChange)="changeAnswer(undefined,undefined, true)">
                                  <option *ngFor="let answer of filteredAnswers; let idx = index" [ngValue]="answer">{{((filteredAnswers.length - idx) + '. ' + (answer.answered_on |  date:'dd.MM.YYYY HH:mm:ss' ))}}</option>
                             </select>
                             <span class="input-group-btn">

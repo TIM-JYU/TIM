@@ -736,12 +736,13 @@ export class AnswerBrowserComponent
         // get new state as long as the previous answer was not explicitly the same as the one before
         // otherwise we might not see the unanswered plugin exactly how the user sees it
         if (
-            !(
+            (!(
                 this.selectedAnswer &&
                 this.loadedAnswer &&
                 this.selectedAnswer.id == this.loadedAnswer.id &&
                 this.oldreview == this.review
-            ) ||
+            ) &&
+                this.canSafelyChangeState) ||
             forceUpdate
         ) {
             this.loading++;
@@ -928,7 +929,7 @@ export class AnswerBrowserComponent
             newIndex = 0;
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
-        await this.changeAnswer();
+        await this.changeAnswer(undefined, undefined, true);
     }
 
     async newTask() {
@@ -1560,12 +1561,6 @@ export class AnswerBrowserComponent
                 };
             }
             this.showError(r.result, "getAnswers");
-            if (status <= 0 || status >= 500) {
-                // Throw error here to prevent further execution
-                // This will prevent AB from further setup and prevent losing the state
-                // FIXME: It should be possible to cancel AB refresh/load without throwing an error
-                throw new Error(r.result.data.error);
-            }
             return undefined;
         }
         this.clearError("getAnswers");
@@ -1608,6 +1603,11 @@ export class AnswerBrowserComponent
 
     showTeacher() {
         return this.viewctrl.teacherMode && this.viewctrl.item.rights.teacher;
+    }
+
+    get canSafelyChangeState() {
+        const plug = this.getPluginComponent();
+        return this.showTeacher() || this.review || !plug?.isUnSaved();
     }
 
     isAndSetShowNewTask() {

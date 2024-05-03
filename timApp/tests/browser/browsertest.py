@@ -499,6 +499,17 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
         self.wait_until_present("pareditor")
         self.wait_until_hidden(".editor-loading")
 
+    def set_network_state(self, online: bool):
+        """
+        Blocks or allows all network activity
+        :param online: If false block everything, otherwise allow everything
+        """
+        self.drv.execute_cdp_cmd(
+            "Network.setBlockedURLs", {"urls": [] if online else ["*"]}
+        )
+        self.drv.execute_cdp_cmd("Network.enable", {})
+        pass
+
 
 def find_button_by_text(root: WebElement, text: str):
     return find_element_by_text(root, text, "button")
