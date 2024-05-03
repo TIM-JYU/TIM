@@ -34,7 +34,7 @@ from timApp.util.flask.responsehelper import (
     safe_redirect,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.logger import log_warning
+from timApp.util.logger import log_warning, log_info
 from timApp.util.secret import check_secret, get_secret_or_abort
 from timApp.util.utils import (
     read_json_lines,
@@ -376,7 +376,11 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> list[str]:
             timeout=10,
         )
         futures.append(r)
-    return collect_errors_from_hosts(futures, hosts)
+    res = collect_errors_from_hosts(futures, hosts)
+    now = get_current_time().timestamp()
+    for email in emails:
+        log_info(f"DIST_LOGGING: {op.type};{email};{now}")
+    return res
 
 
 def register_right_impl(
