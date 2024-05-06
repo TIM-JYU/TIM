@@ -19,7 +19,6 @@ from sqlalchemy import delete
 from timApp.answer.routes import post_answer_impl, AnswerRouteResult
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
-from timApp.item.distribute_rights import UnlockOp, register_op_to_hosts
 from timApp.notification.notify import process_pending_notifications
 from timApp.plugin.containerLink import call_plugin_generic
 from timApp.plugin.exportdata import WithOutData, WithOutDataSchema
@@ -214,6 +213,9 @@ def send_unlock_op(
     email: str,
     target: list[str],
 ):
+    from timApp.item.distribute_rights import UnlockOp
+    from timApp.item.distribute_rights import register_op_to_hosts
+
     op = UnlockOp(type="unlock", email=email, timestamp=get_current_time())
     return register_op_to_hosts(op, target, is_receiving_backup=False)
 
@@ -289,3 +291,10 @@ def apply_pending_userselect_actions() -> None:
     from timApp.plugin.userselect.action_queue import apply_pending_actions_impl
 
     apply_pending_actions_impl()
+
+
+@celery.task(ignore_result=True)
+def relay_dist_rights(dist_json: str, dist_hosts: list[str]) -> None:
+    from timApp.item.distribute_rights import relay_dist_rights_impl
+
+    relay_dist_rights_impl(dist_json, dist_hosts)

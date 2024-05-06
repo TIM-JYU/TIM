@@ -169,6 +169,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     selectOnce: bool = False
     maxMatches: int = 10
     useActionQueues: bool = False
+    synchronizedGroupActions: bool = True
     scanner: ScannerOptions = field(default_factory=ScannerOptions)
     groups: list[str] = field(default_factory=list)
     fields: list[str] = field(default_factory=list)
@@ -897,6 +898,8 @@ def needs_verify(username: str, par: GlobalParId) -> Response:
 def get_group_action_locks(
     model: UserSelectMarkupModel,
 ) -> list[filelock.BaseFileLock]:
+    if not model.synchronizedGroupActions:
+        return []
     if model.useActionQueues:
         return []
     if not model.actions:

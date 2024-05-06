@@ -297,6 +297,43 @@ SYNC_USER_GROUPS_RECEIVE_SECRET = None
 # }
 DIST_RIGHTS_HOSTS = {}
 
+# A description of the right distribution network.
+# The setting defines all machines that are part of the network, how they are grouped and the specific rules
+# for distributing rights
+#
+# Example:
+# {
+#     "hosts": {
+#       "host1": "https://machine1.example.com",
+#       "host2": "https://machine2.example.com",
+#       "host3": "https://machine3.example.com",
+#     },
+#     "distribution_groups": {
+#         "group1": ["host1", "host2"],
+#         "group2": ["host3"],
+#     },
+#     "distribute_targets": {
+#         "some_exam": [
+#             {
+#                 "target": "host1",
+#                 "distribute_group": "group1",
+#             },
+#             {
+#                 "target": "host3",
+#                 "distribute_group": "group2",
+#             },
+#         ],
+#     },
+# }
+DIST_RIGHTS_NETWORK = {
+    "hosts": {},
+    "distribute_groups": {},
+    "distribute_targets": {},
+}
+
+# Current host identifier in the distribution network.
+DIST_RIGHTS_HOST_ID = None
+
 # When registering a right that is going to be distributed, make sure that the given secret matches this one.
 DIST_RIGHTS_REGISTER_SECRET = None
 
