@@ -71,3 +71,13 @@ def set_ug_global_message(usergroup: str, message: str | None) -> Response:
         raise NotExist(f"User group {usergroup} does not exist.")
     set_usergroup_global_message(ug, message)
     return json_response({"users": len(ug.users), "message": message})
+
+
+@admin_bp.get("/sendUserGlobalMessage/<usergroup>")
+def set_ug_global_message(usergroup: str, message: str | None) -> Response:
+    verify_admin()
+    ug = UserGroup.get_by_name(usergroup)
+    if not ug:
+        raise NotExist(f"User group {usergroup} does not exist.")
+    set_usergroup_global_message(ug, message)
+    return json_response({"users": len(ug.users), "message": message})
