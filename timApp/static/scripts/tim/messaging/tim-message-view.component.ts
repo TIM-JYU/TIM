@@ -1,10 +1,18 @@
 import type {OnInit} from "@angular/core";
-import {Component, NgModule, ViewChild, ViewContainerRef} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    ViewChild,
+    ViewContainerRef,
+    ChangeDetectorRef,
+} from "@angular/core";
 import {itemglobals, someglobals} from "tim/util/globals";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {TimMessageModule} from "tim/messaging/tim-message.component";
 
 @Component({
     selector: "tim-message-view",
@@ -12,6 +20,9 @@ import {CommonModule} from "@angular/common";
         <tim-alert *ngIf="messageError" i18n>
             Could not load messages for the page: {{messageError}}
         </tim-alert>
+        <div class="sticky" *ngIf="globalUserMessage">
+            <tim-message [message]="globalUserMessageObject" [isGlobal]="true"></tim-message>
+        </div>
         <div class="sticky">
             <ng-container #messageContainerSticky></ng-container>
         </div>
@@ -29,15 +40,40 @@ export class TimMessageViewComponent implements OnInit {
     containerSticky!: ViewContainerRef;
     messageError?: string;
 
+    globalUserMessage?: string;
+    globalUserMessageObject: TimMessageData = {
+        can_mark_as_read: false,
+        display_type: DisplayType.STICKY,
+        can_reply: false,
+        can_hide: false,
+        doc_path: "",
+        created: "",
+        id: 0,
+        message_body: "",
+        message_subject: $localize`System message`,
+    };
+
     ngOnInit(): void {
         void this.loadMessages(
             "curr_item" in someglobals()
                 ? itemglobals().curr_item.id
                 : undefined
         );
+
+        vctrlInstance?.listen("docViewInfoUpdate", (info) => {
+            const prev = this.globalUserMessage;
+            this.globalUserMessage = info.global_message;
+            if (this.globalUserMessage) {
+                this.globalUserMessageObject.message_body =
+                    this.globalUserMessage;
+            }
+            if (prev !== this.globalUserMessage) {
+                this.cdr.detectChanges();
+            }
+        });
     }
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
     timMessages?: TimMessageData[];
 
@@ -86,10 +122,11 @@ export enum DisplayType {
 export interface TimMessageData {
     // Information about the message retrieved from server
     id: number;
-    created: string;
+    created?: string;
     sender?: string;
     doc_path: string;
     can_mark_as_read: boolean;
+    can_hide?: boolean;
     can_reply: boolean;
     display_type: DisplayType;
     message_body: string;
@@ -99,6 +136,6 @@ export interface TimMessageData {
 @NgModule({
     declarations: [TimMessageViewComponent],
     exports: [TimMessageViewComponent],
-    imports: [CommonModule, TimUtilityModule],
+    imports: [CommonModule, TimUtilityModule, TimMessageModule],
 })
 export class TimMessageViewModule {}

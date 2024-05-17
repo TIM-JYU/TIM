@@ -36,7 +36,7 @@ const MAX_DISPLAY_LENGTH = 210;
                     <span class="group" *ngIf="messageToGroup">, {{group}}</span>
                     -->
                 </p>
-                <p class="messageDate">
+                <p class="messageDate" *ngIf="message.created">
                     <span i18n>Sent: </span>
                     <span class="sentDate">{{messageDate}}</span>
                 </p>
@@ -65,6 +65,7 @@ const MAX_DISPLAY_LENGTH = 210;
                 </div>
                 <form class="readReceiptArea">
                     <button class="timButton btn-sm mark-as-read"
+                            *ngIf="message.can_mark_as_read"
                             (click)="markAsRead()"
                             [disabled]="!canMarkAsRead || markedAsRead" title="Marks message as read and permanently hides it" i18n-title i18n>
                         Mark as read
@@ -72,7 +73,7 @@ const MAX_DISPLAY_LENGTH = 210;
                     <span class="readReceiptLink" *ngIf="markedAsRead" i18n>
                         Read receipt can be cancelled in <a href="/view/{{message.doc_path}}">the message document</a>
                     </span>
-                    <button class="timButton hide-message" (click)="closeMessage()">
+                    <button class="timButton hide-message" (click)="closeMessage()" *ngIf="message.can_hide">
                         <ng-container *ngIf="!markedAsRead" i18n>Hide</ng-container>
                         <ng-container *ngIf="markedAsRead" i18n>Close</ng-container>
                     </button>
@@ -86,7 +87,7 @@ export class TimMessageComponent implements OnInit {
     @Input()
     message!: TimMessageData;
     errorMessage?: string;
-    @HostBinding("class.global-message") isGlobal: boolean = false;
+    @HostBinding("class.global-message") @Input() isGlobal: boolean = false;
 
     messageDate!: string;
     messageOverMaxLength: boolean = false;
@@ -185,14 +186,15 @@ export class TimMessageComponent implements OnInit {
 
     ngOnInit(): void {
         // TODO Display what group the message is related to; currently can't retrieve from database
-        this.isGlobal = this.message.doc_path.includes("/global/");
+        this.isGlobal =
+            this.isGlobal || this.message.doc_path.includes("/global/");
         if (
             this.message.message_body.length > MAX_DISPLAY_LENGTH &&
             !this.isGlobal
         ) {
             this.messageOverMaxLength = true;
             this.showFullContent = false;
-            this.shownContent = `${this.message.message_body.substr(
+            this.shownContent = `${this.message.message_body.substring(
                 0,
                 MAX_DISPLAY_LENGTH
             )}...`;

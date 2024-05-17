@@ -52,6 +52,8 @@ export interface IDocSettings {
     mdButtons?: ITemplateButton[];
     lazyAnswers?: boolean;
     parAuthorOnlyEdit?: boolean;
+    pollDocumentViewInfo?: number;
+    pollDocumentViewInfoJitter?: number;
 }
 
 export interface ISlideDocSettings extends IDocSettings {

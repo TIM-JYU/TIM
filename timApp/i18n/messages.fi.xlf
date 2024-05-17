@@ -9008,6 +9008,14 @@
           <context context-type="linenumber">280,281</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8983597411711235800" datatype="html">
+        <source>System message</source>
+        <target state="translated">Järjestelmäviesti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-view.component.ts</context>
+          <context context-type="linenumber">53</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

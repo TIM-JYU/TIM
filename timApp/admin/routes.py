@@ -5,9 +5,11 @@ from sqlalchemy import select
 
 from timApp.auth.accesshelper import verify_admin
 from timApp.auth.sessioninfo import get_restored_context_user
+from timApp.document.caching import set_usergroup_global_message
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import safe_redirect, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -59,3 +61,13 @@ def search_users(term: str, exact_match: bool = False, full: bool = False) -> Re
         )
     result: list[User] = run_sql(q).scalars().all()
     return json_response([u.to_json(contacts=True, full=full) for u in result])
+
+
+@admin_bp.post("/userGlobalMessage/<usergroup>")
+def set_ug_global_message(usergroup: str, message: str | None) -> Response:
+    verify_admin()
+    ug = UserGroup.get_by_name(usergroup)
+    if not ug:
+        raise NotExist(f"User group {usergroup} does not exist.")
+    set_usergroup_global_message(ug, message)
+    return json_response({"users": len(ug.users), "message": message})

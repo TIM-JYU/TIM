@@ -7,12 +7,7 @@ import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
 import {HttpClient} from "@angular/common/http";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import type {IRight} from "tim/item/access-role.service";
-
-interface IViewAccessStatus {
-    can_access: boolean;
-    right?: IRight;
-}
+import type {IDocumentViewInfoStatus} from "tim/document/viewctrl";
 
 interface GotoError {
     userMessage?: string;
@@ -126,7 +121,9 @@ export class GotoLinkComponent implements OnInit {
         ) {
             const docPath = path.substring(VIEW_PATH.length);
             const accessInfo = await toPromise(
-                this.http.get<IViewAccessStatus>(`/docViewInfo/${docPath}`)
+                this.http.get<IDocumentViewInfoStatus>(
+                    `/docViewInfo/${docPath}`
+                )
             );
             if (accessInfo.ok) {
                 return {
