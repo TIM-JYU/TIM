@@ -8,6 +8,7 @@ import {Users} from "tim/user/userService";
 import {HttpClient} from "@angular/common/http";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {IDocumentViewInfoStatus} from "tim/document/viewctrl";
+import type {IRight} from "tim/item/access-role.service";
 
 interface GotoError {
     userMessage?: string;
