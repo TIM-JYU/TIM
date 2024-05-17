@@ -246,14 +246,16 @@ export class GotoLinkComponent implements OnInit {
             const futureAccess =
                 acc.access?.accessible_from ?? acc.access?.duration_from;
 
-            if (futureAccess && futureAccess.isValid()) {
+            if (futureAccess?.isValid()) {
                 const serverTime = await toPromise(
                     this.http.get<{time: Moment}>("/time")
                 );
                 // TODO should throw an error / return immediately, if we can't get the time from the server
                 //      (user may set their local time in a way that bypasses these checks)
                 let currTime = moment();
-                if (serverTime.ok) currTime = serverTime.result.time;
+                if (serverTime.ok) {
+                    currTime = serverTime.result.time;
+                }
 
                 if (futureAccess.isBefore(currTime)) {
                     const closedT = this.parseTime(this.closeAt);
