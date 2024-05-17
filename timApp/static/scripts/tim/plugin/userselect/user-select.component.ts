@@ -276,12 +276,12 @@ class ToggleOption {
                 </span>
             </div>
         </tim-alert>
-        <tim-alert severity="warning" *ngIf="verifyMessages && verifyAccept && verifyReject">
+        <tim-alert [severity]="verifyError ? 'danger': 'warning'" *ngIf="verifyMessages">
             <div class="undoable-message">
                 <ul class="undoable-text">
                    <li *ngFor="let message of verifyMessages">{{message}}</li> 
                 </ul>
-                <span class="undo-button">
+                <span class="undo-button" *ngIf="!verifyError && verifyAccept && verifyReject">
                     <button (click)="verifyAccept()" class="btn btn-success">{{applyButtonText}}</button>
                     <button (click)="verifyReject()" class="btn btn-danger">{{cancelButtonText}}</button>
                 </span>
@@ -384,6 +384,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
     verifyReasonTemplates!: INeedsVerifyReasons;
     verifyMessages?: string[];
+    verifyError = false;
     verifyAccept?: (v?: unknown) => void;
     verifyReject?: () => void;
 
@@ -556,6 +557,7 @@ export class UserSelectComponent extends AngularPluginBase<
             this.http.post<{
                 needsVerify: boolean;
                 reasons: (keyof INeedsVerifyReasons | string)[];
+                isError: boolean;
             }>(
                 "/userSelect/needsVerify",
                 {
@@ -579,6 +581,7 @@ export class UserSelectComponent extends AngularPluginBase<
         }
 
         this.verifyMessages = [];
+        this.verifyError = false;
         for (const reason of res.result.reasons) {
             const reasonTemplate = isDefaultVerifyReason(reason)
                 ? this.verifyReasonTemplates[reason]
@@ -592,6 +595,11 @@ export class UserSelectComponent extends AngularPluginBase<
             this.beepFail = await playBeep("beep_fail", this.beepFail);
         }
 
+        if (res.result.isError) {
+            this.verifyError = true;
+            return false;
+        }
+
         const mainPromise = new Promise((accept, reject) => {
             this.verifyAccept = accept;
             this.verifyReject = reject;
@@ -599,6 +607,7 @@ export class UserSelectComponent extends AngularPluginBase<
         await mainPromise;
         // Remove the info already here to hide the message box
         this.verifyMessages = undefined;
+        this.verifyError = false;
         this.verifyAccept = undefined;
         this.verifyReject = undefined;
         return true;
@@ -614,7 +623,7 @@ export class UserSelectComponent extends AngularPluginBase<
         const verifyResult = await to2(this.verifyAction());
         if (!verifyResult.ok || !verifyResult.result) {
             this.applying = false;
-            this.resetView();
+            this.resetView(!this.verifyError);
             return;
         }
 
@@ -643,13 +652,15 @@ export class UserSelectComponent extends AngularPluginBase<
         this.applying = false;
     }
 
-    resetView() {
+    resetView(resetVerifyMessages = true) {
         this.selectedUser = undefined;
         this.lastSearchResult = undefined;
         this.searchString = "";
         this.searchParameter = undefined;
         this.verifyUndo = false;
-        this.verifyMessages = undefined;
+        if (resetVerifyMessages) {
+            this.resetVerifyMessages();
+        }
         this.verifyAccept = undefined;
         this.verifyReject = undefined;
         if (!isMobileDevice()) {
@@ -659,6 +670,11 @@ export class UserSelectComponent extends AngularPluginBase<
             const el = this.codeScanner?.nativeElement ?? this.getRootElement();
             el.scrollIntoView();
         }
+    }
+
+    resetVerifyMessages() {
+        this.verifyMessages = undefined;
+        this.verifyError = false;
     }
 
     applyT9(s: string) {
@@ -771,6 +787,7 @@ export class UserSelectComponent extends AngularPluginBase<
         this.displayFields = [];
         this.fieldNames = [];
         this.resetError();
+        this.resetVerifyMessages();
 
         const result = await this.queryHandler.searchUser(
             this.searchQueryStrings,
