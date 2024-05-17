@@ -82,6 +82,7 @@ import type {
     IMenuFunctionEntry,
 } from "tim/document/viewutils";
 import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
+import type {IRight} from "tim/item/access-role.service";
 
 markAsUsed(interceptor);
 
@@ -96,6 +97,12 @@ export interface IChangeListener {
 export interface IUnsavedComponent {
     isUnSaved: (userChange?: boolean) => boolean;
     allowUnsavedLeave?: boolean;
+}
+
+export interface IDocumentViewInfoStatus {
+    can_access: boolean;
+    right?: IRight;
+    global_message?: string;
 }
 
 export interface ITimComponent extends IUnsavedComponent {
@@ -213,6 +220,7 @@ export enum FormModeOption {
  */
 export type EventListeners = {
     editModeChange: (editMode: EditMode | null) => void;
+    docViewInfoUpdate: (info: IDocumentViewInfoStatus) => void;
 };
 
 export class ViewCtrl implements IController {
@@ -269,6 +277,8 @@ export class ViewCtrl implements IController {
         nullable(t.string)
     );
     private liveUpdates: number;
+    private docViewInfoPollInterval?: number;
+    private docViewInfoPollIntervalJitter?: number;
     private oldWidth: number;
     public defaultAction: string | undefined;
     public reviewCtrl: ReviewController;
@@ -434,6 +444,14 @@ export class ViewCtrl implements IController {
             this.startLiveUpdates();
         }
 
+        this.docViewInfoPollInterval = dg.docSettings?.pollDocumentViewInfo;
+        this.docViewInfoPollIntervalJitter =
+            dg.docSettings?.pollDocumentViewInfoJitter;
+
+        if (this.docViewInfoPollInterval) {
+            void this.startDocumentStatePolling();
+        }
+
         this.defaultAction =
             this.defaultActionStorage.get() ?? "Show options window";
         this.reviewCtrl = new ReviewController(this);
@@ -446,6 +464,27 @@ export class ViewCtrl implements IController {
         timLogTime("ViewCtrl end", "view");
 
         this.editingHandler.updateEditBarState();
+    }
+
+    private async startDocumentStatePolling() {
+        const pollRateMs = this.docViewInfoPollInterval ?? 3000;
+        const pollRateJitterMs = this.docViewInfoPollIntervalJitter ?? 1000;
+        const docPath = documentglobals().curr_item.path;
+
+        // Check against statePollInterval to allow stopping the polling
+        while (this.docViewInfoPollInterval) {
+            const r = await to(
+                $http.get<IDocumentViewInfoStatus>(`/docViewInfo/${docPath}`)
+            );
+
+            if (r.ok) {
+                this.emit("docViewInfoUpdate", r.result.data);
+            }
+
+            await $timeout(
+                pollRateMs + (Math.random() - 0.5) * pollRateJitterMs
+            );
+        }
     }
 
     private checkAndSyncEditMenuPosition() {
@@ -1751,8 +1790,10 @@ export class ViewCtrl implements IController {
         const eventList = this.eventListeners.get(event);
         if (eventList) {
             eventList.forEach((callback) => {
-                // direct call does not work because Parameters is not able to infer full type
-                callback.apply(null, args);
+                const cb = callback as (
+                    ..._: Parameters<EventListeners[T]>
+                ) => void;
+                cb(...args);
             });
         }
     }

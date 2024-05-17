@@ -1,10 +1,11 @@
-import type {OnChanges, SimpleChanges} from "@angular/core";
+import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {documentglobals} from "tim/util/globals";
 import type {ITimeLeftSettings} from "tim/document/IDocSettings";
 import type {Moment} from "moment";
 import moment from "moment";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 
 const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     sync_interval: 10 * 60,
@@ -35,7 +36,7 @@ const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     `,
     styleUrls: ["./time-left.component.scss"],
 })
-export class TimeLeftComponent implements OnChanges {
+export class TimeLeftComponent implements OnChanges, OnInit {
     @Input() endTime?: string;
     showLowTimeMessage = true;
     isLowTime = false;
@@ -48,6 +49,20 @@ export class TimeLeftComponent implements OnChanges {
     syncInterval = this.settings.sync_interval;
     syncIntervalDeviation = this.settings.sync_interval_deviation;
     endTimeMoment?: Moment;
+
+    ngOnInit() {
+        vctrlInstance?.listen("docViewInfoUpdate", (info) => {
+            if (!info.right) {
+                return;
+            }
+            if (!info.right.accessible_to) {
+                return;
+            }
+
+            this.endTime = info.right.accessible_to.toISOString();
+            this.endTimeMoment = moment(this.endTime);
+        });
+    }
 
     ngOnChanges(c: SimpleChanges) {
         if (c.endTime) {

@@ -10,6 +10,7 @@ from timApp.document.docrenderresult import DocRenderResult
 from timApp.document.document import Document
 from timApp.document.docviewparams import DocViewParams
 from timApp.document.viewcontext import ViewRoute, ViewContext
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import dataclass_to_bytearray
 
 if TYPE_CHECKING:
@@ -144,4 +145,23 @@ def set_style_timestamp_hash(style_name: str, hash_val: str) -> None:
 
 def get_style_timestamp_hash(style_name: str) -> str | None:
     res = rclient.get(f"tim-style-hash-{style_name}")
+    return res.decode(encoding="utf-8") if res else None
+
+
+def set_user_global_message(user: "User", message: str | None) -> None:
+    if message:
+        rclient.set(f"tim-global-message-{user.id}", message)
+    else:
+        rclient.delete(f"tim-global-message-{user.id}")
+
+
+def set_usergroup_global_message(ug: UserGroup, message: str | None) -> None:
+    if message:
+        rclient.mset({f"tim-global-message-{u.id}": message for u in ug.users})
+    else:
+        rclient.delete(*[f"tim-global-message-{u.id}" for u in ug.users])
+
+
+def get_user_global_message(user: "User") -> str | None:
+    res = rclient.get(f"tim-global-message-{user.id}")
     return res.decode(encoding="utf-8") if res else None

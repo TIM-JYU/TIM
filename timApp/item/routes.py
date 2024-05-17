@@ -46,7 +46,12 @@ from timApp.auth.sessioninfo import (
     clear_session,
     set_document_lang_override,
 )
-from timApp.document.caching import check_doc_cache, set_doc_cache, refresh_doc_expire
+from timApp.document.caching import (
+    check_doc_cache,
+    set_doc_cache,
+    refresh_doc_expire,
+    get_user_global_message,
+)
 from timApp.document.create_item import (
     create_or_copy_item,
     create_citation_doc,
@@ -296,8 +301,16 @@ def doc_access_info(doc_name):
     except ItemLockedException as ile:
         view_access = ile.access
 
+    cur_user = get_current_user_object()
+    user_message = get_user_global_message(cur_user)
+
     return json_response(
-        {"can_access": can_access, "right": view_access}, date_conversion=True
+        {
+            "can_access": can_access,
+            "right": view_access,
+            "global_message": user_message,
+        },
+        date_conversion=True,
     )
 
 
