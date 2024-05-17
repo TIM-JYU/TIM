@@ -1,7 +1,12 @@
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal, Callable
 
+from sqlalchemy import select, func
+
+from timApp.answer.answer import Answer
+from timApp.answer.answer_models import UserAnswer
 from timApp.item.distribute_rights import (
     RightOp,
     ConfirmOp,
@@ -12,7 +17,9 @@ from timApp.item.distribute_rights import (
     register_right_impl,
     UndoConfirmOp,
 )
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
+from timApp.util.get_fields import get_fields_and_users, RequestedGroups
 from timApp.util.utils import get_current_time
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -30,6 +37,7 @@ class DistributeRightAction:
     target: str | list[str]
     timestamp: datetime | None = None
     minutes: float = 0.0
+    distNetworkTargetField: str | None = None
 
     @property
     def timestamp_or_now(self) -> datetime:
@@ -78,10 +86,44 @@ def apply_dist_right_actions(
     user_acc: User, dist_right: list[DistributeRightAction]
 ) -> list[str]:
     errors = []
+
+    task_ids = set(
+        a.distNetworkTargetField for a in dist_right if a.distNetworkTargetField
+    )
+    target_by_task = {}
+
+    if task_ids:
+        sub = (
+            select(func.max(Answer.id).label("max_id"))
+            .join(UserAnswer)
+            .filter(
+                (UserAnswer.user_id == user_acc.id)
+                & (Answer.task_id.in_(task_ids))
+                & (Answer.valid.is_(True))
+            )
+            .group_by(Answer.task_id)
+            .subquery()
+        )
+
+        target_by_task = {
+            tid: json.loads(a).get("c", None)
+            for tid, a in run_sql(
+                select(Answer.task_id, Answer.content).join(
+                    sub, Answer.id == sub.c.max_id
+                )
+            )
+        }
+
     for distribute in dist_right:
         convert = RIGHT_TO_OP[distribute.operation]
         right_op = convert(distribute, user_acc.email)
-        apply_errors = register_right_impl(right_op, distribute.target)
+        apply_errors = register_right_impl(
+            right_op,
+            distribute.target,
+            distribute_network_target=target_by_task.get(
+                distribute.distNetworkTargetField, None
+            ),
+        )
 
         if isinstance(right_op, QuitOp):
             # Ignore failing to undo twice. It is an error but it's not strictly an issue for UserSelect

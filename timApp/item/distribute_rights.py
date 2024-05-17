@@ -3,6 +3,7 @@ from collections import defaultdict
 from concurrent.futures import Future
 from dataclasses import dataclass, replace, field, fields, Field
 from datetime import datetime, timedelta
+from functools import cache
 from pathlib import Path
 from typing import Literal, Union, DefaultDict, Callable, TypeVar, Any, get_args
 from urllib.parse import urlparse
@@ -10,7 +11,7 @@ from urllib.parse import urlparse
 import filelock
 from flask import Response, flash, request
 from isodate import Duration
-from marshmallow import Schema
+from marshmallow import Schema, EXCLUDE
 from sqlalchemy import select
 from werkzeug.utils import secure_filename
 
@@ -22,6 +23,7 @@ from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
 from timApp.tim_app import app, csrf
+from timApp.tim_celery import relay_dist_rights
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -46,6 +48,32 @@ from tim_common.utils import DurationSchema
 from tim_common.vendor.requests_futures import FuturesSession
 
 dist_bp = TypedBlueprint("dist_rights", __name__, url_prefix="/distRights")
+
+
+@dataclass(slots=True)
+class DistRightTarget:
+    target: str
+    distribute_group: str | None
+
+
+@dataclass(slots=True)
+class DistRightNetworkConfig:
+    hosts: dict[str, str] = field(default_factory=dict)
+    distribute_groups: dict[str, list[str]] = field(default_factory=dict)
+    distribute_targets: dict[str, list[DistRightTarget]] = field(default_factory=dict)
+
+
+DistRightNetworkConfigSchema = class_schema(DistRightNetworkConfig)(unknown=EXCLUDE)
+
+
+@cache
+def _get_dist_right_network() -> DistRightNetworkConfig:
+    with app.app_context():
+        try:
+            return DistRightNetworkConfigSchema.load(app.config["DIST_RIGHTS_NETWORK"])
+        except Exception as e:
+            log_warning(f"Error loading DIST_RIGHTS_NETWORK: {e}")
+            return DistRightNetworkConfig()
 
 
 @dataclass(slots=True)
@@ -354,29 +382,58 @@ def do_register_right(op: RightOp, target: str) -> tuple[RightLog | None, str | 
     return rights, None
 
 
-def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> list[str]:
+def _get_dist_hosts(
+    target: str, distribute_target: str | None = None
+) -> list[tuple[str, dict[str, Any] | None]]:
+    host_id = app.config["DIST_RIGHTS_HOST_ID"]
+    if host_id and distribute_target:
+        dist_config = _get_dist_right_network()
+        targets = dist_config.distribute_targets.get(distribute_target)
+        if targets:
+            return [
+                (
+                    dist_config.hosts[t.target],
+                    {
+                        "distribute_group": t.distribute_group,
+                        "distribute_from": host_id,
+                    },
+                )
+                for t in targets
+            ]
+
+    return [(h, None) for h in app.config["DIST_RIGHTS_HOSTS"][target]["hosts"]]
+
+
+def do_dist_rights(
+    op: RightOp,
+    rights: RightLog,
+    target: str,
+    distribute_target: str | None = None,
+) -> list[str]:
     emails = rights.group_cache[op.group] if isinstance(op, GroupOps) else [op.email]
     session = FuturesSession(max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"])
     futures = []
     host_config = app.config["DIST_RIGHTS_HOSTS"][target]
     dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
-    hosts = host_config["hosts"]
+    hosts = _get_dist_hosts(target, distribute_target)
+    hostnames = [h for h, _ in hosts]
     rights_to_send = [{"email": e, "right": rights.get_right(e)} for e in emails]
-    for m in hosts:
+    for m, extra in hosts:
+        data = {
+            "rights": rights_to_send,
+            "secret": dist_rights_send_secret,
+            "item_path": host_config["item"],
+        }
+        if extra:
+            data |= extra
         r = session.put(
             f"{m}/distRights/receive",
-            data=to_json_str(
-                {
-                    "rights": rights_to_send,
-                    "secret": dist_rights_send_secret,
-                    "item_path": host_config["item"],
-                }
-            ),
+            data=to_json_str(data),
             headers={"Content-Type": "application/json"},
             timeout=10,
         )
         futures.append(r)
-    return collect_errors_from_hosts(futures, hosts)
+    return collect_errors_from_hosts(futures, hostnames)
 
 
 def register_right_impl(
@@ -384,6 +441,7 @@ def register_right_impl(
     target: str | list[str],
     backup: bool = True,
     distribute: bool = True,
+    distribute_network_target: str | None = None,
 ) -> list[str]:
     targets = [target] if isinstance(target, str) else target
     errors = []
@@ -397,7 +455,9 @@ def register_right_impl(
                 errors.append(err)
         if distribute and rights:
             with filelock.FileLock(f"/tmp/dist_right_{target_s}"):
-                errors.extend(do_dist_rights(op, rights, target_s))
+                errors.extend(
+                    do_dist_rights(op, rights, target_s, distribute_network_target)
+                )
     if backup:
         backup_errors = register_op_to_hosts(op, target, is_receiving_backup=True)
         if backup_errors:
@@ -430,12 +490,31 @@ class RightEntry:
     right: Right
 
 
+def _resolve_relay_hosts(
+    distribute_group: str, distribute_from: str | None
+) -> list[str]:
+    host_id = app.config["DIST_RIGHTS_HOST_ID"]
+    dist_network = _get_dist_right_network()
+    hosts = set(dist_network.distribute_groups.get(distribute_group, []))
+    if not hosts:
+        return []
+
+    if distribute_from:
+        hosts.discard(distribute_from)
+    if host_id:
+        hosts.discard(host_id)
+
+    return [dist_network.hosts[h] for h in hosts]
+
+
 @dist_bp.put("/receive")
 @csrf.exempt
 def receive_right(
     rights: list[RightEntry],
     item_path: str,
     secret: str,
+    distribute_group: str | None = None,
+    distribute_from: str | None = None,
 ) -> Response:
     check_secret(secret, "DIST_RIGHTS_RECEIVE_SECRET")
     uges = run_sql(
@@ -470,7 +549,36 @@ def receive_right(
             require_confirm=right.require_confirm,
         )
     db.session.commit()
+    if distribute_group:
+        relay_hosts = _resolve_relay_hosts(distribute_group, distribute_from)
+        if relay_hosts:
+            relay_dist_rights.delay(
+                to_json_str(
+                    {"rights": rights, "secret": secret, "item_path": item_path}
+                ),
+                relay_hosts,
+            )
     return ok_response()
+
+
+def relay_dist_rights_impl(
+    dist_json: str,
+    dist_hosts: list[str],
+) -> None:
+    session = FuturesSession(max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"])
+    futures = []
+    for h in dist_hosts:
+        r = session.put(
+            f"{h}/distRights/receive",
+            data=dist_json,
+            headers={"Content-Type": "application/json"},
+            timeout=10,
+        )
+        futures.append(r)
+    errors = collect_errors_from_hosts(futures, dist_hosts)
+    if errors:
+        for e in errors:
+            log_warning(f"Right distribution failed for host: {e}")
 
 
 @dist_bp.get("/changeStartTime")
