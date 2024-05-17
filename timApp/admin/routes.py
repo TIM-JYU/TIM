@@ -74,7 +74,7 @@ def set_ug_global_message(usergroup: str, message: str | None) -> Response:
 
 
 @admin_bp.get("/sendUserGlobalMessage/<usergroup>")
-def set_ug_global_message(usergroup: str, message: str | None) -> Response:
+def set_ug_global_message_get(usergroup: str, message: str | None) -> Response:
     verify_admin()
     ug = UserGroup.get_by_name(usergroup)
     if not ug:
