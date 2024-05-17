@@ -8910,14 +8910,6 @@
           <context context-type="linenumber">280,281</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2289651508005163710" datatype="html">
-        <source>Your access expired at <x id="PH" equiv-text="closedT?.toISOString()"/>.</source>
-        <target state="translated">Din åtkomst upphörde vid <x id="PH" equiv-text="closedT?.toISOString()"/>.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
-          <context context-type="linenumber">270</context>
-        </context-group>
-      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -44,8 +44,7 @@ const VIEW_PATH = "/view/";
                 {{this.error.userMessage ? this.error.userMessage : this.error.defaultMessage}}
             </span>
             <ng-container *ngIf="isCountdown">
-                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="countdownDone()" *ngIf="!preventOpenLinkOnFutureAccess"></tim-countdown>
-                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="countdownDone()" *ngIf="preventOpenLinkOnFutureAccess"></tim-countdown>
+                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="countdownDone()"></tim-countdown>
             </ng-container>
             <ng-container *ngIf="isGoing">
                 <tim-loading></tim-loading>
@@ -83,7 +82,6 @@ export class GotoLinkComponent implements OnInit {
     resetTimeout?: number;
     error?: GotoError;
     unsavedChangesChecked = false;
-    preventOpenLinkOnFutureAccess = false;
 
     constructor(private http: HttpClient) {}
 
@@ -159,6 +157,10 @@ export class GotoLinkComponent implements OnInit {
         this.linkDisabled = true;
 
         const {unauthorized, access} = await this.resolveAccess();
+        await this.startImpl(unauthorized, access);
+    }
+
+    private async startImpl(unauthorized: boolean, access: IRight | undefined) {
         if (unauthorized && (!access || this.noCountdown)) {
             this.showError({
                 userMessage: this.unauthorizedText,
@@ -238,53 +240,14 @@ export class GotoLinkComponent implements OnInit {
 
     async countdownDone() {
         // re-check permissions before allowing the link to be used
-        const acc = await this.resolveAccess();
+        const {unauthorized, access} = await this.resolveAccess();
 
         // user is not (yet) authorized to access the document, but may have access permissions
         // that come into effect later
-        if (acc.unauthorized) {
-            const futureAccess =
-                acc.access?.accessible_from ?? acc.access?.duration_from;
-
-            if (futureAccess?.isValid()) {
-                const serverTime = await toPromise(
-                    this.http.get<{time: Moment}>("/time")
-                );
-                // TODO should throw an error / return immediately, if we can't get the time from the server
-                //      (user may set their local time in a way that bypasses these checks)
-                let currTime = moment();
-                if (serverTime.ok) {
-                    currTime = serverTime.result.time;
-                }
-
-                if (futureAccess.isBefore(currTime)) {
-                    const closedT = this.parseTime(this.closeAt);
-                    // TODO better handling for closedT when a custom message (userMessage/pastDueText) is used
-                    this.showError({
-                        userMessage: this.pastDueText
-                            ? formatString(
-                                  this.pastDueText,
-                                  closedT?.toISOString() ?? "unknown"
-                              )
-                            : undefined,
-                        defaultMessage: $localize`Your access expired at ${closedT?.toISOString()}.`,
-                    });
-                    return;
-                } else {
-                    // reset and restart countdown
-                    this.preventOpenLinkOnFutureAccess = true;
-                    this.openTime = futureAccess;
-                    this.startCountdown();
-                }
-            } else {
-                this.showError({
-                    userMessage: this.unauthorizedText,
-                    defaultMessage: $localize`You don't have permission to view that document.`,
-                });
-                return;
-            }
-        } else {
-            this.preventOpenLinkOnFutureAccess = false;
+        if (unauthorized) {
+            this.reset();
+            void this.startImpl(unauthorized, access);
+            return;
         }
 
         if (this.stopAfterCountdown) {
@@ -295,9 +258,7 @@ export class GotoLinkComponent implements OnInit {
             this.linkDisabled = false;
             return;
         } else {
-            if (!this.preventOpenLinkOnFutureAccess) {
-                this.startOpenLink();
-            }
+            this.startOpenLink();
         }
     }
 
