@@ -13,6 +13,7 @@ from flask import Response, flash, request
 from isodate import Duration
 from marshmallow import Schema, EXCLUDE
 from sqlalchemy import select
+from urllib3 import Retry
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import AccessDenied, verify_admin
@@ -48,6 +49,13 @@ from tim_common.utils import DurationSchema
 from tim_common.vendor.requests_futures import FuturesSession
 
 dist_bp = TypedBlueprint("dist_rights", __name__, url_prefix="/distRights")
+
+# Custom retry logic for distributing rights
+# From tests, it seems that sometimes distribution might fail with 502, in that case we should retry.
+dist_retry = Retry(
+    total=3,
+    status_forcelist=[429, 500, 502, 503, 504],
+)
 
 
 @dataclass(slots=True)
@@ -411,7 +419,10 @@ def do_dist_rights(
     distribute_target: str | None = None,
 ) -> list[str]:
     emails = rights.group_cache[op.group] if isinstance(op, GroupOps) else [op.email]
-    session = FuturesSession(max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"])
+    session = FuturesSession(
+        max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"],
+        adapter_kwargs={"max_retries": dist_retry},
+    )
     futures = []
     host_config = app.config["DIST_RIGHTS_HOSTS"][target]
     dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
@@ -565,7 +576,10 @@ def relay_dist_rights_impl(
     dist_json: str,
     dist_hosts: list[str],
 ) -> None:
-    session = FuturesSession(max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"])
+    session = FuturesSession(
+        max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"],
+        adapter_kwargs={"max_retries": dist_retry},
+    )
     futures = []
     for h in dist_hosts:
         r = session.put(
@@ -620,7 +634,10 @@ def register_op_to_hosts(
     register_hosts = [
         h for h in app.config["DIST_RIGHTS_REGISTER_HOSTS"] if h != curr_host
     ]
-    session = FuturesSession(max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"])
+    session = FuturesSession(
+        max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"],
+        adapter_kwargs={"max_retries": dist_retry},
+    )
     futures: list[Future] = []
     for h in register_hosts:
         f = session.post(
