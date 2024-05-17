@@ -154,6 +154,10 @@ export class GotoLinkComponent implements OnInit {
         this.linkDisabled = true;
 
         const {unauthorized, access} = await this.resolveAccess();
+        await this.startImpl(unauthorized, access);
+    }
+
+    private async startImpl(unauthorized: boolean, access: IRight | undefined) {
         if (unauthorized && (!access || this.noCountdown)) {
             this.showError({
                 userMessage: this.unauthorizedText,
@@ -231,7 +235,18 @@ export class GotoLinkComponent implements OnInit {
         this.linkState = GotoLinkState.Countdown;
     }
 
-    countdownDone() {
+    async countdownDone() {
+        // re-check permissions before allowing the link to be used
+        const {unauthorized, access} = await this.resolveAccess();
+
+        // user is not (yet) authorized to access the document, but may have access permissions
+        // that come into effect later
+        if (unauthorized) {
+            this.reset();
+            void this.startImpl(unauthorized, access);
+            return;
+        }
+
         if (this.stopAfterCountdown) {
             this.showError({
                 defaultMessage: $localize`You can access the link now.`,
