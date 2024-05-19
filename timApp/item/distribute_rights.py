@@ -54,6 +54,7 @@ dist_bp = TypedBlueprint("dist_rights", __name__, url_prefix="/distRights")
 # From tests, it seems that sometimes distribution might fail with 502, in that case we should retry.
 dist_retry = Retry(
     total=3,
+    connect=2,
     status_forcelist=[429, 500, 502, 503, 504],
 )
 
