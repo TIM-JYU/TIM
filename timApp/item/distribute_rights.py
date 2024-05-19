@@ -29,7 +29,7 @@ from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import (
     ok_response,
     to_json_str,
@@ -676,3 +676,65 @@ def get_current_rights_route(
         .order_by(User.email)
     ).scalars()
     return json_response([{"email": e, "right": rights.get_right(e)} for e in emails])
+
+
+@dist_bp.post("/distributeCurrentRights")
+def distribute_current_rights(target: str, hosts: list[str], group: str) -> Response:
+    """
+    Distributes all current rights for a group to all hosts in the network.
+
+    :param target: Target to distribute rights for.
+    :param hosts: List of hosts to distribute to.
+    :param group: The name of the user group for which to apply the rights.
+    :return: OK response if successful.
+    """
+    verify_admin()
+
+    ug = UserGroup.get_by_name(group)
+    if not ug:
+        raise NotExist(f"User group {group} does not exist.")
+
+    rights, _ = get_current_rights(target)
+    host_config = app.config["DIST_RIGHTS_HOSTS"][target]
+    dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
+    rights_to_send = []
+    # Unlike in do_dist_rights, we should apply the rights only to those users who have some operation in the log.
+    # That is, if there was no operation applied to the user, don't distribute their right.
+    for u in ug.users:
+        op = rights.latest_op(u.email)
+        if op is None:
+            continue
+        rights_to_send.append({"email": u.email, "right": op.right})
+
+    dist_config = _get_dist_right_network()
+    host_urls = [hu for h in hosts if (hu := dist_config.hosts.get(h))]
+
+    session = FuturesSession(
+        max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"],
+        adapter_kwargs={"max_retries": dist_retry},
+    )
+    futures = []
+    data = {
+        "rights": rights_to_send,
+        "secret": dist_rights_send_secret,
+        "item_path": host_config["item"],
+    }
+    data_str = to_json_str(data)
+    for h in host_urls:
+        r = session.put(
+            f"{h}/distRights/receive",
+            data=data_str,
+            headers={"Content-Type": "application/json"},
+            timeout=10,
+        )
+        futures.append(r)
+
+    errors = collect_errors_from_hosts(futures, host_urls)
+
+    if errors:
+        log_warning(f"Right distribution failed for some hosts: {errors}")
+        raise RouteException(f"Right distribution failed for some hosts: {errors}")
+
+    return json_response(
+        {"applied_count": len([r["email"] for r in rights_to_send]), "hosts": host_urls}
+    )
