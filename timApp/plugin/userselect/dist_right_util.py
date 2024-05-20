@@ -38,6 +38,7 @@ class DistributeRightAction:
     timestamp: datetime | None = None
     minutes: float = 0.0
     distNetworkTargetField: str | None = None
+    distNetworkTarget: str | None = None
 
     @property
     def timestamp_or_now(self) -> datetime:
@@ -117,12 +118,16 @@ def apply_dist_right_actions(
     for distribute in dist_right:
         convert = RIGHT_TO_OP[distribute.operation]
         right_op = convert(distribute, user_acc.email)
+        dist_network_target = target_by_task.get(
+            distribute.distNetworkTargetField, None
+        )
+        if dist_network_target is None:
+            dist_network_target = distribute.distNetworkTarget
+
         apply_errors = register_right_impl(
             right_op,
             distribute.target,
-            distribute_network_target=target_by_task.get(
-                distribute.distNetworkTargetField, None
-            ),
+            distribute_network_target=dist_network_target,
         )
 
         if isinstance(right_op, QuitOp):
