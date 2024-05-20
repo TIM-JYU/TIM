@@ -25,7 +25,7 @@ class DistRightTarget:
     """
     Host name to which to distribute the rights.
     """
-    distribute_group: str | None
+    distribute_group: str | None = None
     """
     If defined, the target will relay the rights to the specified distribution group.
     """
