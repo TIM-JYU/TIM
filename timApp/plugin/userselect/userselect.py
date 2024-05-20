@@ -1,5 +1,5 @@
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import timedelta
 from enum import Enum
 from typing import Any
@@ -486,22 +486,19 @@ def undo_dist_right_actions(user_acc: User, model: UserSelectMarkupModel) -> lis
     undo_actions = []
     for distribute in undoable_dists:
         if distribute.operation == "confirm":
-            undo_action = DistributeRightAction(
+            undo_action = replace(
+                distribute,
                 operation="undoconfirm",
-                target=distribute.target,
-                timestamp=distribute.timestamp_or_now,
             )
         elif distribute.operation == "quit":
-            undo_action = DistributeRightAction(
+            undo_action = replace(
+                distribute,
                 operation="undoquit",
-                target=distribute.target,
-                timestamp=distribute.timestamp_or_now,
             )
         elif distribute.operation == "changetime":
-            undo_action = DistributeRightAction(
+            undo_action = replace(
+                distribute,
                 operation="changetime",
-                target=distribute.target,
-                timestamp=distribute.timestamp_or_now,
                 minutes=-distribute.minutes,
             )
         else:
