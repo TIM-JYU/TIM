@@ -7,6 +7,7 @@ from sqlalchemy import func, select, update
 
 from timApp.auth.session.model import UserSession
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.item.dist_right_network import get_dist_right_network
 from timApp.item.item import Item
 from timApp.tim_app import app
 from timApp.timdb.sqa import db, run_sql
@@ -250,7 +251,11 @@ def distribute_session_verification(
 
     hosts = set()
     dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
+    dist_config = get_dist_right_network()
+
     for target in targets:
+        dist_hosts = dist_config.get_target_hosts(target)
+        hosts.update(dist_hosts)
         h = app.config["DIST_RIGHTS_HOSTS"].get(target, {}).get("hosts", [])
         hosts.update(h)
 
