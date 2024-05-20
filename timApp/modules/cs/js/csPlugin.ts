@@ -2511,6 +2511,9 @@ ${fhtml}
             this.showCodeNow();
         }
         this.countBoard?.count(str);
+        if (this.isText) {
+            this.preventSave = this.countBoard?.preventSave ?? false;
+        }
         if (this.isText || this.clearSaved) {
             this.savedText = "";
         }
