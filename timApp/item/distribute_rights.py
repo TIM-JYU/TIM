@@ -3,7 +3,6 @@ from collections import defaultdict
 from concurrent.futures import Future
 from dataclasses import dataclass, replace, field, fields, Field
 from datetime import datetime, timedelta
-from functools import cache
 from pathlib import Path
 from typing import Literal, Union, DefaultDict, Callable, TypeVar, Any, get_args
 from urllib.parse import urlparse
@@ -11,7 +10,7 @@ from urllib.parse import urlparse
 import filelock
 from flask import Response, flash, request
 from isodate import Duration
-from marshmallow import Schema, EXCLUDE
+from marshmallow import Schema
 from sqlalchemy import select
 from urllib3 import Retry
 from werkzeug.utils import secure_filename
@@ -22,6 +21,7 @@ from timApp.auth.auth_models import get_duration_now, do_confirm
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
+from timApp.item.dist_right_network import get_dist_right_network
 from timApp.item.item import Item
 from timApp.tim_app import app, csrf
 from timApp.tim_celery import relay_dist_rights
@@ -53,36 +53,10 @@ dist_bp = TypedBlueprint("dist_rights", __name__, url_prefix="/distRights")
 # Custom retry logic for distributing rights
 # From tests, it seems that sometimes distribution might fail with 502, in that case we should retry.
 dist_retry = Retry(
-    total=3,
-    connect=2,
+    total=5,
+    connect=3,
     status_forcelist=[429, 500, 502, 503, 504],
 )
-
-
-@dataclass(slots=True)
-class DistRightTarget:
-    target: str
-    distribute_group: str | None
-
-
-@dataclass(slots=True)
-class DistRightNetworkConfig:
-    hosts: dict[str, str] = field(default_factory=dict)
-    distribute_groups: dict[str, list[str]] = field(default_factory=dict)
-    distribute_targets: dict[str, list[DistRightTarget]] = field(default_factory=dict)
-
-
-DistRightNetworkConfigSchema = class_schema(DistRightNetworkConfig)(unknown=EXCLUDE)
-
-
-@cache
-def _get_dist_right_network() -> DistRightNetworkConfig:
-    with app.app_context():
-        try:
-            return DistRightNetworkConfigSchema.load(app.config["DIST_RIGHTS_NETWORK"])
-        except Exception as e:
-            log_warning(f"Error loading DIST_RIGHTS_NETWORK: {e}")
-            return DistRightNetworkConfig()
 
 
 @dataclass(slots=True)
@@ -396,7 +370,7 @@ def _get_dist_hosts(
 ) -> list[tuple[str, dict[str, Any] | None]]:
     host_id = app.config["DIST_RIGHTS_HOST_ID"]
     if host_id and distribute_target:
-        dist_config = _get_dist_right_network()
+        dist_config = get_dist_right_network()
         targets = dist_config.distribute_targets.get(distribute_target)
         if targets:
             return [
@@ -506,17 +480,13 @@ def _resolve_relay_hosts(
     distribute_group: str, distribute_from: str | None
 ) -> list[str]:
     host_id = app.config["DIST_RIGHTS_HOST_ID"]
-    dist_network = _get_dist_right_network()
-    hosts = set(dist_network.distribute_groups.get(distribute_group, []))
-    if not hosts:
-        return []
-
+    dist_network = get_dist_right_network()
+    except_targets = set()
     if distribute_from:
-        hosts.discard(distribute_from)
+        except_targets.add(distribute_from)
     if host_id:
-        hosts.discard(host_id)
-
-    return [dist_network.hosts[h] for h in hosts]
+        except_targets.add(host_id)
+    return dist_network.get_group_hosts(distribute_group, except_targets)
 
 
 @dist_bp.put("/receive")
@@ -706,7 +676,7 @@ def distribute_current_rights(target: str, hosts: list[str], group: str) -> Resp
             continue
         rights_to_send.append({"email": u.email, "right": op.right})
 
-    dist_config = _get_dist_right_network()
+    dist_config = get_dist_right_network()
     host_urls = [hu for h in hosts if (hu := dist_config.hosts.get(h))]
 
     session = FuturesSession(
