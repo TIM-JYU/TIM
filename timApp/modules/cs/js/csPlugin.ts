@@ -2695,20 +2695,21 @@ ${fhtml}
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty === "md") {
             this.showMD();
-            if (nosave || this.nosave || this.preventSave) {
+            if (nosave || this.nosave) {
                 return;
             }
         }
         if (languageTypes.isInArray(ty, csJSTypes)) {
             // this.jstype = ty;
             this.showJS();
-            if (nosave || this.nosave || this.preventSave) {
+            if (nosave || this.nosave) {
                 return;
             }
         }
-        if (!this.preventSave) {
-            await this.doRunCode(ty, nosave || this.nosave);
+        if (this.preventSave) {
+            return;
         }
+        await this.doRunCode(ty, nosave || this.nosave);
     }
 
     runCodeAuto() {
