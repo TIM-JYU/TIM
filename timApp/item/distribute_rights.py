@@ -458,6 +458,7 @@ def register_right(
     target: str | list[str],
     secret: str,
     is_receiving_backup: bool = False,
+    distribute_network_target: str | None = None,
 ) -> Response:
     check_secret(secret, "DIST_RIGHTS_REGISTER_SECRET")
     is_active_distributor = app.config["DIST_RIGHTS_IS_DISTRIBUTOR"]
@@ -466,6 +467,7 @@ def register_right(
         target,
         backup=False,
         distribute=not is_receiving_backup and is_active_distributor,
+        distribute_network_target=distribute_network_target,
     )
     return json_response({"host_errors": errors})
 
@@ -572,6 +574,7 @@ def change_starttime_route(
     target: str,  # comma-separated; TODO: List[str] doesn't work for GET requests
     minutes: int,
     redir: str,
+    distribute_network_target: str | None = None,
 ) -> Response:
     targets = target.split(",")
     u = get_current_user_object()
@@ -589,7 +592,9 @@ def change_starttime_route(
         group=group,
         starttime=curr_time + timedelta(minutes=minutes),
     )
-    errors = register_right_impl(op, targets)
+    errors = register_right_impl(
+        op, targets, distribute_network_target=distribute_network_target
+    )
     if errors:
         flash(str(errors))
     parsed = urlparse(redir)
