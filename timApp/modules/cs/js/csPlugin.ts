@@ -2511,6 +2511,9 @@ ${fhtml}
             this.showCodeNow();
         }
         this.countBoard?.count(str);
+        if (this.isText) {
+            this.preventSave = this.countBoard?.preventSave ?? false;
+        }
         if (this.isText || this.clearSaved) {
             this.savedText = "";
         }
@@ -2702,6 +2705,9 @@ ${fhtml}
             if (nosave || this.nosave) {
                 return;
             }
+        }
+        if (this.preventSave) {
+            return;
         }
         await this.doRunCode(ty, nosave || this.nosave);
     }
