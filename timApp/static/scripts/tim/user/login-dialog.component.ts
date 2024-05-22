@@ -57,7 +57,7 @@ interface ISimpleRegistrationResponse {
 @Component({
     selector: "tim-login-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [minimizable]="false" [showCloseIcon]="false">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>
@@ -170,7 +170,7 @@ interface ISimpleRegistrationResponse {
                                 <tim-loading class="margin-left-1" *ngIf="loggingIn"></tim-loading>
                             </div>
                             <tim-alert severity="danger" *ngIf="loginError">
-                                <tim-error-description [error]="loginError"></tim-error-description>
+                                <tim-error-descpription [error]="loginError"></tim-error-descpription>
                             </tim-alert>
 
                         </ng-container>
