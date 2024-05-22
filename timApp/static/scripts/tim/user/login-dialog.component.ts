@@ -170,7 +170,7 @@ interface ISimpleRegistrationResponse {
                                 <tim-loading class="margin-left-1" *ngIf="loggingIn"></tim-loading>
                             </div>
                             <tim-alert severity="danger" *ngIf="loginError">
-                                <tim-error-descpription [error]="loginError"></tim-error-descpription>
+                                <tim-error-description [error]="loginError"></tim-error-description>
                             </tim-alert>
 
                         </ng-container>
