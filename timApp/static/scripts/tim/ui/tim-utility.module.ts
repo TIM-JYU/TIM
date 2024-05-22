@@ -31,6 +31,7 @@ import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {CommonModule} from "@angular/common";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
+import {PurifyModule} from "tim/util/purify.module";
 
 @NgModule({
     providers: [SessionVerify],
@@ -90,6 +91,6 @@ import {CreateItemComponent} from "tim/item/create-item.component";
         SwitchButtonComponent,
         CreateItemComponent,
     ],
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PurifyModule],
 })
 export class TimUtilityModule {}

@@ -17,7 +17,7 @@ import {Input, Component} from "@angular/core";
             </ng-container>
             <ng-container *ngSwitchCase="'IPNotAllowed'" i18n>Login is not allowed from this IP address.</ng-container>
             <ng-container *ngSwitchCase="'PasswordResetDisabled'" i18n>Password reset is disabled.</ng-container>
-            <ng-container *ngSwitchDefault i18n>Error: <span [innerHTML]="error"></span></ng-container>
+            <ng-container *ngSwitchDefault i18n>Error: <span [innerHTML]="error | purify"></span></ng-container>
         </ng-container>
     `,
 })
