@@ -82,14 +82,6 @@
           <context context-type="linenumber">19</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7157889813294733336" datatype="html">
-        <source>Unknown error: <x id="INTERPOLATION" equiv-text="{{error}}"/></source>
-        <target state="translated">Tuntematon virhe: <x id="INTERPOLATION" equiv-text="{{error}}"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
-          <context context-type="linenumber">20</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6523327060540361491" datatype="html">
         <source>Loading, please wait.</source>
         <target state="translated">Ladataan, odota.</target>
@@ -9014,6 +9006,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-view.component.ts</context>
           <context context-type="linenumber">53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1805269398693443899" datatype="html">
+        <source>Error: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated">Virhe: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
+          <context context-type="linenumber">20</context>
         </context-group>
       </trans-unit>
     </body>

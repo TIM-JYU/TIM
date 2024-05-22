@@ -73,7 +73,7 @@ class ResizableDraggableWrapper {
                        [class.glyphicon-minus]="!areaMinimized"
                        [class.glyphicon-unchecked]="areaMinimized"
                     ></i>
-                    <tim-close-button *ngIf="closeFn" (click)="closeFn!()">
+                    <tim-close-button *ngIf="showCloseIcon && closeFn" (click)="closeFn!()">
                     </tim-close-button>
                 </div>
                 <div class="draggable-content modal-content" [class.minimized]="areaMinimized">
@@ -96,6 +96,7 @@ export class DialogFrame {
     detachable = false;
     @Input() minimizable = true;
     @Input() canResize = true;
+    @Input() showCloseIcon = true;
 
     // If true, indicates that there may be some asynchronous loading going on when opening the dialog.
     // This info is only used when initializing the position of the dialog.
