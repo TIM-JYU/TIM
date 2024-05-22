@@ -39,6 +39,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.login import log_in_as_anonymous
+from timApp.auth.session.util import has_valid_session
 from timApp.auth.sessioninfo import (
     get_current_user_object,
     logged_in,
@@ -294,15 +295,26 @@ def doc_access_info(doc_name):
     if not doc_info:
         raise NotExist()
 
+    cur_user = get_current_user_object()
+    user_message = get_user_global_message(cur_user)
+
+    # If there is no valid session, just send out the global message
+    # This allows sending global messages even if there is no valid session
+    if not has_valid_session(cur_user):
+        return json_response(
+            {
+                "can_access": False,
+                "right": None,
+                "global_message": user_message,
+            },
+        )
+
     can_access = False
     try:
         view_access = verify_view_access(doc_info, require=False, check_duration=True)
         can_access = view_access is not None
     except ItemLockedException as ile:
         view_access = ile.access
-
-    cur_user = get_current_user_object()
-    user_message = get_user_global_message(cur_user)
 
     return json_response(
         {
