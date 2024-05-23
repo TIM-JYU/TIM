@@ -290,7 +290,7 @@ def par_info(doc_id, par_id):
 
 
 @view_page.get("/docViewInfo/<path:doc_name>")
-def doc_access_info(doc_name):
+def doc_access_info(doc_name: str, require_valid_session: bool = True):
     doc_info = DocEntry.find_by_path(doc_name, fallback_to_id=True)
     if not doc_info:
         raise NotExist()
@@ -298,9 +298,9 @@ def doc_access_info(doc_name):
     cur_user = get_current_user_object()
     user_message = get_user_global_message(cur_user)
 
-    # If there is no valid session, just send out the global message
+    # If there is no valid session, but we don't require one, just send out the global message
     # This allows sending global messages even if there is no valid session
-    if not has_valid_session(cur_user):
+    if not require_valid_session and not has_valid_session(cur_user):
         return json_response(
             {
                 "can_access": False,

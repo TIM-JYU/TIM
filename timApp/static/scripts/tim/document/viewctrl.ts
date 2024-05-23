@@ -474,7 +474,11 @@ export class ViewCtrl implements IController {
         // Check against statePollInterval to allow stopping the polling
         while (this.docViewInfoPollInterval) {
             const r = await to(
-                $http.get<IDocumentViewInfoStatus>(`/docViewInfo/${docPath}`)
+                $http.get<IDocumentViewInfoStatus>(`/docViewInfo/${docPath}`, {
+                    params: {
+                        require_valid_session: false,
+                    },
+                })
             );
 
             if (r.ok) {
