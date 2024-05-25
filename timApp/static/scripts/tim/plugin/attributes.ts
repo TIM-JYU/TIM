@@ -61,6 +61,7 @@ export const GenericPluginMarkup = t.partial({
     previousTask: nullable(previousTaskType),
     saveTeacher: t.boolean,
     spellcheck: t.boolean,
+    eagerlyLoadState: t.boolean,
 });
 
 export const Info = nullable(

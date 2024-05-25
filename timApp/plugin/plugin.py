@@ -703,7 +703,9 @@ class Plugin:
             style += f"max-height:{html.escape(str(mh))};overflow-y:auto;"
         if style:
             style = f'style="{style}"'
-
+        eager_load_state_opt = ""
+        if self.known.eagerlyLoadState:
+            eager_load_state_opt = "[eagerly-load-state]='true'"
         html_task_id = (
             self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id
         )
@@ -735,6 +737,7 @@ class Plugin:
                     f'id="{html_task_id}" '
                     f'plugin-type="/{self.type}" '
                     f'task-id="{doc_task_id or ""}" '
+                    f"{eager_load_state_opt} "
                     f"""{'preview="true"' if self.options.preview else ""}>"""
                     f"{cont}"
                     "</tim-plugin-loader>",

@@ -154,6 +154,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     @Input() public lockedText?: string;
     @Input() public lockedButtonText?: string;
     @Input() public lockedError?: string;
+    @Input() public eagerlyLoadState?: boolean;
     error = "";
 
     timed = false;
@@ -282,7 +283,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
                 .childNodes[0] as HTMLElement;
             this.determineAndSetComponent(component);
         }
-        if (this.loadPluginAfterInit) {
+        if (this.loadPluginAfterInit || this.eagerlyLoadState) {
             this.loadPlugin();
         }
     }
