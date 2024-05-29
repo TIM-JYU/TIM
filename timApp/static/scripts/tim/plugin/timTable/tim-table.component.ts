@@ -3489,6 +3489,7 @@ export class TimTableComponent
         }
 
         if (this.task) {
+            this.edited = true;
             this.initUserData(this.userdata);
             const colCount = this.totalCols;
             // TODO: Move all previous rows if rowId is not the new row. We'd need to take into account locked rows.
@@ -3552,6 +3553,7 @@ export class TimTableComponent
         }
 
         if (this.task && this.userdata) {
+            this.edited = true;
             const colCount = this.totalCols;
             for (let col = 0; col < colCount; col++) {
                 const coords = colnumToLetters(col) + (rowId + 1);
@@ -3625,6 +3627,7 @@ export class TimTableComponent
         }
 
         if (this.task) {
+            this.edited = true;
             this.initUserData(this.userdata);
             const rowCount = this.totalRows;
             // TODO: Move all previous columns if colId is not the new column. We'd need to take into account hardcoded columns.
@@ -3673,6 +3676,7 @@ export class TimTableComponent
         }
 
         if (this.task && this.userdata) {
+            this.edited = true;
             const rowCount = this.totalRows;
             for (let row = 0; row < rowCount; row++) {
                 const coords = colnumToLetters(colId) + (row + 1);
