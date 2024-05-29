@@ -16,7 +16,7 @@ import {NgModel} from "@angular/forms";
                 The source document has tags with expiration dates which may need to be updated manually.
             </tim-alert>
             <div *ngIf="params?.copy">
-                <p>Only document contents will be copied. No history or rights will be preserved.</p>
+                <p>Only document contents will be copied. Default rights of the destination folder will be applied. No original history or rights will be preserved. </p>
                 <p>If you need to have the same document to appear in multiple folders, define multiple short names instead.</p>
             </div>
             <div class="form-group title" timErrorState>
