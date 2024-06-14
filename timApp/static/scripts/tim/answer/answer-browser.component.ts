@@ -144,6 +144,7 @@ export type AnswerBrowserData =
 const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     pointsStep: 0,
     validOnlyText: $localize`Show valid only`,
+    showReview: false,
 };
 
 @Component({
@@ -439,6 +440,10 @@ export class AnswerBrowserComponent
             isPeerReview
         ) {
             this.onlyValid = false;
+        }
+
+        if (this.markupSettings.showReview && this.viewctrl.teacherMode) {
+            this.review = true;
         }
 
         // If task is in form_mode, only last (already loaded) answer should matter.

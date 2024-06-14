@@ -9,6 +9,7 @@ export const AnswerBrowserSettings = t.partial({
     pointsStep: nullable(t.number),
     validOnlyText: t.string,
     showValidOnly: t.boolean,
+    showReview: t.boolean,
 });
 
 export interface IAnswerBrowserSettings
