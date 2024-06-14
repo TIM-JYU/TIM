@@ -397,11 +397,11 @@ class TimTest(TimRouteTest):
             expect_status=400,
             expect_content="URL domain not whitelisted: users.jyu.fi",
         )
-        self.get("/getproxy", query_string={"url": "https://korppi.jyu.fi"})
+        self.get("/getproxy", query_string={"url": "https://gitlab.jyu.fi"})
         self.logout()
         self.get(
             "/getproxy",
-            query_string={"url": "https://korppi.jyu.fi"},
+            query_string={"url": "https://gitlab.jyu.fi"},
             expect_status=403,
         )
 
