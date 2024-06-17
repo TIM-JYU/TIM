@@ -59,6 +59,7 @@ from timApp.messaging.messagelist.messagelist_utils import (
     verify_can_create_lists,
     MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX,
     set_message_list_verification_mode,
+    clear_message_list,
 )
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -343,7 +344,11 @@ def parse_external_member(external_member_candidate: str) -> list[str] | None:
 
 @messagelist.post("/addmember")
 def add_member(
-    member_candidates: list[str], msg_list: str, send_right: bool, delivery_right: bool
+    member_candidates: list[str],
+    msg_list: str,
+    send_right: bool,
+    delivery_right: bool,
+    clear_list: bool = False,
 ) -> Response:
     """Add new members to a message list.
 
@@ -351,6 +356,7 @@ def add_member(
     :param msg_list: The message list where we are trying to add new members.
     :param send_right: The send right on a list for all the member candidates.
     :param delivery_right: The delivery right on a list for all the member candidates.
+    :param clear_list: If true, all the current members are removed from the list before adding new members.
     :return: OK response.
     """
     # Check access right.
@@ -370,6 +376,11 @@ def add_member(
         em_list = get_email_list_by_name(
             message_list.name, message_list.email_list_domain
         )
+
+    if clear_list:
+        # TODO: Allow a separate option to clear without permanent deletion
+        clear_message_list(message_list, em_list, permanent_delete=True)
+        db.session.flush()
 
     for member_candidate in member_candidates:
         # For user groups and individual users.

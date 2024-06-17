@@ -2,6 +2,7 @@ from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.accesstype import AccessType
 from timApp.folder.folder import Folder
 from timApp.messaging.messagelist.listinfo import ArchiveType, Channel
+from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.messaging.messagelist.messagelist_utils import (
     MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX,
 )
@@ -213,6 +214,67 @@ class MessageListTest(TimMessageListTest):
         self.assertEqual(message_list.name, list_name)
         self.assertEqual(message_list.archive, archive)
         self.assertIsNotNone(Folder.find_by_path(f"archives/{message_list.name}"))
+
+    def test_clear_on_add(self):
+        self.make_admin(self.test_user_1)
+        self.login_test1()
+
+        list_name = "clear_on_add_test1"
+        manage_doc, message_list = self.create_list(list_name, ArchiveType.PUBLIC)
+
+        self.json_post(
+            "/messagelist/addmember",
+            json_data={
+                "msg_list": list_name,
+                "clear_list": False,
+                "delivery_right": True,
+                "send_right": True,
+                "member_candidates": ["test1@example.com", "test2@example.com"],
+            },
+        )
+
+        message_list = MessageListModel.get_by_name(list_name)
+
+        self.assertEqual(
+            [m.get_email() for m in message_list.members],
+            ["test1@example.com", "test2@example.com"],
+        )
+
+        self.json_post(
+            "/messagelist/addmember",
+            json_data={
+                "msg_list": list_name,
+                "clear_list": False,
+                "delivery_right": True,
+                "send_right": True,
+                "member_candidates": ["test3@example.com"],
+            },
+        )
+
+        message_list = MessageListModel.get_by_name(list_name)
+
+        self.assertEqual(
+            [m.get_email() for m in message_list.members],
+            ["test1@example.com", "test2@example.com", "test3@example.com"],
+        )
+
+        self.json_post(
+            "/messagelist/addmember",
+            json_data={
+                "msg_list": list_name,
+                "clear_list": True,
+                "delivery_right": True,
+                "send_right": True,
+                "member_candidates": ["test4@example.com"],
+            },
+        )
+
+        message_list = MessageListModel.get_by_name(list_name)
+
+        self.assertEqual(
+            [m.get_email() for m in message_list.members],
+            ["test4@example.com"],
+        )
 
     def test_mailman_members(self):
         list_owner, _ = User.create_with_group(

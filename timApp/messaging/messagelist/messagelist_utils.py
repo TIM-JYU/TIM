@@ -13,7 +13,7 @@ from urllib.parse import SplitResult, parse_qs, urlsplit
 from flask import render_template_string
 from isodate import datetime_isoformat
 from mailmanclient import MailingList
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import load_only
 
 from timApp.auth.accesshelper import has_manage_access, AccessDenied
@@ -1168,7 +1168,7 @@ def set_message_list_member_removed_status(
 ) -> None:
     """Set the message list member's membership removed status.
 
-    :param member: The member who's membership status is being set.
+    :param member: The member whose membership status is being set.
     :param removed: Member's date of removal from the message list. If None, then the member is an active member on the
     list.
     :param email_list: An email list belonging to the message list. If None, the message list does not have an email
@@ -1358,3 +1358,44 @@ def sync_usergroup_messagelist_members(
                         )
     except HTTPError as e:
         log_mailman(e, "Failed to sync usergroups")
+
+
+def clear_message_list(
+    mlist: MessageListModel,
+    email_list: MailingList | None,
+    permanent_delete: bool = False,
+) -> None:
+    """
+    Remove all members from a message list.
+
+    :param mlist: List from which to remove all members.
+    :param email_list: Email list associated with the message list if there is one.
+    :param permanent_delete: If True, remove members permanently. If False, mark members as removed.
+    :return:
+    """
+
+    if permanent_delete:
+        run_sql(
+            delete(MessageListExternalMember).where(
+                MessageListExternalMember.message_list_id == mlist.id
+            )
+        )
+        run_sql(
+            delete(MessageListTimMember).where(
+                MessageListTimMember.message_list_id == mlist.id
+            )
+        )
+        run_sql(
+            delete(MessageListMember).where(
+                MessageListMember.message_list_id == mlist.id
+            )
+        )
+
+        if email_list:
+            emails = [m.address for m in email_list.members]
+            email_list.mass_unsubscribe(emails)
+    else:
+        for member in mlist.members:
+            set_message_list_member_removed_status(
+                member, get_current_time(), email_list
+            )
