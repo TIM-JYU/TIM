@@ -121,9 +121,9 @@ bash -c "${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 # JDK
-ENV JDK_VERSION=21.0.2
+ENV JDK_VERSION=22
 # Grab this path from download links of https://jdk.java.net/
-ENV OPENJDK_DL_PATH=f2283984656d49d69e91c558476027ac/13
+ENV OPENJDK_DL_PATH=830ec9fcccef480bb3e73fb7ecafe059/36
 RUN wget -q https://download.java.net/java/GA/jdk${JDK_VERSION}/${OPENJDK_DL_PATH}/GPL/openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  tar -xf openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  rm openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz
@@ -135,7 +135,7 @@ RUN java -version
 # run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
 
 # JavaFX for OpenJDK
-ENV OPENJFX_VERSION=21.0.2
+ENV OPENJFX_VERSION=22.0.1
 RUN wget -q https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip
@@ -153,7 +153,7 @@ ENV \
     # Do not generate certificate
     DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
     # Version channel from which to install dotnet
-    DOTNET_VERSION_CHANNEL=7.0 \
+    DOTNET_VERSION_CHANNEL=8.0 \
     # Enable correct mode for dotnet watch (only mode supported in a container)
     DOTNET_USE_POLLING_FILE_WATCHER=true \
     # Skip extraction of XML docs - generally not useful within an image/container - helps performance
@@ -360,10 +360,10 @@ RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
 # Install NUnit runner for .NET
-ENV NUNIT_RUNNER_VERSION=3.16.3
+ENV NUNIT_RUNNER_VERSION=3.17.0
 RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version ${NUNIT_RUNNER_VERSION} && \
     # We need to call NUnit directly with dotnet exec in order to properly declare custom references
-    ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/net6.0/any/nunit3-netcore-console.dll /dotnet_tools/nunit.console.dll
+    ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/net6.0/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
 
 # Install ffmpeg for transcoding videos
 RUN bash -c "${APT_INSTALL} ffmpeg && ${APT_CLEANUP}"
