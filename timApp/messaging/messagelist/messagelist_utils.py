@@ -1376,7 +1376,7 @@ def clear_message_list(
 
     if permanent_delete:
         member_ids_to_delete = (
-            run_sql(select(MessageListTimMember.id).filter_by(message_list_id=mlist.id))
+            run_sql(select(MessageListMember.id).filter_by(message_list_id=mlist.id))
             .scalars()
             .all()
         )
