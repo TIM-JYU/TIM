@@ -1375,19 +1375,24 @@ def clear_message_list(
     """
 
     if permanent_delete:
+        member_ids_to_delete = (
+            run_sql(select(MessageListTimMember.id).filter_by(message_list_id=mlist.id))
+            .scalars()
+            .all()
+        )
         run_sql(
             delete(MessageListExternalMember).where(
-                MessageListExternalMember.message_list_id == mlist.id
+                MessageListExternalMember.id.in_(member_ids_to_delete)
             )
         )
         run_sql(
             delete(MessageListTimMember).where(
-                MessageListTimMember.message_list_id == mlist.id
+                MessageListTimMember.id.in_(member_ids_to_delete)
             )
         )
         run_sql(
             delete(MessageListMember).where(
-                MessageListMember.message_list_id == mlist.id
+                MessageListMember.id.in_(member_ids_to_delete)
             )
         )
 
