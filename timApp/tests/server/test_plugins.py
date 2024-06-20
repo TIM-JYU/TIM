@@ -2063,28 +2063,16 @@ initword: a"""
             expect_status=400,
             expect_content="Non-existent answer",
         )
-        # not found because of wrong hint
         self.get(
             "/getState",
             query_string={
                 "user_id": self.current_user_id(),
                 "answer_id": aid,
-                "par_id": "xxx",
-            },
-            expect_status=400,
-            expect_content="Task not found in the document: t (potentially because of wrong block id hint)",
-        )
-        self.get(
-            "/getState",
-            query_string={
-                "user_id": self.current_user_id(),
-                "answer_id": aid,
-                "par_id": "xxx",
                 "ref_from_par_id": "yyy",
                 "ref_from_doc_id": d.id,
             },
             expect_status=400,
-            expect_content="Task not found in the document: t (potentially because of wrong block id hint)",
+            expect_content="Plugin paragraph not found: yyy",
         )
 
     def test_plugin_empty_markup(self):

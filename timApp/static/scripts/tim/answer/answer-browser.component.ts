@@ -711,8 +711,6 @@ export class AnswerBrowserComponent
         }
         const orig = par.originalPar;
         const parParams = {
-            doc_id: par.par.docId,
-            par_id: par.par.id,
             ref_from_doc_id: orig.docId,
             ref_from_par_id: orig.id,
         };
