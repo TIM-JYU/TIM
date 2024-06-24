@@ -45,7 +45,7 @@ import {CommonModule} from "@angular/common";
                         <div class="col-sm-offset-2 col-sm-10">
                             <div class="checkbox">
                                 <label>
-                                    <input [(ngModel)]="includeParams" [disabled]="bookmark.link" name="includeParams"
+                                    <input [(ngModel)]="includeParams" [disabled]="bookmark.link.length > 0" name="includeParams"
                                            type="checkbox">
                                     Include URL parameters in link
                                 </label>
@@ -56,7 +56,7 @@ import {CommonModule} from "@angular/common";
                         <div class="col-sm-offset-2 col-sm-10">
                             <div class="checkbox">
                                 <label>
-                                    <input [(ngModel)]="includeHash" [disabled]="bookmark.link" name="includeHash"
+                                    <input [(ngModel)]="includeHash" [disabled]="bookmark.link.length > 0" name="includeHash"
                                            type="checkbox">
                                     Include URL hash in link
                                 </label>
