@@ -1,4 +1,3 @@
-import pathlib
 import shutil
 from secrets import token_urlsafe
 
@@ -6,7 +5,6 @@ import click
 from flask.cli import AppGroup
 from sqlalchemy import select, delete
 
-import timApp.document.docentry
 from timApp.admin.fix_orphan_documents import (
     fix_orphans_without_docentry,
     move_docs_without_block,
@@ -14,7 +12,7 @@ from timApp.admin.fix_orphan_documents import (
 from timApp.admin.util import commit_if_not_dry
 from timApp.document.docentry import DocEntry
 from timApp.document.translation.translation import Translation
-from timApp.item.block import Block, BlockType, BlockAccess
+from timApp.item.block import Block, BlockType
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import PendingNotification
 from timApp.readmark.readparagraph import ReadParagraph
