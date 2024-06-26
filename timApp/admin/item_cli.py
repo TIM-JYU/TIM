@@ -1,3 +1,4 @@
+import pathlib
 import shutil
 from secrets import token_urlsafe
 
@@ -5,6 +6,7 @@ import click
 from flask.cli import AppGroup
 from sqlalchemy import select, delete
 
+import timApp.document.docentry
 from timApp.admin.fix_orphan_documents import (
     fix_orphans_without_docentry,
     move_docs_without_block,
@@ -12,7 +14,7 @@ from timApp.admin.fix_orphan_documents import (
 from timApp.admin.util import commit_if_not_dry
 from timApp.document.docentry import DocEntry
 from timApp.document.translation.translation import Translation
-from timApp.item.block import Block, BlockType
+from timApp.item.block import Block, BlockType, BlockAccess
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import PendingNotification
 from timApp.readmark.readparagraph import ReadParagraph
@@ -221,3 +223,140 @@ Second paragraph
     shutil.move(pars_dir.as_posix(), deleted_pars)
 
     click.echo("Done, basic IO seems to work!")
+
+
+@item_cli.command("delete")
+@click.option("--dry-run/--no-dry-run", default=True)
+@click.option(
+    "-i",
+    "--id",
+    "item_id",
+    type=int,
+    required=True,
+    prompt="ID of the item to delete",
+)
+def permanent_delete(item_id: int, dry_run: bool) -> None:
+    """
+    Permanently deletes the item from the database and its associated files on disk.
+    :param item_id: ID of the item to delete
+    :param dry_run: Whether to perform a dry run or not.
+    :return:
+    """
+
+    item = db.session.get(Block, item_id)
+    if not item:
+        click.echo(f"Item with ID {item_id} was not found.")
+    if item.type_id not in [BlockType.Document.value, BlockType.Folder.value]:
+        click.echo(
+            f"Permanent deletion is currently only supported for Document and Folder items."
+        )
+        return
+
+    # TODO Add keyboard confirmation prompt (ie. 'Type [Yes/No] to confirm')
+
+    # Prepare Block for deletion
+    item.description = f"deleted_{item_id}"
+    item.accesses = dict()
+
+    from timApp.user.usergroup import UserGroup
+
+    admin_ug = UserGroup.get_admin_group()
+    item.set_owner(admin_ug)
+
+    deleted = []
+    match item.type_id:
+        case BlockType.Document.value:
+            deleted = perma_del_doc(item_id)
+        case BlockType.Folder.value:
+            deleted = perma_del_folder(item_id)
+
+    if not dry_run:
+        db.session.commit()
+
+        click.echo(f"Successfully deleted files and entries for item ID {item_id}")
+        click.echo(f"Deleted files and entries:")
+        for entry in deleted:
+            click.echo(f" - {entry}")
+    else:
+        click.echo(f"*** DRY RUN Results ***")
+        click.echo(f"Performing the action with dry_run=False")
+        click.echo("will *permanently* delete the following files and entries:")
+        for entry in deleted:
+            click.echo(f" - {entry}")
+
+
+def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
+    deleted: list[str] = []
+
+    # Clear DocEntry db objects linked to this ID
+    des = DocEntry.find_all_by_id(item_id)
+    tr_ids = set()
+    for de in des:
+        # Get IDs for this document's Translations, if any, so that they can be deleted as well
+        for tr in de.translations:
+            tr_ids.add(tr.id)
+        if not dry_run:
+            db.session.delete(de)
+        deleted.append(de.name)
+    if not dry_run:
+        deleted_placeholder = DocEntry()
+        deleted_placeholder.name = f"roskis/$deleted_{item_id}"
+        deleted_placeholder.id = item_id
+        deleted_placeholder.public = False
+
+        db.session.add(deleted_placeholder)
+
+    # Clear disk files and folders related to this document
+    from pathlib import Path
+
+    pars_path = Path(f"{get_files_path()}/pars/{item_id}")
+    ver_path = Path(f"{get_files_path()}/docs/{item_id}")
+
+    if not dry_run:
+        if pars_path:
+            pars_path.unlink()
+        if ver_path:
+            ver_path.unlink()
+
+    # Create an empty Document, which reserves the original ID.
+    # As a safety measure, we want to prevent re-assigning a previously used ID.
+    from timApp.document.document import Document
+
+    if not dry_run:
+        d_reserved = Document(doc_id=item_id).create()
+        db.session.add(d_reserved)
+
+    for i in tr_ids:
+        perma_del_doc(i, dry_run=dry_run)
+
+    return deleted
+
+
+def perma_del_folder(item_id: int, dry_run: bool) -> list[str]:
+    deleted: list[str] = []
+
+    # Gather folder contents
+    from timApp.folder.folder import Folder
+    from timApp.document.docentry import get_documents
+
+    folder = Folder.find_by_id(item_id)
+    # docs: list[Document] = folder.get_all_documents() # we don't want to prematurely recurse sub-dirs
+    docs: list[DocEntry] = get_documents(
+        include_nonpublic=True, filter_folder=folder.path, search_recursively=False
+    )
+    subfolders: list[Folder] = folder.get_all_folders()
+
+    deleted.append(f"{folder.path}")
+
+    folder.name = f"$deleted_{item_id}"
+    folder.location = f"roskis"
+
+    for doc in docs:
+        deleted_docs = perma_del_doc(doc.id, dry_run=dry_run)
+        deleted.extend(deleted_docs)
+
+    for subfolder in subfolders:
+        deleted_subfolders = perma_del_folder(subfolder.id)
+        deleted.extend(deleted_subfolders)
+
+    return deleted
