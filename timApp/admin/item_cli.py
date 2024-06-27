@@ -317,8 +317,8 @@ def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
         db.session.add(deleted_placeholder)
 
     # Clear disk files and folders related to this document
-    pars_path = get_files_path() / "pars" / f"item_id"
-    ver_path = get_files_path() / "docs" / f"item_id"
+    pars_path = get_files_path() / "pars" / f"{item_id}"
+    ver_path = get_files_path() / "docs" / f"{item_id}"
 
     if not dry_run:
         # TIM documents' paragraphs and history files are stored in a directory corresponding to the document id,
