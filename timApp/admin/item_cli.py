@@ -373,7 +373,7 @@ def perma_del_folder(item_id: int, dry_run: bool) -> list[str]:
         deleted.extend(deleted_docs)
 
     for subfolder in subfolders:
-        deleted_subfolders = perma_del_folder(subfolder.id)
+        deleted_subfolders = perma_del_folder(subfolder.id, dry_run=dry_run)
         deleted.extend(deleted_subfolders)
 
     return deleted
