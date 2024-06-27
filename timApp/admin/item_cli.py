@@ -226,15 +226,14 @@ Second paragraph
 @item_cli.command("delete")
 @click.option("--dry-run/--no-dry-run", default=True)
 @click.option(
-    "-i",
-    "--id",
-    "item_id",
+    "--item-id",
     type=int,
     required=True,
     prompt="ID of the item to delete",
 )
 def permanent_delete(item_id: int, dry_run: bool) -> None:
     """
+    Delete the item with the specified id.
     Permanently deletes the item from the database and its associated files on disk.
     :param item_id: ID of the item to delete
     :param dry_run: Whether to perform a dry run or not.
@@ -264,9 +263,9 @@ def permanent_delete(item_id: int, dry_run: bool) -> None:
     deleted = []
     match item.type_id:
         case BlockType.Document.value:
-            deleted = perma_del_doc(item_id)
+            deleted = perma_del_doc(item_id, dry_run=dry_run)
         case BlockType.Folder.value:
-            deleted = perma_del_folder(item_id)
+            deleted = perma_del_folder(item_id, dry_run=dry_run)
 
     if not dry_run:
         db.session.commit()
@@ -277,7 +276,7 @@ def permanent_delete(item_id: int, dry_run: bool) -> None:
             click.echo(f" - {entry}")
     else:
         click.echo(f"*** DRY RUN Results ***")
-        click.echo(f"Performing the action with dry_run=False")
+        click.echo(f"Running the command with --no-dry-run")
         click.echo("will *permanently* delete the following files and entries:")
         for entry in deleted:
             click.echo(f" - {entry}")
@@ -287,12 +286,22 @@ def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
     deleted: list[str] = []
 
     # Clear DocEntry db objects linked to this ID
-    des = DocEntry.find_all_by_id(item_id)
+    des = list(run_sql(select(DocEntry).where(DocEntry.id == item_id)).scalars().all())
     tr_ids = set()
     for de in des:
         # Get IDs for this document's Translations, if any, so that they can be deleted as well
-        for tr in de.translations:
-            tr_ids.add(tr.id)
+        # trs = list(
+        #     run_sql(
+        #         select(Translation)
+        #         .where(Translation.src_docid == item_id)
+        #         .where(Translation.doc_id != item_id)
+        #     )
+        #     .scalars()
+        #     .all()
+        # )
+        trs = list(filter(lambda d: d.id != item_id, de.translations))
+        tr_ids.add(tr.id for tr in trs)
+
         if not dry_run:
             db.session.delete(de)
         deleted.append(de.name)
@@ -311,21 +320,31 @@ def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
     ver_path = Path(f"{get_files_path()}/docs/{item_id}")
 
     if not dry_run:
-        if pars_path:
-            pars_path.unlink()
-        if ver_path:
-            ver_path.unlink()
+        # TIM documents' paragraphs and history files are stored in a directory corresponding to the document id,
+        # so we can just remove these file system directories.
+        if pars_path.exists():
+            shutil.rmtree(pars_path)
+        if ver_path.exists():
+            shutil.rmtree(ver_path)
 
     # Create an empty Document, which reserves the original ID.
     # As a safety measure, we want to prevent re-assigning a previously used ID.
     from timApp.document.document import Document
 
-    if not dry_run:
-        d_reserved = Document(doc_id=item_id).create()
-        db.session.add(d_reserved)
+    # TODO delete entries from Translation db table as well?
+    for tr_id in list(*tr_ids):
+        deleted_trs = perma_del_doc(tr_id, dry_run=dry_run)
+        deleted.extend(deleted_trs)
 
-    for i in tr_ids:
-        perma_del_doc(i, dry_run=dry_run)
+    if not dry_run:
+        # d_reserved = Document(doc_id=item_id).create()
+        # Document.create() will create a file system directory for the Document,
+        # so we probably don't want to do this (we just removed those earlier)
+
+        # This seems unnecessary as well, since Document is not a database class,
+        # and so this basically does nothing
+        d_reserved = Document(doc_id=item_id)
+        # db.session.add(d_reserved)
 
     return deleted
 
