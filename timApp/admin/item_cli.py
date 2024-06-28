@@ -10,15 +10,18 @@ from timApp.admin.fix_orphan_documents import (
     move_docs_without_block,
 )
 from timApp.admin.util import commit_if_not_dry
-from timApp.document.docentry import DocEntry
+from timApp.document.docentry import DocEntry, get_documents
+from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
+from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
+from timApp.item.deleting import TRASH_FOLDER_PATH
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import PendingNotification
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db, run_sql
-from timApp.user.user import User
+from timApp.user.user import User, UserGroup
 from timApp.velp.velp_models import VelpGroupsInDocument
 
 item_cli = AppGroup("item")
@@ -221,3 +224,145 @@ Second paragraph
     shutil.move(pars_dir.as_posix(), deleted_pars)
 
     click.echo("Done, basic IO seems to work!")
+
+
+@item_cli.command("delete")
+@click.option("--dry-run/--no-dry-run", default=True)
+@click.option(
+    "--item-id",
+    type=int,
+    required=True,
+    prompt="ID of the item to delete",
+)
+def permanent_delete(item_id: int, dry_run: bool) -> None:
+    """
+    Delete the item with the specified id.
+    Permanently deletes the item's associated files on disk.
+    For now, the item is marked as deleted in the main database so that the ID is reserved.
+
+    :param item_id: ID of the item to delete
+    :param dry_run: Whether to perform a dry run or not.
+    """
+    item = db.session.get(Block, item_id)
+    if not item:
+        click.echo(f"Item with ID {item_id} was not found.")
+    if item.type_id not in [BlockType.Document.value, BlockType.Folder.value]:
+        click.echo(
+            f"Permanent deletion is currently only supported for Document and Folder items."
+        )
+        return
+
+    deleted = []
+    match item.type_id:
+        case BlockType.Document.value:
+            deleted = perma_del_doc(item_id, dry_run=dry_run)
+        case BlockType.Folder.value:
+            deleted = perma_del_folder(item_id, dry_run=dry_run)
+
+    if not dry_run:
+        db.session.commit()
+
+        click.echo(f"Successfully deleted files and entries for item ID {item_id}")
+        click.echo(f"Deleted files and entries:")
+        for entry in deleted:
+            click.echo(f" - {entry}")
+    else:
+        click.echo(f"*** DRY RUN Results ***")
+        click.echo(f"Running the command with --no-dry-run")
+        click.echo("will *permanently* delete the following files and entries:")
+        for entry in deleted:
+            click.echo(f" - {entry}")
+
+
+def clear_block_name_and_accesses(item_id: int) -> None:
+    item = db.session.get(Block, item_id)
+    item.description = f"$deleted_{item_id}"
+    item.accesses.clear()
+
+    admin_ug = UserGroup.get_admin_group()
+    item.set_owner(admin_ug)
+
+
+def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
+    deleted: list[str] = []
+
+    deleted_path = f"{TRASH_FOLDER_PATH}/$deleted_{item_id}"
+    des: list[DocEntry] = list(
+        run_sql(select(DocEntry).where(DocEntry.id == item_id)).scalars().all()
+    )
+
+    if all(d.name == deleted_path for d in des):
+        # Document and its aliases are already deleted, don't do anything
+        return []
+
+    if not dry_run:
+        # Prepare Block for deletion
+        clear_block_name_and_accesses(item_id)
+
+    # Clear DocEntry db objects linked to this ID
+    tr_ids = set()
+    for de in des:
+        trs = list(filter(lambda d: d.id != item_id, de.translations))
+        tr_ids.add(tr.id for tr in trs)
+
+        if not dry_run:
+            db.session.delete(de)
+        deleted.append(de.name)
+    if not dry_run:
+        deleted_placeholder = DocEntry()
+        deleted_placeholder.name = deleted_path
+        deleted_placeholder.id = item_id
+        deleted_placeholder.public = False
+
+        db.session.add(deleted_placeholder)
+
+    # Clear disk files and folders related to this document
+    pars_path = get_files_path() / "pars" / f"{item_id}"
+    ver_path = get_files_path() / "docs" / f"{item_id}"
+
+    if not dry_run:
+        # TIM documents' paragraphs and history files are stored in a directory corresponding to the document id,
+        # so we can just remove these file system directories.
+        if pars_path.exists():
+            shutil.rmtree(pars_path)
+        if ver_path.exists():
+            shutil.rmtree(ver_path)
+
+    # TODO: delete entries from Translation db table as well?
+    for tr_id in list(*tr_ids):
+        deleted_trs = perma_del_doc(tr_id, dry_run=dry_run)
+        deleted.extend(deleted_trs)
+
+    return deleted
+
+
+def perma_del_folder(item_id: int, dry_run: bool) -> list[str]:
+    deleted: list[str] = []
+
+    deleted_name = f"$deleted_{item_id}"
+    folder = Folder.find_by_id(item_id)
+    if folder.location == TRASH_FOLDER_PATH and folder.name == deleted_name:
+        # Already deleted, don't even recurse in since we know the contents are also deleted
+        return []
+
+    if not dry_run:
+        # Ensure subfolders' name and rights are also cleared
+        clear_block_name_and_accesses(item_id)
+
+    docs: list[DocEntry] = folder.get_all_documents()
+    subfolders: list[Folder] = folder.get_all_folders()
+
+    deleted.append(f"{folder.path}")
+
+    folder.name = deleted_name
+    folder.location = TRASH_FOLDER_PATH
+
+    for doc in docs:
+        deleted_docs = perma_del_doc(doc.id, dry_run=dry_run)
+        deleted.extend(deleted_docs)
+
+    for subfolder in subfolders:
+        deleted_subfolders = perma_del_folder(subfolder.id, dry_run=dry_run)
+        deleted.extend(deleted_subfolders)
+
+    return deleted
