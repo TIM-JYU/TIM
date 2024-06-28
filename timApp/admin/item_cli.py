@@ -237,10 +237,11 @@ Second paragraph
 def permanent_delete(item_id: int, dry_run: bool) -> None:
     """
     Delete the item with the specified id.
-    Permanently deletes the item from the database and its associated files on disk.
+    Permanently deletes the item's associated files on disk.
+    For now, the item is marked as deleted in the main database so that the ID is reserved.
+
     :param item_id: ID of the item to delete
     :param dry_run: Whether to perform a dry run or not.
-    :return:
     """
     item = db.session.get(Block, item_id)
     if not item:
@@ -275,8 +276,8 @@ def permanent_delete(item_id: int, dry_run: bool) -> None:
 
 def clear_block_name_and_accesses(item_id: int) -> None:
     item = db.session.get(Block, item_id)
-    item.description = f"deleted_{item_id}"
-    item.accesses = dict()
+    item.description = f"$deleted_{item_id}"
+    item.accesses.clear()
 
     admin_ug = UserGroup.get_admin_group()
     item.set_owner(admin_ug)
@@ -285,23 +286,22 @@ def clear_block_name_and_accesses(item_id: int) -> None:
 def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
     deleted: list[str] = []
 
-    # Prepare Block for deletion
-    clear_block_name_and_accesses(item_id)
+    deleted_path = f"{TRASH_FOLDER_PATH}/$deleted_{item_id}"
+    des: list[DocEntry] = list(
+        run_sql(select(DocEntry).where(DocEntry.id == item_id)).scalars().all()
+    )
+
+    if all(d.name == deleted_path for d in des):
+        # Document and its aliases are already deleted, don't do anything
+        return []
+
+    if not dry_run:
+        # Prepare Block for deletion
+        clear_block_name_and_accesses(item_id)
 
     # Clear DocEntry db objects linked to this ID
-    des = list(run_sql(select(DocEntry).where(DocEntry.id == item_id)).scalars().all())
     tr_ids = set()
     for de in des:
-        # Get IDs for this document's Translations, if any, so that they can be deleted as well
-        # trs = list(
-        #     run_sql(
-        #         select(Translation)
-        #         .where(Translation.src_docid == item_id)
-        #         .where(Translation.doc_id != item_id)
-        #     )
-        #     .scalars()
-        #     .all()
-        # )
         trs = list(filter(lambda d: d.id != item_id, de.translations))
         tr_ids.add(tr.id for tr in trs)
 
@@ -310,7 +310,7 @@ def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
         deleted.append(de.name)
     if not dry_run:
         deleted_placeholder = DocEntry()
-        deleted_placeholder.name = f"{TRASH_FOLDER_PATH}/$deleted_{item_id}"
+        deleted_placeholder.name = deleted_path
         deleted_placeholder.id = item_id
         deleted_placeholder.public = False
 
@@ -328,23 +328,10 @@ def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
         if ver_path.exists():
             shutil.rmtree(ver_path)
 
-    # TODO delete entries from Translation db table as well?
+    # TODO: delete entries from Translation db table as well?
     for tr_id in list(*tr_ids):
         deleted_trs = perma_del_doc(tr_id, dry_run=dry_run)
         deleted.extend(deleted_trs)
-
-    # if not dry_run:
-    # Create an empty Document, which reserves the original ID.
-    # As a safety measure, we want to prevent re-assigning a previously used ID.
-
-    # d_reserved = Document(doc_id=item_id).create()
-    # Document.create() will create a file system directory for the Document,
-    # so we probably don't want to do this (we just removed those earlier)
-
-    # This seems unnecessary as well, since Document is not a database class,
-    # and so this basically does nothing
-    # d_reserved = Document(doc_id=item_id)
-    # db.session.add(d_reserved)
 
     return deleted
 
@@ -352,21 +339,23 @@ def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
 def perma_del_folder(item_id: int, dry_run: bool) -> list[str]:
     deleted: list[str] = []
 
-    # Ensure subfolders' name and rights are also cleared
-    clear_block_name_and_accesses(item_id)
-
-    # Gather folder contents
+    deleted_name = f"$deleted_{item_id}"
     folder = Folder.find_by_id(item_id)
-    # docs: list[Document] = folder.get_all_documents() # we don't want to prematurely recurse sub-dirs
-    docs: list[DocEntry] = get_documents(
-        include_nonpublic=True, filter_folder=folder.path, search_recursively=False
-    )
+    if folder.location == TRASH_FOLDER_PATH and folder.name == deleted_name:
+        # Already deleted, don't even recurse in since we know the contents are also deleted
+        return []
+
+    if not dry_run:
+        # Ensure subfolders' name and rights are also cleared
+        clear_block_name_and_accesses(item_id)
+
+    docs: list[DocEntry] = folder.get_all_documents()
     subfolders: list[Folder] = folder.get_all_folders()
 
     deleted.append(f"{folder.path}")
 
-    folder.name = f"$deleted_{item_id}"
-    folder.location = f"{TRASH_FOLDER_PATH}"
+    folder.name = deleted_name
+    folder.location = TRASH_FOLDER_PATH
 
     for doc in docs:
         deleted_docs = perma_del_doc(doc.id, dry_run=dry_run)
