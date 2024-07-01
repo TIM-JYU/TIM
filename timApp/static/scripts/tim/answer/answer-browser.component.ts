@@ -239,6 +239,8 @@ export class AnswerBrowserComponent
 
     loading: number; // Answerbrowser is fetching data
     updating = false; // Plugin html is reloading
+    loadingAnswer = false; // changing user and html
+    loadingUser: IUser | undefined;
     viewctrl!: Require<ViewCtrl>;
     user: IUser | undefined;
     private fetchedUser: IUser | undefined;
@@ -752,7 +754,12 @@ export class AnswerBrowserComponent
         ) {
             this.loading++;
             const r = await to(
-                $http.get<{html: string; reviewHtml: string}>("/getState", {
+                $http.get<{
+                    html: string;
+                    reviewHtml: string;
+                    userId: number;
+                    answerId?: number;
+                }>("/getState", {
                     params: {
                         ...preParams,
                         ...taskOrAnswer,
@@ -763,6 +770,32 @@ export class AnswerBrowserComponent
             this.loading--;
             if (!r.ok) {
                 this.showError(r.result);
+                return;
+            }
+            console.log(
+                "this.user",
+                this.user.id,
+                this.user.name,
+                r.result.data.userId == this.user.id,
+                "this.fetcheduser",
+                this.fetchedUser?.id,
+                this.fetchedUser?.name,
+                "getstate.id",
+                r.result.data.userId,
+                r.result.data.userId == this.fetchedUser?.id,
+                "this.selans.id",
+                this.selectedAnswer?.id,
+                "getstate ansid",
+                r.result.data.answerId,
+                this.selectedAnswer?.id == r.result.data.answerId
+            );
+            if (
+                (this.selectedAnswer &&
+                    r.result.data.answerId != this.selectedAnswer.id) ||
+                (this.fetchedUser &&
+                    r.result.data.userId != this.fetchedUser.id) ||
+                (this.user && this.user.id != r.result.data.userId)
+            ) {
                 return;
             }
 
@@ -1029,8 +1062,12 @@ export class AnswerBrowserComponent
             return;
         }
         this.user = this.users[newIndex];
+        this.loadingUser = this.user;
         this.tryChangeDocumentSelectedUser();
         await this.getAnswersAndUpdate();
+        if (this.fetchedUser?.id == this.loadingUser.id) {
+            this.loadingUser = undefined;
+        }
 
         if (shouldRefocusPoints) {
             this.shouldFocus = shouldRefocusPoints;
@@ -1543,7 +1580,7 @@ export class AnswerBrowserComponent
         this.loading++;
 
         const r = await to(
-            $http.get<IAnswer[]>(
+            $http.get<{answers: IAnswer[]; userId: number}>(
                 `/getAnswers/${this.taskId.docTask().toString()}/${user.id}`,
                 {
                     params: {
@@ -1569,9 +1606,13 @@ export class AnswerBrowserComponent
             return undefined;
         }
         this.clearError("getAnswers");
+        const userAfter = this.getUserOrCurrentUserForAnswers();
+        if (userAfter && userAfter.id != r.result.data.userId) {
+            return undefined;
+        }
         this.fetchedUser = user;
         this.isAndSetShowNewTask();
-        return r.result.data;
+        return r.result.data.answers;
     }
 
     getPluginHtmlAnswerId() {

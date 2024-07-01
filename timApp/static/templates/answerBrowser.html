@@ -315,4 +315,7 @@
             <div #feedbackDiv [innerHTML]="feedback | purify"></div>
         </tim-alert>
     </div>
+    <div *ngIf="loadingUser">
+        LOADING DATA....
+    </div>
 </div>

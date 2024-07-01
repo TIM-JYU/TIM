@@ -1862,7 +1862,7 @@ def get_answers(task_id: str, user_id: int) -> Response:
     rights = get_user_rights_for_item(d, curr_user)
     if has_no_higher_right(d.document.get_settings().anonymize_reviewers(), rights):
         user_answers = list(map(hide_points_modifier, user_answers))
-    return json_response(user_answers)
+    return json_response({"answers": user_answers, "userId": user_id})
 
 
 @answers.get("/allDocumentAnswersPlain/<path:doc_path>", model=AllAnswersOptions)
@@ -2195,9 +2195,18 @@ def get_state(
         )
         rplug = presult2.custom_answer_plugin
         rhtml = rplug.get_final_output()
-        return json_response({"html": html, "reviewHtml": rhtml})
+        return json_response(
+            {
+                "html": html,
+                "reviewHtml": rhtml,
+                "userId": user_id,
+                "answerId": answer_id,
+            }
+        )
     else:
-        return json_response({"html": html, "reviewHtml": None})
+        return json_response(
+            {"html": html, "reviewHtml": None, "userId": user_id, "answerId": answer_id}
+        )
 
 
 @answers.get("/getTaskUsers/<task_id>")
