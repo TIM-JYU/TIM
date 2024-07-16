@@ -152,6 +152,12 @@ export function getVisibilityVars() {
     if (params.get("pars_only")) {
         hideParsOnlyStuff(hide);
     }
+
+    // Don't show Search UI if user is not logged in.
+    if (!Users.isLoggedIn()) {
+        hide.search = true;
+    }
+
     return hide;
 }
 
