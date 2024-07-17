@@ -308,6 +308,7 @@ def do_soft_delete(u: User) -> None:
     if u.is_deleted:
         raise RouteException("User is already soft-deleted.")
 
+    u.pass_ = None
     u.update_info(
         UserInfo(
             username=f"{u.name}{deleted_user_suffix}_{u.id}",
