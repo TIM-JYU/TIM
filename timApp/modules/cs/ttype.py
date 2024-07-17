@@ -3,17 +3,16 @@ from re import compile
 from file_handler import File
 from languages import LanguageError
 from manager import make_language, make_modifier
+from tim_common.utils import split_ttype
 
 
 class TType:
-    type_splitter = compile("[^+a-z0-9]")
-
     def __init__(self, ttype_str, query, sourcefiles=None):
         if sourcefiles is None:
             sourcefiles = [File.default(query)]
         self.success = True
         self.modifiers = []
-        self.parts = TType.split(ttype_str)
+        self.parts = split_ttype(ttype_str)
         if not self.parts:
             self.language = LanguageError(
                 query, "", f"Invalid ttype (probably empty): {ttype_str}"
@@ -86,8 +85,3 @@ class TType:
 
     def __str__(self):
         return "/".join(self.parts)
-
-    @staticmethod
-    def split(ttype):
-        """Returns a list of the parts of ttype"""
-        return list(filter(None, TType.type_splitter.split(ttype.lower())))

@@ -72,6 +72,7 @@ from tim_common.fileParams import (
     QueryClass,
     replace_program_tokens,
 )
+from tim_common.utils import split_ttype
 from ttype import TType
 
 #  uid = pwd.getpwnam('agent')[2]
@@ -1362,7 +1363,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         try:
             update_markup_from_file(query)
             # Get the template type
-            ttype = TType.split(get_json_param(query.jso, "markup", "type", "cs"))
+            ttype = split_ttype(get_json_param(query.jso, "markup", "type", "cs"))
             is_iframe = is_iframe or "js" in ttype
 
             if is_tauno and not is_answer:

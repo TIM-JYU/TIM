@@ -1,6 +1,7 @@
 import sys
 from dataclasses import field
 from typing import Any, Mapping, overload
+from re import compile
 
 import marshmallow
 from isodate import Duration, duration_isoformat, parse_duration
@@ -123,3 +124,9 @@ class DurationField(marshmallow.fields.Field):
 
 class DurationSchema(marshmallow.Schema):
     TYPE_MAPPING = {Duration: DurationField}
+
+
+def split_ttype(ttype):
+    """Returns a list of the parts of ttype"""
+    type_splitter = compile("[^+a-z0-9]")
+    return list(filter(None, type_splitter.split(ttype.lower())))
