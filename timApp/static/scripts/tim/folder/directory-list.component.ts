@@ -2,7 +2,7 @@ import {Component} from "@angular/core";
 import type {DocumentOrFolder, IFolder, IItem} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {folderglobals} from "tim/util/globals";
-import {to, toPromise} from "tim/util/utils";
+import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
@@ -151,7 +151,9 @@ export class DirectoryListComponent {
             // personal groups from actual groups
             // return AccessLevelBadge.PUBLIC;
             return AccessLevelBadge.NO_BADGE;
-        } else return AccessLevelBadge.PRIVATE;
+        } else {
+            return AccessLevelBadge.PRIVATE;
+        }
     }
 
     getItemBadge(index: number) {
