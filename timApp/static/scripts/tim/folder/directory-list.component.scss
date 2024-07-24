@@ -2,24 +2,30 @@
   margin-left: 0.5em;
 }
 
-.accessbadge-public {
-    border: solid 2px green;
+.accessbadge {
     border-radius: 15px;
     padding: 3px;
-    color: green;
     font-size: x-small;
 }
-.accessbadge-private {
+.ab-public {
+    border: solid 2px red;
+    color: red;
+}
+.ab-logged-in {
+    border: solid 2px darkorange;
+    color: darkorange;
+}
+.ab-organization {
+    border: solid 2px fuchsia;
+    color: fuchsia;
+}
+.ab-limited {
+    border: solid 2px navy;
+    color: navy;
+}
+.ab-private {
     border: solid 2px darkgray;
-    border-radius: 15px;
-    padding: 3px;
     color: darkgray;
-    font-size: x-small;
 }
-.accessbadge-group {
-    border: solid 2px darkblue;
-    border-radius: 15px;
-    padding: 3px;
-    color: darkblue;
-    font-size: x-small;
-}
+
+

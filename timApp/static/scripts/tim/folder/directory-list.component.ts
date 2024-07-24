@@ -4,6 +4,7 @@ import {Users} from "tim/user/userService";
 import {folderglobals} from "tim/util/globals";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
+import {AccessType} from "tim/item/access-role.service";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
@@ -11,9 +12,30 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
 enum AccessLevelBadge {
     NO_BADGE = -1,
     PUBLIC = 0,
-    GROUP = 1,
-    PRIVATE = 2,
+    LOGGED_IN = 1,
+    ORGANIZATION = 2, // Haka organizations
+    LIMITED = 3, // custom groups, users, etc.
+    PRIVATE = 4, // only owner(s)
 }
+
+const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
+    [AccessLevelBadge.NO_BADGE]: "",
+    [AccessLevelBadge.PUBLIC]:
+        "Item is visible publicly (ie. to everyone), including anonymous users.",
+    [AccessLevelBadge.LOGGED_IN]: "Item is visible to logged-in users.",
+    [AccessLevelBadge.ORGANIZATION]:
+        "Item is visible to groups belonging to a Haka organization.",
+    [AccessLevelBadge.LIMITED]:
+        "Item is visible only to specific users, check the Manage-page for details.",
+    [AccessLevelBadge.PRIVATE]: "Item is visible only to its owners.",
+
+    // TODO: Turn on localize when working
+    // [AccessLevelBadge.PUBLIC]: $localize`"Item is visible publicly (ie. to everyone), including anonymous users.`,
+    // [AccessLevelBadge.LOGGED_IN]: $localize`"Item is visible to logged-in users.`,
+    // [AccessLevelBadge.ORGANIZATION]: $localize`"Item is visible to groups belonging to a Haka organization.`,
+    // [AccessLevelBadge.LIMITED]: $localize`"Item is visible only to specific users, check the Manage-page for details.`,
+    // [AccessLevelBadge.PRIVATE]: $localize`"Item is visible only to its owners.`,
+};
 
 @Component({
     selector: "tim-index",
@@ -52,16 +74,10 @@ enum AccessLevelBadge {
                 </td>
                 <td>
                     <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
-                    <ng-container [ngSwitch]="getItemBadge(i)">  
-                        <a *ngSwitchCase="AccessLevelBadge.PUBLIC">
-                            <!-- <i *ngIf="item.unpublished" class="glyphicon glyphicon-lock" title="Unpublished item"></i> -->
-                            <i class="accessbadge-public" title="Item is visible to public groups (anonymous users, logged-in users or jyu.fi users.">Public</i>
-                        </a>
-                        <a *ngSwitchCase="AccessLevelBadge.PRIVATE">
-                            <i class="accessbadge-private" title="Private item">Private</i>
-                        </a>
-                        <a *ngSwitchDefault></a>
-                    </ng-container>
+                    <a><i class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
+                          title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</i>
+                    </a>
+                    
                 </td>
                 <td></td>
                 <td>{{ item.modified }}</td>
@@ -103,7 +119,7 @@ enum AccessLevelBadge {
 })
 export class DirectoryListComponent {
     itemList: DocumentOrFolder[];
-    itemBadges: AccessLevelBadge[];
+    itemBadges: Record<number, AccessLevelBadge>;
     item: IFolder;
     canCreate: boolean;
     showId = false;
@@ -113,6 +129,7 @@ export class DirectoryListComponent {
         this.itemList = fg.items;
         this.item = fg.curr_item;
         this.canCreate = Users.isRealUser();
+        this.itemBadges = {};
 
         // TODO: Allow to sort all columns instead
         if (
@@ -121,44 +138,99 @@ export class DirectoryListComponent {
         ) {
             this.itemList = this.itemList.sort((a, b) => b.id - a.id);
         }
-        this.itemBadges = [this.itemList.length];
-        for (let i = 0; i < this.itemList.length; i++) {
-            this.getAccessLevelBadge(this.itemList[i]).then(
-                (value) => (this.itemBadges[i] = value)
-            );
-        }
+
+        // this.item is the current directory folder
+        this.getAccessLevelBadges(this.item).then((value) => {
+            this.itemBadges = value ?? {};
+        });
     }
 
     listOwnerNames(i: IItem) {
         return i.owners.map((o) => o.name).join(", ");
     }
 
-    async getAccessLevelBadge(i: IItem): Promise<AccessLevelBadge> {
-        const res = await to($http.get<number[]>(`/items/accesses/${i.id}`));
-        let ugids: number[] = [];
+    async getAccessLevelBadges(
+        parentFolder: IItem
+    ): Promise<Record<number, AccessLevelBadge>> {
+        const res = await to(
+            $http.get<Record<number, number[]>>(
+                `/items/accesses_all/${parentFolder.id}`
+            )
+        );
+        let item_accesses: Record<number, number[]>;
+        let badges: Record<number, AccessLevelBadge> = {};
         if (res.ok) {
-            ugids = res.result.data;
+            item_accesses = res.result.data;
+
+            let hakaOrgIds: number[] = [];
+            this.getHakaOrgIds().then((value) => (hakaOrgIds = value));
+            // TODO: clear scheme for badges, ie.
+            //  - what badges are needed
+
+            for (const item_id in item_accesses) {
+                // Logged-in users = 0, Anon users = 1, jyu.fi users = 5
+                const ids = item_accesses[item_id];
+
+                if (ids.includes(1)) {
+                    badges[item_id] = AccessLevelBadge.PUBLIC;
+                } else if (ids.includes(0)) {
+                    badges[item_id] = AccessLevelBadge.LOGGED_IN;
+                } else if (this.hasSomeHakaOrgAccess(ids, hakaOrgIds)) {
+                    badges[item_id] = AccessLevelBadge.ORGANIZATION;
+                } else if (this.hasOtherThanOwnerRights(item_id, ids)) {
+                    // for more info we would have to do db queries, so perhaps just use
+                    // a label like 'Limited' or 'Restricted'
+                    badges[item_id] = AccessLevelBadge.LIMITED;
+                } else {
+                    // Only owners
+                    badges[item_id] = AccessLevelBadge.PRIVATE;
+                }
+            }
+
+            return badges;
         }
 
-        // TODO: clear scheme for badges, ie.
-        //  - what badges are needed
-        //  - how do badges map to different access combinations
-        // Logged-in users = 0, Anon users = 1, jyu.fi users = 5
-        if (ugids.includes(0) || ugids.includes(1) || ugids.includes(5)) {
-            return AccessLevelBadge.PUBLIC;
-        } else if (ugids.length > 1 && i.owners.length != ugids.length) {
-            // we currently don't use the 'Group' badge, since we would have to do db queries to distinguish
-            // personal groups from actual groups
-            // return AccessLevelBadge.PUBLIC;
-            return AccessLevelBadge.NO_BADGE;
-        } else {
-            return AccessLevelBadge.PRIVATE;
-        }
+        return {};
     }
 
-    getItemBadge(index: number) {
-        return this.itemBadges[index];
+    getItemBadge(itemId: number) {
+        return this.itemBadges[itemId];
+    }
+
+    getItemBadgeName(itemId: number) {
+        let name = AccessLevelBadge[this.itemBadges[itemId]];
+        return (name[0] + name.substring(1, name.length).toLowerCase()).replace(
+            "_",
+            "-"
+        );
+    }
+
+    async getHakaOrgIds() {
+        const res = await to($http.get<number[]>(`/groups/getOrgs/ids`));
+        if (res.ok) {
+            return res.result.data;
+        }
+        return [];
+    }
+
+    hasSomeHakaOrgAccess(groupIds: number[], hakaGroupIds: number[]) {
+        // the latter condition is for testing (dev doesn't populate the haka org tables) and should be removed for production
+        return (
+            groupIds.some((id) => hakaGroupIds.includes(id)) ||
+            groupIds.includes(5)
+        );
+    }
+
+    hasOtherThanOwnerRights(itemId: string, groupIds: number[]) {
+        const item_id = parseInt(itemId);
+        const items = this.itemList.filter((item) => item.id == item_id);
+        if (items.length != 1) return false; // if we got multiple items with the same id, something is wrong
+
+        const ownerIds: number[] = items[0].owners.map((group) => group.id);
+        const otherIds = groupIds.filter((id) => !ownerIds.includes(id));
+        return otherIds.length > 0;
     }
 
     protected readonly AccessLevelBadge = AccessLevelBadge;
+    protected readonly AccessLevelBadgeInfo = AccessLevelBadgeInfo;
 }
