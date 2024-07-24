@@ -4,7 +4,6 @@ import {Users} from "tim/user/userService";
 import {folderglobals} from "tim/util/globals";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
-import {AccessType} from "tim/item/access-role.service";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
@@ -158,7 +157,7 @@ export class DirectoryListComponent {
             )
         );
         let item_accesses: Record<number, number[]>;
-        let badges: Record<number, AccessLevelBadge> = {};
+        const badges: Record<number, AccessLevelBadge> = {};
         if (res.ok) {
             item_accesses = res.result.data;
 
@@ -168,28 +167,30 @@ export class DirectoryListComponent {
             //  - what badges are needed
 
             for (const item_id in item_accesses) {
-                // Logged-in users = 0, Anon users = 1, jyu.fi users = 5
-                const ids = item_accesses[item_id];
+                if (
+                    Object.prototype.hasOwnProperty.call(item_accesses, item_id)
+                ) {
+                    // Logged-in users = 0, Anon users = 1, jyu.fi users = 5
+                    const ids = item_accesses[item_id];
 
-                if (ids.includes(1)) {
-                    badges[item_id] = AccessLevelBadge.PUBLIC;
-                } else if (ids.includes(0)) {
-                    badges[item_id] = AccessLevelBadge.LOGGED_IN;
-                } else if (this.hasSomeHakaOrgAccess(ids, hakaOrgIds)) {
-                    badges[item_id] = AccessLevelBadge.ORGANIZATION;
-                } else if (this.hasOtherThanOwnerRights(item_id, ids)) {
-                    // for more info we would have to do db queries, so perhaps just use
-                    // a label like 'Limited' or 'Restricted'
-                    badges[item_id] = AccessLevelBadge.LIMITED;
-                } else {
-                    // Only owners
-                    badges[item_id] = AccessLevelBadge.PRIVATE;
+                    if (ids.includes(1)) {
+                        badges[item_id] = AccessLevelBadge.PUBLIC;
+                    } else if (ids.includes(0)) {
+                        badges[item_id] = AccessLevelBadge.LOGGED_IN;
+                    } else if (this.hasSomeHakaOrgAccess(ids, hakaOrgIds)) {
+                        badges[item_id] = AccessLevelBadge.ORGANIZATION;
+                    } else if (this.hasOtherThanOwnerRights(item_id, ids)) {
+                        // for more info we would have to do db queries, so perhaps just use
+                        // a label like 'Limited' or 'Restricted'
+                        badges[item_id] = AccessLevelBadge.LIMITED;
+                    } else {
+                        // Only owners
+                        badges[item_id] = AccessLevelBadge.PRIVATE;
+                    }
                 }
             }
-
             return badges;
         }
-
         return {};
     }
 
@@ -198,11 +199,13 @@ export class DirectoryListComponent {
     }
 
     getItemBadgeName(itemId: number) {
-        let name = AccessLevelBadge[this.itemBadges[itemId]];
-        return (name[0] + name.substring(1, name.length).toLowerCase()).replace(
-            "_",
-            "-"
-        );
+        const name = AccessLevelBadge[this.itemBadges[itemId]];
+        if (name) {
+            return (
+                name[0] + name.substring(1, name.length).toLowerCase()
+            ).replace("_", "-");
+        }
+        return "";
     }
 
     async getHakaOrgIds() {
@@ -214,17 +217,15 @@ export class DirectoryListComponent {
     }
 
     hasSomeHakaOrgAccess(groupIds: number[], hakaGroupIds: number[]) {
-        // the latter condition is for testing (dev doesn't populate the haka org tables) and should be removed for production
-        return (
-            groupIds.some((id) => hakaGroupIds.includes(id)) ||
-            groupIds.includes(5)
-        );
+        return groupIds.some((id) => hakaGroupIds.includes(id));
     }
 
     hasOtherThanOwnerRights(itemId: string, groupIds: number[]) {
-        const item_id = parseInt(itemId);
+        const item_id = parseInt(itemId, 10);
         const items = this.itemList.filter((item) => item.id == item_id);
-        if (items.length != 1) return false; // if we got multiple items with the same id, something is wrong
+        if (items.length != 1) {
+            return false; // if we got multiple items with the same id, something is wrong
+        }
 
         const ownerIds: number[] = items[0].owners.map((group) => group.id);
         const otherIds = groupIds.filter((id) => !ownerIds.includes(id));
