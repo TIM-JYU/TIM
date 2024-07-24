@@ -43,6 +43,9 @@ class IdeFile:
     byCode: str | None = None
     """ Code of the file when plugin has multiple files """
 
+    program: str | None = None
+    """ Code, when the task is meant to be fully editable """
+
     filename: str | None = None
     """ Name of the file """
 
@@ -53,10 +56,11 @@ class IdeFile:
     """ User arguments for the file """
 
     # Convert to json and set code based on 'by' or 'byCode'
+    # TODO! Bycoden sijaan halutaan opiskelijalle näyttää koko ohjelman sisältö.
     def to_json(self) -> dict[str, str | None]:
         return {
             "task_id_ext": self.taskIDExt,
-            "content": self.by or self.byCode,
+            "content": combine_code_blocks(self.program, self.by, self.byCode, self.filename),
             "file_name": self.filename,
             "user_input": self.userinput,
             "user_args": self.userargs or "",
@@ -226,6 +230,85 @@ class TIDECourse:
     """
     Paths to the tasks
     """
+
+
+def combine_code_blocks(program: str | None, by: str | None,
+                        by_code: str | None, filename: str | None) -> str:
+    """
+    Combine the code blocks.
+
+    :param program: Code block
+    :param by: Code block
+    :param by_code: Code block
+    :return: Combined code blocks
+    """
+    if program is None and by is None and by_code is None:
+        raise RouteException("No code found in the plugin")
+
+    if by is None and by_code is None:
+        return program
+
+    # Find the comment line syntax based on the file extension and create messages.
+    comment_line_syntax = find_comment_line_syntax(filename.split(".")[-1])
+    user_code_begins_message = comment_line_syntax + \
+        " --- Write your code below this line. ---"
+    user_code_ends_message = comment_line_syntax + \
+        " --- Write your code above this line. ---"
+
+    # If the program is not meant to be fully editable, add the messages to the code.
+    if program != "REPLACEBYCODE":
+        annotated_block = user_code_begins_message + "\n" + \
+            "REPLACEBYCODE" + "\n" + user_code_ends_message
+        program = program.replace("REPLACEBYCODE", annotated_block)
+
+    combined_code = ""
+
+    if by is not None:
+        combined_code = program.replace("REPLACEBYCODE", by)
+
+    if by_code is not None:
+        combined_code = program.replace("REPLACEBYCODE", by_code)
+
+    return combined_code
+
+
+def find_comment_line_syntax(file_extension: str) -> str:
+    """
+    Find the comment line syntax based on the type.
+
+    :param type: Type of the file
+    :return: Comment line syntax
+    """
+    comment_syntax_lookup = {
+        "cpp": "//",
+        "c": "//",
+        "cs": "//",
+        "java": "//",
+        "py": "#",
+        "js": "//",
+        "html": "<!--",
+    }
+
+    return comment_syntax_lookup.get(file_extension, "//")
+
+
+def ensure_filename(ide_file: IdeFile, task_info: TIDETaskInfo) -> IdeFile:
+    """
+    Ensure that the filename is set for the ide_file.
+
+    :param ide_file: IdeFile
+    :param task_info: TIDETaskInfo
+    :return: IdeFile
+    """
+
+    filename = "main"
+    programming_languages = ["c", "cpp", "cs", "java", "py", "js", "html"]
+    for lang in programming_languages:
+        if lang in task_info.type:
+            filename = "main." + lang
+            break
+
+    return filename
 
 
 def get_user_ide_courses(user: User) -> list[TIDECourse]:
@@ -521,7 +604,7 @@ def get_ide_user_plugin_data(
         ide_file = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
 
         # if the plugin has no code, look from markup
-        if ide_file.by is None and ide_file.byCode is None:
+        if ide_file.by is None and ide_file.byCode is None and ide_file.program is None:
             ide_file = IdeFileSchema.load(plugin_json["markup"], unknown=EXCLUDE)
             if ide_file.taskIDExt is None:
                 if plugin_json.get("taskIDExt"):
@@ -530,21 +613,16 @@ def get_ide_user_plugin_data(
                     return None
 
         # If the plugin still has no code, return error
-        if ide_file.by is None and ide_file.byCode is None:
+        if ide_file.by is None and ide_file.byCode is None and ide_file.program is None:
             raise RouteException("No code found in the plugin")
 
         # if the ide_file has no filename, try to look it from the markup
         if ide_file.filename is None:
             ide_file.filename = plugin_json["markup"].get("filename")
 
-        # Give the file main.<type> name if the file has no filename and the type is not None
+        # If the ide_file still has no filename, set it to main.<type>
         if ide_file.filename is None and task_info.type is not None:
-            if "c++" in task_info.type:
-                ide_file.filename = "main.cpp"
-            elif "cc" in task_info.type:
-                ide_file.filename = "main.c"
-            else:
-                ide_file.filename = "main." + task_info.type
+            ide_file.filename = ensure_filename(ide_file, task_info)
 
         json_ide_files = [ide_file.to_json()]
 
