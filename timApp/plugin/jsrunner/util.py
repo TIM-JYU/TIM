@@ -649,8 +649,8 @@ def _handle_send_sisu_assessments(
             if ug and verify_group_access(
                 ug, view_access_set, u=curr_user, require=False
             ):
-                for u in ug.members:
-                    send_emails.add(u.email)
+                for usr in ug.members:
+                    send_emails.add(usr.email)
         if is_valid_email(email):
             send_emails.add(email)
 
