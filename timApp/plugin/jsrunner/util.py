@@ -39,8 +39,18 @@ from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, run_sql
 from timApp.upload.uploadedfile import UploadedFile
-from timApp.user.groups import do_create_group, verify_group_edit_access
-from timApp.user.user import User, UserInfo, UserOrigin
+from timApp.user.groups import (
+    do_create_group,
+    verify_group_edit_access,
+    verify_group_access,
+)
+from timApp.user.user import (
+    User,
+    UserInfo,
+    UserOrigin,
+    teacher_access_set,
+    view_access_set,
+)
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.user.userutils import grant_access, expire_access
@@ -634,6 +644,13 @@ def _handle_send_sisu_assessments(
         email = m
         if u:
             email = u.email
+        else:
+            ug = UserGroup.get_by_name(m)
+            if ug and verify_group_access(
+                ug, view_access_set, u=curr_user, require=False
+            ):
+                for u in ug.members:
+                    send_emails.add(u.email)
         if is_valid_email(email):
             send_emails.add(email)
 
