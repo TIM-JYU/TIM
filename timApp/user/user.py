@@ -909,6 +909,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         ug: UserGroup,
         added_by: Optional["User"],
         sync_mailing_lists: bool = True,
+        send_group_notification: bool = True,
     ) -> bool:
         """
         Adds the user to a group.
@@ -916,7 +917,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :param ug: The user group to add the user to.
         :param added_by: Optionally, the user that added this user to the group.
         :param sync_mailing_lists: If True, automatically notifies message lists about the added user.
-        :return: True, if the added user is a "new" member (i.e. never was a member of the group before).
+        :param send_group_notification: If True, sends a group join message to the user.
+        :return: True, if the user was added to the group; False, if the user was already in the group.
         """
         # Avoid cyclical importing.
         from timApp.messaging.messagelist.messagelist_utils import (
@@ -935,21 +937,20 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 add_membership = True
 
             existing.membership_end = None
-            new_add = False
         else:
             ugm = UserGroupMember(group=ug, adder=added_by)
             self.memberships.append(ugm)
             db.session.add(ugm)
-            new_add = True
             add_membership = True
 
-        if add_membership:
+        if add_membership and send_group_notification:
             send_group_join_message(self, ug)
 
         # On changing of group, sync this person to the user group's message lists.
-        if sync_mailing_lists:
+        if add_membership and sync_mailing_lists:
             sync_message_list_on_add(self, ug)
-        return new_add
+
+        return add_membership
 
     def get_contact(
         self,
