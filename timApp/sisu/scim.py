@@ -494,7 +494,12 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         can_update_primary=u.has_active_email,
                         notify_message_lists=False,  # New user, no need to notify
                     )
-            added = user.add_to_group(ug, added_by=scimuser, sync_mailing_lists=False)
+            added = user.add_to_group(
+                ug,
+                added_by=scimuser,
+                sync_mailing_lists=False,
+                send_group_notification=False,
+            )
             if added:
                 added_users.add(user)
 
