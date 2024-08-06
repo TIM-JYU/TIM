@@ -1,3 +1,31 @@
 .icon-inline {
   margin-left: 0.5em;
 }
+
+.accessbadge {
+    border-radius: 15px;
+    padding: 3px;
+    font-size: x-small;
+}
+.ab-public {
+    border: solid 2px red;
+    color: red;
+}
+.ab-logged-in {
+    border: solid 2px darkorange;
+    color: darkorange;
+}
+.ab-organization {
+    border: solid 2px fuchsia;
+    color: fuchsia;
+}
+.ab-limited {
+    border: solid 2px navy;
+    color: navy;
+}
+.ab-private {
+    border: solid 2px darkgray;
+    color: darkgray;
+}
+
+
