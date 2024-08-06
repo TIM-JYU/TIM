@@ -5,18 +5,17 @@ PROFILE = False
 DEBUG_SQL = False
 MINIMUM_SCHEDULED_FUNCTION_INTERVAL = 5
 
-if os.environ.get("RUN_IDEPLUGIN_DEV", "0") == "1":
-    OAUTH2_CLIENTS = [
-        {
-            "client_id": "oauth2_tide",
-            "client_name": "TIDE",
-            "redirect_urls": ["http://localhost:8083/callback"],
-            "allowed_scopes": ["profile", "user_tasks", "user_courses"],
-            "response_types": ["code", "token"],
-            "grant_types": ["authorization_code"],
-            "token_endpoint_auth_method": "none",
-        }
-    ]
+OAUTH2_CLIENTS = [
+    {
+        "client_id": "oauth2_tide",
+        "client_name": "TIDE",
+        "redirect_urls": ["http://localhost:8083/callback"],
+        "allowed_scopes": ["profile", "user_tasks", "user_courses"],
+        "response_types": ["code", "token"],
+        "grant_types": ["authorization_code"],
+        "token_endpoint_auth_method": "none",
+    }
+]
 
 if os.environ.get("RUN_MAILMAN_DEV", "0") == "1":
     MESSAGE_LISTS_ENABLED = True
@@ -29,7 +28,7 @@ if os.environ.get("RUN_MAILMAN_DEV", "0") == "1":
         f"{os.environ.get('TIM_HOST', 'http://localhost')}/mailman3/postorius/lists/"
     )
     os.environ["AUTHLIB_INSECURE_TRANSPORT"] = "true"
-    OAUTH2_CLIENTS = [
+    OAUTH2_CLIENTS.append(
         {
             "client_id": "mailman_tim",
             "client_secret": "test123",
@@ -39,4 +38,4 @@ if os.environ.get("RUN_MAILMAN_DEV", "0") == "1":
             "response_types": ["code", "token"],
             "grant_types": ["authorization_code"],
         }
-    ]
+    )
