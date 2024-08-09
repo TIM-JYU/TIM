@@ -691,12 +691,15 @@ class Jypeli(CS, Modifier):
     @staticmethod
     @functools.cache
     def get_build_refs():
-        return _csharp_get_build_refs_arg_list(["jypeli"])
+        return _csharp_get_build_refs_arg_list(["jypeli", "code_analysis"])
 
     @staticmethod
     @functools.cache
     def get_runtime_deps_args():
-        return ["--additional-deps", _csharp_get_additional_deps(["jypeli"])]
+        return [
+            "--additional-deps",
+            _csharp_get_additional_deps(["jypeli", "code_analysis"]),
+        ]
 
     def get_cmdline(self):
         mainfile = ""
