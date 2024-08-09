@@ -1,6 +1,6 @@
 import base64
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 from bs4 import BeautifulSoup
@@ -43,6 +43,9 @@ class IdeFile:
     byCode: str | None = None
     """ Code of the file when plugin has multiple files """
 
+    program: str | None = None
+    """ Code, when the task is meant to be fully editable """
+
     filename: str | None = None
     """ Name of the file """
 
@@ -52,11 +55,102 @@ class IdeFile:
     userargs: str | None = ""
     """ User arguments for the file """
 
+    content: str | None = field(init=False)
+    """File contents provided for IDE"""
+
+    def __post_init__(self) -> None:
+        self.content = ""
+
+    def set_combined_code(self) -> None:
+        """Combine the code blocks and set the combined code to the
+        content var.
+        """
+        # Program can be considered as a boilerplate
+        boilerplate = self.program
+        user_code = None
+        filename = self.filename
+
+        # Both "by" or "byCode" attributes are considered as user editable code
+        if self.by is not None:
+            user_code = self.by
+
+        if self.byCode is not None:
+            user_code = self.byCode
+
+        if boilerplate is None and user_code is None:
+            raise RouteException("No code found in the plugin")
+
+        if boilerplate is None:
+            self.content = user_code
+            return
+
+        # If no dedicated user editable code, the whole boilerplate is editable
+        if user_code is None:
+            self.content = boilerplate
+            return
+
+        if filename is None:
+            raise RouteException("File name not provided")
+
+        # Find the "comment line" characters based on the file extension and create messages.
+        comment_line_characters = find_comment_line_characters(filename.split(".")[-1])
+
+        user_code_begins_message = (
+            comment_line_characters + " --- Write your code below this line. ---"
+        )
+        user_code_ends_message = (
+            comment_line_characters + " --- Write your code above this line. ---"
+        )
+
+        # If the program is not meant to be fully editable, add the messages to the code.
+        if boilerplate != "REPLACEBYCODE":
+            annotated_block = (
+                user_code_begins_message + "\nREPLACEBYCODE\n" + user_code_ends_message
+            )
+            boilerplate = boilerplate.replace("REPLACEBYCODE", annotated_block)
+        boilerplate = boilerplate.replace("REPLACEBYCODE", user_code)
+        self.content = boilerplate
+
+    def generate_file_extension(self, task_type: str) -> None:
+        """Ensure that the filename with extension will be set for the
+        ide_file.
+
+        :param task_type: Type of task, containing the file extension
+        :return: None
+        """
+
+        programming_languages = {
+            "c": "c",
+            "cc": "c",
+            "cpp": "cpp",
+            "c++": "cpp",
+            "c#": "cs",
+            "cs": "cs",
+            "java": "java",
+            "py": "py",
+            "js": "js",
+        }
+
+        if self.filename is None:
+            self.filename = "main"
+
+        predefined_file_extension = self.filename.split(".")[-1]
+        if programming_languages.get(predefined_file_extension, None) is not None:
+            return
+
+        if task_type is None:
+            raise RouteException("File extension cannot be generated")
+
+        # PLEASE NOTE: task_info.type could be fancy like c++/input/comtest
+        file_extension = task_type.split("/")[0]
+        picked_language = programming_languages.get(file_extension, "cs")
+        self.filename += "." + picked_language
+
     # Convert to json and set code based on 'by' or 'byCode'
     def to_json(self) -> dict[str, str | None]:
         return {
             "task_id_ext": self.taskIDExt,
-            "content": self.by or self.byCode,
+            "content": self.content,
             "file_name": self.filename,
             "user_input": self.userinput,
             "user_args": self.userargs or "",
@@ -226,6 +320,25 @@ class TIDECourse:
     """
     Paths to the tasks
     """
+
+
+def find_comment_line_characters(file_extension: str) -> str:
+    """
+    Find the comment line syntax based on the type.
+
+    :param file_extension: Type of the file
+    :return: Comment line syntax
+    """
+    comment_syntax_lookup = {
+        "cpp": "//",
+        "c": "//",
+        "cs": "//",
+        "java": "//",
+        "py": "#",
+        "js": "//",
+    }
+
+    return comment_syntax_lookup.get(file_extension, "//")
 
 
 def get_user_ide_courses(user: User) -> list[TIDECourse]:
@@ -521,7 +634,7 @@ def get_ide_user_plugin_data(
         ide_file = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
 
         # if the plugin has no code, look from markup
-        if ide_file.by is None and ide_file.byCode is None:
+        if ide_file.by is None and ide_file.byCode is None and ide_file.program is None:
             ide_file = IdeFileSchema.load(plugin_json["markup"], unknown=EXCLUDE)
             if ide_file.taskIDExt is None:
                 if plugin_json.get("taskIDExt"):
@@ -530,22 +643,18 @@ def get_ide_user_plugin_data(
                     return None
 
         # If the plugin still has no code, return error
-        if ide_file.by is None and ide_file.byCode is None:
+        if ide_file.by is None and ide_file.byCode is None and ide_file.program is None:
             raise RouteException("No code found in the plugin")
 
         # if the ide_file has no filename, try to look it from the markup
         if ide_file.filename is None:
             ide_file.filename = plugin_json["markup"].get("filename")
 
-        # Give the file main.<type> name if the file has no filename and the type is not None
-        if ide_file.filename is None and task_info.type is not None:
-            if "c++" in task_info.type:
-                ide_file.filename = "main.cpp"
-            elif "cc" in task_info.type:
-                ide_file.filename = "main.c"
-            else:
-                ide_file.filename = "main." + task_info.type
+        # If the task type is defined, try to generate file extension.
+        if task_info.type is not None:
+            ide_file.generate_file_extension(task_info.type)
 
+        ide_file.set_combined_code()
         json_ide_files = [ide_file.to_json()]
 
     return TIDEPluginData(
