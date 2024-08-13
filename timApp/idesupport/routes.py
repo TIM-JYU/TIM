@@ -114,3 +114,14 @@ def submit_ide_task() -> Response:
     answer = utils.ide_submit_task(submit, user)
 
     return json_response(answer)
+
+
+@ide.get("taskPoints")
+@require_oauth(Scope.user_tasks.value)
+def get_task_points(ide_task_id: str, doc_path: str) -> Response:
+    """
+    Get points data for a task
+    :return: JSON response with the points data
+    """
+    temp = {"current_points": 0.3}
+    return json_response(temp)
