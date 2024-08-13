@@ -471,7 +471,9 @@ def get_ide_task_by_id(
     raise RouteException("Multiple tasks found, support not implemented yet")
 
 
-def generate_supplementary_files(task_type: str, task_name: str):
+def generate_supplementary_files(
+    task_type: str | None, task_name: str
+) -> list[SupplementaryFile]:
     # TODO: fetch language type strings from class itself
     if task_type in ["cs", "c#", "csharp"]:
         return [
