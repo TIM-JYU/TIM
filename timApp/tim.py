@@ -73,6 +73,7 @@ from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.plugin.userselect.userselect import user_select_plugin
 from timApp.printing.print import print_blueprint
 from timApp.proxy.routes import proxy
+from timApp.redirect.routes import redirect_route
 from timApp.readmark.routes import readings
 from timApp.scheduling.scheduling_routes import scheduling
 from timApp.securitytxt.routes import securitytxt
@@ -131,6 +132,7 @@ blueprints = [
     plugin_bp,
     print_blueprint,
     proxy,
+    redirect_route,
     readings,
     scim,
     securitytxt,
