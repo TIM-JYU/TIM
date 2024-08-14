@@ -1,4 +1,8 @@
 QR-code
 Insert QR-code to join to lecture
-![Näytä tätä puhelimelle](https://chart.googleapis.com/chart?chs=400x400&cht=qr&chl=
-https://tim.jyu.fi/lecture/%%docid%%?lecture=autojoin)
+#- {nocache="true" math_type="svg" math_preamble="\\usepackage{qrcode}"}
+{% set teksti = "https://tim.jyu.fi/lecture/"~docid~"?lecture=autojoin" %}
+{%set taso="L"%}
+\begin{equation*}
+\qrcode[height=5cm, level=%%taso%%]%%'{' + teksti + '}'%%
+\end{equation*}
