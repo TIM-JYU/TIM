@@ -328,6 +328,37 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         elif tr_opt:
             if p.is_translation():
                 deref = mark_as_translated(p)
+
+                # Since empty area_end paragraphs are not visible, we need to set their rt-attribute
+                # at the same time as the area start paragraph. Otherwise, the 'Translation out of date' and
+                # 'Check translation' markings will remain on the area_end pars with no obvious way to remove them.
+                # For new area sections, the classes 'troutofdate' and 'checktr' will not be set at all for the area_end
+                # paragraphs if it is empty.
+                if p.is_area():
+                    area_name = (
+                        p.get_attr("area")
+                        if p.get_attr("area")
+                        else p.get_attr("area_end")
+                    )
+                    if not area_name:
+                        raise RouteException(
+                            "Could not access paragraph attributes ['area', 'area_end']."
+                        )
+                    area_end_par = doc.get_named_section(area_name)[-1]
+                    aep_md = area_end_par.get_markdown()
+                    aep_cache = (
+                        area_end_par.html_cache.get(area_end_par.attrs.get("rt"))
+                        if area_end_par.html_cache
+                        else None
+                    )
+
+                    if not aep_md and not aep_cache:
+                        res = mark_as_translated(area_end_par)
+                        if not res:
+                            raise RouteException("Paragraph is not a translation.")
+                        # Also mark the area end par as checked since it does not have any content
+                        mark_translation_as_checked(area_end_par)
+
                 if not deref:
                     raise RouteException("Paragraph is not a translation.")
         else:
