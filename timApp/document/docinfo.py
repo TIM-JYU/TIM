@@ -241,11 +241,11 @@ class DocInfo(Item):
                 # Strip any extra spaces and remove any falsy values (empty strings) if they get evaluated as such
                 # Also remove any self-references
                 extra_preamble_doc_paths = list(
-                    {
+                    dict.fromkeys(
                         edp_t
                         for edp in extra_preamble_doc_paths
                         if (edp_t := edp.strip()) and edp_t != doc_path
-                    }
+                    )
                 )
                 # TODO: Should extraPreambles be recursive?
                 extra_docs = get_docs(extra_preamble_doc_paths)
