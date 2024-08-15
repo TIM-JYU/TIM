@@ -167,8 +167,6 @@ class DocInfo(Item):
         if not paths:
             return []
 
-        path_index_map = {path: i for i, path in enumerate(paths)}
-
         # Templates don't have preambles. Other preambles don't have preambles (for now).
         if any(
             p == TEMPLATE_FOLDER_NAME or p == PREAMBLE_FOLDER_NAME for p in path_parts
@@ -182,6 +180,7 @@ class DocInfo(Item):
         user_ctx = user_context_with_logged_in_or_anon()
 
         def get_docs(doc_paths: list[str]) -> list[tuple[DocEntry, Translation | None]]:
+            doc_paths_index_map = {path: i for i, path in enumerate(doc_paths)}
             docs_q: Result[tuple[DocEntry, Translation | None]] = run_sql(
                 select(DocEntry, Translation)
                 .select_from(DocEntry)
@@ -205,10 +204,12 @@ class DocInfo(Item):
                     continue
                 docs.append((de, tr))
 
+            # The query may return the documents in a different order than requested
+            # Therefore, we sort documents by the original path order
+            docs.sort(key=lambda x: doc_paths_index_map[x[0].path])
             return docs
 
         result = get_docs(paths)
-        result.sort(key=lambda x: path_index_map[x[0].path])
         preamble_docs = []
         for de, tr in result:
             d = tr or de  # preamble either has the corresponding translation or not
@@ -240,11 +241,11 @@ class DocInfo(Item):
                 # Strip any extra spaces and remove any falsy values (empty strings) if they get evaluated as such
                 # Also remove any self-references
                 extra_preamble_doc_paths = list(
-                    {
+                    dict.fromkeys(
                         edp_t
                         for edp in extra_preamble_doc_paths
                         if (edp_t := edp.strip()) and edp_t != doc_path
-                    }
+                    )
                 )
                 # TODO: Should extraPreambles be recursive?
                 extra_docs = get_docs(extra_preamble_doc_paths)
