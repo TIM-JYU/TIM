@@ -35,6 +35,7 @@ from timApp.document.docsettings import get_minimal_visibility_settings
 from timApp.folder.folder import Folder
 from timApp.notification.send_email import send_email
 from timApp.plugin.pluginexception import PluginException
+from timApp.redirect.routes import TIMRedirectException
 from timApp.sisu.sisu import IncorrectSettings, SisuError
 from timApp.tim_app import app
 from timApp.timdb.exceptions import ItemAlreadyExistsException
@@ -253,6 +254,20 @@ def register_errorhandlers(app: Flask) -> None:
     @app.errorhandler(RouteException)
     def handle_route_exception(error: RouteException) -> ResponseReturnValue:
         return error_generic(error.description, error.code)
+
+    @app.errorhandler(TIMRedirectException)
+    def handle_redirect_exception(error: TIMRedirectException) -> ResponseReturnValue:
+        # return error_generic(
+        #     error.description, error.code, template="tim_redirect_error.jinja2"
+        # )
+        return (
+            render_template(
+                "tim_redirect_error.jinja2",
+                message=error.message,
+                alias_doc=error.alias_doc,
+            ),
+            400,
+        )
 
     @app.errorhandler(JSONException)
     def handle_json_exception(error: JSONException) -> ResponseReturnValue:

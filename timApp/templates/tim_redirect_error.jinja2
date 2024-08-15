@@ -1,0 +1,13 @@
+{% extends "error.jinja2" %}
+{% block content %}
+<div class="error">
+    <h4>{{ message["description"] }}</h4>
+    <p>
+        {{ message["start"] }} <strong><a href="{{ alias_doc['name'] }}">{{ alias_doc["name"] }}</a></strong> {{ message["end"] }}
+    </p>
+    <p>Current content:</p>
+    <pre>
+        {{ alias_doc["content"] }}
+    </pre>
+</div>
+{% endblock %}
