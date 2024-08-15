@@ -65,4 +65,6 @@ def redirect_by_alias_file(alias: str) -> Response:
             alias_doc={"name": alias_doc_name, "content": res},
         )
 
-    return redirect(res)
+    # Possible regression with typing in Flask, or Mypy
+    # see: https://github.com/pallets/flask/issues/4612 and https://github.com/pallets/flask/issues/4600
+    return redirect(res)  # type: ignore
