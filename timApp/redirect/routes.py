@@ -4,6 +4,8 @@ import flask.helpers
 import flask.wrappers
 from flask import Response, redirect, current_app
 import re
+
+from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import user_context_with_logged_in_or_anon
 from timApp.document.docentry import DocEntry
 from timApp.document.viewcontext import default_view_ctx
@@ -40,6 +42,8 @@ def redirect_by_alias_file(alias: str) -> Response:
     doc_entry = DocEntry.find_by_path(f"redirect/{alias}")
     if not doc_entry:
         raise NotExist(f"Alias '{alias}' does not exist!")
+
+    verify_view_access(doc_entry)
 
     res = doc_entry.document.export_markdown(
         export_ids=False, export_settings=False
