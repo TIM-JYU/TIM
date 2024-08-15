@@ -257,9 +257,6 @@ def register_errorhandlers(app: Flask) -> None:
 
     @app.errorhandler(TIMRedirectException)
     def handle_redirect_exception(error: TIMRedirectException) -> ResponseReturnValue:
-        # return error_generic(
-        #     error.description, error.code, template="tim_redirect_error.jinja2"
-        # )
         return (
             render_template(
                 "tim_redirect_error.jinja2",
