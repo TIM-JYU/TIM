@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+
+import flask.helpers
+import flask.wrappers
 from flask import Response, redirect, current_app
 import re
 from timApp.auth.sessioninfo import user_context_with_logged_in_or_anon
@@ -26,8 +29,8 @@ TIMRedirectExceptionMessages: dict[str, dict[str, str]] = {
 
 @dataclass
 class TIMRedirectException(RouteException):
-    message: dict[str, str] = None
-    alias_doc: dict[str, str] = None
+    message: dict[str, str]
+    alias_doc: dict[str, str]
     code: int = 400
 
 
