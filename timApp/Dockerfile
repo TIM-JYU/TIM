@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as base
+FROM ubuntu:24.04 as base
 LABEL org.opencontainers.image.authors="tim@jyu.fi"
 LABEL org.opencontainers.image.source="https://github.com/TIM-JYU/TIM"
 
@@ -166,7 +166,7 @@ RUN bash -c "${APT_INSTALL} curl qpdf poppler-utils && ${APT_CLEANUP} && \
 #   output directory.
 #
 # It has not yet been investigated whether it's because of Node or NPM update.
-RUN (curl -sL https://deb.nodesource.com/setup_18.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN (curl -sL https://deb.nodesource.com/setup_20.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@6 -g && bash -c "${APT_CLEANUP}"
 # Fix issue with node-gyp until we upgrade NPM, see https://github.com/TIM-JYU/TIM/issues/3479 and https://github.com/nodejs/node-gyp/issues/2219
 RUN sed -i "s/^\( *\)\(build_file_contents = open(build_file_path, 'rU').read().*\)$/\1build_file_contents = open(build_file_path, 'r').read()/" /usr/lib/node_modules/npm/node_modules/node-gyp/gyp/pylib/gyp/input.py
