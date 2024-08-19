@@ -82,7 +82,7 @@ RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
 
 # Update dvisvgm so that it supports converting PDFs to SVGs
 ENV DVISVGM_VERSION="3.4"
-RUN bash -c "${APT_INSTALL} gcc g++ libgs-dev libkpathsea-dev pkg-config libfreetype6-dev make && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} gcc g++ libgs-dev libkpathsea-dev pkg-config libfreetype6-dev woff2 make && ${APT_CLEANUP}"
 RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/${DVISVGM_VERSION}/dvisvgm-${DVISVGM_VERSION}.tar.gz" -qO $FILE && \
  tar -xf $FILE && \
  cd dvisvgm-$DVISVGM_VERSION && \
