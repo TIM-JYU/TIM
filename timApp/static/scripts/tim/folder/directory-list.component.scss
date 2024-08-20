@@ -28,4 +28,29 @@
     color: darkgray;
 }
 
-
+.itemtags {
+    margin-left: 0.5em;
+}
+.itemtag {
+    margin-left: 3px;
+    border-radius: 4px;
+    padding: 3px;
+    font-size: x-small;
+    color: #fff;
+}
+.tagtype-group {
+    background-color: #004494;
+    border-color: #00387b;
+}
+.tagtype-coursecode {
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+}
+.tagtype-regular {
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+}
+.tagtype-subject {
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+}
