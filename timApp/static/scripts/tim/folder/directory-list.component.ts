@@ -1,5 +1,6 @@
 import {Component} from "@angular/core";
-import {DocumentOrFolder, IFolder, IItem, ITag, TagType} from "tim/item/IItem";
+import type {DocumentOrFolder, IFolder, IItem, ITag} from "tim/item/IItem";
+import {TagType} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {folderglobals} from "tim/util/globals";
 import {to} from "tim/util/utils";

@@ -228,9 +228,11 @@ def get_tags_for_folder_items(folder_id: int) -> Response:
     :param folder_id: The target folder id.
     :returns A dict of the folder ids and TagInfo-objects, keyed by the folder id, converted into JSON.
     """
-    folder = Folder.find_by_id(folder_id)
+    folder: DocInfo | Folder | None = Folder.find_by_id(folder_id)
     if not folder:
         raise NotExist()
+    if not type(folder) is Folder:
+        raise RouteException("Item is not a Folder.")
     verify_view_access(folder)
     item_tags: dict[int, list[TagInfo]] = {}
 
