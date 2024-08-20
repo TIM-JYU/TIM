@@ -18,6 +18,7 @@ from timApp.auth.accesshelper import (
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
+from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.timdb.sqa import db, run_sql
@@ -217,6 +218,35 @@ def get_tags(doc: str) -> Response:
     verify_view_access(d)
     tags = d.block.tags
     return json_response(tags, date_conversion=True)
+
+
+@tags_blueprint.get("/getTags/<int:folder_id>")
+def get_tags_for_folder_items(folder_id: int) -> Response:
+    """
+    Gets the list of tags for each item in a TIM folder.
+
+    :param folder_id: The target folder id.
+    :returns A dict of the folder ids and TagInfo-objects, keyed by the folder id, converted into JSON.
+    """
+    folder = Folder.find_by_id(folder_id)
+    if not folder:
+        raise NotExist()
+    verify_view_access(folder)
+    item_tags: dict[int, list[TagInfo]] = {}
+
+    # Tags are currently only defined for Documents
+    for item in folder.get_all_documents():
+        tags = item.block.tags
+        tag_infos: list[TagInfo] = [
+            TagInfo(
+                name=tag.name, type=tag.type, expires=tag.expires, block_id=tag.block_id
+            )
+            for tag in tags
+        ]
+        if tag_infos:
+            item_tags[item.id] = tag_infos
+
+    return json_response(item_tags, date_conversion=True)
 
 
 @tags_blueprint.get("/getAllTags")
