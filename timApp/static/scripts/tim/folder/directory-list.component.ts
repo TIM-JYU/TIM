@@ -1,5 +1,5 @@
 import {Component} from "@angular/core";
-import type {DocumentOrFolder, IFolder, IItem} from "tim/item/IItem";
+import {DocumentOrFolder, IFolder, IItem, ITag, TagType} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {folderglobals} from "tim/util/globals";
 import {to} from "tim/util/utils";
@@ -65,18 +65,24 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                 <td></td>
                 <td></td>
             </tr>
-            <tr *ngFor="let item of itemList; index as i">
+            <tr *ngFor="let item of itemList">
                 <td>
                     <a *ngIf="item.isFolder" href="/view/{{ item.path }}">
                         <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
                     </a>
                 </td>
+                
                 <td>
                     <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
                     <a><i class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
                           title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</i>
                     </a>
-                    
+                    <span class="itemtags">
+                        <a *ngFor="let tag of getItemTags(item)">
+                            <i class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
+                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires + ')' : '' }}">{{ tag.name }}</i>
+                        </a>
+                    </span>
                 </td>
                 <td></td>
                 <td>{{ item.modified }}</td>
@@ -119,6 +125,7 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
 export class DirectoryListComponent {
     itemList: DocumentOrFolder[];
     itemBadges: Record<number, AccessLevelBadge>;
+    itemTags: Record<number, ITag[]>;
     item: IFolder;
     canCreate: boolean;
     showId = false;
@@ -129,6 +136,7 @@ export class DirectoryListComponent {
         this.item = fg.curr_item;
         this.canCreate = Users.isRealUser();
         this.itemBadges = {};
+        this.itemTags = {};
 
         // TODO: Allow to sort all columns instead
         if (
@@ -141,6 +149,9 @@ export class DirectoryListComponent {
         // this.item is the current directory folder
         this.getAccessLevelBadges(this.item).then((value) => {
             this.itemBadges = value ?? {};
+        });
+        this.getFolderItemTags(this.item).then((value) => {
+            this.itemTags = value ?? {};
         });
     }
 
@@ -208,6 +219,30 @@ export class DirectoryListComponent {
         return "";
     }
 
+    async getFolderItemTags(
+        parentFolder: IItem
+    ): Promise<Record<number, ITag[]>> {
+        const res = await to(
+            $http.get<Record<number, ITag[]>>(
+                `/tags/getTags/${parentFolder.id}`
+            )
+        );
+        if (res.ok) {
+            return res.result.data;
+        }
+        return {};
+    }
+
+    getItemTags(item: IItem) {
+        return this.itemTags[item.id];
+    }
+
+    getTagTypeString(tag: ITag) {
+        return tag.name.startsWith("group:")
+            ? "group"
+            : TagType[tag.type].toLowerCase();
+    }
+
     async getHakaOrgIds() {
         const res = await to($http.get<number[]>(`/groups/getOrgs/ids`));
         if (res.ok) {
@@ -234,4 +269,5 @@ export class DirectoryListComponent {
 
     protected readonly AccessLevelBadge = AccessLevelBadge;
     protected readonly AccessLevelBadgeInfo = AccessLevelBadgeInfo;
+    protected readonly TagType = TagType;
 }
