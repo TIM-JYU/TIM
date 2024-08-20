@@ -9,7 +9,6 @@ from sqlalchemy.orm import defaultload
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
-from timApp.document.docinfo import DocInfo
 from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
@@ -196,7 +195,7 @@ class Item(ItemBase):
         return self.path.replace(path + "/", "", 1)
 
     @staticmethod
-    def find_by_id(item_id: int) -> DocInfo | Folder | None:
+    def find_by_id(item_id: int):
         b = db.session.get(Block, item_id)
         if b:
             if b.type_id == BlockType.Document.value:
