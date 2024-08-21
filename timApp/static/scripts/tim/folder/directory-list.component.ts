@@ -20,21 +20,11 @@ enum AccessLevelBadge {
 
 const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
     [AccessLevelBadge.NO_BADGE]: "",
-    [AccessLevelBadge.PUBLIC]:
-        "Item is visible publicly (ie. to everyone), including anonymous users.",
-    [AccessLevelBadge.LOGGED_IN]: "Item is visible to logged-in users.",
-    [AccessLevelBadge.ORGANIZATION]:
-        "Item is visible to groups belonging to a Haka organization.",
-    [AccessLevelBadge.LIMITED]:
-        "Item is visible only to specific users, check the Manage-page for details.",
-    [AccessLevelBadge.PRIVATE]: "Item is visible only to its owners.",
-
-    // TODO: Turn on localize when working
-    // [AccessLevelBadge.PUBLIC]: $localize`"Item is visible publicly (ie. to everyone), including anonymous users.`,
-    // [AccessLevelBadge.LOGGED_IN]: $localize`"Item is visible to logged-in users.`,
-    // [AccessLevelBadge.ORGANIZATION]: $localize`"Item is visible to groups belonging to a Haka organization.`,
-    // [AccessLevelBadge.LIMITED]: $localize`"Item is visible only to specific users, check the Manage-page for details.`,
-    // [AccessLevelBadge.PRIVATE]: $localize`"Item is visible only to its owners.`,
+    [AccessLevelBadge.PUBLIC]: $localize`Item is visible publicly (ie. to everyone), including anonymous users.`,
+    [AccessLevelBadge.LOGGED_IN]: $localize`Item is visible to logged-in users.`,
+    [AccessLevelBadge.ORGANIZATION]: $localize`Item is visible to groups belonging to a Haka organization.`,
+    [AccessLevelBadge.LIMITED]: $localize`Item is visible only to specific users, check the Manage-page for details.`,
+    [AccessLevelBadge.PRIVATE]: $localize`Item is visible only to its owners.`,
 };
 
 @Component({
