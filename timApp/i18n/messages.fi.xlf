@@ -10667,6 +10667,46 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">48,50</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4343307932975048814" datatype="html">
+        <source>Item is visible publicly (ie. to everyone), including anonymous users.</source>
+        <target state="translated">Kohde näkyy julkisesti kaikille (myös anonyymeille käyttäjille).</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
+          <context context-type="linenumber">23,21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="53962414988403367" datatype="html">
+        <source>Item is visible to logged-in users.</source>
+        <target state="translated">Kohde näkyy sisäänkirjautuneille käyttäjille.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
+          <context context-type="linenumber">24,21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6175417143135898708" datatype="html">
+        <source>Item is visible to groups belonging to a Haka organization.</source>
+        <target state="translated">Kohde näkyy Haka-organisaatioon kuuluville ryhmille.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
+          <context context-type="linenumber">25,21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5605266308588695513" datatype="html">
+        <source>Item is visible only to specific users, check the Manage-page for details.</source>
+        <target state="translated">Kohde näkyy vain valituille käyttäjille, katso lisätiedot Hallitse-sivulta.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
+          <context context-type="linenumber">26,21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="514896344625162208" datatype="html">
+        <source>Item is visible only to its owners.</source>
+        <target state="translated">Kohde näkyy vain omistajilleen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">
         <source>Create a new badge</source>
         <target state="new">Create a new badge</target>
