@@ -102,12 +102,16 @@ def sso(
     return redirect(redirect_url)
 
 
-def _get_saml_response(
-    client: Saml2Client, request_id: str, came_from: str
-) -> AuthnResponse:
+def _get_saml_response() -> str:
     saml_response = request.form.get("SAMLResponse")
     if not saml_response:
         raise SamlException("SAML Response is missing")
+    return saml_response
+
+
+def _parse_saml_response(
+    saml_response: str, client: Saml2Client, request_id: str, came_from: str
+) -> AuthnResponse:
     return client.parse_authn_request_response(
         saml_response,
         BINDING_HTTP_POST,
@@ -138,13 +142,27 @@ def acs() -> Response:
     client = _get_saml_client()
 
     try:
-        resp = _get_saml_response(client, request_id, came_from)
-    except (SamlException, ParseError, SAMLError) as e:
-        report_error(f"Error parsing SAML response: {e}", with_http_body=True)
+        saml_response = _get_saml_response()
+    except SamlException as e:
         if is_testing():
             raise RouteException(str(e))
         raise RouteException(
-            f"Error parsing SAML response. You can log in using your TIM username and password instead. "
+            f"No SAML response received. This could be due to a misconfiguration on the identity provider side. "
+            f"Please contact {app.config['HELP_EMAIL']} if the problem persists."
+        )
+
+    try:
+        resp = _parse_saml_response(saml_response, client, request_id, came_from)
+    except (SamlException, ParseError, SAMLError) as e:
+        report_error(
+            f"Error parsing SAML response.\nError: {e}\nOriginal SAML Response:\n{saml_response}",
+            with_http_body=True,
+        )
+        if is_testing():
+            raise RouteException(str(e))
+        raise RouteException(
+            f"Could not parse response from the identity provider. "
+            f"You can log in using your TIM username and password instead. "
             f"Please contact {app.config['HELP_EMAIL']} if the problem persists."
         )
 

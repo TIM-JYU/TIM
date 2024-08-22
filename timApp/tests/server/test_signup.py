@@ -743,17 +743,21 @@ class TestSignUp(TimRouteTest):
             },
             expect_status=302,
         )
-        with mock.patch("timApp.auth.saml.routes._get_saml_response") as m:
-            m.return_value = SamlSSOResponseMock(
-                info=info,
-                mock_missing_uniquecode=missing_uniquecode,
-                assurance_levels=assurance_levels or [LOW_ASSURANCE],
-            )
-            self.post(
-                acs_url,
-                data={},
-                expect_status=302,
-            )
+        with mock.patch("timApp.auth.saml.routes._get_saml_response") as m1:
+            m1.return_value = ""
+
+            with mock.patch("timApp.auth.saml.routes._parse_saml_response") as m2:
+                m2.return_value = SamlSSOResponseMock(
+                    info=info,
+                    mock_missing_uniquecode=missing_uniquecode,
+                    assurance_levels=assurance_levels or [LOW_ASSURANCE],
+                )
+
+                self.post(
+                    acs_url,
+                    data={},
+                    expect_status=302,
+                )
 
     def test_simple_login(self):
         simple_email = "simple@example.com"
