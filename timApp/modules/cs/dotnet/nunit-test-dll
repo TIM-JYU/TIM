@@ -6,7 +6,8 @@
 
 # First, resolve the full path of the dllfile
 
-dll_file_path=$(readlink -f $1)
+additional_deps="$1"
+dll_file_path=$(readlink -f $2)
 dll_file_dir=$(dirname "$dll_file_path")
 dll_file_name=$(basename "$dll_file_path")
 dll_file_name_no_ext="${dll_file_name%.*}"
@@ -21,11 +22,11 @@ set +e
 
 dotnet exec \
   --runtimeconfig /cs/dotnet/runtimeconfig.json \
-  --additional-deps /cs_data/dotnet/configs/jypeli.deps.json \
+  --additional-deps "$additional_deps" \
   --roll-forward LatestMajor \
   /dotnet_tools/nunit.console.dll \
   --noheader --nocolor \
-  "${@:2}" \
+  "${@:3}" \
   "$dll_file_path"
 
 rm "$dll_deps_path"

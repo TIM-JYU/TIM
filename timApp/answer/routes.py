@@ -2106,8 +2106,6 @@ def get_model_answer(task_id: str) -> Response:
 def get_state(
     user_id: int,
     answer_id: int | None = None,
-    par_id: str | None = None,
-    doc_id: int | None = None,
     review: bool = False,
     task_id: str | None = None,
     answernr: int | None = None,
@@ -2151,8 +2149,6 @@ def get_state(
         raise RouteException("Missing answer ID or task ID")
 
     doc.insert_preamble_pars()
-    if par_id:
-        tid.maybe_set_hint(par_id)
 
     user_ctx = user_context_with_logged_in(user)
     try:

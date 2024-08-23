@@ -15,7 +15,12 @@ from flask import request
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload, defaultload
 
-from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
+from timApp.auth.accesshelper import (
+    has_view_access,
+    verify_admin,
+    verify_logged_in,
+    has_edit_access,
+)
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -848,6 +853,9 @@ def search():
 
     :return: Document paragraph search results with total result count.
     """
+    # Only logged-in users are allowed to use the search functionality
+    verify_logged_in()
+
     # If the file containing all TIM content doesn't exist, give warning immediately.
     content_search_file_path = PROCESSED_CONTENT_FILE_PATH
     title_search_file_path = PROCESSED_TITLE_FILE_PATH

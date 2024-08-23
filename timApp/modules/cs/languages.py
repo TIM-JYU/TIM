@@ -534,6 +534,35 @@ class All(Language):
 GLOBAL_NUGET_PACKAGES_PATH = "/cs_data/dotnet/nuget_cache"
 
 
+def _csharp_get_build_refs_arg_list(dep_files: list[str]) -> str:
+    """
+    Get the build argument list for including build dependencies into scs.
+    :param dep_files: Dependency files to get dependencies from. Must be the same filename as the .csproj files defined in dotnet/deps.
+    :return: Preformatted argument for including all needed build dependencies into csc compiler.
+    """
+    result = []
+    for dep in dep_files:
+        build_deps_list = f"/cs_data/dotnet/configs/{dep}.build.deps"
+        with open(build_deps_list, encoding="utf-8") as f:
+            dep_paths = [
+                os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
+                for dep_line in f.readlines()
+            ]
+            result.extend([f"-r:{p}" for p in dep_paths])
+    return " ".join(result)
+
+
+def _csharp_get_additional_deps(dep_files: list[str]) -> str:
+    """
+    Get a list of additional run dependency configuration files needed to run .NET
+    applications.
+
+    :param dep_files: Dependency files to get dependencies from. Must be the same filename as the .csproj files defined in dotnet/deps.
+    :return: Preformatted argument list for the --additional-deps flag of dotnet.
+    """
+    return ":".join(f"/cs_data/dotnet/configs/{d}.deps.json" for d in dep_files)
+
+
 class CS(Language):
     ttype = ["cs", "c#", "csharp"]
 
@@ -549,6 +578,19 @@ class CS(Language):
     @functools.cache
     def runtime_config():
         return ["--runtimeconfig", "/cs/dotnet/runtimeconfig.json"]
+
+    @staticmethod
+    @functools.cache
+    def get_build_refs():
+        return _csharp_get_build_refs_arg_list(["code_analysis"])
+
+    @staticmethod
+    @functools.cache
+    def get_runtime_deps_args():
+        return [
+            "--additional-deps",
+            _csharp_get_additional_deps(["code_analysis"]),
+        ]
 
     def get_sourcefiles(self, main=None):
         sourcefiles = self.markup.get("sourcefiles", None)
@@ -569,9 +611,7 @@ class CS(Language):
         options = ""
         if self.just_compile:
             options = "-target:library"
-        cmdline = "{} -nologo -out:{} {} {} /cs/dotnet/shims/TIMconsole.cs".format(
-            self.compiler, self.exename, options, self.get_sourcefiles()
-        )
+        cmdline = f"{self.compiler} -nologo -out:{self.exename} {CS.get_build_refs()} {options} {self.get_sourcefiles()} /cs/dotnet/shims/TIMconsole.cs"
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
@@ -582,6 +622,7 @@ class CS(Language):
                 "--roll-forward",
                 "LatestMajor",
                 *CS.runtime_config(),
+                *CS.get_runtime_deps_args(),
                 self.pure_exename,
             ]
         )
@@ -650,17 +691,15 @@ class Jypeli(CS, Modifier):
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open("/cs_data/dotnet/configs/jypeli.build.deps", encoding="utf-8") as f:
-            dep_paths = [
-                os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
-                for dep_line in f.readlines()
-            ]
-            return " ".join([f"-r:{p}" for p in dep_paths])
+        return _csharp_get_build_refs_arg_list(["jypeli", "code_analysis"])
 
     @staticmethod
     @functools.cache
-    def get_run_args():
-        return ["--additional-deps", "/cs_data/dotnet/configs/jypeli.deps.json"]
+    def get_runtime_deps_args():
+        return [
+            "--additional-deps",
+            _csharp_get_additional_deps(["jypeli", "code_analysis"]),
+        ]
 
     def get_cmdline(self):
         mainfile = ""
@@ -748,7 +787,7 @@ class Jypeli(CS, Modifier):
                     "--roll-forward",
                     "LatestMajor",  # Force to use latest available .NET
                     *CS.runtime_config(),
-                    *Jypeli.get_run_args(),
+                    *Jypeli.get_runtime_deps_args(),
                     self.pure_exename,
                     "--headless",
                     "true",
@@ -824,14 +863,14 @@ class CSComtest(
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open(
-            "/cs_data/dotnet/configs/nunit_test.build.deps", encoding="utf-8"
-        ) as f:
-            dep_paths = [
-                os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
-                for dep_line in f.readlines()
-            ]
-            return " ".join([f"-r:{p}" for p in dep_paths])
+        return _csharp_get_build_refs_arg_list(
+            ["nunit_test", "code_analysis", "jypeli"]
+        )
+
+    @staticmethod
+    @functools.cache
+    def get_runtime_deps():
+        return _csharp_get_additional_deps(["nunit_test", "code_analysis", "jypeli"])
 
     def get_cmdline(self):
         testcs = f"/tmp/{self.basename}/{self.filename}Test.cs"
@@ -847,6 +886,7 @@ class CSComtest(
         code, out, err, pwddir = self.runself(
             [
                 "/cs/dotnet/nunit-test-dll",
+                CSComtest.get_runtime_deps(),
                 self.testdll,
                 "--noresult",
             ]

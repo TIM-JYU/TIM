@@ -147,7 +147,7 @@ def add_scheduled_function(
     )
     secs = int(interval.total_seconds())
     min_interval = current_app.config["MINIMUM_SCHEDULED_FUNCTION_INTERVAL"]
-    if secs < min_interval:
+    if secs < min_interval and not u.is_admin:
         raise RouteException(f"Minimum interval is {min_interval} seconds.")
     schedule: IntervalSchedule | None = (
         run_sql(
