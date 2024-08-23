@@ -32,6 +32,21 @@
         <tim-editor-entry ng-repeat="e in $ctrl.getUploadTab().entries" data="e"></tim-editor-entry>
     </uib-tab>
 
+    <!-- Pandoc document conversion-->
+    <uib-tab heading="Pandoc" index="'pandoc'" ng-show="$ctrl.getOptions().showImageUpload">
+        <span>
+            <input type="file" ngf-select="$ctrl.onFileSelectForPandoc($file)" ngf-multiple="false">
+            <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
+                  ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'"></span>
+            <a ng-href="{{$ctrl.uploadedFile}}">{{$ctrl.uploadedFile}}</a>
+        </span>
+        <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
+        <span>
+        </span>
+        <tim-editor-entry ng-repeat="e in $ctrl.getPandocTab().entries" data="e"></tim-editor-entry>
+    </uib-tab>
+
+
     <uib-tab heading="Help" index="'help'">
         <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank"
            title="General TIM Help">TIM
