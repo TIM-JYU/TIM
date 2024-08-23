@@ -109,7 +109,6 @@ ALLOWED_PANDOC_EXTENSIONS = set(
     + [
         "docx",
         "odt",
-        "pdf",
         "tex",
     ]
 )
