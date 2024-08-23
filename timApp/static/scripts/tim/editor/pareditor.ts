@@ -1056,6 +1056,10 @@ ${backTicks}
                 name: "Upload",
                 entries: [],
             },
+            {
+                name: "Pandoc",
+                entries: [],
+            },
         ];
 
         $(document).on(
@@ -1082,12 +1086,19 @@ ${backTicks}
         // it has special content that cannot be placed under "extra".
 
         return this.tabs.filter(
-            (tab) => (!tab.show || tab.show()) && tab.name !== "Upload"
+            (tab) =>
+                (!tab.show || tab.show()) &&
+                tab.name !== "Upload" &&
+                tab.name !== "Pandoc"
         );
     }
 
     getUploadTab() {
         return this.findTab("upload");
+    }
+
+    getPandocTab() {
+        return this.findTab("pandoc");
     }
 
     findTab(name: string) {
@@ -2247,6 +2258,57 @@ ${backTicks}
                             stamped
                         );
                     }
+                });
+            } else {
+                const response = result.result;
+                if (this.file) {
+                    this.file.error = response.data.error;
+                }
+            }
+        }
+    }
+
+    async onFileSelectForPandoc(file: File) {
+        const editor = this.editor!;
+        await this.focusEditor();
+        this.file = file;
+        const editorText = editor.getEditorText();
+
+        // const selectionRange = editor.getPosition(); // Selected area in the editor
+
+        if (file) {
+            this.file.progress = 0;
+            this.file.error = undefined;
+            const upload = $upload.upload<{file: string}>({
+                data: {
+                    doc_id: this.getExtraData().docId.toString(),
+                    file,
+                },
+                method: "POST",
+                url: "/importDocFile",
+            });
+            upload.progress((evt) => {
+                if (this.file) {
+                    this.file.progress = Math.min(
+                        100,
+                        Math.floor((100.0 * evt.loaded) / evt.total)
+                    );
+                }
+            });
+
+            const result = await to(upload);
+
+            if (result.ok) {
+                const response = result.result;
+                $timeout(() => {
+                    // For now, just append the converted file content to the end of the current paragraph
+                    // TODO: automatic uploads for images embedded in the imported document
+                    const convertedDoc = response.data.file;
+                    editor.setPosition([
+                        editorText.length - 1,
+                        editorText.length - 1,
+                    ]);
+                    editor.insertTemplate(`\n${convertedDoc}\n`);
                 });
             } else {
                 const response = result.result;
