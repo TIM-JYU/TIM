@@ -90,13 +90,29 @@ def add_csp_if_not_script_safe(resp: Response, mime: str, value: str = "sandbox"
         add_csp_header(resp, value)
 
 
-def allowed_file(filename):
+def allowed_file(filename, using_pandoc: bool = False):
+    if using_pandoc:
+        return (
+            "." in filename
+            and filename.rsplit(".", 1)[1].lower() in ALLOWED_PANDOC_EXTENSIONS
+        )
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 DOC_EXTENSIONS = ["txt", "md", "markdown"]
 PIC_EXTENSIONS = ["png", "jpg", "jpeg", "gif"]
 ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
+
+# Allow common document formats for Pandoc conversion
+ALLOWED_PANDOC_EXTENSIONS = set(
+    DOC_EXTENSIONS
+    + [
+        "docx",
+        "odt",
+        "pdf",
+        "tex",
+    ]
+)
 
 # The folder for stamped and original pdf files.
 default_attachment_folder = get_files_path() / "blocks/files"
