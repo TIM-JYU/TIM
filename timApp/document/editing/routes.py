@@ -340,10 +340,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
                         if p.get_attr("area")
                         else p.get_attr("area_end")
                     )
-                    if not area_name:
-                        raise RouteException(
-                            "Could not access paragraph attributes ['area', 'area_end']."
-                        )
+                    assert area_name is not None
                     area_end_par = doc.get_named_section(area_name)[-1]
                     aep_md = area_end_par.get_markdown()
                     aep_cache = (
