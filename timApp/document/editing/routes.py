@@ -1,5 +1,6 @@
 """Routes for editing a document."""
 import re
+import os
 from dataclasses import field
 
 from flask import Blueprint, render_template
@@ -19,6 +20,7 @@ from timApp.auth.accesshelper import (
     verify_seeanswers_access,
     has_edit_access,
     verify_route_access,
+    AccessDenied,
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import (
@@ -70,6 +72,15 @@ from timApp.util.flask.requesthelper import (
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.util.utils import get_error_html
 from tim_common.marshmallow_dataclass import dataclass
+
+from timApp.upload.upload import ALLOWED_PANDOC_EXTENSIONS
+from timApp.upload.uploadedfile import (
+    is_script_safe_mimetype,
+    MIMETYPE_FILE_EXT_MAP,
+)
+from pypandoc import convert_file
+from timApp.util.utils import temp_folder_path
+
 
 edit_page = Blueprint("edit_page", __name__, url_prefix="")  # TODO: Better URL prefix.
 
@@ -1122,3 +1133,43 @@ def set_drawio_base(args: DrawIODataModel):
     plug.values["data"] = data
     save_plugin(plug, max_attr_width=float("inf"))
     return ok_response()
+
+
+@edit_page.post("/importDocFile")
+def import_document_from_file() -> Response:
+    if not logged_in():
+        raise AccessDenied("You have to be logged in to upload a file.")
+    file = request.files.get("file")
+    if file is None:
+        raise RouteException("Missing file")
+
+    filetype = file.filename.split(".")[-1]
+
+    if filetype not in ALLOWED_PANDOC_EXTENSIONS or not is_script_safe_mimetype(
+        file.mimetype
+    ):
+        raise RouteException("Unsupported file.")
+
+    # Basic sanity check
+    if not MIMETYPE_FILE_EXT_MAP[filetype] == file.mimetype:
+        raise RouteException("Invalid file: file type does not match mimetype.")
+
+    doc_id = request.form.get("doc_id")
+    if not doc_id:
+        raise RouteException("Missing doc_id")
+    d = DocEntry.find_by_id(int(doc_id))
+    verify_edit_access(d)
+
+    # Save the file to disk temporarily, so we can give it to Pandoc
+    temp_filename = f"{ str(doc_id) }_{ file.filename }"
+    temp_file_path = os.path.join(temp_folder_path, temp_filename)
+    file.save(temp_file_path)
+
+    # Convert file with Pandoc and return the content
+    content = convert_file(temp_file_path, format=filetype, to="md", sandbox=True)
+    data = {"file": content}
+
+    # Delete the temporary file
+    os.remove(temp_file_path)
+
+    return json_response(data)
