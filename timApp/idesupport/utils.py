@@ -1,5 +1,6 @@
 import base64
 import json
+import textwrap
 from dataclasses import dataclass, field
 from typing import List
 
@@ -161,6 +162,21 @@ IdeFileSchema = class_schema(IdeFile)()
 
 
 @dataclass
+class SupplementaryFile:
+    filename: str
+    content: str = ""
+
+    def to_json(self) -> dict[str, str | None]:
+        return {
+            "content": self.content,
+            "file_name": self.filename,
+        }
+
+
+SupplementaryFileSchema = class_schema(SupplementaryFile)()
+
+
+@dataclass
 class TIDETaskInfo:
     """
     Information about the TIDE-task
@@ -221,6 +237,11 @@ class TIDEPluginData:
     task_files: List[IdeFile] | None = None
     """
     Files for the TIDE-task
+    """
+
+    supplementary_files: List[SupplementaryFile] | None = None
+    """
+    Supplementary files for the task
     """
 
     path: str | None = None
@@ -563,6 +584,32 @@ def get_ide_task_by_id(
     raise RouteException("Multiple tasks found, support not implemented yet")
 
 
+def generate_supplementary_files(
+    task_type: str | None, task_name: str
+) -> list[SupplementaryFile]:
+    # TODO: fetch language type strings from class itself
+    if task_type in ["cs", "c#", "csharp"]:
+        return [
+            SupplementaryFileSchema.load(
+                {
+                    "filename": f"{task_name}.csproj",
+                    "content": textwrap.dedent(
+                        """
+                <Project Sdk="Microsoft.NET.Sdk">
+                  <PropertyGroup>
+                    <OutputType>Exe</OutputType>
+                    <TargetFramework>net6.0</TargetFramework>
+                  </PropertyGroup>
+                </Project>
+                """
+                    ),
+                }
+            )
+        ]
+
+    return []
+
+
 def get_ide_user_plugin_data(
     doc: DocInfo,
     par: DocParagraph,
@@ -657,8 +704,13 @@ def get_ide_user_plugin_data(
         ide_file.set_combined_code()
         json_ide_files = [ide_file.to_json()]
 
+    supplementary_files = generate_supplementary_files(
+        task_type=task_info.type, task_name=ide_task_id
+    )
+
     return TIDEPluginData(
         task_files=json_ide_files,
+        supplementary_files=supplementary_files,
         header=task_info.header,
         stem=task_info.stem,
         type=task_info.type,
