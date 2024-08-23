@@ -264,6 +264,7 @@ SCRIPT_SAFE_MIMETYPES = {
     # The following platforms refuse to display PDFs in sandbox:
     # * Mac Safari
     # * Windows Chrome since January 2021
+    # TODO: add OpenDocument (.odt, .ods, .odp) mimetypes
     "application/pdf",
     "image/gif",
     "image/jpeg",
@@ -304,6 +305,17 @@ WHITELIST_MIMETYPES = SCRIPT_SAFE_MIMETYPES | {
 
 REMAP_MIMETYPES = {
     "application/csv": "text/csv",
+}
+
+# Simple mapping for checking against file mimetype vs. file extension
+# Used when converting user supplied document files to markdown
+MIMETYPE_FILE_EXT_MAP = {
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "odt": "application/application/vnd.oasis.opendocument.text",
+    "txt": "text/plain",
+    "pdf": "application/pdf",
+    "md": "text/plain",
+    "tex": "text/plain",
 }
 
 
