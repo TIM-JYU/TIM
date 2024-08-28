@@ -1868,6 +1868,8 @@ def get_answers(task_id: str, user_id: int) -> Response:
 @answers.get("/allDocumentAnswersPlain/<path:doc_path>", model=AllAnswersOptions)
 def get_document_answers(doc_path: str, options: AllAnswersOptions) -> Response:
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
+    if not d:
+        raise NotExist(f"Document not found")
     pars = d.document.get_dereferenced_paragraphs(default_view_ctx)
     task_ids, _, _ = find_task_ids(
         pars, default_view_ctx, user_context_with_logged_in(None)
