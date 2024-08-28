@@ -1208,9 +1208,10 @@ def import_document_from_file(m: ImportDocumentModel) -> Response:
                     db.session.commit()
                     uploaded_images.append(img_upload)
 
-        data["file"] += f"\n----------------------------------------\n"
-        data["file"] += f"Images contained in the document file:\n"
         if uploaded_images:
+            data["file"] += f"\n----------------------------------------\n"
+            data["file"] += f"Images contained in the document file:\n"
+
             for u in uploaded_images:
                 data["file"] += f"\n![{u.filename}](/images/{u.id}/{u.filename})"
 
