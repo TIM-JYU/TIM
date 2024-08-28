@@ -2302,7 +2302,8 @@ ${backTicks}
                 const response = result.result;
                 $timeout(() => {
                     // For now, just append the converted file content to the end of the current paragraph
-                    // TODO: automatic uploads for images embedded in the imported document
+                    // Images embedded in the imported document are automatically uploaded and image links for them
+                    // are added to the end of the document
                     const convertedDoc = response.data.file;
                     editor.setPosition([
                         editorText.length - 1,

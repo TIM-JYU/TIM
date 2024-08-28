@@ -3,6 +3,7 @@ import re
 import os
 import secrets
 import tempfile
+import zipfile
 from dataclasses import field
 
 from flask import Blueprint, render_template
@@ -53,6 +54,7 @@ from timApp.document.translation.synchronize_translations import (
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
+from timApp.item.block import BlockType
 from timApp.item.validation import validate_uploaded_document_content
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.notification.notification import NotificationType
@@ -65,7 +67,6 @@ from timApp.readmark.readings import mark_read
 # from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, run_sql
-from timApp.upload.uploadedfile import UploadedFile
 from timApp.util.flask.requesthelper import (
     verify_json_params,
     use_model,
@@ -76,10 +77,11 @@ from timApp.util.flask.responsehelper import json_response, ok_response, Respons
 from timApp.util.utils import get_error_html
 from tim_common.marshmallow_dataclass import dataclass
 
-from timApp.upload.upload import ALLOWED_PANDOC_EXTENSIONS
+from timApp.upload.upload import ALLOWED_PANDOC_EXTENSIONS, save_file_and_grant_access
 from timApp.upload.uploadedfile import (
     is_script_safe_mimetype,
     ALLOWED_DOC_IMPORT_EXT_MIMETYPES,
+    UploadedFile,
 )
 from pypandoc import convert_file
 from timApp.util.utils import temp_folder_path
@@ -1143,6 +1145,11 @@ class ImportDocumentModel:
     doc_id: int
 
 
+@dataclass
+class ImportedImageFile:
+    filename: str
+
+
 @edit_page.post("/importDocFile")
 @use_model(ImportDocumentModel)
 def import_document_from_file(m: ImportDocumentModel) -> Response:
@@ -1175,6 +1182,36 @@ def import_document_from_file(m: ImportDocumentModel) -> Response:
     except RuntimeError as e:
         raise RouteException(f"Could not convert file. {e}")
     data = {"file": content}
+
+    # If the document contains embedded image files, extract those,
+    # upload them and add references to them to the end of the document content.
+    # Currently only supported for .docx and .odt files
+    if filetype in ["docx", "odt"]:
+        img_pat = re.compile(
+            r"(word/media/|Pictures/)'.+\.(png|jpg|jpeg|gif|bmp|tif|tiff|tga)"
+        )
+        uploaded_images = []
+        with zipfile.ZipFile(name, "r") as zf:
+            img_list = list(
+                filter(lambda img_name: img_pat.match(img_name), zf.namelist())
+            )
+            if img_list:
+                for img in img_list:
+                    imagefile = ImportedImageFile(filename=img.split("/")[-1])
+
+                    img_upload = save_file_and_grant_access(
+                        d,
+                        content=zf.read(img),
+                        file=imagefile,
+                        block_type=BlockType.from_str("image"),
+                    )
+                    uploaded_images.append(img_upload)
+
+        data["file"] += f"\n----------------------------------------\n"
+        data["file"] += f"Images contained in the document file:\n"
+        if uploaded_images:
+            for u in uploaded_images:
+                data["file"] += f"\n![{u.filename}](/images/{u.id}/{u.filename})"
 
     # Delete the temporary file
     os.remove(name)
