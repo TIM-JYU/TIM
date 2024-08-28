@@ -1188,7 +1188,7 @@ def import_document_from_file(m: ImportDocumentModel) -> Response:
     # Currently only supported for .docx and .odt files
     if filetype in ["docx", "odt"]:
         img_pat = re.compile(
-            r"(word/media/|Pictures/)'.+\.(png|jpg|jpeg|gif|bmp|tif|tiff|tga)"
+            r"(word/media/|Pictures/).+\.(png|jpg|jpeg|gif|bmp|tif|tiff|tga)"
         )
         uploaded_images = []
         with zipfile.ZipFile(name, "r") as zf:
@@ -1205,6 +1205,7 @@ def import_document_from_file(m: ImportDocumentModel) -> Response:
                         file=imagefile,
                         block_type=BlockType.from_str("image"),
                     )
+                    db.session.commit()
                     uploaded_images.append(img_upload)
 
         data["file"] += f"\n----------------------------------------\n"
