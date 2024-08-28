@@ -1057,7 +1057,7 @@ ${backTicks}
                 entries: [],
             },
             {
-                name: "Pandoc",
+                name: "Import document",
                 entries: [],
             },
         ];
@@ -1089,7 +1089,7 @@ ${backTicks}
             (tab) =>
                 (!tab.show || tab.show()) &&
                 tab.name !== "Upload" &&
-                tab.name !== "Pandoc"
+                tab.name !== "Import document"
         );
     }
 

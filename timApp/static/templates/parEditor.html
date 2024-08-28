@@ -33,7 +33,7 @@
     </uib-tab>
 
     <!-- Pandoc document conversion-->
-    <uib-tab heading="Pandoc" index="'pandoc'" ng-show="$ctrl.getOptions().showImageUpload">
+    <uib-tab heading="Import document" index="'pandoc'" ng-show="$ctrl.getOptions().showImageUpload">
         <span>
             <input type="file" ngf-select="$ctrl.onFileSelectForPandoc($file)" ngf-multiple="false">
             <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"

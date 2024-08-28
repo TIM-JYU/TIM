@@ -311,11 +311,10 @@ REMAP_MIMETYPES = {
 
 # Simple mapping for checking against file mimetype vs. file extension
 # Used when converting user supplied document files to markdown
-MIMETYPE_FILE_EXT_MAP = {
+ALLOWED_DOC_IMPORT_EXT_MIMETYPES = {
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "odt": "application/vnd.oasis.opendocument.text",
     "txt": "text/plain",
-    "pdf": "application/pdf",
     "md": "text/plain",
     "tex": "text/plain",
 }

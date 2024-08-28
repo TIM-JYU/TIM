@@ -1,6 +1,8 @@
 """Routes for editing a document."""
 import re
 import os
+import secrets
+import tempfile
 from dataclasses import field
 
 from flask import Blueprint, render_template
@@ -21,6 +23,7 @@ from timApp.auth.accesshelper import (
     has_edit_access,
     verify_route_access,
     AccessDenied,
+    verify_logged_in,
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import (
@@ -76,7 +79,7 @@ from tim_common.marshmallow_dataclass import dataclass
 from timApp.upload.upload import ALLOWED_PANDOC_EXTENSIONS
 from timApp.upload.uploadedfile import (
     is_script_safe_mimetype,
-    MIMETYPE_FILE_EXT_MAP,
+    ALLOWED_DOC_IMPORT_EXT_MIMETYPES,
 )
 from pypandoc import convert_file
 from timApp.util.utils import temp_folder_path
@@ -1135,41 +1138,45 @@ def set_drawio_base(args: DrawIODataModel):
     return ok_response()
 
 
+@dataclass
+class ImportDocumentModel:
+    doc_id: int
+
+
 @edit_page.post("/importDocFile")
-def import_document_from_file() -> Response:
-    if not logged_in():
-        raise AccessDenied("You have to be logged in to upload a file.")
+@use_model(ImportDocumentModel)
+def import_document_from_file(m: ImportDocumentModel) -> Response:
+    verify_logged_in()
+    d = DocEntry.find_by_id(m.doc_id)
+    verify_edit_access(d)
+
     file = request.files.get("file")
     if file is None:
         raise RouteException("Missing file")
 
     filetype = file.filename.split(".")[-1]
+    expected_mimetype = ALLOWED_DOC_IMPORT_EXT_MIMETYPES.get(filetype)
 
-    if filetype not in ALLOWED_PANDOC_EXTENSIONS or not is_script_safe_mimetype(
-        file.mimetype
-    ):
+    if expected_mimetype is None or not is_script_safe_mimetype(file.mimetype):
         raise RouteException("Unsupported file.")
 
     # Basic sanity check
-    if not MIMETYPE_FILE_EXT_MAP[filetype] == file.mimetype:
+    if file.mimetype != expected_mimetype:
         raise RouteException("Invalid file: file type does not match mimetype.")
 
-    doc_id = request.form.get("doc_id")
-    if not doc_id:
-        raise RouteException("Missing doc_id")
-    d = DocEntry.find_by_id(int(doc_id))
-    verify_edit_access(d)
-
     # Save the file to disk temporarily, so we can give it to Pandoc
-    temp_filename = f"{ str(doc_id) }_{ file.filename }"
-    temp_file_path = os.path.join(temp_folder_path, temp_filename)
-    file.save(temp_file_path)
+    tmp_dir = temp_folder_path.as_posix()
+    fd, name = tempfile.mkstemp(suffix=f".{filetype}", dir=tmp_dir)
+    file.save(name)
 
     # Convert file with Pandoc and return the content
-    content = convert_file(temp_file_path, format=filetype, to="md", sandbox=True)
+    try:
+        content = convert_file(name, format=filetype, to="md", sandbox=True)
+    except RuntimeError as e:
+        raise RouteException(f"Could not convert file. {e}")
     data = {"file": content}
 
     # Delete the temporary file
-    os.remove(temp_file_path)
+    os.remove(name)
 
     return json_response(data)
