@@ -135,6 +135,10 @@ def get_build_refs(ref_type):
         return [f"-r:{p}" for p in dep_paths]
 
 
+def _csharp_get_additional_deps(dep_files):
+    return ":".join(f"/cs_data/dotnet/configs/{d}.deps.json" for d in dep_files)
+
+
 def main():
     filename = sys.argv[1]
     filename2 = sys.argv[2]
@@ -186,7 +190,11 @@ def main():
         print("Testikoodi ei käänny")
         return
 
-    args = ["/cs/dotnet/nunit-test-dll", f"{filename3}.dll"]
+    args = [
+        "/cs/dotnet/nunit-test-dll",
+        _csharp_get_additional_deps(["nunit_test", "code_analysis", "jypeli"]),
+        f"{filename3}.dll",
+    ]
     ret = call(args, stdout=DEVNULL, stderr=DEVNULL, timeout=20)
 
     # https://docs.nunit.org/articles/nunit/running-tests/Console-Runner.html
