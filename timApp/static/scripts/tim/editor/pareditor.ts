@@ -212,6 +212,20 @@ export interface ISpellWordInfo {
     suggestions: string[];
 }
 
+class DocumentImportHelp {
+    heading: string = `Document import instructions`;
+    shortHelp: string = `You can use this tab to import document files directly to editable text. Click on 'Browse...' to select a document to import.`;
+    formats: string = `Currently supported document formats: Microsoft Word (.docx), OpenOffice/LibreOffice Writer (.odt), Markdown (.md), TeX/LaTeX document (.tex), raw text (.txt).`;
+    styles: string = `Document styles are not imported. You may need to correct formatting and/or styles manually.`;
+    images: string = `Images embedded in the document are automatically uploaded. You will find the appropriate image references at the end of the imported content.`;
+
+    // heading: string = $localize`Document import instructions`;
+    // shortHelp: string = $localize`You can use this tab to import document files directly to editable text. Click on 'Browse...' to select a document to import.`;
+    // formats: string = $localize`Currently supported document formats: Microsoft Word (.docx), OpenOffice/LibreOffice Writer (.odt), Markdown (.md), TeX/LaTeX document (.tex), raw text (.txt).`;
+    // styles: string = $localize`Document styles are not imported. You may need to correct formatting and/or styles manually.`;
+    // images: string = $localize`Images embedded in the document are automatically uploaded. You will find the appropriate image references at the end of the imported content.`;
+}
+
 export class PareditorController extends DialogController<
     {params: IEditorParams},
     IEditorResult
@@ -282,6 +296,7 @@ export class PareditorController extends DialogController<
     private currentSymbol: FormulaEvent = {
         text: "",
     };
+    docImportHelp: DocumentImportHelp;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1075,6 +1090,7 @@ ${backTicks}
         this.outofdate = false;
         this.parCount = 0;
         this.touchDevice = false;
+        this.docImportHelp = new DocumentImportHelp();
     }
 
     getEditor() {

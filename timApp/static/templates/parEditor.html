@@ -34,6 +34,13 @@
 
     <!-- Pandoc document conversion-->
     <uib-tab heading="Import document" index="'pandoc'" ng-show="$ctrl.getOptions().showImageUpload">
+        <div id="import_instructions">
+            <strong>{{$ctrl.docImportHelp.heading}}</strong><br/>
+            {{$ctrl.docImportHelp.shortHelp}}<br/>
+            {{$ctrl.docImportHelp.formats}}<br/>
+            {{$ctrl.docImportHelp.styles}}<br/>
+            {{$ctrl.docImportHelp.images}}
+        </div>
         <span>
             <input type="file" ngf-select="$ctrl.onFileSelectForPandoc($file)" ngf-multiple="false">
             <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
