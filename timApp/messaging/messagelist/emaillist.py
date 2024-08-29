@@ -772,20 +772,24 @@ def _deduplicate_members(members: list[Member]) -> dict[str, Member]:
 def update_mailing_list_address(old: str, new: str) -> None:
     if not old or not new:
         return
-    if old == new:
+    # Mailman does not care about the case, but TIM does
+    # Therefore, we must deduplicate here
+    old_lower = old.lower()
+    new_lower = new.lower()
+    if old_lower == new_lower:
         return
     # Don't try to update info for "soft" deleted emails (since the emails are invalid)
-    if deleted_user_pattern.match(old) or deleted_user_pattern.match(new):
+    if deleted_user_pattern.match(old_lower) or deleted_user_pattern.match(new_lower):
         return
     if not check_mailman_connection():
         return
     try:
-        usr = _client.get_user(old)
-        addr = usr.add_address(new, absorb_existing=True)
+        usr = _client.get_user(old_lower)
+        addr = usr.add_address(new_lower, absorb_existing=True)
         addr.verify()
         usr.preferred_address = addr
-        old_members = find_members_for_address(old)
-        new_members = find_members_for_address(new)
+        old_members = find_members_for_address(old_lower)
+        new_members = find_members_for_address(new_lower)
 
         # Try to pair the old and new members by list_id
         member_pairs: list[tuple[Member, Member]] = []
@@ -800,11 +804,12 @@ def update_mailing_list_address(old: str, new: str) -> None:
         # TODO: This is irreversible, i.e. user changing primary email back doesn't restore old external membership
 
         for old_member, new_member in member_pairs:
+            # TIM cares about the case, so we need to account for both cases
             delete_ids_stmt = (
                 select(MessageListExternalMember.id)
                 .join(MessageListModel)
                 .filter(
-                    (MessageListExternalMember.email_address == new)
+                    (MessageListExternalMember.email_address.ilike(new))
                     & (MessageListModel.mailman_list_id == new_member.list_id)
                 )
             )
@@ -823,7 +828,7 @@ def update_mailing_list_address(old: str, new: str) -> None:
         for member in old_members.values():
             # Mailman objects have dynamic attributes
             # noinspection PyPropertyAccess
-            member.address = new
+            member.address = new_lower
             member.save()
     except HTTPError as e:
-        log_mailman(e, f"Could not reroute emails {old} -> {new}")
+        log_mailman(e, f"Could not reroute emails {old_lower} -> {new_lower}")
