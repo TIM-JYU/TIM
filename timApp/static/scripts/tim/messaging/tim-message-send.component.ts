@@ -54,18 +54,18 @@ interface TimMessageOptions extends t.TypeOf<typeof TimSavedMessageOptions> {
                         <ng-container *ngIf="!sendGlobal">
                             <label for="recipients" i18n>Recipients:</label>
                             <textarea class="form-control" id="recipients" name="recipients" [(ngModel)]="recipientList"
-                                      rows="4" (input)="somethingChanged()"></textarea>
+                                      rows="4" (input)="somethingChanged($event)"></textarea>
                         </ng-container>
 
                         <label for="subject" i18n>Subject:</label>
-                        <input class="form-control" [(ngModel)]="messageSubject" (input)="somethingChanged()"
+                        <input class="form-control" [(ngModel)]="messageSubject" (input)="somethingChanged($event)"
                                id="subject"
                                name="subject">
                     </div>
                     <label for="message" i18n>Message content:</label>
-                    <textarea class="form-control" [(ngModel)]="messageBody" rows="10" (input)="somethingChanged()"
+                    <textarea class="form-control" [(ngModel)]="messageBody" rows="10" (input)="somethingChanged($event)"
                               id="message" name="message"></textarea>
-                    <div class="extra-options" (click)="toggleOptions(); somethingChanged()">
+                    <div class="extra-options" (click)="toggleOptions(); somethingChanged($event)">
                         <i class="glyphicon" [ngClass]="showOptions ? 'glyphicon-minus' : 'glyphicon-plus'"></i>
                         <ng-container *ngIf="showOptions; else hideOptions" i18n>Hide message options</ng-container>
                         <ng-template #hideOptions i18n>Show message options</ng-template>
@@ -305,9 +305,20 @@ export class TimMessageSendComponent {
         this.timMessageOptions.pageList = "";
     }
 
-    somethingChanged() {
+    somethingChanged(event: Event) {
         this.formChanged = true;
+
+        /* Attach or detach beforeunload listeners, depending on message state */
+        if (this.messageBody !== "" && !this.messageSentOk) {
+            window.addEventListener("beforeunload", this.confirmExitHandler);
+        } else {
+            window.removeEventListener("beforeunload", this.confirmExitHandler);
+        }
     }
+
+    confirmExitHandler = (event: Event) => {
+        event.preventDefault();
+    };
 
     // Checks if all mandatory fields have values
     disableSendButton() {
