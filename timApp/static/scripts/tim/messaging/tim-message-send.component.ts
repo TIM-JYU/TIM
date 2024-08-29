@@ -218,6 +218,7 @@ export class TimMessageSendComponent {
     replyToEmail?: string | null;
     messageSubject: string = "";
     messageBody: string = "";
+    prevMessageBody: string = "";
     showOptions: boolean = false;
     emailbcc: boolean = false;
     emailbccme: boolean = true;
@@ -308,11 +309,9 @@ export class TimMessageSendComponent {
     somethingChanged(event: Event) {
         this.formChanged = true;
 
-        /* Attach or detach beforeunload listeners, depending on message state */
-        if (this.messageBody !== "" && !this.messageSentOk) {
+        /* Attach beforeunload listener, if message has changed */
+        if (this.messageBody !== this.prevMessageBody) {
             window.addEventListener("beforeunload", this.confirmExitHandler);
-        } else {
-            window.removeEventListener("beforeunload", this.confirmExitHandler);
         }
     }
 
@@ -379,6 +378,10 @@ export class TimMessageSendComponent {
             });
             this.prevForm = this.form;
         }
+
+        this.prevMessageBody = this.messageBody;
+        /* Detach unload listener, so we don't block on already sent messages */
+        window.removeEventListener("beforeunload", this.confirmExitHandler);
     }
 
     public async sendMessage() {
