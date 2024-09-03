@@ -13,15 +13,16 @@ __license__ = "MIT"
 __date__ = "24.5.2022"
 
 from dataclasses import dataclass
-from typing import Optional, Iterable, List, TYPE_CHECKING
+from typing import Optional, Iterable, List, TYPE_CHECKING, Any
 
 from sqlalchemy import func, select, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
+from timApp.auth.sessioninfo import logged_in
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, get_logged_in_group_id
 from tim_common.dumboclient import call_dumbo
 
 if TYPE_CHECKING:
@@ -157,6 +158,7 @@ class EnrollmentCounts:
 
 @dataclass(slots=True)
 class EnrollmentRight:
+    visible_in_document: bool
     can_enroll: bool
     extra: bool
     manager: bool
@@ -167,8 +169,12 @@ class EnrollmentRight:
         return self.manager or self.creator
 
     @property
-    def is_valid(self) -> bool:
+    def can_use(self) -> bool:
         return self.can_enroll or self.can_manage_event
+
+    @property
+    def can_see(self) -> bool:
+        return self.visible_in_document or self.can_use
 
 
 class Event(db.Model):
@@ -283,11 +289,14 @@ class Event(db.Model):
 
         ug_ids = [ug.id for ug in user.groups]
         # noinspection PyUnresolvedReferences
+        ug_filter: Any = EventGroup.usergroup_id.in_(ug_ids)
+        if logged_in():
+            ug_filter |= EventGroup.usergroup_id == get_logged_in_group_id()
+        # noinspection PyUnresolvedReferences
         event_groups = (
             run_sql(
                 select(EventGroup).filter(
-                    (EventGroup.event_id == self.event_id)
-                    & EventGroup.usergroup_id.in_(ug_ids)
+                    (EventGroup.event_id == self.event_id) & ug_filter
                 )
             )
             .scalars()
@@ -301,7 +310,7 @@ class Event(db.Model):
         is_creator = self.creator_user_id == user.id  # Creators can self-enroll
         if not event_groups:
             return EnrollmentRight(
-                is_creator or can_view_event_doc, False, False, is_creator
+                can_view_event_doc, is_creator, False, False, is_creator
             )
         extra = False
         manager = False
@@ -310,7 +319,7 @@ class Event(db.Model):
                 extra = True
             if event_group.manager:
                 manager = True
-        return EnrollmentRight(True, extra, manager, is_creator)
+        return EnrollmentRight(can_view_event_doc, True, extra, manager, is_creator)
 
     @staticmethod
     def get_by_id(event_id: int) -> Optional["Event"]:
@@ -365,6 +374,9 @@ class Event(db.Model):
             )
             meta |= {
                 "isExtra": e is not None,
+            }
+            meta |= {
+                "rights": self.get_enrollment_right(for_user),
             }
 
         if with_users:

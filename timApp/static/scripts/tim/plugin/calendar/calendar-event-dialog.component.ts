@@ -746,7 +746,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.eventBookState = {canBook: true, reason: undefined};
             return;
         }
-        if (this.eventIsFull()) {
+        if (!this.data.meta?.rights?.can_enroll) {
+            this.eventBookState = {
+                canBook: false,
+                reason: $localize`You do not have the right to book this event`,
+            };
+        } else if (this.eventIsFull()) {
             this.eventBookState = {
                 canBook: false,
                 reason: $localize`The event is full`,

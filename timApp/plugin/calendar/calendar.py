@@ -605,8 +605,8 @@ def get_event(event_id: int) -> Response:
 
     cur_user = get_current_user_object()
     right = event.get_enrollment_right(cur_user)
-    if not right.is_valid:
-        raise AccessDenied("No permission to see event")
+    if not right.can_see:
+        raise AccessDenied("No permission to see event details")
 
     return json_response(
         event.to_json(
@@ -1014,7 +1014,7 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
     new_message = f"{user.name} {now.strftime('%d.%m.%Y %H:%M')}: {booker_msg}"
 
     right: EnrollmentRight = event.get_enrollment_right(user)
-    if not right.is_valid:
+    if not right.can_use:
         raise AccessDenied("You are not allowed to post messages to this event")
 
     user_group = UserGroup.get_by_name(booker_group)

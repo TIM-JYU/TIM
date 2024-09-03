@@ -9048,6 +9048,14 @@
           <context context-type="linenumber">307</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5113952942833093690" datatype="html">
+        <source>You do not have the right to book this event</source>
+        <target state="translated">Sinulla ei ole oikeutta varata tätä tapahtumaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">752</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

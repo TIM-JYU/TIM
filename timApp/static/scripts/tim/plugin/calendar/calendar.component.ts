@@ -205,6 +205,11 @@ export type TIMEventMeta = {
         name: string;
         email: string;
     };
+    rights?: {
+        can_enroll: boolean;
+        manager: boolean;
+        creator: boolean;
+    };
     booker_groups: {
         name: string;
         message: string;
@@ -236,6 +241,7 @@ export function postProcessCalendarEvent(
         send_notifications: event.meta!.send_notifications,
         important: event.meta!.important,
         owner: event.meta!.owner,
+        rights: event.meta!.rights,
         signup_before: new Date(event.meta!.signup_before),
     };
     event.resizable = {
@@ -612,6 +618,11 @@ export class CalendarComponent
                     })`,
                     email: Users.getCurrent().email ?? "",
                 },
+                rights: {
+                    can_enroll: true,
+                    creator: true,
+                    manager: true,
+                },
                 editEnabled: this.editEnabled,
                 send_notifications: true,
                 important: false,
@@ -953,6 +964,7 @@ export class CalendarComponent
                         important: event.meta!.important,
                         booker_groups: [],
                         owner: event.meta!.owner,
+                        rights: event.meta!.rights,
                         signup_before: new Date(event.meta!.signup_before),
                     },
                     resizable: {
