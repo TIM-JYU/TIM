@@ -52,7 +52,7 @@ from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_access
 from timApp.user.special_group_names import LOGGED_IN_GROUPNAME
 from timApp.user.user import User, edit_access_set, manage_access_set
-from timApp.user.usergroup import UserGroup, get_logged_in_group_id
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -488,15 +488,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     if filter_opts.includeDocumentEvents and filter_opts.docId:
         doc = DocEntry.find_by_id(filter_opts.docId)
         if doc and verify_view_access(doc, require=False):
-            logged_in_filter = (Event.origin_doc_id == doc.id) & (
-                select(EventGroup.event_id)
-                .filter(
-                    (EventGroup.event_id == Event.event_id)
-                    & (EventGroup.usergroup_id == get_logged_in_group_id())
-                )
-                .exists()
-            )
-            event_filter |= logged_in_filter
+            event_filter |= Event.origin_doc_id == doc.id
 
     # 2. Events that the user is either a booker or setter for
     subquery_event_groups_all = (
