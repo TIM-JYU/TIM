@@ -492,7 +492,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
 
     # 2. Events that the user is either a booker or setter for
     subquery_event_groups_all = (
-        u.get_groups(include_expired=False, include_special=False)
+        u.get_groups(include_expired=False, include_special=True)
         .join(EventGroup, EventGroup.usergroup_id == UserGroup.id)
         .with_only_columns(EventGroup.event_id)
     )
