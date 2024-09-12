@@ -708,7 +708,7 @@ def get_ide_user_plugin_data(
     #     task_type=task_info.type, task_name=ide_task_id
     # )
 
-    supplementary_files = plugin_json["markup"].get("ide_extra_files")
+    supplementary_files = plugin_json["markup"].get("ide_extra_files") or []
 
     return TIDEPluginData(
         task_files=json_ide_files,
