@@ -6484,7 +6484,7 @@
       </trans-unit>
       <trans-unit id="3647509096795216020" datatype="html">
         <source> Add to 'My courses' </source>
-        <target state="translated"> Lisää 'Kursst'-kansioon </target>
+        <target state="translated"> Lisää 'Kurssit'-kansioon </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/header/header.component.ts</context>
           <context context-type="linenumber">51,53</context>
