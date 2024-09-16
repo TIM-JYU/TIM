@@ -177,17 +177,6 @@ SupplementaryFileSchema = class_schema(SupplementaryFile)()
 
 
 @dataclass
-class IdeAsset:
-    url: str
-
-    def to_json(self) -> dict[str, str | None]:
-        return {"url": self.url}
-
-
-IdeAssetSchema = class_schema(IdeAsset)()
-
-
-@dataclass
 class TIDETaskInfo:
     """
     Information about the TIDE-task
