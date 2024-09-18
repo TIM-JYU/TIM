@@ -96,59 +96,46 @@ def run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any]):
 
 
 def do_run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any]):
-    @contextlib.contextmanager
-    def temp_user_session(uid: int):
-        """
-        Context manager to set the current user in the session.
-        """
-        prev = dict(session)
-        clear_session()
-        session["user_id"] = uid
-        yield
-        clear_session()
-        session.update(prev)
-
-    # We start a separate context and set the session to emulate the user running a function
+    # We emulate a request context so that we can set a temporary user session
     # Some plugins depend on the document context, which in turn may depend on permissions (e.g. extraPreambles)
-    # We also reset the session, since the session is preserved in tests
-    with app.app_context():
-        with temp_user_session(user_id):
-            next_runner = task_id
-            encountered_runners = set()
-            u = User.get_by_id(user_id)
-            step = 0
-            while next_runner:
-                step += 1
-                encountered_runners.add(next_runner)
-                logger.info(f"Plugin run: {u.name}, {next_runner}, step {step}")
-                result = post_answer_impl(
-                    next_runner, copy(plugin_input), {}, {}, u, (), [], None
+    with app.test_request_context():
+        session["user_id"] = user_id
+        next_runner = task_id
+        encountered_runners = set()
+        u = User.get_by_id(user_id)
+        step = 0
+        while next_runner:
+            step += 1
+            encountered_runners.add(next_runner)
+            logger.info(f"Plugin run: {u.name}, {next_runner}, step {step}")
+            result = post_answer_impl(
+                next_runner, copy(plugin_input), {}, {}, u, (), [], None
+            )
+
+            try:
+                wod: WithOutData = WithOutDataSchema.load(
+                    result.result.get("web"), unknown=EXCLUDE
                 )
+            except ValidationError:
+                pass
+            else:
+                handle_exportdata(result, u, wod)
 
-                try:
-                    wod: WithOutData = WithOutDataSchema.load(
-                        result.result.get("web"), unknown=EXCLUDE
-                    )
-                except ValidationError:
-                    pass
-                else:
-                    handle_exportdata(result, u, wod)
+            if output := result.result.get("web", {}).get("output"):
+                logger.info(f"Plugin run: {u.name}, result: {output}")
 
-                if output := result.result.get("web", {}).get("output"):
-                    logger.info(f"Plugin run: {u.name}, result: {output}")
+            # The user-provided parameters go only to the first plugin. Others will get no parameters.
+            plugin_input = {}
 
-                # The user-provided parameters go only to the first plugin. Others will get no parameters.
-                plugin_input = {}
-
-                next_runner = result.plugin.values.get("nextRunner")
-                if isinstance(next_runner, str):
-                    next_runner = f"{result.plugin.task_id.doc_id}.{next_runner}"
-                    if next_runner in encountered_runners:
-                        logger.warning(f"Cycle in runners: {encountered_runners}")
-                        break
-                elif next_runner is not None:
-                    logger.warning(f"Invalid type for nextRunner: {next_runner}")
+            next_runner = result.plugin.values.get("nextRunner")
+            if isinstance(next_runner, str):
+                next_runner = f"{result.plugin.task_id.doc_id}.{next_runner}"
+                if next_runner in encountered_runners:
+                    logger.warning(f"Cycle in runners: {encountered_runners}")
                     break
+            elif next_runner is not None:
+                logger.warning(f"Invalid type for nextRunner: {next_runner}")
+                break
 
 
 def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> None:
