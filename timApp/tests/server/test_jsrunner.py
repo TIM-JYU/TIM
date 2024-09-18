@@ -3,6 +3,7 @@ import json
 from datetime import datetime, timezone
 
 import requests
+from flask import session
 from sqlalchemy import func, select
 
 from timApp.answer.answer import Answer
@@ -12,7 +13,8 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.notification.send_email import sent_mails_in_testing
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
+from timApp.tim_celery import do_run_user_function
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 
@@ -1810,3 +1812,64 @@ gtools.sendMail(tools.getUserName(), "Test subject 2", "Test Body 2");
 
         # Only two messages must be sent, the first one is merged
         self.assertEqual(len(sent_mails_in_testing), 2)
+
+
+class TestJSRunnerScheduledRun(JsRunnerTestBase):
+    def test_scheduled_run(self):
+        self.login_test1()
+
+        testuser1_folder = self.test_user_1.get_personal_folder().path
+
+        d = self.create_doc(
+            f"{testuser1_folder}/jsruntest/runner",
+            initial_par="""
+#- {defaultplugin="textfield" }
+{#GLO_debug #}
+
+``` {#r plugin="jsrunner"}
+fields: [GLO_debug]
+groups: [%%username%%]
+program: |!!
+tools.setString("GLO_debug", "User: %%username%%; Origin: %%origin%%");
+!!
+```
+""",
+        )
+        self.create_doc(
+            f"{testuser1_folder}/jsruntest/macros/macros1",
+            settings={"macros": {"origin": "macros1"}},
+        )
+
+        p = self.create_preamble_for(d)
+        p.document.set_settings(
+            {
+                "extraPreambles": [
+                    f"{testuser1_folder}/jsruntest/macros/macros1",
+                ]
+            }
+        )
+
+        db.session.commit()
+        self.logout()
+
+        self.assertIsNone(session.get("user_id"), "User should be logged out")
+
+        # Now, we run the runner using the scheduled run
+        do_run_user_function(self.test_user_1.id, f"{d.id}.r", {})
+
+        self.assertIsNone(
+            session.get("user_id"),
+            "User session must not leak from the scheduled runner",
+        )
+
+        answer: Answer = run_sql(
+            select(Answer).filter(Answer.task_id == f"{d.id}.GLO_debug").limit(1)
+        ).scalar()
+
+        contents = json.loads(answer.content)
+
+        self.assertEqual(
+            contents["c"],
+            "User: testuser1; Origin: macros1",
+            "User macro should be present and the macro from a limited extra preamble should be set",
+        )
