@@ -153,6 +153,7 @@ class MacroInfo:
                 "useremail": f"{self.macro_delimiter}useremail{self.macro_delimiter}",
                 "loggedUsername": f"{self.macro_delimiter}loggedUsername{self.macro_delimiter}",
                 "userfolder": f"{self.macro_delimiter}userfolder{self.macro_delimiter}",
+                "profilepicture": f"{self.macro_delimiter}profilepicture{self.macro_delimiter}",
             }
         )
         return macros
@@ -178,6 +179,7 @@ def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
          - useremail: The email address of the user.
          - loggedUsername: The username of the user that is logged in.
          - userfolder: The personal folder of the user.
+         - profilepicture: The profile picture of the user.
 
     :param user_ctx: User context to get the macros for.
     :return: Dictionary of user macros.
@@ -192,6 +194,7 @@ def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
         "userfolder": escape(
             user.get_personal_folder().path
         ),  # personal folder object is cached and usually reused
+        "profilepicture": escape(user.get_profile_picture()),
     }
 
 
