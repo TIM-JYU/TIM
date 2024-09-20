@@ -145,6 +145,7 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     pointsStep: 0,
     validOnlyText: $localize`Show valid only`,
     showReview: false,
+    showInitialAskNew: true,
 };
 
 @Component({
@@ -476,6 +477,13 @@ export class AnswerBrowserComponent
         if (!this.formMode) {
             await this.loadInfo();
         }
+
+        // If showInitialAskNew is disabled and the question allows asking new tasks,
+        // then load latest saved task instead on initial load
+        if (!this.markupSettings.showInitialAskNew && this.isAskNew()) {
+            await this.updateFilteredAndSetNewest();
+        }
+
         // TODO: Angular throws error if many answerbrowsers resolve around the same time
         //  (e.g awaits above don't happen if were in form mode and don't want separate info reqs)
         await $timeout(0);
@@ -1614,8 +1622,8 @@ export class AnswerBrowserComponent
     }
 
     isAndSetShowNewTask() {
-        const result = this.taskInfo?.newtask ?? false;
-        if (!result) {
+        const isNewTask = this.taskInfo?.newtask ?? false;
+        if (!isNewTask) {
             this.showNewTask = false;
             return false;
         }
