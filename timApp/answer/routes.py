@@ -1125,6 +1125,7 @@ def post_answer_impl(
                     "is_valid": is_valid,
                     "invalid_explanation": explanation,
                     "force_answer": force_answer,
+                    "allow_save": allow_save,
                     "error": "",
                     "web": web,
                 }
@@ -1253,6 +1254,7 @@ def post_answer_impl(
                     "is_valid": True,
                     "invalid_explanation": "ok",
                     "force_answer": force_answer,
+                    "allow_save": allow_save,
                     "error": "",
                     "web": web,
                 }
