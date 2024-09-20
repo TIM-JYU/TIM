@@ -402,8 +402,6 @@ class DeeplTranslationService(RegisteredTranslationService):
             call = self._translate(
                 session,
                 protected_texts[start:i],
-                # if i < len(protected_texts)
-                # else protected_texts[start : i + 1],
                 # Send uppercase, because it is used in DeepL documentation.
                 source_lang_code.upper() if source_lang_code else None,
                 target_lang.lang_code.upper(),
