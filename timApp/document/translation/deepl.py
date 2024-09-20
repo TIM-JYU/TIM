@@ -47,6 +47,14 @@ from tim_common.vendor.requests_futures import (
 
 LANGUAGES_CACHE_TIMEOUT = 3600 * 24  # seconds
 
+# Limit for how big a request the DeepL API accepts
+# Exact limit is 128KiB (see https://developers.deepl.com/docs/resources/usage-limits#api-limits),
+# but due to request headers/overhead we will have to stick to a lower limit.
+# The limit corresponds roughly to the same amount of characters in the request payload.
+DEEPL_REQUEST_SIZE_LIMIT = 100_000
+# How many text 'packets' or parameters the DeepL API accepts in one request
+DEEPL_REQUEST_MAX_TEXT_PARAMS = 50
+
 
 class DeeplTranslationService(RegisteredTranslationService):
     """Translation service using the DeepL API Free."""
@@ -368,10 +376,34 @@ class DeeplTranslationService(RegisteredTranslationService):
                 else requests.adapters.DEFAULT_RETRIES
             ),
         )
-        for i in range(0, len(protected_texts), 50):
+
+        i = 0
+        while i < len(protected_texts):
+            req_chars = 0
+            num_params = 0
+            start = i
+
+            # In addition to the text parameters limit, requests also have a size limit in bytes
+            while (
+                i < len(protected_texts)
+                and num_params < DEEPL_REQUEST_MAX_TEXT_PARAMS
+                and req_chars + len(protected_texts[i]) < DEEPL_REQUEST_SIZE_LIMIT
+            ):
+                req_chars += len(protected_texts[i])
+                num_params += 1
+                i += 1
+
+            # TODO: text splitter for continuous text that exceeds the byte limit on its own
+            # if len(protected_texts[i]) > DEEPL_REQUEST_SIZE_LIMIT:
+            #     logger.log_info(
+            #         f"MASSIVE TEXT BLOCK! Start: '{protected_texts[j][0:20]}'..."
+            #     )
+
             call = self._translate(
                 session,
-                protected_texts[i : i + 50],
+                protected_texts[start:i],
+                # if i < len(protected_texts)
+                # else protected_texts[start : i + 1],
                 # Send uppercase, because it is used in DeepL documentation.
                 source_lang_code.upper() if source_lang_code else None,
                 target_lang.lang_code.upper(),
@@ -391,6 +423,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         for call in translate_calls:
             resp = call.result()
             # TODO Handle exceptions raised in the error handling.
+            # TODO: salvage successful translation results
             resp_json = self._handle_post_response(resp)
             translation_resps += resp_json["translations"]
 
