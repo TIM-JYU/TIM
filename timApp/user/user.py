@@ -1608,9 +1608,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         # TODO: think other languages also
         return User.get_by_name(current_app.config["MODEL_ANSWER_USER_NAME"])
 
-    def get_profile_picture(self) -> Optional[str]:
+    def get_profile(self) -> Optional[str]:
         path = self.get_personal_folder().path
-        return "/images/730648/Riikola_Olli-Pekka.png"
+        return ""
 
 
 def get_membership_end(u: User, group_ids: set[int]) -> datetime | None:

@@ -114,7 +114,7 @@ TIM_SAFE_TAGS = [
     "tim-message-send",
     "tim-notification-options",
     "tim-search-button",
-    "user-profile",
+    "tim-user-profile",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
