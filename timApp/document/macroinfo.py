@@ -194,7 +194,7 @@ def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
         "userfolder": escape(
             user.get_personal_folder().path
         ),  # personal folder object is cached and usually reused
-        "profilepicture": escape(user.get_profile_picture()),
+        "profilepicture": escape(user.get_profile()),
     }
 
 
