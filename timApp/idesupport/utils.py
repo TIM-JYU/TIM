@@ -164,12 +164,14 @@ IdeFileSchema = class_schema(IdeFile)()
 @dataclass
 class SupplementaryFile:
     filename: str
-    content: str
+    content: str | None = None
+    source: str | None = None
 
     def to_json(self) -> dict[str, str | None]:
         return {
             "content": self.content,
             "file_name": self.filename,
+            "source": self.source,
         }
 
 
@@ -242,11 +244,6 @@ class TIDEPluginData:
     supplementary_files: List[SupplementaryFile] | None = None
     """
     Supplementary files for the task
-    """
-
-    ide_assets: List[IdeAsset] | None = None
-    """
-    Files that cli tool has to download
     """
 
     path: str | None = None
@@ -713,12 +710,13 @@ def get_ide_user_plugin_data(
 
     ide_extra_files = plugin_json["markup"].get("ide_extra_files") or []
 
+    # If both content and source are provided, content is used (see tidecli)
+    # If neither is provided, no supplementary file will be created
     for extra_file in ide_extra_files:
-        if extra_file["content"] is not None:
+        if "content" in extra_file:
             supplementary_files.append(SupplementaryFileSchema.load(extra_file))
-        elif extra_file["source"] is not None:
-            # TODO: fetch the data from disk/internet and slap it in the content-field of a SupplementaryFile
-            pass
+        elif "source" in extra_file:
+            supplementary_files.append(SupplementaryFileSchema.load(extra_file))
 
     return TIDEPluginData(
         task_files=json_ide_files,
