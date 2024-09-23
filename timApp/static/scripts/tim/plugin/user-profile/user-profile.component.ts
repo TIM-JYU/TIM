@@ -1,6 +1,7 @@
-import type {OnInit} from "@angular/core";
+import {Input, OnInit} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {redirectToItem} from "tim/item/IItem";
 
 @Component({
     selector: "tim-user-profile",
@@ -15,7 +16,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
             </div>
             <div class="right-column">
                 <p>
-                    Paragraph inside
+                    Paragraph inside {{foo}}
                 </p>
             </div>
         </div>
@@ -23,14 +24,17 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
     styleUrls: ["./user-profile.component.scss"],
 })
 export class UserProfileComponent implements OnInit {
-    pictureUrl = "http://localhost/images/68/Riikola_Olli-Pekka.png";
+    @Input() foo?: string | null;
+    pictureUrl: string = "";
     profileUrl: string = "";
 
     constructor(private http: HttpClient) {}
 
     async ngOnInit() {
+        // TODO: lue inputosta käyttäjä
         const data = await this.getProfileData();
         console.log(data);
+        console.log(this.foo);
     }
 
     async getProfileData() {

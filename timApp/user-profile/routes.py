@@ -12,5 +12,5 @@ course_blueprint = Blueprint("profile", __name__, url_prefix="/profile")
 @course_blueprint.get()
 def get_data_from_profile_document() -> Response:
     current_user = get_current_user_object()
-    profile_picture = current_user.get_profile_picture()
+    profile_picture = current_user.get_profile()
     return json_response({"test": "Hello World!"})
