@@ -444,7 +444,6 @@ class Language:
 
     def copy_image(self, result, code, out, err, points_rule):
         if code == -9:
-            out = "Runtime exceeded, maybe loop forever\n" + out
             return out, err
         if self.imgsource and self.imgdest:
             _, imgext = splitext(self.imgsource)
