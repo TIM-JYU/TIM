@@ -1913,18 +1913,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     give_points(points_rule, is_test + "notcompile")
                     return write_json_error(self.wfile, error_str, result, points_rule)
 
-                give_points(points_rule, is_test + "compile")
-
-                if (
-                    not err and not language.run_points_given
-                ):  # because test points are already given
-                    give_points(points_rule, "run")
-                # print(code, out, err, pwddir)
-
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
-
                 else:
+                    give_points(points_rule, is_test + "compile")
+                    if (
+                        not err and not language.run_points_given
+                    ):  # because test points are already given
+                        give_points(points_rule, "run")
+                    # print(code, out, err, pwddir)
                     print(err)
                     # err = err + compiler_output
                     err = language.clean_error(err)
