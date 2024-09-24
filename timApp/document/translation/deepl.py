@@ -484,7 +484,7 @@ class DeeplTranslationService(RegisteredTranslationService):
                 return_langs = return_langs + [en]
         return return_langs
 
-    @cache.memoize(timeout=LANGUAGES_CACHE_TIMEOUT, args_to_ignore=["self"])
+    # @cache.memoize(timeout=LANGUAGES_CACHE_TIMEOUT, args_to_ignore=["self"])
     def languages(self) -> LanguagePairing:
         """
         Asks the DeepL API for the list of supported languages and turns the
