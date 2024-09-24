@@ -357,7 +357,9 @@ This will delete the whole ${
 (If you only want to remove selected text, use backspace.)`,
                 localSaveTag: options.localSaveTag ?? "par",
                 showDelete: options.showDelete,
+                showUpload: true,
                 showImageUpload: true,
+                showDocumentImport: true,
                 showPlugins: true,
                 cursorPosition: cursorPos,
                 showSettings:

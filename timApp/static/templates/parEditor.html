@@ -19,39 +19,46 @@
         <div ng-if="t.extra" ng-bind-html="t.extra"></div>
     </uib-tab>
 
-    <uib-tab heading="Upload" index="'upload'" ng-show="$ctrl.getOptions().showImageUpload">
-        <span>
-            <input type="file" ngf-select="$ctrl.onFilesSelect($files, $invalidFiles)" ngf-multiple="true">
-            <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
-                  ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'"></span>
-            <a ng-href="{{$ctrl.uploadedFile}}">{{$ctrl.uploadedFile}}</a>
-        </span>
-        <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
-        <span>
-        </span>
-        <tim-editor-entry ng-repeat="e in $ctrl.getUploadTab().entries" data="e"></tim-editor-entry>
+
+    <uib-tab heading="Upload" index="'upload_main_tab'" ng-show="$ctrl.getOptions().showUpload">
+        <uib-tabset>
+            <uib-tab heading="File or Image" index="'upload'" ng-show="$ctrl.getOptions().showImageUpload">
+                <span>
+                    <input type="file" ngf-select="$ctrl.onFilesSelect($files, $invalidFiles)" ngf-multiple="true">
+                    <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
+                          ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'"></span>
+                    <a ng-href="{{$ctrl.uploadedFile}}">{{$ctrl.uploadedFile}}</a>
+                </span>
+                <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
+                <span>
+                </span>
+                <tim-editor-entry ng-repeat="e in $ctrl.getUploadTab().entries" data="e"></tim-editor-entry>
+            </uib-tab>
+
+            <!-- Pandoc document conversion-->
+            <uib-tab heading="Import document" index="'pandoc'" ng-show="$ctrl.getOptions().showDocumentImport">
+                <div id="import_instructions">
+                    <strong>{{$ctrl.docImportHelp.heading}}</strong><br/>
+                    {{$ctrl.docImportHelp.shortHelp}}<br/>
+                    {{$ctrl.docImportHelp.formats}}<br/>
+                    {{$ctrl.docImportHelp.styles}}<br/>
+                    {{$ctrl.docImportHelp.images}}
+                </div>
+                <span>
+                    <input type="file" ngf-select="$ctrl.onFileSelectForPandoc($file)" ngf-multiple="false">
+                    <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
+                          ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'"></span>
+                    <a ng-href="{{$ctrl.uploadedFile}}">{{$ctrl.uploadedFile}}</a>
+                </span>
+                <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
+                <span>
+                </span>
+                <tim-editor-entry ng-repeat="e in $ctrl.getPandocTab().entries" data="e"></tim-editor-entry>
+            </uib-tab>
+        </uib-tabset>
+        <tim-editor-entry ng-repeat="e in $ctrl.getUploadMainTab().entries" data="e"></tim-editor-entry>
     </uib-tab>
 
-    <!-- Pandoc document conversion-->
-    <uib-tab heading="Import document" index="'pandoc'" ng-show="$ctrl.getOptions().showImageUpload">
-        <div id="import_instructions">
-            <strong>{{$ctrl.docImportHelp.heading}}</strong><br/>
-            {{$ctrl.docImportHelp.shortHelp}}<br/>
-            {{$ctrl.docImportHelp.formats}}<br/>
-            {{$ctrl.docImportHelp.styles}}<br/>
-            {{$ctrl.docImportHelp.images}}
-        </div>
-        <span>
-            <input type="file" ngf-select="$ctrl.onFileSelectForPandoc($file)" ngf-multiple="false">
-            <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
-                  ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'"></span>
-            <a ng-href="{{$ctrl.uploadedFile}}">{{$ctrl.uploadedFile}}</a>
-        </span>
-        <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
-        <span>
-        </span>
-        <tim-editor-entry ng-repeat="e in $ctrl.getPandocTab().entries" data="e"></tim-editor-entry>
-    </uib-tab>
 
 
     <uib-tab heading="Help" index="'help'">
