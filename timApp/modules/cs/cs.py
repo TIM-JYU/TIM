@@ -1915,16 +1915,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 give_points(points_rule, is_test + "compile")
 
-                if (
-                    not err and not language.run_points_given
-                ):  # because test points are already given
-                    give_points(points_rule, "run")
                 # print(code, out, err, pwddir)
 
                 if code == -9:
+                    # If runtime exceeds, then we cannot be sure that the program finished running
+                    # properly. Therefore, we cannot give points for successfully running the program.
                     out = "Runtime exceeded, maybe loop forever\n" + out
-
                 else:
+                    if not err and not language.run_points_given:
+                        give_points(points_rule, "run")
+
                     print(err)
                     # err = err + compiler_output
                     err = language.clean_error(err)
