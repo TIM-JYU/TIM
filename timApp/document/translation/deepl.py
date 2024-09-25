@@ -358,9 +358,7 @@ class DeeplTranslationService(RegisteredTranslationService):
             num_params = 0
             start = i
 
-            if not len(protected_texts[i]) < DEEPL_REQUEST_SIZE_LIMIT:
-                i += 1
-            else:
+            if len(protected_texts[i]) < DEEPL_REQUEST_SIZE_LIMIT:
                 # In addition to the text parameters limit, requests also have a size limit in bytes
                 while (
                     i < len(protected_texts)
@@ -370,6 +368,8 @@ class DeeplTranslationService(RegisteredTranslationService):
                     req_chars += len(protected_texts[i])
                     num_params += 1
                     i += 1
+            else:
+                i += 1
 
             call = self._translate(
                 session,
