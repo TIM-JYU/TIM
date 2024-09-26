@@ -1610,7 +1610,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     def get_profile(self) -> Optional[str]:
         path = self.get_personal_folder().path
-        return ""
+        return path
 
 
 def get_membership_end(u: User, group_ids: set[int]) -> datetime | None:
