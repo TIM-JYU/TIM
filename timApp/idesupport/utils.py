@@ -586,6 +586,7 @@ def get_ide_task_by_id(
 
     raise RouteException("Multiple tasks found, support not implemented yet")
 
+
 def get_task_language(task_type: str | None) -> str | None:
     """
     Get the language of the task
@@ -600,10 +601,10 @@ def get_task_language(task_type: str | None) -> str | None:
 
     return None
 
+
 def generate_supplementary_files(
     task_type: str | None, task_name: str
 ) -> list[SupplementaryFile]:
-
     task_language = get_task_language(task_type)
 
     if task_language in ["cs", "c#", "csharp"]:
