@@ -1,6 +1,17 @@
 tim-user-profile {
   width: 100%;
   padding: 0;
+
+}
+
+.tim-user-profile-container {
+  box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+  padding: 1em;
+  border-radius: 1em;
+
+}
+
+:host(tim-user-profile) {
 }
 
 .container {
@@ -14,9 +25,11 @@ tim-user-profile {
 
 .left-column {
   grid-area: left;
+  padding: .5em;
 }
 
 .right-column {
+  padding: .5em;
   grid-area: right;
 }
 
@@ -33,4 +46,15 @@ tim-user-profile {
 
 .profile-heading h2 {
   margin: unset;
+}
+
+#tim-user-profile-picture {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  width: 50%;
+  object-fit: cover;
+}
+
+.profile-picture-box {
+  margin: 1em;
 }

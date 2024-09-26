@@ -89,6 +89,7 @@ from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.settings.styles import styles
 from timApp.user.verification.routes import verify
+from timApp.user_profile.routes import profile_blueprint
 from timApp.util.error_handlers import register_errorhandlers
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
@@ -168,6 +169,7 @@ blueprints = [
     quantum_circuit_plugin,
     symbolbutton_plugin,
     ide,
+    profile_blueprint,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:

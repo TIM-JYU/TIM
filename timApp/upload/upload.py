@@ -434,16 +434,22 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
 
 
 @upload.post("/upload/")
-def upload_file():
+def upload_file(doc_id: int = None, uploaded_file: UploadedFile = None):
+    print(request)
     if not logged_in():
         raise AccessDenied("You have to be logged in to upload a file.")
-    file = request.files.get("file")
-    if file is None:
+    uploaded_file = (
+        request.files.get("file") if uploaded_file is None else uploaded_file
+    )
+    if uploaded_file is None:
         raise RouteException("Missing file")
     folder = request.form.get("folder")
     if folder is not None:
-        return upload_document(folder, file)
-    doc_id = request.form.get("doc_id")
+        return upload_document(folder, uploaded_file)
+
+    # Doc id could be provided internally
+    if doc_id is None:
+        doc_id = request.form.get("doc_id")
     if not doc_id:
         raise RouteException("Missing doc_id")
     d = DocEntry.find_by_id(int(doc_id))
@@ -452,11 +458,11 @@ def upload_file():
         attachment_params = json.loads(request.form.get("attachmentParams"))
         autostamp = attachment_params[len(attachment_params) - 1]
         # TODO: Notify the user that the file type cannot be stamped
-        if file.mimetype not in STAMPABLE_MIMETYPES and autostamp:
+        if uploaded_file.mimetype not in STAMPABLE_MIMETYPES and autostamp:
             raise StampDataInvalidError("Cannot stamp file")
     except:
         # Just go on with normal upload if necessary conditions are not met.
-        return upload_image_or_file(d, file)
+        return upload_image_or_file(d, uploaded_file)
     else:
         if autostamp:
             # Only go here if attachment params are valid enough and autostamping is valid and true
@@ -477,7 +483,7 @@ def upload_file():
                 )
                 custom_stamp_model = attachment_params[len(attachment_params) - 2]
                 return upload_and_stamp_attachment(
-                    d, file, stamp_data, stamp_format, custom_stamp_model
+                    d, uploaded_file, stamp_data, stamp_format, custom_stamp_model
                 )
             # If attachment isn't a pdf, gives an error too (since it's in 'showPdf' plugin)
             except PdfError as e:
