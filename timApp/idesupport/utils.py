@@ -719,6 +719,16 @@ def get_ide_user_plugin_data(
         elif "source" in extra_file:
             supplementary_files.append(SupplementaryFileSchema.load(extra_file))
 
+    ide_extra_files = plugin_json["markup"].get("ide_extra_files") or []
+
+    # If both content and source are provided, content is used (see tidecli)
+    # If neither is provided, no supplementary file will be created
+    for extra_file in ide_extra_files:
+        if "content" in extra_file:
+            supplementary_files.append(SupplementaryFileSchema.load(extra_file))
+        elif "source" in extra_file:
+            supplementary_files.append(SupplementaryFileSchema.load(extra_file))
+
     return TIDEPluginData(
         task_files=json_ide_files,
         supplementary_files=supplementary_files,
