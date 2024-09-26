@@ -25,6 +25,7 @@ from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
 from tim_common.marshmallow_dataclass import class_schema
+from tim_common.utils import type_splitter
 
 IDE_TASK_TAG = "ideTask"  # Identification tag for the TIDE-task
 
@@ -585,12 +586,27 @@ def get_ide_task_by_id(
 
     raise RouteException("Multiple tasks found, support not implemented yet")
 
+def get_task_language(task_type: str | None) -> str | None:
+    """
+    Get the language of the task
+    :param task_type: Type of the task
+    :return: Language of the task
+    """
+
+    if task_type is not None:
+        type_split = type_splitter.split(task_type)
+        if len(type_split) > 0:
+            return type_split[0]
+
+    return None
 
 def generate_supplementary_files(
     task_type: str | None, task_name: str
 ) -> list[SupplementaryFile]:
-    # TODO: fetch language type strings from class itself
-    if task_type in ["cs", "c#", "csharp"]:
+
+    task_language = get_task_language(task_type)
+
+    if task_language in ["cs", "c#", "csharp"]:
         return [
             SupplementaryFile(
                 filename=f"{task_name}.csproj",
