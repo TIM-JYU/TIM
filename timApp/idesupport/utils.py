@@ -592,21 +592,19 @@ def generate_supplementary_files(
     # TODO: fetch language type strings from class itself
     if task_type in ["cs", "c#", "csharp"]:
         return [
-            SupplementaryFileSchema.load(
-                {
-                    "filename": f"{task_name}.csproj",
-                    "content": textwrap.dedent(
-                        """
-                <Project Sdk="Microsoft.NET.Sdk">
-                  <PropertyGroup>
-                    <OutputType>Exe</OutputType>
-                    <TargetFramework>net6.0</TargetFramework>
-                  </PropertyGroup>
-                </Project>
-                """
-                    ),
-                }
-            )
+            SupplementaryFile(
+                filename=f"{task_name}.csproj",
+                content=textwrap.dedent(
+                    """
+                    <Project Sdk="Microsoft.NET.Sdk">
+                      <PropertyGroup>
+                        <OutputType>Exe</OutputType>
+                        <TargetFramework>net6.0</TargetFramework>
+                      </PropertyGroup>
+                    </Project>
+                    """
+                ),
+            ),
         ]
 
     return []
@@ -706,7 +704,10 @@ def get_ide_user_plugin_data(
         ide_file.set_combined_code()
         json_ide_files = [ide_file.to_json()]
 
-    supplementary_files = []
+    supplementary_files = generate_supplementary_files(
+        task_type=task_info.type,
+        task_name=task_id.task_name,
+    )
 
     ide_extra_files = plugin_json["markup"].get("ide_extra_files") or []
 
