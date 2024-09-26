@@ -706,7 +706,7 @@ def get_ide_user_plugin_data(
 
     supplementary_files = generate_supplementary_files(
         task_type=task_info.type,
-        task_name=task_id.task_name
+        task_name=task_id.task_name,
     )
 
     ide_extra_files = plugin_json["markup"].get("ide_extra_files") or []
