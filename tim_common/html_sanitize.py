@@ -264,6 +264,9 @@ TIM_SAFE_ATTRS = frozenset(
         "folder",
         "button-text",
         "wrapper",
+        "profile-id",
+        "profile-document",
+        "modify-enabled",
     ]
 )
 

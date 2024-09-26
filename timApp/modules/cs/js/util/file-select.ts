@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["files_", "multipleElements_"] }] */
-import type {QueryList} from "@angular/core";
+import type {OnInit, QueryList} from "@angular/core";
 import {
     ChangeDetectorRef,
     Component,
@@ -433,7 +433,7 @@ export class FileSelectComponent {
             [maxSize]="maxSize">
         </file-select>`,
 })
-export class FileSelectManagerComponent {
+export class FileSelectManagerComponent implements OnInit {
     // TODO: translations
     @Input() allowMultiple: boolean = true;
     @Input() dragAndDrop: boolean = true;
@@ -461,6 +461,9 @@ export class FileSelectManagerComponent {
     }[] = [];
 
     constructor(public cdr: ChangeDetectorRef) {}
+    ngOnInit() {
+        console.log("File select init.");
+    }
 
     get multipleElements() {
         return this.multipleElements_;
