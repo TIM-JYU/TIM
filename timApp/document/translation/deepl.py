@@ -15,6 +15,7 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
+from dataclasses import dataclass
 from typing import Optional
 import langcodes
 import requests.adapters
@@ -71,7 +72,9 @@ DEEPL_EXCEPTION_MESSAGE: dict[int, str] = {
 }
 
 
+@dataclass
 class DeepLException(HTTPException):
+    status: int
     description: str
 
 
@@ -188,10 +191,12 @@ class DeeplTranslationService(RegisteredTranslationService):
             if status_code not in DEEPL_EXCEPTION_MESSAGE:
                 # TODO Do not show this to user. Confirm, that wuff is sent.
                 raise DeepLException(
+                    status=status_code,
                     description=f"'{resp.url}' responded with: {status_code}",
                 )
             else:
                 raise DeepLException(
+                    status=status_code,
                     description=DEEPL_EXCEPTION_MESSAGE[status_code],
                 )
 
@@ -392,33 +397,19 @@ class DeeplTranslationService(RegisteredTranslationService):
         translation_resps = list()
         for call in translate_calls:
             resp = call.result()
-            # TODO Handle exceptions raised in the error handling.
-            # NOTE: this is disabled for now, since we can't recover successful results after _handle_post_response
-            #       throws an exception. Instead, we will deal with the failed requests a bit later
-            # resp_json = self._handle_post_response(resp)
 
-            if resp.ok:
-                try:
-                    resp_json = resp.json()
-                except JSONDecodeError as e:
-                    raise Exception(f"DeepL API returned malformed JSON: {e}")
-            else:
-                status_code = resp.status_code
-                if status_code not in DEEPL_EXCEPTION_MESSAGE:
-                    # TODO Do not show this to user. Confirm, that wuff is sent.
-                    raise DeepLException(
-                        description=f"'{resp.url}' responded with: {status_code}",
-                    )
+            # TODO Handle exceptions raised in the error handling.
+            try:
+                resp_json = self._handle_post_response(resp)
+            except DeepLException as de:
                 # TODO: salvage successful translation results on (some) other exceptions as well.
                 # Oversized request, return empty text to signify paragraph should not be modified.
                 # TODO: inform user that some paragraphs were not translated?
                 #       We already have the 'check translation' marks, so that seems a bit redundant.
-                elif status_code == 413:
+                if de.status == 413:
                     resp_json = {"translations": [{"text": ""}]}
                 else:
-                    raise DeepLException(
-                        description=DEEPL_EXCEPTION_MESSAGE[status_code],
-                    )
+                    raise de
 
             translation_resps += resp_json["translations"]
 
@@ -484,6 +475,7 @@ class DeeplTranslationService(RegisteredTranslationService):
                 return_langs = return_langs + [en]
         return return_langs
 
+    # FIXME: Caching this seems to cause problems with generating the LanguagePairings correctly.
     # @cache.memoize(timeout=LANGUAGES_CACHE_TIMEOUT, args_to_ignore=["self"])
     def languages(self) -> LanguagePairing:
         """
