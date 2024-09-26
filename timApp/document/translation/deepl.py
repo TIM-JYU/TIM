@@ -15,14 +15,15 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
+from dataclasses import dataclass
 from typing import Optional
-
 import langcodes
 import requests.adapters
 from requests import post, Response
 from requests.exceptions import JSONDecodeError
 from sqlalchemy import select
 from sqlalchemy.orm import Mapped
+from werkzeug.exceptions import HTTPException
 
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import TranslateApproval, NoTranslate
@@ -46,6 +47,35 @@ from tim_common.vendor.requests_futures import (
 )
 
 LANGUAGES_CACHE_TIMEOUT = 3600 * 24  # seconds
+
+# Limit for how big a request the DeepL API accepts
+# Exact limit is 128KiB (see https://developers.deepl.com/docs/resources/usage-limits#api-limits),
+# but due to request headers/overhead we will have to stick to a lower limit.
+# The limit corresponds roughly to the same amount of characters in the request payload.
+DEEPL_REQUEST_SIZE_LIMIT = 100_000
+# How many text 'packets' or parameters the DeepL API accepts in one request
+DEEPL_REQUEST_MAX_TEXT_PARAMS = 50
+
+# Error messages for exceptions on DeepL translation requests
+DEEPL_EXCEPTION_MESSAGE: dict[int, str] = {
+    400: f"The request to the DeepL API was bad. Please check your parameters.",
+    401: f"Authorization failed. Please check your DeepL API key for typos.",
+    403: f"You lack permission to use this service.",
+    404: f"The requested translator could not be found. Please try again later.",
+    413: f"The request size exceeds the API's limit. Please try again with a smaller document.",
+    414: f"The request URL is too long. Please contact TIM support.",
+    429: f"Too many requests were sent. Please wait and resend the request later.",
+    456: f"You have exceeded your character quota. Please try again when your quota has reset.",
+    500: f"An internal error occurred on the DeepL server. Please try again.",
+    503: f"Translator currently unavailable. Please try again later.",
+    529: f"Too many requests were sent. Please wait and resend the request later.",
+}
+
+
+@dataclass
+class DeepLException(HTTPException):
+    status: int
+    description: str
 
 
 class DeeplTranslationService(RegisteredTranslationService):
@@ -158,59 +188,17 @@ class DeeplTranslationService(RegisteredTranslationService):
                 raise Exception(f"DeepL API returned malformed JSON: {e}")
         else:
             status_code = resp.status_code
-
-            # Handle the status codes given by DeepL API
-            # Using Python 3.10's match-statement would be cool here...
-
-            if status_code == 400:
-                debug_exception = Exception(
-                    f"The request to the DeepL API was bad. Please check your parameters."
-                )
-            elif status_code == 403:
-                debug_exception = Exception(
-                    f"Authorization failed. Please check your DeepL API key for typos."
-                )
-            elif status_code == 404:
-                debug_exception = Exception(
-                    f"The requested translator could not be found. Please try again later."
-                )
-            elif status_code == 413:
-                debug_exception = Exception(
-                    f"The request size exceeds the API's limit. Please try again with a smaller document."
-                )
-            elif status_code == 414:
-                debug_exception = Exception(
-                    f"The request URL is too long. Please contact TIM support."
-                )
-            elif status_code == 429:
-                debug_exception = Exception(
-                    f"Too many requests were sent. Please wait and resend the request later."
-                )
-            elif status_code == 456:
-                debug_exception = Exception(
-                    f"You have exceeded your character quota. Please try again when your quota has reset."
-                )
-            elif status_code == 503:
-                debug_exception = Exception(
-                    f"Translator currently unavailable. Please try again later."
-                )
-            elif status_code == 529:
-                debug_exception = Exception(
-                    f"Too many requests were sent. Please wait and resend the request later."
-                )
-            elif 500 <= status_code < 600:
-                debug_exception = Exception(
-                    f"An internal error occurred on the DeepL server. Please try again."
+            if status_code not in DEEPL_EXCEPTION_MESSAGE:
+                # TODO Do not show this to user. Confirm, that wuff is sent.
+                raise DeepLException(
+                    status=status_code,
+                    description=f"'{resp.url}' responded with: {status_code}",
                 )
             else:
-                # TODO Do not show this to user. Confirm, that wuff is sent.
-                debug_exception = Exception(
-                    f"'{resp.url}' responded with: {status_code}"
+                raise DeepLException(
+                    status=status_code,
+                    description=DEEPL_EXCEPTION_MESSAGE[status_code],
                 )
-
-            raise RouteException(
-                description="The request failed. Error message: " + str(debug_exception)
-            )
 
     def _translate(
         self,
@@ -368,10 +356,29 @@ class DeeplTranslationService(RegisteredTranslationService):
                 else requests.adapters.DEFAULT_RETRIES
             ),
         )
-        for i in range(0, len(protected_texts), 50):
+
+        i = 0
+        while i < len(protected_texts):
+            req_chars = 0
+            num_params = 0
+            start = i
+
+            if len(protected_texts[i]) < DEEPL_REQUEST_SIZE_LIMIT:
+                # In addition to the text parameters limit, requests also have a size limit in bytes
+                while (
+                    i < len(protected_texts)
+                    and num_params < DEEPL_REQUEST_MAX_TEXT_PARAMS
+                    and req_chars + len(protected_texts[i]) < DEEPL_REQUEST_SIZE_LIMIT
+                ):
+                    req_chars += len(protected_texts[i])
+                    num_params += 1
+                    i += 1
+            else:
+                i += 1
+
             call = self._translate(
                 session,
-                protected_texts[i : i + 50],
+                protected_texts[start:i],
                 # Send uppercase, because it is used in DeepL documentation.
                 source_lang_code.upper() if source_lang_code else None,
                 target_lang.lang_code.upper(),
@@ -390,8 +397,20 @@ class DeeplTranslationService(RegisteredTranslationService):
         translation_resps = list()
         for call in translate_calls:
             resp = call.result()
+
             # TODO Handle exceptions raised in the error handling.
-            resp_json = self._handle_post_response(resp)
+            try:
+                resp_json = self._handle_post_response(resp)
+            except DeepLException as de:
+                # TODO: salvage successful translation results on (some) other exceptions as well.
+                # Oversized request, return empty text to signify paragraph should not be modified.
+                # TODO: inform user that some paragraphs were not translated?
+                #       We already have the 'check translation' marks, so that seems a bit redundant.
+                if de.status == 413:
+                    resp_json = {"translations": [{"text": ""}]}
+                else:
+                    raise de
+
             translation_resps += resp_json["translations"]
 
         # Insert the text-parts sent to the API into correct places in
@@ -456,7 +475,8 @@ class DeeplTranslationService(RegisteredTranslationService):
                 return_langs = return_langs + [en]
         return return_langs
 
-    @cache.memoize(timeout=LANGUAGES_CACHE_TIMEOUT, args_to_ignore=["self"])
+    # FIXME: Caching this seems to cause problems with generating the LanguagePairings correctly.
+    # @cache.memoize(timeout=LANGUAGES_CACHE_TIMEOUT, args_to_ignore=["self"])
     def languages(self) -> LanguagePairing:
         """
         Asks the DeepL API for the list of supported languages and turns the
