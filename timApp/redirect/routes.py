@@ -35,6 +35,7 @@ class TIMRedirectException(RouteException):
 
 @redirect_route.get("/r/<alias>")
 def redirect_by_alias_file(alias: str) -> Response:
+    alias = alias.lower()
     hostname = current_app.config["TIM_HOST"]
     doc_entry = DocEntry.find_by_path(f"redirect/{alias}")
     if not doc_entry:
