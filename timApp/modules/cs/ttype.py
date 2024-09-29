@@ -1,5 +1,3 @@
-from re import compile
-
 from file_handler import File
 from languages import LanguageError
 from manager import make_language, make_modifier

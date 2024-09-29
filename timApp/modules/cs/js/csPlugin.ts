@@ -3562,8 +3562,13 @@ ${fhtml}
         }
         const BEGINCODE = "BYCODEBEGIN";
         const ENDCODE = "BYCODEEND";
+        const BEGINCODE2 = "--- Write your code below this line. ---";
+        const ENDCODE2 = "--- Write your code above this line. ---";
         let code = this.usercode;
         let i = code.indexOf(BEGINCODE);
+        if (i < 0) {
+            i = code.indexOf(BEGINCODE2);
+        }
         if (i >= 0) {
             const endl = code.indexOf("\n", i);
             if (endl < 0) {
@@ -3572,6 +3577,9 @@ ${fhtml}
             code = code.substr(endl + 1);
         }
         i = code.indexOf(ENDCODE);
+        if (i < 0) {
+            i = code.indexOf(ENDCODE2);
+        }
         if (i >= 0) {
             let endl = code.lastIndexOf("\n", i);
             if (endl > 0 && code[endl - 1] == "\r") {
