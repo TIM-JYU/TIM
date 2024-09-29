@@ -1,42 +1,8 @@
 # TODO: Import and register all languages etc explicitly (= without using star imports).
 from modifiers import *
 from languages import *
-from jsframe import *
-from stack import *
 from geogebra import *
-from extcheck import ExtCheck
-from gitlang import GitReg, GitCheck
-
-
-def populated(base_class):
-    dictionary = {}
-    classes = [base_class] + base_class.all_subclasses()
-
-    def add(cls, ttype):
-        if ttype in dictionary:
-            raise Exception(
-                f"{base_class.__name__} {cls.__name__} has a duplicate ttype ({ttype}) with {dictionary[ttype].__name__}"
-            )
-        dictionary[ttype] = cls
-
-    for cls in classes:
-        if not hasattr(cls, "ttype"):
-            raise Exception(
-                f"{base_class.__name__} {cls.__name__} hasn't defined ttype"
-            )
-        if cls.ttype is None:
-            continue
-        if isinstance(cls.ttype, list):
-            if len(cls.ttype) == 0:
-                raise Exception(
-                    f"{base_class.__name__} {cls.__name__} hasn't defined ttype"
-                )
-            for ttype in cls.ttype:
-                add(cls, ttype.lower())
-        else:
-            add(cls, cls.ttype.lower())
-    return dictionary
-
+from tim_common.cs_utils import populated
 
 languages = populated(Language)
 modifiers = populated(Modifier)
@@ -83,6 +49,7 @@ def all_css_files():
 def make(dictionary, error_cls, desc, name, query, sourcefiles=None):
     kargs = []
     obj = None
+    err_str = "unknown"
     cls = dictionary.get(name)
     if cls is None:
         err_str = f"Error: {desc} {name} not found."
