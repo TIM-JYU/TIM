@@ -649,7 +649,7 @@ def _handle_send_sisu_assessments(
             if ug and verify_group_access(
                 ug, view_access_set, u=curr_user, require=False
             ):
-                for usr in ug.members:
+                for usr in ug.users:
                     send_emails.add(usr.email)
         if is_valid_email(email):
             send_emails.add(email)
@@ -889,7 +889,7 @@ def _handle_mail_to_send(mail: list[MailToSendData], curr_user: User) -> None:
             if ug and verify_group_access(
                 ug, view_access_set, u=curr_user, require=False
             ):
-                for usr in ug.members:
+                for usr in ug.users:
                     send_to_mails.append(usr.email)
                     user_cache[usr.name] = usr
 
