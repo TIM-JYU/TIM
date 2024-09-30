@@ -1,8 +1,23 @@
-def populated(base_class):
-    dictionary = {}
+# T = TypeVar("T", bound=Union[type[Language], type[Modifier]])
+from typing import TypeVar, Protocol
+
+
+class AllSubclasses(Protocol):
+    @classmethod
+    def all_subclasses(cls) -> list:
+        return []
+
+
+T = TypeVar("T", bound=type[AllSubclasses])
+
+
+def populated(
+    base_class: T,
+) -> dict[str, T]:
+    dictionary: dict[str, T] = {}
     classes = [base_class] + base_class.all_subclasses()
 
-    def add(new_cls, new_ttype):
+    def add(new_cls: T, new_ttype: str) -> None:
         if new_ttype in dictionary:
             raise Exception(
                 f"{base_class.__name__} {cls.__name__} has a duplicate ttype ({new_ttype}) with {dictionary[new_ttype].__name__}"

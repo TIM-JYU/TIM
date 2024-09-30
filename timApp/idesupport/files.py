@@ -16,7 +16,7 @@ class SupplementaryFile:
         }
 
 
-def is_in_filename(files, regexp):
+def is_in_filename(files: list[dict[str, str]], regexp: str) -> bool:
     """
     Checks if regexp matches to some file
     :param files: list of files to study

@@ -62,7 +62,7 @@ class IdeFile:
     content: str | None = field(init=False)
     """File contents provided for IDE"""
 
-    language: Language | None = None
+    language: Language | None = field(init=False)
 
     def __post_init__(self) -> None:
         self.content = ""
@@ -136,6 +136,8 @@ class IdeFile:
             raise RouteException("File extension cannot be generated")
 
         # PLEASE NOTE: task_info.type could be fancy like c++/input/comtest
+        if self.language is None:
+            raise RouteException("Misconfigured task language")
         self.filename += "." + self.language.fileext
 
     # Convert to json and set code based on 'by' or 'byCode'
@@ -489,6 +491,8 @@ def get_ide_tasks(
             if tag is not None:
                 if tag == "":
                     tag = p.attrs.get("taskId")
+                if tag is None:
+                    raise RouteException("Missing taskID!")
                 task = get_ide_user_plugin_data(
                     doc=doc, par=p, user_ctx=user_ctx, ide_task_id=tag
                 )
@@ -624,9 +628,10 @@ def get_ide_user_plugin_data(
     plugin_json = json.loads(base64.b64decode(element.attrs["json"]).decode("utf-8"))
 
     task_info: TIDETaskInfo = TIDETaskInfoSchema.load(plugin.values, unknown=EXCLUDE)
-    language = Language.make_language(
-        get_task_language(task_info.type), plugin_json, ide_task_id
-    )
+    task_language = get_task_language(task_info.type)
+    if task_language is None:
+        raise RouteException("Misconfigured task language")
+    language = Language.make_language(task_language, plugin_json, ide_task_id)
 
     task_id: TaskId | None = plugin.task_id
 
