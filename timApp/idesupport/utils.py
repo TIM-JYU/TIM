@@ -624,7 +624,9 @@ def get_ide_user_plugin_data(
     plugin_json = json.loads(base64.b64decode(element.attrs["json"]).decode("utf-8"))
 
     task_info: TIDETaskInfo = TIDETaskInfoSchema.load(plugin.values, unknown=EXCLUDE)
-    language = Language.make_language(get_task_language(task_info.type), plugin_json, ide_task_id)
+    language = Language.make_language(
+        get_task_language(task_info.type), plugin_json, ide_task_id
+    )
 
     task_id: TaskId | None = plugin.task_id
 

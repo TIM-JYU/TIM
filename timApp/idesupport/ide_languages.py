@@ -29,7 +29,7 @@ class Language:
 
     @staticmethod
     def get_classname(s: str) -> str | None:
-        class_pattern = r'\bclass\s+(\w+)'
+        class_pattern = r"\bclass\s+(\w+)"
         match = re.search(class_pattern, s)
         if not match:
             return None
@@ -48,7 +48,6 @@ class Language:
 
     @staticmethod
     def make_language(ttype, plugin_json, ide_task_id):
-
         cls = languages.get(ttype)
         if cls is None:
             cls = Language
@@ -94,8 +93,8 @@ class CS(Language):
                   </PropertyGroup>
                 </Project>
                 """
-                ),
-            )
+            ),
+        )
         return [proj_file]
 
 
@@ -131,8 +130,8 @@ class Jypeli(CS):
                         </ItemGroup>      
                     </Project>
                     """
-                    ),
-                )
+                ),
+            )
             files.append(proj_file)
         if not is_in_filename(extrafiles, r"Ohjelma\.cs"):
             main_file = SupplementaryFile(
