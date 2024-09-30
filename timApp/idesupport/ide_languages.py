@@ -1,17 +1,21 @@
+from __future__ import annotations
+
 import os
 import re
 import textwrap
+from typing import Any
+from typing import TypeVar, Union
 
 from timApp.idesupport.files import SupplementaryFile, is_in_filename
-from tim_common.cs_utils import populated
+from timApp.modules.cs.modifiers import Modifier
 
 DOTNET_VERSION = "net8.0"
 
 
 class Language:
-    ttype = "_language"
+    ttype: str | list[str] = "_language"
 
-    def __init__(self, plugin_json):
+    def __init__(self, plugin_json: Any):
         self.fileext = ""
         self.comment_syntax_lookup = "//"
         self.plugin_json = plugin_json
@@ -21,10 +25,10 @@ class Language:
     def find_comment_line_characters(self) -> str:
         return self.comment_syntax_lookup
 
-    def init_filename(self):
+    def init_filename(self) -> str:
         return self.plugin_json["markup"].get("filename")
 
-    def get_filename(self):
+    def get_filename(self) -> str:
         return self.filename
 
     @staticmethod
@@ -35,7 +39,7 @@ class Language:
             return None
         return match.group(1)
 
-    def try_to_get_classname(self) -> str:
+    def try_to_get_classname(self) -> str | None:
         clsname = Language.get_classname(self.plugin_json.get("program"))
         if clsname is None:
             clsname = Language.get_classname(self.plugin_json.get("by"))
@@ -43,11 +47,11 @@ class Language:
             clsname = Language.get_classname(self.plugin_json.get("byCode"))
         return clsname
 
-    def generate_supplementary_files(self, extrafiles) -> list[SupplementaryFile]:
+    def generate_supplementary_files(self, extrafiles: Any) -> list[SupplementaryFile]:
         return []
 
     @staticmethod
-    def make_language(ttype, plugin_json, ide_task_id):
+    def make_language(ttype: str, plugin_json: Any, ide_task_id: str) -> Language:
         cls = languages.get(ttype)
         if cls is None:
             cls = Language
@@ -56,15 +60,15 @@ class Language:
         return obj
 
     @classmethod
-    def all_subclasses(cls):
+    def all_subclasses(cls) -> Any:
         subclasses = cls.__subclasses__()
         return subclasses + [i for sc in subclasses for i in sc.all_subclasses()]
 
 
 class CS(Language):
-    ttype = ["cs", "c#", "csharp"]
+    ttype: str | list[str] = ["cs", "c#", "csharp"]
 
-    def __init__(self, plugin_json):
+    def __init__(self, plugin_json: Any):
         super().__init__(plugin_json)
         self.fileext = "cs"
         clsname = self.try_to_get_classname()
@@ -72,7 +76,7 @@ class CS(Language):
             clsname, _ = os.path.splitext(self.filename)
         self.classname = clsname
 
-    def init_filename(self):
+    def init_filename(self) -> str:
         filename = super().init_filename()
         if filename is None:
             filename = self.try_to_get_classname()
@@ -80,7 +84,9 @@ class CS(Language):
             filename = "Main.cs"  # TODO
         return filename
 
-    def generate_supplementary_files(self, extrafiles) -> list[SupplementaryFile]:
+    def generate_supplementary_files(
+        self, extrafiles: list[dict[str, str]]
+    ) -> list[SupplementaryFile]:
         if is_in_filename(extrafiles, r".*\.csproj"):
             return []
         proj_file = SupplementaryFile(
@@ -101,10 +107,12 @@ class CS(Language):
 class Jypeli(CS):
     ttype = "jypeli"
 
-    def __init__(self, plugin_json):
+    def __init__(self, plugin_json: Any):
         super().__init__(plugin_json)
 
-    def generate_supplementary_files(self, extrafiles) -> list[SupplementaryFile]:
+    def generate_supplementary_files(
+        self, extrafiles: list[dict[str, str]]
+    ) -> list[SupplementaryFile]:
         files = []
         if not is_in_filename(extrafiles, r".*\.csproj"):
             proj_file = SupplementaryFile(
@@ -158,16 +166,16 @@ class Jypeli(CS):
 class PY3(Language):
     ttype = ["py", "py3", "python", "python3"]
 
-    def __init__(self, plugin_json):
+    def __init__(self, plugin_json: Any):
         super().__init__(plugin_json)
         self.comment_syntax_lookup = "#"
         self.fileext = "py"
 
 
 class CC(Language):
-    ttype = "cc"
+    ttype: str | list[str] = "cc"
 
-    def __init__(self, plugin_json):
+    def __init__(self, plugin_json: Any):
         super().__init__(plugin_json)
         self.fileext = "c"
 
@@ -175,7 +183,7 @@ class CC(Language):
 class CPP(CC):
     ttype = ["c++", "cpp"]
 
-    def __init__(self, plugin_json):
+    def __init__(self, plugin_json: Any):
         super().__init__(plugin_json)
         self.fileext = "cpp"
 
@@ -183,9 +191,44 @@ class CPP(CC):
 class Java(Language):
     ttype = "java"
 
-    def __init__(self, plugin_json):
+    def __init__(self, plugin_json: Any):
         super().__init__(plugin_json)
         self.fileext = "java"
+
+
+T = TypeVar("T", bound=Union[type[Language], type[Modifier]])
+
+
+def populated(
+    base_class: T,
+) -> dict[str, T]:
+    dictionary: dict[str, T] = {}
+    classes = [base_class] + base_class.all_subclasses()
+
+    def add(new_cls: T, new_ttype: str) -> None:
+        if new_ttype in dictionary:
+            raise Exception(
+                f"{base_class.__name__} {cls.__name__} has a duplicate ttype ({new_ttype}) with {dictionary[new_ttype].__name__}"
+            )
+        dictionary[new_ttype] = new_cls
+
+    for cls in classes:
+        if not hasattr(cls, "ttype"):
+            raise Exception(
+                f"{base_class.__name__} {cls.__name__} hasn't defined ttype"
+            )
+        if cls.ttype is None:
+            continue
+        if isinstance(cls.ttype, list):
+            if len(cls.ttype) == 0:
+                raise Exception(
+                    f"{base_class.__name__} {cls.__name__} hasn't defined ttype"
+                )
+            for ttype in cls.ttype:
+                add(cls, ttype.lower())
+        else:
+            add(cls, cls.ttype.lower())
+    return dictionary
 
 
 languages = populated(Language)
