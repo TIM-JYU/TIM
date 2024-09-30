@@ -2,6 +2,10 @@
 from modifiers import *
 from languages import *
 from geogebra import *
+from jsframe import *
+from stack import *
+from extcheck import ExtCheck
+from gitlang import GitReg, GitCheck
 from tim_common.cs_utils import populated
 
 languages = populated(Language)
