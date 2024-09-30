@@ -1,7 +1,14 @@
 # T = TypeVar("T", bound=Union[type[Language], type[Modifier]])
-from typing import TypeVar
+from typing import TypeVar, Protocol
 
-T = TypeVar("T")
+
+class AllSubclasses(Protocol):
+    @classmethod
+    def all_subclasses(cls) -> list:
+        return []
+
+
+T = TypeVar("T", bound=type[AllSubclasses])
 
 
 def populated(
