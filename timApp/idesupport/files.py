@@ -1,5 +1,7 @@
 import re
 from dataclasses import dataclass, field
+
+
 @dataclass
 class SupplementaryFile:
     filename: str
@@ -25,4 +27,3 @@ def is_in_filename(files, regexp):
         if name and re.match(regexp, name):
             return True
     return False
-
