@@ -190,6 +190,7 @@ export class FileSelectComponent {
 
     addError(error: string, timeout?: number) {
         this.error?.push(error, timeout);
+        console.log("Error obj", this.error);
     }
 
     addWarning(warning: string, timeout?: number) {
@@ -286,8 +287,14 @@ export class FileSelectComponent {
                             }
                         },
                         (error: HttpErrorResponse) => {
+                            console.log(error);
                             if (error.status == 500) {
                                 this.addError(defaultWuffMessage);
+                                this.progress = undefined;
+                            } else if (error.status == 0) {
+                                this.addError(
+                                    $localize`Could not finish uploading. Please check your internet connection and try again.`
+                                );
                                 this.progress = undefined;
                             } else {
                                 const err = error as {error: {error: string}};
