@@ -249,7 +249,7 @@ def save_fields(
             raise AccessDenied(
                 f"You must be a teacher or admin to send mail via JSRunner."
             )
-        _handle_mail_to_send(mail_to_send)
+        _handle_mail_to_send(mail_to_send, curr_user)
 
     new_users_json: dict | None = jsonresp.get("newUsers")
     if new_users_json:
@@ -863,7 +863,7 @@ def _handle_item_right_actions(
     db.session.flush()
 
 
-def _handle_mail_to_send(mail: list[MailToSendData]) -> None:
+def _handle_mail_to_send(mail: list[MailToSendData], curr_user: User) -> None:
     mail_to_send: dict[tuple[str, str], dict[str, Any]] = {}
     user_cache: dict[str, User | None] = {}
 
@@ -874,14 +874,24 @@ def _handle_mail_to_send(mail: list[MailToSendData]) -> None:
         subject = m["subject"]
         body = m["body"]
 
+        send_to_mails = []
+
         if not (u := user_cache.get(to)):
             u = User.get_by_name(to)
             user_cache[to] = u
-        if u:
-            to = u.email
 
-        if not is_valid_email(to):
-            continue  # TODO: Log error
+        if u:
+            send_to_mails.append(u.email)
+        elif is_valid_email(to):
+            send_to_mails.append(to)
+        else:
+            ug = UserGroup.get_by_name(to)
+            if ug and verify_group_access(
+                ug, view_access_set, u=curr_user, require=False
+            ):
+                for usr in ug.members:
+                    send_to_mails.append(usr.email)
+                    user_cache[usr.name] = usr
 
         if not (mail_info := mail_to_send.get((subject, body))):
             mail_info = {
@@ -891,7 +901,7 @@ def _handle_mail_to_send(mail: list[MailToSendData]) -> None:
             }
             mail_to_send[(subject, body)] = mail_info
 
-        mail_info["to"].add(to)
+        mail_info["to"].update(send_to_mails)
 
     for new_mail_info in mail_to_send.values():
         to_lst: set[str] = new_mail_info["to"]
