@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as base
+FROM ubuntu:22.04 AS base
 LABEL org.opencontainers.image.authors="tim@jyu.fi"
 LABEL org.opencontainers.image.source="https://github.com/TIM-JYU/TIM"
 
@@ -93,7 +93,7 @@ RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/$
  ${APT_CLEANUP} && \
  rm -rf /dvisvgm-$DVISVGM_VERSION
 
-FROM base as complete
+FROM base AS complete
 
 # Install Python, pip and other necessary packages
 
