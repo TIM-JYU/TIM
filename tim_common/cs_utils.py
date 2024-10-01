@@ -1,4 +1,3 @@
-# T = TypeVar("T", bound=Union[type[Language], type[Modifier]])
 from typing import TypeVar, Protocol
 
 
@@ -14,6 +13,14 @@ T = TypeVar("T", bound=type[AllSubclasses])
 def populated(
     base_class: T,
 ) -> dict[str, T]:
+    """
+    Populate a dictionary with all subclasses of a base class that have the AllSubclasses protocol implemented
+    and have a ttype attribute defined.
+
+    :param base_class: The base class to populate the dictionary with
+
+    :return: A dictionary with the ttype as the key and the class as the value
+    """
     dictionary: dict[str, T] = {}
     classes = [base_class] + base_class.all_subclasses()
 

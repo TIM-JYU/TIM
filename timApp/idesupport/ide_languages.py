@@ -1,24 +1,40 @@
-from __future__ import annotations
+"""
+Custom IDE support handlers for different language types.
+"""
 
 import os
 import re
 import textwrap
 from typing import Any
-from typing import TypeVar, Union
 
 from timApp.idesupport.files import SupplementaryFile, is_in_filename
-from timApp.modules.cs.modifiers import Modifier
 from tim_common.cs_utils import populated
 
 DOTNET_VERSION = "net8.0"
 
 
 class Language:
+    """
+    A language type handler for the IDE support.
+    Classes derived from this base type can define custom behavior for TIM language types.
+    """
+
     ttype: str | list[str] = "_language"
+    """
+    Language types that the class handles. 
+    Should be equivalent to csPlugin language types.
+    """
 
     def __init__(self, plugin_json: Any):
         self.fileext = ""
+        """
+        File extension to use for the source code files.
+        """
         self.comment_syntax_lookup = "//"
+        """
+        The start of a comment line in the language.
+        """
+
         self.plugin_json = plugin_json
         self.ide_task_id = ""
         self.filename = self.init_filename()
@@ -27,9 +43,17 @@ class Language:
         return self.comment_syntax_lookup
 
     def init_filename(self) -> str:
+        """
+        Generate the file name to use for the main file of the task.
+
+        :return: The file name to use for the main file of the task.
+        """
         return self.plugin_json["markup"].get("filename")
 
     def get_filename(self) -> str:
+        """
+        :return: Current file name to use for the main file of the task.
+        """
         return self.filename
 
     @staticmethod
@@ -48,11 +72,29 @@ class Language:
             clsname = Language.get_classname(self.plugin_json.get("byCode"))
         return clsname
 
-    def generate_supplementary_files(self, extrafiles: Any) -> list[SupplementaryFile]:
+    def generate_supplementary_files(
+        self, extrafiles: list[dict[str, str]]
+    ) -> list[SupplementaryFile]:
+        """
+        Generate the supplementary files needed for the task.
+
+        :param extrafiles: List of extra files provided in the task markup
+
+        :return: List of SupplementaryFiles needed to run the task
+        """
         return []
 
     @staticmethod
-    def make_language(ttype: str, plugin_json: Any, ide_task_id: str) -> Language:
+    def make_language(ttype: str, plugin_json: Any, ide_task_id: str) -> "Language":
+        """
+        Initialize the language handler for a specific language type.
+
+        :param ttype: language type
+        :param plugin_json: plugin markup as a dictionary
+        :param ide_task_id: task id of the IDE task
+
+        :return: Language handler object if found, otherwise the base Language class
+        """
         cls = languages.get(ttype)
         if cls is None:
             cls = Language
@@ -122,7 +164,7 @@ class Jypeli(CS):
                     f"""<Project Sdk="Microsoft.NET.Sdk">
                         <PropertyGroup>
                             <OutputType>WinExe</OutputType>
-                            <TargetFramework>net8.0</TargetFramework>
+                            <TargetFramework>{DOTNET_VERSION}</TargetFramework>
                         </PropertyGroup>
                         <ItemGroup>
                             <PackageReference Include="Jypeli.NET" Version="11.*"/>
