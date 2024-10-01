@@ -25,7 +25,7 @@ class Language:
     Should be equivalent to csPlugin language types.
     """
 
-    def __init__(self, plugin_json: Any):
+    def __init__(self, plugin_json: dict):
         self.fileext = ""
         """
         File extension to use for the source code files.
@@ -57,7 +57,10 @@ class Language:
         return self.filename
 
     @staticmethod
-    def get_classname(s: str) -> str | None:
+    def get_classname(s: str | None) -> str | None:
+        if s is None:
+            return None
+
         class_pattern = r"\bclass\s+(\w+)"
         match = re.search(class_pattern, s)
         if not match:
