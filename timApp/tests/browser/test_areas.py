@@ -218,6 +218,7 @@ par 22
         menu = self.open_menu(p)
         self.assertEqual(expected, menu.text.splitlines())
         self.close_menu(menu)
+        self.scroll_to_top()
 
     def close_menu(self, menu):
         self.find_element("tim-close-button", parent=menu).click()
@@ -245,6 +246,8 @@ par 2
         self.login_browser_quick_test1()
         self.goto_document(d)
         self.use_left_menu()
+        # FIXME: There should be a consistent indicator for refreshing the page
+        time.sleep(2)
         pars = self.find_par_elems()
         menu = self.open_menu(pars[2])
         self.find_element_by_text("Edit", element="button", parent=menu).click()

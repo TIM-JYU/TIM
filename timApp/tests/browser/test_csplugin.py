@@ -60,7 +60,13 @@ pointsRule:
         textarea.send_keys('print("Hello world!")')
         self.get_uninteractable_element().click()
         par = self.find_element_avoid_staleness("#py > tim-plugin-loader > div")
-        self.assert_same_screenshot(par, ["csplugin/python_before_answer"])
+        self.assert_same_screenshot(
+            par,
+            [
+                "csplugin/python_before_answer",
+                "csplugin/python_before_answer_2",
+            ],
+        )
         runbutton = par.find_element(by=By.CSS_SELECTOR, value="button")
         runbutton.click()
         self.wait_until_present_and_vis(".console")
@@ -68,7 +74,11 @@ pointsRule:
         ptxt = self.find_element_by_text("Points:", "span")
         self.assertEqual("Points: 1", ptxt.text)
         self.get_uninteractable_element().click()
-        self.assert_same_screenshot(par, "csplugin/python_after_answer", attempts=2)
+        self.assert_same_screenshot(
+            par,
+            ["csplugin/python_after_answer", "csplugin/python_after_answer_2"],
+            attempts=2,
+        )
 
         # post a second answer because otherwise clicking previous answer does not do anything
         textarea.send_keys(" ")
@@ -85,7 +95,13 @@ pointsRule:
         # self.wait.until(expected_conditions.presence_of_element_located((By.XPATH, "//*[@id='py'][@style='opacity: 1;']")))
 
         # TODO: Why is this slightly different from python_before_answer ?
-        self.assert_same_screenshot(par, "csplugin/python_after_answer_switch")
+        self.assert_same_screenshot(
+            par,
+            [
+                "csplugin/python_after_answer_switch",
+                "csplugin/python_after_answer_switch_2",
+            ],
+        )
         self.verify_answer_content(
             f"{d.id}.py",
             "usercode",

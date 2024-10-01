@@ -12,7 +12,7 @@ from flask import Response, flash, request
 from isodate import Duration
 from marshmallow import Schema
 from sqlalchemy import select
-from urllib3 import Retry
+from urllib3 import Retry  # type: ignore
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import AccessDenied, verify_admin

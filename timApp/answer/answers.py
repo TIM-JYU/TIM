@@ -832,7 +832,7 @@ def get_users_for_tasks_py(
 
     users_query = select(User).filter(userid_filter).order_by(User.real_name)
     if current_app.config["LOAD_STUDENT_IDS_IN_TEACHER"]:
-        users_query = users_query.options(selectinload("uniquecodes"))
+        users_query = users_query.options(selectinload(User.uniquecodes))
 
     # Step 6: Aggregate the results based on the different grouping options
 
@@ -1079,7 +1079,7 @@ def get_users_for_tasks_sql(
     if user_ids is not None:
         main_stmt = main_stmt.filter(User.id.in_(user_ids))
     if current_app.config["LOAD_STUDENT_IDS_IN_TEACHER"]:
-        main_stmt = main_stmt.options(selectinload("uniquecodes"))
+        main_stmt = main_stmt.options(selectinload(User.uniquecodes))
     main_stmt = main_stmt.group_by(User.id, *group_by_cols)
 
     def get_points(subquery_field: Any) -> Any:
