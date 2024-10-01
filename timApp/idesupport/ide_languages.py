@@ -18,7 +18,7 @@ class Language:
     """
     A language type handler for the IDE support.
     Classes derived from this base type can define custom behavior for TIM language types.
-    If any language-clas is written to separate file, it must be imported here so that populated-function
+    If any language-class is written to separate file, it must be imported here so that populated-function
     will work.
     """
 
