@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
  tim:
   image: ${compose.images_repository}/tim:${tim.image_tag}
