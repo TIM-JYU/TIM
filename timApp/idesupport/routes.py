@@ -113,4 +113,12 @@ def submit_ide_task() -> Response:
 
     answer = utils.ide_submit_task(submit, user)
 
+    # Hack for Jypeli rerun when few attributes missing
+    # TODO: study if there is more cases when those are missing and
+    # why they are missing
+    if not answer.result.get("savedNew", None):
+        answer.result["savedNew"] = None
+    if not answer.result.get("valid", None):
+        answer.result["valid"] = True
+
     return json_response(answer)

@@ -1,6 +1,6 @@
 import base64
 import json
-import textwrap
+import os
 from dataclasses import dataclass, field
 from typing import List
 
@@ -17,6 +17,8 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
+from timApp.idesupport.files import SupplementaryFile
+from timApp.idesupport.ide_languages import Language
 from timApp.plugin.containerLink import render_plugin_multi
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, PluginWrap
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
@@ -59,6 +61,8 @@ class IdeFile:
 
     content: str | None = field(init=False)
     """File contents provided for IDE"""
+
+    language: Language | None = field(init=False)
 
     def __post_init__(self) -> None:
         self.content = ""
@@ -121,32 +125,20 @@ class IdeFile:
         :return: None
         """
 
-        programming_languages = {
-            "c": "c",
-            "cc": "c",
-            "cpp": "cpp",
-            "c++": "cpp",
-            "c#": "cs",
-            "cs": "cs",
-            "java": "java",
-            "py": "py",
-            "js": "js",
-        }
-
         if self.filename is None:
             self.filename = "main"
 
-        predefined_file_extension = self.filename.split(".")[-1]
-        if programming_languages.get(predefined_file_extension, None) is not None:
+        _, predefined_file_extension = os.path.splitext(self.filename)
+        if predefined_file_extension != "":
             return
 
         if task_type is None:
             raise RouteException("File extension cannot be generated")
 
         # PLEASE NOTE: task_info.type could be fancy like c++/input/comtest
-        file_extension = task_type.split("/")[0]
-        picked_language = programming_languages.get(file_extension, "cs")
-        self.filename += "." + picked_language
+        if self.language is None:
+            raise RouteException("Misconfigured task language")
+        self.filename += "." + self.language.fileext
 
     # Convert to json and set code based on 'by' or 'byCode'
     def to_json(self) -> dict[str, str | None]:
@@ -160,22 +152,6 @@ class IdeFile:
 
 
 IdeFileSchema = class_schema(IdeFile)()
-
-
-@dataclass
-class SupplementaryFile:
-    filename: str
-    content: str | None = None
-    source: str | None = None
-
-    def to_json(self) -> dict[str, str | None]:
-        return {
-            "content": self.content,
-            "file_name": self.filename,
-            "source": self.source,
-        }
-
-
 SupplementaryFileSchema = class_schema(SupplementaryFile)()
 
 
@@ -513,6 +489,10 @@ def get_ide_tasks(
         if p.attrs is not None:
             tag = p.attrs.get(IDE_TASK_TAG)
             if tag is not None:
+                if tag == "":
+                    tag = p.attrs.get("taskId")
+                if tag is None:
+                    raise RouteException("Missing taskID!")
                 task = get_ide_user_plugin_data(
                     doc=doc, par=p, user_ctx=user_ctx, ide_task_id=tag
                 )
@@ -567,7 +547,10 @@ def get_ide_task_by_id(
 
     for p in pars:
         if p.attrs is not None:
-            if p.attrs.get(IDE_TASK_TAG) == ide_task_id:
+            id = p.attrs.get(IDE_TASK_TAG)
+            if id == "":
+                id = p.attrs.get("taskId")
+            if id == ide_task_id:
                 task = get_ide_user_plugin_data(
                     doc=doc, par=p, user_ctx=user_ctx, ide_task_id=ide_task_id
                 )
@@ -602,31 +585,6 @@ def get_task_language(task_type: str | None) -> str | None:
     return None
 
 
-def generate_supplementary_files(
-    task_type: str | None, task_name: str
-) -> list[SupplementaryFile]:
-    task_language = get_task_language(task_type)
-
-    if task_language in ["cs", "c#", "csharp"]:
-        return [
-            SupplementaryFile(
-                filename=f"{task_name}.csproj",
-                content=textwrap.dedent(
-                    """
-                    <Project Sdk="Microsoft.NET.Sdk">
-                      <PropertyGroup>
-                        <OutputType>Exe</OutputType>
-                        <TargetFramework>net6.0</TargetFramework>
-                      </PropertyGroup>
-                    </Project>
-                    """
-                ),
-            ),
-        ]
-
-    return []
-
-
 def get_ide_user_plugin_data(
     doc: DocInfo,
     par: DocParagraph,
@@ -646,7 +604,7 @@ def get_ide_user_plugin_data(
 
     plugin = Plugin.from_paragraph(par, view_ctx, user_ctx)
 
-    if plugin.type != "csPlugin":
+    if plugin.type not in ["csPlugin", "taunoPlugin"]:
         return None
 
     # Plugin render options
@@ -670,6 +628,10 @@ def get_ide_user_plugin_data(
     plugin_json = json.loads(base64.b64decode(element.attrs["json"]).decode("utf-8"))
 
     task_info: TIDETaskInfo = TIDETaskInfoSchema.load(plugin.values, unknown=EXCLUDE)
+    task_language = get_task_language(task_info.type)
+    if task_language is None:
+        raise RouteException("Misconfigured task language")
+    language = Language.make_language(task_language, plugin_json, ide_task_id)
 
     task_id: TaskId | None = plugin.task_id
 
@@ -696,6 +658,7 @@ def get_ide_user_plugin_data(
     else:
         # If the plugin has only one file, load the file based on 'by' or 'byCode'
         ide_file = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
+        ide_file.language = language
 
         # if the plugin has no code, look from markup
         if ide_file.by is None and ide_file.byCode is None and ide_file.program is None:
@@ -712,7 +675,7 @@ def get_ide_user_plugin_data(
 
         # if the ide_file has no filename, try to look it from the markup
         if ide_file.filename is None:
-            ide_file.filename = plugin_json["markup"].get("filename")
+            ide_file.filename = language.get_filename()
 
         # If the task type is defined, try to generate file extension.
         if task_info.type is not None:
@@ -721,12 +684,9 @@ def get_ide_user_plugin_data(
         ide_file.set_combined_code()
         json_ide_files = [ide_file.to_json()]
 
-    supplementary_files = generate_supplementary_files(
-        task_type=task_info.type,
-        task_name=task_id.task_name,
-    )
-
     ide_extra_files = plugin_json["markup"].get("ide_extra_files") or []
+
+    supplementary_files = language.generate_supplementary_files(ide_extra_files)
 
     # If both content and source are provided, content is used (see tidecli)
     # If neither is provided, no supplementary file will be created
