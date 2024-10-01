@@ -10,13 +10,16 @@ from typing import Any
 from timApp.idesupport.files import SupplementaryFile, is_in_filename
 from tim_common.cs_utils import populated
 
-DOTNET_VERSION = "net8.0"
+DOTNET_VERSION = "net$(NETCoreAppMaximumVersion)"  # "net8.0"
+# see: https://www.meziantou.net/how-to-use-the-latest-target-framework-available-for-a-dotnet-sdk.htm
 
 
 class Language:
     """
     A language type handler for the IDE support.
     Classes derived from this base type can define custom behavior for TIM language types.
+    If any language-clas is written to separate file, it must be imported here so that populated-function
+    will work.
     """
 
     ttype: str | list[str] = "_language"
@@ -138,7 +141,8 @@ class CS(Language):
         proj_file = SupplementaryFile(
             filename=f"{self.ide_task_id}.csproj",
             content=textwrap.dedent(
-                f"""<Project Sdk="Microsoft.NET.Sdk">
+                f"""\
+                <Project Sdk="Microsoft.NET.Sdk">
                   <PropertyGroup>
                     <OutputType>Exe</OutputType>
                     <TargetFramework>{DOTNET_VERSION}</TargetFramework>
@@ -164,7 +168,8 @@ class Jypeli(CS):
             proj_file = SupplementaryFile(
                 filename=f"{self.ide_task_id}.csproj",
                 content=textwrap.dedent(
-                    f"""<Project Sdk="Microsoft.NET.Sdk">
+                    f"""\
+                    <Project Sdk="Microsoft.NET.Sdk">
                         <PropertyGroup>
                             <OutputType>WinExe</OutputType>
                             <TargetFramework>{DOTNET_VERSION}</TargetFramework>
@@ -191,7 +196,8 @@ class Jypeli(CS):
             main_file = SupplementaryFile(
                 filename="Ohjelma.cs",
                 content=textwrap.dedent(
-                    f"""using System;
+                    f"""\
+                    using System;
                     namespace {self.classname};
                     public static class Program
                     {{
