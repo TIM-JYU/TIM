@@ -684,10 +684,10 @@ export class VideoComponent extends AngularPluginBase<
         }
         const v = this.video.nativeElement;
         if (this.markup.defaultSubtitles) {
-            const track = [...v.textTracks].find((vt) =>
-                vt.language === this.markup.defaultSubtitles
-                    ? true // prefer the document's language code if present
-                    : vt.label === this.markup.defaultSubtitles
+            const track = [...v.textTracks].find(
+                (vt) =>
+                    vt.language === this.markup.defaultSubtitles ||
+                    vt.label === this.markup.defaultSubtitles
             );
             if (track) {
                 track.mode = "showing";
