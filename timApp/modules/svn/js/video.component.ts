@@ -224,7 +224,7 @@ const ShowFileAll = t.type({
                        [crossOrigin]="videosettings.crossOrigin"
                        [autoplay]="videoAutoPlay"
                 >
-                        <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" />    
+                        <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" [srclang]="getVTTSrcLang(subtitle.file)"/>    
                 </video>
             </ng-container>
             <ng-container *ngIf="isNormalSize">
@@ -751,6 +751,15 @@ export class VideoComponent extends AngularPluginBase<
 
     getAttributeType() {
         return ShowFileAll;
+    }
+
+    getVTTSrcLang(file: string) {
+        const end = file.slice(file.lastIndexOf("/") + 1, file.length);
+        if (end.endsWith(".vtt")) {
+            // There's no language code in the subtitle file path
+            return "";
+        }
+        return end;
     }
 }
 
