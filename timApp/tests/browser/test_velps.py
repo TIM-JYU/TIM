@@ -294,7 +294,9 @@ saveButton: Tallenna
         # tu1 filters velps by choosing tu2 from the ui
         # tu1 added velps 3 and 4, deleted 3, did not touch filter selector
         # current canvas/annotation container should have velps 2 and 4
-        self.assert_same_screenshot(canvas, "velps/filtered_canvas")
+        self.assert_same_screenshot(
+            canvas, "velps/filtered_canvas", move_to_element=True
+        )
 
     def test_velp_menu_advanced_tabs(self):
         """
