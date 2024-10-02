@@ -43,8 +43,9 @@ PREV_ANSWER = "answerbrowser .prevAnswer"
 options = webdriver.ChromeOptions()
 # Uncomment to print console.log calls in print_console
 # options.capabilities["goog:loggingPrefs"] = {"browser": "ALL"}
-options.headless = True
-options.add_argument("--window-size=1024x768")
+options.add_argument("--headless=new")
+options.add_argument("--window-size=1024,768")
+options.add_argument("--hide-scrollbars")
 # We run unit tests in CI environment, so we can generally skip sandboxing to achieve better stability
 options.add_argument("--no-sandbox")
 # This may slow down unit tests but generally is more stable when running browser tests in Docker
@@ -247,6 +248,9 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
 
     def scroll_into_view(self, element: WebElement):
         self.drv.execute_script("arguments[0].scrollIntoView();", element)
+
+    def scroll_to_top(self):
+        self.drv.execute_script("window.scrollTo(0, 0);")
 
     def save_im(self, im, filename_or_file):
         os.makedirs(

@@ -6,11 +6,6 @@ from typing import Optional
 import html5lib
 from html5lib.constants import namespaces
 from html5lib.filters import sanitizer
-from html5lib.filters.sanitizer import (
-    allowed_elements,
-    allowed_attributes,
-    allowed_css_properties,
-)
 from html5lib.serializer import HTMLSerializer
 from lxml.html.clean import Cleaner
 
@@ -54,43 +49,44 @@ def allow_minimal(s: str | None) -> str | None:
     return sanitize_with_cleaner(s, cs_cleaner)
 
 
-cs_svg_tim_allowed_elements = set(allowed_elements).union(
-    {
-        (namespaces["svg"], "feBlend"),
-        (namespaces["svg"], "feColorMatrix"),
-        (namespaces["svg"], "feGaussianBlur"),
-        (namespaces["svg"], "feOffset"),
-        (namespaces["svg"], "filter"),
-        (namespaces["svg"], "style"),
-    }
-)
+cs_svg_tim_allowed_elements = {
+    (namespaces["svg"], "feBlend"),
+    (namespaces["svg"], "feColorMatrix"),
+    (namespaces["svg"], "feGaussianBlur"),
+    (namespaces["svg"], "feOffset"),
+    (namespaces["svg"], "filter"),
+    (namespaces["svg"], "style"),
+}
 
-cs_svg_allowed_attributes = set(allowed_attributes).union(
-    {
-        (None, "filter"),
-        (None, "in"),
-        (None, "in2"),
-        (None, "lengthAdjust"),
-        (None, "mode"),
-        (None, "result"),
-        (None, "stdDeviation"),
-        (None, "textLength"),
-    }
-)
+cs_svg_allowed_attributes = {
+    (None, "filter"),
+    (None, "in"),
+    (None, "in2"),
+    (None, "lengthAdjust"),
+    (None, "mode"),
+    (None, "result"),
+    (None, "stdDeviation"),
+    (None, "textLength"),
+}
 
-tim_allowed_css_props = set(allowed_css_properties).union({"stroke-dasharray"})
+tim_allowed_css_props = {"stroke-dasharray"}
 
 
 def svg_sanitize(s: str) -> str:
     dom = html5lib.parseFragment(s, treebuilder="dom")
     walker = html5lib.getTreeWalker("dom")
     stream = walker(dom)
-    stream = sanitizer.Filter(
-        stream,
-        allowed_elements=cs_svg_tim_allowed_elements,
-        allowed_attributes=cs_svg_allowed_attributes,
-        allowed_css_properties=tim_allowed_css_props,
+    stream = sanitizer.Filter(stream)
+    stream.allowed_elements = set(stream.allowed_elements).union(
+        cs_svg_tim_allowed_elements
     )
+    stream.allowed_attributes = set(stream.allowed_attributes).union(
+        cs_svg_allowed_attributes
+    )
+    stream.allowed_css_properties = set(stream.allowed_css_properties).union(
+        tim_allowed_css_props
+    )
+
     serializer = HTMLSerializer(quote_attr_values="always")
     s = serializer.render(stream)
     return s
