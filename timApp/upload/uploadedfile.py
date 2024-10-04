@@ -284,6 +284,9 @@ SCRIPT_SAFE_MIMETYPES = {
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+    "application/vnd.oasis.opendocument.text",
+    "application/vnd.oasis.opendocument.presentation",
+    "application/vnd.oasis.opendocument.spreadsheet",
 }
 
 WHITELIST_MIMETYPES = SCRIPT_SAFE_MIMETYPES | {
@@ -304,6 +307,16 @@ WHITELIST_MIMETYPES = SCRIPT_SAFE_MIMETYPES | {
 
 REMAP_MIMETYPES = {
     "application/csv": "text/csv",
+}
+
+# Simple mapping for checking against file mimetype vs. file extension
+# Used when converting user supplied document files to markdown
+ALLOWED_DOC_IMPORT_EXT_MIMETYPES = {
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "odt": "application/vnd.oasis.opendocument.text",
+    "txt": "text/plain",
+    "md": "text/plain",
+    "tex": "text/plain",
 }
 
 
