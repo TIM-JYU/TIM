@@ -1,10 +1,19 @@
 # TODO: Import and register all languages etc explicitly (= without using star imports).
 from modifiers import *
 from languages import *
+
+# All languages must be imported for populated even not used in this file
+# noinspection PyUnresolvedReferences
 from geogebra import *
+
+# noinspection PyUnresolvedReferences
 from jsframe import *
 from stack import *
+
+# noinspection PyUnresolvedReferences
 from extcheck import ExtCheck
+
+# noinspection PyUnresolvedReferences
 from gitlang import GitReg, GitCheck
 from tim_common.cs_utils import populated
 
@@ -20,6 +29,8 @@ def all_js_files():
 
     def add(dictionary):
         for cls in dictionary.values():  # ask needed js and css files from language
+            # no time to find what files could throw
+            # noinspection PyBroadException
             try:
                 files.update(cls.js_files())
             except:
@@ -39,6 +50,8 @@ def all_css_files():
 
     def add(dictionary):
         for cls in dictionary.values():  # ask needed js and css files from language
+            # no time to find what files could throw
+            # noinspection PyBroadException
             try:
                 files.update(cls.css_files())
             except:
