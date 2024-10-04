@@ -1,0 +1,34 @@
+@import "fields-box-common";
+
+.form-control {
+    display: block;
+    width: 100%;
+}
+
+textarea.form-control {
+    height: unset;
+
+}
+
+p {
+    padding-top: 0px;
+    padding-left: 0px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+.timButton {
+    margin-bottom: 5px;
+}
+
+.textfield input{
+    padding: .3em;
+    margin: .5em 0 .5em 0;
+}
+
+.textfield textarea {
+    padding: .3em;
+    overflow:hidden;
+    height: auto;
+}

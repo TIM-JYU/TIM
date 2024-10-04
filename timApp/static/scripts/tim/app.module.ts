@@ -42,8 +42,6 @@ import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {RoleInfoComponent} from "tim/header/role-info.component";
-import {UserProfileComponent} from "tim/plugin/user-profile/user-profile.component";
-import {CsUtilityModule} from "../../../modules/cs/js/util/module";
 
 @NgModule({
     declarations: [
@@ -74,7 +72,6 @@ import {CsUtilityModule} from "../../../modules/cs/js/util/module";
         GamificationMapComponent,
         SelfExpireComponent,
         RoleInfoComponent,
-        UserProfileComponent,
     ],
     imports: [
         BrowserModule,
@@ -88,7 +85,6 @@ import {CsUtilityModule} from "../../../modules/cs/js/util/module";
         TypeaheadModule.forRoot(),
         TooltipModule.forRoot(),
         TabsModule.forRoot(),
-        CsUtilityModule,
     ],
     providers: [
         SessionVerify,
