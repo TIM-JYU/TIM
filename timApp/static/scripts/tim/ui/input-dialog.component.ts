@@ -39,6 +39,9 @@ export type InputDialogParams<T> = {
         | {
               inputType?: "textarea";
           }
+        | {
+              inputType?: "text";
+          }
     );
 
 @Component({
@@ -52,13 +55,20 @@ export type InputDialogParams<T> = {
             </ng-container>
             <ng-container body>
                 <p tabindex="-1" #textEl [innerHtml]="text()" class="content"></p>
-                <input (keydown.enter)="ok()"
+                <textarea (keydown.enter)="ok()"
                        class="form-control"
                        focusMe
                        type="text"
                        *ngIf="isInput && (data.inputType === 'textarea' || data.inputType === undefined)"
                        [(ngModel)]="value"
-                       (ngModelChange)="clearError()">
+                          (ngModelChange)="clearError()"></textarea>
+                <input (keydown.enter)="ok()"
+                       class="form-control"
+                       focusMe
+                       type="text"
+                       *ngIf="isInput && (data.inputType === 'text' )"
+                       [(ngModel)]="value"
+                          (ngModelChange)="clearError()" />
                 <select (keydown.enter)="ok()"
                         class="form-control"
                         focusMe
@@ -165,5 +175,6 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
 @NgModule({
     declarations: [InputDialogComponent],
     imports: [CommonModule, DialogModule, TimUtilityModule, FormsModule],
+    exports: [InputDialogComponent],
 })
 export class InputDialogModule {}
