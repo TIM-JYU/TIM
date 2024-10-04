@@ -8998,6 +8998,14 @@
           <context context-type="linenumber">226</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8875063726542017107" datatype="html">
+        <source>Could not finish uploading. Please check your internet connection and try again.</source>
+        <target state="new">Could not finish uploading. Please check your internet connection and try again.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">296,295</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

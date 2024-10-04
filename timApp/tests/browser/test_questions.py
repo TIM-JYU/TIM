@@ -341,7 +341,10 @@ class QuestionTest(BrowserTest):
 
         self.assert_same_screenshot(
             matrix,
-            f"questions/question_matrix_{questiontype}",
+            [
+                f"questions/question_matrix_{questiontype}",
+                f"questions/question_matrix_{questiontype}_alt",
+            ],
             move_to_element=True,
             attempts=2,
         )

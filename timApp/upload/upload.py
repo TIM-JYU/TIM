@@ -26,6 +26,9 @@ from timApp.auth.accesshelper import (
     verify_answer_access,
 )
 from timApp.auth.accesstype import AccessType
+from timApp.auth.oauth2.models import Scope
+from timApp.auth.oauth2.oauth2 import require_oauth
+from authlib.integrations.flask_oauth2 import current_token
 from timApp.auth.sessioninfo import get_current_user_object, user_context_with_logged_in
 from timApp.auth.sessioninfo import logged_in, get_current_user_group_object
 from timApp.document.docentry import DocEntry
@@ -631,6 +634,7 @@ def save_file_and_grant_access(
 
 
 @upload.get("/files/<path:file_id>/<file_filename>")
+@require_oauth(Scope.user_tasks.value, optional=True)
 def get_file(file_id: str, file_filename: str) -> Response:
     if file_id.isdigit():
         f = UploadedFile.get_by_id_and_filename(int(file_id), file_filename)
@@ -638,7 +642,10 @@ def get_file(file_id: str, file_filename: str) -> Response:
         f = UploadedFile.get_by_doc_and_filename(file_id, file_filename)
     if not f:
         raise NotExist("File not found")
-    verify_view_access(f, check_parents=True)
+
+    user = current_token.user if current_token else None
+
+    verify_view_access(f, check_parents=True, user=user)
     file_path = f.filesystem_path.as_posix()
     send_plain = get_option(request, "plain", False)
     if send_plain:
@@ -704,6 +711,7 @@ def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: i
 
 
 @upload.get("/images/<path:image_id>/<image_filename>")
+@require_oauth(Scope.user_tasks.value, optional=True)
 def get_image(image_id: str, image_filename: str) -> Response:
     if image_id.isdigit():
         f = UploadedFile.get_by_id_and_filename(int(image_id), image_filename)
@@ -711,7 +719,10 @@ def get_image(image_id: str, image_filename: str) -> Response:
         f = UploadedFile.get_by_doc_and_filename(image_id, image_filename)
     if not f:
         raise NotExist("Image not found")
-    verify_view_access(f, check_parents=True)
+
+    user = current_token.user if current_token else None
+
+    verify_view_access(f, check_parents=True, user=user)
     if image_filename != f.filename:
         raise NotExist("Image not found")
     imgtype = guess_image_mime(f.filesystem_path)

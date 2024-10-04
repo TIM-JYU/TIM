@@ -136,6 +136,11 @@ def translate_full_document(
     # The order of paragraphs in both docs must match, so that correct
     # ones are modified.
     for tr_paragraph, text in zip(tr_paragraphs, translated_texts):
+        # Do not modify paragraph, if translation request returns an empty text block,
+        # since this means there was an oversized translation request. We should keep the source text block
+        # intact so the user may split it up in the original or translate it manually.
+        if not text:
+            continue
         # Note that the paragraph's text is stripped, as extra newlines at
         # start or end seem to break plugins.
         tr.document.modify_paragraph(tr_paragraph.id, text.strip())
