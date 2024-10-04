@@ -55,6 +55,7 @@ Adding new language to csPlugin:
 3. Mimic some existing language when creating the new class
     - the simplest one is CC that works when just compiler name end extensions are enough to change
 4. Add language to csPlugin.ts LanguageTypes.languages dictionary
+5. If language is added to separate file, add import to manager.py file
 """
 
 cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
