@@ -17,7 +17,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
-from timApp.idesupport.files import SupplementaryFile
+from timApp.idesupport.files import SupplementaryFile, get_task_language
 from timApp.idesupport.ide_languages import Language
 from timApp.plugin.containerLink import render_plugin_multi
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, PluginWrap
@@ -27,7 +27,6 @@ from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
 from tim_common.marshmallow_dataclass import class_schema
-from tim_common.utils import type_splitter
 
 IDE_TASK_TAG = "ideTask"  # Identification tag for the TIDE-task
 
@@ -486,18 +485,39 @@ def get_ide_tasks(
     tasks = []
 
     for p in pars:
-        if p.attrs is not None:
-            tag = p.attrs.get(IDE_TASK_TAG)
-            if tag is not None:
-                if tag == "":
-                    tag = p.attrs.get("taskId")
-                if tag is None:
-                    raise RouteException("Missing taskID!")
-                task = get_ide_user_plugin_data(
-                    doc=doc, par=p, user_ctx=user_ctx, ide_task_id=tag
-                )
-                if task:
-                    tasks.append(task)
+        tag = "???"
+        try:
+            if p.attrs is not None:
+                tag = p.attrs.get(IDE_TASK_TAG)
+                if tag is not None:
+                    if tag == "":
+                        tag = p.attrs.get("taskId")
+                    if tag is None:
+                        raise RouteException("Missing taskID!")
+                    task = get_ide_user_plugin_data(
+                        doc=doc, par=p, user_ctx=user_ctx, ide_task_id=tag
+                    )
+                    if task:
+                        tasks.append(task)
+        except Exception as e:
+            task = TIDEPluginData(
+                task_files=[],
+                supplementary_files=[
+                    SupplementaryFile(
+                        filename="error.txt",
+                        content="Error: " + str(e),
+                    )
+                ],
+                header="Error: " + str(e),
+                stem="Error: " + str(e),
+                type="error",
+                path=doc.path,
+                task_id=p.attrs.get("taskId"),
+                doc_id=doc.id,
+                par_id=p.id,
+                ide_task_id="error_" + tag,
+            )
+            tasks.append(task)
 
     if len(tasks) == 0:
         raise NotExist(
@@ -547,10 +567,10 @@ def get_ide_task_by_id(
 
     for p in pars:
         if p.attrs is not None:
-            id = p.attrs.get(IDE_TASK_TAG)
-            if id == "":
-                id = p.attrs.get("taskId")
-            if id == ide_task_id:
+            tid = p.attrs.get(IDE_TASK_TAG)
+            if tid == "":
+                tid = p.attrs.get("taskId")
+            if tid == ide_task_id:
                 task = get_ide_user_plugin_data(
                     doc=doc, par=p, user_ctx=user_ctx, ide_task_id=ide_task_id
                 )
@@ -568,21 +588,6 @@ def get_ide_task_by_id(
     # TODO: case where files are saved based on language base folders eg path is taken from the language package
 
     raise RouteException("Multiple tasks found, support not implemented yet")
-
-
-def get_task_language(task_type: str | None) -> str | None:
-    """
-    Get the language of the task
-    :param task_type: Type of the task
-    :return: Language of the task
-    """
-
-    if task_type is not None:
-        type_split = type_splitter.split(task_type)
-        if len(type_split) > 0:
-            return type_split[0]
-
-    return None
 
 
 def get_ide_user_plugin_data(
@@ -663,6 +668,7 @@ def get_ide_user_plugin_data(
         # if the plugin has no code, look from markup
         if ide_file.by is None and ide_file.byCode is None and ide_file.program is None:
             ide_file = IdeFileSchema.load(plugin_json["markup"], unknown=EXCLUDE)
+            ide_file.language = language
             if ide_file.taskIDExt is None:
                 if plugin_json.get("taskIDExt"):
                     ide_file.taskIDExt = plugin_json["taskIDExt"]

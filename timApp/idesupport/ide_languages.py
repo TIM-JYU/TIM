@@ -7,7 +7,7 @@ import re
 import textwrap
 from typing import Any
 
-from timApp.idesupport.files import SupplementaryFile, is_in_filename
+from timApp.idesupport.files import SupplementaryFile, is_in_filename, get_task_language
 from tim_common.cs_utils import populated
 
 DOTNET_VERSION = "net$(NETCoreAppMaximumVersion)"  # "net8.0"
@@ -29,7 +29,8 @@ class Language:
     """
 
     def __init__(self, plugin_json: dict):
-        self.fileext = ""
+        ext = plugin_json.get("markup", {}).get("type", "")
+        self.fileext = get_task_language(ext)
         """
         File extension to use for the source code files.
         """
@@ -41,6 +42,8 @@ class Language:
         self.plugin_json = plugin_json
         self.ide_task_id = ""
         self.filename = self.init_filename()
+        if self.filename is None:
+            self.filename = self.filename_from_id()
 
     def find_comment_line_characters(self) -> str:
         return self.comment_syntax_lookup
@@ -53,6 +56,14 @@ class Language:
         """
         return self.plugin_json["markup"].get("filename")
 
+    def filename_from_id(self):
+        """
+        Give file name from taskID
+        :return: filename or main
+        """
+        tid = self.plugin_json.get("taskID", "1.main").split(".", 2)[1]
+        return tid
+
     def get_filename(self) -> str:
         """
         :return: Current file name to use for the main file of the task.
@@ -61,6 +72,11 @@ class Language:
 
     @staticmethod
     def get_classname(s: str | None) -> str | None:
+        """
+        Tries to find classnaem from source code
+        :param s: souce code to look
+        :return: classname if found
+        """
         if s is None:
             return None
 
@@ -70,12 +86,30 @@ class Language:
             return None
         return match.group(1)
 
+    @staticmethod
+    def try_to_get_classname_from(d: dict) -> str | None:
+        """
+        Troes to get classname from dict
+        :param d: dict to look
+        :return: classname if found
+        """
+        clsname = Language.get_classname(d.get("program"))
+        if clsname is None:
+            clsname = Language.get_classname(d.get("by"))
+        if clsname is None:
+            clsname = Language.get_classname(d.get("byCode"))
+        return clsname
+
     def try_to_get_classname(self) -> str | None:
-        clsname = Language.get_classname(self.plugin_json.get("program"))
+        """
+        Tries to get classname from plugin_json os markup
+        :return: classname if found
+        """
+        clsname = Language.try_to_get_classname_from(self.plugin_json)
         if clsname is None:
-            clsname = Language.get_classname(self.plugin_json.get("by"))
-        if clsname is None:
-            clsname = Language.get_classname(self.plugin_json.get("byCode"))
+            clsname = Language.try_to_get_classname_from(
+                self.plugin_json.get("markup", {})
+            )
         return clsname
 
     def generate_supplementary_files(
@@ -114,6 +148,14 @@ class Language:
         return subclasses + [i for sc in subclasses for i in sc.all_subclasses()]
 
 
+class Text(Language):
+    ttype: str | list[str] = ["text"]
+
+    def __init__(self, plugin_json: Any):
+        super().__init__(plugin_json)
+        self.fileext = "txt"
+
+
 class CS(Language):
     ttype: str | list[str] = ["cs", "c#", "csharp"]
 
@@ -129,8 +171,6 @@ class CS(Language):
         filename = super().init_filename()
         if filename is None:
             filename = self.try_to_get_classname()
-        if filename is None:
-            filename = "Main.cs"  # TODO
         return filename
 
     def generate_supplementary_files(

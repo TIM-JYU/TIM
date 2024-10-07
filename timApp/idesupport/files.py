@@ -5,6 +5,8 @@ File types used for IDE support
 import re
 from dataclasses import dataclass
 
+from tim_common.utils import type_splitter
+
 
 @dataclass
 class SupplementaryFile:
@@ -44,3 +46,18 @@ def is_in_filename(files: list[dict[str, str]], regexp: str) -> bool:
         if name and re.match(regexp, name):
             return True
     return False
+
+
+def get_task_language(task_type: str | None) -> str | None:
+    """
+    Get the language of the task
+    :param task_type: Type of the task
+    :return: Language of the task
+    """
+
+    if task_type is not None:
+        type_split = type_splitter.split(task_type.lower())
+        if len(type_split) > 0:
+            return type_split[0]
+
+    return None
