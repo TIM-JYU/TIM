@@ -91,7 +91,9 @@ export interface IEditorParams {
         showDelete: boolean;
         showPlugins: boolean;
         showSettings: boolean;
+        showUpload: boolean;
         showImageUpload: boolean;
+        showDocumentImport: boolean;
         touchDevice: boolean;
         tags: ITag[];
         choices?: IChoice[];
@@ -212,6 +214,14 @@ export interface ISpellWordInfo {
     suggestions: string[];
 }
 
+class DocumentImportHelp {
+    heading: string = $localize`Document import instructions`;
+    shortHelp: string = $localize`You can use this tab to import document files directly to editable text. Click on 'Browse...' to select a document to import.`;
+    formats: string = $localize`Currently supported document formats: Microsoft Word (.docx), OpenOffice/LibreOffice Writer (.odt), Markdown (.md), TeX/LaTeX document (.tex), raw text (.txt).`;
+    styles: string = $localize`Document styles are not imported. You may need to correct formatting and/or styles manually.`;
+    images: string = $localize`Images embedded in the document are automatically uploaded. You will find the appropriate image references at the end of the imported content.`;
+}
+
 export class PareditorController extends DialogController<
     {params: IEditorParams},
     IEditorResult
@@ -282,6 +292,7 @@ export class PareditorController extends DialogController<
     private currentSymbol: FormulaEvent = {
         text: "",
     };
+    docImportHelp: DocumentImportHelp;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1056,6 +1067,10 @@ ${backTicks}
                 name: "Upload",
                 entries: [],
             },
+            {
+                name: "Import document",
+                entries: [],
+            },
         ];
 
         $(document).on(
@@ -1071,6 +1086,7 @@ ${backTicks}
         this.outofdate = false;
         this.parCount = 0;
         this.touchDevice = false;
+        this.docImportHelp = new DocumentImportHelp();
     }
 
     getEditor() {
@@ -1082,12 +1098,22 @@ ${backTicks}
         // it has special content that cannot be placed under "extra".
 
         return this.tabs.filter(
-            (tab) => (!tab.show || tab.show()) && tab.name !== "Upload"
+            (tab) =>
+                (!tab.show || tab.show()) &&
+                tab.name !== "Upload" &&
+                tab.name !== "Import document"
         );
     }
 
+    getUploadMainTab() {
+        return this.findTab("upload_main_tab");
+    }
     getUploadTab() {
         return this.findTab("upload");
+    }
+
+    getPandocTab() {
+        return this.findTab("pandoc");
     }
 
     findTab(name: string) {
@@ -2247,6 +2273,58 @@ ${backTicks}
                             stamped
                         );
                     }
+                });
+            } else {
+                const response = result.result;
+                if (this.file) {
+                    this.file.error = response.data.error;
+                }
+            }
+        }
+    }
+
+    async onFileSelectForPandoc(file: File) {
+        const editor = this.editor!;
+        await this.focusEditor();
+        this.file = file;
+        const editorText = editor.getEditorText();
+
+        // const selectionRange = editor.getPosition(); // Selected area in the editor
+
+        if (file) {
+            this.file.progress = 0;
+            this.file.error = undefined;
+            const upload = $upload.upload<{file: string}>({
+                data: {
+                    doc_id: this.getExtraData().docId.toString(),
+                    file,
+                },
+                method: "POST",
+                url: "/importDocFile",
+            });
+            upload.progress((evt) => {
+                if (this.file) {
+                    this.file.progress = Math.min(
+                        100,
+                        Math.floor((100.0 * evt.loaded) / evt.total)
+                    );
+                }
+            });
+
+            const result = await to(upload);
+
+            if (result.ok) {
+                const response = result.result;
+                $timeout(() => {
+                    // For now, just append the converted file content to the end of the current paragraph
+                    // Images embedded in the imported document are automatically uploaded and image links for them
+                    // are added to the end of the document
+                    const convertedDoc = response.data.file;
+                    editor.setPosition([
+                        editorText.length - 1,
+                        editorText.length - 1,
+                    ]);
+                    editor.insertTemplate(`\n${convertedDoc}\n`);
                 });
             } else {
                 const response = result.result;
