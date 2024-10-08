@@ -2,68 +2,31 @@
  * Defines the client-side implementation of textfield/label plugin.
  */
 import * as t from "io-ts";
-import {
+import type {
     ApplicationRef,
-    Component,
-    Output,
     DoBootstrap,
-    Input,
-    NgModule,
-    NgZone,
     OnInit,
-    EventEmitter,
-    SimpleChange,
     SimpleChanges,
     OnChanges,
 } from "@angular/core";
 import {
-    GenericPluginMarkup,
-    Info,
-    nullable,
-    withDefault,
-} from "../../../static/scripts/tim/plugin/attributes";
+    Component,
+    Output,
+    Input,
+    NgModule,
+    NgZone,
+    EventEmitter,
+} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {PluginJson} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {registerPlugin} from "../../../static/scripts/tim/plugin/pluginRegistry";
+import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
-import {
-    ChangeType,
-    FormModeOption,
-} from "../../../static/scripts/tim/document/viewctrl";
-import {boolean, string} from "fp-ts";
-import {re} from "mathjs";
+import {nullable} from "tim/plugin/attributes";
 
-const TextfieldMarkup = t.intersection([
-    t.partial({
-        tag: nullable(t.string),
-        inputplaceholder: nullable(t.string),
-        inputstem: nullable(t.string),
-        initword: nullable(t.string),
-        validinput: nullable(t.string),
-        errormessage: nullable(t.string),
-        readOnlyStyle: nullable(t.string),
-        showname: nullable(t.number),
-        autosave: t.boolean,
-        nosave: t.boolean,
-        ignorestyles: t.boolean,
-        clearstyles: t.boolean,
-        textarea: t.boolean,
-        autogrow: t.boolean,
-        downloadButton: t.string,
-        downloadButtonFile: t.string,
-    }),
-    GenericPluginMarkup,
-    t.type({
-        autoupdate: withDefault(t.number, 500),
-        autoUpdateTables: withDefault(t.boolean, true),
-        cols: withDefault(t.number, 6),
-        rows: withDefault(t.number, 1),
-    }),
-]);
 export const FieldContent = t.union([t.string, t.number, t.null]);
 export const FieldBasicData = t.type({
     c: FieldContent,
@@ -74,16 +37,7 @@ export const FieldDataWithStyles = t.intersection([
         styles: nullable(t.record(t.string, t.string)),
     }),
 ]);
-const TextfieldAll = t.intersection([
-    t.partial({}),
-    t.type({
-        info: Info,
-        markup: TextfieldMarkup,
-        preview: t.boolean,
-        state: nullable(FieldDataWithStyles),
-    }),
-]);
-export type TFieldContent = t.TypeOf<typeof FieldContent>;
+
 export type InputType = "TEXTAREA" | "TEXT";
 
 @Component({
@@ -149,19 +103,6 @@ export class StandaloneTextfieldComponent
      */
     getContent(): string {
         return this.userword;
-    }
-
-    /**
-     * Method to check grading input type for textfield.
-     * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
-     * @param re validinput defined by given attribute.
-     */
-    validityCheck(re: string) {
-        if (this.userword === "") {
-            return new RegExp("").test(this.userword);
-        }
-        const regExpChecker = new RegExp(re);
-        return regExpChecker.test(this.userword);
     }
 
     updateInput() {
