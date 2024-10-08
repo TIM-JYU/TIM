@@ -28,7 +28,11 @@ class Language:
     Should be equivalent to csPlugin language types.
     """
 
-    def __init__(self, plugin_json: dict):
+    def __init__(self, plug_json: dict | None = None):
+        if plug_json:
+            plugin_json = plug_json
+        else:
+            plugin_json = {}
         ext = plugin_json.get("markup", {}).get("type", "")
         self.fileext = get_task_language(ext)
         """
@@ -54,9 +58,9 @@ class Language:
 
         :return: The file name to use for the main file of the task.
         """
-        return self.plugin_json["markup"].get("filename")
+        return self.plugin_json.get("markup", {}).get("filename")
 
-    def filename_from_id(self):
+    def filename_from_id(self) -> str:
         """
         Give file name from taskID
         :return: filename or main
@@ -74,7 +78,7 @@ class Language:
     def get_classname(s: str | None) -> str | None:
         """
         Tries to find classnaem from source code
-        :param s: souce code to look
+        :param s: source code to look
         :return: classname if found
         """
         if s is None:
@@ -125,7 +129,7 @@ class Language:
         return []
 
     @staticmethod
-    def make_language(ttype: str, plugin_json: Any, ide_task_id: str) -> "Language":
+    def make_language(ttype: str, plugin_json: dict, ide_task_id: str) -> "Language":
         """
         Initialize the language handler for a specific language type.
 
@@ -151,7 +155,7 @@ class Language:
 class Text(Language):
     ttype: str | list[str] = ["text"]
 
-    def __init__(self, plugin_json: Any):
+    def __init__(self, plugin_json: dict):
         super().__init__(plugin_json)
         self.fileext = "txt"
 
@@ -159,7 +163,7 @@ class Text(Language):
 class CS(Language):
     ttype: str | list[str] = ["cs", "c#", "csharp"]
 
-    def __init__(self, plugin_json: Any):
+    def __init__(self, plugin_json: dict):
         super().__init__(plugin_json)
         self.fileext = "cs"
         clsname = self.try_to_get_classname()
@@ -197,7 +201,7 @@ class CS(Language):
 class Jypeli(CS):
     ttype = "jypeli"
 
-    def __init__(self, plugin_json: Any):
+    def __init__(self, plugin_json: dict):
         super().__init__(plugin_json)
 
     def generate_supplementary_files(
@@ -258,7 +262,7 @@ class Jypeli(CS):
 class PY3(Language):
     ttype = ["py", "py3", "python", "python3"]
 
-    def __init__(self, plugin_json: Any):
+    def __init__(self, plugin_json: dict):
         super().__init__(plugin_json)
         self.comment_syntax_lookup = "#"
         self.fileext = "py"
@@ -267,7 +271,7 @@ class PY3(Language):
 class CC(Language):
     ttype: str | list[str] = "cc"
 
-    def __init__(self, plugin_json: Any):
+    def __init__(self, plugin_json: dict):
         super().__init__(plugin_json)
         self.fileext = "c"
 
@@ -275,7 +279,7 @@ class CC(Language):
 class CPP(CC):
     ttype = ["c++", "cpp"]
 
-    def __init__(self, plugin_json: Any):
+    def __init__(self, plugin_json: dict):
         super().__init__(plugin_json)
         self.fileext = "cpp"
 
@@ -283,7 +287,7 @@ class CPP(CC):
 class Java(Language):
     ttype = "java"
 
-    def __init__(self, plugin_json: Any):
+    def __init__(self, plugin_json: dict):
         super().__init__(plugin_json)
         self.fileext = "java"
 
