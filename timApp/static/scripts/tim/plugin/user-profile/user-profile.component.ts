@@ -1,47 +1,31 @@
-import {
-    ApplicationRef,
-    DoBootstrap,
-    EventEmitter,
-    Input,
-    NgModule,
-    OnInit,
-    Output,
-    TrackByFunction,
-    ViewChild,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
+import {Input, NgModule, ViewChild} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {AngularError, toPromise} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
+import * as t from "io-ts";
+import {int} from "@zxing/library/es2015/customTypings";
+import type {Result, AngularError} from "tim/util/utils";
+import {FormsModule} from "@angular/forms";
+import {CommonModule} from "@angular/common";
+import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
+import {FileSelectManagerComponent} from "../../../../../modules/cs/js/util/file-select";
 import type {
     IFile,
     IFileSpecification,
 } from "../../../../../modules/cs/js/util/file-select";
-import {FileSelectManagerComponent} from "../../../../../modules/cs/js/util/file-select";
-import * as t from "io-ts";
-import {int} from "@zxing/library/es2015/customTypings";
-import {InputDialogKind} from "tim/ui/input-dialog.kind";
-import type {Result} from "tim/util/utils";
-import {showInputDialog} from "tim/ui/showInputDialog";
-import {
-    StandaloneTextfieldComponent,
-    StandaloneTextfieldModule,
-} from "../../../../../modules/fields/js/standalone-textfield.component";
-import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
-import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
-import {boolean} from "fp-ts";
+import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/standalone-textfield.component";
 
-interface ProfileData {
+interface ProfileData extends Object {
     username?: string;
     realname?: string;
     email?: string;
     profile_description: string;
     profile_links: string[];
     document_id?: int;
-}
-
-interface ImageEvent extends Event {
-    image: string;
+    profile_picture_path: string;
+    profile_path: string;
+    edit_access?: boolean;
 }
 
 const UploadedFile = t.intersection([
@@ -82,7 +66,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
             <div class="container">
                 <div class="left-column">
                     <img id="tim-user-profile-picture" [src]="pictureUrl" alt="profilepic"/>
-                    <ng-container *ngIf="modifyEnabled" body>
+                    <ng-container *ngIf="editable" body>
                         <div>
                             <file-select-manager class="small"
                                                  [dragAndDrop]="dragAndDrop"
@@ -97,7 +81,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                     </ng-container>
                 </div>
                 <div class="right-column">
-                    <ng-container *ngIf="modifyEnabled" body>
+                    <ng-container *ngIf="editable" body>
                         <form (ngSubmit)="onSubmit()" #f="ngForm">
                             <tim-standalone-textfield name="description" inputType="TEXTAREA"
                                                       (valueChange)="updateDescription($event)"
@@ -110,7 +94,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                             <button type="submit" class="btn">Save <span class="glyphicon glyphicon-send"></span></button>
                         </form>
                     </ng-container>
-                    <ng-container *ngIf="!modifyEnabled">
+                    <ng-container *ngIf="!editable">
                         <p>
                             {{ profileData.profile_description }}
                         </p>
@@ -152,9 +136,10 @@ member2
     `,
 })
 export class UserProfileComponent implements OnInit {
-    @Input() userId?: int;
-    @Input() documentId?: int;
+    @Input() documentId: int = 0;
     @Input() modifyEnabled: boolean = false;
+    userId?: int;
+    editable: boolean = false;
     warn: boolean | null = null;
     pictureUrl: string = "";
     profileUrl: string = "";
@@ -171,13 +156,16 @@ export class UserProfileComponent implements OnInit {
             profile_description: "",
             profile_links: [""],
             document_id: 1,
+            profile_picture_path: this.pictureUrl,
+            profile_path: this.profileUrl,
         };
     }
 
-    async ngOnInit() {
-        await this.getProfileData(this.userId);
+    ngOnInit() {
+        this.getProfileData(this.userId);
+
         this.uploadUrl = `/profile/picture/${this.documentId}`;
-        this.detailsUrl = `/profile/details`;
+        this.detailsUrl = `/profile/details/${this.documentId}`;
     }
 
     @ViewChild(FileSelectManagerComponent)
@@ -198,23 +186,34 @@ export class UserProfileComponent implements OnInit {
         component.files = files;
     }
 
-    async getProfileData(userId?: int) {
-        const data = this.http
-            .get(`/profile/${userId}`)
-            .subscribe((res: any) => {
+    getProfileData(userId?: int) {
+        let dataEndpoint = "/profile";
+
+        if (userId != undefined) {
+            dataEndpoint = `/profile/${userId}`;
+        }
+        const data = this.http.get<ProfileData>(dataEndpoint).subscribe({
+            next: (res: ProfileData) => {
                 console.log(res);
+
                 this.profileData = {
                     realname: res.realname,
                     email: res.email,
                     username: res.username,
                     profile_description: res.profile_description,
                     profile_links: res.profile_links,
+                    profile_picture_path: res.profile_picture_path,
+                    profile_path: res.profile_path,
+                    edit_access: res.edit_access,
                 };
                 this.pictureUrl = res.profile_picture_path;
                 this.profileUrl = res.profile_path;
-                return true;
-            });
-        console.log(data);
+
+                if (this.modifyEnabled && this.profileData.edit_access) {
+                    this.editable = true;
+                }
+            },
+        });
         return data;
     }
 
@@ -226,26 +225,16 @@ export class UserProfileComponent implements OnInit {
         console.log(file);
     }
 
-    onUpload(resp: any) {
+    onUpload(resp: unknown) {
         console.log("On upload");
         console.log(resp);
         if (!resp) {
             return;
         }
 
-        const pic = resp as IUploadResponse;
-        // for (const response of resps) {
-        //     this.uploadedFiles.push({path: response.file, type: response.type});
-        // }
-        this.uploadedFiles.push({path: pic.file, type: pic.type});
-        this.pictureUrl = `/images/${resp.image}`;
-        console.log(this.pictureUrl);
-    }
+        const img: {image: string} = resp as {image: string};
 
-    onImgLoad(event: any, index: number): void {
-        console.log("On image load");
-        this.pictureUrl = `/images/${event.image}`;
-        console.log(this.pictureUrl);
+        this.pictureUrl = `/images/${img.image}`;
     }
 
     onUploadDone(success: boolean) {
@@ -254,49 +243,30 @@ export class UserProfileComponent implements OnInit {
 
     async onSubmit() {
         // Reset changes warning in child component.
+        // TODO: change the warning impl to be more efficient
         this.warn = false;
 
         // Prepare data for submit
-        this.profileData.document_id = this.documentId;
-        console.log(this.profileData);
-        const data: ProfileData = this.profileData;
 
+        const data: ProfileData = this.profileData;
         // Call endpoint, which handles storing the data into document settings
+
         const response = toPromise(
             this.http.post<{ok: boolean}>(this.detailsUrl, data)
         );
 
         // Get result from response of the endpoint.
         const result: Result<{ok: boolean}, AngularError> = await response;
+
         this.warn = null;
         return result;
     }
 
-    showValue(res: string) {}
-
-    async showTextInput() {
-        console.log("mo");
-        showInputDialog({
-            isInput: InputDialogKind.InputAndValidator,
-            text: "Update a profile description.",
-            title: "Update profile.",
-            defaultValue: "Your description",
-            inputType: "textarea",
-            validator: (input) => {
-                return new Promise<Result<string, string>>((res) => {
-                    return res({ok: true, result: input});
-                });
-            },
-        });
-    }
-
     updateDescription($event: string) {
-        console.log($event);
         this.profileData.profile_description = $event;
     }
 
     updateLink($event: string, i: number) {
-        console.log($event);
         this.profileData.profile_links[i] = $event;
     }
 

@@ -1608,10 +1608,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         # TODO: think other languages also
         return User.get_by_name(current_app.config["MODEL_ANSWER_USER_NAME"])
 
-    def get_profile(self) -> Optional[str]:
-        path = self.get_personal_folder().path
-        return path
-
 
 def get_membership_end(u: User, group_ids: set[int]) -> datetime | None:
     """

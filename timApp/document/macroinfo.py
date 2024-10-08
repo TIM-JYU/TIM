@@ -179,7 +179,6 @@ def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
          - useremail: The email address of the user.
          - loggedUsername: The username of the user that is logged in.
          - userfolder: The personal folder of the user.
-         - profilepicture: The profile picture of the user.
 
     :param user_ctx: User context to get the macros for.
     :return: Dictionary of user macros.
@@ -194,7 +193,6 @@ def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
         "userfolder": escape(
             user.get_personal_folder().path
         ),  # personal folder object is cached and usually reused
-        "profilepicture": escape(user.get_profile()),
     }
 
 
