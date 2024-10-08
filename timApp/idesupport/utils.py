@@ -611,7 +611,7 @@ def get_ide_user_plugin_data(
     answer_map: AnswerMap = {}
     answer = None
     get_answers(user_ctx.user, task_ids, answer_map)
-    if answer_map:  # If tehre was an answer
+    if answer_map:  # If there was an answer
         first_key = next(iter(answer_map))
         answer = answer_map[first_key][0]
 
