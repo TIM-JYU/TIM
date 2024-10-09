@@ -93,7 +93,7 @@ class Language:
     @staticmethod
     def try_to_get_classname_from(d: dict) -> str | None:
         """
-        Troes to get classname from dict
+        Tries to get classname from dict
         :param d: dict to look
         :return: classname if found
         """
