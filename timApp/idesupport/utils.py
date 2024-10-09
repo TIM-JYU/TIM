@@ -65,6 +65,7 @@ class IdeFile:
     content: str | None = field(init=False)
     """File contents provided for IDE"""
 
+    # TODO: Maybe should be field(default_factory=Language)
     language: Language = Language()
 
     def __post_init__(self) -> None:
