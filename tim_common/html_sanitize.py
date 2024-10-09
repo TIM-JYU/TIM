@@ -115,6 +115,7 @@ TIM_SAFE_TAGS = [
     "tim-notification-options",
     "tim-search-button",
     "tim-user-profile",
+    "tim-steps",
     "standalone-textfield",
 ]
 
