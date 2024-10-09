@@ -835,6 +835,7 @@ def post_answer_impl(
         return AnswerRouteResult(
             result=handle_points_ref(answerdata, curr_user, d, plugin.ptype, tid),
             plugin=plugin,
+            extra={},
         )
 
     get_task = (
@@ -955,6 +956,7 @@ def post_answer_impl(
             return AnswerRouteResult(
                 result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
                 plugin=plugin,
+                extra={},
             )
 
     if preoutput:
@@ -969,8 +971,11 @@ def post_answer_impl(
         raise PluginException(f"Got malformed response from plugin: {jsonresp}")
     result["web"] = web
     extra = {}
-    extra["points"] = jsonresp.get("save", {}).get("points", {})
-    extra["type"] = answer_call_data.get("markup", {}).get("type", "")
+    try:
+        extra["points"] = jsonresp.get("save", {}).get("points", {})
+        extra["type"] = answer_call_data.get("markup", {}).get("type", "")
+    except:
+        pass
 
     if "savedata" in jsonresp:
         siw = answer_call_data.get("markup", {}).get("showInView", False)
@@ -1171,6 +1176,7 @@ def post_answer_impl(
                     return AnswerRouteResult(
                         result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
                         plugin=plugin,
+                        extra={},
                     )
 
             if (points or save_object is not None or tags) and allow_save:
@@ -1277,6 +1283,7 @@ def post_answer_impl(
                     return AnswerRouteResult(
                         result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
                         plugin=plugin,
+                        extra={},
                     )
         if result["savedNew"] is not None and uploads:
             # Associate this answer with the upload entries
