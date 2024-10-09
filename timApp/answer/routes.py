@@ -662,6 +662,7 @@ def verify_ip_address(user: User) -> str | None:
 class AnswerRouteResult:
     result: dict[str, Any]
     plugin: Plugin
+    extra: dict
 
 
 def get_postanswer_plugin_etc(
@@ -967,6 +968,9 @@ def post_answer_impl(
     if web is None:
         raise PluginException(f"Got malformed response from plugin: {jsonresp}")
     result["web"] = web
+    extra = {}
+    extra["points"] = jsonresp.get("save", {}).get("points", {})
+    extra["type"] = answer_call_data.get("markup", {}).get("type", "")
 
     if "savedata" in jsonresp:
         siw = answer_call_data.get("markup", {}).get("showInView", False)
@@ -1298,7 +1302,7 @@ def post_answer_impl(
     if result_errors:
         result["errors"] = result_errors
 
-    return AnswerRouteResult(result=result, plugin=plugin)
+    return AnswerRouteResult(result=result, plugin=plugin, extra=extra)
 
 
 def check_answerupload_file_accesses(
