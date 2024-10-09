@@ -8,9 +8,10 @@ from timApp.auth.accesshelper import (
     verify_view_access,
 )
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.document.docentry import DocEntry, get_documents
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from dataclasses import dataclass
 from flask import request
@@ -88,13 +89,17 @@ def prepare_profile_data(user: User, edit_access: bool) -> ProfileData:
     document_object = personal_folder.get_document("profile")
 
     if document_object is None:
-        verify_edit_access(personal_folder)
-        document_object = personal_folder.get_document(
-            "profile", create_if_not_exist=True
-        )
+        try:
+            verify_edit_access(personal_folder)
+            document_object = personal_folder.get_document(
+                "profile", create_if_not_exist=True
+            )
+            db.session.commit()
+        except AccessDenied as e:
+            print(e)
 
     if document_object is None:
-        raise RouteException("No profile document was found.")
+        raise NotExist("No profile document was found.")
 
     # When document is available, verify view privileges
     if not edit_access:
