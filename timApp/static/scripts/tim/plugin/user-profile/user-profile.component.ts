@@ -53,7 +53,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
     template: `
         <div class="tim-user-profile-container">
             <div class="profile-heading">
-                <h2>About</h2>
+                <h2>Profile</h2>
                 <button *ngIf="!modifyEnabled" class="btn btn-profile" type="button" (click)="modifyUserProfile()">
                     Modify profile <span class="glyphicon glyphicon-wrench"></span></button>
             </div>
