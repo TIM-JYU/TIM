@@ -38,12 +38,6 @@ const UploadedFile = t.intersection([
     }),
 ]);
 
-interface IUploadResponse {
-    file: string;
-    type: string;
-    block: number;
-}
-
 interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 
 @Component({
