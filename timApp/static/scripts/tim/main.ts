@@ -63,6 +63,7 @@ import {CopyFolderComponent} from "tim/folder/copy-folder.component";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
 import {ParRefComponent} from "tim/document/par-ref.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
+import {UserProfileComponent} from "tim/plugin/user-profile/user-profile.component";
 import {
     handleExpiredSession,
     SESSION_VERIFICATION_NEEDED_CODE,
@@ -78,7 +79,6 @@ import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
 import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
-import {UserProfileComponent} from "tim/plugin/user-profile/user-profile.component";
 
 BackspaceDisabler.disable();
 
