@@ -77,7 +77,7 @@ class Language:
     @staticmethod
     def get_classname(s: str | None) -> str | None:
         """
-        Tries to find classnaem from source code
+        Tries to find classname from source code
         :param s: source code to look
         :return: classname if found
         """
@@ -93,7 +93,7 @@ class Language:
     @staticmethod
     def try_to_get_classname_from(d: dict) -> str | None:
         """
-        Troes to get classname from dict
+        Tries to get classname from dict
         :param d: dict to look
         :return: classname if found
         """
