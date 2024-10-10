@@ -66,7 +66,7 @@ class IdeFile:
     """File contents provided for IDE"""
 
     # TODO: Maybe should be field(default_factory=Language)
-    language: Language = Language()
+    language: Language = field(default_factory=Language)
 
     def __post_init__(self) -> None:
         self.content = ""
@@ -709,11 +709,14 @@ def get_ide_user_plugin_data(
     )
 
 
-def ide_submit_task(submit: TIDESubmitFile, user: User) -> AnswerRouteResult:
+def ide_submit_task(
+    submit: TIDESubmitFile, user: User, runtype: str | None = None
+) -> AnswerRouteResult:
     """
     Submit the TIDE-task
     :param submit: TIDESubmitFile
     :param user: Current user
+    :param runtype: Optional forced runtype, for example comtest
     :return: True if the task was submitted successfully
     """
 
@@ -731,7 +734,7 @@ def ide_submit_task(submit: TIDESubmitFile, user: User) -> AnswerRouteResult:
     answer_data = {
         "isInput": False,
         "nosave": False,
-        "type": submit.code_language,
+        "type": runtype or submit.code_language,
         "uploadedFiles": [],
         "submittedFiles": submitted_files,
         "userargs": submit.code_files[file_index].user_args,

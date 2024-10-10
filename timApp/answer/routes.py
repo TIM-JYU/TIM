@@ -662,6 +662,7 @@ def verify_ip_address(user: User) -> str | None:
 class AnswerRouteResult:
     result: dict[str, Any]
     plugin: Plugin
+    extra: dict
 
 
 def get_postanswer_plugin_etc(
@@ -834,6 +835,7 @@ def post_answer_impl(
         return AnswerRouteResult(
             result=handle_points_ref(answerdata, curr_user, d, plugin.ptype, tid),
             plugin=plugin,
+            extra={},
         )
 
     get_task = (
@@ -954,6 +956,7 @@ def post_answer_impl(
             return AnswerRouteResult(
                 result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
                 plugin=plugin,
+                extra={},
             )
 
     if preoutput:
@@ -967,6 +970,12 @@ def post_answer_impl(
     if web is None:
         raise PluginException(f"Got malformed response from plugin: {jsonresp}")
     result["web"] = web
+    extra = {}
+    try:
+        extra["points"] = jsonresp.get("save", {}).get("points", {})
+        extra["type"] = answer_call_data.get("markup", {}).get("type", "")
+    except:
+        pass
 
     if "savedata" in jsonresp:
         siw = answer_call_data.get("markup", {}).get("showInView", False)
@@ -1167,6 +1176,7 @@ def post_answer_impl(
                     return AnswerRouteResult(
                         result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
                         plugin=plugin,
+                        extra={},
                     )
 
             if (points or save_object is not None or tags) and allow_save:
@@ -1273,6 +1283,7 @@ def post_answer_impl(
                     return AnswerRouteResult(
                         result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
                         plugin=plugin,
+                        extra={},
                     )
         if result["savedNew"] is not None and uploads:
             # Associate this answer with the upload entries
@@ -1298,7 +1309,7 @@ def post_answer_impl(
     if result_errors:
         result["errors"] = result_errors
 
-    return AnswerRouteResult(result=result, plugin=plugin)
+    return AnswerRouteResult(result=result, plugin=plugin, extra=extra)
 
 
 def check_answerupload_file_accesses(
