@@ -65,6 +65,7 @@ import {ParRefComponent} from "tim/document/par-ref.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
 import {UserProfileComponent} from "tim/plugin/user-profile/user-profile.component";
 import {StepsComponent} from "tim/plugin/steps/steps.component";
+import {UserListComponent} from "tim/plugin/user-list/user-list.component";
 import {
     handleExpiredSession,
     SESSION_VERIFICATION_NEEDED_CODE,
@@ -152,6 +153,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "csFormulaEditorLoader", FormulaEditorLoaderComponent);
     doDowngrade(dg, "timUserProfile", UserProfileComponent);
     doDowngrade(dg, "timSteps", StepsComponent);
+    doDowngrade(dg, "timUserList", UserListComponent);
     return dg;
 }
 
