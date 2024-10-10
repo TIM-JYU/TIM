@@ -66,6 +66,7 @@ import {SearchButtonComponent} from "tim/search/search-button.component";
 import {UserProfileComponent} from "tim/plugin/user-profile/user-profile.component";
 import {StepsComponent} from "tim/plugin/steps/steps.component";
 import {UserListComponent} from "tim/plugin/user-list/user-list.component";
+import {CourseManagerComponent} from "tim/plugin/course-manager/course-manager.component";
 import {
     handleExpiredSession,
     SESSION_VERIFICATION_NEEDED_CODE,
@@ -154,6 +155,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timUserProfile", UserProfileComponent);
     doDowngrade(dg, "timSteps", StepsComponent);
     doDowngrade(dg, "timUserList", UserListComponent);
+    doDowngrade(dg, "timCourseManager", CourseManagerComponent);
     return dg;
 }
 
