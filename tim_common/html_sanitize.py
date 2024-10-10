@@ -118,6 +118,7 @@ TIM_SAFE_TAGS = [
     "tim-steps",
     "standalone-textfield",
     "tim-user-list",
+    "tim-course-manager",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
