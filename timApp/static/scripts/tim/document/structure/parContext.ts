@@ -83,7 +83,8 @@ export class ParContext {
     }
 
     textContent() {
-        return this.getContent().textContent;
+        const c = this.getContent();
+        return c !== null ? c.textContent : "";
     }
 
     equals(other: ParContext) {

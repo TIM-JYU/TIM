@@ -228,7 +228,6 @@ export class StackPluginComponent
             }
         });
 
-        console.log(this.pluginMeta, this.isPreview());
         if (this.markup.open) {
             this.runGetTask();
         }

@@ -3,6 +3,7 @@ import json
 from datetime import datetime, timezone
 
 import requests
+from flask import session
 from sqlalchemy import func, select
 
 from timApp.answer.answer import Answer
@@ -12,7 +13,8 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.notification.send_email import sent_mails_in_testing
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
+from timApp.tim_celery import do_run_user_function
+from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 

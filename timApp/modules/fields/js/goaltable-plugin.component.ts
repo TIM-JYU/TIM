@@ -36,6 +36,8 @@ const GoalTableMarkup = t.intersection([
         borders: withDefault(t.boolean, true),
         bloom: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
+        editMode: withDefault(t.boolean, false),
+
         // autoplay: withDefault(t.boolean, true),
         // file: t.string,
         // open: withDefault(t.boolean, false),
@@ -235,6 +237,7 @@ export class GoalTablePluginComponent
         this.editText = this.markup.editText ?? goalTableWords.editText[lang];
         this.goalText = this.markup.goalText ?? goalTableWords.goalText[lang];
         this.editTitle = goalTableWords.editTitle[lang];
+        this.editMode = this.markup.editMode;
     }
 
     ngOnDestroy() {

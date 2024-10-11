@@ -1,9 +1,12 @@
 import os
 from argparse import ArgumentParser
+from string import Template
 from time import sleep
+from typing import Optional, Tuple
 
 from cli.config import get_config
 from cli.docker.run import run_compose
+from cli.util.errors import CLIError
 from cli.util.logging import log_debug
 from cli.util.proc import sh_join
 
@@ -16,13 +19,26 @@ class Arguments:
     up: bool
     new_screenshots: bool
     coverage: bool
+    chunk: Optional[Tuple[int, int]]
 
 
-BROWSER_TEST_SCRIPT = """
+BROWSER_TEST_SCRIPT = Template(
+    """
 import os
 import subprocess
 
-test_files = [f for f in os.listdir("tests/browser") if f.startswith("test_")]
+chunk = $chunk
+test_files = sorted([f for f in os.listdir("tests/browser") if f.startswith("test_")])
+
+if chunk:
+    chunk_current, chunk_total = chunk
+    chunk_size = len(test_files) // chunk_total
+    overflow = 0
+    if chunk_current == chunk_total:
+        overflow = len(test_files) % chunk_total
+
+    test_files = test_files[(chunk_current - 1) * chunk_size : (chunk_current) * chunk_size + overflow]
+
 MAX_TRIES = 3
 for test_file in test_files:
     cur_try = 0
@@ -57,6 +73,7 @@ for test_file in test_files:
                 print("Timed out, giving up")
                 exit(1)
 """
+)
 
 
 def run(args: Arguments) -> None:
@@ -79,7 +96,13 @@ def run(args: Arguments) -> None:
     # Browser tests can be flaky (in part of lackluster flask support for Selenium, in part of the tests).
     # It's better to retry it a few times
     if args.target == "browser":
-        test_command = ["python3", "-c", BROWSER_TEST_SCRIPT]
+        test_command = [
+            "python3",
+            "-c",
+            BROWSER_TEST_SCRIPT.safe_substitute(
+                chunk=f"({args.chunk[0]}, {args.chunk[1]})" if args.chunk else "None"
+            ),
+        ]
 
     test_command_joined = sh_join(test_command)
     log_debug(f"test_command: {test_command_joined}")
@@ -102,6 +125,25 @@ def run(args: Arguments) -> None:
     exit(res.returncode)
 
 
+def parse_chunk(chunk: str) -> Optional[Tuple[int, int]]:
+    if not chunk:
+        return None
+
+    try:
+        current, total = map(int, chunk.split("/"))
+        if current <= 0 or total <= 0:
+            raise CLIError("--chunk: values must be positive integers.")
+        if current > total:
+            raise CLIError(
+                "--chunk: current chunk must be less than or equal to the total number of chunks."
+            )
+        return current, total
+    except ValueError:
+        raise CLIError(
+            "--chunk must be in format N/M where N is the current chunk to test and M is the total number of chunks."
+        )
+
+
 def init(parser: ArgumentParser) -> None:
     parser.add_argument(
         "--dc-up",
@@ -122,14 +164,21 @@ def init(parser: ArgumentParser) -> None:
         dest="new_screenshots",
     )
     parser.add_argument(
-        "target",
-        help="Run tests in the given group. "
-        "Run a specific test module or test function. Format is <module>[.<function>]. "
-        "Special value 'all' runs all tests.",
-    )
-    parser.add_argument(
         "--coverage",
         help="Run tests with coverage",
         action="store_true",
         dest="coverage",
+    )
+    parser.add_argument(
+        "--chunk",
+        help="Run tests in chunks for tests that support it. Useful for parallelizing tests. Allowed format: N/M where N is the current chunk and M is the total number of chunks.",
+        default="",
+        type=parse_chunk,
+        metavar="N/M",
+    )
+    parser.add_argument(
+        "target",
+        help="Run tests in the given group. "
+        "Run a specific test module or test function. Format is <module>[.<function>]. "
+        "Special value 'all' runs all tests.",
     )

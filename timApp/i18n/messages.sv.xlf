@@ -8911,8 +8911,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1805269398693443899" datatype="html">
-        <source>Error: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="new">Error: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <source>Error: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="new">Error: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -8956,6 +8956,54 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">752</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2781878696015708257" datatype="html">
+        <source>Document import instructions</source>
+        <target state="translated">Instruktioner för import av dokument</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/editor/pareditor.ts</context>
+          <context context-type="linenumber">222</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2931024279077252601" datatype="html">
+        <source>You can use this tab to import document files directly to editable text. Click on 'Browse...' to select a document to import.</source>
+        <target state="translated">Du kan använda den här fliken för att importera dokumentfiler direkt till redigerbar text. Klicka på "Bläddra..." för att välja ett dokument att importera.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/editor/pareditor.ts</context>
+          <context context-type="linenumber">223</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1063006754352868679" datatype="html">
+        <source>Currently supported document formats: Microsoft Word (.docx), OpenOffice/LibreOffice Writer (.odt), Markdown (.md), TeX/LaTeX document (.tex), raw text (.txt).</source>
+        <target state="translated">Dokumentformat som stöds för närvarande: Microsoft Word (.docx), OpenOffice/LibreOffice Writer (.odt), Markdown (.md), TeX/LaTeX-dokument (.tex), råtext (.txt).</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/editor/pareditor.ts</context>
+          <context context-type="linenumber">224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6834985917377711936" datatype="html">
+        <source>Document styles are not imported. You may need to correct formatting and/or styles manually.</source>
+        <target state="translated">Dokumentstilar importeras inte. Du kan behöva korrigera formateringen och/eller stilarna manuellt.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/editor/pareditor.ts</context>
+          <context context-type="linenumber">225</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3187018401189234278" datatype="html">
+        <source>Images embedded in the document are automatically uploaded. You will find the appropriate image references at the end of the imported content.</source>
+        <target state="translated">Bilder som är inbäddade i dokumentet laddas upp automatiskt. Du hittar lämpliga bildreferenser i slutet av det importerade innehållet.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/editor/pareditor.ts</context>
+          <context context-type="linenumber">226</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8875063726542017107" datatype="html">
+        <source>Could not finish uploading. Please check your internet connection and try again.</source>
+        <target state="new">Could not finish uploading. Please check your internet connection and try again.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">296,295</context>
         </context-group>
       </trans-unit>
     </body>

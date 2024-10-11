@@ -390,6 +390,8 @@ def import_events(
 ) -> Response:
     verify_logged_in()
     doc = get_doc_or_abort(origin_doc_id) if origin_doc_id else None
+    if doc and not doc.is_original_translation:
+        doc = doc.src_doc
     save_events(get_current_user_object(), events, True, save_origin=doc)
     db.session.commit()
     return ok_response()
@@ -487,12 +489,17 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
 
     if filter_opts.includeDocumentEvents and filter_opts.docId:
         doc = DocEntry.find_by_id(filter_opts.docId)
-        if doc and verify_view_access(doc, require=False):
-            event_filter |= Event.origin_doc_id == doc.id
+        if doc:
+            # Resolve translation, because we want to add events for the original document
+            if not doc.is_original_translation:
+                doc = doc.src_doc
+            if verify_view_access(doc, require=False):
+                event_filter |= Event.origin_doc_id == doc.id
 
     # 2. Events that the user is either a booker or setter for
+    # TODO: Add a flag to also include special groups (i.e. to show global events)
     subquery_event_groups_all = (
-        u.get_groups(include_expired=False, include_special=True)
+        u.get_groups(include_expired=False, include_special=False)
         .join(EventGroup, EventGroup.usergroup_id == UserGroup.id)
         .with_only_columns(EventGroup.event_id)
     )
@@ -853,6 +860,8 @@ def add_events(
     """
     verify_logged_in()
     doc = get_doc_or_abort(origin_doc_id) if origin_doc_id else None
+    if doc and not doc.is_original_translation:
+        doc = doc.src_doc
     result = save_events(get_current_user_object(), events, save_origin=doc)
     db.session.commit()
     return json_response(result)

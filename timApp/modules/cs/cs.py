@@ -222,8 +222,8 @@ def save_extra_files(query, extra_files, prgpath):
             try:
                 if extra_file.get("type", "") != "bin":
                     headers = extra_file.get("headers", {})
-                    lines = get_url_lines_as_string(
-                        replace_random(query, extra_file["file"]), headers
+                    lines = replace_random(
+                        query, get_url_lines_as_string(extra_file["file"], headers)
                     )
                     write_safe(efilename, lines, others_permissions=extra_file_perms)
                 else:
@@ -1913,18 +1913,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     give_points(points_rule, is_test + "notcompile")
                     return write_json_error(self.wfile, error_str, result, points_rule)
 
-                give_points(points_rule, is_test + "compile")
-
-                if (
-                    not err and not language.run_points_given
-                ):  # because test points are already given
-                    give_points(points_rule, "run")
-                # print(code, out, err, pwddir)
-
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
-
                 else:
+                    give_points(points_rule, is_test + "compile")
+                    if (
+                        not err and not language.run_points_given
+                    ):  # because test points are already given
+                        give_points(points_rule, "run")
+                    # print(code, out, err, pwddir)
                     print(err)
                     # err = err + compiler_output
                     err = language.clean_error(err)

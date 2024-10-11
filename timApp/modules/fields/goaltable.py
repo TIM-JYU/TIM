@@ -40,6 +40,7 @@ class GoalTableMarkupModel(GenericMarkupModel):
     mingoal: int | Missing | None = missing
     maxgoal: int | Missing | None = missing
     initgoal: int | Missing | None = missing
+    editMode: bool | Missing | None = missing
 
     def get_mingoal(self) -> int:
         return max(value_or_default(self.mingoal, 1), 1)

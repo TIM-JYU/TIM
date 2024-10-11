@@ -58,7 +58,7 @@ function isExpired(tag: ITag) {
                 <ng-container *ngIf="translations && translations.length > 1">
             <span *ngFor="let tr of translations">
                 <a class="label label-primary"
-                   href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id || 'language not set' }}</a>&ngsp;
+                   href="/{{ route }}/{{ tr.path + this.sanitizeSearch() }}">{{ tr.lang_id || 'language not set' }}</a>&ngsp;
             </span>
                 </ng-container>
             </div>

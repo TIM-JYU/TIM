@@ -204,6 +204,7 @@ class AnswerBrowserInfo:
     validOnlyText: str | None | Missing = missing
     showValidOnly: bool | None | Missing = missing
     showReview: bool | None | Missing = missing
+    showInitialAskNew: bool | None | Missing = missing
 
 
 @dataclass

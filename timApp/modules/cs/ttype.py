@@ -1,13 +1,10 @@
-from re import compile
-
 from file_handler import File
 from languages import LanguageError
 from manager import make_language, make_modifier
+from tim_common.utils import type_splitter
 
 
 class TType:
-    type_splitter = compile("[^+a-z0-9]")
-
     def __init__(self, ttype_str, query, sourcefiles=None):
         if sourcefiles is None:
             sourcefiles = [File.default(query)]
@@ -90,4 +87,4 @@ class TType:
     @staticmethod
     def split(ttype):
         """Returns a list of the parts of ttype"""
-        return list(filter(None, TType.type_splitter.split(ttype.lower())))
+        return list(filter(None, type_splitter.split(ttype.lower())))

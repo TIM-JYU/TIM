@@ -1,6 +1,6 @@
 import base64
 import json
-import textwrap
+import os
 from dataclasses import dataclass, field
 from typing import List
 
@@ -17,8 +17,11 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
+from timApp.idesupport.files import SupplementaryFile, get_task_language
+from timApp.idesupport.ide_languages import Language
 from timApp.plugin.containerLink import render_plugin_multi
-from timApp.plugin.plugin import Plugin, PluginRenderOptions, PluginWrap
+from timApp.plugin.plugin import Plugin, PluginRenderOptions, PluginWrap, find_task_ids
+from timApp.plugin.pluginControl import get_answers, AnswerMap
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
@@ -56,15 +59,22 @@ class IdeFile:
     userargs: str | None = ""
     """ User arguments for the file """
 
+    # usercode: str | None = ""
+    # """ User code for the file """
+
     content: str | None = field(init=False)
     """File contents provided for IDE"""
+
+    # TODO: Maybe should be field(default_factory=Language)
+    language: Language = field(default_factory=Language)
 
     def __post_init__(self) -> None:
         self.content = ""
 
-    def set_combined_code(self) -> None:
+    def set_combined_code(self, usercode: str) -> None:
         """Combine the code blocks and set the combined code to the
         content var.
+        :param usercode: None or user last answer
         """
         # Program can be considered as a boilerplate
         boilerplate = self.program
@@ -78,11 +88,15 @@ class IdeFile:
         if self.byCode is not None:
             user_code = self.byCode
 
-        if boilerplate is None and user_code is None:
-            raise RouteException("No code found in the plugin")
+        if usercode is not None:
+            user_code = usercode
+
+        # TODO: think if there is need for code?  Why empty file is not ok?
+        # if boilerplate is None and user_code is None:
+        #    raise RouteException("No code found in the plugin")
 
         if boilerplate is None:
-            self.content = user_code
+            self.content = user_code or ""
             return
 
         # If no dedicated user editable code, the whole boilerplate is editable
@@ -94,7 +108,7 @@ class IdeFile:
             raise RouteException("File name not provided")
 
         # Find the "comment line" characters based on the file extension and create messages.
-        comment_line_characters = find_comment_line_characters(filename.split(".")[-1])
+        comment_line_characters = self.language.find_comment_line_characters()
 
         user_code_begins_message = (
             comment_line_characters + " --- Write your code below this line. ---"
@@ -120,32 +134,20 @@ class IdeFile:
         :return: None
         """
 
-        programming_languages = {
-            "c": "c",
-            "cc": "c",
-            "cpp": "cpp",
-            "c++": "cpp",
-            "c#": "cs",
-            "cs": "cs",
-            "java": "java",
-            "py": "py",
-            "js": "js",
-        }
-
         if self.filename is None:
             self.filename = "main"
 
-        predefined_file_extension = self.filename.split(".")[-1]
-        if programming_languages.get(predefined_file_extension, None) is not None:
+        _, predefined_file_extension = os.path.splitext(self.filename)
+        if predefined_file_extension != "":
             return
 
         if task_type is None:
             raise RouteException("File extension cannot be generated")
 
         # PLEASE NOTE: task_info.type could be fancy like c++/input/comtest
-        file_extension = task_type.split("/")[0]
-        picked_language = programming_languages.get(file_extension, "cs")
-        self.filename += "." + picked_language
+        if self.language is None:
+            raise RouteException("Misconfigured task language")
+        self.filename += "." + str(self.language.fileext)
 
     # Convert to json and set code based on 'by' or 'byCode'
     def to_json(self) -> dict[str, str | None]:
@@ -159,20 +161,6 @@ class IdeFile:
 
 
 IdeFileSchema = class_schema(IdeFile)()
-
-
-@dataclass
-class SupplementaryFile:
-    filename: str
-    content: str = ""
-
-    def to_json(self) -> dict[str, str | None]:
-        return {
-            "content": self.content,
-            "file_name": self.filename,
-        }
-
-
 SupplementaryFileSchema = class_schema(SupplementaryFile)()
 
 
@@ -343,25 +331,6 @@ class TIDECourse:
     """
 
 
-def find_comment_line_characters(file_extension: str) -> str:
-    """
-    Find the comment line syntax based on the type.
-
-    :param file_extension: Type of the file
-    :return: Comment line syntax
-    """
-    comment_syntax_lookup = {
-        "cpp": "//",
-        "c": "//",
-        "cs": "//",
-        "java": "//",
-        "py": "#",
-        "js": "//",
-    }
-
-    return comment_syntax_lookup.get(file_extension, "//")
-
-
 def get_user_ide_courses(user: User) -> list[TIDECourse]:
     """
     Gets all courses that have parameter for Ide course in course settings and are bookmarked by the user
@@ -474,18 +443,20 @@ def get_ide_task_set_documents_by_doc(
     return paths
 
 
-def get_ide_tasks(
-    user: User, doc_id: int | None = None, doc_path: str | None = None
+def get_ide_tasks_implementation(
+    user: User,
+    doc_id: int | None = None,
+    doc_path: str | None = None,
+    ide_task_id: str | None = None,
 ) -> list[TIDEPluginData]:
     """
-    Get all TIDE-tasks from the task set document
+    Find ide tasks from pars and get user answers
     :param user: Logged-in user
     :param doc_id:  Document id
     :param doc_path: Path to the task set document
-    :return: List of TIDEPluginData from the task set document or RouteException
-    :raise In case of an error raises RouteException
+    :param ide_task_id: ideTask to find or get all if None
+    :return: list of ideTasks
     """
-
     if doc_path is not None:
         doc = DocEntry.find_by_path(path=doc_path)
 
@@ -507,14 +478,58 @@ def get_ide_tasks(
     tasks = []
 
     for p in pars:
-        if p.attrs is not None:
-            tag = p.attrs.get(IDE_TASK_TAG)
-            if tag is not None:
-                task = get_ide_user_plugin_data(
-                    doc=doc, par=p, user_ctx=user_ctx, ide_task_id=tag
-                )
-                if task:
-                    tasks.append(task)
+        tag: str | None = "???"
+        try:
+            if p.attrs is not None:
+                tag = p.attrs.get(IDE_TASK_TAG)
+                if tag is not None:
+                    if tag == "":
+                        tag = p.attrs.get("taskId")
+                    if tag is None:
+                        raise RouteException("Missing taskID!")
+                    if ide_task_id and ide_task_id != tag:
+                        continue
+                    task = get_ide_user_plugin_data(
+                        doc=doc, par=p, user_ctx=user_ctx, ide_task_id=tag
+                    )
+                    if task:
+                        tasks.append(task)
+        except Exception as e:
+            task = TIDEPluginData(
+                task_files=[],
+                supplementary_files=[
+                    SupplementaryFile(
+                        filename="error.txt",
+                        content="Error: " + str(e),
+                    )
+                ],
+                header="Error: " + str(e),
+                stem="Error: " + str(e),
+                type="error",
+                path=doc.path,
+                task_id=(p.attrs or {}).get("taskId"),
+                doc_id=doc.id,
+                par_id=p.id,
+                ide_task_id="error_" + (tag or "???"),
+            )
+            tasks.append(task)
+
+    return tasks
+
+
+def get_ide_tasks(
+    user: User, doc_id: int | None = None, doc_path: str | None = None
+) -> list[TIDEPluginData]:
+    """
+    Get all TIDE-tasks from the task set document
+    :param user: Logged-in user
+    :param doc_id:  Document id
+    :param doc_path: Path to the task set document
+    :return: List of TIDEPluginData from the task set document or RouteException
+    :raise In case of an error raises RouteException
+    """
+
+    tasks = get_ide_tasks_implementation(user, doc_id, doc_path)
 
     if len(tasks) == 0:
         raise NotExist(
@@ -540,36 +555,7 @@ def get_ide_task_by_id(
     :raises In case of an error raises RouteException
     """
 
-    if doc_id is not None:
-        doc = DocEntry.find_by_id(doc_id=doc_id)
-    elif doc_path is not None:
-        doc = DocEntry.find_by_path(path=doc_path)
-    else:
-        raise RouteException("No document id or path given")
-    # If the document does not exist, raise NotExist
-    if doc is None:
-        raise NotExist("No document found")
-
-    # Check if the user has edit access to the document
-    verify_view_access(doc, user=user)
-
-    user_ctx = UserContext.from_one_user(u=user)
-
-    pars = doc.document.get_paragraphs()
-
-    if pars is None:
-        raise NotExist("No paragraphs found")
-
-    tasks = []
-
-    for p in pars:
-        if p.attrs is not None:
-            if p.attrs.get(IDE_TASK_TAG) == ide_task_id:
-                task = get_ide_user_plugin_data(
-                    doc=doc, par=p, user_ctx=user_ctx, ide_task_id=ide_task_id
-                )
-                if task:
-                    tasks.append(task)
+    tasks = get_ide_tasks_implementation(user, doc_id, doc_path, ide_task_id)
 
     if len(tasks) == 0:
         raise RouteException(
@@ -582,32 +568,6 @@ def get_ide_task_by_id(
     # TODO: case where files are saved based on language base folders eg path is taken from the language package
 
     raise RouteException("Multiple tasks found, support not implemented yet")
-
-
-def generate_supplementary_files(
-    task_type: str | None, task_name: str
-) -> list[SupplementaryFile]:
-    # TODO: fetch language type strings from class itself
-    if task_type in ["cs", "c#", "csharp"]:
-        return [
-            SupplementaryFileSchema.load(
-                {
-                    "filename": f"{task_name}.csproj",
-                    "content": textwrap.dedent(
-                        """
-                <Project Sdk="Microsoft.NET.Sdk">
-                  <PropertyGroup>
-                    <OutputType>Exe</OutputType>
-                    <TargetFramework>net6.0</TargetFramework>
-                  </PropertyGroup>
-                </Project>
-                """
-                    ),
-                }
-            )
-        ]
-
-    return []
 
 
 def get_ide_user_plugin_data(
@@ -629,7 +589,7 @@ def get_ide_user_plugin_data(
 
     plugin = Plugin.from_paragraph(par, view_ctx, user_ctx)
 
-    if plugin.type != "csPlugin":
+    if plugin.type not in ["csPlugin", "taunoPlugin"]:
         return None
 
     # Plugin render options
@@ -645,7 +605,19 @@ def get_ide_user_plugin_data(
         viewmode=view_ctx.viewmode,
     )
 
+    # Get user answer for the task
+    task_ids, _, _ = find_task_ids(
+        [par], view_ctx, user_ctx, check_access=user_ctx.is_different
+    )
+    answer_map: AnswerMap = {}
+    answer = None
+    get_answers(user_ctx.user, task_ids, answer_map)
+    if answer_map:  # If there was an answer
+        first_key = next(iter(answer_map))
+        answer = answer_map[first_key][0]
+
     plugin.set_render_options(None, plugin_opts)
+    plugin.answer = answer
     res = render_plugin_multi(doc.document.get_settings(), "csPlugin", [plugin])
     plugin_htmls = json.loads(res)
     plugin_html = BeautifulSoup(plugin_htmls[0], features="lxml")
@@ -653,6 +625,10 @@ def get_ide_user_plugin_data(
     plugin_json = json.loads(base64.b64decode(element.attrs["json"]).decode("utf-8"))
 
     task_info: TIDETaskInfo = TIDETaskInfoSchema.load(plugin.values, unknown=EXCLUDE)
+    task_language = get_task_language(task_info.type)
+    if task_language is None:
+        raise RouteException("Misconfigured task language")
+    language = Language.make_language(task_language, plugin_json, ide_task_id)
 
     task_id: TaskId | None = plugin.task_id
 
@@ -679,34 +655,45 @@ def get_ide_user_plugin_data(
     else:
         # If the plugin has only one file, load the file based on 'by' or 'byCode'
         ide_file = IdeFileSchema.load(plugin_json, unknown=EXCLUDE)
+        ide_file.language = language
 
         # if the plugin has no code, look from markup
         if ide_file.by is None and ide_file.byCode is None and ide_file.program is None:
             ide_file = IdeFileSchema.load(plugin_json["markup"], unknown=EXCLUDE)
+            ide_file.language = language
             if ide_file.taskIDExt is None:
                 if plugin_json.get("taskIDExt"):
                     ide_file.taskIDExt = plugin_json["taskIDExt"]
                 else:
                     return None
 
+        # TODO: Think if error is needed?
         # If the plugin still has no code, return error
-        if ide_file.by is None and ide_file.byCode is None and ide_file.program is None:
-            raise RouteException("No code found in the plugin")
+        # if ide_file.by is None and ide_file.byCode is None and ide_file.program is None:
+        #     raise RouteException("No code found in the plugin")
 
         # if the ide_file has no filename, try to look it from the markup
         if ide_file.filename is None:
-            ide_file.filename = plugin_json["markup"].get("filename")
+            ide_file.filename = language.get_filename()
 
         # If the task type is defined, try to generate file extension.
         if task_info.type is not None:
             ide_file.generate_file_extension(task_info.type)
 
-        ide_file.set_combined_code()
+        ide_file.set_combined_code(plugin_json.get("usercode"))
         json_ide_files = [ide_file.to_json()]
 
-    supplementary_files = generate_supplementary_files(
-        task_type=task_info.type, task_name=ide_task_id
-    )
+    ide_extra_files = plugin_json["markup"].get("ide_extra_files") or []
+
+    supplementary_files = language.generate_supplementary_files(ide_extra_files)
+
+    # If both content and source are provided, content is used (see tidecli)
+    # If neither is provided, no supplementary file will be created
+    for extra_file in ide_extra_files:
+        if "content" in extra_file:
+            supplementary_files.append(SupplementaryFileSchema.load(extra_file))
+        elif "source" in extra_file:
+            supplementary_files.append(SupplementaryFileSchema.load(extra_file))
 
     return TIDEPluginData(
         task_files=json_ide_files,
@@ -722,11 +709,14 @@ def get_ide_user_plugin_data(
     )
 
 
-def ide_submit_task(submit: TIDESubmitFile, user: User) -> AnswerRouteResult:
+def ide_submit_task(
+    submit: TIDESubmitFile, user: User, runtype: str | None = None
+) -> AnswerRouteResult:
     """
     Submit the TIDE-task
     :param submit: TIDESubmitFile
     :param user: Current user
+    :param runtype: Optional forced runtype, for example comtest
     :return: True if the task was submitted successfully
     """
 
@@ -744,7 +734,7 @@ def ide_submit_task(submit: TIDESubmitFile, user: User) -> AnswerRouteResult:
     answer_data = {
         "isInput": False,
         "nosave": False,
-        "type": submit.code_language,
+        "type": runtype or submit.code_language,
         "uploadedFiles": [],
         "submittedFiles": submitted_files,
         "userargs": submit.code_files[file_index].user_args,

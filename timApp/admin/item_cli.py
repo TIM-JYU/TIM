@@ -300,10 +300,9 @@ def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
         clear_block_name_and_accesses(item_id)
 
     # Clear DocEntry db objects linked to this ID
-    tr_ids = set()
+    tr_ids: set[int] = set()
     for de in des:
-        trs = list(filter(lambda d: d.id != item_id, de.translations))
-        tr_ids.add(tr.id for tr in trs)
+        tr_ids.update(tr.id for tr in de.translations if tr.id != item_id)
 
         if not dry_run:
             db.session.delete(de)
@@ -329,7 +328,7 @@ def perma_del_doc(item_id: int, dry_run: bool) -> list[str]:
             shutil.rmtree(ver_path)
 
     # TODO: delete entries from Translation db table as well?
-    for tr_id in list(*tr_ids):
+    for tr_id in tr_ids:
         deleted_trs = perma_del_doc(tr_id, dry_run=dry_run)
         deleted.extend(deleted_trs)
 

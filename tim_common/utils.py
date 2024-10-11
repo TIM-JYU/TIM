@@ -1,4 +1,5 @@
 import sys
+import re
 from dataclasses import field
 from typing import Any, Mapping, overload
 
@@ -11,7 +12,7 @@ from marshmallow.utils import _Missing
 Missing = _Missing
 Missing.__hash__ = lambda self: id(self)  # type: ignore
 
-#
+type_splitter = re.compile("[^+a-z0-9]")
 
 missing_field = field(default_factory=lambda: marshmallow.missing)  # type: ignore
 

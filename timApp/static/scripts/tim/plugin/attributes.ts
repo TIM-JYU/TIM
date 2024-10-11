@@ -10,6 +10,7 @@ export const AnswerBrowserSettings = t.partial({
     validOnlyText: t.string,
     showValidOnly: t.boolean,
     showReview: t.boolean,
+    showInitialAskNew: t.boolean,
 });
 
 export interface IAnswerBrowserSettings
