@@ -954,6 +954,31 @@ export class AnswerBrowserComponent
         this.cdr.detectChanges();
     }
 
+    async refreshPlugin() {
+        const plug = this.getPluginComponent();
+        if (plug?.isUnSaved()) {
+            const ok = await showConfirm(
+                "Load the newest answer",
+                "Load the newest answer? Your unsaved changes may be lost"
+            );
+            if (!ok) {
+                return;
+            }
+        }
+        const data = await this.getAnswers();
+        if (!data) {
+            return;
+        }
+        this.answers = data;
+        this.updateFiltered();
+        this.selectedAnswer =
+            this.filteredAnswers.length > 0
+                ? this.filteredAnswers[0]
+                : undefined;
+        await this.changeAnswer(undefined, undefined, true);
+        this.cdr.detectChanges();
+    }
+
     findSelectedUserIndex() {
         if (!this.users || !this.user) {
             return -1;
