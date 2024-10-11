@@ -765,3 +765,45 @@ def ide_submit_task(
         origin=None,
         error=verify_ip_address(user),  # Check if the answer from user IP is allowed
     )
+
+
+def get_task_answer(task_id_ext, user: User) -> AnswerRouteResult:
+    """
+    Submit the TIDE-task
+    :param task_id_ext:
+    :param user: Current user
+    :param runtype: Optional forced runtype, for example comtest
+    :return: True if the task was submitted successfully
+    """
+
+    answer_data = {
+        "isInput": False,
+        "nosave": False,
+        "type": "",
+        "uploadedFiles": [],
+        "submittedFiles": [],
+        "userargs": "",
+        "usercode": "",
+        "userinput": "",
+    }
+
+    brow_data = {
+        "giveCustomPoints": False,
+        "saveAnswer": True,
+        "saveTeacher": False,
+        "teacher": False,
+        "userId": user.id,
+    }
+    task_id_ext = task_id_ext
+
+    return post_answer_impl(
+        task_id_ext=task_id_ext,
+        answerdata=answer_data,
+        answer_browser_data=brow_data,
+        answer_options={},
+        curr_user=user,
+        urlmacros=(),
+        other_session_users=[],
+        origin=None,
+        error=verify_ip_address(user),  # Check if the answer from user IP is allowed
+    )

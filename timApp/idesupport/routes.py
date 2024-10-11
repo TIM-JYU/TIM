@@ -1,6 +1,7 @@
 from authlib.integrations.flask_oauth2 import current_token
 from flask import Response, request
 
+from timApp.answer.routes import post_answer_impl, verify_ip_address
 from timApp.auth.oauth2.models import Scope
 from timApp.auth.oauth2.oauth2 import require_oauth
 
@@ -165,5 +166,17 @@ def get_task_points(ide_task_id: str, doc_path: str) -> Response:
     Get points data for a task
     :return: JSON response with the points data
     """
+    user: User = current_token.user
+    task = utils.get_ide_task_by_id(user, ide_task_id=ide_task_id, doc_path=doc_path)
+    log_info(f"task: {task}")
+
+    tie = task.task_files[0]["task_id_ext"]
+
+    data = utils.get_task_answer(tie, user)
+
+    log_info(f"data: {data}")
+
+    # NOTE TO FUTURE SELF: data-muuttujassa points, mutta tehtava ilmeisesti konosti konfiguroitu, koska points tyhja
+
     temp = {"current_points": 0.3}
     return json_response(temp)
