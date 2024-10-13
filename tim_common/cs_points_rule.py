@@ -21,7 +21,7 @@ def count_max_points(points_rule: dict | None, details: bool) -> str | None:
     found = 0
     plus = ""
 
-    def add_points_value(item: str, p: float):
+    def add_points_value(item: str, p: float) -> None:
         nonlocal points_sum
         nonlocal found
         nonlocal details_text
