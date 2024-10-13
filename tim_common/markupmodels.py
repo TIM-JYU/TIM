@@ -20,6 +20,7 @@ class PointsRule:
     allowUserMax: int | float | None | Missing = missing
     multiplier: int | float | None | Missing = missing
     penalties: dict[str, float] | None | Missing = missing
+    # expectOutput: str | None | Missing = missing
 
 
 class PluginDateTimeField(marshmallow.fields.Field):

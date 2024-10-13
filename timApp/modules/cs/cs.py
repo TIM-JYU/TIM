@@ -29,7 +29,12 @@ from file_handler import FileHandler
 from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
 from manager import all_js_files, all_css_files
-from points import return_points, get_points_rule, check_number_rule, give_points
+from tim_common.cs_points_rule import (
+    return_points,
+    get_points_rule,
+    check_number_rule,
+    give_points,
+)
 from run import generate_filename, run2_subdir
 from tim_common.cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from tim_common.dumboclient import (
