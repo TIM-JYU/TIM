@@ -1,5 +1,6 @@
 from authlib.integrations.flask_oauth2 import current_token
 from flask import Response, request
+from marshmallow import missing
 
 from timApp.auth.oauth2.models import Scope
 from timApp.auth.oauth2.oauth2 import require_oauth
@@ -124,7 +125,7 @@ def submit_ide_task() -> Response:
     )
 
     submit = utils.TIDESubmitFileSchema.load(request.json)
-    answer2 = None
+    answer_comtest = None
     comtest_result = ""
 
     answer = utils.ide_submit_task(submit, user)  # run the code
@@ -134,15 +135,19 @@ def submit_ide_task() -> Response:
     ttype = values.get("type", "")
 
     if not web.get("error", "") and "comtest" in ttype:  # Run comtest
-        answer2 = utils.ide_submit_task(submit, user, "comtest")
+        answer_comtest = utils.ide_submit_task(submit, user, "comtest")
 
     # TODO: poista seuraavat sitten kun tidecli osaa käsitellä pisteitä
-    showPoints = values.get("showPoints", True)
     points = answer.extra.get("points")
-    allow_user_max = values.get("-pointsRule", {}).get("allowUserMax", None)
-    if answer2:
-        points = answer2.extra.get("points")
-        comtest_result = answer2.result.get("web", {}).get("console", "")
+    showPoints = answer.plugin.known.show_points()
+    allow_user_max = (
+        answer.plugin.known.pointsRule.allowUserMax  # type: ignore
+        if answer.plugin.known.pointsRule
+        else None
+    )
+    if answer_comtest:
+        points = answer_comtest.extra.get("points")
+        comtest_result = answer_comtest.result.get("web", {}).get("console", "")
     if not showPoints:
         points = None
 
@@ -166,6 +171,4 @@ def submit_ide_task() -> Response:
     if not answer.result.get("valid", None):
         answer.result["valid"] = True
 
-    # TODO: answer.plugin is not json-serializable (not dataclass nor defines to_json method)
-    #  Maybe create a separate dataclass for this route result?
     return json_response({"result": answer.result})
