@@ -61,6 +61,8 @@ function isElement(n: Node): n is Element {
                        [taskId]="parsedTaskId"
                        [answerId]="answerId">
         </answerbrowser>
+        <button (click)="refreshPlugin()">Refresh</button>
+        
         <div *ngIf="timed">
             <div *ngIf="running">
                 <ng-container i18n>Time left:</ng-container>
@@ -334,6 +336,12 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     public isGlobal(): boolean {
         return this.taskId.includes("GLO_");
         // return this.pluginMarkup().globalField;
+    }
+
+    async refreshPlugin() {
+        this.loadPlugin();
+        await this.abLoad.promise;
+        this.viewctrl?.getAnswerBrowser(this.taskId)?.refreshPlugin();
     }
 
     loadAnswerBrowser() {

@@ -450,6 +450,7 @@ export class AnswerBrowserComponent
         // If task is in form_mode, only last (already loaded) answer should matter.
         // Answer changes are handled by viewctrl, so don't bother querying them here
         if (!this.formMode) {
+            console.log("@INIT");
             const answs = await this.getAnswers();
             if (answs) {
                 this.answers = answs;
