@@ -970,9 +970,10 @@ def post_answer_impl(
     if web is None:
         raise PluginException(f"Got malformed response from plugin: {jsonresp}")
     result["web"] = web
-    extra = {}  # This is for TIDE
+    extra = {}
     try:
         extra["points"] = jsonresp.get("save", {}).get("points", {})
+        extra["type"] = answer_call_data.get("markup", {}).get("type", "")
     except:
         pass
 
