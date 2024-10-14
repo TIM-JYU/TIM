@@ -166,5 +166,6 @@ def submit_ide_task() -> Response:
     if not answer.result.get("valid", None):
         answer.result["valid"] = True
 
-    # TODO: Tosin vaikka koko answer lähtisi, answer.plugin on toisessa päässä None??? Miksi?
+    # TODO: answer.plugin is not json-serializable (not dataclass nor defines to_json method)
+    #  Maybe create a separate dataclass for this route result?
     return json_response({"result": answer.result})
