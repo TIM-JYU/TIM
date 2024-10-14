@@ -1,23 +1,83 @@
-import re
-
 """
 Functions to handle cs points_rule rules.
 TODO: change points_rule to proper class
 """
+import re
+
+from marshmallow import EXCLUDE
+
+from tim_common.markupmodels import HiddenFieldsMixin
+from tim_common.marshmallow_dataclass import dataclass, class_schema
 
 
-def count_max_points(points_rule: dict | None, details: bool) -> str | None:
+@dataclass
+class CsPluginPointsRule:
+    """
+    Points rules used in csPlugin.
+    """
+
+    class Meta:
+        unknown = (
+            EXCLUDE  # Ignore general TIM fields for pointsRule not used by csPlugin
+        )
+
+    # TODO: Document all csPlugin pointsRule fields as they are typed
+    cumulative: bool = True
+    """Whether the points are cumulative or not."""
+    compile: float | None = None
+    """Points for successful code compilation."""
+    run: float | None = None
+    """Points for code running without errors."""
+    test: float | None = None
+    """Points for successful tests."""
+    doc: float | None = None
+    """Points for documentation being generated successfully."""
+    code: float | None = None
+    """Points for code being correct (see expectCode and expectCodePlain)."""
+    output: float | None = None
+    """Points for correct output (see expectOutput and expectOutputPlain)."""
+    numberRule: str | list[str] | None = None
+    """Rule for points based on a number."""
+    expectCode: str | None = None
+    """RegEx that the user's input must match to get code points.."""
+    expectCodePlain: str | None = None
+    """Contents that the user's input muse be to get code points."""
+    expectOutput: str | None = None
+    """RegEx that the program's output must match to get output points."""
+    expectOutputPlain: str | None = None
+    """Contents that the program's output must be to get output points."""
+    multiplier: float = 1.0
+    """Multiplier for the points."""
+
+
+@dataclass
+class CsPluginMarkup(HiddenFieldsMixin):
+    """
+    Markup values used in csPlugin.
+    """
+
+    # TODO: Document more csPlugin markup fields as they are typed
+    pointsRule: CsPluginPointsRule | None = None
+
+
+CsPluginMarkupSchema = class_schema(CsPluginMarkup)()
+
+
+def count_max_points(markup: dict, details: bool) -> str | None:
     """
     Counts max possible points from rule
     :param points_rule: rule to us
     :param details: if true give details, otherwise only the max
     :return: max points axplained
     """
-    if points_rule is None:
+    markup_obj = CsPluginMarkupSchema.load(markup, unknown=EXCLUDE)
+    points_rule = markup_obj.pointsRule
+
+    if not points_rule:
         return None
+
     points_sum: float = 0
     details_text = ""
-    cumulative = points_rule.get("cumulative", True)
     found = 0
     plus = ""
 
@@ -26,7 +86,7 @@ def count_max_points(points_rule: dict | None, details: bool) -> str | None:
         nonlocal found
         nonlocal details_text
         nonlocal plus
-        if cumulative:
+        if points_rule.cumulative:
             points_sum += p
         else:
             if p > points_sum:
@@ -36,45 +96,41 @@ def count_max_points(points_rule: dict | None, details: bool) -> str | None:
             plus = " + "
         found += 1
 
-    def add_points(item: str, default: float | None = None) -> None:
-        p = points_rule.get(item, default)
-        if p is None:
-            if default is None:
-                return
-            p = default
-        add_points_value(item, p)
+    def add_points(item: str, val: float | None, default: float | None = None) -> None:
+        if val is not None:
+            add_points_value(item, val)
+        elif default is not None:
+            add_points_value(item, default)
 
-    s = points_rule.get("expectCode", None) or points_rule.get("expectCodePlain", None)
-    if s is not None:
-        add_points("code", 1)
+    if points_rule.expectCode is not None or points_rule.expectCodePlain is not None:
+        add_points("code", points_rule.code, 1)
 
-    s = points_rule.get("expectOutput", None) or points_rule.get(
-        "expectOutputPlain", None
-    )
-    if s is not None:
-        add_points("output", 1)
+    if (
+        points_rule.expectOutput is not None
+        or points_rule.expectOutputPlain is not None
+    ):
+        add_points("output", points_rule.output, 1)
 
-    add_points("compile")
-    add_points("run")
-    add_points("test")
-    add_points("doc")
+    add_points("compile", points_rule.compile)
+    add_points("run", points_rule.run)
+    add_points("test", points_rule.test)
+    add_points("doc", points_rule.doc)
 
-    rule = points_rule.get("numberRule", None)
-    if rule is not None:
-        add_points_value("number", get_max_number_rule(rule))
+    if points_rule.numberRule is not None:
+        add_points_value("number", get_max_number_rule(points_rule.numberRule))
 
     if found == 0:
         return None
 
-    m = points_rule.get("multiplier", 1)
     if details_text != "":
-        if m != 1:
-            details_text = f"({details_text})  *{m:.2g}"
+        if points_rule.multiplier != 1:
+            details_text = f"({details_text})  *{points_rule.multiplier:.2g}"
         details_text += " = "
 
-    return f"{details_text}{m * points_sum:.2g}"
+    return f"{details_text}{points_rule.multiplier * points_sum:.2g}"
 
 
+# TODO: This function should probably use types from the CsPluginPointsRule class
 def give_points(points_rule: dict, rule: str, default: float = 0) -> None:
     """
     Count poinst to points_rule["result"]
