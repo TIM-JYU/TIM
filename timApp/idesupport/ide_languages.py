@@ -75,46 +75,48 @@ class Language:
         return self.filename
 
     @staticmethod
-    def get_classname(s: str | None) -> str | None:
+    def get_itemname(s: str | None, pattern: str) -> str | None:
         """
-        Tries to find classname from source code
+        Tries to find itemname from source code
+        :param pattern: regular expression for item, should have ()
         :param s: source code to look
         :return: classname if found
         """
         if s is None:
             return None
 
-        class_pattern = r"\bclass\s+(\w+)"
-        match = re.search(class_pattern, s)
+        match = re.search(pattern, s)
         if not match:
             return None
         return match.group(1)
 
     @staticmethod
-    def try_to_get_classname_from(d: dict) -> str | None:
+    def try_to_get_itemname_from(d: dict, pattern: str) -> str | None:
         """
-        Tries to get classname from dict
+        Tries to get itemname from dict
         :param d: dict to look
-        :return: classname if found
+        :param pattern: regular expression for item, should have ()
+        :return: itemname if found
         """
-        clsname = Language.get_classname(d.get("program"))
+        clsname = Language.get_itemname(d.get("program"), pattern)
         if clsname is None:
-            clsname = Language.get_classname(d.get("by"))
+            clsname = Language.get_itemname(d.get("by"), pattern)
         if clsname is None:
-            clsname = Language.get_classname(d.get("byCode"))
+            clsname = Language.get_itemname(d.get("byCode"), pattern)
         return clsname
 
-    def try_to_get_classname(self) -> str | None:
+    def try_to_get_itemname(self, pattern: str) -> str | None:
         """
-        Tries to get classname from plugin_json os markup
-        :return: classname if found
+        Tries to get itemname from plugin_json or markup
+        :param pattern: regular expression for item, should have ()
+        :return: itemname if found
         """
-        clsname = Language.try_to_get_classname_from(self.plugin_json)
-        if clsname is None:
-            clsname = Language.try_to_get_classname_from(
-                self.plugin_json.get("markup", {})
+        itemname = Language.try_to_get_itemname_from(self.plugin_json, pattern)
+        if itemname is None:
+            itemname = Language.try_to_get_itemname_from(
+                self.plugin_json.get("markup", {}), pattern
             )
-        return clsname
+        return itemname
 
     def generate_supplementary_files(
         self, extrafiles: list[dict[str, str]]
@@ -162,19 +164,29 @@ class Text(Language):
 
 class CS(Language):
     ttype: str | list[str] = ["cs", "c#", "csharp"]
+    class_pattern = r"\bclass\s+(\w+)"
+    namespace_pattern = r"\bnamespace\s+(\w+)"
 
     def __init__(self, plugin_json: dict):
         super().__init__(plugin_json)
         self.fileext = "cs"
-        clsname = self.try_to_get_classname()
+
+        clsname = self.try_to_get_itemname(CS.class_pattern)
         if not clsname:
             clsname, _ = os.path.splitext(self.filename)
         self.classname = clsname
+        namespace = self.try_to_get_itemname(CS.namespace_pattern)
+        if namespace == "null":
+            namespace = ""
+        else:
+            if not namespace:
+                namespace = clsname
+        self.namespace = namespace
 
     def init_filename(self) -> str:
         filename = super().init_filename()
         if filename is None:
-            filename = self.try_to_get_classname()
+            filename = self.try_to_get_itemname(CS.class_pattern)
         return filename
 
     def generate_supplementary_files(
@@ -237,12 +249,15 @@ class Jypeli(CS):
             )
             files.append(proj_file)
         if not is_in_filename(extrafiles, r"Ohjelma\.cs"):
+            namespaceline = ""
+            if self.namespace:
+                namespaceline = f"namespace {self.namespace};"
             main_file = SupplementaryFile(
                 filename="Ohjelma.cs",
                 content=textwrap.dedent(
                     f"""\
                     using System;
-                    namespace {self.classname};
+                    {namespaceline}
                     public static class Program
                     {{
                         [STAThread]

@@ -1013,7 +1013,7 @@ export function createTemplateButtons(
         "static \nvoid \n Main\n(\n)\n" +
         '        Console.WriteLine(\n"\nworld!\n;\n ';
     const typeButtons =
-        "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
+        'bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n["[] "] \nreturn \n, ';
     const charButtons =
         "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
 

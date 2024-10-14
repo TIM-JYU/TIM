@@ -25,6 +25,7 @@ class QueryClass:
         self.query = {}
         self.jso = None
         self.deleted = {}
+        self.randomcheck = ""
 
     def set_jso_param(self, value, *keys):
         if self.jso is None:
@@ -36,7 +37,7 @@ class QueryClass:
             q = q[key]
         q[keys[-1]] = value
 
-    def set_param(self, value, *keys, field=None, first_list=True):
+    def set_param(self, value, *keys, field=None):  # , first_list=True):
         if len(keys) == 0:
             return
 
@@ -104,7 +105,7 @@ def get_value(jso, default, *keys):
         if not isinstance(d, dict):
             return default
         d = d.get(key, None)
-    if d == None:
+    if d is None:
         return default
     return d
 
@@ -209,7 +210,7 @@ def get_json_eparam(
     return html.unescape(result)
 
 
-def get_json_param(jso: dict[str, Any], key1: str, key2: str, default: Any):
+def get_json_param(jso: dict[str, Any], key1: str, key2: str | None, default: Any):
     # noinspection PyBroadException
     try:
         if jso is None:
@@ -476,7 +477,7 @@ class FileParams:
         self.linefmt = get_param(query, "linefmt" + nr, "")
         self.maxn = int(get_param(query, "maxn" + nr, "10000"))
         self.lastn = int(get_param(query, "lastn" + nr, "1000000"))
-        self.include = get_param(query, "include" + nr, "")
+        self.include: str = get_param(query, "include" + nr, "")
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
         self.by = replace_random(query, get_param(query, "by" + nr, ""))
         if not self.by and nr == "":
@@ -1226,7 +1227,7 @@ def tquote(s: str):
 def str_to_int(s: str, default=0):
     try:
         return int(s)
-    except:
+    except ValueError:
         return default
 
 

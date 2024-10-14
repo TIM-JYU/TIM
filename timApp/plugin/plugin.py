@@ -39,6 +39,7 @@ from timApp.util.rndutils import myhash, SeedClass
 from timApp.util.utils import try_load_json, get_current_time, Range
 from tim_common.markupmodels import PointsRule, KnownMarkupFields
 from tim_common.marshmallow_dataclass import class_schema
+from tim_common.cs_points_rule import count_max_points
 
 date_format = "%Y-%m-%d %H:%M:%S"
 AUTOMD = "automd"
@@ -296,9 +297,18 @@ class Plugin:
         )
 
     def max_points(self, default=None) -> str | None:
+        mp = ""
+        details = False
         if self.known.pointsRule and self.known.pointsRule.maxPoints is not missing:
-            return self.known.pointsRule.maxPoints
-        return default
+            mp = self.known.pointsRule.maxPoints
+            if mp == "details":
+                details = True
+            else:
+                return mp
+        if default is not None and not details:
+            return default
+        max_points = count_max_points(self.values.get("-pointsRule", None), details)
+        return max_points
 
     def user_min_points(self, default=None):
         if self.known.pointsRule and self.known.pointsRule.allowUserMin is not missing:

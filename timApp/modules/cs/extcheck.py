@@ -43,7 +43,7 @@ from marshmallow import RAISE, ValidationError
 
 from extchecklib import RunResult
 from languages import Language
-from points import get_points_rule, give_points
+from tim_common.cs_points_rule import get_points_rule, give_points
 from tim_common.fileParams import get_param
 
 
