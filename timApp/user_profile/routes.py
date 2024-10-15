@@ -107,8 +107,9 @@ def prepare_profile_data(user: User, edit_access: bool) -> ProfileData:
         return default_profile_data()
 
     # When document is available, verify view privileges
+    # TODO: Add view access to profile pages for certain groups, or just require login to see profiles
     if not edit_access:
-        verify_view_access(personal_folder)
+        verify_view_access(document_object)
 
     profile_settings = document_object.document.get_settings()
     profile_picture_path = profile_settings.get(
