@@ -54,8 +54,8 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
         <div class="tim-user-profile-container">
             <div class="profile-heading">
                 <h2>About</h2>
-                <button *ngIf="!modifyEnabled" class="btn btn-profile" type="button" (click)="modifyUserProfile()">
-                    Modify profile <span class="glyphicon glyphicon-wrench"></span></button>
+                <a *ngIf="!modifyEnabled" class="btn btn-profile timButton" type="button" [href]="editLink()" target="_blank">
+                    Modify profile <span class="glyphicon glyphicon-wrench"></span></a>
             </div>
             <div class="container">
                 <div class="left-column">
@@ -211,8 +211,12 @@ export class UserProfileComponent implements OnInit {
         return data;
     }
 
-    modifyUserProfile() {
-        window.open(this.profileUrl);
+    // modifyUserProfile() {
+    //     window.open(`/editPage/${this.userId ?? ""}`);
+    // }
+
+    editLink() {
+        return `/profile/editPage/${this.userId ?? ""}`;
     }
 
     onFileLoad(file: IFile) {

@@ -1,13 +1,15 @@
 import json
 
-from flask import Blueprint, Response
+from flask import Blueprint, Response, redirect
 
 from timApp.auth.accesshelper import (
     AccessDenied,
     verify_edit_access,
     verify_view_access,
+    verify_logged_in,
 )
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.util.flask.requesthelper import RouteException
@@ -50,6 +52,7 @@ class ProfileData:
 PROFILE_PICTURE_KEY = "profile_picture_path"
 PROFILE_DESCRIPTION_KEY = "profile_description"
 PROFILE_LINKS_KEY = "profile_links"
+DEFAULT_PROFILE_PIC_LINK = "/static/images/tim-logo.svg"
 
 
 @profile_blueprint.get("/<int:userid>")
@@ -86,23 +89,34 @@ def prepare_profile_data(user: User, edit_access: bool) -> ProfileData:
 
     # Find a profile picture url from document settings
     document_object = personal_folder.get_document("profile")
+    default_description = f"Hello, my name is {realname}"
 
-    if document_object is None:
-        verify_edit_access(personal_folder)
-        document_object = personal_folder.get_document(
-            "profile", create_if_not_exist=True
+    def default_profile_data():
+        return ProfileData(
+            username,
+            realname,
+            email,
+            profile_path=profile_path,
+            profile_picture_path=DEFAULT_PROFILE_PIC_LINK,  # TODO: Generate random pic?
+            profile_description=default_description,
+            profile_links=[""],
+            edit_access=edit_access,
         )
 
     if document_object is None:
-        raise RouteException("No profile document was found.")
+        return default_profile_data()
 
     # When document is available, verify view privileges
     if not edit_access:
         verify_view_access(personal_folder)
 
     profile_settings = document_object.document.get_settings()
-    profile_picture_path = profile_settings.get(PROFILE_PICTURE_KEY, default="")
-    profile_description = profile_settings.get(PROFILE_DESCRIPTION_KEY, default="")
+    profile_picture_path = profile_settings.get(
+        PROFILE_PICTURE_KEY, default=DEFAULT_PROFILE_PIC_LINK
+    )
+    profile_description = profile_settings.get(
+        PROFILE_DESCRIPTION_KEY, default=default_description
+    )
 
     # As default, return at leas one item as profile link
     profile_links = profile_settings.get(PROFILE_LINKS_KEY, default=[""])
@@ -118,6 +132,36 @@ def prepare_profile_data(user: User, edit_access: bool) -> ProfileData:
         edit_access=edit_access,
     )
     return profile_data
+
+
+@profile_blueprint.get("/editPage/<int:userid>")
+@profile_blueprint.get("/editPage")
+def open_edit_profile_page(userid: int | None = None) -> Response:
+    verify_logged_in()
+    current_user = get_current_user_object()
+    if userid:
+        requested_user = User.get_by_id(userid)
+        if requested_user is None:
+            raise RouteException("Invalid user")
+    else:
+        requested_user = current_user
+    personal_folder = requested_user.get_personal_folder()
+    document_object = personal_folder.get_document("profile")
+    if not document_object:
+        verify_edit_access(personal_folder, message="You cannot edit this profile")
+        document_object = personal_folder.get_document(
+            "profile", create_if_not_exist=True
+        )
+        db.session.commit()
+        document_object.document.add_paragraph(
+            text="""
+<tim-user-profile modify-enabled="true" document-id="%%docid%%"/>
+""",
+            attrs={"allowangular": True},
+        )
+    else:
+        verify_edit_access(document_object, message="You cannot edit this profile")
+    return redirect(document_object.url)
 
 
 @profile_blueprint.post("/picture/<int:document_id>/")
