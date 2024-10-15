@@ -114,6 +114,8 @@ TIM_SAFE_TAGS = [
     "tim-message-send",
     "tim-notification-options",
     "tim-search-button",
+    "tim-user-profile",
+    "standalone-textfield",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
@@ -263,6 +265,8 @@ TIM_SAFE_ATTRS = frozenset(
         "folder",
         "button-text",
         "wrapper",
+        "document-id",
+        "modify-enabled",
     ]
 )
 
