@@ -767,43 +767,20 @@ def ide_submit_task(
     )
 
 
-def get_task_answer(task_id_ext, user: User) -> AnswerRouteResult:
+def get_task_answer(doc_id: int, task_id: str, user: User):
     """
     Submit the TIDE-task
-    :param task_id_ext:
     :param user: Current user
-    :param runtype: Optional forced runtype, for example comtest
     :return: True if the task was submitted successfully
     """
+    user_ctx = UserContext.from_one_user(u=user)
 
-    answer_data = {
-        "isInput": False,
-        "nosave": False,
-        "type": "",
-        "uploadedFiles": [],
-        "submittedFiles": [],
-        "userargs": "",
-        "usercode": "",
-        "userinput": "",
-    }
+    answer_map: AnswerMap = {}
+    task = TaskId(task_name=task_id, doc_id=doc_id)
+    get_answers(user_ctx.user, [task], answer_map)
 
-    brow_data = {
-        "giveCustomPoints": False,
-        "saveAnswer": True,
-        "saveTeacher": False,
-        "teacher": False,
-        "userId": user.id,
-    }
-    task_id_ext = task_id_ext
+    current_points = next(iter(answer_map.values()))[0].points
 
-    return post_answer_impl(
-        task_id_ext=task_id_ext,
-        answerdata=answer_data,
-        answer_browser_data=brow_data,
-        answer_options={},
-        curr_user=user,
-        urlmacros=(),
-        other_session_users=[],
-        origin=None,
-        error=verify_ip_address(user),  # Check if the answer from user IP is allowed
-    )
+    points = {"current_points": current_points}
+
+    return points
