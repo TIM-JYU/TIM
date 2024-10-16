@@ -767,7 +767,7 @@ def ide_submit_task(
     )
 
 
-def get_task_answer(doc_id: int, task_id: str, user: User):
+def get_task_points(doc_id: int, task_id: str, user: User):
     """
     Submit the TIDE-task
     :param user: Current user
