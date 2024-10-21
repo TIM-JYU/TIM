@@ -136,6 +136,10 @@ class QstMarkupModel(GenericMarkupModel):
     size: str | None | Missing = missing
     customHeader: str | None | Missing = missing
     autosave: bool | None | Missing = missing
+    # The fields below exist for compatibility with the old formats of QST
+    # TODO: Convert old QST formats to the new format in production
+    json: dict[Any, Any] | None | Missing = missing
+    title: str | None | Missing = missing
 
 
 QstBasicState = list[list[str]]
@@ -239,7 +243,8 @@ def qst_answer_jso(m: QstAnswerModel):
         and prev_state != answers
     ):
         result = True
-    jsonmarkup = m.markup.get_visible_data()
+    # We need to normalize the markup in case the old format based on the json field is used
+    jsonmarkup = normalize_question_json(m.markup.get_visible_data())
     convert_qst_md(jsonmarkup)  # TODO get mathtype from doc settings?
     save = answers
     show_points = (
