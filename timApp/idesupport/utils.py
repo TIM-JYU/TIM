@@ -247,6 +247,11 @@ class TIDEPluginData:
     Stem of the plugin
     """
 
+    max_points: float | None = None
+    """
+    Maximum total points for the task
+    """
+
     type: str | None = None
     """
     Type of the file
@@ -706,6 +711,7 @@ def get_ide_user_plugin_data(
         doc_id=doc.id,
         par_id=par.id,
         ide_task_id=ide_task_id,
+        max_points=plugin.values["pointsRule"]["maxPoints"],
     )
 
 
