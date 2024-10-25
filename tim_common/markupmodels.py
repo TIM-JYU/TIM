@@ -59,6 +59,13 @@ PluginDateTime._marshmallow_field = PluginDateTimeField  # type: ignore
 
 
 class HiddenFieldsMixin:
+    """
+    Helper mixin to handle hidden fields in the plugin markup.
+
+    Some fields can be forced to be hidden from the browser by prefixing them with "-".
+    This mixin converts hidden fields to normal fields so that they can be parsed by marshmallow.
+    """
+
     @pre_load
     def process_minus(self, data: Any, **_: dict[str, Any]) -> Any:
         if isinstance(data, dict):

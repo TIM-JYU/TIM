@@ -19,7 +19,7 @@ import requests
 
 from file_util import File, default_filename, write_safe, rm_safe
 from modifiers import Modifier
-from points import give_points
+from tim_common.cs_points_rule import give_points
 from run import (
     generate_filename,
     get_imgsource,
@@ -538,7 +538,8 @@ GLOBAL_NUGET_PACKAGES_PATH = "/cs_data/dotnet/nuget_cache"
 def _csharp_get_build_refs_arg_list(dep_files: list[str]) -> str:
     """
     Get the build argument list for including build dependencies into scs.
-    :param dep_files: Dependency files to get dependencies from. Must be the same filename as the .csproj files defined in dotnet/deps.
+    :param dep_files: Dependency files to get dependencies from.
+    :                 Must be the same filename as the .csproj files defined in dotnet/deps.
     :return: Preformatted argument for including all needed build dependencies into csc compiler.
     """
     result = []
@@ -558,7 +559,8 @@ def _csharp_get_additional_deps(dep_files: list[str]) -> str:
     Get a list of additional run dependency configuration files needed to run .NET
     applications.
 
-    :param dep_files: Dependency files to get dependencies from. Must be the same filename as the .csproj files defined in dotnet/deps.
+    :param dep_files: Dependency files to get dependencies from.
+                      Must be the same filename as the .csproj files defined in dotnet/deps.
     :return: Preformatted argument list for the --additional-deps flag of dotnet.
     """
     return ":".join(f"/cs_data/dotnet/configs/{d}.deps.json" for d in dep_files)
@@ -612,7 +614,11 @@ class CS(Language):
         options = ""
         if self.just_compile:
             options = "-target:library"
-        cmdline = f"{self.compiler} -nologo -out:{self.exename} {CS.get_build_refs()} {options} {self.get_sourcefiles()} /cs/dotnet/shims/TIMconsole.cs"
+        cmdline = (
+            f"{self.compiler} -nologo -out:{self.exename} "
+            f"{CS.get_build_refs()} {options} {self.get_sourcefiles()} "
+            f"/cs/dotnet/shims/TIMconsole.cs"
+        )
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
@@ -715,7 +721,11 @@ class Jypeli(CS, Modifier):
                 mainfile = "/tmp/{}/{}.cs".format(self.basename, "MainProgram")
                 write_safe(mainfile, f"using var game = new {classname}();game.Run();")
 
-        cmdline = f"{self.compiler} -nologo -out:{self.exename} {Jypeli.get_build_refs()} {options} {self.get_sourcefiles(mainfile)}"
+        cmdline = (
+            f"{self.compiler} -nologo -out:{self.exename} "
+            f"{Jypeli.get_build_refs()} {options} "
+            f"{self.get_sourcefiles(mainfile)}"
+        )
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
@@ -1120,7 +1130,11 @@ class JComtest(Java, Modifier):
         self.hide_compile_out = True
 
     def get_cmdline(self):
-        return f"java comtest.ComTest {self.sourcefilename} && javac --enable-preview --release {JAVA_VERSION} {self.sourcefilename} {self.testcs}"
+        return (
+            f"java comtest.ComTest {self.sourcefilename} && javac "
+            f"--enable-preview --release {JAVA_VERSION} "
+            f"{self.sourcefilename} {self.testcs}"
+        )
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(

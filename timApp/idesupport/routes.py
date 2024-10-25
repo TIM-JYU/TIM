@@ -1,5 +1,6 @@
 from authlib.integrations.flask_oauth2 import current_token
 from flask import Response, request
+from marshmallow import missing
 
 from timApp.auth.oauth2.models import Scope
 from timApp.auth.oauth2.oauth2 import require_oauth
@@ -124,25 +125,42 @@ def submit_ide_task() -> Response:
     )
 
     submit = utils.TIDESubmitFileSchema.load(request.json)
-    answer2 = None
+    answer_comtest = None
     comtest_result = ""
 
-    answer = utils.ide_submit_task(submit, user)
-    ttype = answer.extra.get("type", "")
-    if not answer.result.get("web", {}).get("error", "") and "comtest" in ttype:
-        answer2 = utils.ide_submit_task(submit, user, "comtest")
+    answer = utils.ide_submit_task(submit, user)  # run the code
+
+    values = answer.plugin.values
+    web = answer.result.get("web", {})
+    ttype = values.get("type", "")
+
+    if not web.get("error", "") and "comtest" in ttype:  # Run comtest
+        answer_comtest = utils.ide_submit_task(submit, user, "comtest")
 
     # TODO: poista seuraavat sitten kun tidecli osaa käsitellä pisteitä
     points = answer.extra.get("points")
-    if answer2:
-        points = answer2.extra.get("points")
-        comtest_result = answer2.result.get("web", {}).get("console", "")
+    showPoints = answer.plugin.known.show_points()
+    allow_user_max = (
+        answer.plugin.known.pointsRule.allowUserMax  # type: ignore
+        if answer.plugin.known.pointsRule
+        else None
+    )
+    if answer_comtest:
+        points = answer_comtest.extra.get("points")
+        comtest_result = answer_comtest.result.get("web", {}).get("console", "")
+    if not showPoints:
+        points = None
 
-    console = answer.result.get("web", {}).get("console", "")
+    console = web.get("console", "")
+    extra_str = ""
     if points:
-        console = "Points: " + str(points) + "\n" + console
-    else:
-        console = "\n" + console  # TODO: can be removed when tidecli formats better
+        points_str = ", ".join(f"{key}: {value}" for key, value in points.items())
+        extra_str = f"Points: {points_str}. "
+    if allow_user_max:
+        extra_str += "Give your own points in TIM."
+
+    console = extra_str + "\n" + console
+    # TODO: \n can be removed when tidecli formats better
     answer.result.get("web", {})["console"] = console + "\n" + comtest_result
 
     # Hack for Jypeli rerun when few attributes missing
@@ -153,9 +171,7 @@ def submit_ide_task() -> Response:
     if not answer.result.get("valid", None):
         answer.result["valid"] = True
 
-    answer.extra = {}  # älä päästä liikaa tietoa eteenpäin
-    # TODO: Onko pakko palauttaa koko answer, eikö result riitä?
-    return json_response(answer)
+    return json_response({"result": answer.result})
 
 
 @ide.get("taskPoints")

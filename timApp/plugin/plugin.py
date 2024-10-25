@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Iterable, Generator, Match, Any
+from typing import Iterable, Generator, Match, Any, Callable
 
 import yaml
 from marshmallow import missing, ValidationError, EXCLUDE
@@ -39,6 +39,7 @@ from timApp.util.rndutils import myhash, SeedClass
 from timApp.util.utils import try_load_json, get_current_time, Range
 from tim_common.markupmodels import PointsRule, KnownMarkupFields
 from tim_common.marshmallow_dataclass import class_schema
+from tim_common.cs_points_rule import count_max_points
 
 date_format = "%Y-%m-%d %H:%M:%S"
 AUTOMD = "automd"
@@ -83,6 +84,15 @@ NO_ANSWERBROWSER_PLUGINS = {
     "calendar",
     "timMenu",
     "symbolbutton",
+}
+
+# FIXME: Instead of defining max points counter here, plugins should return this
+#   information as the state via the /html or /multihtml endpoint.
+PLUGIN_MAX_POINTS_COUNTER: dict[str, Callable[[dict, bool], str | None]] = {
+    "csPlugin": count_max_points,
+    "taunoPlugin": count_max_points,
+    "simcirPlugin": count_max_points,
+    "graphviz": count_max_points,
 }
 
 ALLOW_STYLES_PLUGINS = {"textfield", "numericfield", "drag", "dropdown"}
@@ -296,8 +306,19 @@ class Plugin:
         )
 
     def max_points(self, default=None) -> str | None:
+        details = False
         if self.known.pointsRule and self.known.pointsRule.maxPoints is not missing:
-            return self.known.pointsRule.maxPoints
+            mp = self.known.pointsRule.maxPoints
+            if mp == "details":
+                details = True
+            else:
+                return mp
+        if default is not None and not details:
+            return default
+        # FIXME: Instead of maintaining a dict here, each plugin should return this information via its state.
+        # TODO: There should be proper error reporting to the user if this fails (e.g. typing errors).
+        if counter := PLUGIN_MAX_POINTS_COUNTER.get(self.type):
+            return counter(self.values, details)
         return default
 
     def user_min_points(self, default=None):
