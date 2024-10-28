@@ -246,6 +246,7 @@ class DocumentPrinter:
             pars, context_doc=self._doc_entry.document, view_ctx=view_ctx
         )
         pars_to_print = []
+        self.texplain = settings.is_texplain()
         self.textplain = (
             urlparams.textplain
             if urlparams.textplain is not None
