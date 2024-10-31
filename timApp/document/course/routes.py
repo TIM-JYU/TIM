@@ -80,8 +80,8 @@ def create_course_from_template() -> Response:
 
     # TODO: provide info, if document exist
 
-    do_copy_folder(
-        folder_id=folder.id, destination=f"oscar/{copy_to_dir_name}", exclude=None
+    copied = do_copy_folder(
+        folder_id=folder.id, destination=f"oscar/camps/{copy_to_dir_name}", exclude=None
     )
 
-    return Response(json_response({}))
+    return Response(json_response(copied[0].url))

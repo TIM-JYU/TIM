@@ -40,6 +40,7 @@ import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/sta
                     ></tim-standalone-textfield>
                     <button type="submit" class="btn">Create <span class="glyphicon glyphicon-send"></span></button>
                 </form>
+                <div *ngIf="isCourseCreated"><a [href]="folderCreatedUrl">Link to the course</a></div>
             </div>
         </div>
     `,
@@ -52,6 +53,8 @@ export class CourseManagerComponent implements OnInit {
     courseName: string = "";
     copyPath: string = "oscar/sample-camp";
     courseManagerEndpoint = "/courses/from-template";
+    isCourseCreated: boolean = false;
+    folderCreatedUrl: string = "";
 
     constructor(private http: HttpClient) {}
 
@@ -74,8 +77,19 @@ export class CourseManagerComponent implements OnInit {
             this.http.post<{ok: boolean}>(`${this.courseManagerEndpoint}`, data)
         );
 
+        response.then((res) => {
+            console.log(res);
+        });
+
         // Get result from response of the endpoint.
         const result: Result<{ok: boolean}, AngularError> = await response;
+
+        this.isCourseCreated = result.ok;
+
+        if (result.ok) {
+            this.folderCreatedUrl = `/view/oscar/camps/${data.copy_to_dir_name}`;
+        }
+
         return result;
     }
 
