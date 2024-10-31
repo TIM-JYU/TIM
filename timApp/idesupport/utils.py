@@ -711,7 +711,7 @@ def get_ide_user_plugin_data(
         doc_id=doc.id,
         par_id=par.id,
         ide_task_id=ide_task_id,
-        max_points=plugin.values["pointsRule"]["maxPoints"],
+        max_points=plugin.values.get("pointsRule", {}).get("maxPoints", None),
     )
 
 
