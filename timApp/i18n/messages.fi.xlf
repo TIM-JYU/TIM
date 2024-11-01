@@ -9104,6 +9104,30 @@
           <context context-type="linenumber">296,295</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2125104699508835899" datatype="html">
+        <source>Load the newest answer</source>
+        <target state="translated">Lataa uusin vastaus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">965,964</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">49</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1085934978970660090" datatype="html">
+        <source>Load the newest answer? Your unsaved changes may be lost</source>
+        <target state="translated">Lataa uusin vastaus? Saatat menettää tallentamattomat muutoksesi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
+          <context context-type="linenumber">966,964</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

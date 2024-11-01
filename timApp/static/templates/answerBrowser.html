@@ -36,11 +36,17 @@
         </div>
         <div class="answer-edit-tools" *ngIf="!hasUserChanged() || loading">
                         <span class="flex align-center">
-            <div *ngIf="answers.length > 0">
+                            <div  *ngIf="answers.length==0 && showRefresh" class="input-group input-group-xs answer-picker">
+                            <span class="input-group-btn">
+            <button i18n-title title="Load the newest answer" (click)="refreshPlugin()" class="btn btn-primary glyphicon glyphicon-refresh"></button>
+                            </span>
+                            </div>
+                <div *ngIf="answers.length > 0">
                 <div *ngIf="showBrowseAnswers" class="flex align-center ab-option-row">
                     <div *ngIf="filteredAnswers.length > 0">
                         <div class="input-group input-group-xs answer-picker">
                 <span class="input-group-btn">
+                    <button i18n-title title="Load the newest answer" *ngIf="showRefresh" (click)="refreshPlugin()"  class="btn btn-primary glyphicon glyphicon-refresh"></button>
                     <button i18n-title title="Previous answer" class="btn btn-primary prevAnswer"
                             (click)="changeAnswerTo(-1)">&larr;</button>
                 </span>
