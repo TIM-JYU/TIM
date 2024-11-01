@@ -286,7 +286,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_organizations() -> list[UserGroup]:
-        return (
+        return list(
             run_sql(
                 select(UserGroup).filter(
                     UserGroup.name.endswith(" users")
