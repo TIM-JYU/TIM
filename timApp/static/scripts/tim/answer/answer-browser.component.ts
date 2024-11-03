@@ -299,6 +299,7 @@ export class AnswerBrowserComponent
     showNewTask = false;
     buttonNewTask = $localize`New task`;
     showRefresh = false;
+    refreshing = false;
 
     constructor(
         private element: ElementRef<HTMLElement>,
@@ -969,8 +970,10 @@ export class AnswerBrowserComponent
                 return;
             }
         }
+        this.refreshing = true;
         const data = await this.getAnswers();
         if (!data) {
+            this.refreshing = false;
             return;
         }
         this.answers = data;
@@ -980,6 +983,7 @@ export class AnswerBrowserComponent
                 ? this.filteredAnswers[0]
                 : undefined;
         await this.changeAnswer(undefined, undefined, true);
+        this.refreshing = false;
         this.cdr.detectChanges();
     }
 
