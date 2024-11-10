@@ -9030,6 +9030,54 @@
           <context context-type="linenumber">966,964</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3217189464299162022" datatype="html">
+        <source>Quick themes</source>
+        <target state="new">Quick themes</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">59,60</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="853806060840861954" datatype="html">
+        <source>Quick select styles</source>
+        <target state="new">Quick select styles</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">189</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4161663426352478871" datatype="html">
+        <source> Styles that are available in the Quick select menu (in the Settings menu on the left of the page) are listed here. You can review and remove styles that you use. </source>
+        <target state="new"> Styles that are available in the Quick select menu (in the Settings menu on the left of the page) are listed here. You can review and remove styles that you use. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">192,193</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4570636567629984302" datatype="html">
+        <source> You can also reorder styles by dragging them in the list below. </source>
+        <target state="new"> You can also reorder styles by dragging them in the list below. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">196</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8720702577528832728" datatype="html">
+        <source> You have no quick styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;&gt;"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> tab. </source>
+        <target state="new"> You have no quick styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;&gt;"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> tab. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">206,207</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8594707912435167235" datatype="html">
+        <source> Add to Quick select </source>
+        <target state="new"> Add to Quick select </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">275</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

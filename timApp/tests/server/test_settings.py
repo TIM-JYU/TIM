@@ -101,11 +101,11 @@ class SettingsTest(TimRouteTest):
                     '"remember_last_sidebar_menu_tab": false, '
                     '"remember_last_sidebar_menu_state": false, "word_list": '
                     '"", "email_exclude": "", "language": null, '
-                    '"style_doc_ids": [], "last_answer_fetch": {}, '
-                    '"auto_mark_all_read": false, "bookmarks": [{"Last edited": '
-                    '[{"document 2": "/view/users/test-user-1/doc1"}]}], '
-                    '"max_uncollapsed_toc_items": null, '
-                    '"parmenu_position": 1}',
+                    '"style_doc_ids": [], "quick_select_style_doc_ids": [], '
+                    '"last_answer_fetch": {}, "auto_mark_all_read": false, '
+                    '"bookmarks": [{"Last edited": [{"document 2": '
+                    '"/view/users/test-user-1/doc1"}]}], '
+                    '"max_uncollapsed_toc_items": null, "parmenu_position": 1}',
                     "real_name": "Test user 1",
                 },
                 "velps": [],
@@ -217,6 +217,7 @@ type: python
                 "use_document_word_list": False,
                 "word_list": "",
                 "parmenu_position": 1,
+                "quick_select_style_doc_ids": [],
             },
         )
         self.json_post(
@@ -234,6 +235,7 @@ type: python
                 "remember_last_sidebar_menu_tab": True,
                 "auto_mark_all_read": True,
                 "parmenu_position": 0,
+                "quick_select_style_doc_ids": [],
             },
         )
         self.get(
@@ -253,6 +255,7 @@ type: python
                 "auto_mark_all_read": True,
                 "bookmarks": None,
                 "parmenu_position": 0,
+                "quick_select_style_doc_ids": [],
             },
         )
         self.json_post(
@@ -269,6 +272,7 @@ type: python
                 "remember_last_sidebar_menu_tab": True,
                 "auto_mark_all_read": False,
                 "parmenu_position": 1,
+                "quick_select_style_doc_ids": [],
             },
         )
         self.get(
@@ -288,6 +292,7 @@ type: python
                 "max_uncollapsed_toc_items": None,
                 "bookmarks": None,
                 "parmenu_position": 1,
+                "quick_select_style_doc_ids": [],
             },
         )
 
