@@ -53,8 +53,8 @@ def get_settings() -> Response:
     return json_response(get_current_user_object().get_prefs())
 
 
-def verify_new_styles(curr_prefs: Preferences, new_prefs: Preferences) -> None:
-    new_style_doc_ids = set(new_prefs.style_doc_ids) - set(curr_prefs.style_doc_ids)
+def verify_new_styles(curr_styles: list[int], new_styles: list[int]) -> None:
+    new_style_doc_ids = set(new_styles) - set(curr_styles)
     if not new_style_doc_ids:
         return
 
@@ -90,7 +90,7 @@ def save_settings() -> Response:
             val = getattr(curr_prefs, attr)
             j[attr] = val
         new_prefs = Preferences.from_json(j)
-        verify_new_styles(curr_prefs, new_prefs)
+        verify_new_styles(curr_prefs.style_doc_ids, new_prefs.style_doc_ids)
         user.set_prefs(new_prefs)
     except TypeError as e:
         raise RouteException(f"Invalid settings: {e}")

@@ -1052,3 +1052,20 @@ export function closest(arr: number[], val: number): number {
         Math.abs(curr - val) < Math.abs(prev - val) ? curr : prev
     );
 }
+
+export function replaceStyle(
+    styleOrigin: "user-prefs-style" | "document-style" | "document-settings",
+    toPath: string
+) {
+    const el = document.querySelector(
+        `link[rel="stylesheet"][data-style-origin="${styleOrigin}"]`
+    );
+    if (!el) {
+        return;
+    }
+    const newPath = `/${toPath}`;
+    if (el.getAttribute("href") == newPath) {
+        return;
+    }
+    el.setAttribute("href", newPath);
+}

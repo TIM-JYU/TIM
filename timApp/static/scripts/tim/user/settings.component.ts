@@ -34,7 +34,7 @@ import type {ConsentType} from "tim/ui/consent";
 import type {INotification, ISettings} from "tim/util/globals";
 import {NotificationType, settingsglobals} from "tim/util/globals";
 import type {IOkResponse} from "tim/util/utils";
-import {isIOS, timeout, to2, toPromise} from "tim/util/utils";
+import {isIOS, replaceStyle, timeout, to2, toPromise} from "tim/util/utils";
 import type {DocumentOrFolder, ITranslatorUsage} from "tim/item/IItem";
 import type {IFullUser, IUserApiKey, IUserContact} from "tim/user/IUser";
 import {ContactOrigin} from "tim/user/IUser";
@@ -734,14 +734,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     set currentStyle(path: string) {
-        const el = document.querySelector(
-            'link[rel="stylesheet"][data-style-origin="user-prefs-style"]'
-        )!;
-        const newPath = `/${path}`;
-        if (el.getAttribute("href") == newPath) {
-            return;
-        }
-        el.setAttribute("href", newPath);
+        replaceStyle("user-prefs-style", path);
     }
 
     get currentStyle() {

@@ -35,9 +35,11 @@ from timApp.auth.accesshelper import (
     verify_route_access,
     verify_admin,
 )
-from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
-from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
+from timApp.auth.get_user_rights_for_item import (
+    get_user_rights_for_item,
+    UserItemRights,
+)
 from timApp.auth.login import log_in_as_anonymous
 from timApp.auth.session.util import has_valid_session
 from timApp.auth.sessioninfo import (
@@ -125,8 +127,7 @@ from timApp.tim_app import app
 from timApp.timdb.exceptions import PreambleException
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_view_access
-from timApp.user.settings.style_utils import resolve_themes
-from timApp.user.settings.styles import generate_style
+from timApp.user.settings.style_utils import StyleForUserContext, get_style_for_user
 from timApp.user.user import User, has_no_higher_right
 from timApp.user.usergroup import (
     UserGroup,
@@ -134,7 +135,7 @@ from timApp.user.usergroup import (
     UserGroupWithSisuInfo,
 )
 from timApp.user.users import get_rights_holders_all
-from timApp.user.userutils import DeletedUserException, grant_access
+from timApp.user.userutils import DeletedUserException
 from timApp.util.flask.requesthelper import (
     view_ctx_with_urlmacros,
     RouteException,
@@ -1084,38 +1085,14 @@ def render_doc_view(
         db.session.commit()
 
     exam_mode = is_exam_mode(doc_settings, rights)
-
-    document_themes = doc_settings.themes()
-    if exam_mode:
-        document_themes = list(
-            dict.fromkeys(doc_settings.exam_mode_themes() + document_themes)
-        )
-    override_theme = None
-    document_themes_final = []
-    for theme in document_themes:
-        parts = theme.split(":", 1)
-        if len(parts) == 2:
-            view_route, theme = parts
-            if not theme:
-                continue
-            if view_route and view_ctx.route.value != view_route:
-                continue
-        document_themes_final.append(theme)
-
-    if document_themes_final:
-        document_theme_docs = resolve_themes(document_themes_final)
-        # If the user themes are not overridden, they are merged with document themes
-        user_themes = current_user.get_prefs().theme_docs()
-        if user_themes and not doc_settings.override_user_themes():
-            document_theme_docs = list(
-                (
-                    {d.id: d for d in document_theme_docs}
-                    | {d.id: d for d in user_themes}
-                ).values()
-            )
-        theme_style, theme_hash = generate_style(document_theme_docs)
-        override_theme = f"{theme_style}?{theme_hash}"
-
+    override_theme = get_style_for_user(
+        current_user.get_prefs(),
+        context=StyleForUserContext(
+            view_ctx=view_ctx,
+            doc_info=doc_info,
+            user_rights=rights,
+        ),
+    )
     hide_readmarks = should_hide_readmarks(current_user, doc_settings)
 
     templates_to_render = (
@@ -1267,7 +1244,7 @@ def should_hide_sidemenu(settings: DocSettings, rights: dict):
     return has_no_higher_right(settings.hide_sidemenu(), rights)
 
 
-def is_exam_mode(settings: DocSettings, rights: dict):
+def is_exam_mode(settings: DocSettings, rights: UserItemRights):
     return has_no_higher_right(settings.exam_mode(), rights)
 
 
