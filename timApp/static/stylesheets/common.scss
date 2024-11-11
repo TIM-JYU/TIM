@@ -147,6 +147,14 @@ tim-duration-picker {
     & > .no-shrink {
         flex-shrink: 0;
     }
+
+    &.gap-1 {
+        gap: 0.25em;
+    }
+
+    &.flex-wrap {
+        flex-wrap: wrap;
+    }
 }
 
 .pt-1 {
