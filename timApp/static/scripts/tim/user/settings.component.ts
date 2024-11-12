@@ -44,6 +44,7 @@ import {
     TimTableModule,
 } from "tim/plugin/timTable/tim-table.component";
 import {ParMenuHandlePosition} from "tim/document/editing/editing";
+import {notifyUserPrefsChanged} from "tim/sidebarmenu/tabs/settings-tab.component";
 
 @Component({
     selector: "settings-button-panel",
@@ -184,6 +185,53 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             </div>
                         </ng-container>
                     </tab>
+                    <tab heading="Quick select styles" i18n-heading>
+                        <div class="info-box">
+                            <p i18n>
+                                Styles that are available in the Quick select menu (in the Settings menu on the left of the page) are listed here.
+                                You can review and remove styles that you use.
+                            </p>
+                            <p i18n>
+                                You can also reorder styles by dragging them in the list below.
+                            </p>
+                        </div>
+                        <div class="style-loader" *ngIf="currentQuickStyles === undefined">
+                            <tim-loading></tim-loading>
+                            <ng-container i18n>Loading active styles, please wait</ng-container>
+                        </div>
+                        <ng-container *ngIf="currentQuickStyles !== undefined">
+                            <div class="info-box" *ngIf="currentQuickStyles.length == 0" >
+                                <small i18n>
+                                    You have no quick styles selected. You can add styles via the <a (click)="changeStyleTab(1)">Available styles</a> tab.
+                                </small>
+                            </div>
+                            <div *ngIf="currentQuickStyles.length > 0" class="current-styles" [dndDropzone]="['userStyle']"
+                                 [dndEffectAllowed]="'move'"
+                                 (dndDrop)="onStyleDrop($event, true)">
+                                <div class="drag-placeholder" dndPlaceholderRef></div>
+                                <div *ngFor="let style of currentQuickStyles"
+                                     [dndDraggable]="style.docId"
+                                     [dndEffectAllowed]="'move'"
+                                     [dndDisableDragIf]="saving"
+                                     dndType="userStyle">
+                                    <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving" dndHandle></i>
+                                    <div class="style-info">
+                                        <h4>
+                                            <a class="style-header" href="/view/{{style.path}}">{{style.name}}</a>
+                                            <span *ngIf="style.type == 'official'" class="label label-primary" i18n>Official</span>
+                                            <span *ngIf="style.type == 'deleted'" class="label label-default" i18n>Deleted</span>
+                                        </h4>
+                                        <p class="style-description">{{style.description}}</p>
+                                    </div>
+                                    <div class="style-actions">
+                                        <button class="btn btn-danger" title="Delete style" (click)="deleteSelectedStyle(style, true)" i18n-title>
+                                            <i class="glyphicon glyphicon-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </ng-container>
+                    </tab>
                     <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()" (deselect)="resetSelectedStyles()" i18n-heading>
                         <div class="info-box">
                             <p i18n>
@@ -221,6 +269,9 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 <div class="button-panel">
                                     <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles()" i18n>
                                         Add to Selected styles
+                                    </button>
+                                    <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles(true)" i18n>
+                                        Add to Quick select
                                     </button>
                                     <button class="timButton" [disabled]="!cbCount" (click)="resetSelectedStyles()" i18n>
                                         Clear preview
@@ -538,6 +589,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     verificationSentSet = new Set<IUserContact>();
     contactOrigins = CONTACT_ORIGINS;
     currentStyles?: StyleDocumentInfo[] = undefined;
+    currentQuickStyles?: StyleDocumentInfo[] = undefined;
     primaryChangeVerificationSent = false;
     showUserStyles = false;
     private readonly style: HTMLStyleElement;
@@ -606,14 +658,26 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         }
     }
 
-    async deleteSelectedStyle(style: StyleDocumentInfo) {
-        if (!this.currentStyles) {
+    async deleteSelectedStyle(
+        style: StyleDocumentInfo,
+        isQuickStyle: boolean = false
+    ) {
+        const styleList = isQuickStyle
+            ? this.currentQuickStyles
+            : this.currentStyles;
+        if (!styleList) {
             return;
         }
 
-        const styleIndex = this.currentStyles.indexOf(style);
-        this.currentStyles.splice(styleIndex, 1);
-        this.settings.style_doc_ids = this.currentStyles.map((s) => s.docId);
+        const styleIndex = styleList.indexOf(style);
+        styleList.splice(styleIndex, 1);
+        if (!isQuickStyle) {
+            this.settings.style_doc_ids = styleList.map((s) => s.docId);
+        } else {
+            this.settings.quick_select_style_doc_ids = styleList.map(
+                (s) => s.docId
+            );
+        }
         this.loadingUserStyle = true;
         this.cdr.detectChanges();
         await this.submit(false);
@@ -621,13 +685,16 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
-    async onStyleDrop(event: DndDropEvent) {
-        if (!this.currentStyles) {
+    async onStyleDrop(event: DndDropEvent, isQuickStyle: boolean = false) {
+        const styleList = isQuickStyle
+            ? this.currentQuickStyles
+            : this.currentStyles;
+        if (!styleList) {
             return;
         }
 
         const docId = event.data as number;
-        const oldIndex = this.currentStyles.findIndex((d) => d.docId == docId);
+        const oldIndex = styleList.findIndex((d) => d.docId == docId);
         let newIndex = event.index ?? 0;
         // Don't move if we're inserting directly above or below current item (i.e. not actually moving)
         if (newIndex == oldIndex || newIndex == oldIndex + 1) {
@@ -637,10 +704,16 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         if (newIndex > oldIndex) {
             newIndex--;
         }
-        const item = this.currentStyles[oldIndex];
-        this.currentStyles.splice(oldIndex, 1);
-        this.currentStyles.splice(newIndex, 0, item);
-        this.settings.style_doc_ids = this.currentStyles.map((s) => s.docId);
+        const item = styleList[oldIndex];
+        styleList.splice(oldIndex, 1);
+        styleList.splice(newIndex, 0, item);
+        if (!isQuickStyle) {
+            this.settings.style_doc_ids = styleList.map((s) => s.docId);
+        } else {
+            this.settings.quick_select_style_doc_ids = styleList.map(
+                (s) => s.docId
+            );
+        }
         this.loadingUserStyle = true;
         this.cdr.detectChanges();
         await this.submit();
@@ -663,17 +736,28 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         return this.timTable.first;
     }
 
-    activateSelectedStyles() {
+    activateSelectedStyles(quickSelect: boolean = false) {
         const table = this.timTable.first;
-        const currentStyles = new Set(this.settings.style_doc_ids);
+        const currentStyles = new Set(
+            quickSelect
+                ? this.settings.quick_select_style_doc_ids
+                : this.settings.style_doc_ids
+        );
         const newStyles = table
             .getCheckedRows(0, true)
             .map((s) => +s[0])
             .filter((d) => !currentStyles.has(d));
-        this.settings.style_doc_ids = [
-            ...this.settings.style_doc_ids,
-            ...newStyles,
-        ];
+        if (quickSelect) {
+            this.settings.quick_select_style_doc_ids = [
+                ...this.settings.quick_select_style_doc_ids,
+                ...newStyles,
+            ];
+        } else {
+            this.settings.style_doc_ids = [
+                ...this.settings.style_doc_ids,
+                ...newStyles,
+            ];
+        }
         void this.submit();
     }
 
@@ -792,13 +876,26 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         if (this.settings.style_doc_ids.length == 0) {
             this.currentStyles = [];
             this.cdr.detectChanges();
+        }
+        if (this.settings.quick_select_style_doc_ids.length == 0) {
+            this.currentQuickStyles = [];
+            this.cdr.detectChanges();
+        }
+        if (
+            this.settings.quick_select_style_doc_ids.length == 0 &&
+            this.settings.style_doc_ids.length == 0
+        ) {
             return;
         }
+        const allStyleDocIds = new Set([
+            ...this.settings.style_doc_ids,
+            ...this.settings.quick_select_style_doc_ids,
+        ]);
         const r = await toPromise(
             this.http.get<StyleDocumentInfo[]>("/styles", {
                 params: {
                     all: true,
-                    docs: this.settings.style_doc_ids.join(","),
+                    docs: [...allStyleDocIds].join(","),
                 },
             })
         );
@@ -810,11 +907,21 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
                 .map((s, i) => ({[s]: i}))
                 .reduce((prev, cur) => ({...prev, ...cur}), {});
 
+            const userQuickStyles = new Set(
+                this.settings.quick_select_style_doc_ids
+            );
+            const quickOrderMap: Record<number, number> =
+                this.settings.quick_select_style_doc_ids
+                    .map((s, i) => ({[s]: i}))
+                    .reduce((prev, cur) => ({...prev, ...cur}), {});
+
+            const allUserStyles = new Set([...userStyles, ...userQuickStyles]);
+
             for (const styleDoc of allStyleDocs) {
-                userStyles.delete(styleDoc.docId);
+                allUserStyles.delete(styleDoc.docId);
             }
 
-            for (const missingStyleDoc of userStyles) {
+            for (const missingStyleDoc of allUserStyles) {
                 allStyleDocs.push({
                     docId: missingStyleDoc,
                     description: $localize`This style document was deleted`,
@@ -836,13 +943,26 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
                 }
             }
 
+            const allStyleDocsUser = allStyleDocs.filter((d) =>
+                userStyles.has(d.docId)
+            );
+            const allStyleDocsQuick = allStyleDocs.filter((d) =>
+                userQuickStyles.has(d.docId)
+            );
+
             // Reorder styles back in the correct order because ordering matters
-            const allStyleDocsOrdered = [];
-            for (const style of allStyleDocs) {
-                allStyleDocsOrdered[orderMap[style.docId]] = style;
+            const allStyleDocsUserOrdered = [];
+            for (const style of allStyleDocsUser) {
+                allStyleDocsUserOrdered[orderMap[style.docId]] = style;
             }
 
-            this.currentStyles = allStyleDocsOrdered;
+            const allStyleDocsQuickOrdered = [];
+            for (const style of allStyleDocsQuick) {
+                allStyleDocsQuickOrdered[quickOrderMap[style.docId]] = style;
+            }
+
+            this.currentStyles = allStyleDocsUserOrdered;
+            this.currentQuickStyles = allStyleDocsQuickOrdered;
             this.cdr.detectChanges();
         } else {
             this.styleError = {
@@ -1218,18 +1338,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             this.resetSelectedStyles();
 
             if (updateSelectedStylesList) {
-                const oldStyles = this.currentStyles?.map((s) => s.docId) ?? [];
-                const newStyles = this.settings.style_doc_ids;
-
-                if (
-                    oldStyles.length != newStyles.length ||
-                    oldStyles.some(
-                        (v, i) => v != this.settings.style_doc_ids[i]
-                    )
-                ) {
-                    await this.updateSelectedStyles();
-                }
+                await this.updateSelectedStyles();
             }
+
+            notifyUserPrefsChanged(this.settings);
         } else {
             await showMessageDialog(r.result.error.error);
         }

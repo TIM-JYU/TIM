@@ -34,6 +34,7 @@ class Preferences:
     email_exclude: str = ""
     language: str | None = None
     style_doc_ids: list[int] = attr.Factory(list)
+    quick_select_style_doc_ids: list[int] = attr.Factory(list)
     last_answer_fetch: dict[str, str] = attr.Factory(dict)
     auto_mark_all_read: bool = False
     bookmarks: BookmarkCollection | None = None

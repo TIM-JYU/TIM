@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from flask import current_app, has_request_context, request
+from flask import current_app, has_request_context, session, request
+from sqlalchemy import select
 
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import ViewContext
+from timApp.timdb.sqa import run_sql
 from timApp.user.preferences import Preferences
 
 static_folder = Path("static")
@@ -131,6 +133,25 @@ def get_style_for_user(
                 )
 
     if has_request_context():
+        quick_select_styles = session.get("quick_select_styles", [])
+        quick_select_selectable = set(current_user_prefs.quick_select_style_doc_ids)
+        quick_select_styles = [
+            d for d in quick_select_styles if d in quick_select_selectable
+        ]
+        session["quick_select_styles"] = quick_select_styles
+        if quick_select_styles:
+            resolved_quick_select_styles = (
+                run_sql(select(DocEntry).filter(DocEntry.id.in_(quick_select_styles)))
+                .scalars()
+                .all()
+            )
+            themes = list(
+                (
+                    {d.id: d for d in themes}
+                    | {d.id: d for d in resolved_quick_select_styles}
+                ).values()
+            )
+
         request_themes = [
             ts for t in request.args.get("themes", "").split(",") if (ts := t.strip())
         ]
