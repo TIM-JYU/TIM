@@ -91,6 +91,9 @@ def save_settings() -> Response:
             j[attr] = val
         new_prefs = Preferences.from_json(j)
         verify_new_styles(curr_prefs.style_doc_ids, new_prefs.style_doc_ids)
+        verify_new_styles(
+            curr_prefs.quick_select_style_doc_ids, new_prefs.quick_select_style_doc_ids
+        )
         user.set_prefs(new_prefs)
     except TypeError as e:
         raise RouteException(f"Invalid settings: {e}")

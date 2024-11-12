@@ -222,6 +222,9 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                     <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles()" i18n>
                                         Add to Selected styles
                                     </button>
+                                    <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles(true)" i18n>
+                                        Add to Quick style
+                                    </button>
                                     <button class="timButton" [disabled]="!cbCount" (click)="resetSelectedStyles()" i18n>
                                         Clear preview
                                     </button>
@@ -663,17 +666,29 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         return this.timTable.first;
     }
 
-    activateSelectedStyles() {
+    activateSelectedStyles(quickStyle: boolean = false) {
         const table = this.timTable.first;
-        const currentStyles = new Set(this.settings.style_doc_ids);
+
+        const currentStyles = new Set(
+            quickStyle
+                ? this.settings.quick_select_style_doc_ids
+                : this.settings.style_doc_ids
+        );
         const newStyles = table
             .getCheckedRows(0, true)
             .map((s) => +s[0])
             .filter((d) => !currentStyles.has(d));
-        this.settings.style_doc_ids = [
-            ...this.settings.style_doc_ids,
-            ...newStyles,
-        ];
+        if (quickStyle) {
+            this.settings.quick_select_style_doc_ids = [
+                ...this.settings.quick_select_style_doc_ids,
+                ...newStyles,
+            ];
+        } else {
+            this.settings.style_doc_ids = [
+                ...this.settings.style_doc_ids,
+                ...newStyles,
+            ];
+        }
         void this.submit();
     }
 
