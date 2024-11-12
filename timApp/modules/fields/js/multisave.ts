@@ -133,6 +133,8 @@ export class MultisaveComponent
     unsavedTasksWithAliases: {component: ITimComponent; alias?: string}[] = [];
     requiresTaskId = false;
     listener = false;
+    timed = false;
+    timer?: number;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -378,6 +380,13 @@ export class MultisaveComponent
         this.hasUnsavedTargets = true;
         this.refreshUnsavedList();
         this.isSaved = false;
+        if (!this.timed) {
+        }
+        if (this.timer) {
+            window.clearTimeout(this.timer);
+        }
+        // clear on save? targets should be 0 anyway
+        this.timer = window.setTimeout(() => this.save(), 5000);
     }
 
     public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {
