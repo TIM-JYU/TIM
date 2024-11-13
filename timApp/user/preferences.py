@@ -51,7 +51,11 @@ class Preferences:
             return []
         ordering = {d: i for i, d in enumerate(self.style_doc_ids)}
         return sorted(
-            run_sql(select(DocEntry).filter(DocEntry.id.in_(self.style_doc_ids)))
+            run_sql(
+                select(DocEntry)
+                .filter(DocEntry.id.in_(self.style_doc_ids))
+                .distinct(DocEntry.id)
+            )
             .scalars()
             .all(),
             key=lambda d: ordering[d.id],

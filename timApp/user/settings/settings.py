@@ -82,6 +82,7 @@ def get_quick_themes() -> Response:
         select(DocEntry.id, Block.description)
         .join(Block)
         .filter(DocEntry.id.in_(prefs.quick_select_style_doc_ids))
+        .distinct(DocEntry.id)
     ).all()
 
     return json_response(
@@ -133,7 +134,11 @@ def verify_new_styles(curr_styles: list[int], new_styles: list[int]) -> None:
         return
 
     new_style_docs: Sequence[DocEntry] = (
-        run_sql(select(DocEntry).filter(DocEntry.id.in_(new_style_doc_ids)))
+        run_sql(
+            select(DocEntry)
+            .filter(DocEntry.id.in_(new_style_doc_ids))
+            .distinct(DocEntry.id)
+        )
         .scalars()
         .all()
     )

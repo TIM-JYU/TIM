@@ -141,7 +141,11 @@ def get_style_for_user(
         session["quick_select_styles"] = quick_select_styles
         if quick_select_styles:
             resolved_quick_select_styles = (
-                run_sql(select(DocEntry).filter(DocEntry.id.in_(quick_select_styles)))
+                run_sql(
+                    select(DocEntry)
+                    .filter(DocEntry.id.in_(quick_select_styles))
+                    .distinct(DocEntry.id)
+                )
                 .scalars()
                 .all()
             )
