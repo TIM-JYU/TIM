@@ -119,22 +119,37 @@ interface GroupedNotification {
 
 type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
 
+/**
+ * Selection type for styles.
+ */
+type StyleSelectionType =
+    /**
+     *  Active style, these styles are always active when a user selects them.
+     */
+    | "active"
+    /**
+     * Quick select style, these styles are available in the quick select menu.
+     */
+    | "quick";
+
 // TODO: Figure out why this requires manual cdr.detectChanges() in many places
 @Component({
     selector: "tim-settings",
     template: `
         <h1 i18n>TIM settings</h1>
         <div class="form">
-            <bootstrap-form-panel [disabled]="saving" title="Preferred language" i18n-title anchorId="prefs_language" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Preferred language" i18n-title anchorId="prefs_language"
+                                  [showHeadingAnchors]="true">
                 <div class="flex cl">
                     <tim-language-selector [(language)]="settings.language"></tim-language-selector>
                     <settings-button-panel [saved]="submit" [reloadAfterSave]="true"></settings-button-panel>
                 </div>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title anchorId="prefs_styles" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title anchorId="prefs_styles"
+                                  [showHeadingAnchors]="true">
                 <tim-alert *ngIf="styleError">
-                    <strong>{{styleError.title}}</strong>
-                    <p>{{styleError.message}}</p>
+                    <strong>{{ styleError.title }}</strong>
+                    <p>{{ styleError.message }}</p>
                 </tim-alert>
                 <tabset #stylesTabs>
                     <tab heading="Selected styles" i18n-heading>
@@ -145,7 +160,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             </p>
                             <p i18n>
                                 You can also reorder styles by dragging them in the list below.
-                                Reordering the styles will change their priority which might affect the final generated theme for TIM.
+                                Reordering the styles will change their priority which might affect the final generated
+                                theme for TIM.
                             </p>
                         </div>
                         <div class="style-loader" *ngIf="currentStyles === undefined">
@@ -153,31 +169,34 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             <ng-container i18n>Loading active styles, please wait</ng-container>
                         </div>
                         <ng-container *ngIf="currentStyles !== undefined">
-                            <div class="info-box" *ngIf="currentStyles.length == 0" >
+                            <div class="info-box" *ngIf="currentStyles.length == 0">
                                 <small i18n>
-                                    You have no styles selected. You can add styles via the <a (click)="changeStyleTab(1)">Available styles</a> tab.
+                                    You have no styles selected. You can add styles via the <a
+                                        (click)="changeStyleTab(1)">Available styles</a> tab.
                                 </small>
                             </div>
                             <div *ngIf="currentStyles.length > 0" class="current-styles" [dndDropzone]="['userStyle']"
                                  [dndEffectAllowed]="'move'"
-                                 (dndDrop)="onStyleDrop($event)">
+                                 (dndDrop)="onStyleDrop($event, 'active')">
                                 <div class="drag-placeholder" dndPlaceholderRef></div>
                                 <div *ngFor="let style of currentStyles"
                                      [dndDraggable]="style.docId"
                                      [dndEffectAllowed]="'move'"
                                      [dndDisableDragIf]="saving"
                                      dndType="userStyle">
-                                    <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving" dndHandle></i>
+                                    <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving"
+                                       dndHandle></i>
                                     <div class="style-info">
                                         <h4>
-                                            <a class="style-header" href="/view/{{style.path}}">{{style.name}}</a>
+                                            <a class="style-header" href="/view/{{style.path}}">{{ style.name }}</a>
                                             <span *ngIf="style.type == 'official'" class="label label-primary" i18n>Official</span>
                                             <span *ngIf="style.type == 'deleted'" class="label label-default" i18n>Deleted</span>
                                         </h4>
-                                        <p class="style-description">{{style.description}}</p>
+                                        <p class="style-description">{{ style.description }}</p>
                                     </div>
                                     <div class="style-actions">
-                                        <button class="btn btn-danger" title="Delete style" (click)="deleteSelectedStyle(style)" i18n-title>
+                                        <button class="btn btn-danger" title="Delete style"
+                                                (click)="deleteSelectedStyle(style, 'active')" i18n-title>
                                             <i class="glyphicon glyphicon-trash"></i>
                                         </button>
                                     </div>
@@ -188,7 +207,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                     <tab heading="Quick select styles" i18n-heading>
                         <div class="info-box">
                             <p i18n>
-                                Styles that are available in the Quick select menu (in the Settings menu on the left of the page) are listed here.
+                                Styles that are available in the Quick select menu (in the Settings menu on the left of
+                                the page) are listed here.
                                 You can review and remove styles that you use.
                             </p>
                             <p i18n>
@@ -200,31 +220,35 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             <ng-container i18n>Loading active styles, please wait</ng-container>
                         </div>
                         <ng-container *ngIf="currentQuickStyles !== undefined">
-                            <div class="info-box" *ngIf="currentQuickStyles.length == 0" >
+                            <div class="info-box" *ngIf="currentQuickStyles.length == 0">
                                 <small i18n>
-                                    You have no quick styles selected. You can add styles via the <a (click)="changeStyleTab(1)">Available styles</a> tab.
+                                    You have no quick styles selected. You can add styles via the <a
+                                        (click)="changeStyleTab(1)">Available styles</a> tab.
                                 </small>
                             </div>
-                            <div *ngIf="currentQuickStyles.length > 0" class="current-styles" [dndDropzone]="['userStyle']"
+                            <div *ngIf="currentQuickStyles.length > 0" class="current-styles"
+                                 [dndDropzone]="['userStyle']"
                                  [dndEffectAllowed]="'move'"
-                                 (dndDrop)="onStyleDrop($event, true)">
+                                 (dndDrop)="onStyleDrop($event, 'quick')">
                                 <div class="drag-placeholder" dndPlaceholderRef></div>
                                 <div *ngFor="let style of currentQuickStyles"
                                      [dndDraggable]="style.docId"
                                      [dndEffectAllowed]="'move'"
                                      [dndDisableDragIf]="saving"
                                      dndType="userStyle">
-                                    <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving" dndHandle></i>
+                                    <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving"
+                                       dndHandle></i>
                                     <div class="style-info">
                                         <h4>
-                                            <a class="style-header" href="/view/{{style.path}}">{{style.name}}</a>
+                                            <a class="style-header" href="/view/{{style.path}}">{{ style.name }}</a>
                                             <span *ngIf="style.type == 'official'" class="label label-primary" i18n>Official</span>
                                             <span *ngIf="style.type == 'deleted'" class="label label-default" i18n>Deleted</span>
                                         </h4>
-                                        <p class="style-description">{{style.description}}</p>
+                                        <p class="style-description">{{ style.description }}</p>
                                     </div>
                                     <div class="style-actions">
-                                        <button class="btn btn-danger" title="Delete style" (click)="deleteSelectedStyle(style, true)" i18n-title>
+                                        <button class="btn btn-danger" title="Delete style"
+                                                (click)="deleteSelectedStyle(style, 'quick')" i18n-title>
                                             <i class="glyphicon glyphicon-trash"></i>
                                         </button>
                                     </div>
@@ -232,7 +256,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             </div>
                         </ng-container>
                     </tab>
-                    <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()" (deselect)="resetSelectedStyles()" i18n-heading>
+                    <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()"
+                         (deselect)="resetSelectedStyles()" i18n-heading>
                         <div class="info-box">
                             <p i18n>
                                 The table below lists all styles available on TIM.
@@ -242,17 +267,21 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 <li i18n><strong>Official styles</strong> are maintained and supported by TIM
                                     maintainers.
                                 </li>
-                                <li i18n><strong>User-made styles</strong> are made and maintained by TIM's users. For more information, see <a href="/view/tim/ohjeita/styles">style authoring guide</a>.</li>
+                                <li i18n><strong>User-made styles</strong> are made and maintained by TIM's users. For
+                                    more information, see <a href="/view/tim/ohjeita/styles">style authoring guide</a>.
+                                </li>
                             </ul>
                             <p i18n>To remove styles or edit their ordering, use the <a (click)="changeStyleTab(0)">Selected
                                 styles</a> tab.</p>
-                            <p i18n><strong>Note:</strong> Your current styles will be temporarily disabled while previewing.</p>
+                            <p i18n><strong>Note:</strong> Your current styles will be temporarily disabled while
+                                previewing.</p>
                         </div>
                         <div class="style-loader" *ngIf="tableData.table.rows === undefined">
-                            <tim-loading></tim-loading> <ng-container i18n>Loading available styles, please wait</ng-container>
+                            <tim-loading></tim-loading>
+                            <ng-container i18n>Loading available styles, please wait</ng-container>
                         </div>
                         <ng-container *ngIf="tableData.table.rows !== undefined">
-                            <div class="info-box" *ngIf="tableData.table.rows.length == 0" >
+                            <div class="info-box" *ngIf="tableData.table.rows.length == 0">
                                 <small i18n>
                                     No styles available.
                                 </small>
@@ -261,19 +290,26 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 <div class="checkbox">
                                     <label>
                                         <input type="checkbox" id="style-show-user-made" name="style-show-user-made"
-                                               [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)">
+                                               [ngModel]="showUserStyles"
+                                               (ngModelChange)="changeUserStyleVisibility($event)">
                                         <ng-container i18n>Show user-made styles</ng-container>
                                     </label>
                                 </div>
-                                <tim-table class="style-listing" *ngIf="availableTab.active" [data]="tableData"></tim-table>
+                                <tim-table class="style-listing" *ngIf="availableTab.active"
+                                           [data]="tableData"></tim-table>
                                 <div class="button-panel">
-                                    <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles()" i18n>
+                                    <button class="timButton" [disabled]="!cbCount"
+                                            (click)="addSelectedStylesTo('active')"
+                                            i18n>
                                         Add to Selected styles
                                     </button>
-                                    <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles(true)" i18n>
+                                    <button class="timButton" [disabled]="!cbCount"
+                                            (click)="addSelectedStylesTo('quick')"
+                                            i18n>
                                         Add to Quick select
                                     </button>
-                                    <button class="timButton" [disabled]="!cbCount" (click)="resetSelectedStyles()" i18n>
+                                    <button class="timButton" [disabled]="!cbCount" (click)="resetSelectedStyles()"
+                                            i18n>
                                         Clear preview
                                     </button>
                                 </div>
@@ -287,15 +323,18 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 The styles are applied to all TIM pages and all devices you use.
                             </p>
                             <p i18n>
-                                For extended styling using SCSS, refer to <a href="/view/tim/ohjeita/styles">style authoring guide</a>.
+                                For extended styling using SCSS, refer to <a href="/view/tim/ohjeita/styles">style
+                                authoring guide</a>.
                             </p>
                         </div>
                         <div class="form-group">
                             <label for="custom_css" i18n>Custom CSS</label>
-                            <textarea id="custom_css" name="custom_css" class="form-control" [(ngModel)]="settings.custom_css"></textarea>
+                            <textarea id="custom_css" name="custom_css" class="form-control"
+                                      [(ngModel)]="settings.custom_css"></textarea>
                         </div>
                         <settings-button-panel [saved]="submit">
-                            <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings</button>
+                            <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings
+                            </button>
                         </settings-button-panel>
                     </tab>
                 </tabset>
@@ -304,7 +343,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                     <ng-container i18n>Compiling style, please wait</ng-container>
                 </div>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Editor" i18n-title anchorId="prefs_editor" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Editor" i18n-title anchorId="prefs_editor"
+                                  [showHeadingAnchors]="true">
                 <div class="checkbox">
                     <label>
                         <input type="checkbox" name="use_document_word_list"
@@ -319,7 +359,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                 </label>
                 <settings-button-panel [saved]="submit"></settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Notifications" i18n-title anchorId="prefs_notifications" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Notifications" i18n-title anchorId="prefs_notifications"
+                                  [showHeadingAnchors]="true">
                 <h4 i18n>Subscribed items</h4>
                 <p *ngIf="notifications.length > 0" i18n>You get emails from the following documents and folders:</p>
                 <p *ngIf="notifications.length === 0" i18n>You haven't subscribed to any documents or folders.</p>
@@ -327,19 +368,19 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                     <li *ngFor="let n of notifications">
                         <a href="/manage/{{n.item.path}}">
                             <span *ngIf="n.item.isFolder" class="glyphicon glyphicon-folder-open"></span>
-                            {{n.item.title}}</a>
+                            {{ n.item.title }}</a>
                         <i *ngIf="isDocModify(n)"
-                              class="notification-icon glyphicon glyphicon-pencil"
-                              title="Document modifications" i18n-title></i>
+                           class="notification-icon glyphicon glyphicon-pencil"
+                           title="Document modifications" i18n-title></i>
                         <i *ngIf="isCommentAdd(n)"
-                              class="notification-icon glyphicon glyphicon-send"
-                              title="New comments" i18n-title></i>
+                           class="notification-icon glyphicon glyphicon-send"
+                           title="New comments" i18n-title></i>
                         <i *ngIf="isCommentModify(n)"
-                              class="notification-icon glyphicon glyphicon-comment"
-                              title="Comment modifications" i18n-title></i>
+                           class="notification-icon glyphicon glyphicon-comment"
+                           title="Comment modifications" i18n-title></i>
                         <i *ngIf="isAnswerAdd(n)"
-                              class="notification-icon glyphicon glyphicon-open-file"
-                              title="Answer posts" i18n-title></i>
+                           class="notification-icon glyphicon glyphicon-open-file"
+                           title="Answer posts" i18n-title></i>
                     </li>
                 </ul>
                 <button (click)="getAllNotifications()"
@@ -362,7 +403,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                 </div>
                 <settings-button-panel [saved]="submit"></settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Menus" i18n-title anchorId="prefs_menus" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Menus" i18n-title anchorId="prefs_menus"
+                                  [showHeadingAnchors]="true">
                 <div class="form-view">
                     <label for="max-toc-size" class="input-group-label" i18n>
                         Collapse document index with more than
@@ -429,7 +471,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                 </div>
                 <settings-button-panel [saved]="submit"></settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Other settings" i18n-title anchorId="prefs_misc" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Other settings" i18n-title anchorId="prefs_misc"
+                                  [showHeadingAnchors]="true">
                 <div class="checkbox" id="othersettings"><label>
                     <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
                            [disabled]="saving">
@@ -442,7 +485,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                     <span *ngIf="storageClear" i18n>Local storage cleared.</span>
                 </settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Your account information" i18n-title anchorId="prefs_account" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Your account information" i18n-title
+                                  anchorId="prefs_account" [showHeadingAnchors]="true">
                 <div class="account-info">
                     <label for="account-name" i18n>Username</label>
                     <div><input id="account-name" class="form-control" type="text" [value]="user.name" disabled>
@@ -458,7 +502,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 [(ngModel)]="primaryEmail">
                             <ng-container *ngFor="let contact of userEmailContacts">
                                 <option *ngIf="contact.verified"
-                                        [ngValue]="contact">{{contact.contact}}</option>
+                                        [ngValue]="contact">{{ contact.contact }}
+                                </option>
                             </ng-container>
                         </select>
                         <div class="small">
@@ -470,13 +515,13 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             </p>
                             <p *ngIf="contactOrigins[primaryEmail.origin]; let originInfo" i18n>
                                 This email is managed by <strong
-                                    [style.color]="originInfo.bgColor">{{originInfo.name}}</strong>.
+                                    [style.color]="originInfo.bgColor">{{ originInfo.name }}</strong>.
                                 The address will be automatically updated by the system.
                             </p>
                         </div>
                     </div>
                     <ng-container *ngFor="let entry of userContactEntries">
-                        <span class="form-label">{{channelNames[entry[0]]}}</span>
+                        <span class="form-label">{{ channelNames[entry[0]] }}</span>
                         <div class="contact-collection">
                             <div class="contact-info" *ngFor="let contact of entry[1]">
                                 <input type="text" class="form-control" [value]="contact.contact" disabled>
@@ -487,7 +532,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                       title="This email is managed by {{originInfo.name}}. You cannot delete managed contacts yourself."
                                       i18n-title
                                       [style.backgroundColor]="originInfo.bgColor"
-                                      [style.color]="originInfo.textColor">{{originInfo.name}}</span>
+                                      [style.color]="originInfo.textColor">{{ originInfo.name }}</span>
                                 <span title="This email is verified to be owned by you." i18n-title
                                       *ngIf="contact.verified"
                                       class="verified-badge" i18n>Verified</span>
@@ -515,22 +560,27 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                         <span class="form-label">
                             <ng-container i18n>Machine translator API Keys</ng-container>
                             <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
-                                <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;" title="Help with machine translation setup" i18n-title></span>
+                                <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;"
+                                      title="Help with machine translation setup" i18n-title></span>
                             </a>
                         </span>
                         <div class="contact-collection">
                             <div class="contact-info" *ngFor="let APIkey of userAPIKeys">
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
-                                <input type="text" class="form-control buttonBorder" [value]="APIkey.translator" disabled>
+                                <input type="text" class="form-control buttonBorder" [value]="APIkey.translator"
+                                       disabled>
                                 <div *ngIf="APIkey.quotaChecked" class="stacked quotaProgressBar">
-                                    <progressbar tooltip="{{APIkey.usedQuota}} / {{APIkey.availableQuota}}" [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
+                                    <progressbar tooltip="{{APIkey.usedQuota}} / {{APIkey.availableQuota}}"
+                                                 [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
                                 </div>
-                                <button *ngIf="!APIkey.quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)" i18n>
-                                    Check key's quota 
+                                <button *ngIf="!APIkey.quotaChecked" class="btn" type="button"
+                                        (click)="checkQuota(APIkey)" i18n>
+                                    Check key's quota
                                 </button>
-                                    <button *ngIf="APIkey.quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)">
-                                        <i class="glyphicon glyphicon-refresh"></i>
-                                    </button>
+                                <button *ngIf="APIkey.quotaChecked" class="btn" type="button"
+                                        (click)="checkQuota(APIkey)">
+                                    <i class="glyphicon glyphicon-refresh"></i>
+                                </button>
                                 <button class="btn btn-danger" type="button"
                                         (click)="deleteKey(APIkey)">
                                     <i class="glyphicon glyphicon-trash"></i>
@@ -544,7 +594,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                     <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
                 </settings-button-panel>
             </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorId="prefs_delAcc" [showHeadingAnchors]="true">
+            <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorId="prefs_delAcc"
+                                  [showHeadingAnchors]="true">
                 <button class="timButton btn-danger"
                         (click)="beginDeleteAccount()"
                         *ngIf="!deletingAccount" i18n>Delete account...
@@ -660,23 +711,19 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     async deleteSelectedStyle(
         style: StyleDocumentInfo,
-        isQuickStyle: boolean = false
+        styleType: StyleSelectionType
     ) {
-        const styleList = isQuickStyle
-            ? this.currentQuickStyles
-            : this.currentStyles;
-        if (!styleList) {
-            return;
-        }
-
-        const styleIndex = styleList.indexOf(style);
-        styleList.splice(styleIndex, 1);
-        if (!isQuickStyle) {
-            this.settings.style_doc_ids = styleList.map((s) => s.docId);
-        } else {
-            this.settings.quick_select_style_doc_ids = styleList.map(
-                (s) => s.docId
-            );
+        switch (styleType) {
+            case "active":
+                this.settings.style_doc_ids = this.doDeleteSelectedStyle(
+                    style,
+                    this.currentStyles
+                );
+                break;
+            case "quick":
+                this.settings.quick_select_style_doc_ids =
+                    this.doDeleteSelectedStyle(style, this.currentQuickStyles);
+                break;
         }
         this.loadingUserStyle = true;
         this.cdr.detectChanges();
@@ -685,20 +732,57 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
-    async onStyleDrop(event: DndDropEvent, isQuickStyle: boolean = false) {
-        const styleList = isQuickStyle
-            ? this.currentQuickStyles
-            : this.currentStyles;
+    private doDeleteSelectedStyle(
+        style: StyleDocumentInfo,
+        styleList?: StyleDocumentInfo[]
+    ) {
         if (!styleList) {
-            return;
+            return [];
         }
 
-        const docId = event.data as number;
-        const oldIndex = styleList.findIndex((d) => d.docId == docId);
-        let newIndex = event.index ?? 0;
+        const styleIndex = styleList.indexOf(style);
+        styleList.splice(styleIndex, 1);
+        return styleList.map((s) => s.docId);
+    }
+
+    async onStyleDrop(event: DndDropEvent, styleType: StyleSelectionType) {
+        switch (styleType) {
+            case "active":
+                this.settings.style_doc_ids = this.doChangeStyleOrder(
+                    event.data as number,
+                    event.index ?? 0,
+                    this.currentStyles
+                );
+                break;
+            case "quick":
+                this.settings.quick_select_style_doc_ids =
+                    this.doChangeStyleOrder(
+                        event.data as number,
+                        event.index ?? 0,
+                        this.currentQuickStyles
+                    );
+                break;
+        }
+        this.loadingUserStyle = true;
+        this.cdr.detectChanges();
+        await this.submit();
+        this.loadingUserStyle = false;
+        this.cdr.detectChanges();
+    }
+
+    private doChangeStyleOrder(
+        styleDocId: number,
+        newIndex: number,
+        styleList?: StyleDocumentInfo[]
+    ) {
+        if (!styleList) {
+            return [];
+        }
+
+        const oldIndex = styleList.findIndex((d) => d.docId == styleDocId);
         // Don't move if we're inserting directly above or below current item (i.e. not actually moving)
         if (newIndex == oldIndex || newIndex == oldIndex + 1) {
-            return;
+            return styleList.map((s) => s.docId);
         }
         // If we're moving down the list, first splice will move all items after oldIndex down by one index
         if (newIndex > oldIndex) {
@@ -707,18 +791,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         const item = styleList[oldIndex];
         styleList.splice(oldIndex, 1);
         styleList.splice(newIndex, 0, item);
-        if (!isQuickStyle) {
-            this.settings.style_doc_ids = styleList.map((s) => s.docId);
-        } else {
-            this.settings.quick_select_style_doc_ids = styleList.map(
-                (s) => s.docId
-            );
-        }
-        this.loadingUserStyle = true;
-        this.cdr.detectChanges();
-        await this.submit();
-        this.loadingUserStyle = false;
-        this.cdr.detectChanges();
+        return styleList.map((s) => s.docId);
     }
 
     changeStyleTab(index: number) {
@@ -736,29 +809,31 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         return this.timTable.first;
     }
 
-    activateSelectedStyles(quickSelect: boolean = false) {
+    addSelectedStylesTo(styleType: StyleSelectionType) {
+        switch (styleType) {
+            case "active":
+                this.settings.style_doc_ids = this.getMergedSelectedStyles(
+                    this.settings.style_doc_ids
+                );
+                break;
+            case "quick":
+                this.settings.quick_select_style_doc_ids =
+                    this.getMergedSelectedStyles(
+                        this.settings.quick_select_style_doc_ids
+                    );
+                break;
+        }
+        void this.submit();
+    }
+
+    private getMergedSelectedStyles(currentStyles: number[]) {
         const table = this.timTable.first;
-        const currentStyles = new Set(
-            quickSelect
-                ? this.settings.quick_select_style_doc_ids
-                : this.settings.style_doc_ids
-        );
+        const currentStylesSet = new Set(currentStyles);
         const newStyles = table
             .getCheckedRows(0, true)
             .map((s) => +s[0])
-            .filter((d) => !currentStyles.has(d));
-        if (quickSelect) {
-            this.settings.quick_select_style_doc_ids = [
-                ...this.settings.quick_select_style_doc_ids,
-                ...newStyles,
-            ];
-        } else {
-            this.settings.style_doc_ids = [
-                ...this.settings.style_doc_ids,
-                ...newStyles,
-            ];
-        }
-        void this.submit();
+            .filter((d) => !currentStylesSet.has(d));
+        return [...currentStyles, ...newStyles];
     }
 
     resetSelectedStyles() {
