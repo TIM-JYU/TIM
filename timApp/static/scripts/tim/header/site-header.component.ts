@@ -87,6 +87,11 @@ export class SiteHeaderComponent implements OnInit {
                 this.displayViewHeader =
                     globals.docSettings.displayViewInitialState;
             }
+            // If not set in document settings, allow user setting to determine default header menu open state
+            else {
+                this.displayViewHeader =
+                    globals.userPrefs.always_show_header_menu;
+            }
         }
 
         this.updateHeaderMenuVisibility();

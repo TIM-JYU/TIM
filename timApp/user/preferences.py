@@ -40,6 +40,7 @@ class Preferences:
     bookmarks: BookmarkCollection | None = None
     max_uncollapsed_toc_items: int | None = None
     parmenu_position: int = ParMenuPosition.Right
+    always_show_header_menu: bool = False
 
     @staticmethod
     def from_json(j: dict) -> "Preferences":
