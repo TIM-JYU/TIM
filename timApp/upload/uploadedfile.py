@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, NamedTuple, Union
 
 import magic
-from sqlalchemy import select
+from sqlalchemy import select, Select
 from werkzeug.utils import secure_filename
 
 from timApp.answer.answer_models import AnswerUpload
@@ -17,6 +17,7 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
+from timApp.util.file_utils import compute_file_sha1
 
 DIR_MAPPING = {
     BlockType.File: "files",
@@ -54,15 +55,30 @@ class UploadedFile(ItemBase):
         return UploadedFile._wrap(b)
 
     @staticmethod
+    def get_all_children_query(block: Block) -> Select[Block]:
+        return (
+            select(Block)
+            .join(BlockAssociation, BlockAssociation.child == Block.id)
+            .filter((BlockAssociation.parent == block.id))
+            .order_by(Block.id.desc())
+        )
+
+    @staticmethod
+    def find_all_children(block: Block) -> list["UploadedFile"]:
+        bs = run_sql(UploadedFile.get_all_children_query(block)).scalars().all()
+        result = []
+        for b in bs:
+            f = UploadedFile._wrap(b)
+            if f:
+                result.append(f)
+        return result
+
+    @staticmethod
     def find_first_child(block: Block, name: str) -> Optional["UploadedFile"]:
         b = (
             run_sql(
-                select(Block)
-                .join(BlockAssociation, BlockAssociation.child == Block.id)
-                .filter(
-                    (BlockAssociation.parent == block.id) & (Block.description == name)
-                )
-                .order_by(Block.id.desc())
+                UploadedFile.get_all_children_query(block)
+                .filter(Block.description == name)
                 .limit(1)
             )
             .scalars()
@@ -178,6 +194,10 @@ class UploadedFile(ItemBase):
     @property
     def size(self):
         return os.path.getsize(self.filesystem_path)
+
+    @property
+    def sha1_digest(self):
+        return compute_file_sha1(self.filesystem_path)
 
     @property
     def content_mimetype(self):

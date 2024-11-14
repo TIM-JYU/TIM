@@ -4,6 +4,7 @@ import os
 import posixpath
 import subprocess
 from dataclasses import dataclass
+from hashlib import sha1
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
 
@@ -24,6 +25,8 @@ from timApp.auth.accesshelper import (
     verify_edit_access,
     AccessDenied,
     verify_answer_access,
+    verify_ownership,
+    verify_manage_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.oauth2.models import Scope
@@ -53,7 +56,7 @@ from timApp.upload.uploadedfile import (
     is_script_safe_mimetype,
 )
 from timApp.user.user import User
-from timApp.util.file_utils import guess_image_type, guess_image_mime
+from timApp.util.file_utils import guess_image_type, guess_image_mime, compute_file_sha1
 from timApp.util.flask.requesthelper import (
     use_model,
     RouteException,
@@ -733,3 +736,34 @@ def get_image(image_id: str, image_filename: str) -> Response:
         )
     f = io.BytesIO(f.data)
     return send_file(f, mimetype=imgtype)
+
+
+@dataclass
+class GetDocumentUploadsArgs:
+    with_hashes: bool = False
+    with_sizes: bool = False
+
+
+@upload.get("/docUploads/<path:doc_path>")
+@use_model(GetDocumentUploadsArgs)
+def get_document_uploads(args: GetDocumentUploadsArgs, doc_path: str) -> Response:
+    doc = DocEntry.find_by_path(doc_path, fallback_to_id=True, try_translation=False)
+    if not doc:
+        raise NotExist("Document not found")
+    verify_manage_access(doc)
+
+    uploads = UploadedFile.find_all_children(doc.block)
+    result = []
+    for u in uploads:
+        info = {
+            "id": u.id,
+            "filename": u.filename,
+        }
+        if args.with_hashes:
+            if u.filesystem_path.is_file():
+                info["hash"] = u.sha1_digest
+        if args.with_sizes:
+            info["size"] = u.size
+        result.append(info)
+
+    return json_response(result)

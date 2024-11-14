@@ -225,3 +225,41 @@ texprint: "- %%selitys%% ([LIITE %%liiteNro%% / lista %%lista%%](%%server+linkki
             d, b"""<svg xmlns="http://www.w3.org/2000/svg"></svg>""", "test.svg"
         )
         self.check_mime(r["image"], "image/svg+xml")
+
+    def test_upload_list(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.upload_file(d, b"Test file 1!", "test1.txt")
+        self.upload_file(d, b"Test file 2!", "test2.jpg")
+        res = self.json_req(f"/docUploads/{d.path}")
+        for r in res:
+            del r["id"]
+        self.assertEqual(
+            [
+                {"filename": "test1.txt"},
+                {"filename": "test2.jpg"},
+            ],
+            sorted(res, key=lambda x: x["filename"]),
+        )
+
+        res = self.json_req(f"/docUploads/{d.path}?with_hashes=true&with_sizes=true")
+        for r in res:
+            del r["id"]
+        self.assertEqual(
+            [
+                {
+                    "filename": "test1.txt",
+                    "hash": "750c15b8c8081f0e5c99f29a9bccbe0ee20d16e5",
+                    "size": 12,
+                },
+                {
+                    "filename": "test2.jpg",
+                    "hash": "fd1bbf8bd4826d84dd02d67ad41c22b37674084e",
+                    "size": 12,
+                },
+            ],
+            sorted(res, key=lambda x: x["filename"]),
+        )
+
+        self.login_test2()
+        self.json_req(f"/docUploads/{d.path}", expect_status=403)
