@@ -61,7 +61,7 @@ export function notifyUserPrefsChanged(settings: ISettings) {
         <ng-template i18n>Document settings</ng-template>
         <ng-container *ngIf="users.isRealUser() && quickThemes.length > 0">
             <h5 i18n>Quick themes</h5>
-            <div class="flex flex-wrap gap-1">
+            <div class="flex flex-wrap gap-1 quick-theme-container">
                 <button *ngFor="let theme of quickThemes"
                         class="btn btn-xs" 
                         [class.btn-primary]="theme.enabled"
@@ -282,9 +282,10 @@ export function notifyUserPrefsChanged(settings: ISettings) {
 
         <ng-container *ngIf="users.canScheduleFunctions()">
             <h5 i18n>Scheduled functions</h5>
-            <button (click)="openScheduleDialog()" class="timButton" i18n>Manage scheduled functions</button>
+            <button (click)="openScheduleDialog()" class="timButton btn-block" i18n>Manage scheduled functions</button>
         </ng-container>
     `,
+    styleUrls: ["./settings-tab.component.scss"],
 })
 export class SettingsTabComponent implements OnInit {
     hideVars: IVisibilityVars = getVisibilityVars();
