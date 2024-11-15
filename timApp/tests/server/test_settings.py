@@ -105,7 +105,7 @@ class SettingsTest(TimRouteTest):
                     '"last_answer_fetch": {}, "auto_mark_all_read": false, '
                     '"bookmarks": [{"Last edited": [{"document 2": '
                     '"/view/users/test-user-1/doc1"}]}], '
-                    '"max_uncollapsed_toc_items": null, "parmenu_position": 1}',
+                    '"max_uncollapsed_toc_items": null, "parmenu_position": 1, "always_show_header_menu": false}',
                     "real_name": "Test user 1",
                 },
                 "velps": [],
@@ -218,6 +218,7 @@ type: python
                 "word_list": "",
                 "parmenu_position": 1,
                 "quick_select_style_doc_ids": [],
+                "always_show_header_menu": False,
             },
         )
         self.json_post(
@@ -236,6 +237,7 @@ type: python
                 "auto_mark_all_read": True,
                 "parmenu_position": 0,
                 "quick_select_style_doc_ids": [],
+                "always_show_header_menu": True,
             },
         )
         self.get(
@@ -256,6 +258,7 @@ type: python
                 "bookmarks": None,
                 "parmenu_position": 0,
                 "quick_select_style_doc_ids": [],
+                "always_show_header_menu": True,
             },
         )
         self.json_post(
@@ -273,6 +276,7 @@ type: python
                 "auto_mark_all_read": False,
                 "parmenu_position": 1,
                 "quick_select_style_doc_ids": [],
+                "always_show_header_menu": False,
             },
         )
         self.get(
@@ -293,6 +297,7 @@ type: python
                 "bookmarks": None,
                 "parmenu_position": 1,
                 "quick_select_style_doc_ids": [],
+                "always_show_header_menu": False,
             },
         )
 
