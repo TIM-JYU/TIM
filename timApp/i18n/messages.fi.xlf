@@ -3601,7 +3601,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="582891413766289599" datatype="html">
-        <source> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="."/>. The address will be automatically updated by the system. </source>
+        <source> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong
+                                    [style.color]=&quot;originInfo.bgColor&quot;&gt;"/><x id="INTERPOLATION"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="."/>. The address will be automatically updated by the system. </source>
         <target state="translated"> Tätä sähköpostiosoitetta hallinnoi <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>-järjestelmä. Järjestelmä voi automaattisesti päivittää tämän osoitteen. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
@@ -9161,7 +9162,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8054904775519687363" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="User"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are made and maintained by TIM's users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="User"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> are made and maintained by TIM&apos;s users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </source>
         <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Käyttäjätyylit<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> ovat TIM-käyttäjien luomat. Katso <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>tyylien laadintaopas<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> lisätietoja varten.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
@@ -9174,22 +9175,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">336,337</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3858364302339756970" datatype="html">
-        <source>Header menu (Navigation bar)</source>
-        <target state="translated">Ylämenu (navigointipalkki)</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">424,425</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="653934982330202983" datatype="html">
-        <source>Always show navigation bar (unless overridden in document settings)</source>
-        <target state="translated">Näytä navigointipalkki aina (ellei tätä asetusta ohiteta dokumenttiasetuksilla)</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">431</context>
         </context-group>
       </trans-unit>
     </body>

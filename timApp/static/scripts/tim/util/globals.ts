@@ -190,7 +190,6 @@ export interface ISettings {
     style_doc_ids: number[];
     quick_select_style_doc_ids: number[];
     parmenu_position: number;
-    always_show_header_menu: boolean;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {

@@ -420,18 +420,7 @@ type StyleSelectionType =
                             Clear
                         </button>
                     </div>
-                    
-                    <span i18n>Header menu (Navigation bar)</span>
-                    <div>
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="header_menu_default_visibility"
-                                       [(ngModel)]="settings.always_show_header_menu"
-                                       [disabled]="saving">
-                                <ng-container i18n>Always show navigation bar (unless overridden in document settings)</ng-container>
-                            </label>
-                        </div>
-                    </div>
+
                     <span i18n>Opening settings</span>
                     <div>
                         <div class="checkbox">
