@@ -116,6 +116,7 @@ class DocSettingTypes:
     ideCourse: list[IdeDocument]
     loginCodes: bool
     loginMessage: str
+    customIndex: list[tuple[Any, Any]]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -201,7 +202,8 @@ class DocSettings:
     def get_setting_or_default(self, name: str, default: T) -> T:
         try:
             return doc_setting_field_map[name].deserialize(self.__dict.get(name))
-        except ValidationError:
+        except ValidationError as e:
+            print(e)
             return default
 
     def __init__(self, doc: "Document", settings_dict: YamlBlock | None = None):
@@ -720,6 +722,9 @@ class DocSettings:
 
     def login_message(self) -> str | None:
         return self.get_setting_or_default("loginMessage", None)
+
+    def custom_index(self) -> list[tuple[Any, Any]]:
+        return self.get_setting_or_default("customIndex", [])
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

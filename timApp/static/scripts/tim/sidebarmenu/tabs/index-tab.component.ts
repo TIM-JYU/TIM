@@ -1,7 +1,10 @@
 import type {OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
-import type {IHeaderDisplayIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
+import type {
+    IHeader,
+    IHeaderDisplayIndexItem,
+} from "tim/sidebarmenu/services/header-indexer.service";
 import {HeaderIndexerService} from "tim/sidebarmenu/services/header-indexer.service";
 import {
     getViewRangeWithHeaderId,
@@ -22,16 +25,17 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
                        [class.glyphicon-plus]="header.closed"
                        [class.glyphicon-minus]="!header.closed"></i>
                 </a>
-                <a class="a{{header.h1.level}}"
-                   href="{{pageUrl}}#{{header.h1.id}}"
+                <a [classList]="getHeaderClassList(header.h1)"
+                   [href]="getHeaderHref(header.h1)"
                    target="_self"
                    (click)="headerClicked($event, header.h1.id)">
                     {{header.h1.text}}
                 </a>
                 <ul class="list-unstyled" *ngIf="!header.closed" (click)="$event.stopPropagation()">
                     <li *ngFor="let header2 of header.h2List">
-                        <a class="a{{header2.level}}"
-                           href="{{pageUrl}}#{{header2.id}}"
+                        <a 
+                           [classList]="getHeaderClassList(header2)"
+                           [href]="getHeaderHref(header2)"
                            target="_self"
                            (click)="headerClicked($event, header2.id)">
                             {{header2.text}}
@@ -88,5 +92,23 @@ export class IndexTabComponent implements OnInit {
             }
         }
         evt.stopPropagation();
+    }
+
+    protected readonly getViewRangeWithHeaderId = getViewRangeWithHeaderId;
+
+    getHeaderClassList(h: IHeader) {
+        let res = [`a${h.level}`];
+        if (h.classList) {
+            res = res.concat(h.classList);
+        }
+        return res;
+    }
+
+    getHeaderHref(h: IHeader) {
+        if (h.href) {
+            return h.href;
+        } else {
+            return `${this.pageUrl}#${h.id ?? ""}`;
+        }
     }
 }

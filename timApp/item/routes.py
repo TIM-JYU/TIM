@@ -1011,6 +1011,9 @@ def render_doc_view(
             xs, post_process_result.texts, view_range, preamble_count
         )
 
+    if custom_index := doc_settings.custom_index():
+        index = custom_index
+
     if force_hide_names(current_user, doc_info) or view_ctx.hide_names_requested:
         model_u = User.get_model_answer_user()
         model_u_id = model_u.id if model_u else None
