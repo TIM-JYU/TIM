@@ -8,8 +8,8 @@ import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
 import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/standalone-textfield.component";
 
 @Component({
-    selector: "tim-user-list",
-    styleUrls: ["./user-list.component.scss"],
+    selector: "tim-participant-list",
+    styleUrls: ["./participant-list.component.scss"],
     imports: [
         StandaloneTextfieldComponent,
         CsUtilityModule,
@@ -28,7 +28,7 @@ import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/sta
         </div>
     `,
 })
-export class UserListComponent implements OnInit {
+export class ParticipantListComponent implements OnInit {
     @Input() documentId: number = 0;
     @Input() modifyEnabled: boolean = false;
     editable: boolean = false;
@@ -41,7 +41,7 @@ export class UserListComponent implements OnInit {
 }
 
 @NgModule({
-    imports: [UserListComponent],
+    imports: [ParticipantListComponent],
 })
 export class UserListModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

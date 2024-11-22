@@ -117,7 +117,7 @@ TIM_SAFE_TAGS = [
     "tim-user-profile",
     "tim-steps",
     "standalone-textfield",
-    "tim-user-list",
+    "tim-participant-list",
     "tim-course-manager",
 ]
 

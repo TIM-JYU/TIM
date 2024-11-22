@@ -21,6 +21,7 @@ import {registerPlugin} from "../pluginRegistry";
 import {PurifyModule} from "tim/util/purify.module";
 import {type AngularError, type Result, toPromise} from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
+import {Subscription} from "rxjs";
 
 const TSteps = t.type({
     name: t.string,
@@ -70,6 +71,7 @@ interface StepsState {
                         <button (click)="onSubmit()" class="timButton btn-success corner-button">Save</button>
                     </div>
                 </div>
+                
 
                 <div class="container">
                     <div class="step-list">
@@ -81,7 +83,7 @@ interface StepsState {
                             <h3>{{ step.name }}</h3>
                             <div class="step-content"
                                  [style.border-left-style]="currentStep >= i ? 'solid' : 'dashed'">
-                                <p [innerHTML]="step.description | purify"></p>
+                                <p [innerHTML]="step.description | purify">This is the intermediate element</p>
                             </div>
                         </div>
                         <div class="step step-upcoming ">
@@ -157,16 +159,16 @@ export class StepsPluginComponent extends AngularPluginBase<
         return {};
     }
 
-    getStepsState() {
-        const plugin = this.getTaskId();
-        let endpoint = `/steps/${plugin?.docId}/${plugin?.name}`;
-        const data = this.http.get<StepsState>(endpoint).subscribe({
+    getStepsState(): void {
+        const plugin: TaskId | undefined = this.getTaskId();
+        let endpoint: string = `/steps/${plugin?.docId}/${plugin?.name}`;
+        this.http.get<StepsState>(endpoint).subscribe({
             next: (res: StepsState) => {
-                console.log("tulos", res);
+                console.log(res);
                 this.currentStep = res.current_phase;
             },
         });
-        return data;
+        return;
     }
 
     async onSubmit() {
