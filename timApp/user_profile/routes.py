@@ -92,7 +92,14 @@ def prepare_profile_data(user: User, edit_access: bool) -> ProfileData:
         try:
             verify_edit_access(personal_folder)
             document_object = personal_folder.get_document(
-                "profile", create_if_not_exist=True
+                "profile",
+                create_if_not_exist=True,
+                creator_group=user.get_personal_group(),
+            )
+
+            document_object.document.add_paragraph(
+                text=f"<tim-user-profile modify-enabled=true user-id={user.get_user_id()} document-id=%%docid%% ></tim-user-profile>",
+                attrs={"allowangular": "true"},
             )
             db.session.commit()
         except AccessDenied as e:
