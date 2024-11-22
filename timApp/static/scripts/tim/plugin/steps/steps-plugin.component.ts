@@ -67,8 +67,8 @@ interface StepsState {
                         <h2>Step-by-step</h2>
                     </div>
                     <div class="right-column flex justify-corner-button">
-                        <button class="timButton btn-danger corner-button">Remove</button>
-                        <button (click)="onSubmit()" class="timButton btn-success corner-button">Save</button>
+                        <!-- <button class="timButton btn-danger corner-button">Remove</button>
+                        <button (click)="onSubmit()" class="timButton btn-success corner-button">Save</button> -->
                     </div>
                 </div>
                 
@@ -86,8 +86,11 @@ interface StepsState {
                                 <p [innerHTML]="step.description | purify">This is the intermediate element</p>
                             </div>
                         </div>
-                        <div class="step step-upcoming ">
-                        <span class="step-num last-step-num glyphicon glyphicon-ok">
+                        <div class="step"
+                             [style.opacity]="active ? '100%' : '50%'">
+                        <span class="step-num last-step-num glyphicon glyphicon-ok"
+                        [ngStyle]="currentStep >= steps.length ? {'background-color': '#00AA00', 'color': '#ffefef'} : {}"
+                              (click)="switchComplete($event, steps.length)">
                         </span>
                             <h3>{{ lastStep?.name }}</h3>
                             <p *ngIf="lastStep?.description" [innerHTML]="lastStep?.description | purify"></p>
