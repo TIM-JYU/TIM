@@ -124,3 +124,25 @@ class DurationField(marshmallow.fields.Field):
 
 class DurationSchema(marshmallow.Schema):
     TYPE_MAPPING = {Duration: DurationField}
+
+
+def replace_in_file(file_path: str, pattern: str, replacement: str) -> int:
+    """
+    Replace a pattern in a file.
+    :param file_path:   from which file to replace
+    :param pattern:     what to replace
+    :param replacement: with what to replace
+    :return:            number of replacements
+    """
+    with open(file_path, "r") as file:
+        content = file.read()
+
+    new_content, num_replacements = re.subn(
+        pattern, replacement, content, flags=re.MULTILINE
+    )
+
+    if num_replacements > 0:
+        with open(file_path, "w") as file:
+            file.write(new_content)
+
+    return num_replacements
