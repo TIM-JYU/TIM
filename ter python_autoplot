@@ -1,0 +1,125 @@
+[33mcommit 6918ace5a58b9666bb15f1f71e8ce233da3aa9f0[m[33m ([m[1;31morigin/python_auto_plot[m[33m, [m[1;32mpython_auto_plot[m[33m)[m
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Sun Nov 24 20:25:39 2024 +0200
+
+    autoplot for Python
+
+[33mcommit 32a7783ab7e765f38a9f2fd21f4ff54ca69fe0ef[m
+Author: Denis Zhidkikh <dezhidki@jyu.fi>
+Date:   Wed Oct 9 15:17:01 2024 +0300
+
+    Update timApp/idesupport/utils.py
+
+[33mcommit 87408a3e14dd24dbf4d0259de953cfea74a2cb64[m
+Author: Denis Zhidkikh <dezhidki@jyu.fi>
+Date:   Wed Oct 9 15:12:09 2024 +0300
+
+    Update timApp/idesupport/ide_languages.py
+
+[33mcommit 0bbc9dcf54f7363be792dce8830f6d6046710b80[m
+Author: Denis Zhidkikh <dezhidki@jyu.fi>
+Date:   Wed Oct 9 15:11:16 2024 +0300
+
+    Update timApp/idesupport/ide_languages.py
+
+[33mcommit 648a1733f1473051ad7f582504fe55317733e9b8[m
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Wed Oct 9 00:12:30 2024 +0300
+
+    tide: use usercode if available, correct spelling
+
+[33mcommit 0410691d6a970c66643cacfa914e273c585d29d2[m
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Wed Oct 9 00:08:58 2024 +0300
+
+    tide: use usercode if available
+
+[33mcommit 931f8ad1be45d86099c8838150c721cd9f75b5d0[m
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Tue Oct 8 02:07:48 2024 +0300
+
+    tide: error handling
+
+[33mcommit 69a344f52a908536a7b0305637c412ae7c4e417e[m
+Merge: 6a6a36e7a d5ded209f
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Mon Oct 7 22:26:13 2024 +0300
+
+    Merge remote-tracking branch 'origin/master' into ide-languages
+
+[33mcommit 6a6a36e7a0140e4421be7d500727361f534f84ac[m
+Merge: e2fe84fd8 2a7d446cf
+Author: Denis Zhidkikh <dezhidki@jyu.fi>
+Date:   Fri Oct 4 09:21:58 2024 +0300
+
+    Merge branch 'master' into ide-languages
+
+[33mcommit e2fe84fd89dcb592372e102c30a00c8e4be6839f[m
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Wed Oct 2 01:20:27 2024 +0300
+
+    Tide-language: Correct spelling
+
+[33mcommit 508b4f4de41a41438dea1b7a576a5fe7f4b2c037[m
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Wed Oct 2 01:16:23 2024 +0300
+
+    Suplementary files: Do not indent too much
+
+[33mcommit 494a368b602b73e6cfba0359c603edba20d50b25[m
+Merge: 233e4bb3f 178130199
+Author: Denis Zhidkikh <dezhidki@jyu.fi>
+Date:   Tue Oct 1 18:03:50 2024 +0300
+
+    Merge remote-tracking branch 'refs/remotes/origin/master' into ide-languages
+    
+    # Conflicts:
+    #       timApp/idesupport/ide_languages.py
+
+[33mcommit 233e4bb3f278bc3a64ed37c10504e72e9e849851[m
+Author: Denis Zhidkikh <dezhidki@jyu.fi>
+Date:   Tue Oct 1 10:02:55 2024 +0300
+
+    Revert package-lock.json
+
+[33mcommit 891bc2467dc672a0f6d45391c98ecc3da0343e53[m
+Author: Denis Zhidkikh <dezhidki@jyu.fi>
+Date:   Tue Oct 1 09:58:51 2024 +0300
+
+    Clean up, add docs
+
+[33mcommit 07b5d607b91969e768c4bb03dc6b7039d5ac9c1b[m
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Mon Sep 30 23:42:21 2024 +0300
+
+    TODO comment
+
+[33mcommit 48c6eb93f5b927f753cbc0c10839808462bc530e[m
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Mon Sep 30 22:16:52 2024 +0300
+
+    hack for jypeli rerun missing arguments
+
+[33mcommit e56b0445e48bc833439c91981f9c623667804b74[m
+Author: sijualle <simo.lehtinen@hotmail.com>
+Date:   Mon Sep 30 23:55:14 2024 +0300
+
+    CsPlugin: restore imports
+
+[33mcommit 181ab5570766a6ba171a725acde775a6507b0965[m
+Author: sijualle <simo.lehtinen@hotmail.com>
+Date:   Mon Sep 30 23:54:37 2024 +0300
+
+    Add partial type hints to ide_languages
+
+[33mcommit 78f0b6e54282158b4c3b8ca93d1fb0430cc7d695[m
+Author: sijualle <simo.lehtinen@hotmail.com>
+Date:   Mon Sep 30 17:40:08 2024 +0300
+
+    Run black
+
+[33mcommit b6b47afed86e11e4b61a300669e90b854199c849[m
+Author: Vesa Lappalainen <vesal@jyu.fi>
+Date:   Sun Sep 29 23:37:03 2024 +0300
+
+    Tide languages

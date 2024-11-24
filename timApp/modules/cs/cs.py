@@ -24,7 +24,7 @@ from traceback import print_exc
 from urllib.request import urlopen
 
 from cs_logging import get_logger
-from cs_utils import replace_code, check_parsons
+from cs_utils import replace_code, check_parsons, text_value_replace
 from file_handler import FileHandler
 from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
@@ -712,7 +712,7 @@ def handle_common_params(query: QueryClass, ttype: TType):
         "tauno",
         "parsons",
     ]:  # TODO: make tauno, simcir and parsons work without this
-        if not "markup" in js or js["markup"] is None:
+        if "markup" not in js or js["markup"] is None:
             js["markup"] = {}
         js["markup"]["type"] = str(ttype)
 
@@ -1478,7 +1478,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # Check query parameters
             p0 = FileParams(query, "", "")
 
-            usercode_edit_rules = query.jso.get("markup", {}).get("usercodeEdit", None)
+            usercode_edit_rules = get_param(query, "usercodeEdit", None)
             if p0.by and usercode_edit_rules:
                 p0.by = replace_code(usercode_edit_rules, p0.by)
 
@@ -1996,19 +1996,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if language.delete_tmp:
             removedir(language.prgpath)
 
-        out = out[0 : get_param(query, "maxConsole", 20000)]
-
-        out_replace = get_param(query, "outReplace", None)
-        out_by = get_param(query, "outBy", "")
-        if out_replace:
-            # if type(out_replace) is list:
-            if isinstance(out_replace, list):
-                for rep in out_replace:
-                    replace = rep.get("replace", "")
-                    if replace:
-                        out = re.sub(replace, rep.get("by", out_by), out, flags=re.M)
-            else:
-                out = re.sub(out_replace, out_by, out, flags=re.M)
+        out = text_value_replace(query, out, "outReplace", "outBy")
+        err = text_value_replace(query, err, "errReplace", "errBy")
 
         stdout = get_param(query, "stdout", None)
         if stdout:
