@@ -42,6 +42,8 @@ from tim_common.fileParams import (
     getint,
     get_value,
 )
+from tim_common.utils import replace_in_file
+
 
 """
 Adding new language to csPlugin:
@@ -458,7 +460,10 @@ class Language:
                 ims = self.filepath + "/" + ims
             image_ok, e = copy_file(ims, destname, True, self.is_optional_image)
             if e:
-                err = str(err) + "\n" + str(e) + "\n" + str(out)
+                outtext = ""
+                if self.markup.get("-joinOutToErr", True):
+                    outtext = str(out)
+                err = str(err) + "\n" + str(e) + "\n" + outtext
             # print(self.is_optional_image, image_ok)
             rm_safe(self.imgsource)
             if image_ok:
@@ -560,7 +565,8 @@ def _csharp_get_additional_deps(dep_files: list[str]) -> str:
     applications.
 
     :param dep_files: Dependency files to get dependencies from.
-                      Must be the same filename as the .csproj files defined in dotnet/deps.
+                      Must be the same filename as the .csproj files
+                      defined in dotnet/deps.
     :return: Preformatted argument list for the --additional-deps flag of dotnet.
     """
     return ":".join(f"/cs_data/dotnet/configs/{d}.deps.json" for d in dep_files)
@@ -617,7 +623,7 @@ class CS(Language):
         cmdline = (
             f"{self.compiler} -nologo -out:{self.exename} "
             f"{CS.get_build_refs()} {options} {self.get_sourcefiles()} "
-            f"/cs/dotnet/shims/TIMconsole.cs"
+            "/cs/dotnet/shims/TIMconsole.cs"
         )
         return cmdline
 
@@ -1132,7 +1138,8 @@ class JComtest(Java, Modifier):
     def get_cmdline(self):
         return (
             f"java comtest.ComTest {self.sourcefilename} && javac "
-            f"--enable-preview --release {JAVA_VERSION} "
+            f"--enable-preview --release "
+            f"{JAVA_VERSION} "
             f"{self.sourcefilename} {self.testcs}"
         )
 
@@ -1364,8 +1371,19 @@ class PY3(Language):
         self.wavname = f"{self.rndname}{self.wavsource}"
 
     def run(self, result, sourcelines, points_rule):
+        is_autoplot = self.markup.get("-autoplot", False)
+        was_show = 0
+        if is_autoplot:
+            if not self.imgsource:
+                self.imgsource = "autoplotimage.png"
+            srcfile = f"{self.filepath}/{self.pure_exename}"
+            was_show = replace_in_file(
+                srcfile, "(^[^#\n]+)\\.show\\(\\)", f'\\1.savefig("{self.imgsource}")'
+            )
+
         code, out, err, pwddir = self.runself(["python3", self.pure_exename])
-        out, err = self.copy_image(result, code, out, err, points_rule)
+        if was_show > 0 or not is_autoplot:
+            out, err = self.copy_image(result, code, out, err, points_rule)
         if err:
             err = re.sub(
                 "/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\\)",
