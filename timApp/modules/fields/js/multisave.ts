@@ -316,6 +316,9 @@ export class MultisaveComponent
             }
             savedIndex++;
         }
+        if (!this.allSaved()) {
+            this.setTimer();
+        }
         if (this.markup.autoUpdateTables) {
             this.vctrl.updateAllTables(fieldsToUpdate);
         }
@@ -382,11 +385,34 @@ export class MultisaveComponent
         this.isSaved = false;
         if (!this.timed) {
         }
+        this.setTimer();
+    }
+
+    private setTimer() {
         if (this.timer) {
             window.clearTimeout(this.timer);
         }
         // clear on save? targets should be 0 anyway
         this.timer = window.setTimeout(() => this.save(), 5000);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/require-await
+    private async massSave() {
+        // get targets
+        // get inputs as arr/dict
+        // do request
+        // inform answerbrowsers?
+        // inform plugins
+        const componentsToSave = this.findTargetTasks();
+        const inputs = new Map<string, any>();
+        for (const c of componentsToSave) {
+            const tid = c.getTaskId();
+            const req = c.getSaveReq?.();
+            if (tid && req) {
+                inputs.set(tid.docTask().toString(), req);
+            }
+            // do request here
+        }
     }
 
     public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {

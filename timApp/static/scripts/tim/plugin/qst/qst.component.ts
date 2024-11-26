@@ -12,6 +12,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import type {AngularError, Result} from "tim/util/utils";
 import {defaultErrorMessage, to2} from "tim/util/utils";
 import type {IPreviewParams} from "tim/document/question/answer-sheet.component";
 import {
@@ -33,6 +34,7 @@ import {
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CommonModule} from "@angular/common";
+import type {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,
@@ -280,6 +282,87 @@ export class QstComponent
     isInvalid() {
         return this.attrsall.markup.invalid;
     }
+
+    // begin save sequence
+    public preSave() {
+        // do everything in doSaveText before the request
+        this.log = undefined;
+        this.error = undefined;
+        this.isRunning = true;
+
+        this.result = undefined;
+    }
+
+    public getSaveReq(nosave: boolean) {
+        // return inputs for requests
+        const answers = this.newAnswer;
+
+        const params = {
+            input: {
+                answers,
+                nosave: false,
+            },
+        };
+
+        if (nosave) {
+            params.input.nosave = true;
+        }
+    }
+
+    public afterSave(
+        r: Result<
+            {
+                // asdff
+                web: {
+                    result: string;
+                    show_result: boolean;
+                    state: AnswerTable;
+                    markup?: IQuestionMarkup;
+                    error?: string;
+                };
+            } & IAnswerSaveEvent,
+            AngularError
+        >
+    ) {
+        // do everything in doSaveText after the request
+        this.isRunning = false;
+        if (!r.ok) {
+            this.error =
+                r.result.error.error ??
+                this.attrsall.markup.connectionErrorMessage ??
+                defaultErrorMessage;
+            this.saveFailed = true;
+            return {
+                saved: false,
+                message:
+                    r.result.error.error ??
+                    this.attrsall.markup.connectionErrorMessage,
+            };
+        }
+        const data = r.result;
+        let result = data.web.result;
+        if (result == "Saved") {
+            if (this.attrsall.markup.savedText != undefined) {
+                result = this.attrsall.markup.savedText;
+            } else {
+                result = $localize`Saved`;
+            }
+        }
+        this.result = result;
+        this.log = data.web.error;
+        if (data.web.markup && data.web.show_result) {
+            this.preview = makePreview(data.web.markup, {
+                answerTable: data.web.state,
+                enabled: true,
+            });
+            this.preview.showExplanations = true;
+            this.preview.showCorrectChoices = true;
+        }
+        this.savedAnswer = this.newAnswer;
+        this.saveFailed = false;
+        this.checkChanges();
+    }
+    // end save sequence
 
     private async doSaveText(nosave: boolean) {
         this.log = undefined;
