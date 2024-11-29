@@ -20,22 +20,16 @@ import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/sta
     standalone: true,
     template: `
         <div class="tim-course-manager-container">
-            <div class="heading">
-                <h2>Course manager</h2>
-            </div>
             <div class="container">
-                <p>
-                    Create a course from a template.
-                </p>
                 <form (ngSubmit)="onSubmit()" #f="ngForm">
                     <tim-standalone-textfield name="link" inputType="TEXT" 
                                           [initialValue]="initValue"
-                                              [placeholder]="'Copy from path'"
+                                              [placeholder]="'Copy from path, eg. courses/camp'"
                                           (valueChange)="updatePath($event)"
                     ></tim-standalone-textfield>
                 <tim-standalone-textfield name="link" inputType="TEXT" 
                                           [initialValue]="initValue"
-                                          [placeholder]="'Camp name'"
+                                          [placeholder]="'Name for a copy'"
                                           (valueChange)="updateName($event)"
                     ></tim-standalone-textfield>
                     <button type="submit" class="btn">Create <span class="glyphicon glyphicon-send"></span></button>
