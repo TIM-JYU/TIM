@@ -1017,7 +1017,7 @@ export class AnswerBrowserComponent
         if (this.loading > 0 || this.hidden) {
             return false;
         }
-        if (e.ctrlKey) {
+        if (e.ctrlKey && e.altKey) {
             // e.key does not work on IE but it is more readable, so let's use both
             if (e.key === "ArrowUp" || e.which === KEY_UP) {
                 e.preventDefault();
