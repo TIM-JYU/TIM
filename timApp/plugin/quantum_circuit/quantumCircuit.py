@@ -116,6 +116,11 @@ class AnswerIncorrectError:
 
 
 @dataclass
+class AnswerIncorrectErrorExact:
+    errorType: str = "answer-incorrect-exact"
+
+
+@dataclass
 class MatrixIncorrectError:
     matrix: str
     errorType: str = "matrix-incorrect"
@@ -164,6 +169,7 @@ ErrorType = Union[
     ConditionNotInterpretableError,
     ConditionInvalidError,
     AnswerIncorrectError,
+    AnswerIncorrectErrorExact,
     MatrixIncorrectError,
     TooManyQubitsError,
     TooManyMomentsError,
@@ -195,6 +201,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     samplingMode: str | None = None
     nSamples: int | None = None
     modelCircuit: list[GateInfo] | None = None
+    answerExactMatch: bool | None = None
     modelInput: list[str] | None = None
     modelConditions: list[str] | None = None
     qubits: list[QubitInfo] | None = None
@@ -775,10 +782,72 @@ def check_conditions(
     return True, None
 
 
+def check_gates_equal(gate: GateInfo, gate2: GateInfo) -> bool:
+    """
+    Checks that gates are equal. Order of swap gate targets and control and anti-controls in GateInfo doesn't matter.
+    editable attribute is not considered.
+    :param gate: first gate
+    :param gate2: second gate
+    :return: True if gates are equal False otherwise
+    """
+    if isinstance(gate, SwapGateInfo) and isinstance(gate2, SwapGateInfo):
+        if not (
+            gate.swap1 == gate2.swap1
+            and gate.swap2 == gate2.swap2
+            or gate.swap1 == gate2.swap2
+            and gate.swap2 == gate2.swap1
+        ):
+            return False
+        return (
+            gate.time == gate2.time
+            and sorted(gate.controls if gate.controls else [])
+            == sorted(gate2.controls if gate2.controls else [])
+            and sorted(gate.antiControls if gate.antiControls else [])
+            == sorted(gate2.antiControls if gate2.antiControls else [])
+        )
+    elif isinstance(gate, NormalGateInfo) and isinstance(gate2, NormalGateInfo):
+        return (
+            gate.name == gate2.name
+            and gate.target == gate2.target
+            and gate.time == gate2.time
+            and sorted(gate.controls if gate.controls else [])
+            == sorted(gate2.controls if gate2.controls else [])
+            and sorted(gate.antiControls if gate.antiControls else [])
+            == sorted(gate2.antiControls if gate2.antiControls else [])
+        )
+    else:
+        log_warning(f"quantum: undefined gate type {gate} or {gate2}")
+    return False
+
+
+def check_circuits_equal(
+    model_circuit: list[GateInfo], user_circuit: list[GateInfo]
+) -> bool:
+    """
+    Checks that model_circuit and user_circuit have same gates.
+    :param model_circuit: correct circuit that user_circuit is compared to
+    :param user_circuit: circuit that was created by user
+    :return: True if circuits are equal False otherwise
+    """
+    if len(model_circuit) != len(user_circuit):
+        return False
+    for gate in model_circuit:
+        found = False
+        for gate2 in user_circuit:
+            if check_gates_equal(gate, gate2):
+                found = True
+                break
+        if not found:
+            return False
+
+    return True
+
+
 def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     model_circuit = args.markup.modelCircuit
     model_input = args.markup.modelInput
     model_conditions = args.markup.modelConditions
+    answer_exact_match = args.markup.answerExactMatch
 
     user_circuit = args.input.userCircuit
     user_input = args.input.userInput
@@ -811,22 +880,31 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
         and user_circuit is not None
         and n_qubits is not None
     ):
-        ok, sim_error = run_all_simulations_threaded(
-            model_circuit,
-            user_circuit,
-            n_qubits,
-            custom_gates,
-            model_input,
-            max_run_timeout,
-        )
-
-        if ok:
-            points = 1.0
-            result = "correct"
+        if answer_exact_match:
+            if check_circuits_equal(model_circuit, user_circuit):
+                points = 1.0
+                result = "correct"
+            else:
+                points = 0.0
+                result = ""
+                error = asdict(AnswerIncorrectErrorExact())
         else:
-            points = 0.0
-            result = ""
-            error = asdict(sim_error) if sim_error else "Unknown error"
+            ok, sim_error = run_all_simulations_threaded(
+                model_circuit,
+                user_circuit,
+                n_qubits,
+                custom_gates,
+                model_input,
+                max_run_timeout,
+            )
+
+            if ok:
+                points = 1.0
+                result = "correct"
+            else:
+                points = 0.0
+                result = ""
+                error = asdict(sim_error) if sim_error else "Unknown error"
 
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},
