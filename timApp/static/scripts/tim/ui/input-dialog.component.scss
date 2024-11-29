@@ -5,8 +5,8 @@
     width: 100vw;
     height: 100vh;
     z-index: 100;
-    background-color: #20202020;
-    backdrop-filter: blur(7px);
+    background: black;
+    opacity: 0.5;
     pointer-events: all;
 }
 
