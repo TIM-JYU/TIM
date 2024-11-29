@@ -461,9 +461,7 @@ export class FileSelectManagerComponent implements OnInit {
     }[] = [];
 
     constructor(public cdr: ChangeDetectorRef) {}
-    ngOnInit() {
-        console.log("File select init.");
-    }
+    ngOnInit() {}
 
     get multipleElements() {
         return this.multipleElements_;
