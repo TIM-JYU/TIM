@@ -60,7 +60,7 @@ export type InputDialogParams<T> = {
                        focusMe
                        type="text"
                        *ngIf="isInput && (data.inputType === 'textarea' || data.inputType === undefined)"
-                       [(ngModel)]="value"
+                       [(ngModel)]="value" 
                           (ngModelChange)="clearError()"></textarea>
                 <input (keydown.enter)="ok()"
                        class="form-control"
