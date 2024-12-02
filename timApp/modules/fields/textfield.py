@@ -105,6 +105,10 @@ class TextfieldAnswerWeb(PluginAnswerWeb, total=False):
     clear: bool
 
 
+def multianswer(args: list[TextfieldAnswerModel]) -> list[PluginAnswerResp]:
+    return map args answer
+    pass
+
 def answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
     web: TextfieldAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}

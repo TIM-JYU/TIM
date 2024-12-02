@@ -278,7 +278,10 @@ def call_plugin_generic(
         if headers is None:
             headers = {}
         headers["Accept-Language"] = locale
+    # if plugin == qst:
+    #     return qst.answer(dsdsa)
     try:
+        # this.app.enhuoli = true
         r = do_request(method, url, data, params, headers, read_timeout)
     except (
         requests.exceptions.ConnectTimeout,
