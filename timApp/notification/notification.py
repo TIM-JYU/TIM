@@ -22,6 +22,7 @@ class NotificationType(enum.Enum):
     CommentModified = 6
     CommentDeleted = 7
     AnswerAdded = 8
+    # EmailUnSent = x
 
     @property
     def is_document_modification(self) -> bool:

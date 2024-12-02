@@ -174,6 +174,10 @@ def qst_answer(m):
     return qst_answer_jso(m)
 
 
+# qst_plugin.put(/qst/multianswer)
+# return map (qst_answer, m[])
+
+
 def qst_answer_jso(m: QstAnswerModel):
     tim_info = {}
     answers = m.input.answers
