@@ -153,7 +153,6 @@ class MacroInfo:
                 "useremail": f"{self.macro_delimiter}useremail{self.macro_delimiter}",
                 "loggedUsername": f"{self.macro_delimiter}loggedUsername{self.macro_delimiter}",
                 "userfolder": f"{self.macro_delimiter}userfolder{self.macro_delimiter}",
-                "profilepicture": f"{self.macro_delimiter}profilepicture{self.macro_delimiter}",
             }
         )
         return macros
