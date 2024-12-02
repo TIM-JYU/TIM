@@ -5,7 +5,7 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime, timedelta
 from typing import Sequence, Iterable, Any, Callable
 
-from flask import Response, request, render_template
+from flask import Response, render_template
 from flask_babel import gettext
 from marshmallow import missing, ValidationError
 from marshmallow.fields import Field
@@ -37,8 +37,8 @@ from timApp.plugin.plugin import Plugin
 from timApp.tim_app import app
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import (
-    do_create_group,
     verify_group_access,
+    do_create_group_impl,
 )
 from timApp.user.user import User, UserInfo, manage_access_set
 from timApp.user.usergroup import UserGroup, get_groups_by_ids
@@ -448,8 +448,13 @@ def create_group(
     exam_doc_id: int | None = None,
 ) -> Response:
     group_name = f"{slugify(group_prefix)}-{_clean_group_name(name)}-{slugify(secrets.token_urlsafe(8))}"
-    group_path = f"{group_folder_path}/{group_name}"
-    ug, doc = do_create_group(group_path)
+    group_path_folder = Folder.find_by_path(f"groups/{group_folder_path}")
+    if not group_path_folder:
+        raise NotExist(f"Exam group folder groups/{group_folder_path} does not exist.")
+    # Allow creating exam groups only in the specified folder that the user owns
+    verify_ownership(group_path_folder)
+    # Otherwise, bypass the normal group creation permissions
+    ug, doc = do_create_group_impl(f"{group_folder_path}/{group_name}", group_name)
     doc.title = name
 
     extra_data = {}

@@ -203,10 +203,15 @@ def do_create_group(group_path: str) -> tuple[UserGroup, DocInfo]:
     # Does not check whether a name or a path is missing.
     group_name = group_path.split("/")[-1]
 
+    verify_groupadmin(action=f"Creating group {group_name}")
+
+    return do_create_group_impl(group_path, group_name)
+
+
+def do_create_group_impl(group_path: str, group_name: str) -> tuple[UserGroup, DocInfo]:
     if UserGroup.get_by_name(group_name):
         raise RouteException("User group already exists.")
 
-    verify_groupadmin(action=f"Creating group {group_name}")
     validate_groupname(group_name)
 
     # To support legacy code:
