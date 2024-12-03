@@ -9,5 +9,15 @@
 
 .container {
   padding: 0;
+  margin: 1em 0 1em 0;
   max-width: 100%;
+}
+
+.msg-icon {
+  margin: 0 1em 0 0;
+  font-size: 1.5em;
+}
+
+.msg {
+  vertical-align: top;
 }
