@@ -1,7 +1,7 @@
 from copy import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
-from typing import Any, Mapping, NewType
+from typing import Any, Mapping, NewType, Literal
 
 import dateutil.parser
 import marshmallow
@@ -90,7 +90,7 @@ class AccessField:
 class ModelAnswerInfo:
     answer: str | None | Missing = missing
     count: int | None | Missing = 1
-    disabled: bool | None | Missing = missing
+    disabled: bool | Literal["unless_review"] | None | Missing = missing
     endDate: PluginDateTime | datetime | None | Missing = missing
     groups: list[str] | None | Missing = missing
     hideText: str | None | Missing = missing

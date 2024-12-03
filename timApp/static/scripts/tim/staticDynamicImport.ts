@@ -74,6 +74,10 @@ export function staticDynamicImport(s: string) {
             return import("tim/plugin/userselect/user-select.component");
         case "timMessageListManagement":
             return import("tim/messaging/manage/message-list-manage.module");
+        case "timExamGroupManager":
+            return import(
+                "tim/plugin/examGroupManager/exam-group-manager.component"
+            );
         case "oauthAuthorize":
             return import("tim/user/oauth-authorize.component");
         case "timArchive":

@@ -376,6 +376,12 @@ export class AnswerBrowserComponent
         const isPeerReview = getViewName() == "review";
         this.isPeerReview = isPeerReview;
         this.review = isPeerReview;
+        if (
+            this.viewctrl.docSettings.force_velps &&
+            getViewName() == "teacher"
+        ) {
+            this.review = true;
+        }
         this.peerReviewEnabled = this.viewctrl.peerReviewInProcess() ?? false;
         if (!this.viewctrl.item.rights.teacher && isPeerReview) {
             this.showBrowseAnswers = false;
@@ -1851,8 +1857,11 @@ export class AnswerBrowserComponent
             this.modelAnswer = r.result.data.modelAnswer;
             // Don't show "Show model answer" when it's disabled for viewers
             if (
-                this.modelAnswer.disabled &&
-                !this.viewctrl.item.rights.teacher
+                (this.modelAnswer.disabled === "unless_review" &&
+                    !Users.isInAnswerReview &&
+                    !this.viewctrl.item.rights.teacher) ||
+                (this.modelAnswer.disabled === true &&
+                    !this.viewctrl.item.rights.teacher)
             ) {
                 this.hideModelAnswerPanel = true;
             }

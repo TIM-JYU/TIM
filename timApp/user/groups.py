@@ -1,9 +1,12 @@
+import base64
+import time
+from enum import Flag
 from dataclasses import dataclass
 from operator import attrgetter
 from typing import Any
 
-from flask import Response
-from sqlalchemy import select
+from flask import Response, request
+from sqlalchemy import select, delete
 
 from timApp.auth.accesshelper import (
     verify_admin,
@@ -27,16 +30,22 @@ from timApp.user.special_group_names import (
     SPECIAL_USERNAMES,
 )
 from timApp.user.user import User, view_access_set, edit_access_set
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, get_groups_by_ids
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars, get_current_time
+from timApp.util.logger import log_error
 from tim_common.marshmallow_dataclass import class_schema
 
 groups = TypedBlueprint("groups", __name__, url_prefix="/groups")
 
 USER_NOT_FOUND = "User not found"
+
+
+class NameValidationFlags(Flag):
+    RequireDigits = 1
+    AllowUpperCase = 2
 
 
 def verify_groupadmin(
@@ -164,6 +173,7 @@ def raise_group_not_found_if_none(group_name: str, ug: UserGroup | None):
         raise RouteException(f'User group "{group_name}" not found')
 
 
+# FIXME: Implement
 @groups.get("/create/<path:group_path>")
 def create_group(group_path: str) -> Response:
     """Route for creating a user group.
@@ -181,7 +191,6 @@ def create_group(group_path: str) -> Response:
      2. lowercase ASCII strings (Korppi users) with length being in range [2,8].
 
     """
-
     _, doc = do_create_group(group_path)
     db.session.commit()
     return json_response(doc)
@@ -194,10 +203,15 @@ def do_create_group(group_path: str) -> tuple[UserGroup, DocInfo]:
     # Does not check whether a name or a path is missing.
     group_name = group_path.split("/")[-1]
 
+    verify_groupadmin(action=f"Creating group {group_name}")
+
+    return do_create_group_impl(group_path, group_name)
+
+
+def do_create_group_impl(group_path: str, group_name: str) -> tuple[UserGroup, DocInfo]:
     if UserGroup.get_by_name(group_name):
         raise RouteException("User group already exists.")
 
-    verify_groupadmin(action=f"Creating group {group_name}")
     validate_groupname(group_name)
 
     # To support legacy code:
