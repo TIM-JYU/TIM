@@ -1033,11 +1033,17 @@ export class AnswerBrowserComponent
                 e.preventDefault();
                 await this.changeStudent(1);
                 return true;
-            } else if (e.key === "ArrowLeft" || e.which === KEY_LEFT) {
+            } else if (
+                e.altKey &&
+                (e.key === "ArrowLeft" || e.which === KEY_LEFT)
+            ) {
                 e.preventDefault();
                 await this.changeAnswerTo(-1);
                 return true;
-            } else if (e.key === "ArrowRight" || e.which === KEY_RIGHT) {
+            } else if (
+                e.altKey &&
+                (e.key === "ArrowRight" || e.which === KEY_RIGHT)
+            ) {
                 e.preventDefault();
                 await this.changeAnswerTo(1);
                 return true;
