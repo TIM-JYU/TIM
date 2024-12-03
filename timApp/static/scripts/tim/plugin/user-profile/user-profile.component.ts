@@ -60,7 +60,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
             <div class="container">
                 <div class="left-column">
                     <img id="tim-user-profile-picture" [src]="pictureUrl" alt="profilepic"/>
-                    <ng-container *ngIf="editable" body>
+                    <ng-container *ngIf="editAccess" body>
                         <div>
                             <file-select-manager class="small"
                                                  [dragAndDrop]="dragAndDrop"
@@ -75,7 +75,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                     </ng-container>
                 </div>
                 <div class="right-column">
-                    <ng-container *ngIf="editable" body>
+                    <ng-container *ngIf="editAccess" body>
                         <form (ngSubmit)="onSubmit()" #f="ngForm">
                             <tim-standalone-textfield name="description" inputType="TEXTAREA"
                                                       (valueChange)="updateDescription($event)"
@@ -88,7 +88,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                             <button type="submit" class="btn">Save <span class="glyphicon glyphicon-send"></span></button>
                         </form>
                     </ng-container>
-                    <ng-container *ngIf="!editable">
+                    <ng-container *ngIf="!editAccess">
                         <p>
                             {{ profileData.profile_description }}
                         </p>
@@ -132,8 +132,8 @@ member2
 export class UserProfileComponent implements OnInit {
     @Input() documentId: int = 0;
     @Input() modifyEnabled: boolean = false;
-    userId?: int;
-    editable: boolean = false;
+    @Input() userId?: int;
+    editAccess: boolean = false;
     warn: boolean | null = null;
     pictureUrl: string = "";
     profileUrl: string = "";
@@ -186,10 +186,9 @@ export class UserProfileComponent implements OnInit {
         if (userId != undefined) {
             dataEndpoint = `/profile/${userId}`;
         }
+        console.log(dataEndpoint);
         const data = this.http.get<ProfileData>(dataEndpoint).subscribe({
             next: (res: ProfileData) => {
-                console.log(res);
-
                 this.profileData = {
                     realname: res.realname,
                     email: res.email,
@@ -204,7 +203,7 @@ export class UserProfileComponent implements OnInit {
                 this.profileUrl = res.profile_path;
 
                 if (this.modifyEnabled && this.profileData.edit_access) {
-                    this.editable = true;
+                    this.editAccess = true;
                 }
             },
         });

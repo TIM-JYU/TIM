@@ -34,8 +34,9 @@ import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/sta
                     ></tim-standalone-textfield>
                     <button type="submit" class="btn">Create <span class="glyphicon glyphicon-send"></span></button>
                 </form>
-                <div *ngIf="isCourseCreated"><a [href]="folderCreatedUrl">Link to the course</a></div>
             </div>
+            <div class="alert alert-success" *ngIf="isCourseCreated"><span class="msg-icon glyphicon glyphicon-ok"></span> <a [href]="folderCreatedUrl">Link to the course</a></div>
+            <div *ngIf="fail" class="alert alert-warning flex"><span class="msg-icon glyphicon glyphicon-info-sign"></span><p>{{ failMessage }}</p></div>
         </div>
     `,
 })
@@ -49,20 +50,25 @@ export class CourseManagerComponent implements OnInit {
     courseManagerEndpoint = "/courses/from-template";
     isCourseCreated: boolean = false;
     folderCreatedUrl: string = "";
+    fail: boolean = false;
+    failMessage: string = "";
 
     constructor(private http: HttpClient) {}
 
     ngOnInit() {}
 
     async onSubmit() {
+        // Clear error element
+        this.fail = false;
+
         // Prepare data for submit
         const data: {
             copy_to_dir_name: string;
-            copy_from_id: number | null;
+            // copy_from_id: number | null;
             copy_from_path: string;
         } = {
             copy_to_dir_name: this.courseName,
-            copy_from_id: null,
+            // copy_from_id: null,
             copy_from_path: this.copyPath,
         };
 
@@ -82,6 +88,11 @@ export class CourseManagerComponent implements OnInit {
 
         if (result.ok) {
             this.folderCreatedUrl = `/view/oscar/camps/${data.copy_to_dir_name}`;
+        } else {
+            const msg: string = result.result.error.error;
+            this.fail = true;
+            this.failMessage = msg;
+            // await showMessageDialog();
         }
 
         return result;

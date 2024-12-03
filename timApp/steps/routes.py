@@ -4,8 +4,6 @@ from sqlalchemy import ForeignKey, select
 from sqlalchemy.orm import mapped_column, Mapped
 from timApp.timdb.sqa import db, run_sql
 from timApp.util.flask.responsehelper import json_response
-from tim_common.marshmallow_dataclass import dataclass
-import json
 
 from flask import Blueprint, Response
 
@@ -14,18 +12,12 @@ from timApp.auth.sessioninfo import (
     logged_in,
     get_current_user_group,
 )
-from timApp.timdb.sqa import db
 from timApp.user.user import User, UserGroup
-from timApp.document.docentry import DocEntry, get_documents
+from timApp.document.docentry import DocEntry
 from timApp.util.flask.requesthelper import RouteException, NotExist
 
 from dataclasses import dataclass
 from flask import request
-from timApp.upload.upload import upload_file, upload_image_or_file
-from timApp.upload.uploadedfile import (
-    UploadedFile,
-)
-from timApp.auth.accesstype import AccessType
 
 steps_blueprint = Blueprint("steps", __name__, url_prefix="/steps")
 
@@ -54,12 +46,12 @@ class StepsPhase(db.Model):
     current_phase: Mapped[int]
 
     @staticmethod
-    def find_by_id(steps_id: int) -> Optional["StepsPhase"]:
+    def find_by_id(steps_id: int) -> "StepsPhase":
         return db.session.get(StepsPhase, steps_id)
 
     @staticmethod
     def find_by_task(doc_id: int, name: str, user_group: int) -> Optional["StepsPhase"]:
-        step: StepsPhase = (
+        step: StepsPhase | None = (
             run_sql(
                 select(StepsPhase)
                 .filter_by(document_id=doc_id, name=name, user_group=user_group)
@@ -75,13 +67,13 @@ class StepsPhase(db.Model):
     def find_all_by_user_group(user_group: UserGroup) -> list[Optional["StepsPhase"]]:
         return db.session.get(StepsPhase, user_group.name)
 
-    def change_current_step(self, new_step: int = 0):
+    def change_current_step(self, new_step: int = 0) -> "StepsPhase":
         self.current_phase = new_step
         db.session.commit()
         return self
 
     @staticmethod
-    def create(name: str, doc_id, current_phase: int = 0) -> "StepsPhase":
+    def create(name: str, doc_id: int, current_phase: int = 0) -> "StepsPhase":
         steps = StepsPhase(
             name=name,
             document_id=doc_id,
@@ -93,7 +85,7 @@ class StepsPhase(db.Model):
         db.session.commit()
         return steps
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
             "id": self.id,
             "document_id": self.document_id,
@@ -124,8 +116,11 @@ def get_steps_data(steps_id: int | None = None) -> Response:
         steps = StepsPhase.find_all_by_user_group(user.groups[0])
         return json_response(steps)
 
-    step = StepsPhase.find_by_id(steps_id)
-    return json_response(step.to_json())
+    steps = StepsPhase.find_by_id(steps_id)
+    if steps is None:
+        raise NotExist("Steps element does not exist.")
+
+    return json_response(steps.to_json())
 
 
 @steps_blueprint.post("/create")

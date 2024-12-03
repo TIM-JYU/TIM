@@ -1,18 +1,19 @@
 """
 Contains course related routes.
 """
+from dataclasses import dataclass
 
 from flask import Blueprint, current_app, Response, request
 from sqlalchemy.orm import selectinload
 
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
-from timApp.document.create_item import create_or_copy_item
 from timApp.folder.folder import Folder
-from timApp.item.block import Block, BlockType
+from timApp.item.block import Block
 from timApp.item.manage import do_copy_folder
-from timApp.timdb.sqa import db
+from timApp.util.flask.requesthelper import load_data_from_req, NotExist
 from timApp.util.flask.responsehelper import json_response
+from tim_common.marshmallow_dataclass import class_schema
 
 course_blueprint = Blueprint("course", __name__, url_prefix="/courses")
 
@@ -58,25 +59,25 @@ def get_documents_from_bookmark_folder(foldername: str) -> Response:
     return json_response(docs)
 
 
+@dataclass
+class CourseTemplateInitModel:
+    copy_to_dir_name: str
+    # copy_from_id: str
+    copy_from_path: str
+
+
+CourseTemplateInitModelSchema = class_schema(CourseTemplateInitModel)
+
+
 @course_blueprint.post("/from-template")
 def create_course_from_template() -> Response:
-    data = {**request.get_json()}
-    copy_to_dir_name: str = data.get("copy_to_dir_name")
-    copy_from_id: str = data.get("copy_from_id")
-    copy_from_path: str = data.get("copy_from_path")
+    data: CourseTemplateInitModel = load_data_from_req(CourseTemplateInitModelSchema)
+    copy_to_dir_name: str = data.copy_to_dir_name
+    #  copy_from_id: str = data.copy_from_id
+    copy_from_path: str = data.copy_from_path
     folder = Folder.find_by_path(copy_from_path)
-
-    # documents: list[DocEntry] = get_documents(
-    #     include_nonpublic=True, filter_folder=copy_from_path
-    # )
-    #
-    # for item in documents:
-    #     created = create_or_copy_item(
-    #         f"kurssit/{copy_to_dir_name}/{item.short_name}",
-    #         BlockType.Document,
-    #         item.short_name,
-    #         use_template=False,
-    #     )
+    if not folder:
+        raise NotExist("No template folder found.")
 
     # TODO: provide info, if document exist
 
@@ -84,4 +85,4 @@ def create_course_from_template() -> Response:
         folder_id=folder.id, destination=f"oscar/camps/{copy_to_dir_name}", exclude=None
     )
 
-    return Response(json_response(copied[0].url))
+    return json_response({"url": copied[0].url})

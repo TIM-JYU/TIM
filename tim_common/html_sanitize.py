@@ -269,6 +269,7 @@ TIM_SAFE_ATTRS = frozenset(
         "button-text",
         "wrapper",
         "document-id",
+        "user-id",
         "modify-enabled",
     ]
 )
