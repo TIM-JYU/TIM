@@ -10497,6 +10497,14 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
           <context context-type="linenumber">625,627</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3038653550894083290" datatype="html">
+        <source>The circuit is incorrect</source>
+        <target state="translated">Piiri on väärin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
