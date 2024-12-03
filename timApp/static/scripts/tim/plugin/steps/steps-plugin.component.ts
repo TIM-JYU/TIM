@@ -1,27 +1,20 @@
+import * as t from "io-ts";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
+import {CommonModule} from "@angular/common";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {PurifyModule} from "tim/util/purify.module";
+import {type AngularError, type Result, toPromise} from "tim/util/utils";
+import type {TaskId} from "tim/plugin/taskid";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     nullable,
     withDefault,
-} from "../attributes";
-import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    Input,
-    NgModule,
-    OnInit,
-} from "@angular/core";
-import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {CommonModule} from "@angular/common";
-import {HttpClientModule} from "@angular/common/http";
-import {FormsModule} from "@angular/forms";
-import {registerPlugin} from "../pluginRegistry";
-import {PurifyModule} from "tim/util/purify.module";
-import {type AngularError, type Result, toPromise} from "tim/util/utils";
-import {TaskId} from "tim/plugin/taskid";
-import {Subscription} from "rxjs";
+} from "tim/plugin/attributes";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 
 const TSteps = t.type({
     name: t.string,
@@ -83,7 +76,7 @@ interface StepsState {
                             <h3>{{ step.name }}</h3>
                             <div class="step-content"
                                  [style.border-left-style]="currentStep >= i ? 'solid' : 'dashed'">
-                                <p [innerHTML]="step.description | purify">This is the intermediate element</p>
+                                <p [innerHTML]="step.description | purify"></p>
                             </div>
                         </div>
                         <div class="step"
@@ -108,12 +101,9 @@ export class StepsPluginComponent extends AngularPluginBase<
     t.TypeOf<typeof PluginFields>,
     typeof PluginFields
 > {
-    documentId: number = 0;
-    modifyEnabled: boolean = false;
     editable: boolean = false;
     active: boolean = true;
     isCompleted: boolean = false;
-    stepsEndpoint: string = "/steps/create/";
     steps: Steps[] = [];
     lastStep: Steps | undefined;
     currentStep: number = 0;
@@ -127,11 +117,13 @@ export class StepsPluginComponent extends AngularPluginBase<
     }
 
     async switchComplete(event: Event, index: number) {
+        // Switch step in the component view and assign it to the request data.
         this.currentStep = index;
         const data: TaskId | undefined = Object.assign({}, this.getTaskId(), {
             currentStep: this.currentStep,
         });
 
+        // Post the step phase change to database
         const endpoint = "/steps/switch";
         const response = toPromise(
             this.http.post<{ok: boolean}>(endpoint, data)
@@ -140,16 +132,6 @@ export class StepsPluginComponent extends AngularPluginBase<
         // Get result from response of the endpoint.
         const result: Result<{ok: boolean}, AngularError> = await response;
         console.log(result);
-
-        /*
-        const r = await this.postAnswer<{
-            web: {result: string; error?: string};
-        }>({
-            input: {
-                current_step: this.isCompleted ? 1 : 0,
-            },
-        });
-        */
 
         return result;
     }
@@ -164,7 +146,13 @@ export class StepsPluginComponent extends AngularPluginBase<
 
     getStepsState(): void {
         const plugin: TaskId | undefined = this.getTaskId();
-        let endpoint: string = `/steps/${plugin?.docId}/${plugin?.name}`;
+
+        // TODO: inform user about the problem, missing plugin or missing doc id
+        if (plugin?.docId == undefined) {
+            return;
+        }
+
+        const endpoint: string = `/steps/${plugin.docId}/${plugin.name}`;
         this.http.get<StepsState>(endpoint).subscribe({
             next: (res: StepsState) => {
                 console.log(res);
@@ -172,20 +160,6 @@ export class StepsPluginComponent extends AngularPluginBase<
             },
         });
         return;
-    }
-
-    async onSubmit() {
-        console.log(this.markup.steps);
-        const data = {};
-        const endpoint = "/steps/create";
-        // const response = toPromise(
-        //    this.http.post<{ok: boolean}>(endpoint, data)
-        //);
-
-        // Get result from response of the endpoint.
-        //const result: Result<{ok: boolean}, AngularError> = await response;
-        //console.log(result);
-        //return result;
     }
 }
 
