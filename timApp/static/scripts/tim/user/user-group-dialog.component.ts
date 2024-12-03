@@ -8,6 +8,15 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
 
+/**
+ * Defines additional parameters for creating new user groups via the UserGroupDialog.
+ */
+export interface UserGroupDialogParams {
+    defaultGroupFolder?: string;
+    canChooseFolder?: boolean;
+    adminDocTitle?: string;
+}
+
 @Component({
     selector: "tim-user-group-dialog",
     template: `
@@ -46,9 +55,10 @@ import {CommonModule} from "@angular/common";
                                 <input i18n-placeholder type="text"
                                        [(ngModel)]="folder"
                                        (ngModelChange)="setMessage()"
+                                       [disabled]="!canChooseFolder()"
                                        id="folder" name="folder"
                                        class="form-control"
-                                       placeholder="Enter the location or leave empty">
+                                       placeholder="{{getDefaultFolder() ?? 'Enter the location or leave empty'}}">
                             </div>
                         </div>
                     </div>
@@ -89,11 +99,10 @@ import {CommonModule} from "@angular/common";
     `,
 })
 export class UserGroupDialogComponent extends AngularDialogComponent<
-    undefined,
+    UserGroupDialogParams,
     IDocument
 > {
     protected dialogName = "UserGroupCreate";
-
     name = "";
     folder = "";
     message?: string;
@@ -102,9 +111,22 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
         super();
     }
 
+    ngOnInit() {
+        if (!this.canChooseFolder() && this.data.defaultGroupFolder) {
+            this.folder = this.getDefaultFolder() ?? "";
+        }
+    }
+
     async saveGroup(): Promise<void> {
-        const request = `/groups/create/${this.getFolderName()}`;
-        const response = await toPromise(this.http.get<IDocument>(request));
+        let opts: Record<string, string> = {};
+        if (this.data.adminDocTitle) {
+            opts = {adminDocTitle: this.data.adminDocTitle};
+        }
+        const response = await toPromise(
+            this.http.get<IDocument>(`/groups/create/${this.getFolderName()}`, {
+                params: opts,
+            })
+        );
 
         if (response.ok) {
             this.close(response.result);
@@ -117,14 +139,21 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
      * User group must always have a name, but folder is optional.
      */
     private getFolderName(): string {
-        if (this.folder) {
-            return this.folder + "/" + this.name;
-        }
-        return this.name;
+        return this.folder ? this.folder + "/" + this.name : this.name;
     }
 
     setMessage(message?: string): void {
         this.message = message;
+    }
+
+    canChooseFolder(): boolean {
+        // if the `canChooseFolder` param isn't set, user should be able to set the folder
+        return this.data?.canChooseFolder ?? true;
+    }
+
+    getDefaultFolder(): string | undefined {
+        // TODO return empty string instead of undefined?
+        return this.data?.defaultGroupFolder;
     }
 }
 

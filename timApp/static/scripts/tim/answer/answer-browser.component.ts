@@ -376,6 +376,12 @@ export class AnswerBrowserComponent
         const isPeerReview = getViewName() == "review";
         this.isPeerReview = isPeerReview;
         this.review = isPeerReview;
+        if (
+            this.viewctrl.docSettings.force_velps &&
+            getViewName() == "teacher"
+        ) {
+            this.review = true;
+        }
         this.peerReviewEnabled = this.viewctrl.peerReviewInProcess() ?? false;
         if (!this.viewctrl.item.rights.teacher && isPeerReview) {
             this.showBrowseAnswers = false;
@@ -1027,11 +1033,17 @@ export class AnswerBrowserComponent
                 e.preventDefault();
                 await this.changeStudent(1);
                 return true;
-            } else if (e.key === "ArrowLeft" || e.which === KEY_LEFT) {
+            } else if (
+                e.altKey &&
+                (e.key === "ArrowLeft" || e.which === KEY_LEFT)
+            ) {
                 e.preventDefault();
                 await this.changeAnswerTo(-1);
                 return true;
-            } else if (e.key === "ArrowRight" || e.which === KEY_RIGHT) {
+            } else if (
+                e.altKey &&
+                (e.key === "ArrowRight" || e.which === KEY_RIGHT)
+            ) {
                 e.preventDefault();
                 await this.changeAnswerTo(1);
                 return true;
@@ -1851,8 +1863,11 @@ export class AnswerBrowserComponent
             this.modelAnswer = r.result.data.modelAnswer;
             // Don't show "Show model answer" when it's disabled for viewers
             if (
-                this.modelAnswer.disabled &&
-                !this.viewctrl.item.rights.teacher
+                (this.modelAnswer.disabled === "unless_review" &&
+                    !Users.isInAnswerReview &&
+                    !this.viewctrl.item.rights.teacher) ||
+                (this.modelAnswer.disabled === true &&
+                    !this.viewctrl.item.rights.teacher)
             ) {
                 this.hideModelAnswerPanel = true;
             }

@@ -1,0 +1,240 @@
+tabset.merged ::ng-deep .tab-content {
+  display: grid;
+  grid-template-areas: "tab";
+  grid-template-rows: max-content;
+
+  & > tab {
+    visibility: hidden;
+    grid-area: tab;
+
+    &.active {
+      visibility: visible;
+    }
+  }
+}
+
+.info-box {
+  margin-bottom: 1em;
+}
+
+.loading-spinner {
+  display: flex;
+  gap: 0.5em;
+}
+
+.info-text {
+  color: #4c4c4c;
+  pointer-events: none;
+  font-size: 0.8em;
+  margin-top: 0.5em;
+}
+
+.list-archive-policy-header {
+  margin-bottom: 0.5em;
+  font-weight: bold;
+}
+
+tab {
+  margin-top: 1em;
+  margin-bottom: 1em;
+
+  h4 {
+    font-size: 1em;
+  }
+}
+
+.grid-tab {
+  display: grid !important;
+  grid-template-columns: max-content;
+  grid-auto-rows: max-content min-content;
+  grid-template-areas: "tab-main-content" "tab-controls";
+  align-items: baseline;
+  gap: 1em 0.5em;
+}
+
+textarea {
+  min-height: 10em;
+  resize: vertical;
+}
+
+.save-button {
+
+  & > * {
+    margin-top: 0.5em;
+  }
+
+  div {
+    display: flex;
+    align-items: center;
+  }
+
+  tim-loading {
+    margin-left: 1em;
+    vertical-align: baseline;
+  }
+}
+
+tim-alert {
+  display: block;
+}
+
+#actions-panel .actions {
+  display: flex;
+  align-items: center;
+
+  column-gap: 0.5em;
+}
+
+#members-tab .contents {
+  display: flex;
+  flex-direction: column;
+
+  & > *:not(:first-child) {
+    margin-top: 0.5em;
+  }
+
+  & label {
+    margin-bottom: 0;
+  }
+}
+
+.add-members-help {
+  margin-left: 0.5em;
+}
+
+#current-members-tab .contents {
+  display: flex;
+  flex-direction: column;
+
+  & > *:not(:first-child) {
+    margin-top: 0.5em;
+  }
+}
+
+input[type="checkbox"], input[type="radio"] {
+  margin-right: 0.5em;
+}
+
+.section {
+  padding-bottom: 1.5em;
+}
+
+.tab-form {
+  ul {
+    list-style: none;
+    padding-left: 1.5em;
+
+    label {
+      font-weight: normal;
+    }
+  }
+
+  div > ul {
+    padding-left: 0;
+  }
+}
+
+.indented {
+  // Indent by uniform amount.
+  margin-left: 2em;
+}
+
+.indented-more {
+  // Some elements are sub-elements, those are indented a bit more.
+  margin-left: 4em;
+}
+
+#domain-indicator {
+  padding: 0 0.25em;
+}
+
+.member-table-row {
+  font-size: 0.9em;
+}
+
+tbody {
+  // Tables, especially the one showing group's members, might be hundreds of rows long. We don't want that to make the
+  // table and by extension the page unnecessarily long, so add scrolling to table's body.
+  overflow: scroll;
+  max-height: 40em;
+}
+
+.not-implemented {
+  color: #b3b3b3;
+}
+
+.button-controls {
+  display: flex;
+  gap: 0.25em;
+}
+
+.group-table {
+  margin: 1em 0;
+}
+
+.copy-members-field {
+  display: inline-flex;;
+}
+
+.checklist {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-auto-rows: 1fr;
+
+
+  & > div {
+    display: contents;
+
+    & > * {
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-bottom: 0.5em;
+      padding-top: 0.5em;
+
+      &:last-child {
+        padding-right: 1em;
+        align-items: end;
+      }
+
+      &:first-child {
+        padding-left: 1em;
+      }
+    }
+
+    &.disabled > * {
+      background: #efefef;
+      color: #717171;
+    }
+  }
+
+  .cb {
+    padding-right: 1em;
+  }
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+  }
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.select-exam {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+
+  & label {
+    text-wrap: nowrap;
+  }
+}
+
+.mt {
+    margin-top: 1em;
+}
