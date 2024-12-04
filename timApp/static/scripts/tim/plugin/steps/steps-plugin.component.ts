@@ -5,8 +5,6 @@ import {CommonModule} from "@angular/common";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {PurifyModule} from "tim/util/purify.module";
-import {type AngularError, type Result, toPromise} from "tim/util/utils";
-import type {TaskId} from "tim/plugin/taskid";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
@@ -40,15 +38,6 @@ const PluginFields = t.intersection([
         ),
     }),
 ]);
-
-interface StepsState {
-    id: number;
-    documentId: number;
-    user_working_group: number;
-    user_group: number;
-    name: string;
-    current_phase: number;
-}
 
 @Component({
     selector: "tim-steps-plugin",
@@ -113,27 +102,27 @@ export class StepsPluginComponent extends AngularPluginBase<
         this.steps = this.markup.steps;
         this.lastStep = this.steps.pop();
         this.isCompleted = !!this.attrsall.state?.current_step;
-        this.getStepsState();
+        if (this.attrsall.state?.current_step != undefined) {
+            this.currentStep = this.attrsall.state?.current_step;
+        }
     }
 
     async switchComplete(event: Event, index: number) {
         // Switch step in the component view and assign it to the request data.
         this.currentStep = index;
-        const data: TaskId | undefined = Object.assign({}, this.getTaskId(), {
-            currentStep: this.currentStep,
-        });
+        const params = {
+            input: {
+                current_step: this.currentStep,
+            },
+        };
 
-        // Post the step phase change to database
-        const endpoint = "/steps/switch";
-        const response = toPromise(
-            this.http.post<{ok: boolean}>(endpoint, data)
-        );
-
-        // Get result from response of the endpoint.
-        const result: Result<{ok: boolean}, AngularError> = await response;
-        console.log(result);
-
-        return result;
+        // TODO: make visible error messages, if save not valid etc.
+        const r = await this.postAnswer<{
+            web: {result: string; error?: string};
+        }>(params);
+        if (r.ok) {
+            console.log("Step updated.");
+        }
     }
 
     getAttributeType() {
@@ -142,24 +131,6 @@ export class StepsPluginComponent extends AngularPluginBase<
 
     getDefaultMarkup() {
         return {};
-    }
-
-    getStepsState(): void {
-        const plugin: TaskId | undefined = this.getTaskId();
-
-        // TODO: inform user about the problem, missing plugin or missing doc id
-        if (plugin?.docId == undefined) {
-            return;
-        }
-
-        const endpoint: string = `/steps/${plugin.docId}/${plugin.name}`;
-        this.http.get<StepsState>(endpoint).subscribe({
-            next: (res: StepsState) => {
-                console.log(res);
-                this.currentStep = res.current_phase;
-            },
-        });
-        return;
     }
 }
 
