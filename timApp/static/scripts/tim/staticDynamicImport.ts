@@ -104,6 +104,8 @@ export function staticDynamicImport(s: string) {
             return import(
                 "tim/plugin/symbolbutton/symbol-button-plugin.component"
             );
+        case "steps":
+            return import("tim/plugin/steps/steps-plugin.component");
     }
     throw Error(`Module was not statically known: ${s}`);
 }

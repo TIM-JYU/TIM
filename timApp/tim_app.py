@@ -96,6 +96,9 @@ from timApp.printing.printeddoc import PrintedDoc
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.slide.slidestatus import SlideStatus
+
+# from timApp.steps.routes import StepsPhase
+
 from timApp.timdb.sqa import db
 from timApp.user.consentchange import ConsentChange
 from timApp.user.hakaorganization import HakaOrganization
@@ -205,6 +208,7 @@ all_models = (
     ScimUserGroup,
     ShowPoints,
     SlideStatus,
+    #  StepsPhase,
     Tag,
     TaskBlock,
     Translation,

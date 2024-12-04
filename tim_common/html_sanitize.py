@@ -114,6 +114,11 @@ TIM_SAFE_TAGS = [
     "tim-message-send",
     "tim-notification-options",
     "tim-search-button",
+    "tim-user-profile",
+    "tim-steps",
+    "standalone-textfield",
+    "tim-participant-list",
+    "tim-course-manager",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
@@ -263,6 +268,9 @@ TIM_SAFE_ATTRS = frozenset(
         "folder",
         "button-text",
         "wrapper",
+        "document-id",
+        "user-id",
+        "modify-enabled",
     ]
 )
 
