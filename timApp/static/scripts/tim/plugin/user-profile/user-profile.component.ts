@@ -14,7 +14,6 @@ import type {
     IFile,
     IFileSpecification,
 } from "../../../../../modules/cs/js/util/file-select";
-import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/standalone-textfield.component";
 
 interface ProfileData extends Object {
     username?: string;
@@ -43,12 +42,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 @Component({
     selector: "tim-user-profile",
     styleUrls: ["./user-profile.component.scss"],
-    imports: [
-        StandaloneTextfieldComponent,
-        CsUtilityModule,
-        FormsModule,
-        CommonModule,
-    ],
+    imports: [CsUtilityModule, FormsModule, CommonModule],
     standalone: true,
     template: `
         <div class="tim-user-profile-container">
@@ -76,15 +70,19 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                 </div>
                 <div class="right-column">
                     <ng-container *ngIf="editAccess" body>
-                        <form (ngSubmit)="onSubmit()" #f="ngForm">
-                            <tim-standalone-textfield name="description" inputType="TEXTAREA"
-                                                      (valueChange)="updateDescription($event)"
-                                                      [initialValue]="profileData.profile_description"
-                                                      [inputWarn]="warn"></tim-standalone-textfield>
-                            <tim-standalone-textfield #i name="link" inputType="TEXT" *ngFor="let item of profileData.profile_links; index as i; trackBy: linkTrackBy"
-                                                      (valueChange)="updateLink($event, i)"
-                                                        [initialValue]="profileData.profile_links[i]"
-                                                      [inputWarn]="warn"></tim-standalone-textfield>
+                        <form (ngSubmit)="onSubmit()" #f="ngForm" class="form">
+                            <span class="textfield">
+                            <textarea name="description"  class="form-control textarea"
+                                                      (ngModelChange)= "setWarning('description')"
+                                                        [class.warnFrame]="checkWarning('description')"    
+                                                      [ngModel]="profileData.profile_description"></textarea></span>
+                            
+                                <span class="textfield">
+                            <input #i name="link" class="form-control" type="text" *ngFor="let item of profileData.profile_links; index as i; trackBy: linkTrackBy"
+                                                      (ngModelChange)="setWarning(i.toString())"
+                                                        [ngModel]="profileData.profile_links[i]"
+                                   [class.warnFrame]="checkWarning(i.toString())" /> 
+</span>
                             <button type="submit" class="btn">Save <span class="glyphicon glyphicon-send"></span></button>
                         </form>
                     </ng-container>
@@ -134,7 +132,7 @@ export class UserProfileComponent implements OnInit {
     @Input() modifyEnabled: boolean = false;
     @Input() userId?: int;
     editAccess: boolean = false;
-    warn: boolean | null = null;
+    warnings: string[] = [];
     pictureUrl: string = "";
     profileUrl: string = "";
     uploadUrl?: string;
@@ -236,8 +234,7 @@ export class UserProfileComponent implements OnInit {
 
     async onSubmit() {
         // Reset changes warning in child component.
-        // TODO: change the warning impl to be more efficient
-        this.warn = false;
+        this.warnings = [];
 
         // Prepare data for submit
 
@@ -251,16 +248,17 @@ export class UserProfileComponent implements OnInit {
         // Get result from response of the endpoint.
         const result: Result<{ok: boolean}, AngularError> = await response;
 
-        this.warn = null;
         return result;
     }
 
-    updateDescription($event: string) {
-        this.profileData.profile_description = $event;
+    setWarning(name: string) {
+        if (!this.warnings.includes(name)) {
+            this.warnings.push(name);
+        }
     }
 
-    updateLink($event: string, i: number) {
-        this.profileData.profile_links[i] = $event;
+    checkWarning(name: string) {
+        return this.warnings.includes(name);
     }
 
     linkTrackBy(i: number, item: string): number {
