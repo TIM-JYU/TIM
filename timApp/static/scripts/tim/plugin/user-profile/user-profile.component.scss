@@ -1,3 +1,5 @@
+@import "modules/fields/js/fields-box-common";
+
 tim-user-profile {
   width: 100%;
   padding: 0;
@@ -63,4 +65,12 @@ tim-user-profile {
 
 form {
   width: 100%;
+}
+
+.form-control {
+  margin: 1em 0 1em 0;
+}
+
+.textarea {
+  height: 5em;
 }
