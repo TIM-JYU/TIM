@@ -53,6 +53,9 @@ class IdeFile:
     filename: str | None = None
     """ Name of the file """
 
+    task_directory: str | None = None
+    """ Directory of the task """
+
     userinput: str | None = ""
     """ User input for the file """
 
@@ -155,6 +158,7 @@ class IdeFile:
             "task_id_ext": self.taskIDExt,
             "content": self.content,
             "file_name": self.filename,
+            "task_directory": self.task_directory,
             "user_input": self.userinput,
             "user_args": self.userargs or "",
         }
@@ -235,6 +239,11 @@ class TIDEPluginData:
     path: str | None = None
     """
     Path to the task
+    """
+
+    task_directory: str | None = None
+    """
+    Directory of the task
     """
 
     header: str | None = None
@@ -676,6 +685,9 @@ def get_ide_user_plugin_data(
         if ide_file.filename is None:
             ide_file.filename = language.get_filename()
 
+        if ide_file.task_directory is None:
+            ide_file.task_directory = language.get_task_directory()
+
         # If the task type is defined, try to generate file extension.
         if task_info.type is not None:
             ide_file.generate_file_extension(task_info.type)
@@ -703,6 +715,7 @@ def get_ide_user_plugin_data(
         type=task_info.type,
         path=doc.path,
         task_id=task_id.task_name,
+        task_directory=ide_file.task_directory,
         doc_id=doc.id,
         par_id=par.id,
         ide_task_id=ide_task_id,
