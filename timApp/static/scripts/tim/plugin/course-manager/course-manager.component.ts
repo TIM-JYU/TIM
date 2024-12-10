@@ -22,16 +22,16 @@ import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/sta
         <div class="tim-course-manager-container">
             <div class="container">
                 <form (ngSubmit)="onSubmit()" #f="ngForm">
-                    <tim-standalone-textfield name="link" inputType="TEXT" 
-                                          [initialValue]="initValue"
-                                              [placeholder]="'Copy from path, eg. courses/camp'"
-                                          (valueChange)="updatePath($event)"
-                    ></tim-standalone-textfield>
-                <tim-standalone-textfield name="link" inputType="TEXT" 
-                                          [initialValue]="initValue"
-                                          [placeholder]="'Name for a copy'"
-                                          (valueChange)="updateName($event)"
-                    ></tim-standalone-textfield>
+                    <input name="course" class="form-control" type="text"
+                           (ngModelChange)="setWarning('course')"
+                           [(ngModel)]="copyPath"
+                           [placeholder]="'Copy from path, eg. courses/camp'"
+                           [class.warnFrame]="checkWarning('course')" /> 
+                    <input name="link" class="form-control" type="text"
+                           (ngModelChange)="setWarning('link')"
+                           [(ngModel)]="courseName"
+                           [placeholder]="'Name for a copy'"
+                           [class.warnFrame]="checkWarning('link')" /> 
                     <button type="submit" class="btn">Create <span class="glyphicon glyphicon-send"></span></button>
                 </form>
             </div>
@@ -46,13 +46,13 @@ export class CourseManagerComponent implements OnInit {
     editable: boolean = false;
     initValue: string = "";
     courseName: string = "";
-    copyPath: string = "oscar/sample-camp";
+    copyPath: string = "";
     courseManagerEndpoint = "/courses/from-template";
     isCourseCreated: boolean = false;
     folderCreatedUrl: string = "";
     fail: boolean = false;
     failMessage: string = "";
-
+    warnings: string[] = [];
     constructor(private http: HttpClient) {}
 
     ngOnInit() {}
@@ -98,12 +98,14 @@ export class CourseManagerComponent implements OnInit {
         return result;
     }
 
-    updateName($event: string) {
-        this.courseName = $event;
+    setWarning(name: string) {
+        if (!this.warnings.includes(name)) {
+            this.warnings.push(name);
+        }
     }
 
-    updatePath($event: string) {
-        this.copyPath = $event;
+    checkWarning(name: string) {
+        return this.warnings.includes(name);
     }
 }
 
