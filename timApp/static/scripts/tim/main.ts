@@ -63,6 +63,9 @@ import {CopyFolderComponent} from "tim/folder/copy-folder.component";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
 import {ParRefComponent} from "tim/document/par-ref.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
+import {UserProfileComponent} from "tim/plugin/user-profile/user-profile.component";
+import {ParticipantListComponent} from "tim/plugin/participant-list/participant-list.component";
+import {CourseManagerComponent} from "tim/plugin/course-manager/course-manager.component";
 import {
     handleExpiredSession,
     SESSION_VERIFICATION_NEEDED_CODE,
@@ -148,7 +151,9 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timSearchButton", SearchButtonComponent);
     doDowngrade(dg, "timRoleInfo", RoleInfoComponent);
     doDowngrade(dg, "csFormulaEditorLoader", FormulaEditorLoaderComponent);
-
+    doDowngrade(dg, "timUserProfile", UserProfileComponent);
+    doDowngrade(dg, "timParticipantList", ParticipantListComponent);
+    doDowngrade(dg, "timCourseManager", CourseManagerComponent);
     return dg;
 }
 

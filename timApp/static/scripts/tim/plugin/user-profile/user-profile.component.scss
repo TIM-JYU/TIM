@@ -1,0 +1,76 @@
+@import "modules/fields/js/fields-box-common";
+
+tim-user-profile {
+  width: 100%;
+  padding: 0;
+  background-color: yellow;
+}
+
+.tim-user-profile-container {
+  box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+  padding: 1em;
+  border-radius: 1em;
+  margin: 2em 0 2em 0;
+}
+
+:host(tim-user-profile) {
+
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "left right";
+  padding: 0;
+  max-width: 100%;
+
+}
+
+.left-column {
+  grid-area: left;
+  padding: .5em;
+}
+
+.right-column {
+  padding: .5em;
+  grid-area: right;
+}
+
+.btn-profile {
+  height: 3em;
+}
+
+.profile-heading {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.profile-heading h2 {
+  margin: unset;
+}
+
+#tim-user-profile-picture {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  width: 50%;
+  object-fit: cover;
+  margin: 1em auto 1em auto;
+}
+
+.profile-picture-box {
+  margin: 1em;
+}
+
+form {
+  width: 100%;
+}
+
+.form-control {
+  margin: 1em 0 1em 0;
+}
+
+.textarea {
+  height: 5em;
+}

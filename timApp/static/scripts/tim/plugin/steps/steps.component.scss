@@ -1,0 +1,125 @@
+.tim-steps-container {
+  position: relative;
+  box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+  padding: 1em;
+  border-radius: 1em;
+  margin: 2em 0 2em 0;
+  z-index: 10;
+}
+
+.container {
+  padding: 0;
+  max-width: 100%;
+}
+
+.step-list {
+}
+
+.step-num {
+  padding: 1em;
+  margin: .5em 1em .5em 0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:1em;
+  height:1em;
+  border-radius:50%;
+  background-color: #0F409620;
+  color: #0F0C00;
+  font-weight: bold;
+}
+
+.step-content {
+  border-left: .2em dashed #0F4096;
+  margin: 0 0 0 1em;
+  padding: 0 0 .5em 1em;
+}
+
+.step-content-completed {
+  border-style: solid;
+}
+
+.step h3 {
+  display: inline;
+}
+
+.step {
+
+}
+
+.step-upcoming {
+  opacity: 50%;
+}
+
+.last-step-num-completed {
+  background-color: #00AA00;
+}
+
+.last-step-num {
+  border-color: #00AA00;
+}
+
+.step-num:hover {
+  background-color: #0F409670;
+  cursor: pointer;
+}
+
+// input
+
+@import "../timApp/modules/fields/js/fields-box-common";
+
+.form-control {
+    display: block;
+    width: 100%;
+}
+
+select.form-control {
+    height: unset;
+
+}
+
+p {
+    padding-top: 0px;
+    padding-left: 0px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+.timButton {
+  margin-bottom: 10px;
+}
+
+.steps-selector-container input{
+    padding: .3em;
+    margin: .5em 0 .5em 0;
+}
+
+.corner-button {
+  align-self: end;
+}
+
+.justify-corner-button {
+  justify-content: end;
+}
+
+// Common
+
+.grid-container{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "left right";
+  padding: 0;
+  max-width: 100%;
+
+}
+
+.left-column {
+  grid-area: left;
+  padding: .5em;
+}
+
+.right-column {
+  padding: .5em;
+  grid-area: right;
+}
