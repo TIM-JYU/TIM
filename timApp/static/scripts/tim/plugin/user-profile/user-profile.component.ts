@@ -75,12 +75,12 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                             <textarea name="description"  class="form-control textarea"
                                                       (ngModelChange)= "setWarning('description')"
                                                         [class.warnFrame]="checkWarning('description')"    
-                                                      [ngModel]="profileData.profile_description"></textarea></span>
+                                                      [(ngModel)]="profileData.profile_description"></textarea></span>
                             
                                 <span class="textfield">
                             <input #i name="link" class="form-control" type="text" *ngFor="let item of profileData.profile_links; index as i; trackBy: linkTrackBy"
                                                       (ngModelChange)="setWarning(i.toString())"
-                                                        [ngModel]="profileData.profile_links[i]"
+                                                        [(ngModel)]="profileData.profile_links[i]"
                                    [class.warnFrame]="checkWarning(i.toString())" /> 
 </span>
                             <button type="submit" class="btn">Save <span class="glyphicon glyphicon-send"></span></button>
