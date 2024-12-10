@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from typing import List
 
@@ -52,6 +53,12 @@ class IdeFile:
 
     filename: str | None = None
     """ Name of the file """
+
+    task_directory: str | None = None
+    """ Directory of the task """
+
+    task_type: str | None = None
+    """ type of the file """
 
     userinput: str | None = ""
     """ User input for the file """
@@ -155,6 +162,8 @@ class IdeFile:
             "task_id_ext": self.taskIDExt,
             "content": self.content,
             "file_name": self.filename,
+            "task_directory": self.task_directory,
+            "task_type": self.task_type,
             "user_input": self.userinput,
             "user_args": self.userargs or "",
         }
@@ -235,6 +244,16 @@ class TIDEPluginData:
     path: str | None = None
     """
     Path to the task
+    """
+
+    task_directory: str | None = None
+    """
+    Directory of the task
+    """
+
+    task_type: str | None = None
+    """
+    Type of the file
     """
 
     header: str | None = None
@@ -676,6 +695,12 @@ def get_ide_user_plugin_data(
         if ide_file.filename is None:
             ide_file.filename = language.get_filename()
 
+        if ide_file.task_directory is None:
+            ide_file.task_directory = language.get_task_directory()
+
+        if ide_file.task_type is None:
+            ide_file.task_type = task_info.type
+
         # If the task type is defined, try to generate file extension.
         if task_info.type is not None:
             ide_file.generate_file_extension(task_info.type)
@@ -703,6 +728,7 @@ def get_ide_user_plugin_data(
         type=task_info.type,
         path=doc.path,
         task_id=task_id.task_name,
+        task_directory=ide_file.task_directory,
         doc_id=doc.id,
         par_id=par.id,
         ide_task_id=ide_task_id,
@@ -734,7 +760,7 @@ def ide_submit_task(
     answer_data = {
         "isInput": False,
         "nosave": False,
-        "type": runtype or submit.code_language,
+        "type": runtype or re.split("[,;/]", submit.code_language)[0],
         "uploadedFiles": [],
         "submittedFiles": submitted_files,
         "userargs": submit.code_files[file_index].user_args,
