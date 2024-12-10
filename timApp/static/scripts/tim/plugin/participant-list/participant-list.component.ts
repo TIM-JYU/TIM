@@ -5,17 +5,11 @@ import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
-import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/standalone-textfield.component";
 
 @Component({
     selector: "tim-participant-list",
     styleUrls: ["./participant-list.component.scss"],
-    imports: [
-        StandaloneTextfieldComponent,
-        CsUtilityModule,
-        FormsModule,
-        CommonModule,
-    ],
+    imports: [CsUtilityModule, FormsModule, CommonModule],
     standalone: true,
     template: `
         <div class="tim-user-list-container">

@@ -6,17 +6,11 @@ import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import {type AngularError, type Result, toPromise} from "tim/util/utils";
 import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
-import {StandaloneTextfieldComponent} from "../../../../../modules/fields/js/standalone-textfield.component";
 
 @Component({
     selector: "tim-course-manager",
     styleUrls: ["./course-manager.component.scss"],
-    imports: [
-        StandaloneTextfieldComponent,
-        CsUtilityModule,
-        FormsModule,
-        CommonModule,
-    ],
+    imports: [CsUtilityModule, FormsModule, CommonModule],
     standalone: true,
     template: `
         <div class="tim-course-manager-container">
