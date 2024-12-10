@@ -1,7 +1,7 @@
 // import type {OnChanges, SimpleChanges} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {toPromise} from "tim/util/utils";
+import {formatNumberCode, toPromise} from "tim/util/utils";
 import {saveCurrentScreenPar} from "tim/document/parhelpers";
 import {genericglobals, isDocumentGlobals} from "tim/util/globals";
 
@@ -9,7 +9,11 @@ const loginErrors: Record<string, string> = {
     InvalidLoginCode: $localize`Invalid login code. Check that you entered it correctly.`,
     LoginCodeNotYetActive: $localize`Login code not yet active. Make sure you use the correct code or ask the code to be activated.`,
     LoginCodeExpired: $localize`Login code expired. Make sure you use the correct code or ask for a new code.`,
+    LoginCodeNotValid: $localize`Login code has been disabled. Make sure you use the correct code or ask for a new code.`,
 };
+
+export const CODE_LENGTH = 12;
+export const SPLIT_EVERY = 4;
 
 @Component({
     selector: "tim-user-code-login",
@@ -41,9 +45,9 @@ const loginErrors: Record<string, string> = {
     styleUrls: ["./user-code-login.component.scss"],
 })
 export class UserCodeLoginComponent {
-    maxLength = 12;
+    maxLength = CODE_LENGTH;
     selectionPos = 0;
-    split = 4;
+    split = SPLIT_EVERY;
     loginCode: string = "    -    -    ";
     loggingIn = false;
     loginError: string | null = null;
@@ -105,14 +109,7 @@ export class UserCodeLoginComponent {
 
     reformatCode() {
         const clean = this.cleanCode.substring(0, this.maxLength);
-        let newCode = "";
-        for (let i = 0; i < this.maxLength; i++) {
-            if (i > 0 && i % this.split === 0) {
-                newCode += "-";
-            }
-            newCode += clean[i] || " ";
-        }
-        this.loginCode = newCode;
+        this.loginCode = formatNumberCode(clean, this.split, this.maxLength);
     }
 
     async login() {

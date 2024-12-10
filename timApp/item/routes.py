@@ -64,7 +64,11 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docrenderresult import DocRenderResult
-from timApp.document.docsettings import DocSettings, get_minimal_visibility_settings
+from timApp.document.docsettings import (
+    DocSettings,
+    get_minimal_visibility_settings,
+    DISABLE_ANSWER_REVIEW_MODE,
+)
 from timApp.document.document import (
     get_index_from_html_list,
     dereference_pars,
@@ -629,6 +633,8 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     # This is only used for optimizing database access so that we can close the db session
     # as early as possible.
     preload_personal_folder_and_breadcrumbs(current_user, doc_info)
+    # This is used to disable unnecessary database access unless we are in answer review mode.
+    preload_tags_if_answer_review(doc_info)
     # TODO: Closing session here breaks is_attribute_loaded function.
     #  According to https://docs.sqlalchemy.org/en/13/errors.html#error-bhk3, it may not be good practice to close
     #  the session manually in the first place.
@@ -653,6 +659,11 @@ def preload_personal_folder_and_breadcrumbs(current_user: User, doc_info: DocInf
     if current_user.logged_in:
         current_user.get_personal_folder()
     _ = doc_info.parents_to_root_eager
+
+
+def preload_tags_if_answer_review(doc_info: DocInfo):
+    if doc_info.document.get_settings().disable_answer() == DISABLE_ANSWER_REVIEW_MODE:
+        _ = doc_info.block.tags
 
 
 def get_additional_angular_modules(doc_info: DocInfo) -> set[str]:
@@ -813,6 +824,13 @@ def render_doc_view(
                 usergroups = doc_settings.groups()
             except ValueError as e:
                 flash(str(e))
+        # TODO: Remove; this allows admins to bypass the groups: [] option and view all answers
+        if (
+            usergroups is not None
+            and len(usergroups) == 0
+            and verify_admin(require=False, user=current_user)
+        ):
+            usergroups = None
         ugs_without_access = []
         if usergroups is not None:
             ugs = (

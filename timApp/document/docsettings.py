@@ -68,6 +68,9 @@ class IdeDocument:
     path: str
 
 
+DISABLE_ANSWER_REVIEW_MODE = "answer_review"
+
+
 # TODO: Start moving DocSettings keys to this dataclass
 @dataclass
 class DocSettingTypes:
@@ -713,6 +716,12 @@ class DocSettings:
 
     def need_view_for_answers(self) -> bool:
         return self.get_setting_or_default("need_view_for_answers", False)
+
+    def use_login_codes(self) -> bool:
+        return self.get_setting_or_default("loginCodes", False)
+
+    def login_message(self) -> str | None:
+        return self.get_setting_or_default("loginMessage", None)
 
     def ide_course(self) -> list[IdeDocument]:
         return self.get_setting_or_default("ideCourse", [])

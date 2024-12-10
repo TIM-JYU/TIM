@@ -6,6 +6,8 @@ import type {ToReturn} from "tim/util/utils";
 import {to} from "tim/util/utils";
 import type {ICurrentUser, IUser} from "tim/user/IUser";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "tim/user/IUser";
+import {isTaggedItem} from "tim/item/IItem";
+import moment from "moment";
 
 export interface ILoginResponse {
     other_users: IUser[];
@@ -16,6 +18,7 @@ export class UserService {
     private current: ICurrentUser; // currently logged in user
     private group: IUser[]; // any additional users that have been added in the session - this does not include the main user
     private restoreContextUser: string | null; // user to restore context to if the user is logged in as someone else
+    private isInAnswerReviewField?: boolean;
 
     constructor(
         current: ICurrentUser,
@@ -128,6 +131,35 @@ export class UserService {
             this.current = r.result.data.current_user;
         }
         return r;
+    }
+
+    public get isInAnswerReview() {
+        if (this.isInAnswerReviewField === undefined) {
+            this.isInAnswerReviewField = this.getIsInAnswerReviewImpl();
+        }
+        return this.isInAnswerReviewField;
+    }
+
+    private getIsInAnswerReviewImpl() {
+        const curr_item = genericglobals().curr_item;
+        if (!curr_item || !isTaggedItem(curr_item)) {
+            return false;
+        }
+        const activeTags = new Set(
+            curr_item.tags
+                .filter(
+                    (tag) =>
+                        tag.expires == null ||
+                        moment(tag.expires).diff(moment.now()) > 0
+                )
+                .map((tag) => tag.name)
+        );
+        const groupReviewTags = this.current.groups.map(
+            (g) => `answer_review_group:${g.name}`
+        );
+        const res = groupReviewTags.some((tag) => activeTags.has(tag));
+        console.log(activeTags, groupReviewTags, res);
+        return res;
     }
 }
 

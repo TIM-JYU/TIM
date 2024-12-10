@@ -178,6 +178,7 @@ const QuantumCircuitMarkup = t.intersection([
         middleAxisLabel: withDefault(t.string, "Step"),
         rightAxisLabel: withDefault(t.string, "Output"),
         feedbackShowTable: withDefault(t.boolean, true),
+        answerExactMatch: withDefault(t.boolean, false),
     }),
 ]);
 
@@ -214,6 +215,9 @@ export const ServerError = t.union([
         expected: t.array(t.number),
         actual: t.array(t.number),
         errorType: t.literal("answer-incorrect"),
+    }),
+    t.type({
+        errorType: t.literal("answer-incorrect-exact"),
     }),
     t.type({
         matrix: t.string,
@@ -600,7 +604,8 @@ export class QuantumCircuitComponent
                     // show user defined error message as feedback if defined
                     if (
                         customMessage &&
-                        this.error.errorType === "answer-incorrect"
+                        (this.error.errorType === "answer-incorrect" ||
+                            this.error.errorType === "answer-incorrect-exact")
                     ) {
                         this.error = undefined;
                         this.showErrorMessage(customMessage);

@@ -79,7 +79,12 @@ Test
             # Ensure JS is loaded fully
             pars = self.find_element("div#pars")
             self.assert_same_screenshot(
-                pars, f"jsrunner/area_visibility_{name}", move_to_element=True
+                pars,
+                [
+                    f"jsrunner/area_visibility_{name}",
+                    f"jsrunner/area_visibility_{name}_alt",
+                ],
+                move_to_element=True,
             )
 
         def wait_refresh_done():

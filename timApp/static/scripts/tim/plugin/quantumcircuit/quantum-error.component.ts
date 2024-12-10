@@ -37,6 +37,9 @@ interface AnswerIncorrectRow {
                 <p>{{error.matrix}}</p>
             </div>
 
+            <div *ngIf="error.errorType === 'answer-incorrect-exact'">
+                <p i18n>The circuit is incorrect</p>
+            </div>
 
             <div *ngIf="error.errorType === 'answer-incorrect'">
                 <label *ngIf="feedbackShowTable">

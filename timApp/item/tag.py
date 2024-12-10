@@ -1,7 +1,7 @@
 from enum import Enum, unique
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.timdb.sqa import db
@@ -53,7 +53,12 @@ class Tag(db.Model):
     def get_group_name(self) -> str | None:
         if self.name.startswith(GROUP_TAG_PREFIX):
             return self.name[len(GROUP_TAG_PREFIX) :]
+        if self.name.startswith(ANSWER_REVIEW_GROUP_TAG_PREFIX):
+            return self.name[len(ANSWER_REVIEW_GROUP_TAG_PREFIX) :]
         return None
 
 
+TAG_ACTIVE = (Tag.expires == None) | (func.current_timestamp() < Tag.expires)
+
 GROUP_TAG_PREFIX = "group:"
+ANSWER_REVIEW_GROUP_TAG_PREFIX = "answer_review_group:"

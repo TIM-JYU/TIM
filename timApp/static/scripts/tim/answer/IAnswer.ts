@@ -25,5 +25,5 @@ export type IModelAnswerSettings = {
     lockConfirmation?: string;
     lockedLinkText?: string;
     alreadyLocked?: boolean;
-    disabled?: boolean;
+    disabled?: boolean | "unless_review";
 };

@@ -3,6 +3,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+from typing import Sequence
 
 from flask import flash, current_app
 from flask import request, g
@@ -23,6 +24,7 @@ from timApp.auth.sessioninfo import (
     get_current_user_object,
     get_current_user_id,
     user_context_with_logged_in,
+    get_current_user,
 )
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -33,6 +35,7 @@ from timApp.document.viewcontext import ViewContext, OriginInfo, ViewRoute
 from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
 from timApp.item.item import Item
+from timApp.item.tag import Tag, ANSWER_REVIEW_GROUP_TAG_PREFIX, TAG_ACTIVE
 from timApp.notification.send_email import send_email
 from timApp.peerreview.util.peerreview_utils import is_peerreview_enabled
 from timApp.plugin.plugin import (
@@ -944,3 +947,35 @@ def verify_user_create_right(curr_user: User) -> None:
     user_creators = UserGroup.get_user_creator_group()
     if user_creators not in curr_user.groups:
         raise AccessDenied("You do not have permission to create users.")
+
+
+def is_in_answer_review(doc: DocInfo, user: User | None) -> bool:
+    cur_user = user if user is not None else get_current_user()
+    curr_user_group_names: Sequence[str] = (
+        run_sql(
+            cur_user.get_groups(
+                include_special=False, include_expired=False
+            ).with_only_columns(UserGroup.name)
+        )
+        .scalars()
+        .all()
+    )
+    active_review_tag: str | None = (
+        run_sql(
+            select(Tag.name)
+            .filter(
+                (Tag.block_id == doc.id)
+                & Tag.name.in_(
+                    [
+                        f"{ANSWER_REVIEW_GROUP_TAG_PREFIX}{group_name}"
+                        for group_name in curr_user_group_names
+                    ]
+                )
+                & TAG_ACTIVE
+            )
+            .limit(1)
+        )
+        .scalars()
+        .one_or_none()
+    )
+    return active_review_tag is not None
