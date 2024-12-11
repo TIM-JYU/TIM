@@ -73,7 +73,6 @@ CourseTemplateInitModelSchema = class_schema(CourseTemplateInitModel)
 def create_course_from_template() -> Response:
     data: CourseTemplateInitModel = load_data_from_req(CourseTemplateInitModelSchema)
     copy_to_dir_name: str = data.copy_to_dir_name
-    #  copy_from_id: str = data.copy_from_id
     copy_from_path: str = data.copy_from_path
     folder = Folder.find_by_path(copy_from_path)
     if not folder:
