@@ -205,7 +205,6 @@ all_models = (
     ScimUserGroup,
     ShowPoints,
     SlideStatus,
-    #  StepsPhase,
     Tag,
     TaskBlock,
     Translation,
