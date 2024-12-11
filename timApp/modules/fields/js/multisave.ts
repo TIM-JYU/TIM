@@ -20,7 +20,7 @@ import {escapeRegExp, scrollToElement} from "tim/util/utils";
 import type {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {HttpClient, HttpClientModule, HttpHeaders} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {DomSanitizer} from "@angular/platform-browser";
 import {showConfirm} from "tim/ui/showConfirmDialog";
@@ -28,6 +28,9 @@ import {slugify} from "tim/util/slugify";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {PurifyModule} from "tim/util/purify.module";
+import {AnswerTable, IQuestionMarkup} from "tim/lecture/lecturetypes";
+import {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
+import {CellEntity} from "tim/plugin/timTable/tim-table.component";
 import {
     GroupType,
     SisuAssessmentExportModule,
@@ -100,7 +103,7 @@ const multisaveAll = t.intersection([
     <button class="timButton"
             [disabled]="(disableUnchanged && allSaved())"
             *ngIf="buttonText() && !markup.destCourse"
-            (click)="save()">
+            (click)="massSave()">
         {{buttonText()}}
     </button>
     &nbsp;
@@ -397,22 +400,31 @@ export class MultisaveComponent
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    private async massSave() {
+    async massSave() {
         // get targets
         // get inputs as arr/dict
         // do request
         // inform answerbrowsers?
         // inform plugins
         const componentsToSave = this.findTargetTasks();
-        const inputs = new Map<string, any>();
+        const inputs: Record<string, any> = {}; // new Map<string, any>();
         for (const c of componentsToSave) {
             const tid = c.getTaskId();
             const req = c.getSaveReq?.();
             if (tid && req) {
-                inputs.set(tid.docTask().toString(), req);
+                inputs[tid.docTask().toString()] = req;
             }
-            // do request here
         }
+        // do all requests here
+        // or one multirequest? here
+        console.log("INPUTS", inputs);
+        const headers: HttpHeaders = new HttpHeaders();
+        const r = await this.httpPut<any>(
+            "/massAnswer", // url,
+            {inputs: inputs},
+            headers
+        );
+        console.log(r);
     }
 
     public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {

@@ -293,7 +293,7 @@ export class QstComponent
         this.result = undefined;
     }
 
-    public getSaveReq(nosave: boolean) {
+    public getSaveReq(nosave?: boolean) {
         // return inputs for requests
         const answers = this.newAnswer;
 
@@ -307,6 +307,7 @@ export class QstComponent
         if (nosave) {
             params.input.nosave = true;
         }
+        return params;
     }
 
     public afterSave(

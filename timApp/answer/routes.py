@@ -616,6 +616,17 @@ def multisendemail(
 InputAnswer = Union[AnswerData, list[Any], int, float, str]
 
 
+@answers.put("/massAnswer")
+def post_mass_answer(
+    inputs: dict[str, InputAnswer],
+    abData: dict[str, Any] = field(default_factory=dict),
+    options: dict[str, Any] = field(default_factory=dict),
+):
+    print(inputs)
+    return json_response([save.response for save in inputs])
+    return ok_response()
+
+
 # noinspection PyShadowingBuiltins
 @answers.put("/<plugintype>/<task_id_ext>/answer")
 def post_answer(

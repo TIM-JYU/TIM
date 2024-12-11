@@ -106,8 +106,9 @@ class TextfieldAnswerWeb(PluginAnswerWeb, total=False):
 
 
 def multianswer(args: list[TextfieldAnswerModel]) -> list[PluginAnswerResp]:
-    return map args answer
+    # return map args answer
     pass
+
 
 def answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
     web: TextfieldAnswerWeb = {}
