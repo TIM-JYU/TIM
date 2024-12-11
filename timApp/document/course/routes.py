@@ -1,9 +1,8 @@
 """
 Contains course related routes.
 """
-from dataclasses import dataclass
 
-from flask import Blueprint, current_app, Response, request
+from flask import current_app, Response
 from sqlalchemy.orm import selectinload
 
 from timApp.auth.sessioninfo import get_current_user_object
@@ -11,11 +10,11 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.manage import do_copy_folder
-from timApp.util.flask.requesthelper import load_data_from_req, NotExist
+from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import json_response
-from tim_common.marshmallow_dataclass import class_schema
+from timApp.util.flask.typedblueprint import TypedBlueprint
 
-course_blueprint = Blueprint("course", __name__, url_prefix="/courses")
+course_blueprint = TypedBlueprint("course", __name__, url_prefix="/courses")
 
 
 @course_blueprint.get("/settings")
@@ -59,21 +58,8 @@ def get_documents_from_bookmark_folder(foldername: str) -> Response:
     return json_response(docs)
 
 
-@dataclass
-class CourseTemplateInitModel:
-    copy_to_dir_name: str
-    # copy_from_id: str
-    copy_from_path: str
-
-
-CourseTemplateInitModelSchema = class_schema(CourseTemplateInitModel)
-
-
 @course_blueprint.post("/from-template")
-def create_course_from_template() -> Response:
-    data: CourseTemplateInitModel = load_data_from_req(CourseTemplateInitModelSchema)
-    copy_to_dir_name: str = data.copy_to_dir_name
-    copy_from_path: str = data.copy_from_path
+def create_course_from_template(copy_to_dir_name: str, copy_from_path: str) -> Response:
     folder = Folder.find_by_path(copy_from_path)
     if not folder:
         raise NotExist("No template folder found.")

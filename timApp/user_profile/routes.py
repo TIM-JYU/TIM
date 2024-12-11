@@ -1,20 +1,22 @@
-from flask import Blueprint, Response
-from timApp.auth.sessioninfo import get_current_user_object, logged_in
-from timApp.timdb.sqa import db
-from timApp.user.user import User
-from timApp.document.docentry import DocEntry
-from timApp.util.flask.requesthelper import RouteException, NotExist, load_data_from_req
-from timApp.util.flask.responsehelper import json_response
 from dataclasses import dataclass
+
+from flask import Response
 from flask import request
-from timApp.upload.upload import upload_image_or_file
-from tim_common.marshmallow_dataclass import class_schema
+
 from timApp.auth.accesshelper import (
     AccessDenied,
     verify_edit_access,
 )
+from timApp.auth.sessioninfo import get_current_user_object, logged_in
+from timApp.document.docentry import DocEntry
+from timApp.timdb.sqa import db
+from timApp.upload.upload import upload_image_or_file
+from timApp.user.user import User
+from timApp.util.flask.requesthelper import RouteException, NotExist
+from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 
-profile_blueprint = Blueprint("profile", __name__, url_prefix="/profile")
+profile_blueprint = TypedBlueprint("profile", __name__, url_prefix="/profile")
 
 PROFILE_PICTURE_KEY = "profile_picture_path"
 PROFILE_DESCRIPTION_KEY = "profile_description"
@@ -43,9 +45,6 @@ class ProfileDataModel:
             "profile_links": self.profile_links,
             "edit_access": self.edit_access,
         }
-
-
-ProfileDataModelSchema = class_schema(ProfileDataModel)
 
 
 @profile_blueprint.get("/<int:userid>")
@@ -157,10 +156,11 @@ def upload_profile_picture(document_id: int) -> Response:
 
 
 @profile_blueprint.post("/details/<int:document_id>")
-def set_profile_details(document_id: int) -> Response:
-    data: ProfileDataModel = load_data_from_req(ProfileDataModelSchema)
-    links: list[str] = data.profile_links
-    description: str = data.profile_description
+def set_profile_details(
+    document_id: int, profile_links: list[str], profile_description: str
+) -> Response:
+    links: list[str] = profile_links
+    description: str = profile_description
     document_info = DocEntry.find_by_id(document_id)
 
     if document_info is None:
@@ -170,4 +170,4 @@ def set_profile_details(document_id: int) -> Response:
     document_info.document.add_setting(PROFILE_DESCRIPTION_KEY, description)
     document_info.document.add_setting(PROFILE_LINKS_KEY, links)
 
-    return Response(status=200)
+    return ok_response()
