@@ -1,4 +1,5 @@
 import datetime as dt
+import zoneinfo
 from typing import Optional
 
 import pytz
@@ -128,7 +129,13 @@ class CrontabSchedule(ModelBase, ModelMixin):
             "month_of_year": schedule._orig_month_of_year,
         }
         if schedule.tz:
-            spec.update({"timezone": schedule.tz.zone})
+            if isinstance(schedule.tz, zoneinfo.ZoneInfo):
+                zone = schedule.tz.key
+            elif isinstance(schedule.tz, pytz.BaseTzInfo):
+                zone = schedule.tz.zone
+            else:
+                zone = str(schedule.tz)
+            spec.update({"timezone": zone})
         model = (
             session.execute(select(CrontabSchedule).filter_by(**spec).limit(1))
             .scalars()
