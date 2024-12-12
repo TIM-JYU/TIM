@@ -66,6 +66,7 @@ from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.quantum_circuit.quantumCircuit import quantum_circuit_plugin
 from timApp.plugin.reviewcanvas.reviewcanvas import reviewcanvas_plugin
 from timApp.plugin.routes import plugin_bp
+from timApp.plugin.steps.steps import steps_plugin
 from timApp.plugin.symbolbutton.symbolbutton import symbolbutton_plugin
 from timApp.plugin.tableform.tableForm import tableForm_plugin
 from timApp.plugin.tape.tape import tape_plugin
@@ -89,6 +90,7 @@ from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.settings.styles import styles
 from timApp.user.verification.routes import verify
+from timApp.user_profile.routes import profile_blueprint
 from timApp.util.error_handlers import register_errorhandlers
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
@@ -141,6 +143,7 @@ blueprints = [
     search_routes,
     settings_page,
     sisu,
+    steps_plugin,
     tags_blueprint,
     styles,
     tr_bp,
@@ -168,6 +171,7 @@ blueprints = [
     quantum_circuit_plugin,
     symbolbutton_plugin,
     ide,
+    profile_blueprint,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:

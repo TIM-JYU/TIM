@@ -82,6 +82,7 @@ NO_ANSWERBROWSER_PLUGINS = {
     "importData",
     "userSelect",
     "calendar",
+    "steps",
     "timMenu",
     "symbolbutton",
 }
