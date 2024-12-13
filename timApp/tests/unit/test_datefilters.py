@@ -60,7 +60,7 @@ class TestFormatDate(TestCase):
     def test_fmt_date_str(self):
         d = "2024-02-05 15+02"
         r = fmt_date(d, "%d.%m.%Y")
-        e = "5.2.2024"
+        e = "05.02.2024"
         self.assertEqual(e, r, "Not same in str case")
 
 

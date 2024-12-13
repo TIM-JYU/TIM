@@ -282,7 +282,7 @@ def str_to_date(s, input_fmt=None):
     see: timApp/tests/unit/test_datefilters.py
 
     :param s: string to convert
-    :param input_fmt: optinal input format for date
+    :param input_fmt: optional input format for date
     :return: datetime object
     """
     if input_fmt:
