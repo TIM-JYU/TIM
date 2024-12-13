@@ -714,7 +714,11 @@ def get_ide_user_plugin_data(
 
     # If both content and source are provided, content is used (see tidecli)
     # If neither is provided, no supplementary file will be created
+    task_extra_directory = plugin_json["markup"].get("task_extra_directory", None)
+
     for extra_file in ide_extra_files:
+        if "task_directory" not in extra_file:
+            extra_file["task_directory"] = task_extra_directory
         if "content" in extra_file:
             supplementary_files.append(SupplementaryFileSchema.load(extra_file))
         elif "source" in extra_file:

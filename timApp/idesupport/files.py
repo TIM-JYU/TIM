@@ -24,11 +24,15 @@ class SupplementaryFile:
     source: str | None = None
     """If no content, URL of the file source"""
 
+    task_directory: str | None = None
+    """if missing, use default"""
+
     def to_json(self) -> dict[str, str | None]:
         return {
             "content": self.content,
             "file_name": self.filename,
             "source": self.source,
+            "task_directory": self.task_directory,
         }
 
 
