@@ -288,11 +288,15 @@ def str_to_date(s, input_fmt=None):
     if input_fmt:
         return datetime.strptime(s, input_fmt)
 
-    if s.count(".") == 1:  # parser.parse does not handle 1.2 correctly
-        s = f"{s}.{date.today().year}"
+    dayfirst = False
+    periods = s.count(".")
+    if periods > 0:
+        dayfirst = True
+        if periods == 1:  # parser.parse does not handle 1.2 correctly
+            s = f"{s}.{date.today().year}"
 
     try:
-        dt = parser.parse(s, dayfirst=True)
+        dt = parser.parse(s, dayfirst=dayfirst)
         return dt
     except ValueError as e:
         raise ValueError(f"time data '{s}' does not match any known format") from e
