@@ -1,11 +1,12 @@
 from unittest import TestCase
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 
 from timApp.markdown.markdownconverter import (
     week_to_date,
     week_to_text,
     month_to_week,
     fmt_date,
+    str_to_date,
     preinc,
     postinc,
 )
@@ -55,6 +56,49 @@ class TestFormatDate(TestCase):
         r = fmt_date(d)
         e = "5.2"
         self.assertEqual(e, r, "Not same in default case")
+
+    def test_fmt_date_str(self):
+        d = "2024-02-05 15+02"
+        r = fmt_date(d, "%d.%m.%Y")
+        e = "05.02.2024"
+        self.assertEqual(e, r, "Not same in str case")
+
+
+class TestStrToDate(TestCase):
+    def test_str2date_normal(self):
+        r = str_to_date("5.2.2020")
+        e = datetime(2020, 2, 5)
+        self.assertEqual(e, r, "Not same in normal case")
+
+    def test_str2date_one(self):
+        r = str_to_date("5")
+        e = datetime(date.today().year, date.today().month, 5)
+        self.assertEqual(e, r, "Not same in normal case")
+
+    def test_str2date_short(self):
+        r = str_to_date("5.2")
+        e = datetime(date.today().year, 2, 5)
+        self.assertEqual(e, r, "Not same in short case")
+
+    def test_str2date_ISO_date(self):
+        r = str_to_date("2024-12-13")
+        e = datetime(2024, 12, 13)
+        self.assertEqual(e, r, "Not same in ISO_date case")
+
+    def test_str2date_ISO(self):
+        r = str_to_date("2024-12-13 15")
+        e = datetime(2024, 12, 13, 15, 0)
+        self.assertEqual(e, r, "Not same in ISO case")
+
+    def test_str2date_ISO_z(self):
+        r = str_to_date("2024-12-13 15+02")
+        e = datetime(2024, 12, 13, 15, 0, tzinfo=timezone(timedelta(hours=2)))
+        self.assertEqual(e, r, "Not same in ISO z case")
+
+    def test_str2date_ISO_zm(self):
+        r = str_to_date("2024-12-13 15:30+03")
+        e = datetime(2024, 12, 13, 15, 30, tzinfo=timezone(timedelta(hours=3)))
+        self.assertEqual(e, r, "Not same in ISO zm case")
 
 
 class TestInc(TestCase):

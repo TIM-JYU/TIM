@@ -5,6 +5,7 @@ import random
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from dateutil import parser
 from re import Pattern
 from typing import TYPE_CHECKING, Iterable, Any
 from urllib.parse import quote_plus
@@ -265,12 +266,40 @@ def fmt_date(d, frmt=""):
     :param frmt: Python format
     :return: string from d an format
     """
+    if isinstance(d, str):
+        d = str_to_date(d)
     ds = "" + str(d.day)
     ms = "" + str(d.month)
     if frmt == "":
         return str(ds) + "." + str(ms)
     frmt = frmt.replace("%d1", ds).replace("%m1", ms)
     return d.strftime(frmt)
+
+
+def str_to_date(s, input_fmt=None):
+    """
+    Convert string to datetime object
+    see: timApp/tests/unit/test_datefilters.py
+
+    :param s: string to convert
+    :param input_fmt: optional input format for date
+    :return: datetime object
+    """
+    if input_fmt:
+        return datetime.strptime(s, input_fmt)
+
+    dayfirst = False
+    periods = s.count(".")
+    if periods > 0:
+        dayfirst = True
+        if periods == 1:  # parser.parse does not handle 1.2 correctly
+            s = f"{s}.{date.today().year}"
+
+    try:
+        dt = parser.parse(s, dayfirst=dayfirst)
+        return dt
+    except ValueError as e:
+        raise ValueError(f"time data '{s}' does not match any known format") from e
 
 
 def week_to_text(
@@ -606,6 +635,7 @@ tim_filters = {
     "w2text": week_to_text,
     "slugify": slugify_str,
     "fmtdate": fmt_date,
+    "str2date": str_to_date,
     "preinc": preinc,
     "postinc": postinc,
     "belongs": belongs_placeholder,

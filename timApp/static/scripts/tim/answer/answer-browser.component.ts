@@ -462,7 +462,7 @@ export class AnswerBrowserComponent
             if (answs) {
                 this.answers = answs;
             }
-            if (this.getPar()?.par.attrs.ideTask) {
+            if (this.getPar()?.par.attrs.ideTask !== undefined) {
                 this.showRefresh = true;
             }
             const updated = this.updateAnswerFromURL();
