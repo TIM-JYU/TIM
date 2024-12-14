@@ -70,6 +70,11 @@ class TestStrToDate(TestCase):
         e = datetime(2020, 2, 5)
         self.assertEqual(e, r, "Not same in normal case")
 
+    def test_str2date_one(self):
+        r = str_to_date("5")
+        e = datetime(date.today().year, date.today().month, 5)
+        self.assertEqual(e, r, "Not same in normal case")
+
     def test_str2date_short(self):
         r = str_to_date("5.2")
         e = datetime(date.today().year, 2, 5)
