@@ -644,7 +644,11 @@ def get_ide_user_plugin_data(
     plugin_json = json.loads(base64.b64decode(element.attrs["json"]).decode("utf-8"))
 
     task_info: TIDETaskInfo = TIDETaskInfoSchema.load(plugin.values, unknown=EXCLUDE)
-    task_language = get_task_language(task_info.type)
+    selected_language = plugin_json.get("markup").get("selectedLanguage")
+    if selected_language:
+        task_language = get_task_language(selected_language)
+    else:
+        task_language = get_task_language(task_info.type)
     if task_language is None:
         raise RouteException("Misconfigured task language")
     language = Language.make_language(task_language, plugin_json, ide_task_id)
