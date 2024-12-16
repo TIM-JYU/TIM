@@ -290,10 +290,19 @@ def str_to_date(s, input_fmt=None):
 
     dayfirst = False
     periods = s.count(".")
+    space = s.find(" ")
     if periods > 0:
         dayfirst = True
         if periods == 1:  # parser.parse does not handle 1.2 correctly
-            s = f"{s}.{date.today().year}"
+            if space < 0:
+                s = f"{s}.{date.today().year}"
+            else:  # case 1.2 12
+                d, h = s.split(" ", 1)
+                s = f"{d}.{date.today().year} {h}"
+    if periods == 0 and space > 0:
+        colons = s.count(":")
+        if colons == 0:  # case 1 12  => 1.12.2024 12:00
+            s = f"{s}:00"
 
     try:
         dt = parser.parse(s, dayfirst=dayfirst)

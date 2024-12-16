@@ -100,6 +100,16 @@ class TestStrToDate(TestCase):
         e = datetime(2024, 12, 13, 15, 30, tzinfo=timezone(timedelta(hours=3)))
         self.assertEqual(e, r, "Not same in ISO zm case")
 
+    def test_d_m_h(self):
+        r = str_to_date("24.12 19")
+        e = datetime(date.today().year, 12, 24, 19)
+        self.assertEqual(e, r, "Not same in d_m_h")
+
+    def test_d_h(self):
+        r = str_to_date("24 18")
+        e = datetime(date.today().year, date.today().month, 24, 18)
+        self.assertEqual(e, r, "Not same in d_h")
+
 
 class TestInc(TestCase):
     def test_pre_inc1(self):
