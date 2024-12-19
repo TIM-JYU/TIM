@@ -2,30 +2,53 @@
   margin-left: 0.5em;
 }
 
+/*
+Default colors are set according to JYU branding guidelines
+
+Primary colors:
+BLUE #002957 R0 G41 B87
+BEIGE #EDE1CE R237 G225 B206
+WHITE #FFFFFF R255 G255 B255
+
+Secondary colors:
+GOLD #C29A5B R194 G154 B91
+ORANGE #F1563F R241 G86 B63
+BLACK #020203 R2 G2 B3
+GRAY_30 #EFF0F1 R239 G240 B241
+
+Additional colors:
+BLUE_60 #6B7F97 R107 G127 B151
+BLUE_30 #B3BFCD R178 G191 B205
+ORANGE_60 #EA9D90 R234 G157 B144
+ORANGE_30 #F5D1C9 R245 G209 B201
+
+*/
+
+
 .accessbadge {
     border-radius: 15px;
     padding: 3px;
     font-size: x-small;
 }
 .ab-public {
-    border: solid 2px red;
-    color: red;
+    border: solid 2px #002957;
+    color: #002957;
 }
 .ab-logged-in {
-    border: solid 2px darkorange;
-    color: darkorange;
+    border: solid 2px #6b7f97;
+    color: #6b7f97;
 }
 .ab-organization {
-    border: solid 2px fuchsia;
-    color: fuchsia;
+    border: solid 2px #c29a5b;
+    color: #c29a5b;
 }
 .ab-limited {
-    border: solid 2px navy;
-    color: navy;
+    border: solid 2px #ea9d90;
+    color: #ea9d90;
 }
 .ab-private {
-    border: solid 2px darkgray;
-    color: darkgray;
+    border: solid 2px #f1563f;
+    color: #f1563f;
 }
 
 .itemtags {
