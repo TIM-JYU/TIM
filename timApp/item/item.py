@@ -195,7 +195,7 @@ class Item(ItemBase):
         return self.path.replace(path + "/", "", 1)
 
     @staticmethod
-    def find_by_id(item_id):
+    def find_by_id(item_id: int):
         b = db.session.get(Block, item_id)
         if b:
             if b.type_id == BlockType.Document.value:

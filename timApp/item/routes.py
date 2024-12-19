@@ -1,6 +1,7 @@
 """Routes for document view."""
 import dataclasses
 import html
+import logging
 import time
 from difflib import context_diff
 from typing import Union, Any, ValuesView, Generator
@@ -1448,6 +1449,45 @@ def get_item(item_id: int):
         raise NotExist("Item not found")
     verify_view_access(i)
     return json_response(i)
+
+
+@view_page.get("/items/accesses/<int:item_id>")
+def get_item_accesses(item_id: int):
+    """Return a list of usergroup ids that have any access to the item"""
+
+    i = Item.find_by_id(item_id)
+    if not i:
+        raise NotExist("Item not found")
+    verify_view_access(i)
+
+    accs = list(set(v.usergroup.id for v in i.block.accesses.values()))
+
+    # from timApp.util.logger import log_info
+    # log_info(str(accs))
+    return json_response(accs)
+
+
+@view_page.get("/items/accesses_all/<int:folder_id>")
+def get_item_accesses_all(folder_id: int):
+    """Return a list of usergroup ids that have any access to the items in the directory"""
+
+    folder = Folder.find_by_id(folder_id)
+    items: list[Item] = []
+    # TODO: preferably we should only do one db request to get all the items in the directory,
+    #       we don't really care if they are folders or documents
+    items.extend(folder.get_all_folders())
+    items.extend(folder.get_all_documents())
+
+    item_accesses = dict()
+    for item in items:
+        verify_view_access(item)
+        accesses = list(set(v.usergroup.id for v in item.block.accesses.values()))
+        item_accesses[int(item.id)] = accesses
+
+    # from timApp.util.logger import log_info
+    # log_info(str(accs))
+
+    return json_response(item_accesses)
 
 
 @view_page.post("/items/relevance/set/<int:item_id>")
