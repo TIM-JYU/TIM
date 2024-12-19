@@ -35,7 +35,8 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
             <tr>
                 <th></th>
                 <th>Name</th>
-                <th></th>
+                <th (click)="showAccessBadges = !showAccessBadges">Access</th>
+                <th (click)="showTags = !showTags">Tags</th>
                 <th>Last modified</th>
                 <th>Owners</th>
                 <th>Rights</th>
@@ -55,6 +56,7 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                 <td></td>
                 <td></td>
                 <td></td>
+                <td></td>
             </tr>
             <tr *ngFor="let item of itemList">
                 <td>
@@ -65,17 +67,24 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                 
                 <td>
                     <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
-                    <a><i class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
-                          title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</i>
-                    </a>
-                    <span class="itemtags">
-                        <a *ngFor="let tag of getItemTags(item)">
-                            <i class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
-                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires + ')' : '' }}">{{ tag.name }}</i>
-                        </a>
-                    </span>
                 </td>
-                <td></td>
+                <td class="col-access-badges">
+                    <ng-container  *ngIf="showAccessBadges">
+                        <a><i class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
+                              title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</i>
+                        </a>
+                    </ng-container>
+                </td>
+                <td class="col-item-tags">
+                    <ng-container *ngIf="showTags">
+                        <span class="itemtags">
+                            <a *ngFor="let tag of getItemTags(item)">
+                                <i class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
+                                  title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires + ')' : '' }}">{{ tag.name }}</i>
+                            </a>
+                        </span>
+                    </ng-container>
+                </td>
                 <td>{{ item.modified }}</td>
                 <td>{{ listOwnerNames(item) }}</td>
                 <td>
@@ -119,7 +128,10 @@ export class DirectoryListComponent {
     itemTags: Record<number, ITag[]>;
     item: IFolder;
     canCreate: boolean;
+    // TODO: persist these visibility modifiers via user settings
     showId = false;
+    showTags = true;
+    showAccessBadges = true;
 
     constructor() {
         const fg = folderglobals();
