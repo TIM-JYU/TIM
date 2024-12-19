@@ -64,7 +64,6 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                         <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
                     </a>
                 </td>
-                
                 <td>
                     <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
                 </td>
