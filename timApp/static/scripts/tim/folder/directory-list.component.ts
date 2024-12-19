@@ -165,8 +165,6 @@ export class DirectoryListComponent {
 
             let hakaOrgIds: number[] = [];
             this.getHakaOrgIds().then((value) => (hakaOrgIds = value));
-            // TODO: clear scheme for badges, ie.
-            //  - what badges are needed
 
             for (const item_id in item_accesses) {
                 if (
