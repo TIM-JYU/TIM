@@ -14,6 +14,7 @@ import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
+import type {AngularError, Result} from "tim/util/utils";
 import {
     getTypedStorage,
     getURLParameter,
@@ -83,6 +84,8 @@ import type {
 } from "tim/document/viewutils";
 import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
 import type {IRight} from "tim/item/access-role.service";
+import {AnswerTable, IQuestionMarkup} from "tim/lecture/lecturetypes";
+import type {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 
 markAsUsed(interceptor);
 
@@ -124,6 +127,9 @@ export interface ITimComponent extends IUnsavedComponent {
     setAnswer: (content: Record<string, unknown>) => ISetAnswerResult;
     setData?(data: unknown, save: boolean): void;
     getSaveReq?: () => any;
+    setSaveData?(web: any): void;
+    // TODO: investigate if setData / setAnswer can be refactored to achieve same functionality
+    // TODO: send errors in setSaveData?
 }
 
 /**

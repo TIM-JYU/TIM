@@ -419,11 +419,31 @@ export class MultisaveComponent
         // or one multirequest? here
         console.log("INPUTS", inputs);
         const headers: HttpHeaders = new HttpHeaders();
-        const r = await this.httpPut<any>(
+        const r = await this.httpPut<Record<string, any>>(
             "/massAnswer", // url,
             {inputs: inputs},
             headers
         );
+        if (!r.ok) {
+            return;
+        }
+        for (const res in r.result) {
+            const vals = r.result[res];
+            const comp = this.vctrl.getTimComponentByName(res);
+            if (!comp || !comp.setSaveData) {
+                console.log("Missins setanswer @", res);
+                return; // throw err?
+            }
+            comp.setSaveData(vals.web);
+            const ab = this.vctrl.getAnswerBrowser(res);
+            if (ab) {
+                // registernewanswer
+                ab.registerNewAnswer(vals);
+            }
+            console.log("res vals", res, vals);
+            // comp.setAnswer(vals);
+        }
+        // r.result;
         console.log(r);
     }
 

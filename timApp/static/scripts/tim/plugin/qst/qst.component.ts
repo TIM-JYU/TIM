@@ -19,7 +19,7 @@ import {
     AnswerSheetModule,
     makePreview,
 } from "tim/document/question/answer-sheet.component";
-import type {ITimComponent} from "tim/document/viewctrl";
+import type {ISetAnswerResult, ITimComponent} from "tim/document/viewctrl";
 import {ChangeType} from "tim/document/viewctrl";
 import type {AnswerTable, IQuestionMarkup} from "tim/lecture/lecturetypes";
 import {AskedJsonJsonCodec} from "tim/lecture/lecturetypes";
@@ -310,38 +310,33 @@ export class QstComponent
         return params;
     }
 
-    public afterSave(
-        r: Result<
-            {
-                // asdff
-                web: {
-                    result: string;
-                    show_result: boolean;
-                    state: AnswerTable;
-                    markup?: IQuestionMarkup;
-                    error?: string;
-                };
-            } & IAnswerSaveEvent,
-            AngularError
-        >
+    public setSaveData(
+        // asdff
+        web: {
+            result: string;
+            show_result: boolean;
+            state: AnswerTable;
+            markup?: IQuestionMarkup;
+            error?: string;
+        }
     ) {
         // do everything in doSaveText after the request
         this.isRunning = false;
-        if (!r.ok) {
-            this.error =
-                r.result.error.error ??
-                this.attrsall.markup.connectionErrorMessage ??
-                defaultErrorMessage;
-            this.saveFailed = true;
-            return {
-                saved: false,
-                message:
-                    r.result.error.error ??
-                    this.attrsall.markup.connectionErrorMessage,
-            };
-        }
-        const data = r.result;
-        let result = data.web.result;
+        // if (!r.ok) {
+        //     this.error =
+        //         r.result.error.error ??
+        //         this.attrsall.markup.connectionErrorMessage ??
+        //         defaultErrorMessage;
+        //     this.saveFailed = true;
+        //     return {
+        //         saved: false,
+        //         message:
+        //             r.result.error.error ??
+        //             this.attrsall.markup.connectionErrorMessage,
+        //     };
+        // }
+        // const data = web;
+        let result = web.result;
         if (result == "Saved") {
             if (this.attrsall.markup.savedText != undefined) {
                 result = this.attrsall.markup.savedText;
@@ -350,10 +345,10 @@ export class QstComponent
             }
         }
         this.result = result;
-        this.log = data.web.error;
-        if (data.web.markup && data.web.show_result) {
-            this.preview = makePreview(data.web.markup, {
-                answerTable: data.web.state,
+        this.log = web.error;
+        if (web.markup && web.show_result) {
+            this.preview = makePreview(web.markup, {
+                answerTable: web.state,
                 enabled: true,
             });
             this.preview.showExplanations = true;
@@ -364,6 +359,10 @@ export class QstComponent
         this.checkChanges();
     }
     // end save sequence
+
+    setAnswer(content: Record<string, unknown>): ISetAnswerResult {
+        return super.setAnswer(content);
+    }
 
     private async doSaveText(nosave: boolean) {
         this.log = undefined;

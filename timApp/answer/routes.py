@@ -623,8 +623,26 @@ def post_mass_answer(
     options: dict[str, Any] = field(default_factory=dict),
 ):
     print(inputs)
-    return json_response([save.response for save in inputs])
-    return ok_response()
+    print([(save, inputs[save]) for save in inputs])
+    curr_user = get_current_user_object()
+    ret = {}
+    for save, inp in inputs.items():
+        ans = post_answer_impl(
+            save,
+            inp["input"],
+            abData,
+            options,
+            curr_user,
+            get_urlmacros_from_request(),
+            get_other_session_users_objs(),
+            get_origin_from_request(),
+            error=verify_ip_address(user=curr_user),
+        )
+        ret[save] = ans.result
+    print(ret)
+    return json_response(ret)
+    # return ok_response()
+    # return ok_response()
 
 
 # noinspection PyShadowingBuiltins
