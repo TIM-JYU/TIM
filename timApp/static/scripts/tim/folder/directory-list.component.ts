@@ -1,10 +1,31 @@
 import {Component} from "@angular/core";
-import type {DocumentOrFolder, IFolder, IItem} from "tim/item/IItem";
+import type {DocumentOrFolder, IFolder, IItem, ITag} from "tim/item/IItem";
+import {TagType} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {folderglobals} from "tim/util/globals";
+import {to} from "tim/util/utils";
+import {$http} from "tim/util/ngimport";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
+
+enum AccessLevelBadge {
+    NO_BADGE = 0,
+    PUBLIC = 1,
+    LOGGED_IN = 2,
+    ORGANIZATION = 3, // Haka organizations
+    LIMITED = 4, // custom groups, users, etc.
+    PRIVATE = 5, // only owner(s)
+}
+
+const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
+    [AccessLevelBadge.NO_BADGE]: "",
+    [AccessLevelBadge.PUBLIC]: $localize`Item is visible publicly (ie. to everyone), including anonymous users.`,
+    [AccessLevelBadge.LOGGED_IN]: $localize`Item is visible to logged-in users.`,
+    [AccessLevelBadge.ORGANIZATION]: $localize`Item is visible to groups belonging to a Haka organization.`,
+    [AccessLevelBadge.LIMITED]: $localize`Item is visible only to specific users, check the Manage-page for details.`,
+    [AccessLevelBadge.PRIVATE]: $localize`Item is visible only to its owners.`,
+};
 
 @Component({
     selector: "tim-index",
@@ -14,7 +35,8 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
             <tr>
                 <th></th>
                 <th>Name</th>
-                <th></th>
+                <th (click)="showAccessBadges = !showAccessBadges">Access</th>
+                <th (click)="showTags = !showTags">Tags</th>
                 <th>Last modified</th>
                 <th>Owners</th>
                 <th>Rights</th>
@@ -34,6 +56,7 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
                 <td></td>
                 <td></td>
                 <td></td>
+                <td></td>
             </tr>
             <tr *ngFor="let item of itemList">
                 <td>
@@ -43,10 +66,24 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
                 </td>
                 <td>
                     <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
-                    <a><i *ngIf="item.unpublished" class="glyphicon glyphicon-lock"
-                          title="Unpublished item"></i></a>
                 </td>
-                <td></td>
+                <td class="col-access-badges">
+                    <ng-container  *ngIf="showAccessBadges">
+                        <a><i class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
+                              title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</i>
+                        </a>
+                    </ng-container>
+                </td>
+                <td class="col-item-tags">
+                    <ng-container *ngIf="showTags">
+                        <span class="itemtags">
+                            <a *ngFor="let tag of getItemTags(item)">
+                                <i class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
+                                  title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires + ')' : '' }}">{{ tag.name }}</i>
+                            </a>
+                        </span>
+                    </ng-container>
+                </td>
                 <td>{{ item.modified }}</td>
                 <td>{{ listOwnerNames(item) }}</td>
                 <td>
@@ -86,15 +123,22 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
 })
 export class DirectoryListComponent {
     itemList: DocumentOrFolder[];
+    itemBadges: Record<number, AccessLevelBadge>;
+    itemTags: Record<number, ITag[]>;
     item: IFolder;
     canCreate: boolean;
+    // TODO: persist these visibility modifiers via user settings
     showId = false;
+    showTags = true;
+    showAccessBadges = true;
 
     constructor() {
         const fg = folderglobals();
         this.itemList = fg.items;
         this.item = fg.curr_item;
         this.canCreate = Users.isRealUser();
+        this.itemBadges = {};
+        this.itemTags = {};
 
         // TODO: Allow to sort all columns instead
         if (
@@ -103,9 +147,75 @@ export class DirectoryListComponent {
         ) {
             this.itemList = this.itemList.sort((a, b) => b.id - a.id);
         }
+
+        // this.item is the current directory folder
+        this.getAccessLevelBadges(this.item).then((value) => {
+            this.itemBadges = value ?? {};
+        });
+        this.getFolderItemTags(this.item).then((value) => {
+            this.itemTags = value ?? {};
+        });
     }
 
     listOwnerNames(i: IItem) {
         return i.owners.map((o) => o.name).join(", ");
     }
+
+    async getAccessLevelBadges(
+        parentFolder: IItem
+    ): Promise<Record<number, AccessLevelBadge>> {
+        const res = await to(
+            $http.get<Record<number, number>>(
+                `/items/getBadges/${parentFolder.id}`
+            )
+        );
+        let badges: Record<number, AccessLevelBadge> = {};
+        if (res.ok) {
+            badges = res.result.data;
+            return badges;
+        }
+        return {};
+    }
+
+    getItemBadge(itemId: number) {
+        return this.itemBadges[itemId];
+    }
+
+    getItemBadgeName(itemId: number) {
+        const name = AccessLevelBadge[this.itemBadges[itemId]];
+        if (name) {
+            return (
+                name[0] + name.substring(1, name.length).toLowerCase()
+            ).replace("_", "-");
+        }
+        return "";
+    }
+
+    async getFolderItemTags(
+        parentFolder: IItem
+    ): Promise<Record<number, ITag[]>> {
+        const res = await to(
+            $http.get<Record<number, ITag[]>>(
+                `/tags/getTags/${parentFolder.id}`
+            )
+        );
+        if (res.ok) {
+            return res.result.data;
+        }
+        return {};
+    }
+
+    getItemTags(item: IItem) {
+        return this.itemTags[item.id];
+    }
+
+    getTagTypeString(tag: ITag) {
+        return tag.name.startsWith("group:")
+            ? "group"
+            : TagType[tag.type].toLowerCase();
+    }
+
+    protected readonly AccessLevelBadge = AccessLevelBadge;
+    protected readonly AccessLevelBadgeInfo = AccessLevelBadgeInfo;
+    protected readonly TagType = TagType;
 }
