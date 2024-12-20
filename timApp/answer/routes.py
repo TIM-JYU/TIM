@@ -627,6 +627,10 @@ def post_mass_answer(
     curr_user = get_current_user_object()
     ret = {}
     for save, inp in inputs.items():
+        # try:
+        # TODO: Group requests by plugins
+        #   Call plugins with multiple inputs
+        #   commit db.session only once
         ans = post_answer_impl(
             save,
             inp["input"],
@@ -639,6 +643,14 @@ def post_mass_answer(
             error=verify_ip_address(user=curr_user),
         )
         ret[save] = ans.result
+        # ret[save] = {"status": 200, "result": ans.result}
+        # TODO: Check if use cases where same document can have some plugins with access and some not
+        # except AccessDenied as e:
+        #     ret[save] = {"status": 403, "result": e.args}
+        # 400?
+        # TODO: if one plugin raises 500, we probably can't accept others as db may need db.session.rollback()
+        # except Exception as e:
+        #     ret[save] = {"status": 500, "result": e}
     print(ret)
     return json_response(ret)
     # return ok_response()
