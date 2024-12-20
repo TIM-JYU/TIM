@@ -1454,43 +1454,26 @@ def get_item(item_id: int):
     return json_response(i)
 
 
-@view_page.get("/items/accesses/<int:item_id>")
-def get_item_accesses(item_id: int):
-    """Return a list of usergroup ids that have any access to the item"""
-
-    i = Item.find_by_id(item_id)
-    if not i:
-        raise NotExist("Item not found")
-    verify_view_access(i)
-
-    accs = list(set(v.usergroup.id for v in i.block.accesses.values()))
-
-    # from timApp.util.logger import log_info
-    # log_info(str(accs))
-    return json_response(accs)
-
-
-@view_page.get("/items/accesses_all/<int:folder_id>")
-def get_item_accesses_all(folder_id: int):
-    """Return a list of usergroup ids that have any access to the items in the directory"""
-
+@view_page.get("/items/getBadges/<int:folder_id>")
+def get_item_access_badges(folder_id: int) -> Response:
+    """Return access level information for items in the current directory"""
+    user = get_current_user_object()
     folder = Folder.find_by_id(folder_id)
     items: list[Item] = []
-    # TODO: preferably we should only do one db request to get all the items in the directory,
-    #       we don't really care if they are folders or documents
-    items.extend(folder.get_all_folders())
-    items.extend(folder.get_all_documents())
+    viewable_folders = [
+        f for f in folder.get_all_folders() if user.has_view_access(i=f)
+    ]
+    items.extend(viewable_folders)
+    items.extend(folder.get_all_documents(filter_user=user))
 
-    item_accesses = dict()
+    badges = dict()
     for item in items:
-        verify_view_access(item)
-        accesses = list(set(v.usergroup.id for v in item.block.accesses.values()))
-        item_accesses[int(item.id)] = accesses
+        badges[int(item.id)] = item.visibility.value
 
-    # from timApp.util.logger import log_info
-    # log_info(str(accs))
+    from timApp.util.logger import log_info
 
-    return json_response(item_accesses)
+    log_info(str(badges))
+    return json_response(badges)
 
 
 @view_page.post("/items/relevance/set/<int:item_id>")

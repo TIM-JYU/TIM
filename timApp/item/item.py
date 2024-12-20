@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import Enum
 from itertools import accumulate
 from typing import TYPE_CHECKING
 
@@ -7,17 +8,36 @@ from flask import current_app
 from sqlalchemy import tuple_, func, select
 from sqlalchemy.orm import defaultload
 
+from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import include_if_loaded, db, run_sql
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location, date_to_relative, cached_property
 
 if TYPE_CHECKING:
     from timApp.folder.folder import Folder
     from timApp.user.user import User
+
+
+class ItemVisibility(Enum):
+    """
+    Represents the visibility level of an item.
+    Visibility level is determined by view access,
+    such that it always represents the least restrictive access level:
+    if both 'Anonymous users' and say a Haka group (= organisation) have view access,
+    the visibility level would be 'PUBLIC' (corresponding to 'Anonymous users').
+    """
+
+    NONE = 0  # this has no use for now
+    PUBLIC = 1
+    LOGGED_IN = 2
+    ORGANIZATION = 3
+    LIMITED = 4
+    PRIVATE = 5
 
 
 class ItemBase:
@@ -109,6 +129,31 @@ class Item(ItemBase):
         parts = self.path_without_lang.rsplit("/", 1)
         return parts[len(parts) - 1]
 
+    @property
+    def visibility(self) -> ItemVisibility:
+        if self.block is None:
+            return ItemVisibility.NONE
+
+        block_access_ids = [tuplekey[0] for tuplekey in self.block.accesses.keys()]
+
+        # Special groups
+        if ItemVisibility.PUBLIC in block_access_ids:
+            return ItemVisibility.PUBLIC
+        if ItemVisibility.LOGGED_IN in block_access_ids:
+            return ItemVisibility.LOGGED_IN
+        for group in UserGroup.get_organizations():
+            if group.id in block_access_ids:
+                return ItemVisibility.ORGANIZATION
+
+        # Specific rights that are not special groups
+        for ba in self.block.accesses.values():
+            if ba.access_type is not AccessType.owner:
+                return ItemVisibility.LIMITED
+
+        # If none of the above, it must be private.
+        return ItemVisibility.PRIVATE
+        # return ItemVisibility.NONE
+
     def parents_to_root(self, include_root=True, eager_load_groups=False):
         if not self.path_without_lang:
             return []
@@ -180,6 +225,7 @@ class Item(ItemBase):
             "rights": get_user_rights_for_item(self, curr_user),
             "unpublished": self.block.is_unpublished() if self.block else False,
             "public": self.public,
+            "visibility": self.visibility,
             # We only add tags if they've already been loaded.
             **include_if_loaded("tags", self.block),
             **include_if_loaded("relevance", self.block),
