@@ -10,12 +10,12 @@ const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
 
 enum AccessLevelBadge {
-    NO_BADGE = -1,
-    PUBLIC = 0,
-    LOGGED_IN = 1,
-    ORGANIZATION = 2, // Haka organizations
-    LIMITED = 3, // custom groups, users, etc.
-    PRIVATE = 4, // only owner(s)
+    NO_BADGE = 0,
+    PUBLIC = 1,
+    LOGGED_IN = 2,
+    ORGANIZATION = 3, // Haka organizations
+    LIMITED = 4, // custom groups, users, etc.
+    PRIVATE = 5, // only owner(s)
 }
 
 const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
@@ -165,41 +165,13 @@ export class DirectoryListComponent {
         parentFolder: IItem
     ): Promise<Record<number, AccessLevelBadge>> {
         const res = await to(
-            $http.get<Record<number, number[]>>(
-                `/items/accesses_all/${parentFolder.id}`
+            $http.get<Record<number, number>>(
+                `/items/getBadges/${parentFolder.id}`
             )
         );
-        let item_accesses: Record<number, number[]>;
-        const badges: Record<number, AccessLevelBadge> = {};
+        let badges: Record<number, AccessLevelBadge> = {};
         if (res.ok) {
-            item_accesses = res.result.data;
-
-            let hakaOrgIds: number[] = [];
-            this.getHakaOrgIds().then((value) => (hakaOrgIds = value));
-
-            for (const item_id in item_accesses) {
-                if (
-                    Object.prototype.hasOwnProperty.call(item_accesses, item_id)
-                ) {
-                    // Logged-in users = 0, Anon users = 1, jyu.fi users = 5
-                    const ids = item_accesses[item_id];
-
-                    if (ids.includes(1)) {
-                        badges[item_id] = AccessLevelBadge.PUBLIC;
-                    } else if (ids.includes(0)) {
-                        badges[item_id] = AccessLevelBadge.LOGGED_IN;
-                    } else if (this.hasSomeHakaOrgAccess(ids, hakaOrgIds)) {
-                        badges[item_id] = AccessLevelBadge.ORGANIZATION;
-                    } else if (this.hasOtherThanOwnerRights(item_id, ids)) {
-                        // for more info we would have to do db queries, so perhaps just use
-                        // a label like 'Limited' or 'Restricted'
-                        badges[item_id] = AccessLevelBadge.LIMITED;
-                    } else {
-                        // Only owners
-                        badges[item_id] = AccessLevelBadge.PRIVATE;
-                    }
-                }
-            }
+            badges = res.result.data;
             return badges;
         }
         return {};
@@ -241,30 +213,6 @@ export class DirectoryListComponent {
         return tag.name.startsWith("group:")
             ? "group"
             : TagType[tag.type].toLowerCase();
-    }
-
-    async getHakaOrgIds() {
-        const res = await to($http.get<number[]>(`/groups/getOrgs/ids`));
-        if (res.ok) {
-            return res.result.data;
-        }
-        return [];
-    }
-
-    hasSomeHakaOrgAccess(groupIds: number[], hakaGroupIds: number[]) {
-        return groupIds.some((id) => hakaGroupIds.includes(id));
-    }
-
-    hasOtherThanOwnerRights(itemId: string, groupIds: number[]) {
-        const item_id = parseInt(itemId, 10);
-        const items = this.itemList.filter((item) => item.id == item_id);
-        if (items.length != 1) {
-            return false; // if we got multiple items with the same id, something is wrong
-        }
-
-        const ownerIds: number[] = items[0].owners.map((group) => group.id);
-        const otherIds = groupIds.filter((id) => !ownerIds.includes(id));
-        return otherIds.length > 0;
     }
 
     protected readonly AccessLevelBadge = AccessLevelBadge;
