@@ -31,6 +31,7 @@ from timApp.answer.answers import (
 )
 from timApp.answer.backup import send_answer_backup_if_enabled
 from timApp.answer.exportedanswer import ExportedAnswer
+from timApp.answer.massanswer import mass_answer
 from timApp.auth.accesshelper import (
     verify_logged_in,
     get_doc_or_abort,
@@ -622,38 +623,39 @@ def post_mass_answer(
     abData: dict[str, Any] = field(default_factory=dict),
     options: dict[str, Any] = field(default_factory=dict),
 ):
-    print(inputs)
-    print([(save, inputs[save]) for save in inputs])
-    curr_user = get_current_user_object()
-    ret = {}
-    for save, inp in inputs.items():
-        # try:
-        # TODO: Group requests by plugins
-        #   Call plugins with multiple inputs
-        #   commit db.session only once
-        ans = post_answer_impl(
-            save,
-            inp["input"],
-            abData,
-            options,
-            curr_user,
-            get_urlmacros_from_request(),
-            get_other_session_users_objs(),
-            get_origin_from_request(),
-            error=verify_ip_address(user=curr_user),
-        )
-        ret[save] = ans.result
-        # ret[save] = {"status": 200, "result": ans.result}
-        # TODO: Check if use cases where same document can have some plugins with access and some not
-        # except AccessDenied as e:
-        #     ret[save] = {"status": 403, "result": e.args}
-        # 400?
-        # TODO: if one plugin raises 500, we probably can't accept others as db may need db.session.rollback()
-        # except Exception as e:
-        #     ret[save] = {"status": 500, "result": e}
-    print(ret)
-    return json_response(ret)
-    # return ok_response()
+    ret = mass_answer(inputs, abData, options)
+    # print(inputs)
+    # print([(save, inputs[save]) for save in inputs])
+    # curr_user = get_current_user_object()
+    # ret = {}
+    # for save, inp in inputs.items():
+    #     # try:
+    #     # TODO: Group requests by plugins
+    #     #   Call plugins with multiple inputs
+    #     #   commit db.session only once
+    #     ans = post_answer_impl(
+    #         save,
+    #         inp["input"],
+    #         abData,
+    #         options,
+    #         curr_user,
+    #         get_urlmacros_from_request(),
+    #         get_other_session_users_objs(),
+    #         get_origin_from_request(),
+    #         error=verify_ip_address(user=curr_user),
+    #     )
+    #     ret[save] = ans.result
+    #     # ret[save] = {"status": 200, "result": ans.result}
+    #     # TODO: Check if use cases where same document can have some plugins with access and some not
+    #     # except AccessDenied as e:
+    #     #     ret[save] = {"status": 403, "result": e.args}
+    #     # 400?
+    #     # TODO: if one plugin raises 500, we probably can't accept others as db may need db.session.rollback()
+    #     # except Exception as e:
+    #     #     ret[save] = {"status": 500, "result": e}
+    # print(ret)
+    # return json_response(ret)
+    return ok_response()
     # return ok_response()
 
 
