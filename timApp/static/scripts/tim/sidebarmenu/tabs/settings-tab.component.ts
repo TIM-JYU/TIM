@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, EventEmitter} from "@angular/core";
 import type {UserService} from "tim/user/userService";
 import {Users} from "tim/user/userService";
 import type {ViewCtrl} from "tim/document/viewctrl";
@@ -7,12 +7,18 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {LectureController} from "tim/lecture/lectureController";
 import type {DocumentOrFolder, IDocument} from "tim/item/IItem";
 import {isRootFolder, redirectToItem} from "tim/item/IItem";
-import type {IMeetingMemoSettings} from "tim/util/globals";
+import type {IMeetingMemoSettings, ISettings} from "tim/util/globals";
 import {isDocumentGlobals, someglobals} from "tim/util/globals";
 import type {IViewRange} from "tim/document/viewRangeInfo";
 import {getCurrentViewRange, toggleViewRange} from "tim/document/viewRangeInfo";
 import type {IOkResponse} from "tim/util/utils";
-import {getTypedStorage, to2, toPromise} from "tim/util/utils";
+import {
+    getTypedStorage,
+    getViewName,
+    replaceStyle,
+    to2,
+    toPromise,
+} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {getActiveDocument} from "tim/document/activedocument";
 import type {ITemplateParams} from "tim/printing/print-dialog.component";
@@ -34,13 +40,40 @@ import {showMessageListCreation} from "tim/messaging/showMessageListCreation";
 import type {IVisibilityVars} from "tim/timRoot";
 import {getVisibilityVars} from "tim/timRoot";
 import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
+import type {UserGroupDialogParams} from "tim/user/user-group-dialog.component";
 
 const DEFAULT_PIECE_SIZE = 20;
+
+type QuickThemeEntry = {
+    id: number;
+    title: string;
+    enabled: boolean;
+};
+
+const USER_PREFS_CHANGED: EventEmitter<ISettings> = new EventEmitter();
+
+export function notifyUserPrefsChanged(settings: ISettings) {
+    USER_PREFS_CHANGED.emit(settings);
+}
 
 @Component({
     selector: "settings-tab",
     template: `
         <ng-template i18n>Document settings</ng-template>
+        <ng-container *ngIf="users.isRealUser() && quickThemes.length > 0">
+            <h5 i18n>Quick themes</h5>
+            <div class="flex flex-wrap gap-1 quick-theme-container">
+                <button *ngFor="let theme of quickThemes"
+                        class="btn btn-xs" 
+                        [class.btn-primary]="theme.enabled"
+                        [class.active]="theme.enabled"
+                        [class.btn-default]="!theme.enabled"
+                        (click)="toggleTheme(theme)"
+                        >
+                    {{ theme.title }}
+                </button>
+            </div>
+        </ng-container>
         <ng-container>
             <h5 i18n>Help</h5>
             <div class="flex cl">
@@ -250,9 +283,10 @@ const DEFAULT_PIECE_SIZE = 20;
 
         <ng-container *ngIf="users.canScheduleFunctions()">
             <h5 i18n>Scheduled functions</h5>
-            <button (click)="openScheduleDialog()" class="timButton" i18n>Manage scheduled functions</button>
+            <button (click)="openScheduleDialog()" class="timButton btn-block" i18n>Manage scheduled functions</button>
         </ng-container>
     `,
+    styleUrls: ["./settings-tab.component.scss"],
 })
 export class SettingsTabComponent implements OnInit {
     hideVars: IVisibilityVars = getVisibilityVars();
@@ -269,6 +303,7 @@ export class SettingsTabComponent implements OnInit {
     docSettings?: IDocSettings;
     memoMinutesSettings?: IMeetingMemoSettings;
     isAutoCounterNumbering: boolean = false;
+    quickThemes: QuickThemeEntry[] = [];
     private currentViewRange?: IViewRange;
     private documentMemoMinutes: string | undefined;
 
@@ -297,6 +332,22 @@ export class SettingsTabComponent implements OnInit {
         }
         if (!this.item?.isFolder) {
             this.loadViewRangeSettings();
+        }
+        if (this.users.isLoggedIn()) {
+            void this.loadQuickThemesList();
+        }
+
+        USER_PREFS_CHANGED.subscribe(async () => {
+            await this.loadQuickThemesList();
+        });
+    }
+
+    private async loadQuickThemesList() {
+        const r = await toPromise(
+            this.http.get<QuickThemeEntry[]>("/settings/quickThemes")
+        );
+        if (r.ok) {
+            this.quickThemes = r.result;
         }
     }
 
@@ -591,7 +642,11 @@ export class SettingsTabComponent implements OnInit {
     }
 
     async createGroup(): Promise<void> {
-        const doc = await to2(showUserGroupDialog());
+        const params: UserGroupDialogParams = {
+            defaultGroupFolder: "",
+            canChooseFolder: true,
+        };
+        const doc = await to2(showUserGroupDialog(params));
         if (doc.ok) {
             redirectToItem(doc.result);
         }
@@ -632,5 +687,25 @@ export class SettingsTabComponent implements OnInit {
             return;
         }
         void to2(openScheduleDialog(this.item));
+    }
+
+    async toggleTheme(theme: QuickThemeEntry) {
+        theme.enabled = !theme.enabled;
+
+        const r = await toPromise(
+            this.http.post<{style_path: string}>(`/settings/quickThemes`, {
+                themes: this.quickThemes
+                    .filter((qe) => qe.enabled)
+                    .map((qe) => qe.id),
+                view_route: getViewName(),
+                doc_id: this.item?.id,
+            })
+        );
+
+        if (r.ok) {
+            const path = r.result.style_path;
+            replaceStyle("user-prefs-style", path);
+            replaceStyle("document-style", path);
+        }
     }
 }

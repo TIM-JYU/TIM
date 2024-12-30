@@ -1052,3 +1052,37 @@ export function closest(arr: number[], val: number): number {
         Math.abs(curr - val) < Math.abs(prev - val) ? curr : prev
     );
 }
+
+export function formatNumberCode(
+    numCode: string,
+    splitEvery: number,
+    targetLength?: number,
+    separator: string = "-"
+) {
+    targetLength = targetLength ?? numCode.length;
+    let newCode = "";
+    for (let i = 0; i < targetLength; i++) {
+        if (i > 0 && i % splitEvery === 0) {
+            newCode += separator;
+        }
+        newCode += numCode[i] || " ";
+    }
+    return newCode;
+}
+
+export function replaceStyle(
+    styleOrigin: "user-prefs-style" | "document-style" | "document-settings",
+    toPath: string
+) {
+    const el = document.querySelector(
+        `link[rel="stylesheet"][data-style-origin="${styleOrigin}"]`
+    );
+    if (!el) {
+        return;
+    }
+    const newPath = `/${toPath}`;
+    if (el.getAttribute("href") == newPath) {
+        return;
+    }
+    el.setAttribute("href", newPath);
+}

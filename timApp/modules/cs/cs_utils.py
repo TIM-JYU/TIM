@@ -1,5 +1,5 @@
 import re
-from tim_common.fileParams import get_2_items
+from tim_common.fileParams import get_2_items, get_param, QueryClass
 
 
 def replace_code(rules: list, s: str) -> str:
@@ -86,3 +86,19 @@ def check_parsons(
     if p == len(exlines) and p == len(usrlines):
         return 1, correct
     return 0, correct
+
+
+def text_value_replace(
+    query: QueryClass, text: str, replace_key: str, by_key: str
+) -> str:
+    text_replace = get_param(query, replace_key, None)
+    text_by = get_param(query, by_key, "")
+    if text_replace:
+        if isinstance(text_replace, list):
+            for rep in text_replace:
+                replace = rep.get("replace", "")
+                if replace:
+                    text = re.sub(replace, rep.get("by", text_by), text, flags=re.M)
+        else:
+            text = re.sub(text_replace, text_by, text, flags=re.M)
+    return text

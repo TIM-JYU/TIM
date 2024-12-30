@@ -1131,8 +1131,12 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
                 user.email,
                 True,
                 user.real_name,
-                group_tim_member.member.send_right or True,
-                group_tim_member.member.delivery_right or False,
+                group_tim_member.member.send_right
+                if group_tim_member.member.send_right is not None
+                else True,
+                group_tim_member.member.delivery_right
+                if group_tim_member.member.delivery_right is not None
+                else False,
             )
 
 

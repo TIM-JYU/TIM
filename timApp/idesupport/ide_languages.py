@@ -74,6 +74,12 @@ class Language:
         """
         return self.filename
 
+    def get_task_directory(self) -> str | None:
+        """
+        :return: Task directory for current file
+        """
+        return self.plugin_json.get("markup", {}).get("task_directory", None)
+
     @staticmethod
     def get_itemname(s: str | None, pattern: str) -> str | None:
         """
@@ -300,11 +306,29 @@ class CPP(CC):
 
 
 class Java(Language):
-    ttype = "java"
+    ttype = ["java", "graphics"]
+    class_pattern = r"\bclass\s+(\w+)"
+    package_pattern = r"\bpackage\s+((\w|\.)+);"
 
     def __init__(self, plugin_json: dict):
         super().__init__(plugin_json)
         self.fileext = "java"
+
+        clsname = self.try_to_get_itemname(Java.class_pattern)
+        if not clsname:
+            clsname, _ = os.path.splitext(self.filename)
+        self.classname = clsname
+
+    def init_filename(self) -> str:
+        filename = super().init_filename()
+        if filename is not None:
+            return filename
+        filename = self.try_to_get_itemname(Java.class_pattern)
+        package = self.try_to_get_itemname(Java.package_pattern)
+        if not package:
+            return filename
+        package_dir = package.replace(".", "/")
+        return f"{package_dir}/{filename}.java"
 
 
 languages = populated(Language)

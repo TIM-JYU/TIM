@@ -241,7 +241,7 @@ def view_ctx_with_urlmacros(
         False,
         hide_names_requested=hide_names_requested,
         urlmacros=get_urlmacros_from_dict(urlmacros)
-        if urlmacros
+        if urlmacros is not None
         else get_urlmacros_from_request(),
         **kwargs,
     )

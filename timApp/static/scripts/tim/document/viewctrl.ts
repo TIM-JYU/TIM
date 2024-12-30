@@ -333,6 +333,10 @@ export class ViewCtrl implements IController {
         this.velpMode = dg.velpMode;
         this.scope = sc;
 
+        if (Users.isInAnswerReview) {
+            document.querySelector("body")?.classList.add("answer-review-mode");
+        }
+
         const currSel = documentglobals().current_list_user;
         if (this.users.length > 0) {
             this.selectedUser = currSel

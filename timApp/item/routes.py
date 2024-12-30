@@ -35,9 +35,11 @@ from timApp.auth.accesshelper import (
     verify_route_access,
     verify_admin,
 )
-from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
-from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
+from timApp.auth.get_user_rights_for_item import (
+    get_user_rights_for_item,
+    UserItemRights,
+)
 from timApp.auth.login import log_in_as_anonymous
 from timApp.auth.session.util import has_valid_session
 from timApp.auth.sessioninfo import (
@@ -62,7 +64,11 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docrenderresult import DocRenderResult
-from timApp.document.docsettings import DocSettings, get_minimal_visibility_settings
+from timApp.document.docsettings import (
+    DocSettings,
+    get_minimal_visibility_settings,
+    DISABLE_ANSWER_REVIEW_MODE,
+)
 from timApp.document.document import (
     get_index_from_html_list,
     dereference_pars,
@@ -125,8 +131,7 @@ from timApp.tim_app import app
 from timApp.timdb.exceptions import PreambleException
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.groups import verify_group_view_access
-from timApp.user.settings.style_utils import resolve_themes
-from timApp.user.settings.styles import generate_style
+from timApp.user.settings.style_utils import StyleForUserContext, get_style_for_user
 from timApp.user.user import User, has_no_higher_right
 from timApp.user.usergroup import (
     UserGroup,
@@ -134,7 +139,7 @@ from timApp.user.usergroup import (
     UserGroupWithSisuInfo,
 )
 from timApp.user.users import get_rights_holders_all
-from timApp.user.userutils import DeletedUserException, grant_access
+from timApp.user.userutils import DeletedUserException
 from timApp.util.flask.requesthelper import (
     view_ctx_with_urlmacros,
     RouteException,
@@ -628,6 +633,8 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     # This is only used for optimizing database access so that we can close the db session
     # as early as possible.
     preload_personal_folder_and_breadcrumbs(current_user, doc_info)
+    # This is used to disable unnecessary database access unless we are in answer review mode.
+    preload_tags_if_answer_review(doc_info)
     # TODO: Closing session here breaks is_attribute_loaded function.
     #  According to https://docs.sqlalchemy.org/en/13/errors.html#error-bhk3, it may not be good practice to close
     #  the session manually in the first place.
@@ -652,6 +659,11 @@ def preload_personal_folder_and_breadcrumbs(current_user: User, doc_info: DocInf
     if current_user.logged_in:
         current_user.get_personal_folder()
     _ = doc_info.parents_to_root_eager
+
+
+def preload_tags_if_answer_review(doc_info: DocInfo):
+    if doc_info.document.get_settings().disable_answer() == DISABLE_ANSWER_REVIEW_MODE:
+        _ = doc_info.block.tags
 
 
 def get_additional_angular_modules(doc_info: DocInfo) -> set[str]:
@@ -812,6 +824,13 @@ def render_doc_view(
                 usergroups = doc_settings.groups()
             except ValueError as e:
                 flash(str(e))
+        # TODO: Remove; this allows admins to bypass the groups: [] option and view all answers
+        if (
+            usergroups is not None
+            and len(usergroups) == 0
+            and verify_admin(require=False, user=current_user)
+        ):
+            usergroups = None
         ugs_without_access = []
         if usergroups is not None:
             ugs = (
@@ -1011,6 +1030,9 @@ def render_doc_view(
             xs, post_process_result.texts, view_range, preamble_count
         )
 
+    if custom_index := doc_settings.custom_index():
+        index = custom_index
+
     if force_hide_names(current_user, doc_info) or view_ctx.hide_names_requested:
         model_u = User.get_model_answer_user()
         model_u_id = model_u.id if model_u else None
@@ -1084,38 +1106,14 @@ def render_doc_view(
         db.session.commit()
 
     exam_mode = is_exam_mode(doc_settings, rights)
-
-    document_themes = doc_settings.themes()
-    if exam_mode:
-        document_themes = list(
-            dict.fromkeys(doc_settings.exam_mode_themes() + document_themes)
-        )
-    override_theme = None
-    document_themes_final = []
-    for theme in document_themes:
-        parts = theme.split(":", 1)
-        if len(parts) == 2:
-            view_route, theme = parts
-            if not theme:
-                continue
-            if view_route and view_ctx.route.value != view_route:
-                continue
-        document_themes_final.append(theme)
-
-    if document_themes_final:
-        document_theme_docs = resolve_themes(document_themes_final)
-        # If the user themes are not overridden, they are merged with document themes
-        user_themes = current_user.get_prefs().theme_docs()
-        if user_themes and not doc_settings.override_user_themes():
-            document_theme_docs = list(
-                (
-                    {d.id: d for d in document_theme_docs}
-                    | {d.id: d for d in user_themes}
-                ).values()
-            )
-        theme_style, theme_hash = generate_style(document_theme_docs)
-        override_theme = f"{theme_style}?{theme_hash}"
-
+    override_theme = get_style_for_user(
+        current_user.get_prefs(),
+        context=StyleForUserContext(
+            view_ctx=view_ctx,
+            doc_info=doc_info,
+            user_rights=rights,
+        ),
+    )
     hide_readmarks = should_hide_readmarks(current_user, doc_settings)
 
     templates_to_render = (
@@ -1267,7 +1265,7 @@ def should_hide_sidemenu(settings: DocSettings, rights: dict):
     return has_no_higher_right(settings.hide_sidemenu(), rights)
 
 
-def is_exam_mode(settings: DocSettings, rights: dict):
+def is_exam_mode(settings: DocSettings, rights: UserItemRights):
     return has_no_higher_right(settings.exam_mode(), rights)
 
 

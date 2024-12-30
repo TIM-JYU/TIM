@@ -468,8 +468,10 @@ def get_group_members(list_name: str) -> Response:
                 else f"User {user.id}",
                 username=user.name if not hide_names else f"user{user.id}",
                 email=user.email if not hide_names else "user@noreply",
-                sendRight=group.send_right or False,
-                deliveryRight=group.delivery_right or False,
+                sendRight=group.send_right if group.send_right is not None else False,
+                deliveryRight=group.delivery_right
+                if group.delivery_right is not None
+                else False,
                 removed=None,
             )
             for user in user_group.users

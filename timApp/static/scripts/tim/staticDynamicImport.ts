@@ -74,6 +74,10 @@ export function staticDynamicImport(s: string) {
             return import("tim/plugin/userselect/user-select.component");
         case "timMessageListManagement":
             return import("tim/messaging/manage/message-list-manage.module");
+        case "timExamGroupManager":
+            return import(
+                "tim/plugin/examGroupManager/exam-group-manager.component"
+            );
         case "oauthAuthorize":
             return import("tim/user/oauth-authorize.component");
         case "timArchive":
@@ -100,6 +104,8 @@ export function staticDynamicImport(s: string) {
             return import(
                 "tim/plugin/symbolbutton/symbol-button-plugin.component"
             );
+        case "steps":
+            return import("tim/plugin/steps/steps-plugin.component");
     }
     throw Error(`Module was not statically known: ${s}`);
 }

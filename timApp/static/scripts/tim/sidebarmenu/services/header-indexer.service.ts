@@ -12,6 +12,8 @@ export interface IHeader {
     id: string;
     level: number;
     text: string;
+    href?: string;
+    classList?: string[];
 }
 
 export interface IHeaderDisplayIndexItem {

@@ -26,6 +26,8 @@ class QueryClass:
         self.jso = None
         self.deleted = {}
         self.randomcheck = ""
+        self.cut_errors = []
+        self.hide_program = False
 
     def set_jso_param(self, value, *keys):
         if self.jso is None:

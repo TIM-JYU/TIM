@@ -47,13 +47,14 @@ class DocThemesTest(TimRouteTest):
 
         light_theme_doc = DocEntry.find_by_path(f"{OFFICIAL_STYLES_PATH}/lighttheme")
         self.current_user.set_prefs(Preferences(style_doc_ids=[light_theme_doc.id]))
+        db.session.commit()
 
-        d = self.create_doc()
-        t = self.get(d.url, as_tree=True)
+        t = self.get("/", as_tree=True)
         personal_theme = get_theme_style_name(t, "user-prefs-style")
         self.assertIsNotNone(personal_theme)
         self.assertNotEqual(personal_theme, "default.css")
 
+        d = self.create_doc()
         d.document.set_settings(
             {"themes": ["hide_focus"], "override_user_themes": True}
         )

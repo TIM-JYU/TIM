@@ -1,6 +1,7 @@
+import re
+
 from authlib.integrations.flask_oauth2 import current_token
 from flask import Response, request
-from marshmallow import missing
 
 from timApp.auth.oauth2.models import Scope
 from timApp.auth.oauth2.oauth2 import require_oauth
@@ -121,7 +122,7 @@ def submit_ide_task() -> Response:
 
     log_info(
         f"tide submit: {current_token.user.name}; "
-        + f"{request.json.get('code_files',[{'task_id_ext': '???'}])[0].get('task_id_ext', 'None')}"
+        + f"{request.json.get('code_files', [{'task_id_ext': '???'}])[0].get('task_id_ext', 'None')}"
     )
 
     submit = utils.TIDESubmitFileSchema.load(request.json)
@@ -134,12 +135,16 @@ def submit_ide_task() -> Response:
     web = answer.result.get("web", {})
     ttype = values.get("type", "")
 
-    if not web.get("error", "") and "comtest" in ttype:  # Run comtest
-        answer_comtest = utils.ide_submit_task(submit, user, "comtest")
+    if not web.get("error", "") and "comtest" in ttype:
+        typeparts = re.split("[,;/]", ttype)
+        for part in typeparts:
+            if "comtest" in part:
+                answer_comtest = utils.ide_submit_task(submit, user, part)
+                break
 
     # TODO: poista seuraavat sitten kun tidecli osaa käsitellä pisteitä
     points = answer.extra.get("points")
-    showPoints = answer.plugin.known.show_points()
+    show_points = answer.plugin.known.show_points()
     allow_user_max = (
         answer.plugin.known.pointsRule.allowUserMax  # type: ignore
         if answer.plugin.known.pointsRule
@@ -148,13 +153,13 @@ def submit_ide_task() -> Response:
     if answer_comtest:
         points = answer_comtest.extra.get("points")
         comtest_result = answer_comtest.result.get("web", {}).get("console", "")
-    if not showPoints:
+    if not show_points:
         points = None
 
     console = web.get("console", "")
     extra_str = ""
     if points:
-        points_str = ", ".join(f"{key}: {value}" for key, value in points.items())
+        points_str = ", ".join(f"{key}: {value:.3g}" for key, value in points.items())
         extra_str = f"Points: {points_str}. "
     if allow_user_max:
         extra_str += "Give your own points in TIM."

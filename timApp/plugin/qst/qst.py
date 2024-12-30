@@ -140,6 +140,7 @@ class QstMarkupModel(GenericMarkupModel):
     # TODO: Convert old QST formats to the new format in production
     json: dict[Any, Any] | None | Missing = missing
     title: str | None | Missing = missing
+    showResult: bool | None | Missing = missing
 
 
 QstBasicState = list[list[str]]
@@ -250,7 +251,14 @@ def qst_answer_jso(m: QstAnswerModel):
     show_points = (
         info.show_points if info is not None and info.show_points is not None else True
     )
-    if not show_points:
+    show_result = True
+    if isinstance(m.markup.showResult, bool) and not m.markup.showResult:
+        show_result = False
+
+    if not show_result:
+        result = False
+
+    if not show_points or not show_result:
         jsonmarkup.pop("expl", None)
         jsonmarkup.pop("points", None)
         jsonmarkup.pop("defaultPoints", None)
@@ -723,7 +731,8 @@ def qst_try_hide_points(jso):
         info, "earlier_answers", 0
     )
     show_points = info.get("show_points", True) if info is not None else True
-    if not limit_reached or not show_points:
+    show_result = markup.get("showResult", True)
+    if not show_result or not limit_reached or not show_points:
         markup.pop("points", None)
         markup.pop("expl", None)
         markup.pop("defaultPoints", None)

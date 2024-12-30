@@ -2,27 +2,43 @@
 from dataclasses import field
 from typing import Any, Sequence
 
-from flask import render_template, flash, Response
+from flask import render_template, flash, Response, session
 from flask import request
 from flask_babel import refresh
 from jinja2 import TemplateNotFound
-from sqlalchemy import select
+from sqlalchemy import select, Row
 
 from timApp.admin.user_cli import do_soft_delete
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.routes import hide_points, hide_points_modifier
-from timApp.auth.accesshelper import verify_logged_in, verify_admin, verify_view_access
+from timApp.auth.accesshelper import (
+    verify_logged_in,
+    verify_admin,
+    verify_view_access,
+    get_doc_or_abort,
+)
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object, clear_session
 from timApp.document.docentry import DocEntry
+from timApp.document.viewcontext import default_view_ctx, ViewRoute
 from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
 from timApp.notification.notify import get_current_user_notifications
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
-from timApp.user.settings.style_utils import is_style_doc
+from timApp.user.settings.style_utils import (
+    is_style_doc,
+    StyleForUserContext,
+    get_style_for_user,
+)
 from timApp.user.user import User, Consent, get_owned_objects_query
-from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
+from timApp.util.flask.requesthelper import (
+    get_option,
+    RouteException,
+    NotExist,
+    view_ctx_with_urlmacros,
+)
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -53,13 +69,76 @@ def get_settings() -> Response:
     return json_response(get_current_user_object().get_prefs())
 
 
-def verify_new_styles(curr_prefs: Preferences, new_prefs: Preferences) -> None:
-    new_style_doc_ids = set(new_prefs.style_doc_ids) - set(curr_prefs.style_doc_ids)
+@settings_page.get("/quickThemes")
+def get_quick_themes() -> Response:
+    verify_logged_in()
+    user = get_current_user_object()
+    prefs = user.get_prefs()
+    ordering = {d: i for i, d in enumerate(prefs.quick_select_style_doc_ids)}
+
+    current_quick_select = set(session.get("quick_select_styles", []))
+
+    style_doc_names: Sequence[Row[tuple[int, str]]] = run_sql(
+        select(DocEntry.id, Block.description)
+        .join(Block)
+        .filter(DocEntry.id.in_(prefs.quick_select_style_doc_ids))
+        .distinct(DocEntry.id)
+    ).all()
+
+    return json_response(
+        sorted(
+            [
+                {
+                    "id": doc_id,
+                    "title": title,
+                    "enabled": doc_id in current_quick_select,
+                }
+                for doc_id, title in style_doc_names
+            ],
+            key=lambda d: ordering[d["id"]],
+        )
+    )
+
+
+@settings_page.post("/quickThemes")
+def set_quick_themes(
+    themes: list[int], doc_id: int | None = None, view_route: str | None = None
+) -> Response:
+    verify_logged_in()
+    user = get_current_user_object()
+    prefs = user.get_prefs()
+
+    selectable_quick_select = set(prefs.quick_select_style_doc_ids)
+    themes = [t for t in themes if t in selectable_quick_select]
+    session["quick_select_styles"] = themes
+
+    style_context = None
+    if doc_id:
+        doc_info = get_doc_or_abort(doc_id)
+        view_ctx = (
+            default_view_ctx
+            if not view_route or view_route not in ViewRoute.__members__.keys()
+            else view_ctx_with_urlmacros(ViewRoute(view_route))
+        )
+        user_rights = get_user_rights_for_item(doc_info, user)
+        style_context = StyleForUserContext(
+            doc_info=doc_info, view_ctx=view_ctx, user_rights=user_rights
+        )
+
+    return json_response({"style_path": get_style_for_user(prefs, style_context)})
+
+
+def verify_new_styles(curr_styles: list[int], new_styles: list[int]) -> None:
+    new_style_doc_ids = set(new_styles) - set(curr_styles)
     if not new_style_doc_ids:
         return
 
     new_style_docs: Sequence[DocEntry] = (
-        run_sql(select(DocEntry).filter(DocEntry.id.in_(new_style_doc_ids)))
+        run_sql(
+            select(DocEntry)
+            .filter(DocEntry.id.in_(new_style_doc_ids))
+            .distinct(DocEntry.id)
+        )
         .scalars()
         .all()
     )
@@ -90,7 +169,10 @@ def save_settings() -> Response:
             val = getattr(curr_prefs, attr)
             j[attr] = val
         new_prefs = Preferences.from_json(j)
-        verify_new_styles(curr_prefs, new_prefs)
+        verify_new_styles(curr_prefs.style_doc_ids, new_prefs.style_doc_ids)
+        verify_new_styles(
+            curr_prefs.quick_select_style_doc_ids, new_prefs.quick_select_style_doc_ids
+        )
         user.set_prefs(new_prefs)
     except TypeError as e:
         raise RouteException(f"Invalid settings: {e}")

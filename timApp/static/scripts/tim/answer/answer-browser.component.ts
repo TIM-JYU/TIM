@@ -298,6 +298,8 @@ export class AnswerBrowserComponent
     peerReviewEnabled = false;
     showNewTask = false;
     buttonNewTask = $localize`New task`;
+    showRefresh = false;
+    refreshing = false;
 
     constructor(
         private element: ElementRef<HTMLElement>,
@@ -374,6 +376,12 @@ export class AnswerBrowserComponent
         const isPeerReview = getViewName() == "review";
         this.isPeerReview = isPeerReview;
         this.review = isPeerReview;
+        if (
+            this.viewctrl.docSettings.force_velps &&
+            getViewName() == "teacher"
+        ) {
+            this.review = true;
+        }
         this.peerReviewEnabled = this.viewctrl.peerReviewInProcess() ?? false;
         if (!this.viewctrl.item.rights.teacher && isPeerReview) {
             this.showBrowseAnswers = false;
@@ -453,6 +461,9 @@ export class AnswerBrowserComponent
             const answs = await this.getAnswers();
             if (answs) {
                 this.answers = answs;
+            }
+            if (this.getPar()?.par.attrs.ideTask !== undefined) {
+                this.showRefresh = true;
             }
             const updated = this.updateAnswerFromURL();
             if (answs && answs.length > 0) {
@@ -954,6 +965,34 @@ export class AnswerBrowserComponent
         this.cdr.detectChanges();
     }
 
+    async refreshPlugin() {
+        const plug = this.getPluginComponent();
+        if (plug?.isUnSaved()) {
+            const ok = await showConfirm(
+                $localize`Load the newest answer`,
+                $localize`Load the newest answer? Your unsaved changes may be lost`
+            );
+            if (!ok) {
+                return;
+            }
+        }
+        this.refreshing = true;
+        const data = await this.getAnswers();
+        if (!data) {
+            this.refreshing = false;
+            return;
+        }
+        this.answers = data;
+        this.updateFiltered();
+        this.selectedAnswer =
+            this.filteredAnswers.length > 0
+                ? this.filteredAnswers[0]
+                : undefined;
+        await this.changeAnswer(undefined, undefined, true);
+        this.refreshing = false;
+        this.cdr.detectChanges();
+    }
+
     findSelectedUserIndex() {
         if (!this.users || !this.user) {
             return -1;
@@ -994,11 +1033,17 @@ export class AnswerBrowserComponent
                 e.preventDefault();
                 await this.changeStudent(1);
                 return true;
-            } else if (e.key === "ArrowLeft" || e.which === KEY_LEFT) {
+            } else if (
+                e.altKey &&
+                (e.key === "ArrowLeft" || e.which === KEY_LEFT)
+            ) {
                 e.preventDefault();
                 await this.changeAnswerTo(-1);
                 return true;
-            } else if (e.key === "ArrowRight" || e.which === KEY_RIGHT) {
+            } else if (
+                e.altKey &&
+                (e.key === "ArrowRight" || e.which === KEY_RIGHT)
+            ) {
                 e.preventDefault();
                 await this.changeAnswerTo(1);
                 return true;
@@ -1818,8 +1863,11 @@ export class AnswerBrowserComponent
             this.modelAnswer = r.result.data.modelAnswer;
             // Don't show "Show model answer" when it's disabled for viewers
             if (
-                this.modelAnswer.disabled &&
-                !this.viewctrl.item.rights.teacher
+                (this.modelAnswer.disabled === "unless_review" &&
+                    !Users.isInAnswerReview &&
+                    !this.viewctrl.item.rights.teacher) ||
+                (this.modelAnswer.disabled === true &&
+                    !this.viewctrl.item.rights.teacher)
             ) {
                 this.hideModelAnswerPanel = true;
             }
