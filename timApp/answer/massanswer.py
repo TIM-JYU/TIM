@@ -1,10 +1,18 @@
 from dataclasses import field
-from typing import Any
+from typing import Any, Union
 
 from flask_babel import gettext
 
-from timApp.answer.answers import ExistingAnswersInfo, get_existing_answers_info
-from timApp.answer.routes import InputAnswer, get_postanswer_plugin_etc
+from timApp.answer.answer import AnswerData
+from timApp.answer.answers import (
+    ExistingAnswersInfo,
+    get_existing_answers_info,
+    get_existing_answers_info_multiple_tasks,
+    get_existing_answers_info_batch,
+)
+from timApp.answer.routes import get_postanswer_plugin_etc
+
+# from timApp.answer.routes import InputAnswer, get_postanswer_plugin_etc
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
     is_in_answer_review,
@@ -12,14 +20,17 @@ from timApp.auth.accesshelper import (
     get_origin_from_request,
     get_plugin_from_request,
     TaskAccessVerification,
+    verify_task_access,
 )
+from timApp.auth.accesstype import AccessType
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docsettings import DISABLE_ANSWER_REVIEW_MODE
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, ViewRoute
+from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.taskid import TaskId
+from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.user.user import has_no_higher_right, User
 from timApp.util.flask.requesthelper import get_urlmacros_from_request
 
@@ -35,6 +46,8 @@ from timApp.util.flask.requesthelper import get_urlmacros_from_request
 #     origin: OriginInfo | None,
 #     error: str | None = None,
 # ) -> AnswerRouteResult:
+
+InputAnswer = Union[AnswerData, list[Any], int, float, str]
 
 
 def mass_answer(
@@ -78,19 +91,43 @@ def mass_answer(
             TaskAccessVerification, ExistingAnswersInfo, list[User], bool, bool, bool
         ],
     ] = {}
-    users = None
-    for save, inp in inputs.items():
-        tid = tids[save]
-        doc, found_plugin = get_plugin_from_request(
-            d.document, tid, context_user, view_ctx
+    users = [curr_user]
+    # ex_ans_infos = get_existing_answers_info_multiple_tasks(
+    #     users, list(tids.values()), True
+    # )
+    # TODO: get these single query
+    # ex_ans_infos = {
+    #     t.doc_task: get_existing_answers_info(users, t, True) for t in tids.values()
+    # }
+    plugs: dict[str, Plugin] = {}
+    # plugdata: vr,    answerinfo,    users,    allow_save,    ask_new,    force_answer,
+    plugdatas = {
+        t.doc_task: get_postanswer_plugin_etc(
+            d, t, abData, curr_user, None, urlmacros, users, [], origin, False
         )
-        if (
-            found_plugin.known.useCurrentUser or found_plugin.task_id.is_global
-        ):  # For plugins that is saved only for current user
-            users = [curr_user]
-        if users is None:
-            users = [curr_user]  # + other_session_users
-        # answerinfo = get_existing_answers_info(users, tid, True) # query all plugin answers here
+        for t in tids.values()
+    }
+    validities = {
+        t: data[0].plugin.is_answer_valid(data[1].count, {})
+        for t, data in plugdatas.items()
+    }
+    # for save, inp in inputs.items():
+    #     tid = tids[save]
+    #     doc, found_plugin = get_plugin_from_request(
+    #         d.document, tid, context_user, view_ctx
+    #     )
+    #     plugs[save] = found_plugin
+    #     ainf = ex_ans_infos[save]
+    #     vr = verify_task_access(
+    #         doc.docinfo,
+    #         tid,
+    #         AccessType.view,
+    #         TaskIdAccess.ReadWrite,
+    #         context_user,
+    #         view_ctx,
+    #     )
+    # get_existing_answers_info
+    # answerinfo = get_existing_answers_info(users, tid, True) # query all plugin answers here
     pass
 
 
