@@ -101,6 +101,7 @@ def mass_answer(
     # }
     plugs: dict[str, Plugin] = {}
     # plugdata: vr,    answerinfo,    users,    allow_save,    ask_new,    force_answer,
+    # Group these (plugdata, validities, infos) into typed dict
     plugdatas = {
         t.doc_task: get_postanswer_plugin_etc(
             d, t, abData, curr_user, None, urlmacros, users, [], origin, False
@@ -111,6 +112,31 @@ def mass_answer(
         t: data[0].plugin.is_answer_valid(data[1].count, {})
         for t, data in plugdatas.items()
     }
+    infos = {
+        t: data[0].plugin.get_info(users, data[1].count, validities[t])
+        for t, data in plugdatas.items()
+    }
+    states = {
+        t: data[1].latest_answer.content
+        if curr_user.logged_in and data[1].latest_answer
+        else None
+        for t, data in plugdatas.items()
+    }
+    # abdata state?
+
+    # preprocessor for jsrunner only -> skip here
+
+    answer_call_datas = {
+        t: {
+            "markup": data[0].plugin.values,
+            "state": states[t],
+            "input": inputs[t],
+            "taskID": tids[t].doc_task,
+            "info": infos[t],
+        }
+        for t, data in plugdatas.items()
+    }
+
     # for save, inp in inputs.items():
     #     tid = tids[save]
     #     doc, found_plugin = get_plugin_from_request(
