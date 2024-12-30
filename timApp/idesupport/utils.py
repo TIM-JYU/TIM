@@ -700,6 +700,8 @@ def get_ide_user_plugin_data(
         elif "source" in extra_file:
             supplementary_files.append(SupplementaryFileSchema.load(extra_file))
 
+    max_points = plugin.values.get("pointsRule", {}).get("maxPoints", None)
+
     return TIDEPluginData(
         task_files=json_ide_files,
         supplementary_files=supplementary_files,
@@ -711,7 +713,7 @@ def get_ide_user_plugin_data(
         doc_id=doc.id,
         par_id=par.id,
         ide_task_id=ide_task_id,
-        max_points=plugin.values.get("pointsRule", {}).get("maxPoints", None),
+        max_points=max_points,
     )
 
 
@@ -785,7 +787,10 @@ def get_task_points(doc_id: int, task_id: str, user: User):
     task = TaskId(task_name=task_id, doc_id=doc_id)
     get_answers(user_ctx.user, [task], answer_map)
 
-    current_points = next(iter(answer_map.values()))[0].points
+    if any(answer_map.values()):
+        current_points = next(iter(answer_map.values()))[0].points
+    else:
+        current_points = None
 
     points = {"current_points": current_points}
 
