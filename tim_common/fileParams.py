@@ -289,6 +289,14 @@ def get_cache_keys():
 
 # noinspection PyBroadException
 def get_url_lines(url: str):
+    # TODO: there might be a problem with sama cache for lines and
+    # strings. If the same url is used for both, the cache will
+    # return the wrong one. Maybe must use different keys for
+    # lines (maybe add some LINE_ to the key saving lines)
+    # And should be studied if cache is better with redis.
+    # Now using memory cache, the speed difference is at least 10x
+    # in small multihtml-route compared to empty cache.
+    #
     global cache
     # print("========= CACHE KEYS ==========\n", get_cache_keys())
     if url in cache:

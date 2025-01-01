@@ -714,6 +714,7 @@ const CsMarkupOptional = t.partial({
     file: t.string,
     filename: t.string,
     fullhtml: t.string,
+    srchtml: t.string,
     fullhtmlurl: t.string,
     fullhtmlparams: t.record(t.string, t.string),
     git: GitMarkup,
@@ -1871,6 +1872,9 @@ export class CsController extends CsBase implements ITimComponent {
             return this.fullhtmlCache;
         }
         let r = this.markup.fullhtml;
+        if (!r) {
+            r = this.markup.srchtml;
+        }
         if ((!r && this.type.includes("html")) || this.isProcessing) {
             return "REPLACEBYCODE";
         }
@@ -4034,7 +4038,7 @@ ${fhtml}
                 // TODO: Why would someone _not_ want console?
                 //  There won't be anything visible in UI without it.
                 // Answer: console means that consolelog goes to same
-                // place than write.  Itherwise it goes to browser console
+                // place than write.  Otherwise it goes to browser console
                 console: !this.attrsall.markup.jsBrowserConsole, // true, // this.type.includes("/c"),
                 ...extra,
             },
