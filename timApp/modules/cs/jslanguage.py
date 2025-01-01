@@ -4,7 +4,7 @@ from languages import Language, get_by_id, get_by_id_and_pop
 
 from tim_common.fileParams import get_url_lines_as_string
 
-from urllib.parse import urlparse, urlunparse, urljoin
+from urllib.parse import urlparse, urljoin
 
 JSREADYHTML = {}
 
@@ -24,8 +24,8 @@ def add_host_if_missing(url: str, default_host: str) -> str:
 
 def get_from_url(url: str) -> str:
     """
-    Get html from url but use cahche if allready there.
-    For that remeber to empty csplin cache if needed (/cs/refresh)!
+    Get html from url but use cache if already there.
+    For that remember to empty csplugin cache if needed (/cs/refresh)!
     """
     print(f"get_from_url: {url}")
     url = add_host_if_missing(url, os.environ["TIM_HOST"])
