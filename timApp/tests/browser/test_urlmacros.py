@@ -1,3 +1,4 @@
+import time
 from typing import Optional
 
 from timApp.document.docinfo import DocInfo
@@ -47,7 +48,7 @@ print("Hello World")
         self, d: DocInfo, console_text: str, query: dict[str, str] | None = None
     ):
         self.goto_document(d, query=query)
-        runbutton = self.find_element_avoid_staleness("#t button")
+        runbutton = self.find_element_avoid_staleness(".csRunMenu button")
         runbutton.click()
         self.wait_until_present_and_vis(".console")
         e = self.find_element(".console")

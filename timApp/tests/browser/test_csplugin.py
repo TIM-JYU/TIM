@@ -1,4 +1,5 @@
 import re
+import time
 from time import sleep
 
 from selenium.webdriver.common.by import By
@@ -294,6 +295,7 @@ postprogram: |!!
 
         # Let's refresh, should be 4/3 and Uusi button visible and new task
         self.goto_document(d)
+        time.sleep(0.5)
         self.wait_until_present(".csEditArea")
         input = self.find_element(".csEditArea")
         input.click()
