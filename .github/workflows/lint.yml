@@ -22,6 +22,12 @@ jobs:
     if: needs.skip_check.outputs.should_skip != 'true'
 
     steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
       - uses: actions/checkout@v3
       - name: Cache node modules
         uses: actions/cache@v3
@@ -54,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install APT Packages
-        uses: awalsh128/cache-apt-pkgs-action@v1.0.1
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.2
         with:
           packages: libxmlsec1-dev libxmlsec1-openssl
           version: "1.1"
