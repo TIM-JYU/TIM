@@ -25,6 +25,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
       - uses: actions/checkout@v3
       - name: Cache node modules
         uses: actions/cache@v3
@@ -49,7 +52,7 @@ jobs:
     name: Lint Python
     runs-on: ubuntu-latest
     env:
-      PYTHON_VERSION: "3.10"
+      PYTHON_VERSION: "3.11"
 
     needs: skip_check
     if: needs.skip_check.outputs.should_skip != 'true'
@@ -64,7 +67,7 @@ jobs:
       - name: Install Poetry
         run: pipx install poetry
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v3
         with:
           python-version: "${{ env.PYTHON_VERSION }}"
           cache: poetry
