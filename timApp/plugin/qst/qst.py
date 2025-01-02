@@ -185,15 +185,16 @@ def qst_answer(m):
 def qst_answer_multi(m: QstMultiAnswerModel):
     resps = []
     for q in m.plugs:
-        resps.append(qst_answer_jso(q))
-    return resps
+        save, web, tim_info = qst_answer_impl(q)
+        resps.append({"save": save, "web": web, "tim_info": tim_info})
+    return json_response(resps)
 
 
 # qst_plugin.put(/qst/multianswer)
 # return map (qst_answer, m[])
 
 
-def qst_answer_jso(m: QstAnswerModel):
+def qst_answer_impl(m: QstAnswerModel):
     tim_info = {}
     answers = m.input.answers
     spoints = m.markup.points
@@ -294,6 +295,11 @@ def qst_answer_jso(m: QstAnswerModel):
         "show_result": result,
         "state": webstate,
     }
+    return save, web, tim_info
+
+
+def qst_answer_jso(m: QstAnswerModel):
+    save, web, tim_info = qst_answer_impl(m)
     return json_response({"save": save, "web": web, "tim_info": tim_info})
 
 
