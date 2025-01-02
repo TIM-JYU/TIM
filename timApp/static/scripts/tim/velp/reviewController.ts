@@ -35,7 +35,6 @@ import {
     checkIfElement,
     getElementParent,
     isText,
-    log,
     to,
     truncate,
 } from "tim/util/utils";
