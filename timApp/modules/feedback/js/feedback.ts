@@ -18,7 +18,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {documentglobals} from "tim/util/globals";
-import {injectStyle, log} from "tim/util/utils";
+import {injectStyle} from "tim/util/utils";
 import type {EditMode} from "tim/document/popup-menu-dialog.component";
 import {HttpClientModule} from "@angular/common/http";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -1058,7 +1058,7 @@ export class FeedbackPluginComponent
         if (timComponent) {
             const content = timComponent.getPar()?.getContent();
             if (!content) {
-                log("Not in paragraph, skipping getting answers");
+                // log("Not in paragraph, skipping getting answers");
                 return [];
             }
             // Add additional nodes to be accepted if the need arises.
