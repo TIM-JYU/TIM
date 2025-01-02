@@ -28,6 +28,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.user.user import has_no_higher_right, User
 from timApp.util.flask.requesthelper import get_urlmacros_from_request
+from timApp.util.utils import try_load_json
 from tim_common.timjsonencoder import TimJsonEncoder
 
 # def post_answer_impl(
@@ -106,7 +107,7 @@ def mass_answer(
         for t in tids.values()
     }
     validities = {
-        t: data[0].plugin.is_answer_valid(data[1].count, {})
+        t: data[0].plugin.is_answer_valid(data[1].count, {})[0]
         for t, data in plugdatas.items()
     }
     infos = {
@@ -126,8 +127,8 @@ def mass_answer(
     answer_call_datas = {
         t: {
             "markup": data[0].plugin.values,
-            "state": states[t],
-            "input": inputs[t],
+            "state": try_load_json(states[t]),
+            "input": inputs[t]["input"],
             "taskID": tids[t].doc_task,
             "info": infos[t],
         }
