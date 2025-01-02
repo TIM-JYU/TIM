@@ -353,7 +353,7 @@ class Language:
         """
         :return: list of needed css-files (maybe copiled from scss-files)
         """
-        return ["/cs/css/cs.css"]
+        return ["/csstatic/css/cs.css"]
 
     def convert(self, sourcelines):
         return 0, sourcelines, "", ""
@@ -1865,7 +1865,7 @@ class SimCir(Language):
 
     @staticmethod
     def css_files():
-        return ["/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"]
+        return ["/csstatic/simcir/simcir.css", "/csstatic/simcir/simcir-basicset.css"]
 
 
 class Sage(Language):
@@ -2203,7 +2203,7 @@ class Mathcheck(Language):
 
     @staticmethod
     def css_files():
-        return ["/cs/css/mathcheck.css"]
+        return ["/csstatic/css/mathcheck.css"]
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)

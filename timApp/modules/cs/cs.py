@@ -1158,7 +1158,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     "/cs/js-parsons/lib/prettify.js",
                 ],
                 "css": [
-                    "/cs/css/cs.css",
+                    "/csstatic/css/cs.css",
                     "/cs/js-parsons/parsons.css",
                     "/cs/js-parsons/lib/prettify.css",
                 ],
