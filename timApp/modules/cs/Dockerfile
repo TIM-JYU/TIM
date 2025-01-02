@@ -10,7 +10,7 @@
 # (add --push arg to also push the images automatically to Docker Hub)
 
 
-FROM ubuntu:22.04 as base
+FROM ubuntu:24.04 AS base
 LABEL org.opencontainers.image.authors="tim@jyu.fi"
 LABEL org.opencontainers.image.source="https://github.com/TIM-JYU/TIM"
 
@@ -41,10 +41,11 @@ RUN bash -c "add-apt-repository ppa:deadsnakes/ppa && apt-get update && \
     cd /usr/lib/python3/dist-packages/ && cp apt_pkg*.so apt_pkg.so && \
     wget -q https://bootstrap.pypa.io/get-pip.py -O get-pip.py && ${PYTHON} get-pip.py && rm get-pip.py && \
     ${APT_CLEANUP}"
-RUN ${PYTHON} -m pip install --ignore-installed Flask bleach lxml && bash -c "${APT_CLEANUP}"
+RUN ${PYTHON} -m pip install --ignore-installed Flask bleach lxml==4.9.4 && bash -c "${APT_CLEANUP}"
 
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && bash -c "${APT_CLEANUP}"
-RUN echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" > /etc/apt/sources.list.d/mono-official-stable.list
+RUN bash -c "gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
+    && echo 'deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main' | tee /etc/apt/sources.list.d/mono-official-stable.list \
+    && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} \
 build-essential \
 ca-certificates \
@@ -68,9 +69,21 @@ sqlite3 \
 valgrind \
 xvfb \
 x11-utils \
+x11-xkb-utils \
+xkb-data \
 libglfw3 \
 libglfw3-dev \
 && ${APT_CLEANUP}"
+
+# 2025-01-03: X11 shipped with Ubuntu 24.04 seems to be not synced with
+# xkb-data package. This causes the following messages being logged:
+#     Could not resolve keysym XF86CameraAccessEnable (and for other XF86 keys)
+# The error stems from /usr/share/X11/xkb/symbols/inet containing symbols that
+# xkb does not support. To suppress the message, we empty the inet symbols
+# for the default keyboard layout (evdev).
+# We do not use the keyboard anyways since we run headless.
+# TODO: This might not be needed in future releases of Ubuntu.
+RUN bash -c "echo 'xkb_symbols \"evdev\" {};' > /usr/share/X11/xkb/symbols/inet"
 
 # Copy any certificates that are needed
 # Right some servers doe not share the certificate correctly,
@@ -78,9 +91,6 @@ libglfw3-dev \
 # See https://gitlab.com/tim-jyu/tim/-/issues/2590
 COPY cert_chains/*.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
-RUN ln -s /etc/ssl/certs/ca-certificates.crt /usr/lib/ssl/cert.pem && \
-    chmod 775 /usr/lib/ssl/cert.pem && \
-    chmod 775 /etc/ssl/certs/ca-certificates.crt
 
 # We use Mesa drivers by default for GUI rendering
 # For this, we specifically force software rendering mode and use the fast "llvmpipe" driver
@@ -94,7 +104,7 @@ ENV XVFB_WHD="1280x1024x24"\
     MESA_SHADER_CACHE_DISABLE="true"
 
 # Docker client binary
-ENV DOCKER_VERSION 20.10.3
+ENV DOCKER_VERSION 27.4.1
 RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz && \
     tar -xzvf docker-${DOCKER_VERSION}.tgz --strip=1 -C /usr/bin docker/docker && \
     rm docker-${DOCKER_VERSION}.tgz && docker --version
@@ -121,9 +131,9 @@ bash -c "${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 # JDK
-ENV JDK_VERSION=22
+ENV JDK_VERSION=23.0.1
 # Grab this path from download links of https://jdk.java.net/
-ENV OPENJDK_DL_PATH=830ec9fcccef480bb3e73fb7ecafe059/36
+ENV OPENJDK_DL_PATH=c28985cbf10d4e648e4004050f8781aa/11
 RUN wget -q https://download.java.net/java/GA/jdk${JDK_VERSION}/${OPENJDK_DL_PATH}/GPL/openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  tar -xf openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  rm openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz
@@ -135,7 +145,7 @@ RUN java -version
 # run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
 
 # JavaFX for OpenJDK
-ENV OPENJFX_VERSION=22.0.1
+ENV OPENJFX_VERSION=23.0.1
 RUN wget -q https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip
@@ -164,11 +174,11 @@ ENV \
 
 RUN bash -c "${APT_INSTALL} \
     libc6 \
-    libgcc1 \
-    libgssapi-krb5-2 \
-    libicu70 \
-    libssl3 \
+    libgcc-s1 \
+    libicu74 \
+    libssl3t64 \
     libstdc++6 \
+    tzdata \
     zlib1g \
 && ${APT_CLEANUP}"
 
@@ -230,7 +240,7 @@ RUN dotnet help && \
 
 EXPOSE 5000
 
-FROM base as complete
+FROM base AS complete
 
 # Temporarily return to root to install packages
 USER root
@@ -239,6 +249,9 @@ USER root
 
 # OpenCV
 RUN $PYTHON -m pip install sympy opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
+
+# Gurobi
+RUN $PYTHON -m pip install gurobipy && bash -c "${APT_CLEANUP}"
 
 # http://www.scipy.org/install.html
 RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
@@ -257,28 +270,22 @@ RUN $PYTHON -m pip install pyqula && bash -c "${APT_CLEANUP}"
 RUN bash -c "$PYTHON -m pip install sktime[all_extras] && ${APT_CLEANUP}"
 
 # R packages
-RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-dev gfortran && ${APT_CLEANUP}"
 
 # Scala
-RUN bash -c "${APT_INSTALL} openjdk-19-jre-headless && ${APT_CLEANUP}"
-ENV SCALA_VERSION 2.13.11
+RUN bash -c "${APT_INSTALL} openjdk-21-jre-headless && ${APT_CLEANUP}"
+ENV SCALA_VERSION 2.13.15
 RUN wget -q https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
  dpkg -i scala-${SCALA_VERSION}.deb && \
  rm scala-${SCALA_VERSION}.deb
 
 # Octave
-RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal gnuplot pstoedit liboctave-dev fonts-freefont-otf && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal gnuplot pstoedit octave-dev fonts-freefont-otf && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} make && ${APT_CLEANUP}"
 RUN bash -c 'echo -n "pkg install -forge io" | octave && \
  echo -n '"'"'pkg install "https://github.com/gnu-octave/statistics/archive/refs/tags/release-1.5.0.tar.gz"'"'"' | octave && \
  echo -n '"'"'pkg install "https://downloads.sourceforge.net/project/octave/Octave%20Forge%20Packages/Individual%20Package%20Releases/struct-1.0.18.tar.gz"'"'"' | octave && \
  echo -n '"'"'pkg install "https://downloads.sourceforge.net/project/octave/Octave%20Forge%20Packages/Individual%20Package%20Releases/optim-1.6.2.tar.gz"'"'"' | octave '
-
-# Octave and gnuplot use Qt to generate plots and relevant UI (not used by us but it's a hard dependency)
-# Latest gnuplot fails to run on kernel versions below 3.15 (see https://github.com/TIM-JYU/TIM/issues/2349)
-# This adopts the following fix:
-# https://github.com/dnschneid/crouton/wiki/Fix-error-while-loading-shared-libraries:-libQt5Core.so.5
-RUN strip --remove-section=.note.ABI-tag /lib/x86_64-linux-gnu/libQt5Core.so.5
 
 # Swift requirements
 RUN bash -c "${APT_INSTALL} libcurl4 libpython3.8 libxml2 && ${APT_CLEANUP}"
@@ -316,11 +323,10 @@ RUN swift --version
 
 RUN echo 'options(repos=structure(c(CRAN="https://cloud.r-project.org/")))' > ~/.Rprofile
 
-# TODO: Newer versions don't compile yet (seems to be missing some deps)
 RUN bash -c "${APT_INSTALL} cmake && \
     git clone https://github.com/stevengj/nlopt.git && \
     cd nlopt && \
-    git checkout b195a672e006f6d9c48bb322f6e8e1d212e4df99 && \
+    git checkout master && \
     cmake -DCMAKE_CXX_FLAGS=-std=c++11 . && make && make install && cd .. && rm -r nlopt && \
     apt-get remove -y cmake && ${APT_CLEANUP}"
 
@@ -332,7 +338,7 @@ RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArm
 RUN bash -c "${APT_INSTALL} bsdmainutils iputils-ping && ${APT_CLEANUP}"
 
 # Kotlin
-ENV         KOTLIN_VERSION=1.8.21 \
+ENV         KOTLIN_VERSION=2.1.0 \
             KOTLIN_HOME=/usr/local/kotlin
 
 RUN bash -c 'cd  /tmp && \
@@ -350,17 +356,17 @@ RUN bash -c 'cd  /tmp && \
 RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
 
 # Go
-ENV GOLANG_VERSION=1.20.5
+ENV GOLANG_VERSION=1.23.4
 RUN wget -q https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && rm go${GOLANG_VERSION}.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
 # NodeJS and TypeScript
-RUN bash -c "(wget -qO- https://deb.nodesource.com/setup_18.x | bash -) && ${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN bash -c "(wget -qO- https://deb.nodesource.com/setup_22.x | bash -) && ${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
 # Install NUnit runner for .NET
-ENV NUNIT_RUNNER_VERSION=3.17.0
+ENV NUNIT_RUNNER_VERSION=3.19.0
 RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version ${NUNIT_RUNNER_VERSION} && \
     # We need to call NUnit directly with dotnet exec in order to properly declare custom references
     ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/net6.0/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
@@ -393,10 +399,8 @@ RUN $PYTHON -m pip install coverage && bash -c "${APT_CLEANUP}"
 
 RUN bash -c "${APT_INSTALL} openscad && ${APT_CLEANUP}"
 
-# Install Racket via ppa:plt/racket
-RUN add-apt-repository ppa:plt/racket && \
-    apt-get update && \
-    bash -c "${APT_INSTALL} racket && ${APT_CLEANUP}"
+# Install Racket
+RUN bash -c "${APT_INSTALL} racket && ${APT_CLEANUP}"
 
 # Install Racket packages
 RUN raco pkg install -i sicp
@@ -439,7 +443,7 @@ RUN bash -c "opam repo add --all-switches --set-default coq-released https://coq
 
 USER agent
 
-FROM complete as sudo
+FROM complete AS sudo
 
 USER root
 ENV LANG en_US.UTF-8
