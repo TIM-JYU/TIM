@@ -477,8 +477,6 @@ export class ReviewController {
                         a,
                         AnnotationAddReason.LoadingExisting
                     );
-                } else {
-                    log("annotation range invalid, adding to margin only");
                 }
             }
             this.addAnnotationToMargin(
@@ -1440,7 +1438,7 @@ export class ReviewController {
         }
         const parent = document.getElementById(annotation.coord.start.par_id);
         if (parent == null) {
-            log(`par ${annotation.coord.start.par_id} not found`);
+            // log(`par ${annotation.coord.start.par_id} not found`);
             return;
         }
 
@@ -1475,7 +1473,6 @@ export class ReviewController {
         }
 
         if (!annotation.answer) {
-            log("annotation.answer is null");
             return;
         }
         // Find answer browser and its scope
@@ -1483,12 +1480,16 @@ export class ReviewController {
         // query selector element -> toggle annotation
         const loader = parent.getElementsByTagName("TIM-PLUGIN-LOADER")[0];
         if (!loader) {
-            log("tim-plugin-loader not found");
+            console.error(
+                `tim-plugin-loader not found in parent element \'${parent.id}\'`
+            );
             return;
         }
         const taskId = loader.getAttribute("task-id");
         if (!taskId) {
-            log("task-id missing");
+            console.error(
+                `task-id missing from plugin loader \'${loader.id}\'`
+            );
             return;
         }
         let ab = this.getAnswerBrowserFromPluginLoader(loader) ?? null;
@@ -1496,13 +1497,17 @@ export class ReviewController {
         if (!ab) {
             const loaderCtrl = this.vctrl.getPluginLoader(taskId);
             if (!loaderCtrl) {
-                log("getPluginLoader failed");
+                console.error(
+                    `getPluginLoader failed for task id \'${taskId}\'`
+                );
                 return;
             }
             loaderCtrl.loadPlugin();
             ab = await loaderCtrl.abLoad.promise;
             if (!ab) {
-                log("plugin has no answerbrowser");
+                const pluginName =
+                    loaderCtrl.parsedTaskId?.name ?? loaderCtrl.taskId;
+                console.warn(`plugin ${pluginName} has no answerbrowser`);
                 return;
             }
         }
@@ -1528,10 +1533,12 @@ export class ReviewController {
         }
         let r = await to(this.vctrl.getAnnotationAsync(prefix + annotation.id));
         if (!r.ok) {
-            log("falling back to showing margin annotation");
+            // log("falling back to showing margin annotation");
             r = await to(this.vctrl.getAnnotationAsync("m" + annotation.id));
             if (!r.ok) {
-                log("getAnnotationAsync failed even for margin");
+                console.error(
+                    `getAnnotationAsync failed even for annotation \'${annotation.id}\'`
+                );
                 return;
             }
         }
