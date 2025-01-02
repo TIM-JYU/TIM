@@ -37,6 +37,8 @@ jobs:
           npm install
           cd modules/jsrunner/server
           npm install
+          npm install --global node-gyp@latest
+          npm config set node_gyp $(npm prefix -g)/lib/node_modules/node-gyp/bin/node-gyp.js
       - name: Lint main code
         run: cd timApp && npm run lint
       - name: Lint JSRunner
