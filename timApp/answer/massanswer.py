@@ -1,3 +1,4 @@
+import json
 from dataclasses import field
 from typing import Any, Union
 
@@ -6,11 +7,7 @@ from flask_babel import gettext
 from timApp.answer.answer import AnswerData
 from timApp.answer.answers import (
     ExistingAnswersInfo,
-    get_existing_answers_info,
-    get_existing_answers_info_multiple_tasks,
-    get_existing_answers_info_batch,
 )
-from timApp.answer.routes import get_postanswer_plugin_etc
 
 # from timApp.answer.routes import InputAnswer, get_postanswer_plugin_etc
 from timApp.auth.accesshelper import (
@@ -18,22 +15,20 @@ from timApp.auth.accesshelper import (
     is_in_answer_review,
     AccessDenied,
     get_origin_from_request,
-    get_plugin_from_request,
     TaskAccessVerification,
-    verify_task_access,
 )
-from timApp.auth.accesstype import AccessType
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docsettings import DISABLE_ANSWER_REVIEW_MODE
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, ViewRoute
+from timApp.plugin.containerLink import call_plugin_generic
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.taskid import TaskId, TaskIdAccess
+from timApp.plugin.taskid import TaskId
 from timApp.user.user import has_no_higher_right, User
 from timApp.util.flask.requesthelper import get_urlmacros_from_request
-
+from tim_common.timjsonencoder import TimJsonEncoder
 
 # def post_answer_impl(
 #     task_id_ext: str,
@@ -100,6 +95,8 @@ def mass_answer(
     #     t.doc_task: get_existing_answers_info(users, t, True) for t in tids.values()
     # }
     plugs: dict[str, Plugin] = {}
+    from timApp.answer.routes import get_postanswer_plugin_etc
+
     # plugdata: vr,    answerinfo,    users,    allow_save,    ask_new,    force_answer,
     # Group these (plugdata, validities, infos) into typed dict
     plugdatas = {
@@ -136,6 +133,49 @@ def mass_answer(
         }
         for t, data in plugdatas.items()
     }
+    acd_by_plugin = {}  # {plugin:{tid:values}}
+    for t, d in answer_call_datas.items():
+        plug_type = plugdatas[t][0].plugin.type
+        if acd_by_plugin.get(plug_type) is None:
+            acd_by_plugin[plug_type] = {}
+        acd_by_plugin[plug_type][t] = d
+
+    # skip postprograms for now
+    # jsonresp = call_plugin_answer_and_parse(answer_call_data, plugin.type)
+
+    def call_plugin_answers_multi(answer_call_data: dict) -> dict:
+        timeout = 25
+        resps = {}
+        for ptype, acd in answer_call_data.items():
+            # if ptype in multi_answer_plugins
+            acds = {"plugs": list(acd.values())}
+            resp = call_plugin_generic(
+                ptype,
+                "put",
+                "multianswer",
+                json.dumps(acds, cls=TimJsonEncoder),
+                read_timeout=min(timeout + 5, 120),
+            )
+            resps[ptype] = resp
+
+        # return call_plugin_generic(
+        #     plugin,
+        #     "put",
+        #     "answer",
+        #     json.dumps(answer_data, cls=TimJsonEncoder),
+        #     headers={"Content-type": "application/json"},
+        #     read_timeout=min(timeout + 5, 120),
+        # ).text
+        # try:
+        #     jsonresp = json.loads(plugin_response)
+        # except ValueError as e:
+        #     raise PluginException(
+        #         "The plugin response was not a valid JSON string. The response was: "
+        #         + plugin_response
+        #     ) from e
+        # return jsonresp
+
+    jsonresps = call_plugin_answers_multi(acd_by_plugin)
 
     # for save, inp in inputs.items():
     #     tid = tids[save]

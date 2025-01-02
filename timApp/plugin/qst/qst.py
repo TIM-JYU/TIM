@@ -164,6 +164,11 @@ class QstAnswerModel(GenericAnswerModel[QstInputModel, QstMarkupModel, QstStateM
     pass
 
 
+@dataclass
+class QstMultiAnswerModel:
+    plugs: list[QstAnswerModel]
+
+
 AnswerSchema = class_schema(QstAnswerModel)
 
 
@@ -172,6 +177,16 @@ AnswerSchema = class_schema(QstAnswerModel)
 @use_model(QstAnswerModel)
 def qst_answer(m):
     return qst_answer_jso(m)
+
+
+@qst_plugin.put("/qst/multianswer")
+@csrf.exempt
+@use_model(QstMultiAnswerModel)
+def qst_answer_multi(m: QstMultiAnswerModel):
+    resps = []
+    for q in m.plugs:
+        resps.append(qst_answer_jso(q))
+    return resps
 
 
 # qst_plugin.put(/qst/multianswer)

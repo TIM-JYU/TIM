@@ -107,6 +107,10 @@ ALLOWED_MACRO_PLUGIN_ATTRS = {
     "question",
 }
 
+MULTI_ANSWER_PLUGINS = {
+    "qst",
+}
+
 
 class PluginWrap(Enum):
     Nothing = 1
