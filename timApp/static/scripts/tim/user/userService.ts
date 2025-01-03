@@ -158,7 +158,7 @@ export class UserService {
             (g) => `answer_review_group:${g.name}`
         );
         const res = groupReviewTags.some((tag) => activeTags.has(tag));
-        console.log(activeTags, groupReviewTags, res);
+        // console.log(activeTags, groupReviewTags, res);
         return res;
     }
 }
