@@ -192,4 +192,4 @@ def get_task_points(doc_path: str, ide_task_id: str) -> Response:
 
     points = utils.get_task_points(task.doc_id, task.task_id, user)
 
-    return json_response(points)
+    return json_response({"current_points": points})
