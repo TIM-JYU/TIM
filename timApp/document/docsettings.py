@@ -205,8 +205,7 @@ class DocSettings:
     def get_setting_or_default(self, name: str, default: T) -> T:
         try:
             return doc_setting_field_map[name].deserialize(self.__dict.get(name))
-        except ValidationError as e:
-            print(e)
+        except ValidationError:
             return default
 
     def __init__(self, doc: "Document", settings_dict: YamlBlock | None = None):
