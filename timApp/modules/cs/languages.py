@@ -353,7 +353,7 @@ class Language:
         """
         :return: list of needed css-files (maybe copiled from scss-files)
         """
-        return ["/cs/css/cs.css"]
+        return ["/csstatic/css/cs.css"]
 
     def convert(self, sourcelines):
         return 0, sourcelines, "", ""
@@ -1620,7 +1620,15 @@ class TS(Language):
 
 
 class JS(Language):
-    ttype = "js"
+    """
+    Base for many JavaScript based languages
+    that are not yet tested to be inherited from new JSWithHTML.
+    See JSWithHTML for more information.
+    This is not meant to be used directly yet.
+    Idea is that this could be could be later JSWithHTML.
+    """
+
+    ttype = None
 
     def run(self, result, sourcelines, points_rule):
         return 0, "", "", ""
@@ -1856,7 +1864,7 @@ class SimCir(Language):
 
     @staticmethod
     def css_files():
-        return ["/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"]
+        return ["/csstatic/simcir/simcir.css", "/csstatic/simcir/simcir-basicset.css"]
 
 
 class Sage(Language):
@@ -1864,10 +1872,38 @@ class Sage(Language):
 
 
 def get_by_id(jso, item_id, default=None):
+    """
+    Try to get value by key or -key from json object.
+    If not found, return default
+    :param jso: json where to search
+    :param item_id: key for value
+    :param default: default if not found
+    :return: value or default
+    """
     val = jso.get(item_id, None)
     if val is None:
         val = jso.get("-" + item_id, default)
     return val
+
+
+def get_by_id_and_pop(jso, item_id, default=None):
+    """
+    Same as get_by_id but also pops the value from the json object
+    if found.
+    :param jso: json where to search
+    :param item_id: key for value
+    :param default: default if not found
+    :return: value or default
+    """
+    val = jso.get(item_id, None)
+    if val is not None:
+        jso.pop(item_id)
+        return val
+    val = jso.get("-" + item_id, None)
+    if val is not None:
+        jso.pop("-" + item_id)
+        return val
+    return default
 
 
 def html_change(s, old, jso, item_id, repfmt, default, valdef=None, delta=0):
@@ -2166,7 +2202,7 @@ class Mathcheck(Language):
 
     @staticmethod
     def css_files():
-        return ["/cs/css/mathcheck.css"]
+        return ["/csstatic/css/mathcheck.css"]
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
