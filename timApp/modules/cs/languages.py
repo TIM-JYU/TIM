@@ -1629,7 +1629,6 @@ class JS(Language):
     """
 
     ttype = None
-    pass
 
     def run(self, result, sourcelines, points_rule):
         return 0, "", "", ""
