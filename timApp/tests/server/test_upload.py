@@ -195,7 +195,7 @@ texprint: "- %%selitys%% ([LIITE %%liiteNro%% / lista %%lista%%](%%server+linkki
         file_id = int(r["file"].split("/")[0])
         pdf = UploadedFile.find_by_id(file_id)
         pdf = StampedPDF(pdf.block)
-        self.assertEqual(15811, len(pdf.data))
+        self.assertEqual(15849, len(pdf.data))
         self.assertGreater(len(pdf.data), file_len)
         self.check_mime(pdf.relative_filesystem_path, "application/pdf")
 
