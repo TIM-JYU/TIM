@@ -19,6 +19,34 @@ from tim_common.cs_sanitizer import allow_minimal, tim_sanitize
 CACHE_DIR = "/tmp/cache/"
 
 
+def apply_sed_replacements(s: str, replacements: str | list[str]) -> str:
+    """
+    Apply a list of sed-style replacements to a string.
+
+    :param s: The input string.
+    :param replacements: A list of sed-style replacement strings (e.g., 's/old/new/g').
+    :return: The modified string.
+    """
+    if not isinstance(replacements, list):
+        replacements = [replacements]
+    for replacement in replacements:
+        # Parse the sed replacement string with any delimiter
+        match = re.match(r"s(.)(.*?)(\1)(.*?)(\1)([gim]*)", replacement)
+        if not match:
+            continue
+        delimiter, old, _, new, _, flags = match.groups()
+        re_flags = 0
+        if "i" in flags:
+            re_flags |= re.IGNORECASE
+        if "m" in flags:
+            re_flags |= re.MULTILINE
+        if "g" in flags:
+            s = re.sub(old, new, s, flags=re_flags)
+        else:
+            s = re.sub(old, new, s, count=1, flags=re_flags)
+    return s
+
+
 class QueryClass:
     def __init__(self):
         self.get_query = {}
@@ -493,6 +521,8 @@ class FileParams:
         if not self.by and nr == "":
             self.by = replace_random(query, get_param(query, "byCode" + nr, ""))
         self.prorgam = replace_random(query, get_param(query, "program" + nr, ""))
+        self.line_sed = get_param(query, "lineSed" + nr, "")
+        self.file_sed = get_param(query, "fileSed" + nr, "")
 
         self.reps = []
 
@@ -528,7 +558,10 @@ class FileParams:
     def get_file(self, escape_html=False, not_found_error=None):
         if self.prorgam:
             # print(self.prorgam)
-            return self.scan_needed_lines(self.prorgam.split("\n"), escape_html)
+            s = self.prorgam
+            if self.file_sed != "":
+                s = apply_sed_replacements(s, self.file_sed)
+            return self.scan_needed_lines(s.split("\n"), escape_html)
         if not self.url:
             # print("SELF.BY:", self.by.encode())
             if not self.by:
@@ -541,6 +574,10 @@ class FileParams:
                 return not_found_error
             return "File not found " + clean_url(self.url)
 
+        if self.file_sed != "":
+            s = "\n".join(lines)
+            s = apply_sed_replacements(s, self.file_sed)
+            lines = s.split("\n")
         return self.scan_needed_lines(lines, escape_html)
 
     def scan_needed_range(self, lines):
@@ -591,6 +628,8 @@ class FileParams:
 
             if escape_html:
                 line = html.escape(line)
+            if self.line_sed != "":
+                line = apply_sed_replacements(line, self.line_sed)
             ln = self.linefmt.format(i + 1)
             result += ln + line + "\n"
             if i + 1 >= self.lastn:

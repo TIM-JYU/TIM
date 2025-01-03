@@ -31,6 +31,7 @@ import re
 import socketserver
 import time
 
+from tim_common.dumboclient import DumboOptions, call_dumbo
 from tim_common.fileParams import (
     get_param,
     get_surrounding_headers2,
@@ -735,12 +736,25 @@ def get_html(
     if i >= 0:
         fn = ffn[i + 1 :]
 
+    color = get_param(query, "color", "")
+    auto_color = get_param(query, "autoColor", True)
+    if auto_color and not color:
+        color = fn[fn.rfind(".") + 1 :]
+    fs = get_file_to_output(query, show_html and not color)
+    div = "pre"
+    if color:
+        div = "div"
+        fs = f"```{color}\n{fs}\n```"
+        htmls = call_dumbo([fs])
+        fs = htmls[0]
+
     if show_html:
-        s += '<pre ng-non-bindable class="showCode' + cla + '"' + w + ">"
-    s += get_file_to_output(query, show_html)
+        s += f'<{div} ng-non-bindable class="showCode{cla} "{w}">'
+
+    s += fs
     if show_html:
         s += (
-            '</pre><p class="smalllink"><a href="'
+            f'</{div}><p class="smalllink"><a href="'
             + clean_url(ffn)
             + '" target="_blank">'
             + clean_url(fn)
