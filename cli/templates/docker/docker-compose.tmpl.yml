@@ -244,7 +244,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
    - /tmp
  dumbo:
-  image: ${compose.images_repository}/dumbo:latest
+  image: ${compose.images_repository}/dumbo:2024-08-19-9845ad34ce7c02b49fd625a88e6ebf82118ae6ec
   volumes:
    - ./Dumbo/cache:/dumbo_cache
    - ./Dumbo/tmp:/dumbo_tmp
