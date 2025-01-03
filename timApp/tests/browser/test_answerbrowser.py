@@ -141,6 +141,7 @@ type: text
             self.find_element("cs-runner button").click()
             self.wait_until_present_and_vis("answerbrowser")
             self.wait_until_hidden("tim-loading")
+            self.find_element_and_move_to("tim-site-header")
 
         do_browser_check("Original input", "Original input")
         do_browser_check(", New input", "Original input, New input")
