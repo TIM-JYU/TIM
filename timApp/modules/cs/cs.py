@@ -79,7 +79,6 @@ from tim_common.fileParams import (
 )
 from ttype import TType
 
-
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
 
@@ -270,8 +269,6 @@ def get_md(ttype: TType, query):
         usercode = get_json_eparam(query.jso, "state", "usercode", None, False)
     if usercode is None:
         usercode = bycode
-
-    r = runner
 
     # s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
     header = str(get_param(query, "header", ""))
@@ -523,12 +520,14 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
     # print("UserId:", user_id)
     if user_id == "Anonymous":
         allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
-        jump = get_param(query, "taskID", "")
+        # jump = get_param(query, "taskID", "")
         # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX jump: ", jump)
         if allow_anonymous != "true":
             return (
                 NOLAZY
-                + '<p class="pluginError">Please <tim-login-menu></tim-login-menu> to interact with this component</p><pre class="csRunDiv">'
+                + '<p class="pluginError">Please <tim-login-menu>'
+                + "</tim-login-menu> to interact with this component</p>"
+                + '<pre class="csRunDiv">'
                 + get_param(query, "byCode", "")
                 + "</pre>"
             )
@@ -558,9 +557,9 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
     parsons_options = markup.get("parsons", {})
     if parsons_options.get("shuffleHost", False):
         if usercode is None:
-            bycodeLines = bycode.split("\n")
-            random.shuffle(bycodeLines)
-            bycode = "\n".join(bycodeLines)
+            bycode_lines = bycode.split("\n")
+            random.shuffle(bycode_lines)
+            bycode = "\n".join(bycode_lines)
             js["by"] = bycode
         js["markup"].pop("byCode", None)
 
@@ -583,10 +582,10 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
         bymd = code.split("\n")
         dopts = DumboOptions.from_dict(parsons_options)
         htmls = call_dumbo(bymd, options=dopts)
-        parsonsHTML = []
+        parsons_html = []
         for i in range(0, len(bymd)):
-            parsonsHTML.append({"t": bymd[i], "h": htmls[i]})
-        js["markup"]["parsons"]["html"] = parsonsHTML
+            parsons_html.append({"t": bymd[i], "h": htmls[i]})
+        js["markup"]["parsons"]["html"] = parsons_html
     jso = json.dumps(js)
 
     if is_rv:
@@ -727,7 +726,11 @@ def handle_common_params(query: QueryClass, ttype: TType):
     not_found_error = get_param(query, "notFoundError", None)
     if q_byfile is not None and q_bycode is None:
         # TODO: Better error message for missing file
-        js["by"] = get_url_lines_as_string(q_byfile, not_found_error=not_found_error)
+        js["by"] = get_url_lines_as_string(
+            q_byfile,
+            not_found_error=not_found_error,
+            usecache=get_param(query, "usecache", True),
+        )
     bycode = ""
     if q_bycode is not None:
         bycode = q_bycode
@@ -831,10 +834,14 @@ def check_fullprogram(query, cut_errors=False):
             query.hide_program = True
         if not fullfile:
             return False
-        fullprogram = get_url_lines_as_string(fullfile)
+        fullprogram = get_url_lines_as_string(
+            fullfile, usecache=get_param(query, "usecache", True)
+        )
+
     if not fullprogram:
         return False
 
+    # fullprogram = do_sed_replacements(query, fullprogram)
     get_param_del(query, "fullprogram", "")
     get_param_del(query, "fullfile", "")
 
@@ -1184,12 +1191,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             except:
                 timeout = 20
         timeout = (
-            timeout + 2.5
-        )  # +2.5 because we want languages to realize the timeout first
+            timeout + 3
+        )  # +3 because we want languages to realize the timeout first
         try:
             signal.signal(signal.SIGALRM, signal_handler)
             signal.alarm(timeout)  # Ten seconds
-        except Exception as e:
+        except Exception:
             # print("No signal", e)  #  TODO; why is this signal at all when it always comes here?
             pass
         try:
@@ -1264,13 +1271,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         ) and not is_gethtml
         is_css = path.find(".css") >= 0
         is_js = path.find(".js") >= 0 or path.find(".ts") >= 0
-        is_graphviz = path.find("/graphviz") >= 0
+        # is_graphviz = path.find("/graphviz") >= 0
         is_iframe_param = get_param_del(query, "iframe", "")
         is_iframe = (path.find("/iframe") >= 0) or is_iframe_param
         is_answer = path.find("/answer") >= 0
         is_tauno = path.find("/tauno") >= 0
         is_simcir = path.find("/simcir") >= 0
-        is_parsons = path.find("/parsons") >= 0
+        # is_parsons = path.find("/parsons") >= 0
         is_ptauno = path.find("/ptauno") >= 0
         is_rikki = path.find("rikki") >= 0
         print_file = get_param(query, "print", "")
@@ -1810,7 +1817,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             err = ""
             out = ""
-            retdata = {}
 
             pwddir = ""
 

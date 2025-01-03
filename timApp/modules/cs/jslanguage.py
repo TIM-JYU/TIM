@@ -2,7 +2,7 @@ import json
 import os
 from languages import Language, get_by_id, get_by_id_and_pop
 
-from tim_common.fileParams import get_url_lines_as_string
+from tim_common.fileParams import get_url_lines_as_string, do_sed_replacements
 
 from urllib.parse import urlparse, urljoin
 
@@ -22,7 +22,7 @@ def add_host_if_missing(url: str, default_host: str) -> str:
     return str(url)
 
 
-def get_from_url(url: str) -> str:
+def get_from_url(url: str, usecache: bool = True) -> str:
     """
     Get html from url but use cache if already there.
     For that remember to empty csplugin cache if needed (/cs/refresh)!
@@ -31,7 +31,7 @@ def get_from_url(url: str) -> str:
     url = add_host_if_missing(url, os.environ["TIM_HOST"])
     # change URL in local development because inside docker container localhost is not valid
     url = url.replace("localhost/", "host.docker.internal/")
-    return get_url_lines_as_string(url)
+    return get_url_lines_as_string(url, usecache=usecache)
 
 
 class JSWithHTML(Language):
@@ -85,13 +85,16 @@ class JSWithHTML(Language):
         if not src:
             url = get_by_id_and_pop(ma, "fullhtmlurl", None)
             if url:
-                src = get_from_url(url)
+                url = url.replace("COMPS", "/print/tim/components")
+                src = get_from_url(url, get_by_id(ma, "usecache", True))
 
         if not src:
             src = ""
 
         if src.find("TIMJS") >= 0:
             self.jsobject = "TIMJS."
+
+        src = do_sed_replacements(self.query, src)
 
         opt = get_by_id(ma, "options", None)
         if not opt:
@@ -104,6 +107,7 @@ class JSWithHTML(Language):
         contstyle = (
             'style="' + get_by_id(ma, "contStyle", "width: 100%; margin: auto; ") + '"'
         )
+
         src = src.replace("CONTSTYLE", contstyle)
 
         src = src.replace("##TIM_HOST##", os.environ["TIM_HOST"])
