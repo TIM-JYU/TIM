@@ -5,7 +5,8 @@ description = "TIM (The Interactive Material) is an open-source cloud-based plat
 authors = [
     "TIM contributors"
 ]
-readme = "README.md"
+readme = "readme.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
