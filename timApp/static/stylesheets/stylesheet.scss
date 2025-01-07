@@ -552,6 +552,19 @@ div.error {
     position: relative;
 }
 
+// Detached diff view in editor
+#diff.draggable-detached {
+    > .draggable-content {
+        height: inherit;
+    }
+
+    // Fix resizehandle-d pos
+    .resizehandle-d {
+        bottom: -65px;
+    }
+}
+
+
 .previewDiv {
     min-width: 50%;
     max-width: 100%;
@@ -566,6 +579,10 @@ div.error {
     .par {
         margin-left: 0;
         margin-right: 0;
+    }
+
+    .draggable-content {
+        height: inherit;
     }
 }
 
@@ -593,7 +610,8 @@ div.error {
     overflow-y: auto;
     background-color: $material-bg;
     min-height: 1em;
-    max-height: 30em;
+    max-height: 90vh;
+    height: inherit;
     padding-left: 2em;
     padding-right: 2em;
     min-width: inherit;
@@ -1327,7 +1345,8 @@ p.docsettings {
 .diff {
     position: relative;
     background-color: #f8f8f8;
-    max-height: 24em;
+    max-height: 90vh;
+    height: inherit;
 
     a {
         position: absolute;
@@ -1337,7 +1356,9 @@ p.docsettings {
     }
 
     pre {
-        max-height: 23em; //This has to be kept around 1em (or 50px) lower than diff's max-height or else it overflows over the preview in editor!
+        //max-height: 23em; //This has to be kept around 1em (or 50px) lower than diff's max-height or else it overflows over the preview in editor!
+        max-height: 90vh;
+        height: inherit;
         border: 0;
 
         ins {
