@@ -1,3 +1,4 @@
+import re
 import time
 import traceback
 from urllib.parse import urlparse
@@ -318,6 +319,9 @@ if app.config["DEBUG_SQL"]:
 LOG_BEFORE_REQUESTS = app.config["LOG_BEFORE_REQUESTS"]
 
 
+DOUBLE_SLASH_PATH_REGEX = re.compile(r"/\s*/")
+
+
 @app.before_request
 def preprocess_request():
     session.permanent = True
@@ -331,7 +335,8 @@ def preprocess_request():
         p = request.path
         if "//" in p or (p.endswith("/") and p != "/"):
             query_str = request.query_string.decode()
-            fixed_url = p.rstrip("/").replace("//", "/")
+            fixed_url = p.rstrip("/")
+            fixed_url = DOUBLE_SLASH_PATH_REGEX.sub("/", fixed_url)
             if query_str:
                 fixed_url = f"{fixed_url}?{query_str}"
             return redirect(fixed_url)
