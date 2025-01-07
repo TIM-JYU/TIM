@@ -71,3 +71,6 @@ class RedirectTest(TimRouteTest):
         self.get("/test//x///?a=b", expect_status=302, expect_content="/test/x?a=b")
         self.get("/view", expect_status=200)
         self.get("/manage", expect_status=302, expect_content="/view")
+        self.get("/ /example.com/", expect_status=302, expect_content="/example.com")
+        self.get("/%20/example.com/", expect_status=302, expect_content="/example.com")
+        self.get("/%09/example.com/", expect_status=302, expect_content="/example.com")
