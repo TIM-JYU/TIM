@@ -369,7 +369,7 @@ RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 ENV NUNIT_RUNNER_VERSION=3.19.0
 RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version ${NUNIT_RUNNER_VERSION} && \
     # We need to call NUnit directly with dotnet exec in order to properly declare custom references
-    ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/net6.0/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
+    ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/net8.0/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
 
 # Install ffmpeg for transcoding videos
 RUN bash -c "${APT_INSTALL} ffmpeg && ${APT_CLEANUP}"
