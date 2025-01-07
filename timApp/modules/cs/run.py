@@ -189,7 +189,7 @@ def run2(
     s_in = ""
     pwddir = ""
     if not ulimit:
-        ulimit = "ulimit -f 1000 -t 20 -s 2000 "
+        ulimit = "ulimit -f 1000 -t 20 -s 2000 -n 65536"
     if uargs:
         uargs = str(uargs)
         if len(uargs):
