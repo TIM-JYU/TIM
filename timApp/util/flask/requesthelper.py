@@ -248,6 +248,8 @@ def view_ctx_with_urlmacros(
 
 
 def get_from_url(url: str) -> str:
+    if url.startswith("COMPS"):
+        url = url.replace("COMPS", "/print/tim/components")
     parsed = urlparse(url)
     if not parsed.netloc and not parsed.scheme:
         host = f"http://caddy" if is_localhost() else current_app.config["TIM_HOST"]

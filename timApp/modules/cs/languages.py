@@ -1741,8 +1741,8 @@ class MongoDB(Language):
 # Cassandra Query Language language type
 class CQL(Language):
     ttype = "cql"
-    login_cmd_pattern = re.compile(r"LOGIN\s+[^\s]+(\s+[^\s]+)?\s*[;\n]", re.I)
-    use_cmd_pattern = re.compile(r"USE\s+[^\s]+\s*[;\n]", re.I)
+    login_cmd_pattern = re.compile(r"LOGIN\s+\S+(\s+\S+)?\s*[;\n]", re.I)
+    use_cmd_pattern = re.compile(r"USE\s+\S+\s*[;\n]", re.I)
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
