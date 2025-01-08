@@ -1,5 +1,5 @@
  csplugin_mongo: # MongoDB for csplugin
-  image: mongo:5
+  image: mirror.gcr.io/mongo:5
   profiles:
    - prod
    - dev

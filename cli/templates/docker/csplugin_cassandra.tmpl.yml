@@ -2,7 +2,7 @@
   profiles:
    - prod
    - dev
-  image: cassandra:4
+  image: mirror.gcr.io/cassandra:4
   restart: unless-stopped
   cap_add: # Needed for Cassandra to be able to bind to the Docker socket.
    - SYS_NICE

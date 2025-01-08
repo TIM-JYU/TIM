@@ -69,7 +69,7 @@ services:
   profiles:
    - prod
    - dev
-  image: postgres:15
+  image: mirror.gcr.io/postgres:15
   volumes:
    - db_data:/var/lib/postgresql/data
   command: [
@@ -98,7 +98,7 @@ services:
     max-size: "50m"
     max-file: "100"
  postgresql-test:
-  image: postgres:15
+  image: mirror.gcr.io/postgres:15
   profiles:
    - test
    - dev
@@ -253,7 +253,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   restart: unless-stopped
   read_only: true
  redis:
-  image: eqalpha/keydb:latest
+  image: mirror.gcr.io/eqalpha/keydb:latest
   command: ["keydb-server", "--appendonly", "yes"]
   restart: unless-stopped
   read_only: true
@@ -344,7 +344,7 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
    - /tmp
  caddy:
-  image: caddy:2.6
+  image: mirror.gcr.io/caddy:2.6
   command: caddy run --config /etc/caddy/Caddyfile
   read_only: true
   volumes:
