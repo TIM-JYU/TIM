@@ -149,7 +149,7 @@ def mass_answer(
         resps = {}
         for ptype, acd in answer_call_data.items():
             # if ptype in multi_answer_plugins
-            acds = {"plugs": list(acd.values())}
+            acds = {"plugs": acd}
             resp = call_plugin_generic(
                 ptype,
                 "put",
@@ -158,7 +158,7 @@ def mass_answer(
                 read_timeout=min(timeout + 5, 120),
             )
             resps[ptype] = resp
-
+        return resps
         # return call_plugin_generic(
         #     plugin,
         #     "put",
@@ -177,7 +177,12 @@ def mass_answer(
         # return jsonresp
 
     jsonresps = call_plugin_answers_multi(acd_by_plugin)
+    for k, v in jsonresps.items():
+        jsonresps[k] = json.loads(v.text)  # wrap around try
+    print(jsonresps)
+    # if save in jsonresp etc
 
+    # return jsonresps
     # for save, inp in inputs.items():
     #     tid = tids[save]
     #     doc, found_plugin = get_plugin_from_request(

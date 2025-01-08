@@ -52,6 +52,7 @@ const multisaveMarkup = t.intersection([
         testOnly: t.boolean,
         savedText: t.string,
         unsavedText: t.string,
+        masssave: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -103,7 +104,7 @@ const multisaveAll = t.intersection([
     <button class="timButton"
             [disabled]="(disableUnchanged && allSaved())"
             *ngIf="buttonText() && !markup.destCourse"
-            (click)="massSave()">
+            (click)="save()">
         {{buttonText()}}
     </button>
     &nbsp;
@@ -296,6 +297,10 @@ export class MultisaveComponent
      *   plugin in the same document
      */
     async save() {
+        if (this.markup.masssave) {
+            this.massSave();
+            return;
+        }
         const componentsToSave = this.findTargetTasks();
 
         const promises = [];
@@ -445,6 +450,7 @@ export class MultisaveComponent
         }
         // r.result;
         console.log(r);
+        // if !allsaved settimer
     }
 
     public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {

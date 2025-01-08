@@ -653,9 +653,9 @@ def post_mass_answer(
     #     # TODO: if one plugin raises 500, we probably can't accept others as db may need db.session.rollback()
     #     # except Exception as e:
     #     #     ret[save] = {"status": 500, "result": e}
-    # print(ret)
-    # return json_response(ret)
-    return ok_response()
+    print(ret)
+    return json_response(ret)
+    # return ok_response()
     # return ok_response()
 
 

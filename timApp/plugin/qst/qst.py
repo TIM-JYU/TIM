@@ -166,7 +166,7 @@ class QstAnswerModel(GenericAnswerModel[QstInputModel, QstMarkupModel, QstStateM
 
 @dataclass
 class QstMultiAnswerModel:
-    plugs: list[QstAnswerModel]
+    plugs: dict[str, QstAnswerModel]
 
 
 AnswerSchema = class_schema(QstAnswerModel)
@@ -184,9 +184,9 @@ def qst_answer(m):
 @use_model(QstMultiAnswerModel)
 def qst_answer_multi(m: QstMultiAnswerModel):
     resps = []
-    for q in m.plugs:
-        save, web, tim_info = qst_answer_impl(q)
-        resps.append({"save": save, "web": web, "tim_info": tim_info})
+    for tid, mup in m.plugs.items():
+        save, web, tim_info = qst_answer_impl(mup)
+        resps.append({tid: {"save": save, "web": web, "tim_info": tim_info}})
     return json_response(resps)
 
 
