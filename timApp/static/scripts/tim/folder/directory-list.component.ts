@@ -2,7 +2,7 @@ import {Component} from "@angular/core";
 import type {DocumentOrFolder, IFolder, IItem, ITag} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
-import {folderglobals} from "tim/util/globals";
+import {folderglobals, genericglobals} from "tim/util/globals";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
 
@@ -35,8 +35,8 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
             <tr>
                 <th></th>
                 <th>Name</th>
-                <th (click)="showAccessBadges = !showAccessBadges">Access</th>
-                <th (click)="showTags = !showTags">Tags</th>
+                <th *ngIf="displayAccessBadges" (click)="showAccessBadges = !showAccessBadges">Access</th>
+                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">Tags</th>
                 <th>Last modified</th>
                 <th>Owners</th>
                 <th>Rights</th>
@@ -51,8 +51,8 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                     </a>
                 </td>
                 <td><a href="/view/{{ item.location }}">Go to parent folder</a></td>
-                <td></td>
-                <td></td>
+                <td *ngIf="displayAccessBadges"></td>
+                <td *ngIf="displayDocumentTags"></td>
                 <td></td>
                 <td></td>
                 <td></td>
@@ -67,14 +67,14 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                 <td>
                     <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
                 </td>
-                <td class="col-access-badges">
+                <td *ngIf="displayAccessBadges" class="col-access-badges">
                     <ng-container  *ngIf="showAccessBadges">
                         <a><i class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
                               title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</i>
                         </a>
                     </ng-container>
                 </td>
-                <td class="col-item-tags">
+                <td *ngIf="displayDocumentTags" class="col-item-tags">
                     <ng-container *ngIf="showTags">
                         <span class="itemtags">
                             <a *ngFor="let tag of getItemTags(item)">
@@ -131,6 +131,8 @@ export class DirectoryListComponent {
     showId = false;
     showTags = true;
     showAccessBadges = true;
+    displayAccessBadges: boolean;
+    displayDocumentTags: boolean;
 
     constructor() {
         const fg = folderglobals();
@@ -148,13 +150,22 @@ export class DirectoryListComponent {
             this.itemList = this.itemList.sort((a, b) => b.id - a.id);
         }
 
+        this.displayAccessBadges =
+            genericglobals().userPrefs.display_dir_list_badges;
+        this.displayDocumentTags =
+            genericglobals().userPrefs.display_dir_list_tags;
+
         // this.item is the current directory folder
-        this.getAccessLevelBadges(this.item).then((value) => {
-            this.itemBadges = value ?? {};
-        });
-        this.getFolderItemTags(this.item).then((value) => {
-            this.itemTags = value ?? {};
-        });
+        if (this.displayAccessBadges) {
+            this.getAccessLevelBadges(this.item).then((value) => {
+                this.itemBadges = value ?? {};
+            });
+        }
+        if (this.displayDocumentTags) {
+            this.getFolderItemTags(this.item).then((value) => {
+                this.itemTags = value ?? {};
+            });
+        }
     }
 
     listOwnerNames(i: IItem) {
