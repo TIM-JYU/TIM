@@ -134,12 +134,16 @@ class Item(ItemBase):
         if self.block is None:
             return ItemVisibility.NONE
 
-        block_access_ids = [tuplekey[0] for tuplekey in self.block.accesses.keys()]
+        block_access_ids = [
+            usergroup_id for (usergroup_id, accesstype) in self.block.accesses.keys()
+        ]
 
-        # Special groups
-        if ItemVisibility.PUBLIC in block_access_ids:
+        # Special groups:
+        # Anon users == 1 == PUBLIC
+        # Logged-in users == 0 == (LOGGED_IN - 2)
+        if ItemVisibility.PUBLIC.value in block_access_ids:
             return ItemVisibility.PUBLIC
-        if ItemVisibility.LOGGED_IN in block_access_ids:
+        if (ItemVisibility.LOGGED_IN.value - 2) in block_access_ids:
             return ItemVisibility.LOGGED_IN
         for group in UserGroup.get_organizations():
             if group.id in block_access_ids:
@@ -152,7 +156,6 @@ class Item(ItemBase):
 
         # If none of the above, it must be private.
         return ItemVisibility.PRIVATE
-        # return ItemVisibility.NONE
 
     def parents_to_root(self, include_root=True, eager_load_groups=False):
         if not self.path_without_lang:
