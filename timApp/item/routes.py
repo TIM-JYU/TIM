@@ -1470,9 +1470,6 @@ def get_item_access_badges(folder_id: int) -> Response:
     for item in items:
         badges[int(item.id)] = item.visibility.value
 
-    from timApp.util.logger import log_info
-
-    log_info(str(badges))
     return json_response(badges)
 
 
