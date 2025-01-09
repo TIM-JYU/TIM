@@ -114,6 +114,7 @@ class SearchTest(TimRouteTest):
                         },
                         "title": "Test user 1",
                         "unpublished": True,
+                        "visibility": 5,
                     },
                     "group": {
                         "id": self.test_user_1.get_personal_group().id,
@@ -175,6 +176,7 @@ class SearchTest(TimRouteTest):
                         },
                         "title": "Test user 2",
                         "unpublished": True,
+                        "visibility": 5,
                     },
                     "group": {
                         "id": self.test_user_2.get_personal_group().id,
@@ -231,6 +233,7 @@ class SearchTest(TimRouteTest):
                         },
                         "title": "Test user 3",
                         "unpublished": True,
+                        "visibility": 5,
                     },
                     "group": {
                         "id": self.test_user_3.get_personal_group().id,
