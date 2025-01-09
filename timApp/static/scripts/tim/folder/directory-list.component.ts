@@ -35,8 +35,8 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
             <tr>
                 <th></th>
                 <th>Name</th>
-                <th *ngIf="displayAccessBadges" (click)="showAccessBadges = !showAccessBadges">Access</th>
-                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">Tags</th>
+                <th *ngIf="displayAccessBadges" (click)="showAccessBadges = !showAccessBadges">{{showAccessBadges ? "Access" : "A" }}</th>
+                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">{{ showTags ? "Tags" : "T"}}</th>
                 <th>Last modified</th>
                 <th>Owners</th>
                 <th>Rights</th>
