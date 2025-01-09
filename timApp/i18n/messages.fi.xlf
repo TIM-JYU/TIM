@@ -10707,6 +10707,22 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">27</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3305807586292277903" datatype="html">
+        <source>Directory listing: Display access badges for folder items. </source>
+        <target state="translated">Hakemistolistaus: Näytä näkyvyysmerkinnät kansioille ja dokumenteille. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">499,500</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3616259126353021959" datatype="html">
+        <source>Directory listing: Display document tags for folder items. </source>
+        <target state="translated">Hakemistolistaus: Näytä dokumenttitagit. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">507,508</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">
         <source>Create a new badge</source>
         <target state="new">Create a new badge</target>
