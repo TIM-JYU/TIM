@@ -79,7 +79,7 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                         <span class="itemtags">
                             <a *ngFor="let tag of getItemTags(item)">
                                 <i class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
-                                  title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires + ')' : '' }}">{{ tag.name }}</i>
+                                  title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires.toDate() + ')' : '' }}">{{ tag.name }}</i>
                             </a>
                         </span>
                     </ng-container>
