@@ -36,6 +36,7 @@ from timApp.user.special_group_names import (
 )
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
+from timApp.util.flask.cache import cache
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
@@ -302,7 +303,9 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return UserGroup.get_or_create_group(haka_group_name)
 
     @staticmethod
+    @cache.memoize(timeout=86400)
     def get_organizations() -> list[UserGroup]:
+        """This database fetch is cached, since new UserGroups for organisations are rarely created."""
         return list(
             run_sql(
                 select(UserGroup).filter(

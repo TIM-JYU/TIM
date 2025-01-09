@@ -145,6 +145,10 @@ class Item(ItemBase):
             return ItemVisibility.PUBLIC
         if (ItemVisibility.LOGGED_IN.value - 2) in block_access_ids:
             return ItemVisibility.LOGGED_IN
+
+        # There is currently no good way to avoid calling get_organizations()
+        # for each item when viewing folder items. However, we utilize caching
+        # for that method, so it shouldn't be a problem.
         for group in UserGroup.get_organizations():
             if group.id in block_access_ids:
                 return ItemVisibility.ORGANIZATION
