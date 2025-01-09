@@ -8897,8 +8897,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></target>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -10543,6 +10543,22 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
           <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3305807586292277903" datatype="html">
+        <source>Directory listing: Display access badges for folder items. </source>
+        <target state="translated">Hakemistolistaus: Näytä näkyvyysmerkinnät kansioille ja dokumenteille. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">499,500</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3616259126353021959" datatype="html">
+        <source>Directory listing: Display document tags for folder items. </source>
+        <target state="translated">Hakemistolistaus: Näytä dokumenttitagit. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">507,508</context>
         </context-group>
       </trans-unit>
     </body>
