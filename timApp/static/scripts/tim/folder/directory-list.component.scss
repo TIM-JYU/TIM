@@ -52,10 +52,12 @@ ORANGE_30 #F5D1C9 R245 G209 B201
 }
 
 .itemtags {
-    margin-left: 0.5em;
+    margin-left: 0.2em;
+    display: inline-flex;
+    flex-wrap: wrap;
 }
 .itemtag {
-    margin-left: 3px;
+    /*margin-left: 3px;*/
     border-radius: 4px;
     padding: 3px;
     font-size: x-small;

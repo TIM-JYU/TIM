@@ -69,18 +69,15 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                 </td>
                 <td *ngIf="displayAccessBadges" class="col-access-badges">
                     <ng-container  *ngIf="showAccessBadges">
-                        <a><i class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
-                              title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</i>
-                        </a>
+                        <span class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
+                              title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</span>
                     </ng-container>
                 </td>
                 <td *ngIf="displayDocumentTags" class="col-item-tags">
                     <ng-container *ngIf="showTags">
-                        <span class="itemtags">
-                            <a *ngFor="let tag of getItemTags(item)">
-                                <i class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
-                                  title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires.toDate() + ')' : '' }}">{{ tag.name }}</i>
-                            </a>
+                        <span class="itemtags" *ngFor="let tag of getItemTags(item)">
+                            <span class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
+                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires.toDate() + ')' : '' }}">{{ tag.name }}</span>
                         </span>
                     </ng-container>
                 </td>
