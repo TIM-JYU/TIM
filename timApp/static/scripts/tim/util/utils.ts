@@ -1086,3 +1086,17 @@ export function replaceStyle(
     }
     el.setAttribute("href", newPath);
 }
+
+/**
+ * Splits the given string into items. The items are separated by newlines, commas, or semicolons.
+ * Any leading dashes are removed from the items.
+ *
+ * @param itemsString String to split into items.
+ * @returns Array of items.
+ */
+export function splitItems(itemsString: string): string[] {
+    return itemsString
+        .split("\n")
+        .flatMap((n) => n.split(/[,;]/))
+        .map((n) => n.replace(/^ *- */, "").trim());
+}

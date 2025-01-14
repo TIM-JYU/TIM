@@ -51,10 +51,13 @@ import {
     clone,
     defaultErrorMessage,
     maxContentOrFitContent,
+    splitItems,
     to,
     to2,
+    toPromise,
 } from "tim/util/utils";
 import {CommonModule} from "@angular/common";
+import type {IAddmemberResponse} from "tim/ui/add-member.component";
 
 const RunScriptModel = t.type({
     script: nullable(t.string),
@@ -115,6 +118,9 @@ const TableFormMarkup = t.intersection([
         runScripts: t.array(t.union([t.string, RunScriptModel])),
         dataView: nullable(DataViewSettingsType),
         replyToEmail: nullable(t.string),
+        addUsersButton: nullable(t.string),
+        notifyOnAdd: t.boolean,
+        createMissingUsers: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -200,10 +206,20 @@ const sortLang = "fi";
                        [taskid]="getTaskId()"></tim-table>
 
             <div class="hidden-print">
+                <tim-alert *ngIf="actionInfo" severity="info" [closeable]="true"
+                           (closing)="resetActionInfoText()">
+                    <p class="action-info-content">{{actionInfo}}</p>
+                </tim-alert>
                 <button class="timButton"
                         *ngIf="(tableCheck() && !autosave && !locked) || saveFailed"
                         (click)="saveText()">
                     {{ buttonText() }}
+                </button>
+                <button class="timButton"
+                        *ngIf="addUsersButton"
+                        (click)="addUsers()"
+                >
+                    {{ addUsersButton }}
                 </button>
                 <button class="timButton"
                         *ngIf="reportCheck()"
@@ -213,34 +229,34 @@ const sortLang = "fi";
                 <button class="timButton"
                         (click)="closeTable()"
                         *ngIf="hideButtonText">
-                    {{hideButtonText}}
+                    {{ hideButtonText }}
                 </button>
                 <button class="timButton"
                         (click)="forceUpdateTable()"
                         *ngIf="forceUpdateButtonText">
-                    {{forceUpdateButtonText}}
+                    {{ forceUpdateButtonText }}
                 </button>
                 <button class="timButton"
                         (click)="removeUsers()"
                         *ngIf="removeUsersButtonText && cbCount">
-                    {{removeUsersButtonText}}
+                    {{ removeUsersButtonText }}
                 </button>
                 <button class="timButton"
                         (click)="listUsernames()"
                         *ngIf="userListButtonText && cbCount">
-                    {{userListButtonText}}
+                    {{ userListButtonText }}
                 </button>
                 <button class="timButton"
                         (click)="emailUsers()"
                         *ngIf="emailUsersButtonText && cbCount">
-                    {{emailUsersButtonText}}
+                    {{ emailUsersButtonText }}
                 </button>
                 <ng-container *ngIf="runScripts">
                     <button class="timButton"
                             *ngFor="let s of runScripts"
                             [hidden]="!s.all && !cbCount"
                             (click)="runJsRunner(s)">
-                        {{s.button}}
+                        {{ s.button }}
                     </button>
                 </ng-container>
                 <ng-container *ngIf="sisugroups && cbCount">
@@ -282,7 +298,7 @@ const sortLang = "fi";
                               [storageKey]="this.taskIdFull"
                               [replyToEmail]="markup['replyToEmail']"
             ></tim-message-send>
-            <pre *ngIf="result">{{result}}</pre>
+            <pre *ngIf="result">{{ result }}</pre>
             <pre *ngIf="error" [innerHtml]="error"></pre>
             <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
         </div>
@@ -290,7 +306,7 @@ const sortLang = "fi";
             <button class="timButton"
                     [disabled]="loading"
                     (click)="openTable()">
-                {{openButtonText}}
+                {{ openButtonText }}
             </button>
             <tim-loading *ngIf="loading"></tim-loading>
         </div>
@@ -343,6 +359,8 @@ export class TableFormComponent
     private taskLocations: Record<string, string> = {};
     private changedCells: string[] = []; // Use same type as data.userdata?
     private clearStylesCells = new Set<string>();
+    private isAddingUsers = false;
+    actionInfo?: string;
 
     runScripts?: RunScriptType[];
 
@@ -414,6 +432,10 @@ export class TableFormComponent
 
     get sisugroups() {
         return this.markup.sisugroups;
+    }
+
+    get addUsersButton() {
+        return this.markup.addUsersButton;
     }
 
     /**
@@ -1544,6 +1566,113 @@ export class TableFormComponent
 
     getAttributeType() {
         return TableFormAll;
+    }
+
+    async addUsers() {
+        if (this.isAddingUsers) {
+            return;
+        }
+        this.isAddingUsers = true;
+
+        let prompt = $localize`Please provide email addresses or usernames.
+Separate multiple addresses with commas or write each address on a new line.`;
+
+        if (this.markup.createMissingUsers) {
+            prompt +=
+                "\n\n" +
+                $localize`If the address does not have a TIM account, a new account will be created for them.`;
+        }
+        if (this.markup.notifyOnAdd) {
+            prompt += "\n" + $localize`New members will be notified by email.`;
+        }
+
+        const res = await to2(
+            showInputDialog<IAddmemberResponse>({
+                title: $localize`Add users`,
+                text: prompt,
+                okText: $localize`Add`,
+                inputType: "textarea",
+                isInput: InputDialogKind.InputAndValidator,
+                defaultValue: "",
+                validator: async (input: string) => {
+                    if (!this.markup.groups) {
+                        return {
+                            ok: false,
+                            result: $localize`There are not groups defined in this table.`,
+                        };
+                    }
+                    const group = this.markup.groups[0];
+                    const r = await toPromise(
+                        this.http.post<IAddmemberResponse>(
+                            `/groups/addmember/${group}`,
+                            {
+                                names: splitItems(input),
+                                create_missing_users:
+                                    !!this.markup.createMissingUsers,
+                                notify_new: !!this.markup.notifyOnAdd,
+                            }
+                        )
+                    );
+                    if (r.ok) {
+                        return r;
+                    } else {
+                        return {
+                            ok: false,
+                            result: r.result.error.error,
+                        };
+                    }
+                },
+            })
+        );
+        if (res.ok) {
+            const result = res.result;
+
+            let actionMessage = $localize`Updated group.`;
+
+            if (result.added.length > 0) {
+                const addedText =
+                    $localize`Added ${result.added.length} users:` +
+                    "\n\n" +
+                    result.added.map((u) => `- ${u}`).join("\n");
+                actionMessage += "\n\n" + addedText;
+                if (this.markup.notifyOnAdd) {
+                    actionMessage +=
+                        "\n\n" +
+                        $localize`New members will be notified by email.`;
+                }
+            }
+            if (result.already_belongs.length > 0) {
+                const alreadyInGroupText =
+                    $localize`Users already in group:` +
+                    "\n\n" +
+                    result.already_belongs.map((u) => `- ${u}`).join("\n");
+                actionMessage += "\n\n" + alreadyInGroupText;
+            }
+            if (result.not_exist.length > 0) {
+                const notFoundText =
+                    $localize`Users not found in TIM or address was wrong:` +
+                    "\n\n" +
+                    result.not_exist.map((u) => `- ${u}`).join("\n");
+                actionMessage += "\n\n" + notFoundText;
+            }
+
+            this.setActionInfoText(actionMessage, 10000);
+            await this.forceUpdateTable();
+        }
+        this.isAddingUsers = false;
+    }
+
+    resetActionInfoText() {
+        this.actionInfo = undefined;
+    }
+
+    setActionInfoText(text: string, resetMs?: number) {
+        this.actionInfo = text;
+        if (resetMs) {
+            setTimeout(() => {
+                this.resetActionInfoText();
+            }, resetMs);
+        }
     }
 }
 

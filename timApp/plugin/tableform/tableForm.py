@@ -158,6 +158,9 @@ class TableFormMarkupModel(GenericMarkupModel):
     usernames: bool | Missing = missing
     dataView: DataViewSettingsModel | Missing | None = missing
     replyToEmail: str | Missing | None = missing
+    addUsersButton: str | Missing | None = missing
+    notifyOnAdd: bool | Missing = False
+    createMissingUsers: bool | Missing = False
 
 
 TableFormMarkupSchema = class_schema(TableFormMarkupModel)
