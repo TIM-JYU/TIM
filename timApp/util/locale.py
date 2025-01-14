@@ -1,4 +1,4 @@
-from flask import request, Response
+from flask import request, Response, current_app
 
 from timApp.auth.sessioninfo import (
     logged_in,
@@ -26,7 +26,12 @@ def get_locale(force_refresh: bool = False) -> str:
 
 
 def update_locale_lang(resp: Response) -> Response:
-    resp.set_cookie("lang", get_locale(force_refresh=True))
+    resp.set_cookie(
+        "lang",
+        get_locale(force_refresh=True),
+        samesite=current_app.config["SESSION_COOKIE_SAMESITE"],
+        secure=current_app.config["SESSION_COOKIE_SECURE"],
+    )
     return resp
 
 

@@ -417,10 +417,20 @@ def after_request(resp: Response):
     # lang is used to preserve the active language preference which may be either
     # a specific language or "UseWebBrowser" which defaults to browser preference
     if not request.cookies.get("lang"):
-        resp.set_cookie("lang", locale)
+        resp.set_cookie(
+            "lang",
+            locale,
+            samesite=app.config["SESSION_COOKIE_SAMESITE"],
+            secure=app.config["SESSION_COOKIE_SECURE"],
+        )
     # script_lang is used by Caddy to serve correct Angular scripts
     # It always contains a specific valid language, never "UseWebBrowser"
-    resp.set_cookie("script_lang", locale)
+    resp.set_cookie(
+        "script_lang",
+        locale,
+        samesite=app.config["SESSION_COOKIE_SAMESITE"],
+        secure=app.config["SESSION_COOKIE_SECURE"],
+    )
     return resp
 
 

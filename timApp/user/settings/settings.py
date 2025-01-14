@@ -24,6 +24,7 @@ from timApp.document.viewcontext import default_view_ctx, ViewRoute
 from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
 from timApp.notification.notify import get_current_user_notifications
+from timApp.tim_app import app
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
@@ -179,7 +180,12 @@ def save_settings() -> Response:
     db.session.commit()
     r = json_response(user.get_prefs().to_json(with_style=True))
     if new_prefs.language:
-        r.set_cookie("lang", new_prefs.language)
+        r.set_cookie(
+            "lang",
+            new_prefs.language,
+            samesite=app.config["SESSION_COOKIE_SAMESITE"],
+            secure=app.config["SESSION_COOKIE_SECURE"],
+        )
     return r
 
 
@@ -191,7 +197,12 @@ def save_language_route(lang: str) -> Response:
     u.set_prefs(prefs)
     db.session.commit()
     r = ok_response()
-    r.set_cookie("lang", lang)
+    r.set_cookie(
+        "lang",
+        lang,
+        samesite=app.config["SESSION_COOKIE_SAMESITE"],
+        secure=app.config["SESSION_COOKIE_SECURE"],
+    )
 
     refresh()
 
