@@ -19,12 +19,18 @@ interface ProfileData extends Object {
     username?: string;
     realname?: string;
     email?: string;
+    profile_path: string;
+    profile_picture_path: string;
     profile_description: string;
     profile_links: string[];
-    document_id?: int;
-    profile_picture_path: string;
-    profile_path: string;
     edit_access?: boolean;
+    course_group_name?: string;
+}
+
+interface TimUserGroup {
+    id: number;
+    name: string;
+    admin?: string;
 }
 
 const UploadedFile = t.intersection([
@@ -53,7 +59,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
             </div>
             <div class="container">
                 <div class="left-column">
-                    <img id="tim-user-profile-picture" [src]="pictureUrl" alt="profilepic"/>
+                    <img id="tim-user-profile-picture" [src]="profileData.profile_picture_path" alt="profilepic"/>
                     <ng-container *ngIf="editAccess" body>
                         <div>
                             <file-select-manager class="small"
@@ -72,18 +78,24 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                     <ng-container *ngIf="editAccess" body>
                         <form (ngSubmit)="onSubmit()" #f="ngForm" class="form">
                             <span class="textfield">
-                            <textarea name="description"  class="form-control textarea"
-                                                      (ngModelChange)= "setWarning('description')"
-                                                        [class.warnFrame]="checkWarning('description')"    
-                                                      [(ngModel)]="profileData.profile_description"></textarea></span>
-                            
-                                <span class="textfield">
-                            <input #i name="link" class="form-control" type="text" *ngFor="let item of profileData.profile_links; index as i; trackBy: linkTrackBy"
-                                                      (ngModelChange)="setWarning(i.toString())"
-                                                        [(ngModel)]="profileData.profile_links[i]"
-                                   [class.warnFrame]="checkWarning(i.toString())" /> 
+                            <textarea name="description" class="form-control textarea"
+                                      (ngModelChange)="setWarning('description')"
+                                      [class.warnFrame]="checkWarning('description')"
+                                      [(ngModel)]="profileData.profile_description"></textarea></span>
+
+                            <span class="textfield">
+                            <input #i name="link" class="form-control" type="text"
+                                   *ngFor="let item of profileData.profile_links; index as i; trackBy: linkTrackBy"
+                                   (ngModelChange)="setWarning(i.toString())"
+                                   [(ngModel)]="profileData.profile_links[i]"
+                                   [class.warnFrame]="checkWarning(i.toString())"/>
+                            <input #group name="group" class="form-control" type="text"
+                                           (ngModelChange)="setWarning(group.toString())"
+                                           [(ngModel)]="profileData.course_group_name"
+                                           [class.warnFrame]="checkWarning(group.toString())"/>
 </span>
-                            <button type="submit" class="btn">Save <span class="glyphicon glyphicon-send"></span></button>
+                            <button type="submit" class="btn">Save <span class="glyphicon glyphicon-send"></span>
+                            </button>
                         </form>
                     </ng-container>
                     <ng-container *ngIf="!editAccess">
@@ -91,8 +103,8 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                             {{ profileData.profile_description }}
                         </p>
                         <ng-container *ngFor="let item of profileData.profile_links">
-                        <a [href]="item">{{ item }}</a>
-                            </ng-container> 
+                            <a [href]="item">{{ item }}</a>
+                        </ng-container>
                     </ng-container>
                 </div>
 
@@ -100,28 +112,20 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
             </div>
             <div class="container">
                 <div class="left-column">
-                    
-                <h2>Hello, {{ profileData.realname }}!</h2>
-                <ul>
-                <li>
-                Username: {{ profileData.username }}
-                </li>
-                <li>
-
-                Email: {{ profileData.email }}
-                </li>
-                </ul>
+                    <h2>Hello, {{ profileData.realname }}!</h2>
+                    <ul>
+                        <li>Username: {{ profileData.username }}</li>
+                        <li>Email: {{ profileData.email }}</li>
+                    </ul>
                 </div>
                 <div class="right-column">
-                    <h2>Group number</h2>
+                    <h2>Your group: {{ myGroupName }}</h2>
                     <ul>
-                <li>
-    member1
-                </li>
-                <li>
-member2
-                </li>
-                </ul>
+                        <li
+                                *ngFor="let member of myGroupMembers;">
+                            {{ member.name }}
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -133,8 +137,6 @@ export class UserProfileComponent implements OnInit {
     @Input() userId?: int;
     editAccess: boolean = false;
     warnings: string[] = [];
-    pictureUrl: string = "";
-    profileUrl: string = "";
     uploadUrl?: string;
     detailsUrl: string = "";
     dragAndDrop: boolean = true;
@@ -142,19 +144,25 @@ export class UserProfileComponent implements OnInit {
     stem: string = "Change a profile picture";
     fileSelect?: FileSelectManagerComponent;
     profileData: ProfileData;
+    myProjectGroup?: TimUserGroup;
+    myGroups?: TimUserGroup[];
+    myGroupName?: string;
+    myGroupMembers?: TimUserGroup[];
 
     constructor(private http: HttpClient) {
         this.profileData = {
             profile_description: "",
             profile_links: [""],
-            document_id: 1,
-            profile_picture_path: this.pictureUrl,
-            profile_path: this.profileUrl,
+            profile_picture_path: "",
+            profile_path: "",
         };
     }
 
     ngOnInit() {
+        // TODO: change data fetching technique/method to another
         this.getProfileData(this.userId);
+        // this.getMyGroups();
+        // this.getMyGroupName();
 
         this.uploadUrl = `/profile/picture/${this.documentId}`;
         this.detailsUrl = `/profile/details/${this.documentId}`;
@@ -184,21 +192,12 @@ export class UserProfileComponent implements OnInit {
         if (userId != undefined) {
             dataEndpoint = `/profile/${userId}`;
         }
-        console.log(dataEndpoint);
         const data = this.http.get<ProfileData>(dataEndpoint).subscribe({
             next: (res: ProfileData) => {
-                this.profileData = {
-                    realname: res.realname,
-                    email: res.email,
-                    username: res.username,
-                    profile_description: res.profile_description,
-                    profile_links: res.profile_links,
-                    profile_picture_path: res.profile_picture_path,
-                    profile_path: res.profile_path,
-                    edit_access: res.edit_access,
-                };
-                this.pictureUrl = res.profile_picture_path;
-                this.profileUrl = res.profile_path;
+                this.profileData = res;
+
+                // TODO: organize dependent calls into ngOnInit function
+                this.getMyGroups();
 
                 if (this.modifyEnabled && this.profileData.edit_access) {
                     this.editAccess = true;
@@ -208,8 +207,64 @@ export class UserProfileComponent implements OnInit {
         return data;
     }
 
+    getMyGroups() {
+        const endpoint: string = `/groups/usergroups`;
+
+        const data = this.http.get<TimUserGroup[]>(endpoint).subscribe({
+            next: (res) => {
+                this.myGroups = res;
+
+                // TODO: organize into ngOnInit
+                this.myGroupName = this.getMyGroupName();
+                this.getMyGroupMembers();
+            },
+        });
+
+        return data;
+    }
+
+    getMyGroupMembers() {
+        if (!this.myGroupName) {
+            console.log("Group name not yet stored.");
+            return;
+        }
+
+        const groupName: string = this.myGroupName;
+        const endpoint: string = `/groups/show/${groupName}`;
+
+        const data = this.http.get<TimUserGroup[]>(endpoint).subscribe({
+            next: (res) => {
+                this.myGroupMembers = res;
+            },
+        });
+        return data;
+    }
+
+    getMyGroupName(): string {
+        let group = "No group found.";
+        if (this.myGroups == undefined) {
+            console.log(group);
+            return group;
+        }
+
+        // Find prefixed
+        const myGroup = this.myGroups.filter((item) => {
+            if (this.profileData.course_group_name == undefined) {
+                console.log("Course group name undefined.");
+                return "";
+            }
+            item.name.startsWith(`${this.profileData.course_group_name}-`);
+        });
+
+        if (myGroup[0]) {
+            group = myGroup[0].name;
+        }
+
+        return group;
+    }
+
     modifyUserProfile() {
-        window.open(this.profileUrl);
+        window.open(this.profileData.profile_path);
     }
 
     onFileLoad(file: IFile) {
@@ -225,7 +280,7 @@ export class UserProfileComponent implements OnInit {
 
         const img: {image: string} = resp as {image: string};
 
-        this.pictureUrl = `/images/${img.image}`;
+        this.profileData.profile_picture_path = `/images/${img.image}`;
     }
 
     onUploadDone(success: boolean) {
@@ -239,8 +294,8 @@ export class UserProfileComponent implements OnInit {
         // Prepare data for submit
 
         const data: ProfileData = this.profileData;
-        // Call endpoint, which handles storing the data into document settings
 
+        // Call endpoint, which handles storing the data into document settings
         const response = toPromise(
             this.http.post<{ok: boolean}>(this.detailsUrl, data)
         );
