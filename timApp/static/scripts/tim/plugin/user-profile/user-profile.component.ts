@@ -134,7 +134,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 export class UserProfileComponent implements OnInit {
     @Input() documentId: int = 0;
     @Input() modifyEnabled: boolean = false;
-    @Input() userId?: int;
+    @Input() profileId?: int;
     editAccess: boolean = false;
     warnings: string[] = [];
     uploadUrl?: string;
@@ -144,13 +144,16 @@ export class UserProfileComponent implements OnInit {
     stem: string = "Change a profile picture";
     fileSelect?: FileSelectManagerComponent;
     profileData: ProfileData;
-    myProjectGroup?: TimUserGroup;
     myGroups?: TimUserGroup[];
     myGroupName?: string;
     myGroupMembers?: TimUserGroup[];
 
     constructor(private http: HttpClient) {
-        this.profileData = {
+        this.profileData = this.formatProfileData();
+    }
+
+    formatProfileData() {
+        return {
             profile_description: "",
             profile_links: [""],
             profile_picture_path: "",
@@ -159,8 +162,8 @@ export class UserProfileComponent implements OnInit {
     }
 
     ngOnInit() {
-        // TODO: change data fetching technique/method to another
-        this.getProfileData(this.userId);
+        // TODO: change data fetching technique/method to another e.g. toPromise(this.http...
+        this.getProfileData(this.profileId);
         // this.getMyGroups();
         // this.getMyGroupName();
 
@@ -188,7 +191,7 @@ export class UserProfileComponent implements OnInit {
 
     getProfileData(userId?: int) {
         let dataEndpoint = "/profile";
-
+        console.log("fetcibn profiledata, userid: ", userId);
         if (userId != undefined) {
             dataEndpoint = `/profile/${userId}`;
         }
@@ -235,8 +238,13 @@ export class UserProfileComponent implements OnInit {
         const data = this.http.get<TimUserGroup[]>(endpoint).subscribe({
             next: (res) => {
                 this.myGroupMembers = res;
+                console.log(res);
+            },
+            error: (err) => {
+                console.log("Error when fetching members.");
             },
         });
+        console.log(data);
         return data;
     }
 
@@ -246,20 +254,24 @@ export class UserProfileComponent implements OnInit {
             console.log(group);
             return group;
         }
+        console.log("mygroups are defined, ", this.myGroups);
 
         // Find prefixed
-        const myGroup = this.myGroups.filter((item) => {
-            if (this.profileData.course_group_name == undefined) {
-                console.log("Course group name undefined.");
-                return "";
-            }
-            item.name.startsWith(`${this.profileData.course_group_name}-`);
-        });
+        if (this.profileData.course_group_name == undefined) {
+            console.log("Course group name undefined.");
+            return "";
+        }
+        const myGroup: TimUserGroup[] = this.myGroups.filter((item) =>
+            item.name.startsWith(`${this.profileData.course_group_name!}-`)
+        );
+
+        console.log("name filtered, ", myGroup);
 
         if (myGroup[0]) {
             group = myGroup[0].name;
         }
 
+        console.log("returnning, ", group);
         return group;
     }
 
@@ -302,6 +314,10 @@ export class UserProfileComponent implements OnInit {
 
         // Get result from response of the endpoint.
         const result: Result<{ok: boolean}, AngularError> = await response;
+        if (result.ok) {
+            this.myGroupMembers = [];
+            this.getProfileData();
+        }
 
         return result;
     }
