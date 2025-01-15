@@ -1,18 +1,14 @@
 import json
-import os
 import re
 from base64 import b64encode
-
-from languages import Language, get_by_id
-
-JSREADYHTML = {}
-
-JSREADYOPTIONS = {}
+from languages import get_by_id
+from jslanguage import JSWithHTML, JSREADYHTML
 
 
-class JSframe(Language):
+class JSframe(JSWithHTML):
     ttype = "jsframe"
     load_original_data = True
+    initListenerDefault = True
 
     def get_default_before_open(self):
         return '<div class="defBeforeOpen"><p>Open JS-frame</p></div>'
@@ -65,6 +61,15 @@ class JSframe(Language):
         return ["c"]
 
     def iframehtml(self, result, sourcelines, points_rule):
+        """
+        This method is called when task is saved and iframehtml: true.
+        This is mainly for generating html with reply included.
+        Used for example in GeoGebra, but not so much other jsframes.
+        :param result: result object to be returned from save
+        :param sourcelines: source code lines if any
+        :param points_rule: points rule if any
+        :return: html string
+        """
         self.modify_query()
         ma = self.query.jso["markup"]
         srchtml = get_by_id(ma, "srchtml", "")
@@ -88,47 +93,12 @@ class JSframe(Language):
         return srchtml
 
     def modify_query(self):
+        super().modify_query()
         ma = self.query.jso["markup"]
-        readyhtml = get_by_id(ma, "readyHtml", "")
-        readyoptions = get_by_id(ma, "readyOptions", readyhtml)
-        src = ma.get("srchtml", "")
-        if not src and readyhtml:
-            src = JSREADYHTML.get(readyhtml, "")
-        if src.find("TIMJS") >= 0:
-            self.jsobject = "TIMJS."
-
-        opt = get_by_id(ma, "options", None)
-        if not opt:
-            opt = JSREADYOPTIONS.get(readyoptions, None)
-        if opt:
-            src = src.replace(
-                "//OPTIONS", self.jsobject + "options = " + json.dumps(opt) + ";"
-            )
-
-        contstyle = (
-            'style="' + get_by_id(ma, "contStyle", "width: 100%; margin: auto; ") + '"'
-        )
-        src = src.replace("CONTSTYLE", contstyle)
-
-        src = src.replace("##TIM_HOST##", os.environ["TIM_HOST"])
-
-        src = src.replace("##HOST_URL##", ma.get("hosturl", os.environ["TIM_HOST"]))
-
-        if self.load_original_data:
-            original_data = get_by_id(ma, "data", None)
-            if original_data:
-                src = src.replace(
-                    "//ORIGINALDATA",
-                    self.jsobject + "originalData = " + json.dumps(original_data) + ";",
-                )
-
-        javascript = get_by_id(ma, "javascript", None)
-        if javascript:
-            src = src.replace("//JAVASCRIPT", javascript)
-
-        src = src.replace("##CHARTJSVERSION##", ma.get("chartjsversion", "2.8.0"))
-        ma["srchtml"] = src
-        return
+        # Seem that initListener is better to be on by default
+        init_listener = ma.get("initListener", None)
+        if init_listener is None:
+            ma["initListener"] = self.initListenerDefault
 
 
 JSREADYHTML[
@@ -154,8 +124,25 @@ JSREADYHTML[
 """
 
 
+def check_aspect_ratio(ma):
+    data = ma.get("data", {})
+    if isinstance(data, str):
+        data = {}
+    height = ma.get("height", None)  # Automatic aspect ratio or height
+    dopt = data.get("options", {})
+    ar = data.get("aspectRatio", dopt.get("aspectRatio", None))
+    if height and not ar:
+        if not ma.get("data", None):
+            ma["data"] = {}
+        data["aspectRatio"] = ma.get("width", 800) / (height * 0.95)
+    if not height and ar:
+        ma["height"] = ma.get("width", 800) / (ar * 0.95)
+    return data
+
+
 class ChartJS(JSframe):
     ttype = "chartjs"
+    initListenerDefault = False
 
     def modify_query(self):
         ma = self.query.jso["markup"]
@@ -163,16 +150,7 @@ class ChartJS(JSframe):
         srchtml = get_by_id(ma, "srchtml", None)
         if readyhtml is None and srchtml is None:
             ma["readyHtml"] = "oneDataChartJS"
-        height = ma.get("height", None)  # Automatic aspect ratio or height
-        data = ma.get("data", {})
-        dopt = data.get("options", {})
-        ar = data.get("aspectRatio", dopt.get("aspectRatio", None))
-        if height and not ar:
-            if not ma.get("data", None):
-                ma["data"] = {}
-            data["aspectRatio"] = ma.get("width", 800) / (height * 0.95)
-        if not height and ar:
-            ma["height"] = ma.get("width", 800) / (ar * 0.95)
+        check_aspect_ratio(ma)
         super().modify_query()
         return
 
@@ -204,19 +182,8 @@ class DrawIO(JSframe):
         srchtml = get_by_id(ma, "srchtml", None)
         if readyhtml is None and srchtml is None:
             ma["readyHtml"] = "simpleDrawIO"
-        height = ma.get("height", None)  # Automatic aspect ratio or height
-        data = ma.get("data", {})
-        if isinstance(data, str):
-            data = {}
-        dopt = data.get("options", {})
-        templates = ma.get("templates", "")
-        ar = data.get("aspectRatio", dopt.get("aspectRatio", None))
-        if height and not ar:
-            if not ma.get("data", None):
-                ma["data"] = {}
-            data["aspectRatio"] = ma.get("width", 800) / (height * 0.95)
-        if not height and ar:
-            ma["height"] = ma.get("width", 800) / (ar * 0.95)
+        # templates = ma.get("templates", "") not needed?
+        check_aspect_ratio(ma)
         ma["initListener"] = ma.get("initListener", True)
         ma["saveButton"] = ma.get("saveButton", "")
         # TODO: prevent user options if thereis

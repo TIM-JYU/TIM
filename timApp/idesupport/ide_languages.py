@@ -78,7 +78,7 @@ class Language:
         """
         :return: Task directory for current file
         """
-        return self.plugin_json.get("markup", {}).get("taskDirectory", None)
+        return self.plugin_json.get("markup", {}).get("task_directory", None)
 
     @staticmethod
     def get_itemname(s: str | None, pattern: str) -> str | None:

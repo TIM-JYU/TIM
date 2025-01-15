@@ -1,3 +1,4 @@
+import re
 import time
 import traceback
 from urllib.parse import urlparse
@@ -318,6 +319,9 @@ if app.config["DEBUG_SQL"]:
 LOG_BEFORE_REQUESTS = app.config["LOG_BEFORE_REQUESTS"]
 
 
+DOUBLE_SLASH_PATH_REGEX = re.compile(r"/\s*/")
+
+
 @app.before_request
 def preprocess_request():
     session.permanent = True
@@ -331,7 +335,8 @@ def preprocess_request():
         p = request.path
         if "//" in p or (p.endswith("/") and p != "/"):
             query_str = request.query_string.decode()
-            fixed_url = p.rstrip("/").replace("//", "/")
+            fixed_url = p.rstrip("/")
+            fixed_url = DOUBLE_SLASH_PATH_REGEX.sub("/", fixed_url)
             if query_str:
                 fixed_url = f"{fixed_url}?{query_str}"
             return redirect(fixed_url)
@@ -412,10 +417,20 @@ def after_request(resp: Response):
     # lang is used to preserve the active language preference which may be either
     # a specific language or "UseWebBrowser" which defaults to browser preference
     if not request.cookies.get("lang"):
-        resp.set_cookie("lang", locale)
+        resp.set_cookie(
+            "lang",
+            locale,
+            samesite=app.config["SESSION_COOKIE_SAMESITE"],
+            secure=app.config["SESSION_COOKIE_SECURE"],
+        )
     # script_lang is used by Caddy to serve correct Angular scripts
     # It always contains a specific valid language, never "UseWebBrowser"
-    resp.set_cookie("script_lang", locale)
+    resp.set_cookie(
+        "script_lang",
+        locale,
+        samesite=app.config["SESSION_COOKIE_SAMESITE"],
+        secure=app.config["SESSION_COOKIE_SECURE"],
+    )
     return resp
 
 

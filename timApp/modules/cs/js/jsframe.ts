@@ -450,7 +450,7 @@ export class JsframeComponent
         this.initData = "";
         let data: {c: unknown; fielddata?: unknown} = this.getDataFromMarkup();
         if (res.result.data) {
-            // there os no more fielddata-attribute
+            // there is no more fielddata-attribute
             if (!data) {
                 data = {c: undefined};
             }

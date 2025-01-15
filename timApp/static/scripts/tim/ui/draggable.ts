@@ -227,7 +227,7 @@ export class DraggableController implements IController {
             }
             this.element.removeClass("draggable-detached");
             this.element.addClass("draggable-attached");
-            console.log("attach", this.slidePars);
+            // console.log("attach", this.slidePars);
             if (this.slidePars) {
                 vctrlInstance?.removeSlideParsState();
             }
@@ -237,7 +237,7 @@ export class DraggableController implements IController {
             void this.restoreSizeAndPosition(VisibilityFix.Full);
             this.element.removeClass("draggable-attached");
             this.element.addClass("draggable-detached");
-            console.log("detach", this.slidePars);
+            // console.log("detach", this.slidePars);
             if (this.slidePars) {
                 vctrlInstance?.addSlideParsState();
             }

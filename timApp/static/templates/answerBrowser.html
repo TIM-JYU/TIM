@@ -61,7 +61,7 @@
                                     title="List of answers"
                                     [(ngModel)]="selectedAnswer"
                                     (ngModelChange)="changeAnswer(undefined,undefined, true)">
-                                 <option *ngFor="let answer of filteredAnswers; let idx = index" [ngValue]="answer">{{((filteredAnswers.length - idx) + '. ' + (answer.answered_on |  date:'dd.MM.YYYY HH:mm:ss' ))}}</option>
+                                 <option *ngFor="let answer of filteredAnswers; let idx = index" [ngValue]="answer">{{((filteredAnswers.length - idx) + '. ' + (answer.answered_on |  date:'dd.MM.yyyy HH:mm:ss' ))}}</option>
                             </select>
                             <span class="input-group-btn">
                     <button i18n-title title="Next answer" class="btn btn-primary nextAnswer" (click)="changeAnswerTo(1)">&rarr;</button>
@@ -298,13 +298,13 @@
             <span class="answeringTime" *ngIf="taskInfo.starttime || taskInfo.deadline">
         <ng-container i18n>Answering time:</ng-container>
         <span *ngIf="taskInfo.starttime && !taskInfo.deadline">
-            <ng-container i18n>Since</ng-container> {{ taskInfo.starttime | date:'dd.MM.YYYY HH:mm:ss' }}
+            <ng-container i18n>Since</ng-container> {{ taskInfo.starttime | date:'dd.MM.yyyy HH:mm:ss' }}
         </span>
         <span *ngIf="!taskInfo.starttime && taskInfo.deadline">
-            <ng-container i18n>Until</ng-container> {{ taskInfo.deadline | date:'dd.MM.YYYY HH:mm:ss' }}
+            <ng-container i18n>Until</ng-container> {{ taskInfo.deadline | date:'dd.MM.yyyy HH:mm:ss' }}
         </span>
         <span *ngIf="taskInfo.starttime && taskInfo.deadline">
-            {{ taskInfo.starttime | date:'dd.MM.YYYY HH:mm:ss' }} - {{ taskInfo.deadline | date:'dd.MM.YYYY HH:mm:ss' }}
+            {{ taskInfo.starttime | date:'dd.MM.yyyy HH:mm:ss' }} - {{ taskInfo.deadline | date:'dd.MM.yyyy HH:mm:ss' }}
         </span>
     </span>
     </ng-container>

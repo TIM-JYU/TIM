@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS base
+FROM ubuntu:24.04 AS base
 LABEL org.opencontainers.image.authors="tim@jyu.fi"
 LABEL org.opencontainers.image.source="https://github.com/TIM-JYU/TIM"
 
@@ -24,6 +24,7 @@ ca-certificates \
 cm-super \
 dvidvi \
 dvipng \
+dvisvgm \
 feynmf \
 fonts-texgyre \
 fragmaster \
@@ -79,19 +80,6 @@ wget \
 
 # Install gpg and gpg-agent for verifying signatures
 RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
-
-# Update dvisvgm so that it supports converting PDFs to SVGs
-ENV DVISVGM_VERSION="2.14"
-RUN bash -c "${APT_INSTALL} gcc g++ libgs-dev libkpathsea-dev pkg-config libfreetype6-dev make && ${APT_CLEANUP}"
-RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/${DVISVGM_VERSION}/dvisvgm-${DVISVGM_VERSION}.tar.gz" -qO $FILE && \
- tar -xf $FILE && \
- cd dvisvgm-$DVISVGM_VERSION && \
- ./configure --enable-bundled-libs && \
- make -j4 && \
- make install && \
- cd / && \
- ${APT_CLEANUP} && \
- rm -rf /dvisvgm-$DVISVGM_VERSION
 
 FROM base AS complete
 

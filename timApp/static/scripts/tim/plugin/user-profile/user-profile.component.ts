@@ -164,8 +164,6 @@ export class UserProfileComponent implements OnInit {
     ngOnInit() {
         // TODO: change data fetching technique/method to another e.g. toPromise(this.http...
         this.getProfileData(this.profileId);
-        // this.getMyGroups();
-        // this.getMyGroupName();
 
         this.uploadUrl = `/profile/picture/${this.documentId}`;
         this.detailsUrl = `/profile/details/${this.documentId}`;
@@ -191,7 +189,6 @@ export class UserProfileComponent implements OnInit {
 
     getProfileData(userId?: int) {
         let dataEndpoint = "/profile";
-        console.log("fetcibn profiledata, userid: ", userId);
         if (userId != undefined) {
             dataEndpoint = `/profile?userid=${userId}`;
         }
@@ -314,6 +311,7 @@ export class UserProfileComponent implements OnInit {
 
         // Get result from response of the endpoint.
         const result: Result<{ok: boolean}, AngularError> = await response;
+
         if (result.ok) {
             this.myGroupMembers = [];
             this.getProfileData();

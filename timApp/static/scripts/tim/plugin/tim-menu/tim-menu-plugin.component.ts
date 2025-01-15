@@ -218,7 +218,7 @@ export class TimMenuPluginComponent
             return;
         }
         this.menu = this.attrsall.menu;
-        console.log(this.menu);
+        // console.log(this.menu);
         this.separator = this.markup.separator;
         this.topMenu = this.markup.topMenu;
         this.openAbove = this.markup.openAbove;

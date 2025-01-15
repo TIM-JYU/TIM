@@ -19,6 +19,34 @@ from tim_common.cs_sanitizer import allow_minimal, tim_sanitize
 CACHE_DIR = "/tmp/cache/"
 
 
+def apply_sed_replacements(s: str, replacements: str | list[str]) -> str:
+    """
+    Apply a list of sed-style replacements to a string.
+
+    :param s: The input string.
+    :param replacements: A list of sed-style replacement strings (e.g., 's/old/new/g').
+    :return: The modified string.
+    """
+    if not isinstance(replacements, list):
+        replacements = [replacements]
+    for replacement in replacements:
+        # Parse the sed replacement string with any delimiter
+        match = re.match(r"s(.)(.*?)(\1)(.*?)(\1)([gim]*)", replacement)
+        if not match:
+            continue
+        delimiter, old, _, new, _, flags = match.groups()
+        re_flags = 0
+        if "i" in flags:
+            re_flags |= re.IGNORECASE
+        if "m" in flags:
+            re_flags |= re.MULTILINE
+        if "g" in flags:
+            s = re.sub(old, new, s, flags=re_flags)
+        else:
+            s = re.sub(old, new, s, count=1, flags=re_flags)
+    return s
+
+
 class QueryClass:
     def __init__(self):
         self.get_query = {}
@@ -288,18 +316,27 @@ def get_cache_keys():
 
 
 # noinspection PyBroadException
-def get_url_lines(url: str):
+def get_url_lines(url: str, usecache: bool = True):
+    # TODO: there might be a problem with sama cache for lines and
+    # strings. If the same url is used for both, the cache will
+    # return the wrong one. Maybe must use different keys for
+    # lines (maybe add some LINE_ to the key saving lines)
+    # And should be studied if cache is better with redis.
+    # Now using memory cache, the speed difference is at least 10x
+    # in small multihtml-route compared to empty cache.
+    #
     global cache
     # print("========= CACHE KEYS ==========\n", get_cache_keys())
-    if url in cache:
+    if usecache and url in cache:
         # print("from cache: ", url)
         return cache[url]
 
     diskcache = CACHE_DIR + url.replace("/", "_").replace(":", "_")
 
-    print("not in cache: ", url)
+    if usecache:
+        print("not in cache: ", url)
     # if False and os.path.isfile(diskcache):
-    if os.path.isfile(diskcache):
+    if usecache and os.path.isfile(diskcache):
         try:
             result = open(diskcache, encoding="iso8859_15").read()
             result = result.split("\n")
@@ -335,17 +372,17 @@ def get_url_lines(url: str):
                 line = str(line)
         lines[i] = line.replace("\n", "").replace("\r", "")
 
-    cache[url] = lines
+    if usecache:
+        cache[url] = lines
+        try:
+            # open(diskcache,"w").write("\n".join(lines))
+            if not os.path.isdir(CACHE_DIR):
+                os.mkdir(CACHE_DIR)
 
-    try:
-        # open(diskcache,"w").write("\n".join(lines))
-        if not os.path.isdir(CACHE_DIR):
-            os.mkdir(CACHE_DIR)
-
-        open(diskcache, "w", encoding="iso8859_15").write("\n".join(lines))
-    except Exception as e:
-        print(str(e))
-        print("XXXXXXXXXXXXXXXXXXXXXXXX Could no write cache: \n", diskcache)
+            open(diskcache, "w", encoding="iso8859_15").write("\n".join(lines))
+        except Exception as e:
+            print(str(e))
+            print("XXXXXXXXXXXXXXXXXXXXXXXX Could no write cache: \n", diskcache)
 
     return lines
 
@@ -365,7 +402,10 @@ def clean_url(url: str):
 
 # noinspection PyBroadException
 def get_url_lines_as_string(
-    url: str, headers: dict[str, str] | None = None, not_found_error: str | None = None
+    url: str,
+    headers: dict[str, str] | None = None,
+    not_found_error: str | None = None,
+    usecache: bool = True,
 ):
     global cache
     cachename = "lines_" + url + secure_hash_dict(headers)
@@ -373,14 +413,14 @@ def get_url_lines_as_string(
     # print("========= CACHE KEYS ==========\n", get_cache_keys())
     # print(cachename + "\n")
     # print(cache) # cache does not work in forkingMix
-    if cachename in cache:
+    if usecache and cachename in cache:
         # print("from cache: ", cachename)
         return cache[cachename]
 
     # print("not in cache: ", cachename)
     # return "File not found: " + url
 
-    if os.path.isfile(diskcache):
+    if usecache and os.path.isfile(diskcache):
         try:
             result = open(diskcache).read()
             cache[cachename] = result
@@ -417,14 +457,16 @@ def get_url_lines_as_string(
         result += line.replace("\r", "")
 
     result = result.strip("\n")
-    cache[cachename] = result
 
-    try:
-        open(diskcache, "w").write(result)
-    except:
-        print("Could no write cache: ", diskcache)
+    if usecache:
+        cache[cachename] = result
 
-    # print(cache)
+        try:
+            open(diskcache, "w").write(result)
+        except:
+            print("Could no write cache: ", diskcache)
+
+        # print(cache)
     return result
 
 
@@ -485,6 +527,9 @@ class FileParams:
         if not self.by and nr == "":
             self.by = replace_random(query, get_param(query, "byCode" + nr, ""))
         self.prorgam = replace_random(query, get_param(query, "program" + nr, ""))
+        self.line_sed = get_param(query, "lineSed" + nr, "")
+        self.file_sed = get_param(query, "fileSed" + nr, "")
+        self.usecache = get_param(query, "usecache" + nr, True)
 
         self.reps = []
 
@@ -492,7 +537,7 @@ class FileParams:
         if nr:
             rep_nr = nr + "."
 
-        for i in range(1, 10):
+        for i in range(1, 5):  # TODO: check if ever used anywhere (was 10)
             rep = do_matcher(
                 get_param(query, "replace" + rep_nr + str(i), "")
             )  # replace.1.1 tyyliin replace1 on siis replace.0.1
@@ -520,19 +565,26 @@ class FileParams:
     def get_file(self, escape_html=False, not_found_error=None):
         if self.prorgam:
             # print(self.prorgam)
-            return self.scan_needed_lines(self.prorgam.split("\n"), escape_html)
+            s = self.prorgam
+            if self.file_sed != "":
+                s = apply_sed_replacements(s, self.file_sed)
+            return self.scan_needed_lines(s.split("\n"), escape_html)
         if not self.url:
             # print("SELF.BY:", self.by.encode())
             if not self.by:
                 return ""
             return self.by  # self.by.replace("\\n", "\n")
 
-        lines = get_url_lines(self.url)
+        lines = get_url_lines(self.url, usecache=self.usecache)
         if not lines:
             if not_found_error:
                 return not_found_error
             return "File not found " + clean_url(self.url)
 
+        if self.file_sed != "":
+            s = "\n".join(lines)
+            s = apply_sed_replacements(s, self.file_sed)
+            lines = s.split("\n")
         return self.scan_needed_lines(lines, escape_html)
 
     def scan_needed_range(self, lines):
@@ -583,6 +635,8 @@ class FileParams:
 
             if escape_html:
                 line = html.escape(line)
+            if self.line_sed != "":
+                line = apply_sed_replacements(line, self.line_sed)
             ln = self.linefmt.format(i + 1)
             result += ln + line + "\n"
             if i + 1 >= self.lastn:
@@ -620,7 +674,7 @@ def get_file_to_output(query: QueryClass, show_html: bool, p0: FileParams = None
         # return "Must give file= -parameter"
         s += p0.get_include(show_html)
         u = p0.url
-        for i in range(1, 10):
+        for i in range(1, 0):  # TODO: check if ever used anywhere (was 10)
             p = FileParams(query, "." + str(i), u)
             s += p.get_file(show_html, not_found_error=not_found_error)
             s += p.get_include(show_html)
@@ -1235,3 +1289,26 @@ def str_to_int(s: str, default=0):
 
 def encode_json_data(d: str):
     return base64.b64encode(d.encode()).decode()
+
+
+def do_sed_replacements(query: QueryClass, s: str) -> str:
+    """
+    Apply a list of sed-style replacements to a string.
+
+    :param query: The query object where to look sed rules
+    :param s: The input string.
+    :return: The modified string.
+    """
+    if not query:
+        return s
+    line_sed = get_param(query, "lineSed", "")
+    file_sed = get_param(query, "fileSed", "")
+    if file_sed != "":
+        s = apply_sed_replacements(s, file_sed)
+    if line_sed != "":
+        lines = s.split("\n")
+        result = ""
+        for line in lines:
+            result += apply_sed_replacements(line, line_sed) + "\n"
+        s = result
+    return s

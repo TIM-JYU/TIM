@@ -8,6 +8,9 @@ from geogebra import *
 
 # noinspection PyUnresolvedReferences
 from jsframe import *
+
+# noinspection PyUnresolvedReferences
+from jslanguage import *
 from stack import *
 
 # noinspection PyUnresolvedReferences

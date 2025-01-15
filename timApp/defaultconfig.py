@@ -169,10 +169,15 @@ HOME_ORGANIZATION = "jyu.fi"
 LOAD_STUDENT_IDS_IN_TEACHER = False
 
 HAS_HTTPS = TIM_HOST.startswith("https:")
-SESSION_COOKIE_SAMESITE = (
-    "None" if HAS_HTTPS else None
-)  # Required for Aalto iframe to work.
-SESSION_COOKIE_SECURE = HAS_HTTPS  # Required by Chrome due to SameSite=None setting.
+
+# Following current web dev recommendations, first-party cookies must be marked with either
+# SameSite=Lax or SameSite=Strict. See
+# https://web.dev/articles/first-party-cookie-recipes#the_good_first-party_cookie_recipe
+# TODO: For cases where sessions are used across different domains, we need to provide
+#     a list of allowed domains for which to allow the session cookie as a third-party cookie.
+#     Or see e.g., https://developers.google.com/privacy-sandbox/cookies/chips
+SESSION_COOKIE_SAMESITE = "Lax" if HAS_HTTPS else None
+SESSION_COOKIE_SECURE = HAS_HTTPS  # Require HTTPS or localhost for session cookies
 
 BOOKMARKS_ENABLED = True
 

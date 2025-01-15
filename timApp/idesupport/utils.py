@@ -7,7 +7,11 @@ from typing import List
 
 from bs4 import BeautifulSoup
 from marshmallow import EXCLUDE
+from sqlalchemy import select
 
+from timApp.answer.answer import Answer
+from timApp.answer.answer_models import UserAnswer
+from timApp.answer.answers import valid_answers_query
 from timApp.answer.routes import post_answer_impl, verify_ip_address, AnswerRouteResult
 from timApp.auth.accesshelper import (
     verify_view_access,
@@ -26,6 +30,7 @@ from timApp.plugin.pluginControl import get_answers, AnswerMap
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
+from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
 from tim_common.marshmallow_dataclass import class_schema
@@ -264,6 +269,11 @@ class TIDEPluginData:
     stem: str | None = None
     """
     Stem of the plugin
+    """
+
+    max_points: float | None = None
+    """
+    Maximum total points for the task
     """
 
     type: str | None = None
@@ -644,7 +654,11 @@ def get_ide_user_plugin_data(
     plugin_json = json.loads(base64.b64decode(element.attrs["json"]).decode("utf-8"))
 
     task_info: TIDETaskInfo = TIDETaskInfoSchema.load(plugin.values, unknown=EXCLUDE)
-    task_language = get_task_language(task_info.type)
+    selected_language = plugin_json.get("markup").get("selectedLanguage")
+    if selected_language:
+        task_language = get_task_language(selected_language)
+    else:
+        task_language = get_task_language(task_info.type)
     if task_language is None:
         raise RouteException("Misconfigured task language")
     language = Language.make_language(task_language, plugin_json, ide_task_id)
@@ -714,11 +728,17 @@ def get_ide_user_plugin_data(
 
     # If both content and source are provided, content is used (see tidecli)
     # If neither is provided, no supplementary file will be created
+    task_extra_directory = plugin_json["markup"].get("task_extra_directory", None)
+
     for extra_file in ide_extra_files:
+        if "task_directory" not in extra_file:
+            extra_file["task_directory"] = task_extra_directory
         if "content" in extra_file:
             supplementary_files.append(SupplementaryFileSchema.load(extra_file))
         elif "source" in extra_file:
             supplementary_files.append(SupplementaryFileSchema.load(extra_file))
+
+    max_points = plugin.values.get("pointsRule", {}).get("maxPoints", None)
 
     return TIDEPluginData(
         task_files=json_ide_files,
@@ -732,6 +752,7 @@ def get_ide_user_plugin_data(
         doc_id=doc.id,
         par_id=par.id,
         ide_task_id=ide_task_id,
+        max_points=max_points,
     )
 
 
@@ -791,3 +812,25 @@ def ide_submit_task(
         origin=None,
         error=verify_ip_address(user),  # Check if the answer from user IP is allowed
     )
+
+
+def get_task_points(doc_id: int, task_id: str, user: User) -> float | None:
+    """
+    Get the current points for the latest valid answer in the task
+
+    :param doc_id: Document id
+    :param task_id:  Task id
+    :param user:  Current user
+    :return:  Current points for the task or None
+    """
+    return run_sql(
+        select(Answer.points)
+        .join(UserAnswer)
+        .filter(
+            (Answer.task_id == f"{doc_id}.{task_id}")
+            & (Answer.valid == True)
+            & (UserAnswer.user_id == user.id)
+        )
+        .order_by(Answer.id.desc())
+        .limit(1)
+    ).scalar()

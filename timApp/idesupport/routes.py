@@ -177,3 +177,24 @@ def submit_ide_task() -> Response:
         answer.result["valid"] = True
 
     return json_response({"result": answer.result})
+
+
+@ide.get("taskPoints")
+@require_oauth(Scope.user_tasks.value)
+def get_task_points(doc_path: str, ide_task_id: str) -> Response:
+    """
+    Get points data for a task
+    :return: JSON response with the points data
+    """
+    user: User = current_token.user
+
+    task = utils.get_ide_task_by_id(user, ide_task_id=ide_task_id, doc_path=doc_path)
+
+    if task.doc_id is None:
+        raise RouteException("No document found for the given path")
+    if task.task_id is None:
+        raise RouteException("No task found for the given IDE task ID")
+
+    points = utils.get_task_points(task.doc_id, task.task_id, user)
+
+    return json_response({"current_points": points})

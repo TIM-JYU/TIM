@@ -13,7 +13,6 @@ from timApp.timdb.sqa import db
 from timApp.upload.upload import upload_image_or_file
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, NotExist
-from timApp.util.flask.requesthelper import load_data_from_req
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 

@@ -31,6 +31,7 @@ import re
 import socketserver
 import time
 
+from tim_common.dumboclient import call_dumbo
 from tim_common.fileParams import (
     get_param,
     get_surrounding_headers2,
@@ -178,6 +179,10 @@ def get_images_md(query):
                 url = url.get("name", "")
         else:
             url = ""
+    return handle_image_size(query, url)
+
+
+def handle_image_size(query, url):
     w = get_clean_param(query, "width", "")
     h = get_clean_param(query, "height", "")
     w = get_clean_param(query, "texwidth", w)
@@ -200,17 +205,7 @@ def get_image_md(query):
     """
     url = get_clean_param(query, "file", "")
     url = get_clean_param(query, "texfile", url)
-    w = get_clean_param(query, "width", "")
-    h = get_clean_param(query, "height", "")
-    w = get_clean_param(query, "texwidth", w)
-    h = get_clean_param(query, "texheight", h)
-    if w:
-        w = "width=" + w + " "
-    if h:
-        h = "height=" + h + " "
-    header, footer = get_surrounding_md_headers2(query, "pluginHeader", None)
-    result = header + "\n\n" + f"![{footer}]({url}){{{w}{h}}}"
-    return result
+    return handle_image_size(query, url)
 
 
 def get_image_html(query):
@@ -631,45 +626,34 @@ def escape_latex(s: str):
 
 
 def get_md(self, query):
-    is_image = self.path.find("/image/") >= 0
-    is_images = self.path.find("/multiimages/") >= 0
-    is_video = self.path.find("/video/") >= 0
-    is_pdf = self.path.find("/pdf/") >= 0
     is_template = self.path.find("/template") >= 0
     tempfile = get_param(query, "file", "")
 
-    if is_image:
+    if self.path.find("/image/") >= 0:
         if is_template:
             return file_to_string("templates/image/" + tempfile)
         s = get_image_md(query)
         return s
 
-    if is_images:
+    if self.path.find("/multiimages/") >= 0:
         if is_template:
             return file_to_string("templates/images/" + tempfile)
         s = get_images_md(query)
         return s
 
-    if is_video:
+    if self.path.find("/video/") >= 0:
         if is_template:
             return file_to_string("templates/video/" + tempfile)
         s = get_video_md(query)
         return s
 
-    if is_pdf:
+    if self.path.find("/pdf/") >= 0:
         if is_template:
             return file_to_string("templates/pdf/" + tempfile)
         s = get_video_md(query)
         return s
 
     # Was none of special, so print the file(s) in query
-
-    cla = get_param(query, "class", "")
-    w = get_param(query, "width", "")
-    if w:
-        w = ' style="width:' + w + '"'
-    if cla:
-        cla = " " + cla
 
     s = ""
 
@@ -688,32 +672,28 @@ def get_md(self, query):
 def get_html(
     self: http.server.BaseHTTPRequestHandler, query: QueryClass, show_html: bool
 ):
-    is_image = self.path.find("/image/") >= 0
-    is_images = self.path.find("/multiimages/") >= 0
-    is_video = self.path.find("/video/") >= 0
-    is_pdf = self.path.find("/pdf/") >= 0
     is_template = self.path.find("/template") >= 0
     tempfile = get_param(query, "file", "")
 
-    if is_image:
+    if self.path.find("/image/") >= 0:
         if is_template:
             return file_to_string("templates/image/" + tempfile)
         s = get_image_html(query)
         return s
 
-    if is_images:
+    if self.path.find("/multiimages/") >= 0:
         if is_template:
             return file_to_string("templates/images/" + tempfile)
         s = get_images_html(query)
         return s
 
-    if is_video:
+    if self.path.find("/video/") >= 0:
         if is_template:
             return file_to_string("templates/video/" + tempfile)
         s = get_video_html(query)
         return s
 
-    if is_pdf:
+    if self.path.find("/pdf/") >= 0:
         if is_template:
             return file_to_string("templates/pdf/" + tempfile)
         s = get_video_html(query)
@@ -735,12 +715,25 @@ def get_html(
     if i >= 0:
         fn = ffn[i + 1 :]
 
+    color = get_param(query, "color", "")
+    auto_color = get_param(query, "autoColor", True)
+    if auto_color and not color:
+        color = fn[fn.rfind(".") + 1 :]
+    fs = get_file_to_output(query, show_html and not color)
+    div = "pre"
+    if color:
+        div = "div"
+        fs = f"```{color}\n{fs}\n```"
+        htmls = call_dumbo([fs])
+        fs = htmls[0]
+
     if show_html:
-        s += '<pre ng-non-bindable class="showCode' + cla + '"' + w + ">"
-    s += get_file_to_output(query, show_html)
+        s += f'<{div} ng-non-bindable class="showCode{cla} "{w}">'
+
+    s += fs
     if show_html:
         s += (
-            '</pre><p class="smalllink"><a href="'
+            f'</{div}><p class="smalllink"><a href="'
             + clean_url(ffn)
             + '" target="_blank">'
             + clean_url(fn)

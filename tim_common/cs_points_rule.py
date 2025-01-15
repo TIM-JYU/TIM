@@ -250,7 +250,9 @@ def check_number_rule(s: str, number_rule: str | list[str]) -> float:
     return points
 
 
-def get_points_rule(points_rule: dict, key: str, default: float | str) -> str | float:
+def get_points_rule(
+    points_rule: dict, key: str, default: float | str | None
+) -> str | float | None:
     if not isinstance(points_rule, dict):
         return default
     return points_rule.get(key, default)
