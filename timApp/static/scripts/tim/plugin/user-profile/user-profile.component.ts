@@ -193,7 +193,7 @@ export class UserProfileComponent implements OnInit {
         let dataEndpoint = "/profile";
         console.log("fetcibn profiledata, userid: ", userId);
         if (userId != undefined) {
-            dataEndpoint = `/profile/${userId}`;
+            dataEndpoint = `/profile?userid=${userId}`;
         }
         const data = this.http.get<ProfileData>(dataEndpoint).subscribe({
             next: (res: ProfileData) => {

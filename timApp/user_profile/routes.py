@@ -51,7 +51,6 @@ class ProfileDataModel:
         }
 
 
-@profile_blueprint.get("/<int:userid>")
 @profile_blueprint.get("")
 def get_data_from_profile_document(userid: int | None = None) -> Response:
     """
