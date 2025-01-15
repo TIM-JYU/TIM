@@ -162,11 +162,15 @@ def upload_profile_picture(document_id: int) -> Response:
 
 
 @profile_blueprint.post("/details/<int:document_id>")
-def set_profile_details(document_id: int) -> Response:
-    data: ProfileDataModel = load_data_from_req(ProfileDataModelSchema)
-    links: list[str] = data.profile_links
-    description: str = data.profile_description
-    course_group: str = data.course_group_name
+def set_profile_details(
+    document_id: int,
+    profile_links: list[str],
+    profile_description: str,
+    course_group_name: str,
+) -> Response:
+    links: list[str] = profile_links
+    description: str = profile_description
+    course_group: str = course_group_name
     document_info = DocEntry.find_by_id(document_id)
 
     if document_info is None:
