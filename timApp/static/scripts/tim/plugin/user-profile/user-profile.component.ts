@@ -51,7 +51,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
     imports: [CsUtilityModule, FormsModule, CommonModule],
     standalone: true,
     template: `
-        <div class="tim-user-profile-container">
+        <div *ngIf="profileVisible" class="tim-user-profile-container">
             <div class="profile-heading">
                 <h2>Profile</h2>
                 <button *ngIf="!modifyEnabled" class="btn btn-profile" type="button" (click)="modifyUserProfile()">
@@ -129,6 +129,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                 </div>
             </div>
         </div>
+        <div *ngIf="!profileVisible" class="alert alert-warning flex"><span class="msg-icon glyphicon glyphicon-info-sign"></span><p>Cannot show a profile.</p></div>
     `,
 })
 export class UserProfileComponent implements OnInit {
@@ -147,6 +148,7 @@ export class UserProfileComponent implements OnInit {
     myGroups?: TimUserGroup[];
     myGroupName?: string;
     myGroupMembers?: TimUserGroup[];
+    profileVisible: boolean = true;
 
     constructor(private http: HttpClient) {
         this.profileData = this.formatProfileData();
@@ -202,6 +204,13 @@ export class UserProfileComponent implements OnInit {
                 if (this.modifyEnabled && this.profileData.edit_access) {
                     this.editAccess = true;
                 }
+
+                if (!res.email) {
+                    this.profileVisible = false;
+                }
+            },
+            error: (err) => {
+                this.profileVisible = false;
             },
         });
         return data;
