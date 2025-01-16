@@ -54,13 +54,13 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
         <div *ngIf="profileVisible" class="tim-user-profile-container">
             <div class="profile-heading">
                 <h2>Profile</h2>
-                <button *ngIf="!modifyEnabled" class="btn btn-profile" type="button" (click)="modifyUserProfile()">
-                    Modify profile <span class="glyphicon glyphicon-wrench"></span></button>
+                <button *ngIf="viewMode === 'SHOW' && profileData.edit_access" class="timButton corner-button" type="button" (click)="modifyUserProfile()">
+                    <span class="glyphicon glyphicon-wrench"></span></button>
             </div>
             <div class="container">
                 <div class="left-column">
                     <img id="tim-user-profile-picture" [src]="profileData.profile_picture_path" alt="profilepic"/>
-                    <ng-container *ngIf="editAccess" body>
+                    <ng-container *ngIf="viewMode == 'EDIT' && editAccess" body>
                         <div>
                             <file-select-manager class="small"
                                                  [dragAndDrop]="dragAndDrop"
@@ -75,7 +75,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                     </ng-container>
                 </div>
                 <div class="right-column">
-                    <ng-container *ngIf="editAccess" body>
+                    <ng-container *ngIf="viewMode === 'EDIT' && editAccess" body>
                         <form (ngSubmit)="onSubmit()" #f="ngForm" class="form">
                             <span class="textfield">
                             <textarea name="description" class="form-control textarea"
@@ -90,9 +90,9 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                                    [(ngModel)]="profileData.profile_links[i]"
                                    [class.warnFrame]="checkWarning(i.toString())"/>
                             <input #group name="group" class="form-control" type="text"
-                                           (ngModelChange)="setWarning(group.toString())"
-                                           [(ngModel)]="profileData.course_group_name"
-                                           [class.warnFrame]="checkWarning(group.toString())"/>
+                                   (ngModelChange)="setWarning(group.toString())"
+                                   [(ngModel)]="profileData.course_group_name"
+                                   [class.warnFrame]="checkWarning(group.toString())"/>
 </span>
                             <button type="submit" class="btn">Save <span class="glyphicon glyphicon-send"></span>
                             </button>
@@ -129,12 +129,14 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                 </div>
             </div>
         </div>
-        <div *ngIf="!profileVisible" class="alert alert-warning flex"><span class="msg-icon glyphicon glyphicon-info-sign"></span><p>Cannot show a profile.</p></div>
+        <div *ngIf="!profileVisible" class="alert alert-warning flex"><span
+                class="msg-icon glyphicon glyphicon-info-sign"></span>
+            <p>Cannot show a profile.</p></div>
     `,
 })
 export class UserProfileComponent implements OnInit {
     @Input() documentId: int = 0;
-    @Input() modifyEnabled: boolean = false;
+    @Input() viewMode?: string;
     @Input() profileId?: int;
     editAccess: boolean = false;
     warnings: string[] = [];
@@ -201,7 +203,7 @@ export class UserProfileComponent implements OnInit {
                 // TODO: organize dependent calls into ngOnInit function
                 this.getMyGroups();
 
-                if (this.modifyEnabled && this.profileData.edit_access) {
+                if (this.viewMode === "EDIT" && this.profileData.edit_access) {
                     this.editAccess = true;
                 }
 

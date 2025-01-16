@@ -269,7 +269,7 @@ TIM_SAFE_ATTRS = frozenset(
         "wrapper",
         "document-id",
         "profile-id",
-        "modify-enabled",
+        "view-mode",
     ]
 )
 

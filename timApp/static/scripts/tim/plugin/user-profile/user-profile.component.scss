@@ -79,3 +79,11 @@ form {
   margin: 0 1em 0 0;
   font-size: 1.5em;
 }
+
+.corner-button {
+  border-radius: 50% 20% 50% 50%;
+  padding: 1em;
+  display: flex;
+  justify-items: center;
+  align-content: center;
+}
