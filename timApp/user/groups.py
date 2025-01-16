@@ -162,6 +162,27 @@ def belongs(username: str, group_name: str) -> Response:
     return json_response({"status": ug in u.groups})
 
 
+@groups.get("/usergroups/<username>/<group_name>")
+def show_team_by_name(username: str, group_name: str) -> Response:
+    # TODO Implement proper access right verification
+    if not group_name.startswith("oscar"):
+        raise AccessDenied("Only oscar groups are allowed")
+
+    u = User.get_by_name(username)
+    if not u:
+        raise NotExist(USER_NOT_FOUND)
+
+    return json_response(
+        run_sql(
+            u.get_groups(include_special=False)
+            .filter(UserGroup.name.like(f"{group_name}-%"))
+            .order_by(UserGroup.name)
+        )
+        .scalars()
+        .all()
+    )
+
+
 def get_group_or_abort(group_name: str):
     ug = UserGroup.get_by_name(group_name)
     raise_group_not_found_if_none(group_name, ug)

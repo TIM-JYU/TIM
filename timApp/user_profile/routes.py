@@ -9,6 +9,7 @@ from timApp.auth.accesshelper import (
 )
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload_image_or_file
 from timApp.user.user import User
@@ -50,8 +51,10 @@ class ProfileDataModel:
         }
 
 
-@profile_blueprint.get("")
-def get_data_from_profile_document(userid: int | None = None) -> Response:
+@profile_blueprint.get("/<int:userid>/<string:mode>")
+def get_data_from_profile_document(
+    userid: int | None = None, mode: str = "SHOW"
+) -> Response:
     """
     Provide user profile details according requested user.
     :param userid: ID of the user
@@ -61,79 +64,53 @@ def get_data_from_profile_document(userid: int | None = None) -> Response:
     requested_user: User | None = get_current_user_object()
 
     # If not a specific user's profile requested, show user's own profile
-    if userid is not None:
+    if userid > 0:
         requested_user = User.get_by_id(userid)
 
     if requested_user is None:
         raise RouteException("No user with given ID was found.")
 
     # Form the response JSON here
-    profile_data = prepare_profile_data(requested_user)
+    profile_data = prepare_profile_data(requested_user, mode)
 
     return json_response(profile_data.to_json())
 
 
-def prepare_profile_data(user: User) -> ProfileDataModel:
+def prepare_profile_data(user: User, mode: str) -> ProfileDataModel:
     """
     Build a profile data from user's personal profile document
     :param user: either requested or current user
     :return: profile data instance
     """
-    username = user.name
-    realname = user.real_name
-    email = user.email
-
     # Get a personal folder from user's documents, and get the profile document
-    personal_folder = user.get_personal_folder()
-    profile_path = f"/view/{personal_folder.path}/profile"
+    personal_folder: Folder = user.get_personal_folder()
     document_object = personal_folder.get_document("profile")
 
-    if document_object is None:
-        try:
-            verify_edit_access(personal_folder)
-            document_object = personal_folder.get_document(
-                "profile",
-                create_if_not_exist=True,
-                creator_group=user.get_personal_group(),
-            )
+    document_no_exist: bool = document_object is None
+    show_mode_on: bool = mode == "SHOW"
 
-            if document_object is None:
-                raise NotExist("Document 'profile' not found.")
-
-            document_object.document.add_paragraph(
-                text=f"<tim-user-profile modify-enabled=true user-id={user.id} document-id=%%docid%% ></tim-user-profile>",
-                attrs={"allowangular": "true"},
-            )
-            db.session.commit()
-        except AccessDenied as e:
-            print(e)
-
-    if document_object is None:
+    # Do not auto create document, if one is not trying to edit one's own profile
+    if document_no_exist and show_mode_on:
         raise NotExist("No profile document was found.")
 
+    # Access profile settings to get profile data
     profile_settings = document_object.document.get_settings()
-    profile_picture_path = profile_settings.get(PROFILE_PICTURE_KEY, default="")
-    profile_description = profile_settings.get(PROFILE_DESCRIPTION_KEY, default="")
-    course_group_name = profile_settings.get(COURSE_GROUP_KEY, default="")
-
-    # As default, return at least one item as profile link
-    profile_links = profile_settings.get(PROFILE_LINKS_KEY, default=[""])
-
-    # Provide information for to show edit profile button or not
-    # If requester is owner of requested profile
-    edit_access = user.id == get_current_user_object().id
 
     profile_data: ProfileDataModel = ProfileDataModel(
-        username,
-        realname,
-        email,
-        profile_path=profile_path,
-        profile_picture_path=profile_picture_path,
-        profile_description=profile_description,
-        profile_links=profile_links,
-        edit_access=edit_access,
-        course_group_name=course_group_name,
+        user.name,
+        user.real_name,
+        user.email,
+        profile_path=f"/view/{personal_folder.path}/profile",
+        profile_picture_path=profile_settings.get(PROFILE_PICTURE_KEY, default=""),
+        profile_description=profile_settings.get(PROFILE_DESCRIPTION_KEY, default=""),
+        course_group_name=profile_settings.get(COURSE_GROUP_KEY, default=""),
+        # As default, return at least one item as profile link
+        profile_links=profile_settings.get(PROFILE_LINKS_KEY, default=[""]),
+        # Provide information for to show edit profile button or not
+        # If requester is owner of requested profile
+        edit_access=user.id == get_current_user_object().id,
     )
+
     return profile_data
 
 
@@ -157,6 +134,41 @@ def upload_profile_picture(document_id: int) -> Response:
     )
 
     return upload_response
+
+
+@profile_blueprint.post("create")
+def create_profile_on_fetch() -> Response:
+    user: User = get_current_user_object()
+    personal_folder: Folder = user.get_personal_folder()
+
+    create_profile(user, personal_folder)
+    return json_response({})
+
+
+def create_profile(user: User, personal_folder: Folder) -> Response:
+    """
+    Create a new profile
+    :return:
+    """
+
+    try:
+        verify_edit_access(personal_folder)
+        document_object = personal_folder.get_document(
+            "profile",
+            create_if_not_exist=True,
+            creator_group=user.get_personal_group(),
+        )
+
+        if document_object is None:
+            raise NotExist("Document 'profile' not found.")
+
+        document_object.document.add_paragraph(
+            text=f"<tim-user-profile view-mode=true user-id={user.id} document-id=%%docid%% ></tim-user-profile>",
+            attrs={"allowangular": "true"},
+        )
+        db.session.commit()
+    except AccessDenied as e:
+        print(e)
 
 
 @profile_blueprint.post("/details/<int:document_id>")

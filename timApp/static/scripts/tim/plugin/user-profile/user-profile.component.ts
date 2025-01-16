@@ -8,6 +8,8 @@ import {int} from "@zxing/library/es2015/customTypings";
 import type {Result, AngularError} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
+import {Users} from "tim/user/userService";
+import type {ICurrentUser} from "tim/user/IUser";
 import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
 import {FileSelectManagerComponent} from "../../../../../modules/cs/js/util/file-select";
 import type {
@@ -18,6 +20,7 @@ import type {
 interface ProfileData extends Object {
     username?: string;
     realname?: string;
+    userid: number;
     email?: string;
     profile_path: string;
     profile_picture_path: string;
@@ -54,7 +57,8 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
         <div *ngIf="profileVisible" class="tim-user-profile-container">
             <div class="profile-heading">
                 <h2>Profile</h2>
-                <button *ngIf="viewMode === 'SHOW' && profileData.edit_access" class="timButton corner-button" type="button" (click)="modifyUserProfile()">
+                <button *ngIf="viewMode === 'SHOW' && profileData.edit_access" class="timButton corner-button"
+                        type="button" (click)="modifyUserProfile()">
                     <span class="glyphicon glyphicon-wrench"></span></button>
             </div>
             <div class="container">
@@ -131,13 +135,17 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
         </div>
         <div *ngIf="!profileVisible" class="alert alert-warning flex"><span
                 class="msg-icon glyphicon glyphicon-info-sign"></span>
-            <p>Cannot show a profile.</p></div>
+            <p>{{ profileVisibleMsg }}</p></div>
+        <div *ngIf="!profileVisible && profileId == user?.id" class="alert alert-info flex"><span
+                class="msg-icon glyphicon glyphicon-info-sign"></span>
+            <p>Create a profile here. <button class="timButton" (click)="createProfile()">Create</button></p></div>
+
     `,
 })
 export class UserProfileComponent implements OnInit {
     @Input() documentId: int = 0;
-    @Input() viewMode?: string;
-    @Input() profileId?: int;
+    @Input() viewMode: string = "SHOW";
+    @Input() profileId: int = 0;
     editAccess: boolean = false;
     warnings: string[] = [];
     uploadUrl?: string;
@@ -151,6 +159,8 @@ export class UserProfileComponent implements OnInit {
     myGroupName?: string;
     myGroupMembers?: TimUserGroup[];
     profileVisible: boolean = true;
+    profileVisibleMsg: string = "Cannot show a profile.";
+    user?: ICurrentUser;
 
     constructor(private http: HttpClient) {
         this.profileData = this.formatProfileData();
@@ -162,15 +172,17 @@ export class UserProfileComponent implements OnInit {
             profile_links: [""],
             profile_picture_path: "",
             profile_path: "",
+            userid: 0,
         };
     }
 
     ngOnInit() {
         // TODO: change data fetching technique/method to another e.g. toPromise(this.http...
-        this.getProfileData(this.profileId);
+        this.getProfileData(this.profileId, this.viewMode);
 
         this.uploadUrl = `/profile/picture/${this.documentId}`;
         this.detailsUrl = `/profile/details/${this.documentId}`;
+        this.user = Users.getCurrent();
     }
 
     @ViewChild(FileSelectManagerComponent)
@@ -191,12 +203,10 @@ export class UserProfileComponent implements OnInit {
         component.files = files;
     }
 
-    getProfileData(userId?: int) {
-        let dataEndpoint = "/profile";
-        if (userId != undefined) {
-            dataEndpoint = `/profile?userid=${userId}`;
-        }
-        const data = this.http.get<ProfileData>(dataEndpoint).subscribe({
+    getProfileData(userId: int, mode: string) {
+        const endpoint = ["/profile", userId, mode].join("/");
+
+        const data = this.http.get<ProfileData>(endpoint).subscribe({
             next: (res: ProfileData) => {
                 this.profileData = res;
 
@@ -211,7 +221,8 @@ export class UserProfileComponent implements OnInit {
                     this.profileVisible = false;
                 }
             },
-            error: (err) => {
+            error: (err: Error) => {
+                // this.profileVisibleMsg = err.message;
                 this.profileVisible = false;
             },
         });
@@ -219,7 +230,17 @@ export class UserProfileComponent implements OnInit {
     }
 
     getMyGroups() {
-        const endpoint: string = `/groups/usergroups`;
+        let endpoint: string = `/groups/usergroups`;
+
+        if (this.profileData.username != undefined) {
+            endpoint = endpoint.concat(`/${this.profileData.username}`);
+        }
+
+        if (this.profileData.course_group_name != undefined) {
+            endpoint = endpoint.concat(
+                `/${this.profileData.course_group_name}`
+            );
+        }
 
         const data = this.http.get<TimUserGroup[]>(endpoint).subscribe({
             next: (res) => {
@@ -325,10 +346,26 @@ export class UserProfileComponent implements OnInit {
 
         if (result.ok) {
             this.myGroupMembers = [];
-            this.getProfileData();
+            this.getProfileData(this.profileId, this.viewMode);
         }
 
         return result;
+    }
+
+    async createProfile() {
+        const endpoint = "/profile/create";
+        const response = toPromise(this.http.post<{ok: boolean}>(endpoint, {}));
+
+        response.then((res) => {
+            // console.log(res);
+        });
+
+        const result: Result<{ok: boolean}, AngularError> = await response;
+
+        if (result.ok) {
+            this.formatProfileData();
+            window.location.reload();
+        }
     }
 
     setWarning(name: string) {
