@@ -280,10 +280,8 @@ export class UserProfileComponent implements OnInit {
     getMyGroupName(): string {
         let group = "No group found.";
         if (this.myGroups == undefined) {
-            console.log(group);
             return group;
         }
-        console.log("mygroups are defined, ", this.myGroups);
 
         // Find prefixed
         if (this.profileData.course_group_name == undefined) {
@@ -294,13 +292,10 @@ export class UserProfileComponent implements OnInit {
             item.name.startsWith(`${this.profileData.course_group_name!}-`)
         );
 
-        console.log("name filtered, ", myGroup);
-
         if (myGroup[0]) {
             group = myGroup[0].name;
         }
 
-        console.log("returnning, ", group);
         return group;
     }
 

@@ -52,11 +52,10 @@ class ProfileDataModel:
 
 
 @profile_blueprint.get("/<int:userid>/<string:mode>")
-def get_data_from_profile_document(
-    userid: int | None = None, mode: str = "SHOW"
-) -> Response:
+def get_data_from_profile_document(userid: int = 0) -> Response:
     """
     Provide user profile details according requested user.
+    :param mode: View mode of profile component
     :param userid: ID of the user
     :return: JSON data, containing user profile details
     """
@@ -71,12 +70,12 @@ def get_data_from_profile_document(
         raise RouteException("No user with given ID was found.")
 
     # Form the response JSON here
-    profile_data = prepare_profile_data(requested_user, mode)
+    profile_data = prepare_profile_data(requested_user)
 
     return json_response(profile_data.to_json())
 
 
-def prepare_profile_data(user: User, mode: str) -> ProfileDataModel:
+def prepare_profile_data(user: User) -> ProfileDataModel:
     """
     Build a profile data from user's personal profile document
     :param user: either requested or current user
@@ -86,11 +85,8 @@ def prepare_profile_data(user: User, mode: str) -> ProfileDataModel:
     personal_folder: Folder = user.get_personal_folder()
     document_object = personal_folder.get_document("profile")
 
-    document_no_exist: bool = document_object is None
-    show_mode_on: bool = mode == "SHOW"
-
     # Do not auto create document, if one is not trying to edit one's own profile
-    if document_no_exist and show_mode_on:
+    if document_object is None:
         raise NotExist("No profile document was found.")
 
     # Access profile settings to get profile data
@@ -145,7 +141,7 @@ def create_profile_on_fetch() -> Response:
     return json_response({})
 
 
-def create_profile(user: User, personal_folder: Folder) -> Response:
+def create_profile(user: User, personal_folder: Folder) -> None:
     """
     Create a new profile
     :return:

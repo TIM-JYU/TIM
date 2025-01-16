@@ -12,7 +12,12 @@ from sqlalchemy import select
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
 from timApp.answer.answers import valid_answers_query
-from timApp.answer.routes import post_answer_impl, verify_ip_address, AnswerRouteResult
+from timApp.answer.routes import (
+    post_answer_impl,
+    verify_ip_address,
+    AnswerRouteResult,
+    InputAnswer,
+)
 from timApp.auth.accesshelper import (
     verify_view_access,
 )
@@ -778,7 +783,7 @@ def ide_submit_task(
         for file in submit.code_files:
             submitted_files.append(file)
 
-    answer_data = {
+    answer_data: InputAnswer = {
         "isInput": False,
         "nosave": False,
         "type": runtype or re.split("[,;/]", submit.code_language)[0],
