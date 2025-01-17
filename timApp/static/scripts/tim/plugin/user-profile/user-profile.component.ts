@@ -178,7 +178,7 @@ export class UserProfileComponent implements OnInit {
 
     ngOnInit() {
         // TODO: change data fetching technique/method to another e.g. toPromise(this.http...
-        this.getProfileData(this.profileId, this.viewMode);
+        this.getProfileData(this.profileId);
 
         this.uploadUrl = `/profile/picture/${this.documentId}`;
         this.detailsUrl = `/profile/details/${this.documentId}`;
@@ -203,8 +203,8 @@ export class UserProfileComponent implements OnInit {
         component.files = files;
     }
 
-    getProfileData(userId: int, mode: string) {
-        const endpoint = ["/profile", userId, mode].join("/");
+    getProfileData(userId: int) {
+        const endpoint = ["/profile", userId].join("/");
 
         const data = this.http.get<ProfileData>(endpoint).subscribe({
             next: (res: ProfileData) => {
@@ -341,7 +341,7 @@ export class UserProfileComponent implements OnInit {
 
         if (result.ok) {
             this.myGroupMembers = [];
-            this.getProfileData(this.profileId, this.viewMode);
+            this.getProfileData(this.profileId);
         }
 
         return result;

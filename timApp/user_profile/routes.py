@@ -51,7 +51,7 @@ class ProfileDataModel:
         }
 
 
-@profile_blueprint.get("/<int:userid>/<string:mode>")
+@profile_blueprint.get("/<int:userid>")
 def get_data_from_profile_document(userid: int = 0) -> Response:
     """
     Provide user profile details according requested user.
