@@ -176,6 +176,19 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def scim_resource_type(self):
         return "Group"
 
+    @property
+    def human_name(self):
+        """
+        Human-readable name of the group.
+
+        If the group has an admic doc, returns the title of the document.
+        Otherwise, returns the group name.
+        :return: Human-readable name of the group.
+        """
+        if self.admin_doc:
+            return self.admin_doc.description
+        return self.name
+
     def is_anonymous(self) -> bool:
         return self.name == ANONYMOUS_GROUPNAME
 
