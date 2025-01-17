@@ -6,6 +6,7 @@ from flask import request
 from timApp.auth.accesshelper import (
     AccessDenied,
     verify_edit_access,
+    verify_logged_in,
 )
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.document.docentry import DocEntry
@@ -134,6 +135,7 @@ def upload_profile_picture(document_id: int) -> Response:
 
 @profile_blueprint.post("create")
 def create_profile_on_fetch() -> Response:
+    verify_logged_in()
     user: User = get_current_user_object()
     personal_folder: Folder = user.get_personal_folder()
 
