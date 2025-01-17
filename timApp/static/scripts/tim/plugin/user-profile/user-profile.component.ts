@@ -36,6 +36,8 @@ interface TimUserGroup {
     admin?: string;
 }
 
+type ViewMode = "SHOW" | "EDIT";
+
 const UploadedFile = t.intersection([
     t.type({
         path: t.string,
@@ -82,17 +84,20 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                     <ng-container *ngIf="viewMode === 'EDIT' && editAccess" body>
                         <form (ngSubmit)="onSubmit()" #f="ngForm" class="form">
                             <span class="textfield">
+                                <label>Description</label>
                             <textarea name="description" class="form-control textarea"
                                       (ngModelChange)="setWarning('description')"
                                       [class.warnFrame]="checkWarning('description')"
                                       [(ngModel)]="profileData.profile_description"></textarea></span>
 
                             <span class="textfield">
+                                <label>Links</label>
                             <input #i name="link" class="form-control" type="text"
                                    *ngFor="let item of profileData.profile_links; index as i; trackBy: linkTrackBy"
                                    (ngModelChange)="setWarning(i.toString())"
                                    [(ngModel)]="profileData.profile_links[i]"
                                    [class.warnFrame]="checkWarning(i.toString())"/>
+                                <label>Group</label>
                             <input #group name="group" class="form-control" type="text"
                                    (ngModelChange)="setWarning(group.toString())"
                                    [(ngModel)]="profileData.course_group_name"
@@ -103,11 +108,13 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                         </form>
                     </ng-container>
                     <ng-container *ngIf="!editAccess">
+                        <h3>Description</h3>
                         <p>
                             {{ profileData.profile_description }}
                         </p>
+                        <h3>Links</h3>
                         <ng-container *ngFor="let item of profileData.profile_links">
-                            <a [href]="item">{{ item }}</a>
+                            <p><a [href]="item">{{ item }}</a></p>
                         </ng-container>
                     </ng-container>
                 </div>
@@ -144,7 +151,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 })
 export class UserProfileComponent implements OnInit {
     @Input() documentId: int = 0;
-    @Input() viewMode: string = "SHOW";
+    @Input() viewMode: ViewMode = "SHOW";
     @Input() profileId: int = 0;
     editAccess: boolean = false;
     warnings: string[] = [];

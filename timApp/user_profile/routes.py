@@ -138,33 +138,30 @@ def create_profile_on_fetch() -> Response:
     personal_folder: Folder = user.get_personal_folder()
 
     create_profile(user, personal_folder)
-    return json_response({})
+    return ok_response()
 
 
 def create_profile(user: User, personal_folder: Folder) -> None:
     """
     Create a new profile
-    :return:
+    :return: None
     """
 
-    try:
-        verify_edit_access(personal_folder)
-        document_object = personal_folder.get_document(
-            "profile",
-            create_if_not_exist=True,
-            creator_group=user.get_personal_group(),
-        )
+    verify_edit_access(personal_folder)
+    document_object = personal_folder.get_document(
+        "profile",
+        create_if_not_exist=True,
+        creator_group=user.get_personal_group(),
+    )
 
-        if document_object is None:
-            raise NotExist("Document 'profile' not found.")
+    if document_object is None:
+        raise NotExist("Document 'profile' not found.")
 
-        document_object.document.add_paragraph(
-            text=f"<tim-user-profile view-mode=true user-id={user.id} document-id=%%docid%% ></tim-user-profile>",
-            attrs={"allowangular": "true"},
-        )
-        db.session.commit()
-    except AccessDenied as e:
-        print(e)
+    document_object.document.add_paragraph(
+        text=f"<tim-user-profile view-mode='EDIT' profile-id={user.id} document-id=%%docid%% ></tim-user-profile>",
+        attrs={"allowangular": "true"},
+    )
+    db.session.commit()
 
 
 @profile_blueprint.post("/details/<int:document_id>")
