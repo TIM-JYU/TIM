@@ -59,15 +59,17 @@ def get_documents_from_bookmark_folder(foldername: str) -> Response:
 
 
 @course_blueprint.post("/from-template")
-def create_course_from_template(copy_to_dir_name: str, copy_from_path: str) -> Response:
+def create_course_from_template(copy_to_path: str, copy_from_path: str) -> Response:
+    """
+    Create a course from a template.
+    :param copy_to_path: Whole path to copy to, including a name of new folder as last part of path.
+    :param copy_from_path: Path from which to copy template.
+    :return: Response, containing url to created document
+    """
     folder = Folder.find_by_path(copy_from_path)
     if not folder:
         raise NotExist("No template folder found.")
 
-    # TODO: provide info, if document exist
-
-    copied = do_copy_folder(
-        folder_id=folder.id, destination=f"oscar/camps/{copy_to_dir_name}", exclude=None
-    )
+    copied = do_copy_folder(folder_id=folder.id, destination=copy_to_path, exclude=None)
 
     return json_response({"url": copied[0].url})
