@@ -57,6 +57,7 @@ def post_process_pars(
     do_lazy: bool = False,
     load_plugin_states: bool = True,
     filter_return: GlobalParId | None = None,
+    settings: DocSettings | None = None,
 ) -> PostProcessResult:
     taketime("start pluginify")
 
@@ -80,7 +81,7 @@ def post_process_pars(
     final_pars = presult.pars
     taketime("end pluginify")
     should_mark_all_read = False
-    settings = doc.get_settings()
+    settings = doc.get_settings() if settings is None else settings
     macroinfo = settings.get_macroinfo(view_ctx, user_ctx)
     user_macros = get_user_specific_macros(user_ctx)
     macros = macroinfo.get_macros()

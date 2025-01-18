@@ -776,6 +776,7 @@ const CsMarkupOptional = t.partial({
     showAlwaysSavedText: t.boolean,
     startLineNumber: t.number,
     targetCanvas: t.string,
+    previewExtraSettings: t.UnknownRecord,
 });
 
 const CsMarkupDefaults = t.type({
@@ -3840,6 +3841,7 @@ ${fhtml}
                 text: text,
                 settings: {
                     math_type: "mathjax",
+                    ...(this.markup.previewExtraSettings ?? {}),
                 },
             }
         );

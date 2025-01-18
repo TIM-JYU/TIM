@@ -590,7 +590,7 @@ def par_response(
                             old_exported = old_par.get_exported_markdown()
                     trdiff = {"old": old_exported, "new": newest_exported}
     post_process_result = post_process_pars(
-        doc, pars, user_ctx, view_ctx, filter_return=filter_return
+        doc, pars, user_ctx, view_ctx, filter_return=filter_return, settings=settings
     )
 
     changed_post_process_result = post_process_pars(
