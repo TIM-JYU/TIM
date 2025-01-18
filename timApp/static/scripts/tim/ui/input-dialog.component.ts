@@ -49,29 +49,32 @@ export type InputDialogParams<T> = {
     template: `
         <div class="modal-bg">
         </div>
-        <tim-dialog-frame [minimizable]="false" [mightBeAsync]=asyncContent>
+        <tim-dialog-frame [minimizable]="false" [mightBeAsync]=asyncContent [showCloseIcon]="!loading">
             <ng-container header>
                 {{getTitle()}}
             </ng-container>
             <ng-container body>
                 <p tabindex="-1" #textEl [innerHtml]="text()" class="content"></p>
-                <textarea (keydown.enter)="ok()"
+                <textarea
                        class="form-control"
                        focusMe
+                       [disabled]="loading"
                        type="text"
-                       *ngIf="isInput && (data.inputType === 'textarea' || data.inputType === undefined)"
+                       *ngIf="isInput && (data.inputType === 'textarea')"
                        [(ngModel)]="value" 
                           (ngModelChange)="clearError()"></textarea>
                 <input (keydown.enter)="ok()"
                        class="form-control"
                        focusMe
+                       [disabled]="loading"
                        type="text"
-                       *ngIf="isInput && (data.inputType === 'text' )"
+                       *ngIf="isInput && (data.inputType === 'text' || data.inputType === undefined)"
                        [(ngModel)]="value"
                           (ngModelChange)="clearError()" />
                 <select (keydown.enter)="ok()"
                         class="form-control"
                         focusMe
+                        [disabled]="loading"
                         *ngIf="isInput && data.inputType === 'select'"
                         [(ngModel)]="value"
                         (ngModelChange)="clearError()">
@@ -82,10 +85,11 @@ export type InputDialogParams<T> = {
                 </tim-alert>
             </ng-container>
             <ng-container footer>
-                <button [disabled]="!value"
+                <tim-loading *ngIf="loading"></tim-loading>
+                <button [disabled]="!value || loading"
                         class="timButton" type="button" (click)="ok()">{{ okText() }}
                 </button>
-                <button class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
+                <button [disabled]="loading" class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -100,10 +104,15 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     error?: string;
     isInput = false;
     asyncContent = true;
+    loading = false;
     @ViewChild("textEl") textEl!: ElementRef<HTMLElement>;
 
     @HostListener("keydown.enter", ["$event"])
     enterPressed(e: KeyboardEvent) {
+        // Textarea is multiline, we cannot just skip the enter key
+        if (this.data.inputType === "textarea") {
+            return;
+        }
         void this.ok();
         e.stopPropagation();
     }
@@ -140,11 +149,13 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     }
 
     async ok() {
-        if (!this.value) {
+        if (!this.value || this.loading) {
             return;
         }
         if (this.data.isInput !== InputDialogKind.NoValidator) {
+            this.loading = true;
             const result = await this.data.validator(this.value);
+            this.loading = false;
             if (!result.ok) {
                 this.error = result.result;
                 return;

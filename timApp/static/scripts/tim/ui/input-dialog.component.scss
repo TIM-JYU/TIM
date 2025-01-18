@@ -12,4 +12,14 @@
 
 .content {
     white-space: pre;
+    text-wrap-mode: wrap;
+}
+
+textarea {
+    resize: vertical;
+    height: 10em;
+}
+
+tim-loading {
+    margin-right: 1em;
 }
