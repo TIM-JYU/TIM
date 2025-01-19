@@ -43,6 +43,8 @@ import {HttpClient} from "@angular/common/http";
                 <ng-container *ngIf="!hideOptions.userMenuOptions">
                     <li role="menuitem"><a
                             href="/view/{{ getCurrentUser().folder!.path }}" i18n>My documents</a></li>
+                    <li role="menuitem"><a
+                            href="/settings" i18n>My TIM settings</a></li>
 
                     <li role="menuitem">
                         <a (click)="addUser()" role="button">
