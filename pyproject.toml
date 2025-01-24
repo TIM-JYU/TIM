@@ -6,7 +6,6 @@ authors = [
     "TIM contributors"
 ]
 readme = "readme.md"
-package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -76,6 +75,7 @@ pysaml2 = "^7.2.1"
 cachelib = "<0.10.0"
 qulacs = "^0.6.1"
 flask-babel = "^4.0.0"
+openpyxl = "^3.1.5"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"
@@ -98,6 +98,7 @@ types-pysaml2 = "^1.0.0"
 qulacs = "^0.6.1"
 SQLAlchemy = "^2.0.19"
 flask-babel = "^4.0.0"
+types-openpyxl = "^3.1.5.20241225"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

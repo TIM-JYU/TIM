@@ -45,7 +45,7 @@ jobs:
       - name: Generate bundle statistics
         run: cd timApp && npm run statshtml
       - name: Upload stats
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v4
         with:
           name: Bundle Report
           path: timApp/report.html

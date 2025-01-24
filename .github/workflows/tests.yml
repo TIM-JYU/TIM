@@ -30,8 +30,10 @@ jobs:
         include:
           - test_module: browser
             chunk: "1/2"
+            chunk_name: 1
           - test_module: browser
             chunk: "2/2"
+            chunk_name: 2
     steps:
       - uses: actions/checkout@v3
         with:
@@ -88,7 +90,7 @@ jobs:
           SKIP_JSRUNNER_START: ${{ matrix.test_module == 'unit' || matrix.test_module == 'db' }}
       - name: Upload screenshots
         if: "${{ matrix.test_module == 'browser' && always() }}"
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v4
         with:
-          name: Browser Screenshots${{ matrix.chunk && format(' (chunk {0})', matrix.chunk[0]) || '' }}
+          name: Browser Screenshots${{ matrix.chunk && format(' (chunk {0})', matrix.chunk_name) || '' }}
           path: screenshots
