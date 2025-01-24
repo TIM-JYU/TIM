@@ -181,21 +181,43 @@ fields:
  - t1
  - t_non_form
 program: |!!
-tools.setString("t1", "Hello (form update)")
-tools.setString("t_non_form", "Hello (regular update)")
+let prev = tools.getString("t1")
+tools.setString("t1", prev+"|Hello (form update)")
+prev = tools.getString("t_non_form")
+tools.setString("t_non_form", prev+"|Hello (regular update)")
 !!
 ```
 """
         )
         self.goto_document(d)
-        runner = self.find_element_avoid_staleness("js-runner .timButton")
-        runner.click()
-        self.wait_until_hidden("js-runner tim-loading")
+
+        def run_and_wait():
+            runner = self.find_element_avoid_staleness("js-runner .timButton")
+            runner.click()
+            self.wait_until_hidden("js-runner tim-loading")
+
+        run_and_wait()
         input = self.find_element(
             "tim-plugin-loader[task-id$='t1'] tim-textfield-runner input"
         )
-        self.assertEqual("Hello (form update)", input.get_attribute("value"))
+        self.assertEqual("|Hello (form update)", input.get_attribute("value"))
         input = self.find_element(
             "tim-plugin-loader[task-id$='t_non_form'] tim-textfield-runner input"
         )
-        self.assertEqual("Hello (regular update)", input.get_attribute("value"))
+        self.assertEqual("|Hello (regular update)", input.get_attribute("value"))
+        tr = self.create_translation(d)
+        self.goto_document(tr)
+        run_and_wait()
+        input = self.find_element(
+            "tim-plugin-loader[task-id$='t1'] tim-textfield-runner input"
+        )
+        self.assertEqual(
+            "|Hello (form update)|Hello (form update)", input.get_attribute("value")
+        )
+        input = self.find_element(
+            "tim-plugin-loader[task-id$='t_non_form'] tim-textfield-runner input"
+        )
+        self.assertEqual(
+            "|Hello (regular update)|Hello (regular update)",
+            input.get_attribute("value"),
+        )

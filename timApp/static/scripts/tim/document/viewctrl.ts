@@ -1678,7 +1678,7 @@ export class ViewCtrl implements IController {
 
     private normalizeTaskId(taskId: string) {
         if (taskId.split(".").length < 2) {
-            taskId = this.docId + "." + taskId;
+            taskId = (this.item.src_docid ?? this.docId) + "." + taskId;
         }
         return taskId;
     }
