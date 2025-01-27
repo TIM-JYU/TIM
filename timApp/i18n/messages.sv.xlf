@@ -9335,8 +9335,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></target>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -9655,8 +9655,8 @@ Det går inte att ångra den här åtgärden!
         </context-group>
       </trans-unit>
       <trans-unit id="2564339447423195125" datatype="html">
-        <source>Show all school&apos;s exam groups</source>
-        <target state="new">Show all school&apos;s exam groups</target>
+        <source>Show all school's exam groups</source>
+        <target state="new">Show all school's exam groups</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">239,240</context>
@@ -9963,11 +9963,11 @@ Det går inte att ångra den här åtgärden!
         </context-group>
       </trans-unit>
       <trans-unit id="7203468454678983743" datatype="html">
-        <source>Some students already have login codes in exam group &apos;<x id="PH" equiv-text="group.readableName"/>&apos;.
+        <source>Some students already have login codes in exam group '<x id="PH" equiv-text="group.readableName"/>'.
 Generating new codes will overwrite the existing ones.
 
 Proceed?</source>
-        <target state="new">Some students already have login codes in exam group &apos;<x id="PH" equiv-text="group.readableName"/>&apos;.
+        <target state="new">Some students already have login codes in exam group '<x id="PH" equiv-text="group.readableName"/>'.
 Generating new codes will overwrite the existing ones.
 
 Proceed?</target>
@@ -10017,24 +10017,24 @@ Proceed?</target>
         </context-group>
       </trans-unit>
       <trans-unit id="4724136087546200841" datatype="html">
-        <source>You first need to resume the exam by using the &quot;Resume exam for all students&quot; button.</source>
-        <target state="new">You first need to resume the exam by using the &quot;Resume exam for all students&quot; button.</target>
+        <source>You first need to resume the exam by using the "Resume exam for all students" button.</source>
+        <target state="new">You first need to resume the exam by using the "Resume exam for all students" button.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1225,1224</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7423988897349876240" datatype="html">
-        <source>You first need to resume the exam by using the &quot;Resume exam for main group&quot; button.</source>
-        <target state="new">You first need to resume the exam by using the &quot;Resume exam for main group&quot; button.</target>
+        <source>You first need to resume the exam by using the "Resume exam for main group" button.</source>
+        <target state="new">You first need to resume the exam by using the "Resume exam for main group" button.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1232,1231</context>
         </context-group>
       </trans-unit>
       <trans-unit id="80885656053579115" datatype="html">
-        <source>You first need to interrupt the exam by using the &quot;Interrupt exam&quot; button.</source>
-        <target state="new">You first need to interrupt the exam by using the &quot;Interrupt exam&quot; button.</target>
+        <source>You first need to interrupt the exam by using the "Interrupt exam" button.</source>
+        <target state="new">You first need to interrupt the exam by using the "Interrupt exam" button.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1239,1238</context>
@@ -10045,8 +10045,8 @@ Proceed?</target>
         </context-group>
       </trans-unit>
       <trans-unit id="5284153462863049949" datatype="html">
-        <source>You can&apos;t resume the exam that has already ended. End the exam and restart it if needed.</source>
-        <target state="new">You can&apos;t resume the exam that has already ended. End the exam and restart it if needed.</target>
+        <source>You can't resume the exam that has already ended. End the exam and restart it if needed.</source>
+        <target state="new">You can't resume the exam that has already ended. End the exam and restart it if needed.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1310,1309</context>
@@ -10066,9 +10066,9 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="5367871428395336991" datatype="html">
         <source>Are you sure you want to interrupt the exam while it is running?
-If you want to end the exam, use the &quot;End exam&quot; buttons.</source>
+If you want to end the exam, use the "End exam" buttons.</source>
         <target state="new">Are you sure you want to interrupt the exam while it is running?
-If you want to end the exam, use the &quot;End exam&quot; buttons.</target>
+If you want to end the exam, use the "End exam" buttons.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1319,1317</context>
@@ -10161,9 +10161,9 @@ Are you sure you want to change the exam?</target>
         </context-group>
       </trans-unit>
       <trans-unit id="1709400740676656154" datatype="html">
-        <source>Some students don&apos;t have a login code yet.
+        <source>Some students don't have a login code yet.
 Please generate login codes first.</source>
-        <target state="new">Some students don&apos;t have a login code yet.
+        <target state="new">Some students don't have a login code yet.
 Please generate login codes first.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
@@ -10219,8 +10219,8 @@ Please generate login codes first.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="269375217385324097" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre&gt;"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre&gt;"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> You can obtain the student list from Wilma by selecting &quot;Print course book&quot; and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="new"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre&gt;"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre&gt;"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> You can obtain the student list from Wilma by selecting &quot;Print course book&quot; and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="new"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-import-dialog.component.ts</context>
           <context context-type="linenumber">27,45</context>
@@ -10235,8 +10235,8 @@ Please generate login codes first.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="8023863054421277417" datatype="html">
-        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the &quot;View exam document&quot; link. </source>
-        <target state="new"> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the &quot;View exam document&quot; link. </target>
+        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link. </source>
+        <target state="new"> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">558</context>
@@ -10267,16 +10267,16 @@ Please generate login codes first.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="8985586082248904379" datatype="html">
-        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> To start a new exam, stop answer reviewing in section &apos;4. Show answers to students&apos;. </source>
-        <target state="new"> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> To start a new exam, stop answer reviewing in section &apos;4. Show answers to students&apos;. </target>
+        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> To start a new exam, stop answer reviewing in section '4. Show answers to students'. </source>
+        <target state="new"> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> To start a new exam, stop answer reviewing in section '4. Show answers to students'. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">456,457</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6383743377048106825" datatype="html">
-        <source> You can show answers only when they don&apos;t have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> Stop the exam and disable login codes in section &apos;3. Manage exams&apos; to enable showing answers. </source>
-        <target state="new"> You can show answers only when they don&apos;t have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> Stop the exam and disable login codes in section &apos;3. Manage exams&apos; to enable showing answers. </target>
+        <source> You can show answers only when they don't have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers. </source>
+        <target state="new"> You can show answers only when they don't have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">679,680</context>
@@ -10323,32 +10323,32 @@ Please generate login codes first.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="5092731290148917173" datatype="html">
-        <source>Make sure the exam is ended and login codes are disabled in section &apos;3. Manage exams&apos;</source>
-        <target state="new">Make sure the exam is ended and login codes are disabled in section &apos;3. Manage exams&apos;</target>
+        <source>Make sure the exam is ended and login codes are disabled in section '3. Manage exams'</source>
+        <target state="new">Make sure the exam is ended and login codes are disabled in section '3. Manage exams'</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">708,709</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7462261835080950306" datatype="html">
-        <source>Press the &apos;Begin showing answers to students&apos; button to allow students to review their answers for 1 hour.</source>
-        <target state="new">Press the &apos;Begin showing answers to students&apos; button to allow students to review their answers for 1 hour.</target>
+        <source>Press the 'Begin showing answers to students' button to allow students to review their answers for 1 hour.</source>
+        <target state="new">Press the 'Begin showing answers to students' button to allow students to review their answers for 1 hour.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">709,710</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
-        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;&lt;/li&gt;"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li&gt;"/></source>
-        <target state="new">Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;&lt;/li&gt;"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li&gt;"/></target>
+        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></source>
+        <target state="new">Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">712,713</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2002757117959971790" datatype="html">
-        <source>Students can open the exam using the &apos;Open exam&apos; button.</source>
-        <target state="new">Students can open the exam using the &apos;Open exam&apos; button.</target>
+        <source>Students can open the exam using the 'Open exam' button.</source>
+        <target state="new">Students can open the exam using the 'Open exam' button.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">711,712</context>
@@ -10363,8 +10363,8 @@ Please generate login codes first.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="4643789971977071249" datatype="html">
-        <source>To end the view right, press the &apos;End showing answers to students button&apos;. The right is automatically disabled in 1 hour.</source>
-        <target state="new">To end the view right, press the &apos;End showing answers to students button&apos;. The right is automatically disabled in 1 hour.</target>
+        <source>To end the view right, press the 'End showing answers to students button'. The right is automatically disabled in 1 hour.</source>
+        <target state="new">To end the view right, press the 'End showing answers to students button'. The right is automatically disabled in 1 hour.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">713,714</context>
@@ -10379,24 +10379,24 @@ Please generate login codes first.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="1609834812747709494" datatype="html">
-        <source> Students can access the answers to the exam &apos;<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>&apos;. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? &apos;&apos;)}}"/>. </source>
-        <target state="new"> Students can access the answers to the exam &apos;<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>&apos;. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? &apos;&apos;)}}"/>. </target>
+        <source> Students can access the answers to the exam '<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>'. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </source>
+        <target state="new"> Students can access the answers to the exam '<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>'. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">697,699</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2757709715920465016" datatype="html">
-        <source> Press the toggle button to end the exam for the main student group. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></source>
-        <target state="new"> Press the toggle button to end the exam for the main student group. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></target>
+        <source> Press the toggle button to end the exam for the main student group. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></source>
+        <target state="new"> Press the toggle button to end the exam for the main student group. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">594,596</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8462627312597849727" datatype="html">
-        <source> Press the toggle button to end the exam for all students <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></source>
-        <target state="new"> Press the toggle button to end the exam for all students <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></target>
+        <source> Press the toggle button to end the exam for all students <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></source>
+        <target state="new"> Press the toggle button to end the exam for all students <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">625,627</context>
@@ -10408,6 +10408,14 @@ Please generate login codes first.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8149301268971106238" datatype="html">
+        <source>My TIM settings</source>
+        <target state="translated">Mina TIM-inställningar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">47,49</context>
         </context-group>
       </trans-unit>
     </body>
