@@ -5,6 +5,7 @@ import io, json, re, tempfile
 from dataclasses import dataclass, asdict, field
 from typing import Any, TypedDict, Sequence, Tuple
 
+import openpyxl.worksheet.worksheet
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
 from openpyxl import Workbook
@@ -447,7 +448,7 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
     """
     Generates a report defined by tableForm attributes
     # TODO: generic, move
-    :return: SpreadSheet in CSV or .xlsx format containing headerrow and rows for users and values
+    :return: SpreadSheet in CSV or .xlsx format containing header row and rows for users and values
     """
     curr_user = get_current_user_object()
     (
@@ -551,52 +552,21 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
             continue
         data.append(row_data)
 
+    csv = csv_string(data, "excel", separator)
     if args.downloadAsExcelFile and isinstance(args.downloadAsExcelFile, str):
         file_name = args.downloadAsExcelFile
         file_ext = file_name.split(".")[-1]
-        output_content = ""
         match file_ext:
             case "xlsx":
                 num_re = re.compile(r"(^[\d,. ]+)")
                 wb = Workbook()
-                ws = wb.active
+                ws = wb.create_sheet()
 
                 # Only rudimentary value conversions are supported for now.
                 # TODO: implement configurable filtering/type-casting via JSRunner, like with CSVs
-                for row in data:
-                    rd = row.copy()
-                    for i in range(len(rd)):
-                        m = num_re.match(rd[i]) if rd[i] else None
-                        if m:
-                            val = m.group(0)
-                            val = val.replace(" ", "")
-                            if len(val) == 0:
-                                rd[i] = None
-                                continue
-                            dot, comma = val.find("."), val.find(",")
-                            decimal_sep = (
-                                "dot"
-                                if ((-1 < dot < comma) or (comma == -1 < dot))
-                                else "comma"
-                                if ((-1 < comma < dot) or (dot == -1 < comma))
-                                else None
-                            )
-                            match decimal_sep:
-                                case "dot":
-                                    val = val.replace(",", "")
-                                    val = val[: dot + 1] + (
-                                        val[dot + 1 :].replace(".", "")
-                                    )
-                                    rd[i] = float(val) if len(val) > 1 else None
-                                case "comma":
-                                    val = val.replace(".", "")
-                                    val = val[: comma + 1] + (
-                                        val[comma + 1 :].replace(",", "")
-                                    )
-                                    val = val.replace(",", ".")
-                                    rd[i] = float(val) if len(val) > 1 else None
-                                case _:
-                                    rd[i] = int(val)
+                for rowd in data:
+                    rd = rowd.copy()
+                    parse_row(rd, num_re)
                     ws.append(rd)
 
                 # TODO: Delete temporary spreadsheet file after we've sent it. Since we have to return a Response here,
@@ -622,24 +592,55 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
                 )
 
             case "csv":
-                csv = csv_string(data, "excel", separator)
-                output = ""
                 csv, output = filter_csv_report(args.reportFilter, csv)
                 output_content = output + csv
                 return create_and_send_report(file_name, output_content, "text/csv")
             case _:
-                return text_response(output_content)
+                return text_response(csv)
 
-    """
-        # This did not work because if code is just return data; then it is not identical when returned
-        if args.reportFilter:
-            params = {'code': args.reportFilter, 'data': data}
-            data, output = jsrunner_run(params)
-        return csv_response(data, 'excel', separator)
-    """
+    return text_response(csv)
+
+    # """
+    #     # This did not work because if code is just return data; then it is not identical when returned
+    #     if args.reportFilter:
+    #         params = {'code': args.reportFilter, 'data': data}
+    #         data, output = jsrunner_run(params)
+    #     return csv_response(data, 'excel', separator)
+    # """
 
 
-def filter_csv_report(report_filter: str, content: str) -> Tuple[str, str]:
+def parse_row(rd: list[str | float | None], regex_filter: re.Pattern) -> None:
+    for i in range(len(rd)):
+        m = regex_filter.match(rd[i]) if rd[i] else None
+        if m:
+            val = m.group(0)
+            val = val.replace(" ", "")
+            if len(val) == 0:
+                rd[i] = None
+                continue
+            dot, comma = val.find("."), val.find(",")
+            decimal_sep = (
+                "dot"
+                if ((-1 < dot < comma) or (comma == -1 < dot))
+                else "comma"
+                if ((-1 < comma < dot) or (dot == -1 < comma))
+                else None
+            )
+            match decimal_sep:
+                case "dot":
+                    val = val.replace(",", "")
+                    val = val[: dot + 1] + (val[dot + 1 :].replace(".", ""))
+                    rd[i] = float(val) if len(val) > 1 else None
+                case "comma":
+                    val = val.replace(".", "")
+                    val = val[: comma + 1] + (val[comma + 1 :].replace(",", ""))
+                    val = val.replace(",", ".")
+                    rd[i] = float(val) if len(val) > 1 else None
+                case _:
+                    rd[i] = int(val)
+
+
+def filter_csv_report(report_filter: str | Missing, content: str) -> Tuple[str, str]:
     csv, output = "", ""
     if isinstance(report_filter, str) and report_filter:
         params = JsRunnerParams(code=report_filter, data=content)
