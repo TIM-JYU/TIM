@@ -27,7 +27,7 @@ class TIMConfig(ConfigParser):
     def __init__(self, save_path: str, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._comment_lines: Dict[Tuple[str, str], str] = {}
-        self._comment_prefixes: Tuple = ('#', ';')
+        self._comment_prefixes: Tuple = ("#", ";")
         self._save_path = save_path
 
     @property
