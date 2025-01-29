@@ -615,11 +615,11 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
                 tmp_file = tmp_dir + "/" + file_name
                 wb.save(tmp_file)
                 return send_file(
-                         tmp_file,
-                         as_attachment=True,
-                         download_name=file_name,
-                         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                     )
+                    tmp_file,
+                    as_attachment=True,
+                    download_name=file_name,
+                    mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
 
             case "csv":
                 csv = csv_string(data, "excel", separator)
