@@ -1105,7 +1105,7 @@ export class TableFormComponent
         }
 
         const win = window.open(
-            "/tableForm/generateCSV?" +
+            "/tableForm/generateReport?" +
                 $httpParamSerializer({
                     ...reportParams,
                     ...filterParams,

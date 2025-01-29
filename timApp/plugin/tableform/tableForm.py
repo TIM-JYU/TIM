@@ -4,10 +4,11 @@ TIM example plugin: a tableFormndrome checker.
 import io
 import json
 from dataclasses import dataclass, asdict, field
-from typing import Any, TypedDict, Sequence
+from typing import Any, TypedDict, Sequence, Tuple
 
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
+from openpyxl import Workbook
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from webargs.flaskparser import use_args
@@ -316,7 +317,7 @@ def render_static_table_form(m: TableFormHtmlModel) -> str:
 
 
 @dataclass
-class GenerateCSVModel:
+class GenerateSpreadSheetModel:
     docId: int
     fields: list[str]
     groups: list[str]
@@ -333,7 +334,7 @@ class GenerateCSVModel:
     downloadAsExcelFile: str | Missing = missing
 
 
-GenerateCSVSchema = class_schema(GenerateCSVModel)
+GenerateSpreadSheetSchema = class_schema(GenerateSpreadSheetModel)
 
 
 class TableformAnswerResp(PluginAnswerResp):
@@ -441,13 +442,13 @@ def check_field_filtering(
     return r_filter.is_match(target)
 
 
-@tableForm_plugin.get("/generateCSV")
-@use_args(GenerateCSVSchema())
-def gen_csv(args: GenerateCSVModel) -> Response | str:
+@tableForm_plugin.get("/generateReport")
+@use_args(GenerateSpreadSheetSchema())
+def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
     """
     Generates a report defined by tableForm attributes
     # TODO: generic, move
-    :return: CSV containing headerrow and rows for users and values
+    :return: SpreadSheet in CSV or .xlsx format containing headerrow and rows for users and values
     """
     curr_user = get_current_user_object()
     (
@@ -551,37 +552,56 @@ def gen_csv(args: GenerateCSVModel) -> Response | str:
             continue
         data.append(row_data)
 
-    csv = csv_string(data, "excel", separator)
-    output = ""
-    if isinstance(args.reportFilter, str) and args.reportFilter:
-        params = JsRunnerParams(code=args.reportFilter, data=csv)
+    if args.downloadAsExcelFile and isinstance(args.downloadAsExcelFile, str):
+        file_name = args.downloadAsExcelFile
+        file_ext = file_name.split(".")[-1]
+        output_content = ""
+        match file_ext:
+            case "xlsx":
+                pass
+                return create_and_send_report(
+                    file_name,
+                    output_content,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            case "csv":
+                csv = csv_string(data, "excel", separator)
+                output = ""
+                csv, output = filter_csv_report(args.reportFilter, csv)
+                output_content = output + csv
+                return create_and_send_report(file_name, output_content, "text/csv")
+            case _:
+                return text_response(output_content)
+
+    """
+        # This did not work because if code is just return data; then it is not identical when returned
+        if args.reportFilter:
+            params = {'code': args.reportFilter, 'data': data}
+            data, output = jsrunner_run(params)
+        return csv_response(data, 'excel', separator)
+    """
+
+
+def filter_csv_report(report_filter: str, content: str) -> Tuple[str, str]:
+    csv, output = "", ""
+    if isinstance(report_filter, str) and report_filter:
+        params = JsRunnerParams(code=report_filter, data=content)
         try:
             csv, output = jsrunner_run(params)
         except JsRunnerError as e:
             raise RouteException("Error in JavaScript: " + str(e)) from e
-
-    if args.downloadAsExcelFile and isinstance(args.downloadAsExcelFile, str):
-        file_name = args.downloadAsExcelFile
-        output_content = output + csv
-        # Re-encode to UTF-8-BOM since that's what Excel opens by default
-        file_io = io.BytesIO(output_content.encode("utf-8-sig"))
-        return send_file(
-            file_io,
-            as_attachment=True,
-            download_name=file_name,
-            mimetype="text/csv",
-        )
-
-    return text_response(output + csv)
+    return csv, output
 
 
-"""
-    # This did not work because if code is just return data; then it is not identical when returned
-    if args.reportFilter:
-        params = {'code': args.reportFilter, 'data': data}
-        data, output = jsrunner_run(params)
-    return csv_response(data, 'excel', separator)
-"""
+def create_and_send_report(filename: str, content: str, mimetype: str) -> Response:
+    # Re-encode to UTF-8-BOM since that's what Excel opens by default
+    file_io = io.BytesIO(content.encode("utf-8-sig"))
+    return send_file(
+        file_io,
+        as_attachment=True,
+        download_name=filename,
+        mimetype=mimetype,
+    )
 
 
 @dataclass
