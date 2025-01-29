@@ -1,8 +1,7 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
-import io
-import json
+import io, json, re, tempfile
 from dataclasses import dataclass, asdict, field
 from typing import Any, TypedDict, Sequence, Tuple
 
@@ -54,7 +53,7 @@ from timApp.util.get_fields import (
     RequestedGroups,
     GetFieldsAccess,
 )
-from timApp.util.utils import fin_timezone
+from timApp.util.utils import fin_timezone, temp_folder_path
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
@@ -558,12 +557,70 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
         output_content = ""
         match file_ext:
             case "xlsx":
-                pass
-                return create_and_send_report(
-                    file_name,
-                    output_content,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
+                num_re = re.compile(r"(^[\d,. ]+)")
+                wb = Workbook()
+                ws = wb.active
+
+                # Only rudimentary value conversions are supported for now.
+                # TODO: implement configurable filtering/type-casting via JSRunner, like with CSVs
+                for row in data:
+                    rd = row.copy()
+                    for i in range(len(rd)):
+                        m = num_re.match(rd[i]) if rd[i] else None
+                        if m:
+                            val = m.group(0)
+                            val = val.replace(" ", "")
+                            if len(val) == 0:
+                                rd[i] = None
+                                continue
+                            dot, comma = val.find("."), val.find(",")
+                            decimal_sep = (
+                                "dot"
+                                if ((-1 < dot < comma) or (comma == -1 < dot))
+                                else "comma"
+                                if ((-1 < comma < dot) or (dot == -1 < comma))
+                                else None
+                            )
+                            match decimal_sep:
+                                case "dot":
+                                    val = val.replace(",", "")
+                                    val = val[: dot + 1] + (
+                                        val[dot + 1 :].replace(".", "")
+                                    )
+                                    rd[i] = float(val) if len(val) > 1 else None
+                                case "comma":
+                                    val = val.replace(".", "")
+                                    val = val[: comma + 1] + (
+                                        val[comma + 1 :].replace(",", "")
+                                    )
+                                    val = val.replace(",", ".")
+                                    rd[i] = float(val) if len(val) > 1 else None
+                                case _:
+                                    rd[i] = int(val)
+                    ws.append(rd)
+
+                # TODO: Delete temporary spreadsheet file after we've sent it. Since we have to return a Response here,
+                #       and openpyxl only allows us to save the Workbook as a file, we have to create another route just
+                #       for the clean-up and call it once the browser has received the file we created here.
+                tmp_dir = temp_folder_path.as_posix()
+                # wb_response = None
+                # with tempfile.TemporaryFile(dir=tmp_dir) as fp:
+                #     wb.save(fp)
+                #     wb_response = send_file(
+                #         fp,
+                #         as_attachment=True,
+                #         download_name=file_name,
+                #         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                #     )
+                tmp_file = tmp_dir + "/" + file_name
+                wb.save(tmp_file)
+                return send_file(
+                         tmp_file,
+                         as_attachment=True,
+                         download_name=file_name,
+                         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                     )
+
             case "csv":
                 csv = csv_string(data, "excel", separator)
                 output = ""
