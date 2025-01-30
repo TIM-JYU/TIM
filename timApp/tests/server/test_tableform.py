@@ -33,7 +33,7 @@ class TableFormTest(TimRouteTest):
 
         # Test that user filtering still works with the wildcard
         self.get(
-            f"/tableForm/generateCSV",
+            f"/tableForm/generateReport",
             query_string={
                 "docId": doc.id,
                 "fields": "mmcqexample",
