@@ -1,11 +1,10 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
-import io, json, re, tempfile
+import io, json, re, os
 from dataclasses import dataclass, asdict, field
 from typing import Any, TypedDict, Sequence, Tuple
 
-import openpyxl.worksheet.worksheet
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
 from openpyxl import Workbook
@@ -560,32 +559,24 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
             case "xlsx":
                 num_re = re.compile(r"(^[\d,. ]+)")
                 wb = Workbook()
-                ws = wb.create_sheet()
+                # ws = wb.active
+                # grab the worksheet directly since wb.active seems to have some typing issues
+                ws = wb.worksheets[0]
 
-                # Only rudimentary value conversions are supported for now.
+                # Only rudimentary value conversions are supported for now (see parse_row(rd, regex_filter))
                 # TODO: implement configurable filtering/type-casting via JSRunner, like with CSVs
                 for rowd in data:
                     rd = rowd.copy()
                     parse_row(rd, num_re)
                     ws.append(rd)
 
-                # TODO: Delete temporary spreadsheet file after we've sent it. Since we have to return a Response here,
-                #       and openpyxl only allows us to save the Workbook as a file, we have to create another route just
-                #       for the clean-up and call it once the browser has received the file we created here.
                 tmp_dir = temp_folder_path.as_posix()
-                # wb_response = None
-                # with tempfile.TemporaryFile(dir=tmp_dir) as fp:
-                #     wb.save(fp)
-                #     wb_response = send_file(
-                #         fp,
-                #         as_attachment=True,
-                #         download_name=file_name,
-                #         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                #     )
                 tmp_file = tmp_dir + "/" + file_name
                 wb.save(tmp_file)
+                fileio = io.FileIO(tmp_file)
+                os.unlink(tmp_file)
                 return send_file(
-                    tmp_file,
+                    fileio,
                     as_attachment=True,
                     download_name=file_name,
                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
