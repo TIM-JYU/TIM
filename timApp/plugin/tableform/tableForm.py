@@ -557,7 +557,7 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
         file_ext = file_name.split(".")[-1]
         match file_ext:
             case "xlsx":
-                num_re = re.compile(r"(^[\d,. ]+)")
+                num_re = re.compile(r"(^[\d,.\- ]+)")
                 wb = Workbook()
                 # ws = wb.active
                 # grab the worksheet directly since wb.active seems to have some typing issues
@@ -606,6 +606,11 @@ def parse_row(rd: list[str | float | None], regex_filter: re.Pattern) -> None:
         if m:
             val = m.group(0)
             val = val.replace(" ", "")
+            # Determine whether the value should be negative. Only the presence of a minus sign matters,
+            # an even number of minus signs preceding the number does not indicate a positive value.
+            negative = "-" in val
+            val = val.replace("-", "")
+
             if len(val) == 0:
                 rd[i] = None
                 continue
@@ -621,14 +626,20 @@ def parse_row(rd: list[str | float | None], regex_filter: re.Pattern) -> None:
                 case "dot":
                     val = val.replace(",", "")
                     val = val[: dot + 1] + (val[dot + 1 :].replace(".", ""))
-                    rd[i] = float(val) if len(val) > 1 else None
+                    if len(val) > 1:
+                        rd[i] = float(val) if not negative else -float(val)
+                    else:
+                        rd[i] = None
                 case "comma":
                     val = val.replace(".", "")
                     val = val[: comma + 1] + (val[comma + 1 :].replace(",", ""))
                     val = val.replace(",", ".")
-                    rd[i] = float(val) if len(val) > 1 else None
+                    if len(val) > 1:
+                        rd[i] = float(val) if not negative else -float(val)
+                    else:
+                        rd[i] = None
                 case _:
-                    rd[i] = int(val)
+                    rd[i] = int(val) if not negative else -int(val)
 
 
 def filter_csv_report(report_filter: str | Missing, content: str) -> Tuple[str, str]:
