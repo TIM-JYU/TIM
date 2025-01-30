@@ -1,13 +1,16 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
-import io, json, re, os
+import datetime
+import io, json, re
 from dataclasses import dataclass, asdict, field
 from typing import Any, TypedDict, Sequence, Tuple
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
 from openpyxl import Workbook
+from openpyxl.writer.excel import ExcelWriter
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from webargs.flaskparser import use_args
@@ -53,7 +56,7 @@ from timApp.util.get_fields import (
     RequestedGroups,
     GetFieldsAccess,
 )
-from timApp.util.utils import fin_timezone, temp_folder_path
+from timApp.util.utils import fin_timezone
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
@@ -577,11 +580,7 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
                     parse_row(rd, num_re)
                     ws.append(rd)
 
-                tmp_dir = temp_folder_path.as_posix()
-                tmp_file = tmp_dir + "/" + file_name
-                wb.save(tmp_file)
-                fileio = io.FileIO(tmp_file)
-                os.unlink(tmp_file)
+                fileio = save_workbook_to_memory(wb)
                 return send_file(
                     fileio,
                     as_attachment=True,
@@ -605,6 +604,25 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
     #         data, output = jsrunner_run(params)
     #     return csv_response(data, 'excel', separator)
     # """
+
+
+def save_workbook_to_memory(wb: Workbook) -> io.BytesIO:
+    """Saves a Workbook to memory instead of on disk.
+    This is a convenience function so that we do not need to create temporary files on disk when exporting spreadsheets.
+    """
+    if wb.write_only and not wb.worksheets:
+        wb.create_sheet()
+
+    wb.properties.modified = datetime.datetime.now(tz=datetime.timezone.utc).replace(
+        tzinfo=None
+    )
+    buffer = io.BytesIO()
+    with ZipFile(buffer, "w", ZIP_DEFLATED, allowZip64=True) as archive:
+        writer = ExcelWriter(wb, archive)
+        writer.save()
+
+    buffer.seek(0)
+    return buffer
 
 
 def parse_row(rd: list[str | float | None], regex_filter: re.Pattern) -> None:
