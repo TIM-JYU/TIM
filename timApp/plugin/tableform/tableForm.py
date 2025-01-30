@@ -9,7 +9,6 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
-from msgpack.fallback import BytesIO
 from openpyxl import Workbook
 from openpyxl.writer.excel import ExcelWriter
 from sqlalchemy import select
@@ -679,10 +678,10 @@ def filter_csv_report(report_filter: str | Missing, content: str) -> Tuple[str, 
 
 
 def create_and_send_report(
-    filename: str, content: str | BytesIO, mimetype: str
+    filename: str, content: str | io.BytesIO, mimetype: str
 ) -> Response:
     file_io = content
-    if not isinstance(content, BytesIO):
+    if not isinstance(content, io.BytesIO):
         # Re-encode to UTF-8-BOM since that's what Excel opens by default
         file_io = io.BytesIO(content.encode("utf-8-sig"))
     return send_file(
