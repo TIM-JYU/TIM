@@ -16,7 +16,7 @@ import {
     Info,
     withDefault,
 } from "tim/plugin/attributes";
-import {escapeRegExp, scrollToElement} from "tim/util/utils";
+import {escapeRegExp, scrollToElement, timeout} from "tim/util/utils";
 import type {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -49,6 +49,8 @@ const multisaveMarkup = t.intersection([
         testOnly: t.boolean,
         savedText: t.string,
         unsavedText: t.string,
+        timer: t.number,
+        saveDelay: t.number,
     }),
     GenericPluginMarkup,
     t.type({
@@ -133,6 +135,7 @@ export class MultisaveComponent
     unsavedTasksWithAliases: {component: ITimComponent; alias?: string}[] = [];
     requiresTaskId = false;
     listener = false;
+    timer?: number;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -290,11 +293,14 @@ export class MultisaveComponent
      * - If fields/areas are not given and multisave is not within any areas then just call save for every ITimComponent
      *   plugin in the same document
      */
-    async save() {
+    async save(delay?: number) {
         const componentsToSave = this.findTargetTasks();
 
         const promises = [];
         for (const v of componentsToSave) {
+            if (delay) {
+                await timeout(delay);
+            }
             const result = v.save();
             promises.push(result);
         }
@@ -313,6 +319,9 @@ export class MultisaveComponent
                 }
             }
             savedIndex++;
+        }
+        if (this.markup.timer && !this.allSaved()) {
+            this.setTimer();
         }
         if (this.markup.autoUpdateTables) {
             this.vctrl.updateAllTables(fieldsToUpdate);
@@ -378,6 +387,22 @@ export class MultisaveComponent
         this.hasUnsavedTargets = true;
         this.refreshUnsavedList();
         this.isSaved = false;
+        if (this.markup.timer && !this.timer) {
+            this.setTimer();
+        }
+    }
+
+    private setTimer() {
+        if (!this.markup.timer) {
+            return;
+        }
+        if (this.timer) {
+            window.clearTimeout(this.timer);
+        }
+        this.timer = window.setTimeout(
+            () => this.save(this.markup.saveDelay),
+            this.markup.timer
+        );
     }
 
     public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {

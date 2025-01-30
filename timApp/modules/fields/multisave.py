@@ -36,6 +36,8 @@ class MultisaveMarkupModel(GenericMarkupModel):
     savedText: str | Missing = missing
     tags: list[str] | Missing = missing
     unsavedText: str | Missing = missing
+    timer: int | Missing = missing
+    saveDelay: int | Missing = missing
 
     # Sisu export-related fields; TODO: Should be a separate plugin.
     destCourse: str | Missing = missing
