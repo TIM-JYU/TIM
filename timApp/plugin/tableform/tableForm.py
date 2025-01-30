@@ -667,7 +667,8 @@ def parse_row(rd: list[str | float | None], regex_filter: re.Pattern) -> None:
 
 
 def filter_csv_report(report_filter: str | Missing, content: str) -> Tuple[str, str]:
-    csv, output = "", ""
+    csv = content
+    output = ""
     if isinstance(report_filter, str) and report_filter:
         params = JsRunnerParams(code=report_filter, data=content)
         try:
