@@ -441,6 +441,13 @@ def check_field_filtering(
     return r_filter.is_match(target)
 
 
+@tableForm_plugin.get("/generateCSV")
+@use_args(GenerateSpreadSheetSchema())
+def gen_csv_legacy(args: GenerateSpreadSheetModel) -> Response | str:
+    """Legacy route for documents that have direct links to the route."""
+    return gen_spreadsheet(args)
+
+
 @tableForm_plugin.get("/generateReport")
 @use_args(GenerateSpreadSheetSchema())
 def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
