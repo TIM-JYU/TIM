@@ -9,6 +9,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
+from msgpack.fallback import BytesIO
 from openpyxl import Workbook
 from openpyxl.writer.excel import ExcelWriter
 from sqlalchemy import select
@@ -562,6 +563,8 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
         data.append(row_data)
 
     csv = csv_string(data, "excel", separator)
+    csv, output = filter_csv_report(args.reportFilter, csv)
+
     if args.downloadAsExcelFile and isinstance(args.downloadAsExcelFile, str):
         file_name = args.downloadAsExcelFile
         file_ext = file_name.split(".")[-1]
@@ -581,15 +584,12 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
                     ws.append(rd)
 
                 fileio = save_workbook_to_memory(wb)
-                return send_file(
+                return create_and_send_report(
+                    file_name,
                     fileio,
-                    as_attachment=True,
-                    download_name=file_name,
-                    mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
-
             case "csv":
-                csv, output = filter_csv_report(args.reportFilter, csv)
                 output_content = output + csv
                 return create_and_send_report(file_name, output_content, "text/csv")
             case _:
@@ -678,9 +678,13 @@ def filter_csv_report(report_filter: str | Missing, content: str) -> Tuple[str, 
     return csv, output
 
 
-def create_and_send_report(filename: str, content: str, mimetype: str) -> Response:
-    # Re-encode to UTF-8-BOM since that's what Excel opens by default
-    file_io = io.BytesIO(content.encode("utf-8-sig"))
+def create_and_send_report(
+    filename: str, content: str | BytesIO, mimetype: str
+) -> Response:
+    file_io = content
+    if not isinstance(content, BytesIO):
+        # Re-encode to UTF-8-BOM since that's what Excel opens by default
+        file_io = io.BytesIO(content.encode("utf-8-sig"))
     return send_file(
         file_io,
         as_attachment=True,
