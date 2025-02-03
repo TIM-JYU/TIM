@@ -387,7 +387,10 @@ export class MultisaveComponent
         this.hasUnsavedTargets = true;
         this.refreshUnsavedList();
         this.isSaved = false;
-        if (this.markup.timer && !this.timer) {
+        if (this.markup.timer) {
+            if (this.timer) {
+                window.clearTimeout(this.timer);
+            }
             this.setTimer();
         }
     }
