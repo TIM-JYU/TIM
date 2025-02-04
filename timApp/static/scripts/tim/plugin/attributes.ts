@@ -11,6 +11,8 @@ export const AnswerBrowserSettings = t.partial({
     showValidOnly: t.boolean,
     showReview: t.boolean,
     showInitialAskNew: t.boolean,
+    autosave: t.boolean,
+    limitPoints: t.boolean,
 });
 
 export interface IAnswerBrowserSettings

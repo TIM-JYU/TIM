@@ -212,6 +212,8 @@ class AnswerBrowserInfo:
     showValidOnly: bool | None | Missing = missing
     showReview: bool | None | Missing = missing
     showInitialAskNew: bool | None | Missing = missing
+    autosave: bool | None | Missing = missing
+    limitPoints: bool | None | Missing = missing
 
 
 @dataclass

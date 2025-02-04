@@ -97,13 +97,13 @@
                     title="Link to peer review"
                 href="{{ getReviewLink() }}">Review</a>
                 </span>
-             <div *ngIf="answers.length == 0 && viewctrl.teacherMode">
-                 <ng-container *ngIf="!hasUserChanged()">
-                    <span i18n *ngIf="!isGlobal()">(no answers from the selected user)</span>
-                    <span i18n *ngIf="isGlobal()">(no answers)</span>
-                 </ng-container>
-                 <span *ngIf="hasUserChanged()"> <tim-loading></tim-loading> </span>
-             </div>
+                 <div *ngIf="answers.length == 0 && viewctrl.teacherMode">
+                     <ng-container *ngIf="!hasUserChanged()">
+                        <span i18n *ngIf="!isGlobal()">(no answers from the selected user)</span>
+                        <span i18n *ngIf="isGlobal()">(no answers)</span>
+                     </ng-container>
+                     <span *ngIf="hasUserChanged()"> <tim-loading></tim-loading> </span>
+                 </div>
                  <div class="flex ab-option-row">
                             <form (ngSubmit)="savePoints()" class="point-form form-inline">
                                 <label class="inline" *ngIf="showTeacher() || (giveCustomPoints && allowCustomPoints())">
@@ -111,8 +111,9 @@
                                                   [ngClass]="{ unsaved: points != selectedAnswer?.points,
                                                   'no-step': !markupSettings.pointsStep }"
                                                   (focus)="shouldFocusIfSelectedAnswer()"
-                                                  (blur)="shouldFocus = false"
+                                                  (blur)="handlePointsFocusOut($event)"
                                                   [(ngModel)]="points"
+                                                                                    (ngModelChange)="maybeLimitPoints()"
                                                   (keydown)="handlePointScroll($event)"
                                                   name="points"
                                                   type="number"
@@ -124,7 +125,7 @@
 
                                 <button i18n-title title="Save points"
                                         class="timButton btn-xs"
-                                        *ngIf="selectedAnswer && points != selectedAnswer.points">
+                                        *ngIf="selectedAnswer && points != selectedAnswer.points && !autosave">
                                     <i class="glyphicon glyphicon-ok"></i>
                                 </button>
                             </form>

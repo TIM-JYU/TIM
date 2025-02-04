@@ -146,6 +146,8 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     validOnlyText: $localize`Show valid only`,
     showReview: false,
     showInitialAskNew: true,
+    autosave: true,
+    limitPoints: true,
 };
 
 @Component({
@@ -282,6 +284,8 @@ export class AnswerBrowserComponent
     reviewHtml?: string;
     private answerLoader?: AnswerLoadCallback;
     pointsStep: number = 0.01;
+    autosave: boolean = true;
+    limitPoints: boolean = true;
     markupSettings: IAnswerBrowserSettings = DEFAULT_MARKUP_CONFIG;
     modelAnswer?: IModelAnswerSettings;
     private modelAnswerFetched = false;
@@ -441,6 +445,13 @@ export class AnswerBrowserComponent
         // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
         if (this.markupSettings.pointsStep) {
             this.pointsStep = this.markupSettings?.pointsStep;
+        }
+        // Save points for the answer when the points field loses focus
+        if (this.markupSettings.autosave) {
+            this.autosave = this.markupSettings?.autosave;
+        }
+        if (this.markupSettings.limitPoints) {
+            this.limitPoints = this.markupSettings?.limitPoints;
         }
         if (this.markupSettings.showValidOnly != undefined) {
             this.onlyValid = this.markupSettings.showValidOnly;
@@ -1016,6 +1027,47 @@ export class AnswerBrowserComponent
             e.which === KEY_DOWN
         ) {
             e.preventDefault();
+        }
+    }
+
+    /**
+     *
+     * @param ev FocusEvent
+     */
+    handlePointsFocusOut(ev: FocusEvent) {
+        ev.preventDefault();
+        this.shouldFocus = false;
+        if (
+            this.autosave &&
+            ev.type == "blur" &&
+            this.points != this.selectedAnswer?.points
+        ) {
+            this.savePoints();
+        }
+    }
+
+    /**
+     * If the AnswerBrowserSetting `limitPoints` is set,
+     * limits the points given for the answer to the value defined by PointRule.maxPoints (see tim/tim_common/markupmodels.py).
+     * TODO: Maybe expand the `limitPoints` option to include its own min, max values and use those instead of pointsrule,
+     *  so that we can also limit the minimum allowed points for task answers.
+     */
+    maybeLimitPoints() {
+        if (!this.limitPoints) {
+            return;
+        }
+        let maxpoints;
+        if (this.taskInfo?.maxPoints) {
+            maxpoints = parseFloat(this.taskInfo.maxPoints.toString());
+        }
+
+        if (
+            maxpoints &&
+            !isNaN(maxpoints) &&
+            this.points &&
+            this.points > maxpoints
+        ) {
+            this.points = maxpoints;
         }
     }
 
