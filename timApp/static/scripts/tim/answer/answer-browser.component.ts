@@ -146,8 +146,6 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     validOnlyText: $localize`Show valid only`,
     showReview: false,
     showInitialAskNew: true,
-    autosave: true,
-    limitPoints: true,
 };
 
 @Component({
@@ -447,11 +445,11 @@ export class AnswerBrowserComponent
             this.pointsStep = this.markupSettings?.pointsStep;
         }
         // Save points for the answer when the points field loses focus
-        if (this.markupSettings.autosave) {
-            this.autosave = this.markupSettings?.autosave;
+        if (this.markupSettings.autosave != undefined) {
+            this.autosave = this.markupSettings.autosave;
         }
-        if (this.markupSettings.limitPoints) {
-            this.limitPoints = this.markupSettings?.limitPoints;
+        if (this.markupSettings.limitPoints != undefined) {
+            this.limitPoints = this.markupSettings.limitPoints;
         }
         if (this.markupSettings.showValidOnly != undefined) {
             this.onlyValid = this.markupSettings.showValidOnly;
