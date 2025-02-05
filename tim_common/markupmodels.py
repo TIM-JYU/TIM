@@ -206,6 +206,12 @@ class UndoInfo:
 
 
 @dataclass
+class PointsLimiterInfo:
+    min: int | float | None | Missing = missing
+    max: int | float | None | Missing = missing
+
+
+@dataclass
 class AnswerBrowserInfo:
     pointsStep: float | None | Missing = missing
     validOnlyText: str | None | Missing = missing
@@ -213,7 +219,7 @@ class AnswerBrowserInfo:
     showReview: bool | None | Missing = missing
     showInitialAskNew: bool | None | Missing = missing
     autosave: bool | None | Missing = missing
-    limitPoints: bool | None | Missing = missing
+    limitPoints: PointsLimiterInfo | Missing | None = missing
 
 
 @dataclass
