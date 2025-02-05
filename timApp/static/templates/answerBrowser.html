@@ -113,14 +113,13 @@
                                                   (focus)="shouldFocusIfSelectedAnswer()"
                                                   (blur)="handlePointsFocusOut($event)"
                                                   [(ngModel)]="points"
-                                                                                    (ngModelChange)="maybeLimitPoints()"
                                                   (keydown)="handlePointScroll($event)"
                                                   name="points"
                                                   type="number"
                                                   step="{{ pointsStep }}"
                                                   style="max-width: 5em"
                                                   autocomplete="off"
-                                                  size="2">
+                                                  size="2" min="{{limitPoints.min}}" max="{{limitPoints.max}}">
                                 </label>
 
                                 <button i18n-title title="Save points"

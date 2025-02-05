@@ -37,6 +37,7 @@ import type {
     IAnswerBrowserSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
+    IPointsLimiterSettings,
 } from "tim/plugin/attributes";
 import type {IUser} from "tim/user/IUser";
 import {sortByRealName} from "tim/user/IUser";
@@ -283,7 +284,7 @@ export class AnswerBrowserComponent
     private answerLoader?: AnswerLoadCallback;
     pointsStep: number = 0.01;
     autosave: boolean = true;
-    limitPoints: boolean = true;
+    limitPoints: IPointsLimiterSettings = {min: 0, max: undefined};
     markupSettings: IAnswerBrowserSettings = DEFAULT_MARKUP_CONFIG;
     modelAnswer?: IModelAnswerSettings;
     private modelAnswerFetched = false;
@@ -448,7 +449,7 @@ export class AnswerBrowserComponent
         if (this.markupSettings.autosave != undefined) {
             this.autosave = this.markupSettings.autosave;
         }
-        if (this.markupSettings.limitPoints != undefined) {
+        if (this.markupSettings.limitPoints) {
             this.limitPoints = this.markupSettings.limitPoints;
         }
         if (this.markupSettings.showValidOnly != undefined) {
@@ -1029,43 +1030,18 @@ export class AnswerBrowserComponent
     }
 
     /**
-     *
+     * Handle focus out event for the points field
      * @param ev FocusEvent
      */
     handlePointsFocusOut(ev: FocusEvent) {
         ev.preventDefault();
         this.shouldFocus = false;
         if (
-            this.autosave &&
-            ev.type == "blur" &&
-            this.points != this.selectedAnswer?.points
+            // this.autosave &&
+            ev.type == "blur"
+            // this.points != this.selectedAnswer?.points
         ) {
-            this.savePoints();
-        }
-    }
-
-    /**
-     * If the AnswerBrowserSetting `limitPoints` is set,
-     * limits the points given for the answer to the value defined by PointRule.maxPoints (see tim/tim_common/markupmodels.py).
-     * TODO: Maybe expand the `limitPoints` option to include its own min, max values and use those instead of pointsrule,
-     *  so that we can also limit the minimum allowed points for task answers.
-     */
-    maybeLimitPoints() {
-        if (!this.limitPoints) {
-            return;
-        }
-        let maxpoints;
-        if (this.taskInfo?.maxPoints) {
-            maxpoints = parseFloat(this.taskInfo.maxPoints.toString());
-        }
-
-        if (
-            maxpoints &&
-            !isNaN(maxpoints) &&
-            this.points &&
-            this.points > maxpoints
-        ) {
-            this.points = maxpoints;
+            this.trySavePoints(true);
         }
     }
 
