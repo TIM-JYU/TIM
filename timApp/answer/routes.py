@@ -682,6 +682,7 @@ def log_answer_request(
 ):
     p = Path(current_app.config["FILES_PATH"]) / current_app.config["ANSWER_LOG_FILE"]
     j = {
+        "time": datetime.now(),
         "user": user.name,
         "ip": request.remote_addr,
         "task_id_ext": task_id_ext,
