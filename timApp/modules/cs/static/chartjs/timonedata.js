@@ -120,7 +120,7 @@ function isObject(item) {
  * Remove forcechar from the start of the key
  * @param target object where to merge
  * @param source object where from merge
- * @param forcechar what char to remove from begining of key
+ * @param forcechar what char to remove from beginning of key
  * @forcechar char for starting the attribute name when no deepcopy is done, instead object reference
  */
 function mergeDeep(target, source, forcechar) {
