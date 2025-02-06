@@ -284,7 +284,7 @@ export class AnswerBrowserComponent
     private answerLoader?: AnswerLoadCallback;
     pointsStep: number = 0.01;
     autosave: boolean = true;
-    limitPoints: IPointsLimiterSettings = {min: 0, max: undefined};
+    limitPoints: IPointsLimiterSettings = {min: undefined, max: undefined};
     markupSettings: IAnswerBrowserSettings = DEFAULT_MARKUP_CONFIG;
     modelAnswer?: IModelAnswerSettings;
     private modelAnswerFetched = false;
