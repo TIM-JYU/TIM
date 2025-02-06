@@ -35,6 +35,7 @@ let pluginTrendlineLinear = {
     }
 };
 
+
 function addFitter(datasetMeta, ctx, dataset, xScale, yScale) {
     let style = dataset.trendlineLinear.style || dataset.borderColor;
     let lineWidth = dataset.trendlineLinear.width || dataset.borderWidth;
@@ -75,6 +76,7 @@ function addFitter(datasetMeta, ctx, dataset, xScale, yScale) {
     ctx.stroke();
 }
 
+
 Chart.plugins.register(pluginTrendlineLinear);
 
 function LineFitter() {
@@ -86,6 +88,7 @@ function LineFitter() {
     this.minx = 1e100;
     this.maxx = -1e100;
 }
+
 
 LineFitter.prototype = {
     'add': function (x, y) {
@@ -105,6 +108,7 @@ LineFitter.prototype = {
     }
 };
 
+
 /**
  * Simple is object check.
  * @param item
@@ -113,6 +117,7 @@ LineFitter.prototype = {
 function isObject(item) {
   return (item && typeof item === 'object' && !Array.isArray(item));
 }
+
 
 /**
  * Deep merge two objects.
@@ -144,6 +149,7 @@ function mergeDeep(target, source, forcechar) {
   }
   return target;
 }
+
 
 // TIM jsframe function for ChartJS
 let TIMJS = {};
@@ -198,6 +204,7 @@ TIMJS.baseDataOptions = {
 };
 TIMJS.alpha = 0.5;
 
+
 function pros(od) {
     // return od;
     let max = Math.max(...od);
@@ -208,6 +215,7 @@ function pros(od) {
     // console.log(max, a);
     return a;
 }
+
 
 /**
  * Add dtata to datasets from datas-object
@@ -280,6 +288,7 @@ function ensureDataSets(datasets, n) {
        mergeDeep(datasets[i], datasets[i-1]);
    }
 }
+
 
 /**
  * Set chart data from data, needs global variables globaldata, chart, originaldata
@@ -436,9 +445,11 @@ TIMJS.setData = function(P, data) {
   }
 };
 
+
 function setData(data) {
     TIMJS.setData(TIMJS, data);
 }
+
 
 function getData() {
     return TIMJS.globaldata;
