@@ -118,6 +118,7 @@ TIM_SAFE_TAGS = [
     "tim-steps",
     "tim-participant-list",
     "tim-course-manager",
+    "tim-todo",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
