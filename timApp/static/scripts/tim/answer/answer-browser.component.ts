@@ -601,7 +601,10 @@ export class AnswerBrowserComponent
         this.selectedAnswer.valid = this.isValidAnswer;
     }
 
-    trySavePoints(updateAnswers: boolean = false) {
+    trySavePoints(
+        updateAnswers: boolean = false,
+        updatePointsState: boolean = true
+    ) {
         if (!this.selectedAnswer || !this.user) {
             return true;
         }
@@ -622,7 +625,7 @@ export class AnswerBrowserComponent
         }
 
         const doSavePoints = async () => {
-            await this.savePoints(false);
+            await this.savePoints(updatePointsState);
             if (updateAnswers) {
                 await this.getAnswersAndUpdate();
             }
@@ -943,7 +946,7 @@ export class AnswerBrowserComponent
      * @param dir -1 for older answer, 1 for newer answer
      */
     async changeAnswerTo(dir: -1 | 1) {
-        if (!this.trySavePoints(true)) {
+        if (!this.trySavePoints(true, false)) {
             return;
         }
         if (!(await this.checkUnsavedAnnotations())) {
@@ -965,7 +968,7 @@ export class AnswerBrowserComponent
     }
 
     async newTask() {
-        if (!this.trySavePoints(true)) {
+        if (!this.trySavePoints(true, false)) {
             return;
         }
 
@@ -1036,12 +1039,8 @@ export class AnswerBrowserComponent
     handlePointsFocusOut(ev: FocusEvent) {
         ev.preventDefault();
         this.shouldFocus = false;
-        if (
-            // this.autosave &&
-            ev.type == "blur"
-            // this.points != this.selectedAnswer?.points
-        ) {
-            this.trySavePoints(true);
+        if (this.autosave && ev.type == "blur") {
+            this.trySavePoints(false, true);
         }
     }
 
@@ -1091,7 +1090,7 @@ export class AnswerBrowserComponent
         if (this.users.length <= 0) {
             return;
         }
-        if (!this.trySavePoints()) {
+        if (!this.trySavePoints(false, false)) {
             return;
         }
         const shouldRefocusPoints = this.shouldFocus;

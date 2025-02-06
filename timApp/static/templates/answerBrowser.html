@@ -105,7 +105,7 @@
                      <span *ngIf="hasUserChanged()"> <tim-loading></tim-loading> </span>
                  </div>
                  <div class="flex ab-option-row">
-                            <form (ngSubmit)="savePoints()" class="point-form form-inline">
+                            <form (ngSubmit)="trySavePoints(false, true)" class="point-form form-inline">
                                 <label class="inline" *ngIf="showTeacher() || (giveCustomPoints && allowCustomPoints())">
                                     <ng-container i18n>Points:</ng-container><input class="form-control input-xs"
                                                   [ngClass]="{ unsaved: points != selectedAnswer?.points,
