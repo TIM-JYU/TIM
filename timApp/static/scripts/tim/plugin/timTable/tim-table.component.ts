@@ -100,7 +100,6 @@ import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
-    maxContentOrFitContent,
     scrollToViewInsideParent,
     StringOrNumber,
     timeout,
@@ -790,7 +789,7 @@ export class TimTableComponent
     cbFilter = false;
     filterRow = false;
     maxRows = "2000em";
-    maxCols = maxContentOrFitContent();
+    maxCols = "fit-content";
     permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
     edited = false;

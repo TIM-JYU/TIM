@@ -50,7 +50,6 @@ import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {
     clone,
     defaultErrorMessage,
-    maxContentOrFitContent,
     splitItems,
     to,
     to2,
@@ -140,7 +139,7 @@ const TableFormMarkup = t.intersection([
         realnames: withDefault(t.boolean, true),
         emails: withDefault(t.boolean, false),
         addedDates: withDefault(t.boolean, false),
-        maxCols: withDefault(t.string, maxContentOrFitContent()),
+        maxCols: withDefault(t.string, "fit-content"),
         openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
         open: withDefault(t.boolean, true),
         reportFilter: withDefault(t.string, ""),

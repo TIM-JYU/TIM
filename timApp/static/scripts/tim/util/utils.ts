@@ -841,14 +841,6 @@ export function createValidator(
     };
 }
 
-/**
- * On Firefox, we need max-content in timTable to get rid of the horizontal scrollbar.
- * On the other hand, max-content does not work well in Chrome because it makes some columns too wide.
- */
-export function maxContentOrFitContent() {
-    return isFirefox() ? "max-content" : "fit-content";
-}
-
 export function log(s: string) {
     console.log(s);
 }
