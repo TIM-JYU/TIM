@@ -347,7 +347,7 @@ export class AnswerBrowserComponent
                 if (pattern) {
                     displayAlert = !pattern.test(e);
                 }
-                if (displayAlert) {
+                if (displayAlert && !this.alerts.some((m) => m.msg === e)) {
                     this.alerts.push({msg: e, type: "warning"});
                 }
             }
