@@ -372,6 +372,10 @@ export class AnnotationComponent
         this.annotation = a;
         this.original = a.getEditableValues();
         this.values = clone(this.original);
+        this.values.visible_to =
+            this.allowChangePoints() || this.vctrl.item.rights.teacher
+                ? this.values.visible_to
+                : 1; /* value for "Just me", ie. visible only the user who added the annotation. */
         this.onColorUpdate(this.values.color ?? "");
         this.refreshMath = true;
     }
