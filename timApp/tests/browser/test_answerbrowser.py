@@ -123,7 +123,9 @@ type: text
         )
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
-        self.login_browser_test2()
+
+        self.login_browser_quick_test2()
+        self.login_test2()
 
         def do_browser_check(input: str, expect: str):
             self.goto_document(d)
