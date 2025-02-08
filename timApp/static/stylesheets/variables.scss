@@ -83,7 +83,7 @@ $link-hover-color: darken($link-color, 15%) !default; // likely of interest
 $input-color-placeholder: $gray !default;
 $headings-font-weight: 700 !default;
 $font-size-base: 14px !default; // this should probably not be changed from default 14px
-$font_size-normal: floor(($font-size-base * 16.00/14.00)) !default; // this should probably not be changed from default 14px
+$font_size-normal: floor(calc($font-size-base * 16.00/14.00)) !default; // this should probably not be changed from default 14px
 $font-size-h1: floor(($font_size-normal * 2.00)) !default; // default factor is 2.6
 $font-size-h2: floor(($font_size-normal * 1.5)) !default; // default factor is 2.15
 $font-size-h3: floor(($font_size-normal * 1.3125)) !default; // default factor is 1.7
