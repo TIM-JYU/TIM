@@ -11,6 +11,7 @@ import sys
 
 from flask import Flask, Request
 from flask_migrate import Migrate
+from flask_socketio import SocketIO, emit
 from flask_wtf import CSRFProtect
 from sqlalchemy import func
 from sqlalchemy.sql.ddl import CreateTable
@@ -241,6 +242,28 @@ all_models = (
 
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
+
+
+tim_socketio = SocketIO()
+tim_socketio.init_app(app, cors_allowed_origins="*")
+
+
+@tim_socketio.on("connect", namespace="/chat")
+def handle_connect():
+    print("Client connected to /chat")
+    emit("message", "Welcome to the WebSocket server!", broadcast=True)
+
+
+@tim_socketio.on("message", namespace="/chat")
+def handle_message(msg):
+    print(f"Received message: {msg}")
+    emit("message", f"Echo: {msg}", broadcast=True)
+
+
+@tim_socketio.on("disconnect", namespace="/chat")
+def handle_disconnect():
+    print("Client disconnected from /chat")
+
 
 app.json = TimJsonProvider(app)
 app.json_provider_class = TimJsonProvider

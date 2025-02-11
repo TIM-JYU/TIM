@@ -1,4 +1,9 @@
-import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
+import type {
+    ApplicationRef,
+    DoBootstrap,
+    OnDestroy,
+    OnInit,
+} from "@angular/core";
 import {Input, NgModule, ViewChild} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
@@ -10,12 +15,14 @@ import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import {Users} from "tim/user/userService";
 import type {ICurrentUser} from "tim/user/IUser";
+import type {Subscription} from "rxjs";
 import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
 import {FileSelectManagerComponent} from "../../../../../modules/cs/js/util/file-select";
 import type {
     IFile,
     IFileSpecification,
 } from "../../../../../modules/cs/js/util/file-select";
+import {WebSocketService} from "../../../../../events/websocket.service";
 
 interface ProfileData extends Object {
     username?: string;
@@ -47,6 +54,11 @@ const UploadedFile = t.intersection([
         rotation: t.number,
     }),
 ]);
+
+interface IMessage {
+    type: string;
+    data: string;
+}
 
 interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 
@@ -130,6 +142,8 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                     </ul>
                 </div>
                 <div class="right-column">
+                    <p *ngFor="let msg of messages">{{ msg }}</p>
+                    <button (click)="sendMessage()">Send</button>
                     <h2>Your group: {{ myGroupName }}</h2>
                     <ul>
                         <li
@@ -149,7 +163,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 
     `,
 })
-export class UserProfileComponent implements OnInit {
+export class UserProfileComponent implements OnInit, OnDestroy {
     @Input() documentId: int = 0;
     @Input() viewMode: ViewMode = "SHOW";
     @Input() profileId: int = 0;
@@ -169,7 +183,14 @@ export class UserProfileComponent implements OnInit {
     profileVisibleMsg: string = "Cannot show a profile.";
     user?: ICurrentUser;
 
-    constructor(private http: HttpClient) {
+    // Websocket related stuff
+    messages: IMessage[] = [];
+    private messageSubscription?: Subscription;
+
+    constructor(
+        private http: HttpClient,
+        private webSocketService: WebSocketService
+    ) {
         this.profileData = this.formatProfileData();
     }
 
@@ -190,6 +211,26 @@ export class UserProfileComponent implements OnInit {
         this.uploadUrl = `/profile/picture/${this.documentId}`;
         this.detailsUrl = `/profile/details/${this.documentId}`;
         this.user = Users.getCurrent();
+
+        // Subscribe to messages from the WebSocket
+        this.messageSubscription = this.webSocketService
+            .getMessages()
+            .subscribe((message: IMessage) => {
+                this.messages.push(message);
+            });
+    }
+
+    sendMessage() {
+        const message: IMessage = {type: "message", data: "Hello, Server!"};
+        this.webSocketService.sendMessage(message);
+    }
+
+    ngOnDestroy() {
+        // Unsubscribe from WebSocket messages and close the connection
+        if (this.messageSubscription != undefined) {
+            this.messageSubscription.unsubscribe();
+            this.webSocketService.closeConnection();
+        }
     }
 
     @ViewChild(FileSelectManagerComponent)

@@ -92,6 +92,7 @@ from timApp.user.settings.settings import settings_page
 from timApp.user.settings.styles import styles
 from timApp.user.verification.routes import verify
 from timApp.user_profile.routes import profile_blueprint
+from timApp.events.routes import events_blueprint
 from timApp.util.error_handlers import register_errorhandlers
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
@@ -106,6 +107,7 @@ from timApp.util.testing import register_testing_routes
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation import annotations
 from timApp.velp.velp import velps
+from flask_socketio import SocketIO, emit
 
 cache.init_app(app)
 
@@ -173,6 +175,7 @@ blueprints = [
     symbolbutton_plugin,
     ide,
     profile_blueprint,
+    events_blueprint,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:
@@ -469,6 +472,7 @@ def init_app():
 
 def start_app() -> None:
     init_app()
+
     app.run(
         host="0.0.0.0", port=5000, use_evalex=False, use_reloader=False, threaded=True
     )
