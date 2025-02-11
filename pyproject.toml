@@ -76,6 +76,7 @@ cachelib = "<0.10.0"
 qulacs = "^0.6.11"
 flask-babel = "^4.0.0"
 openpyxl = "^3.1.5"
+flask-socketio = "^5.5.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"
