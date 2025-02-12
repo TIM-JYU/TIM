@@ -864,7 +864,10 @@ export class ViewCtrl implements IController {
      * @param ev KeyboardEvent
      */
     keyEventHandler = (ev: KeyboardEvent) => {
-        if (!this.item.rights.editable) {
+        if (
+            !this.item.rights.editable ||
+            !this.isParagraph(document.activeElement as HTMLElement)
+        ) {
             return;
         }
         const modifiers = [];
@@ -891,6 +894,17 @@ export class ViewCtrl implements IController {
                 return;
         }
     };
+
+    isParagraph(el: HTMLElement | null): boolean {
+        if (el === null || el.id === "pars") {
+            return false;
+        }
+        if (el.classList.contains("parContent")) {
+            return true;
+        } else {
+            return this.isParagraph(el.parentElement);
+        }
+    }
 
     /**
      * Opens the paragraph editor on the currently active paragraph.
