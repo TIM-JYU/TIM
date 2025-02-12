@@ -54,7 +54,7 @@
                 </p>
 
 
-                <p ng-show="$ctrl.allowChangePoints()" class="header"><input id="addVelpPoints" type="number" style="width: 50%;"
+                <p class="header"><input ng-if="$ctrl.allowChangePoints()" id="addVelpPoints" type="number" style="width: 50%;"
                                                         title="Default points from this velp"
                                                         ng-model="$ctrl.velp.points"
                                                         step="0.01"
