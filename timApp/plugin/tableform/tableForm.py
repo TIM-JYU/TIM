@@ -102,6 +102,7 @@ class RunScriptModel:
     button: str | None = None
     all: bool | None = None
     update: bool | None = None
+    onMemberAdd: bool | None = None
     interval: int | None = None
 
 

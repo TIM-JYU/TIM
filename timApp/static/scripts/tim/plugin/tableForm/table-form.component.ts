@@ -59,13 +59,18 @@ import {
 import {CommonModule} from "@angular/common";
 import type {IAddmemberResponse} from "tim/ui/add-member.component";
 
-const RunScriptModel = t.type({
-    script: nullable(t.string),
-    button: nullable(t.string),
-    all: nullable(t.boolean),
-    update: nullable(t.boolean),
-    interval: nullable(t.number),
-});
+const RunScriptModel = t.intersection([
+    t.type({
+        script: nullable(t.string),
+        button: nullable(t.string),
+        all: nullable(t.boolean),
+        update: nullable(t.boolean),
+        interval: nullable(t.number),
+    }),
+    t.partial({
+        onMemberAdd: nullable(t.boolean),
+    }),
+]);
 
 interface RunScriptModelType extends t.TypeOf<typeof RunScriptModel> {}
 
@@ -506,6 +511,7 @@ export class TableFormComponent
                 interval: null,
                 handle: undefined,
                 running: 0,
+                onMemberAdd: null,
             };
             if (typeof r === "string") {
                 if (r.length == 0) {
@@ -518,6 +524,7 @@ export class TableFormComponent
                 rs.all = r.all;
                 rs.update = r.update;
                 rs.interval = r.interval;
+                rs.onMemberAdd = r.onMemberAdd;
             }
             let script = "";
             if (s) {
@@ -1654,6 +1661,13 @@ Separate multiple addresses with commas or write each address on a new line.`;
                     "\n\n" +
                     result.not_exist.map((u) => `- ${u}`).join("\n");
                 actionMessage += "\n\n" + notFoundText;
+            }
+
+            if (this.runScripts) {
+                const onAddMemberScripts = this.runScripts
+                    .filter((s) => !!s.onMemberAdd)
+                    .map((s) => this.runJsRunner(s));
+                await Promise.all(onAddMemberScripts);
             }
 
             this.setActionInfoText(actionMessage, 10000);
