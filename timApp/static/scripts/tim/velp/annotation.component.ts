@@ -127,7 +127,7 @@ export async function updateAnnotationServer(
                 <div>
                     <div *ngIf="showFull">
                         <p class="points-input">
-                            <ng-container *ngIf="canEditAnnotation() || allowChangePoints()">
+                            <ng-container *ngIf="canEditAnnotation() && allowChangePoints()">
                                 <label>
                                 Points: <input type="number"
                                                [(ngModel)]="values.points"
@@ -242,6 +242,7 @@ export class AnnotationComponent
             {id: 3, name: "Teachers"},
             {id: 4, name: "Users with access"},
         ],
+        default: 1,
     };
     styleOptions = {
         values: [
@@ -249,6 +250,7 @@ export class AnnotationComponent
             {id: 2, name: "Text"},
             {id: 3, name: "Text (always visible)"},
         ],
+        default: 1,
     };
     newcomment = "";
     showFull = false;
@@ -372,10 +374,6 @@ export class AnnotationComponent
         this.annotation = a;
         this.original = a.getEditableValues();
         this.values = clone(this.original);
-        this.values.visible_to =
-            this.allowChangePoints() || this.vctrl.item.rights.teacher
-                ? this.values.visible_to
-                : 1; /* value for "Just me", ie. visible only the user who added the annotation. */
         this.onColorUpdate(this.values.color ?? "");
         this.refreshMath = true;
     }
