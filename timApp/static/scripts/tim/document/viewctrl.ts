@@ -38,7 +38,10 @@ import * as t from "io-ts";
 import type {ParContext} from "tim/document/structure/parContext";
 import {DerefOption} from "tim/document/structure/derefOption";
 import {enumPars} from "tim/document/structure/iteration";
-import {getParContainerElem} from "tim/document/structure/create";
+import {
+    createParContext,
+    getParContainerElem,
+} from "tim/document/structure/create";
 import type {UserListController} from "tim/answer/userlistController";
 import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import type {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
@@ -69,6 +72,7 @@ import {
     ParMenuHandlePosition,
 } from "tim/document/editing/editing";
 import type {PendingCollection} from "tim/document/editing/edittypes";
+import {EditType} from "tim/document/editing/edittypes";
 import {onClick} from "tim/document/eventhandlers";
 import type {IDocSettings} from "tim/document/IDocSettings";
 import type {
@@ -83,6 +87,7 @@ import type {
 } from "tim/document/viewutils";
 import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
 import type {IRight} from "tim/item/access-role.service";
+import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
 
 markAsUsed(interceptor);
 
@@ -832,6 +837,7 @@ export class ViewCtrl implements IController {
                 }
             });
         }
+        window.addEventListener("keydown", this.keyEventHandler, true);
         this.instantUpdateTasks =
             (this.docSettings.form_mode ?? this.instantUpdateTasks) ||
             getViewName() === "review";
@@ -852,6 +858,71 @@ export class ViewCtrl implements IController {
             this.lastActiveInput = ele;
         }
     };
+
+    /**
+     * Handles keyboard shortcuts utilising the standard modifier keys (CTRL, SHIFT, ALT, META)
+     * @param ev KeyboardEvent
+     */
+    keyEventHandler = (ev: KeyboardEvent) => {
+        if (
+            !this.item.rights.editable ||
+            !this.isParagraph(document.activeElement as HTMLElement)
+        ) {
+            return;
+        }
+        const modifiers = [];
+        if (ev.ctrlKey) {
+            modifiers.push("CTRL");
+        }
+        if (ev.shiftKey) {
+            modifiers.push("SHIFT");
+        }
+        if (ev.altKey) {
+            modifiers.push("ALT");
+        }
+        if (ev.metaKey) {
+            modifiers.push("META");
+        }
+
+        const keys = modifiers.join("+") + "+" + ev.key.toUpperCase();
+
+        switch (keys) {
+            case "CTRL+E":
+                this.openEditor();
+                break;
+            default:
+                return;
+        }
+    };
+
+    isParagraph(el: HTMLElement | null): boolean {
+        if (el === null || el.id === "pars") {
+            return false;
+        }
+        if (el.classList.contains("parContent")) {
+            return true;
+        } else {
+            return this.isParagraph(el.parentElement);
+        }
+    }
+
+    /**
+     * Opens the paragraph editor on the currently active paragraph.
+     */
+    openEditor() {
+        const par = document.activeElement as HTMLElement;
+        if (this.editingHandler.getParEditor()) {
+            this.editingHandler.goToEditor();
+        }
+        const selectedPar = createParContext($(par).closest(".par")[0]);
+        this.editingHandler.toggleParEditor(
+            {
+                type: EditType.Edit,
+                pars: UnbrokenSelection.explicit(selectedPar),
+            },
+            {showDelete: true}
+        );
+    }
 
     /**
      * Registers a table controller to the view controller.
