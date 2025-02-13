@@ -259,7 +259,7 @@ const sortLang = "fi";
                 <ng-container *ngIf="runScripts">
                     <button class="timButton"
                             *ngFor="let s of runScripts"
-                            [hidden]="(!s.all && !cbCount) || !s.button"
+                            [hidden]="(!s.all && !cbCount) || s.onMemberAdd"
                             (click)="runJsRunner(s)">
                         {{ s.button }}
                     </button>
