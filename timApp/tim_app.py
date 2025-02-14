@@ -140,6 +140,10 @@ from timApp.velp.velp_models import (
 )
 from tim_common.timjsonencoder import TimJsonProvider
 
+from gevent import monkey
+
+monkey.patch_all()
+
 # All SQLAlchemy models must be imported in this module.
 all_models = (
     AccessTypeModel,
@@ -242,28 +246,6 @@ all_models = (
 
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
-
-
-tim_socketio = SocketIO()
-tim_socketio.init_app(app, cors_allowed_origins="*")
-
-
-@tim_socketio.on("connect", namespace="/chat")
-def handle_connect():
-    print("Client connected to /chat")
-    emit("message", "Welcome to the WebSocket server!", broadcast=True)
-
-
-@tim_socketio.on("message", namespace="/chat")
-def handle_message(msg):
-    print(f"Received message: {msg}")
-    emit("message", f"Echo: {msg}", broadcast=True)
-
-
-@tim_socketio.on("disconnect", namespace="/chat")
-def handle_disconnect():
-    print("Client disconnected from /chat")
-
 
 app.json = TimJsonProvider(app)
 app.json_provider_class = TimJsonProvider

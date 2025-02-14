@@ -107,7 +107,7 @@ from timApp.util.testing import register_testing_routes
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation import annotations
 from timApp.velp.velp import velps
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, send
 
 cache.init_app(app)
 
@@ -437,6 +437,39 @@ def after_request(resp: Response):
     return resp
 
 
+tim_socketio = SocketIO()  # (logger=True, engineio_logger=True)
+
+
+@tim_socketio.on("connect")
+def handle_connect():
+    print("Client connected to /chat")
+    current_user = get_current_user_object()
+    emit(
+        "message",
+        {
+            "type": "message",
+            "data": f"Welcome to the WebSocket server {current_user.real_name}!",
+        },
+        broadcast=True,
+    )
+
+
+@tim_socketio.on("message")
+def handle_message(msg):
+    print(f"Received message: {msg}")
+    emit(
+        "message",
+        msg,
+        broadcast=True,
+    )
+    # send(msg)
+
+
+@tim_socketio.on("disconnect")
+def handle_disconnect():
+    print("Client disconnected from /chat")
+
+
 def init_app():
     if app.config["PROFILE"]:
         app.wsgi_app = ProfilerMiddleware(
@@ -467,12 +500,19 @@ def init_app():
         log_info(f"Mailman client credentials configured: {check_mailman_connection()}")
         log_info(f"Mailman events REST auth configured: {has_valid_event_auth()}")
 
+    tim_socketio.init_app(
+        app,
+        cors_allowed_origins="*",
+        async_mode="gevent",
+    )
     return app
 
 
 def start_app() -> None:
     init_app()
 
-    app.run(
-        host="0.0.0.0", port=5000, use_evalex=False, use_reloader=False, threaded=True
-    )
+    # app.run(
+    #    host="0.0.0.0", port=5000, use_evalex=False, use_reloader=False, threaded=True
+    # )
+
+    tim_socketio.run(app, host="0.0.0.0", port=5000, debug=True)

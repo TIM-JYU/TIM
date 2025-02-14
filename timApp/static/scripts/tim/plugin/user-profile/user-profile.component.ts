@@ -4,7 +4,7 @@ import type {
     OnDestroy,
     OnInit,
 } from "@angular/core";
-import {Input, NgModule, ViewChild} from "@angular/core";
+import {Input, NgModule, ViewChild, ElementRef} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
@@ -142,8 +142,6 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                     </ul>
                 </div>
                 <div class="right-column">
-                    <p *ngFor="let msg of messages">{{ msg }}</p>
-                    <button (click)="sendMessage()">Send</button>
                     <h2>Your group: {{ myGroupName }}</h2>
                     <ul>
                         <li
@@ -160,6 +158,19 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
         <div *ngIf="!profileVisible && profileId == user?.id" class="alert alert-info flex"><span
                 class="msg-icon glyphicon glyphicon-info-sign"></span>
             <p>Create a profile here. <button class="timButton" (click)="createProfile()">Create</button></p></div>
+        <div>
+  <h2>Chat</h2>
+  <div>
+    <input [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Enter your message" />
+    <button (click)="sendMessage()">Send</button>
+  </div>
+  <div #chatContainer style="height: 20em; overflow-y: auto;">
+    <h3>Messages:</h3>
+    <ul>
+        <li *ngFor="let msg of messages$">{{ msg.data }}</li>
+    </ul>
+  </div>
+</div>
 
     `,
 })
@@ -184,7 +195,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     user?: ICurrentUser;
 
     // Websocket related stuff
-    messages: IMessage[] = [];
+    messages$: IMessage[] = [];
+    newMessage: string = "";
     private messageSubscription?: Subscription;
 
     constructor(
@@ -213,16 +225,36 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.user = Users.getCurrent();
 
         // Subscribe to messages from the WebSocket
-        this.messageSubscription = this.webSocketService
+        /*       this.messageSubscription = this.webSocketService
             .getMessages()
             .subscribe((message: IMessage) => {
-                this.messages.push(message);
-            });
+                console.log("Pushing msg: ", JSON.stringify(message));
+                this.messages.push(JSON.stringify(message));
+            });*/
+        // this.webSocketService.listenSocket();
+        this.messages$ = this.webSocketService.messages$;
     }
 
     sendMessage() {
-        const message: IMessage = {type: "message", data: "Hello, Server!"};
+        const userName = this.user ? this.user.name : "Guest";
+        const message: IMessage = {
+            type: "message",
+            data: `${userName}: ${this.newMessage}`,
+        };
         this.webSocketService.sendMessage(message);
+        this.newMessage = "";
+    }
+
+    @ViewChild("chatContainer") chatContainer!: ElementRef;
+    scrollToBottom(): void {
+        try {
+            this.chatContainer.nativeElement.scrollTop =
+                this.chatContainer.nativeElement.scrollHeight;
+        } catch (err) {}
+    }
+
+    ngAfterViewChecked() {
+        this.scrollToBottom();
     }
 
     ngOnDestroy() {

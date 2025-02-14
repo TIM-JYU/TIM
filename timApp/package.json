@@ -86,6 +86,8 @@
     "reveal.js": "^4.3.1",
     "rxjs": "^7.5.7",
     "sanitize-html": "^2.7.2",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "tslib": "^2.4.0",
     "type-zoo": "^3.4.1",
     "typescript-json-serializer": "^4.3.0",
