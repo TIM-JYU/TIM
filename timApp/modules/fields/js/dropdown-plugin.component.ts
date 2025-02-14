@@ -83,7 +83,7 @@ const DropdownAll = t.intersection([
                 [(ngModel)]="selectedWord"
                 (ngModelChange)="updateSelection()"
                 [ngClass]="{warnFrame: isUnSaved(), alertFrame: saveFailed}"
-                [disabled]="attrsall['preview']"
+                [disabled]="attrsall['preview'] || readonly"
                 [ngStyle]="styles"
                 [tooltip]="connectionErrorMessage"
                 [isOpen]="connectionErrorMessage !== undefined"
@@ -250,7 +250,10 @@ export class DropdownPluginComponent
             this.saveFailed = true;
         }
         this.initialWord = this.selectedWord;
-        return {saved: r.ok, message: this.error};
+        return {
+            saved: r.ok,
+            message: this.error ?? this.connectionErrorMessage,
+        };
     }
 
     updateSelection() {
