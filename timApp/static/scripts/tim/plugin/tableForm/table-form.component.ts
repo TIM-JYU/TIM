@@ -1548,7 +1548,7 @@ export class TableFormComponent
         }
     }
 
-    async runJsRunner(runner: RunScriptType) {
+    async runJsRunner(runner: RunScriptType, users?: string[]) {
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
@@ -1557,11 +1557,10 @@ export class TableFormComponent
         let jsRunner;
         if (this.viewctrl && runnerName) {
             const selUsers = timTable.getCheckedRows(0, true);
-            const users = TableFormComponent.makeUserArray(
-                selUsers,
-                userNameColIndex
-            );
-            jsRunner = await this.viewctrl.runJsRunner(runnerName, users);
+            const userNames =
+                users ??
+                TableFormComponent.makeUserArray(selUsers, userNameColIndex);
+            jsRunner = await this.viewctrl.runJsRunner(runnerName, userNames);
         }
         // JSRunner is able to update all tables automatically
         if (runner.update && !jsRunner?.willAutoRefreshTables()) {
@@ -1666,7 +1665,7 @@ Separate multiple addresses with commas or write each address on a new line.`;
             if (this.runScripts) {
                 const onAddMemberScripts = this.runScripts
                     .filter((s) => !!s.onMemberAdd)
-                    .map((s) => this.runJsRunner(s));
+                    .map((s) => this.runJsRunner(s, []));
                 await Promise.all(onAddMemberScripts);
             }
 
