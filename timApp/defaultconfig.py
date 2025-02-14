@@ -277,6 +277,8 @@ BACKUP_ANSWER_FILE = "answers.backup"
 # The hosts where to back up the answers. Every entry should start with "https://".
 BACKUP_ANSWER_HOSTS = None
 
+ANSWER_LOG_FILE = None
+
 SYNC_USER_GROUPS_SEND_SECRET = None
 """
 Secret to use to when syncing user group info. If None, no user group memberships.
