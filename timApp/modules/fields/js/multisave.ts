@@ -337,6 +337,7 @@ export class MultisaveComponent
                         const reg = new RegExp(`^${o.expect}$`);
                         if (reg.test(msg)) {
                             msg = o.replace;
+                            break;
                         }
                     }
                 }
