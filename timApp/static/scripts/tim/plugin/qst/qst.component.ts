@@ -174,7 +174,7 @@ export class QstComponent
         if (!this.pluginMeta.isPreview()) {
             this.vctrl.addTimComponent(this);
         }
-        if (this.attrsall.markup.invalid || this.attrsall.markup.readonly) {
+        if (this.attrsall.markup.invalid || this.readonly) {
             this.enabled = false;
         }
         this.preview = makePreview(this.attrsall.markup, {
