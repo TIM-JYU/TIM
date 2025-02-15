@@ -21,7 +21,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {parseHexColor, shouldUseDarkText} from "tim/util/colorUtils";
+import {parseHexColor, RGBAtoHex, shouldUseDarkText} from "tim/util/colorUtils";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "tim/util/keycodes";
 import {$http} from "tim/util/ngimport";
@@ -216,10 +216,15 @@ export async function updateAnnotationServer(
                             </button>
                         </span>
                     </div>
-                    <div *ngIf="showFull">
-                        <span class="pull-right glyphicon glyphicon-trash clickable-icon glyph-delete-annotation" title="Delete annotation"
+                    
+                
+                    <div *ngIf="showFull" class="pull-right">
+                        <span class="glyphicon glyphicon-unchecked clickable-icon glyph-dismiss-annotation" title="Dismiss annotation"
                               [hidden]="!canEditAnnotation()"
-                              (click)="deleteAnnotation()"></span>
+                              (click)="toggleAnnotationDismissed($event)" i18n-title></span>
+                        <span class="glyphicon glyphicon-trash clickable-icon glyph-delete-annotation" title="Delete annotation"
+                              [hidden]="!canEditAnnotation()"
+                              (click)="deleteAnnotation()" i18n-title></span>
                     </div>
                     <div class="annotationVisibleText" [hidden]="showFull">
                         {{ getSelectedVisibleOption().name }}
@@ -270,6 +275,7 @@ export class AnnotationComponent
     private refreshMath = false;
     zIndex = 0;
     darkBg = false;
+    dismissed = false;
 
     imageCoordinates = {top: 0, left: 0}; // location of drawn velp on drawCanvas
     imageDimensions = {width: 0, height: 0}; // size of annotation border div on drawCanvas
@@ -575,6 +581,34 @@ export class AnnotationComponent
             return;
         }
         this.rctrl.deleteAnnotation(this.annotation.id);
+    }
+
+    /**
+     * Dismisses the annotation. The annotation is not removed, but it is instead marked as processed or 'done',
+     * and its appearance is made transparent to reflect its dismissed status.
+     */
+    toggleAnnotationDismissed(ev: MouseEvent) {
+        const el = ev.target as HTMLElement;
+        if (this.dismissed) {
+            this.clearColor();
+            el.classList.remove("glyphicon-check");
+            el.classList.add("glyphicon-unchecked");
+            el.title = $localize`Un-dismiss annotation`;
+        } else {
+            // we are assuming colors are always expressed as hex strings
+            const rgba = parseHexColor(this.values.color!);
+            if (!rgba) {
+                return;
+            }
+            rgba.a = 0.5;
+            const hex = RGBAtoHex(rgba);
+            this.values.color = hex ?? this.values.color!;
+            this.onColorUpdate(this.values.color);
+            el.classList.remove("glyphicon-unchecked");
+            el.classList.add("glyphicon-check");
+            el.title = $localize`Dismiss annotation`;
+        }
+        this.dismissed = !this.dismissed;
     }
 
     /**

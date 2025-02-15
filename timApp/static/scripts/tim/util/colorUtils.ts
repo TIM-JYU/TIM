@@ -103,3 +103,29 @@ export function parseRGBAColor(color: string): RGBA | undefined {
     const a = m[4] ? parseFloat(m[4]) : 1;
     return {r, g, b, a};
 }
+
+/**
+ * Convert an RGB or RGBA object to a hex color string.
+ * @param rgba RGB or RGBA object.
+ * @returns hex color string or undefined if not successful.
+ */
+export function RGBAtoHex(rgba: RGBA): string | undefined {
+    const hex = "0123456789ABCDEF";
+    if (!rgba) {
+        return undefined;
+    }
+    let hcolor = "#";
+    const components = rgba.a
+        ? [rgba.r, rgba.g, rgba.b, rgba.a]
+        : [rgba.r, rgba.g, rgba.b];
+    for (const cc of components) {
+        const cval = cc > 1.0 ? cc : Math.round(cc * 255);
+        const hval = hex[Math.trunc(cval / 16)] + hex[cval % 16];
+        hcolor = hcolor + hval;
+    }
+    if ((!rgba.a && hcolor.length == 7) || hcolor.length == 9) {
+        return hcolor;
+    } else {
+        return undefined;
+    }
+}
