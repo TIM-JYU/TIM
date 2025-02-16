@@ -888,6 +888,7 @@ export class ViewCtrl implements IController {
 
         switch (keys) {
             case "CTRL+E":
+                ev.preventDefault(); // Prevent Chrome/ium from shifting focus to the address bar
                 this.openEditor();
                 break;
             default:
