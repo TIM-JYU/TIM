@@ -3,6 +3,11 @@
 Insert only configuration-related things in this file. Do NOT define routes here.
 
 """
+from gevent import monkey
+
+# Enable asynchronous running for sockets etc.
+monkey.patch_all()
+
 import inspect
 import json
 import mimetypes
@@ -139,10 +144,6 @@ from timApp.velp.velp_models import (
     AnnotationComment,
 )
 from tim_common.timjsonencoder import TimJsonProvider
-
-from gevent import monkey
-
-monkey.patch_all()
 
 # All SQLAlchemy models must be imported in this module.
 all_models = (

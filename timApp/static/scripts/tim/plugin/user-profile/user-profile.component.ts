@@ -55,10 +55,7 @@ const UploadedFile = t.intersection([
     }),
 ]);
 
-interface IMessage {
-    type: string;
-    data: string;
-}
+type IMessage = string;
 
 interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 
@@ -167,7 +164,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
   <div #chatContainer style="height: 20em; overflow-y: auto;">
     <h3>Messages:</h3>
     <ul>
-        <li *ngFor="let msg of messages$">{{ msg.data }}</li>
+        <li *ngFor="let msg of messages$">{{ msg }}</li>
     </ul>
   </div>
 </div>
@@ -224,23 +221,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.detailsUrl = `/profile/details/${this.documentId}`;
         this.user = Users.getCurrent();
 
-        // Subscribe to messages from the WebSocket
-        /*       this.messageSubscription = this.webSocketService
-            .getMessages()
-            .subscribe((message: IMessage) => {
-                console.log("Pushing msg: ", JSON.stringify(message));
-                this.messages.push(JSON.stringify(message));
-            });*/
-        // this.webSocketService.listenSocket();
+        // Store messages to variable for asynchronous visualisation in view
         this.messages$ = this.webSocketService.messages$;
     }
 
     sendMessage() {
         const userName = this.user ? this.user.name : "Guest";
-        const message: IMessage = {
-            type: "message",
-            data: `${userName}: ${this.newMessage}`,
-        };
+        const message: IMessage = `${userName}: ${this.newMessage}`;
+
         this.webSocketService.sendMessage(message);
         this.newMessage = "";
     }
