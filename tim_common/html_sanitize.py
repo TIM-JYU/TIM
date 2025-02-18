@@ -120,6 +120,7 @@ TIM_SAFE_TAGS = [
     "tim-course-manager",
     "tim-todo",
     "tim-badge",
+    "tim-badge-test",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
