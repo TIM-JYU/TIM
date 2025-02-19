@@ -119,6 +119,8 @@ TIM_SAFE_TAGS = [
     "tim-participant-list",
     "tim-course-manager",
     "tim-todo",
+    "tim-badge",
+    "tim-badge-test",
     "tim-badges",
 ]
 

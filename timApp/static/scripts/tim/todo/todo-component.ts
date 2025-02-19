@@ -10,19 +10,22 @@ import type {IAnswer} from "tim/answer/IAnswer";
 @Component({
     selector: "tim-todo",
     template: `
-        <p>Hello world! id: {{userID}}</p>
-        <div *ngFor="let answer of answers">{{answer.points}}</div>
+        <p>Hello {{userName}}! {{xp}} XP</p>
+        <div *ngFor="let answer of answers"></div>
     `,
     styleUrls: [],
 })
 export class TodoListComponent implements OnInit {
     userID?: number;
+    userName?: string;
     answers?: IAnswer[];
+    xp?: number;
     constructor(private http: HttpClient) {}
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
             this.userID = Users.getCurrent().id;
+            this.userName = Users.getCurrent().name;
         }
         this.fetchAnswers();
     }
@@ -39,6 +42,12 @@ export class TodoListComponent implements OnInit {
 
         if (result.ok) {
             this.answers = result.result;
+            this.xp = 0;
+            for (const alkio of this.answers) {
+                if (alkio.points != undefined) {
+                    this.xp += alkio.points * 100;
+                }
+            }
             console.log(this.answers);
         }
 
