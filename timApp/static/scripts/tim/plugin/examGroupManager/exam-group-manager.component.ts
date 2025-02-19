@@ -122,13 +122,22 @@ const ExamT = t.type({
     url: t.union([t.string, t.null]),
 });
 
+const ExamWithPracticeT = t.intersection([
+    ExamT,
+    t.partial({
+        practice: t.union([ExamT, t.null]),
+    }),
+]);
+
 export interface Exam extends t.TypeOf<typeof ExamT> {}
+
+export interface ExamWithPractice extends t.TypeOf<typeof ExamWithPracticeT> {}
 
 const ExamManagerMarkup = t.intersection([
     t.type({
         groupsPath: withDefault(t.string, ""),
         showAllGroups: withDefault(t.boolean, false),
-        exams: withDefault(t.array(ExamT), []),
+        exams: withDefault(t.array(ExamWithPracticeT), []),
     }),
     t.partial({
         extraInfoTitle: t.string,
@@ -393,7 +402,7 @@ export class ToggleComponent {
                                             i18n>
                                         Print login codes (Main exam)
                                     </button>
-                                    <button class="timButton" *ngIf="markup['practiceExam']"
+                                    <button class="timButton" *ngIf="examByDocId.get(group.examDocId ?? -1)?.practice ?? markup['practiceExam']"
                                             (click)="printLoginCodes(group, true)" i18n>
                                         Print login codes (Practice exam)
                                     </button>
@@ -430,9 +439,9 @@ export class ToggleComponent {
                                 <select id="current-exam-doc-{{group.id}}" name="current-exam-doc-{{group.id}}" class="form-control"
                                         [ngModel]="group.currentExamDoc"
                                         (ngModelChange)="confirmSelectExam(group, $event)">
-                                    <option *ngIf="markup['practiceExam']"
-                                            [ngValue]="markup['practiceExam'].docId">
-                                        {{ markup['practiceExam'].name }}
+                                    <option *ngIf="examByDocId.get(group.examDocId ?? -1) ?? markup['practiceExam']"
+                                            [ngValue]="examByDocId.get(group.examDocId ?? -1)?.practice?.docId ?? markup['practiceExam']?.docId ?? -1">
+                                        {{ examByDocId.get(group.examDocId ?? -1)?.practice?.name ?? markup['practiceExam']?.name ?? "" }}
                                     </option>
                                     <option *ngIf="group.examDocId && examByDocId.get(group.examDocId)"
                                             [ngValue]="examByDocId.get(group.examDocId)?.docId">
@@ -741,7 +750,7 @@ export class ExamGroupManagerComponent
     // Members visible on the currently active group tab (in the group members table)
     members: Record<string, GroupMember[]> = {};
     error?: string;
-    examByDocId = new Map<number, Exam>();
+    examByDocId = new Map<number, ExamWithPractice>();
 
     allowRestrictedAccess: boolean = false;
 
@@ -770,6 +779,9 @@ export class ExamGroupManagerComponent
 
         for (const exam of this.markup.exams) {
             this.examByDocId.set(exam.docId, exam);
+            if (exam.practice) {
+                this.examByDocId.set(exam.practice.docId, exam.practice);
+            }
         }
         if (this.markup.practiceExam) {
             this.examByDocId.set(
@@ -1454,7 +1466,7 @@ export class ExamGroupManagerComponent
         return undefined;
     }
 
-    getExamUrl(exam?: Exam) {
+    getExamUrl(exam?: ExamWithPractice) {
         if (!exam) {
             return "";
         }
