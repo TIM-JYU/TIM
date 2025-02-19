@@ -116,6 +116,7 @@ export class QstComponent
     private newAnswer?: AnswerTable;
     private changes = false;
     saveFailed = false;
+    private enabled = true;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -173,11 +174,14 @@ export class QstComponent
         if (!this.pluginMeta.isPreview()) {
             this.vctrl.addTimComponent(this);
         }
+        if (this.attrsall.markup.invalid || this.readonly) {
+            this.enabled = false;
+        }
         this.preview = makePreview(this.attrsall.markup, {
             answerTable: this.attrsall.state ?? [],
             showCorrectChoices: this.attrsall.show_result,
             showExplanations: this.attrsall.show_result,
-            enabled: !this.attrsall.markup.invalid,
+            enabled: this.enabled,
         });
         this.button = this.buttonText() ?? $localize`Save`;
     }
@@ -337,7 +341,7 @@ export class QstComponent
         if (data.web.markup && data.web.show_result) {
             this.preview = makePreview(data.web.markup, {
                 answerTable: data.web.state,
-                enabled: true,
+                enabled: this.enabled ?? true,
             });
             this.preview.showExplanations = true;
             this.preview.showCorrectChoices = true;
@@ -354,7 +358,7 @@ export class QstComponent
             answerTable: this.savedAnswer,
             showCorrectChoices: this.attrsall.show_result,
             showExplanations: this.attrsall.show_result,
-            enabled: !this.attrsall.markup.invalid,
+            enabled: this.enabled,
         });
         this.checkChanges();
         this.saveFailed = false;

@@ -5,14 +5,23 @@ So, do NOT import anything client-side-specific (like AngularJS) in this module 
 
 import * as t from "io-ts";
 
+export const PointsLimiterSettings = t.partial({
+    min: t.number,
+    max: t.number,
+});
+
+export interface IPointsLimiterSettings
+    extends t.TypeOf<typeof PointsLimiterSettings> {}
+
 export const AnswerBrowserSettings = t.partial({
     pointsStep: nullable(t.number),
     validOnlyText: t.string,
     showValidOnly: t.boolean,
     showReview: t.boolean,
     showInitialAskNew: t.boolean,
+    autosave: t.boolean,
+    limitPoints: nullable(PointsLimiterSettings),
 });
-
 export interface IAnswerBrowserSettings
     extends t.TypeOf<typeof AnswerBrowserSettings> {
     // Empty

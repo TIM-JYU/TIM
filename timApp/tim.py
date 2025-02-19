@@ -42,6 +42,7 @@ from timApp.document.editing.routes_clipboard import clipboard
 from timApp.document.minutes.routes import minutes_blueprint
 from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
+from timApp.gamification.badges import Badge
 from timApp.gamification.generateMap import generateMap
 from timApp.item.distribute_rights import dist_bp
 from timApp.item.manage import manage_page
@@ -265,6 +266,26 @@ def empty_response_route():
 @app.get("/ping")
 def ping():
     return ok_response()
+
+
+@app.get("/test_add_badge")
+def test_add_badge():
+    badge = Badge(
+        title="Hard worker",
+        description="You have worked really hard!",
+        color="red",
+        shape="hexagon",
+        image=2,
+    )
+    db.session.add(badge)
+    db.session.commit()
+
+
+@app.get("/test_get_badges")
+def test_get_badges():
+    badges = Badge(title="someTitle")
+    badges.to_json()
+    return badges
 
 
 @app.get("/time")

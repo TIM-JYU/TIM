@@ -2,7 +2,7 @@ import copy
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TypedDict, Any, DefaultDict, Literal, Sequence
 
 from sqlalchemy import func, select, Row
@@ -160,6 +160,9 @@ class ItemRightActionData:
     accessType: AccessType | None = None
     accessibleFrom: datetime | None = None
     accessibleTo: datetime | None = None
+    durationFrom: datetime | None = None
+    durationTo: datetime | None = None
+    durationSeconds: float | None = None
 
 
 ItemRightActionSchema = class_schema(ItemRightActionData)
@@ -855,6 +858,11 @@ def _handle_item_right_actions(
                         access_type,
                         accessible_from=action.accessibleFrom,
                         accessible_to=action.accessibleTo,
+                        duration_from=action.durationFrom,
+                        duration_to=action.durationTo,
+                        duration=timedelta(seconds=action.durationSeconds)
+                        if action.durationSeconds
+                        else None,
                     )
                 case "expire":
                     expire_access(group, itm, access_type)

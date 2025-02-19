@@ -304,6 +304,100 @@ class GroupTest(TimRouteTest):
             expect_status=400,
         )
 
+    def test_groups_add_create_missing(self):
+        """
+        Test create_missing_users option when adding users to a group.
+        """
+        self.init_groupadmin()
+
+        groupname = "test_add_create_missing1"
+        self.get(f"/groups/create/{groupname}")
+
+        # Cannot create missing users if setting not set
+        self.json_post(
+            f"/groups/addmember/{groupname}",
+            {
+                "names": ["test_add_create_user1@test.com"],
+                "create_missing_users": True,
+            },
+            expect_status=400,
+            expect_content={"error": "Creating missing users is not allowed."},
+        )
+
+        with self.temp_config({"GROUPS_MISSING_USER_CREATE_ALLOW": True}):
+            self.json_post(
+                f"/groups/addmember/{groupname}",
+                {
+                    "names": ["test_add_create_user1@test.com"],
+                    "create_missing_users": True,
+                },
+                expect_content={
+                    "added": ["test_add_create_user1@test.com"],
+                    "already_belongs": [],
+                    "not_exist": [],
+                },
+            )
+
+            u = User.get_by_email("test_add_create_user1@test.com")
+            self.assertIsNotNone(u)
+            self.assertEqual(u.name, "test_add_create_user1@test.com")
+            self.assertEqual(u.email, "test_add_create_user1@test.com")
+
+    def test_groups_add_notify(self):
+        """
+        Test notify option when adding users to a group.
+        """
+
+        self.init_groupadmin()
+        sent_mails_in_testing.clear()
+
+        groupname = "test_add_notify1"
+        self.get(f"/groups/create/{groupname}")
+
+        with self.temp_config(
+            {
+                "GROUPS_MISSING_USER_CREATE_ALLOW": True,
+                "GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_HEAD": "GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_HEAD",
+                "GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_BODY": "GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_BODY",
+                "GROUPS_MISSING_USER_ADD_NOTIFY_HEAD": "GROUPS_MISSING_USER_ADD_NOTIFY_HEAD",
+                "GROUPS_MISSING_USER_ADD_NOTIFY_BODY": "GROUPS_MISSING_USER_ADD_NOTIFY_BODY",
+            }
+        ):
+            self.json_post(
+                "/groups/addmember/test_add_notify1",
+                {
+                    "names": [
+                        self.test_user_1.name,
+                        "test_add_notify_non_existing1@test.com",
+                    ],
+                    "notify_new": True,
+                    "create_missing_users": True,
+                },
+                expect_content={
+                    "added": [
+                        "test_add_notify_non_existing1@test.com",
+                        self.test_user_1.name,
+                    ],
+                    "already_belongs": [],
+                    "not_exist": [],
+                },
+            )
+
+            self.assertEqual(len(sent_mails_in_testing), 2)
+            self.assertEqual(
+                {
+                    (
+                        "GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_HEAD",
+                        "GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_BODY",
+                    ),
+                    (
+                        "GROUPS_MISSING_USER_ADD_NOTIFY_HEAD",
+                        "GROUPS_MISSING_USER_ADD_NOTIFY_BODY",
+                    ),
+                },
+                {(m["subject"], m["msg"]) for m in sent_mails_in_testing},
+            )
+
     def test_groups_trim(self):
         self.init_admin()
         self.get("/groups/create/testing1")

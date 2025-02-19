@@ -85,6 +85,7 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
 
 import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
+import {BadgesComponent} from "tim/badges/badges.component";
 
 BackspaceDisabler.disable();
 
@@ -161,6 +162,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timTodo", TodoListComponent);
     doDowngrade(dg, "timBadge", BadgeComponent);
     doDowngrade(dg, "timBadgeTest", BadgeTestComponent);
+    doDowngrade(dg, "timBadges", BadgesComponent);
     return dg;
 }
 

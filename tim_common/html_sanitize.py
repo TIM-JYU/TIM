@@ -121,6 +121,7 @@ TIM_SAFE_TAGS = [
     "tim-todo",
     "tim-badge",
     "tim-badge-test",
+    "tim-badges",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
