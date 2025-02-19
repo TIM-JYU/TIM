@@ -179,6 +179,12 @@ HAS_HTTPS = TIM_HOST.startswith("https:")
 SESSION_COOKIE_SAMESITE = "Lax" if HAS_HTTPS else None
 SESSION_COOKIE_SECURE = HAS_HTTPS  # Require HTTPS or localhost for session cookies
 
+DEFAULT_UI_LANGUAGE = None
+"""
+The default UI language to use when user's language is not explicitly set. 
+If not set, determines the language based on the user's browser settings.
+"""
+
 BOOKMARKS_ENABLED = True
 
 # If False, only admins can create folders and documents.
