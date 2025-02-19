@@ -108,13 +108,18 @@ class Exam:
 
 
 @dataclass
+class ExamWithPractice(Exam):
+    practice: Exam | None = None
+
+
+@dataclass
 class ExamGroupManagerMarkup(GenericMarkupModel):
     groupsPath: str | Missing = missing
     extraInfoTitle: str | Missing = missing
     showAllGroups: bool = False
     show: ViewOptionsMarkup = field(default_factory=ViewOptionsMarkup)
     groupNamePrefix: str | Missing = missing
-    exams: list[Exam] = field(default_factory=list)
+    exams: list[ExamWithPractice] = field(default_factory=list)
     practiceExam: Exam | Missing = missing
 
 
@@ -760,16 +765,26 @@ def print_login_codes(
     users = _get_exam_group_members_json(ug)
 
     plugin, _ = _get_plugin_markup(GlobalParId(doc_id, par_id))
-    if practice and not plugin.practiceExam:
-        raise NotExist(gettext("Practice exam not set in the plugin markup."))
 
     exams_by_doc_id = {e.docId: e for e in plugin.exams}
 
-    exam = (
+    exam: Exam | None = (
         exams_by_doc_id.get(extra_data.examDocId, None)
-        if not practice and not isinstance(extra_data.examDocId, Missing)
-        else plugin.practiceExam
+        if not isinstance(extra_data.examDocId, Missing)
+        else None
     )
+
+    if practice:
+        exam = exam.practice if isinstance(exam, ExamWithPractice) else None
+        if not exam and isinstance(plugin.practiceExam, Exam):
+            exam = plugin.practiceExam
+
+    if practice and not exam:
+        raise NotExist(gettext("Practice exam not set in the plugin markup."))
+
+    if not exam:
+        raise NotExist(gettext("Exam info not found in the plugin markup."))
+
     exam_url: str | None = None
     exam_title: str | None = None
     if exam and not isinstance(exam, Missing):
