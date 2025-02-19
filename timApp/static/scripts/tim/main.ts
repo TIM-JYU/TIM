@@ -157,7 +157,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timParticipantList", ParticipantListComponent);
     doDowngrade(dg, "timCourseManager", CourseManagerComponent);
     doDowngrade(dg, "timTodo", TodoListComponent);
-    doDowngrade(dg, "badges", BadgesComponent);
+    doDowngrade(dg, "timBadges", BadgesComponent);
     return dg;
 }
 
