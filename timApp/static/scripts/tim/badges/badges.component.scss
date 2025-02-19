@@ -1,19 +1,16 @@
-.badge-container {
+.badges-container {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  margin-top: 20px;
 }
 
 .badge {
-  padding: 10px;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.badge-icon {
-  width: 30px;
-  height: 30px;
+  color: white;                  /* Text color */
+  padding: 8px 16px;             /* Padding around the text */
+  border-radius: 12px;           /* Rounded corners for shape */
+  font-size: 14px;               /* Font size */
+  display: inline-block;         /* Allow the badges to appear inline */
+  text-align: center;            /* Center the text inside the badge */
+  font-weight: bold;             /* Optional: Make text bold */
 }

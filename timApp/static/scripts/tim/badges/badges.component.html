@@ -1,1 +1,7 @@
-<p>Hello kitty</p>
+<button (click)="addBadge()">Add a badge</button>
+
+<div class="badges-container">
+  <div *ngFor="let badge of badges" class="badge" [style.background-color]="badge.color">
+    {{ badge.text }}
+  </div>
+</div>
