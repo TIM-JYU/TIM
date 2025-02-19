@@ -10531,7 +10531,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="6129598176641143387" datatype="html">
         <source>New members will be notified by email.</source>
-        <target state="translated">Uusille jäsenille on lähetetään ilmoitus sähköpostitse.</target>
+        <target state="translated">Uusille käyttäjille lähetetään ilmoitus sähköpostitse.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1638,1636</context>
@@ -10540,7 +10540,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       <trans-unit id="8143693159335456296" datatype="html">
         <source>Please provide email addresses or usernames.
 Separate multiple addresses with commas or write each address on a new line.</source>
-        <target state="translated">Anna ryhmään lisättävät sähköpostiosoitteet tai käyttäjätunnukset.
+        <target state="translated">Anna ryhmään lisättävät sähköpostiosoitteet.
 Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
@@ -10585,6 +10585,22 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">47,49</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="808449486721217429" datatype="html">
+        <source>&lt;b&gt;Really remove the following users from group&lt;/b&gt; </source>
+        <target state="translated">&lt;b&gt;Poistetaanko seuraavat käyttäjätunnukset ryhmästä&lt;/b&gt; </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1204</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5532251880411219076" datatype="html">
+        <source>Remove users from group </source>
+        <target state="translated">Poista käyttäjät ryhmästä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1209</context>
         </context-group>
       </trans-unit>
     </body>

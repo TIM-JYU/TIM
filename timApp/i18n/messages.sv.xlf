@@ -10492,6 +10492,22 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">1653</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="808449486721217429" datatype="html">
+        <source>&lt;b&gt;Really remove the following users from group&lt;/b&gt; </source>
+        <target state="new">&lt;b&gt;Really remove the following users from group&lt;/b&gt; </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1204</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5532251880411219076" datatype="html">
+        <source>Remove users from group </source>
+        <target state="new">Remove users from group </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1209</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

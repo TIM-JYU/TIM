@@ -1201,12 +1201,12 @@ export class TableFormComponent
         const dr = await to2(
             showInputDialog({
                 text:
-                    "<b>Really remove the following users from group:</b> " +
+                    $localize`<b>Really remove the following users from group</b> ` +
                     group +
-                    "<br>\n<pre>\n" +
+                    "<b>?</b><br>\n<pre>\n" +
                     msg +
                     "\n</pre>",
-                title: "Remove users from group " + group,
+                title: $localize`Remove users from group ` + group,
                 isInput: InputDialogKind.ValidatorOnly,
                 validator: async () => {
                     const ulist = TableFormComponent.makeUserList(
