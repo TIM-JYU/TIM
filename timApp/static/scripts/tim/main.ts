@@ -28,6 +28,7 @@ import * as velpSelection from "tim/velp/velpSelection";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {AppModule} from "tim/app.module";
 import {TodoListComponent} from "tim/todo/todo-component";
+import {BadgeComponent} from "tim/Badge/Badge-component";
 import {HeaderComponent} from "tim/header/header.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";

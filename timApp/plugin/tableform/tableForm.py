@@ -1,13 +1,16 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
-import io
-import json
+import datetime
+import io, json, re
 from dataclasses import dataclass, asdict, field
-from typing import Any, TypedDict, Sequence
+from typing import Any, TypedDict, Sequence, Tuple
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from flask import render_template_string, Response, send_file
 from marshmallow.utils import missing
+from openpyxl import Workbook
+from openpyxl.writer.excel import ExcelWriter
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from webargs.flaskparser import use_args
@@ -99,6 +102,7 @@ class RunScriptModel:
     button: str | None = None
     all: bool | None = None
     update: bool | None = None
+    onMemberAdd: bool | None = None
     interval: int | None = None
 
 
@@ -155,6 +159,9 @@ class TableFormMarkupModel(GenericMarkupModel):
     usernames: bool | Missing = missing
     dataView: DataViewSettingsModel | Missing | None = missing
     replyToEmail: str | Missing | None = missing
+    addUsersButton: str | Missing | None = missing
+    notifyOnAdd: bool | Missing = False
+    createMissingUsers: bool | Missing = False
 
 
 TableFormMarkupSchema = class_schema(TableFormMarkupModel)
@@ -316,7 +323,7 @@ def render_static_table_form(m: TableFormHtmlModel) -> str:
 
 
 @dataclass
-class GenerateCSVModel:
+class GenerateSpreadSheetModel:
     docId: int
     fields: list[str]
     groups: list[str]
@@ -333,7 +340,7 @@ class GenerateCSVModel:
     downloadAsExcelFile: str | Missing = missing
 
 
-GenerateCSVSchema = class_schema(GenerateCSVModel)
+GenerateSpreadSheetSchema = class_schema(GenerateSpreadSheetModel)
 
 
 class TableformAnswerResp(PluginAnswerResp):
@@ -442,12 +449,19 @@ def check_field_filtering(
 
 
 @tableForm_plugin.get("/generateCSV")
-@use_args(GenerateCSVSchema())
-def gen_csv(args: GenerateCSVModel) -> Response | str:
+@use_args(GenerateSpreadSheetSchema())
+def gen_csv_legacy(args: GenerateSpreadSheetModel) -> Response | str:
+    """Legacy route for documents that have direct links to the route."""
+    return gen_spreadsheet(args)
+
+
+@tableForm_plugin.get("/generateReport")
+@use_args(GenerateSpreadSheetSchema())
+def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
     """
     Generates a report defined by tableForm attributes
     # TODO: generic, move
-    :return: CSV containing headerrow and rows for users and values
+    :return: SpreadSheet in CSV or .xlsx format containing header row and rows for users and values
     """
     curr_user = get_current_user_object()
     (
@@ -552,36 +566,135 @@ def gen_csv(args: GenerateCSVModel) -> Response | str:
         data.append(row_data)
 
     csv = csv_string(data, "excel", separator)
+    csv, output = filter_csv_report(args.reportFilter, csv)
+
+    if args.downloadAsExcelFile and isinstance(args.downloadAsExcelFile, str):
+        file_name = args.downloadAsExcelFile
+        file_ext = file_name.split(".")[-1]
+        match file_ext:
+            case "xlsx":
+                num_re = re.compile(r"(^[\d,.\- ]+)")
+                wb = Workbook()
+                # ws = wb.active
+                # grab the worksheet directly since wb.active seems to have some typing issues
+                ws = wb.worksheets[0]
+
+                # Only rudimentary value conversions are supported for now (see parse_row(rd, regex_filter))
+                # TODO: implement configurable filtering/type-casting via JSRunner, like with CSVs
+                for rowd in data:
+                    rd = rowd.copy()
+                    parse_row(rd, num_re)
+                    ws.append(rd)
+
+                fileio = save_workbook_to_memory(wb)
+                return create_and_send_report(
+                    file_name,
+                    fileio,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            case "csv":
+                output_content = output + csv
+                return create_and_send_report(file_name, output_content, "text/csv")
+            case _:
+                return text_response(csv)
+
+    return text_response(csv)
+
+    # """
+    #     # This did not work because if code is just return data; then it is not identical when returned
+    #     if args.reportFilter:
+    #         params = {'code': args.reportFilter, 'data': data}
+    #         data, output = jsrunner_run(params)
+    #     return csv_response(data, 'excel', separator)
+    # """
+
+
+def save_workbook_to_memory(wb: Workbook) -> io.BytesIO:
+    """Saves a Workbook to memory instead of on disk.
+    This is a convenience function so that we do not need to create temporary files on disk when exporting spreadsheets.
+    """
+    if wb.write_only and not wb.worksheets:
+        wb.create_sheet()
+
+    wb.properties.modified = datetime.datetime.now(tz=datetime.timezone.utc).replace(
+        tzinfo=None
+    )
+    buffer = io.BytesIO()
+    with ZipFile(buffer, "w", ZIP_DEFLATED, allowZip64=True) as archive:
+        writer = ExcelWriter(wb, archive)
+        writer.save()
+
+    buffer.seek(0)
+    return buffer
+
+
+def parse_row(rd: list[str | float | None], regex_filter: re.Pattern) -> None:
+    for i in range(len(rd)):
+        m = regex_filter.match(rd[i]) if rd[i] else None
+        if m:
+            val = m.group(0)
+            val = val.replace(" ", "")
+            # Determine whether the value should be negative. Only the presence of a minus sign matters,
+            # an even number of minus signs preceding the number does not indicate a positive value.
+            negative = "-" in val
+            val = val.replace("-", "")
+
+            if len(val) == 0:
+                rd[i] = None
+                continue
+            dot, comma = val.find("."), val.find(",")
+            decimal_sep = (
+                "dot"
+                if ((-1 < dot < comma) or (comma == -1 < dot))
+                else "comma"
+                if ((-1 < comma < dot) or (dot == -1 < comma))
+                else None
+            )
+            match decimal_sep:
+                case "dot":
+                    val = val.replace(",", "")
+                    val = val[: dot + 1] + (val[dot + 1 :].replace(".", ""))
+                    if len(val) > 1:
+                        rd[i] = float(val) if not negative else -float(val)
+                    else:
+                        rd[i] = None
+                case "comma":
+                    val = val.replace(".", "")
+                    val = val[: comma + 1] + (val[comma + 1 :].replace(",", ""))
+                    val = val.replace(",", ".")
+                    if len(val) > 1:
+                        rd[i] = float(val) if not negative else -float(val)
+                    else:
+                        rd[i] = None
+                case _:
+                    rd[i] = int(val) if not negative else -int(val)
+
+
+def filter_csv_report(report_filter: str | Missing, content: str) -> Tuple[str, str]:
+    csv = content
     output = ""
-    if isinstance(args.reportFilter, str) and args.reportFilter:
-        params = JsRunnerParams(code=args.reportFilter, data=csv)
+    if isinstance(report_filter, str) and report_filter:
+        params = JsRunnerParams(code=report_filter, data=content)
         try:
             csv, output = jsrunner_run(params)
         except JsRunnerError as e:
             raise RouteException("Error in JavaScript: " + str(e)) from e
+    return csv, output
 
-    if args.downloadAsExcelFile and isinstance(args.downloadAsExcelFile, str):
-        file_name = args.downloadAsExcelFile
-        output_content = output + csv
+
+def create_and_send_report(
+    filename: str, content: str | io.BytesIO, mimetype: str
+) -> Response:
+    file_io = content
+    if not isinstance(content, io.BytesIO):
         # Re-encode to UTF-8-BOM since that's what Excel opens by default
-        file_io = io.BytesIO(output_content.encode("utf-8-sig"))
-        return send_file(
-            file_io,
-            as_attachment=True,
-            download_name=file_name,
-            mimetype="text/csv",
-        )
-
-    return text_response(output + csv)
-
-
-"""
-    # This did not work because if code is just return data; then it is not identical when returned
-    if args.reportFilter:
-        params = {'code': args.reportFilter, 'data': data}
-        data, output = jsrunner_run(params)
-    return csv_response(data, 'excel', separator)
-"""
+        file_io = io.BytesIO(content.encode("utf-8-sig"))
+    return send_file(
+        file_io,
+        as_attachment=True,
+        download_name=filename,
+        mimetype=mimetype,
+    )
 
 
 @dataclass

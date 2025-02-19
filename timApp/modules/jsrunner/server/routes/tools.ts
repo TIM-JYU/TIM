@@ -234,6 +234,9 @@ export const ItemRightActionT = t.intersection([
         ]),
         accessibleFrom: DateString,
         accessibleTo: DateString,
+        durationFrom: DateString,
+        durationTo: DateString,
+        durationSeconds: t.number,
     }),
 ]);
 

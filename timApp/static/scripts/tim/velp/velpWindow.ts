@@ -15,6 +15,7 @@ import type {
     IVelpGroupUI,
     IVelpUI,
 } from "tim/velp/velptypes";
+import {clamp} from "tim/util/math";
 
 /**
  * Created by Seppo Tarvainen on 25.11.2016.
@@ -43,6 +44,7 @@ interface IVelpOptionSetting {
     title: string;
     values: number[];
     names: string[];
+    default: number;
 }
 
 /**
@@ -78,8 +80,11 @@ export class VelpWindowController implements IController {
         this.velpLocal = clone(this.velp);
 
         if (this.velp.visible_to == null) {
-            this.velp.visible_to = 4; // Everyone by default
+            this.velp.visible_to = this.setDefaultVisibility(
+                this.visibleOptions.default
+            );
         }
+
         if (this.velp.style == null) {
             this.velp.style = 1;
         }
@@ -119,12 +124,14 @@ export class VelpWindowController implements IController {
                 "Teachers",
                 "Users with access",
             ],
+            default: 1,
         };
         this.styleOptions = {
             type: "select",
             title: "Style",
             values: [1, 2, 3],
             names: ["Default", "Text", "Text (always visible)"],
+            default: 1,
         };
         this.settings = {
             teacherRightsError:
@@ -158,6 +165,12 @@ export class VelpWindowController implements IController {
         return "Save";
     }
 
+    setDefaultVisibility(def: number) {
+        return this.vctrl.item.rights.teacher
+            ? this.velp.visible_to ?? 4 // Teachers' velps are public by default
+            : clamp(def, 1, this.visibleOptions.values.length);
+    }
+
     /**
      * Toggles velp for editing. If another velp is currently open,
      * this method closes it.
@@ -180,6 +193,9 @@ export class VelpWindowController implements IController {
 
             if (this.new) {
                 this.velpLocal = clone(this.velp);
+                this.velp.visible_to = this.setDefaultVisibility(
+                    this.visibleOptions.default
+                );
                 // TODO: focus velp content textarea
             }
             this.velpSelection.setVelpToEdit(this.velp, () =>
@@ -220,6 +236,9 @@ export class VelpWindowController implements IController {
 
     useVelp() {
         if (!this.velp.edit && !this.notAnnotationRights(this.velp.points)) {
+            this.velp.visible_to = this.setDefaultVisibility(
+                this.visibleOptions.default
+            );
             this.onVelpSelect({$VELP: this.velp});
         }
     }

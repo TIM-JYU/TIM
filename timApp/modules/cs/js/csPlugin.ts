@@ -1289,7 +1289,9 @@ export class CsController extends CsBase implements ITimComponent {
             return;
         }
 
-        this.editor.setReadOnly(this.markup.editorreadonly === true);
+        this.editor.setReadOnly(
+            this.markup.editorreadonly === true || this.readonly
+        );
         if (this.attrsall.submittedFiles || this.markup.files) {
             const files = new OrderedSet<EditorFile>((f) => f.path);
             const defaultMode =
@@ -1589,7 +1591,7 @@ export class CsController extends CsBase implements ITimComponent {
         }
         await this.runCode();
         this.cdr.detectChanges();
-        return {saved: true, message: undefined};
+        return {saved: !this.edited, message: this.connectionErrorMessage};
     }
 
     formBehavior(): FormModeOption {

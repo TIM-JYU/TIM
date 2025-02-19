@@ -126,12 +126,16 @@ export async function updateAnnotationServer(
                 
                 <div>
                     <div *ngIf="showFull">
-                        <p class="points-input" [hidden]="!canEditAnnotation() || !allowChangePoints()"><label>
-                            Points: <input type="number"
-                                           [(ngModel)]="values.points"
-                                           step="any"
-                                           [disabled]="!canEditAnnotation()"/></label>
-                            <span [hidden]="!canEditAnnotation()" style="float: right">
+                        <p class="points-input">
+                            <ng-container *ngIf="canEditAnnotation() && allowChangePoints()">
+                                <label>
+                                Points: <input type="number"
+                                               [(ngModel)]="values.points"
+                                               step="any"
+                                               [disabled]="!canEditAnnotation()"/>
+                                </label>
+                            </ng-container>
+                            <span *ngIf="canEditAnnotation()" style="float: right">
                                 <input type="color" [(ngModel)]="values.color"
                                        (ngModelChange)="onColorUpdate($event)"
                                        title="Change annotation color"
@@ -238,6 +242,7 @@ export class AnnotationComponent
             {id: 3, name: "Teachers"},
             {id: 4, name: "Users with access"},
         ],
+        default: 1,
     };
     styleOptions = {
         values: [
@@ -245,6 +250,7 @@ export class AnnotationComponent
             {id: 2, name: "Text"},
             {id: 3, name: "Text (always visible)"},
         ],
+        default: 1,
     };
     newcomment = "";
     showFull = false;

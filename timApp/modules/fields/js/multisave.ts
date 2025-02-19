@@ -16,7 +16,7 @@ import {
     Info,
     withDefault,
 } from "tim/plugin/attributes";
-import {escapeRegExp, scrollToElement} from "tim/util/utils";
+import {escapeRegExp, scrollToElement, timeout} from "tim/util/utils";
 import type {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -49,6 +49,15 @@ const multisaveMarkup = t.intersection([
         testOnly: t.boolean,
         savedText: t.string,
         unsavedText: t.string,
+        timer: t.number,
+        saveDelay: t.number,
+        showMessages: t.boolean,
+        messageOverrides: t.array(
+            t.type({
+                expect: t.string,
+                replace: t.string,
+            })
+        ),
     }),
     GenericPluginMarkup,
     t.type({
@@ -92,6 +101,9 @@ const multisaveAll = t.intersection([
                 </li>
             </ul>
         </div>
+        <div *ngIf="saveMessages" class="saveMessages">
+            <div *ngFor="let m of saveMessages">{{m}}</div>
+        </div>
         <div *ngIf="allSaved()">
             {{allSavedText}}
         </div>
@@ -133,6 +145,8 @@ export class MultisaveComponent
     unsavedTasksWithAliases: {component: ITimComponent; alias?: string}[] = [];
     requiresTaskId = false;
     listener = false;
+    timer?: number;
+    saveMessages: string[] = [];
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -295,6 +309,9 @@ export class MultisaveComponent
 
         const promises = [];
         for (const v of componentsToSave) {
+            if (this.markup.saveDelay) {
+                await timeout(this.markup.saveDelay);
+            }
             const result = v.save();
             promises.push(result);
         }
@@ -303,6 +320,7 @@ export class MultisaveComponent
         this.savedFields = 0;
         let savedIndex = 0;
         const fieldsToUpdate: string[] = [];
+        this.saveMessages = [];
         for (const p of promises) {
             const result = await p;
             if (result.saved) {
@@ -312,7 +330,25 @@ export class MultisaveComponent
                     fieldsToUpdate.push(tid.docTask().toString());
                 }
             }
+            if (this.markup.showMessages && result.message) {
+                let msg = result.message;
+                if (this.markup.messageOverrides) {
+                    for (const o of this.markup.messageOverrides) {
+                        const reg = new RegExp(`^${o.expect}$`);
+                        if (reg.test(msg)) {
+                            msg = o.replace;
+                            break;
+                        }
+                    }
+                }
+                if (!this.saveMessages.includes(msg)) {
+                    this.saveMessages.push(msg);
+                }
+            }
             savedIndex++;
+        }
+        if (this.markup.timer && !this.allSaved()) {
+            this.setTimer();
         }
         if (this.markup.autoUpdateTables) {
             this.vctrl.updateAllTables(fieldsToUpdate);
@@ -378,6 +414,22 @@ export class MultisaveComponent
         this.hasUnsavedTargets = true;
         this.refreshUnsavedList();
         this.isSaved = false;
+        if (this.markup.timer) {
+            if (this.timer) {
+                window.clearTimeout(this.timer);
+            }
+            this.setTimer();
+        }
+    }
+
+    private setTimer() {
+        if (!this.markup.timer) {
+            return;
+        }
+        if (this.timer) {
+            window.clearTimeout(this.timer);
+        }
+        this.timer = window.setTimeout(() => this.save(), this.markup.timer);
     }
 
     public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {

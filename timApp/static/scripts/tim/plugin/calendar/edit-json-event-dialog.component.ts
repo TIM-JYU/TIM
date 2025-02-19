@@ -6,6 +6,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {PurifyModule} from "tim/util/purify.module";
 import {CommonModule} from "@angular/common";
+import {itemglobals} from "tim/util/globals";
 import {EditorModule} from "../../../../../modules/cs/js/editor/module";
 import {AceEditorComponent} from "../../../../../modules/cs/js/editor/ace";
 
@@ -97,6 +98,7 @@ export class EditJsonEventDialogComponent extends AngularDialogComponent<
                 web?: {error?: string};
             }>("/calendar/import", {
                 events: jsonData,
+                origin_doc_id: itemglobals().curr_item.id,
             })
         );
 
