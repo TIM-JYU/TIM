@@ -22,6 +22,12 @@ class MultisaveStateModel:
 
 
 @dataclass
+class MessageOverrides:
+    expect: str
+    replace: str
+
+
+@dataclass
 class MultisaveMarkupModel(GenericMarkupModel):
     aliases: dict[str, str] | Missing = missing
     areas: list[str] | Missing = missing
@@ -36,6 +42,10 @@ class MultisaveMarkupModel(GenericMarkupModel):
     savedText: str | Missing = missing
     tags: list[str] | Missing = missing
     unsavedText: str | Missing = missing
+    timer: int | Missing = missing
+    saveDelay: int | Missing = missing
+    showMessages: bool | Missing = False
+    messageOverrides: list[MessageOverrides] | Missing = missing
 
     # Sisu export-related fields; TODO: Should be a separate plugin.
     destCourse: str | Missing = missing

@@ -10505,6 +10505,80 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
           <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6082636692959910230" datatype="html">
+        <source>Add users</source>
+        <target state="translated">Lisää käyttäjä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1577,1576</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="494185651714406389" datatype="html">
+        <source>There are not groups defined in this table.</source>
+        <target state="translated">Ei ryhmiä määriteltynä tässä taulukossa.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1592</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5791799200547215180" datatype="html">
+        <source>Updated group.</source>
+        <target state="translated">Ryhmä päivitetty.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1631</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6129598176641143387" datatype="html">
+        <source>New members will be notified by email.</source>
+        <target state="translated">Uusille jäsenille on lähetetään ilmoitus sähköpostitse.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1638,1636</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8143693159335456296" datatype="html">
+        <source>Please provide email addresses or usernames.
+Separate multiple addresses with commas or write each address on a new line.</source>
+        <target state="translated">Anna ryhmään lisättävät sähköpostiosoitteet tai käyttäjätunnukset.
+Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1577</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1454510249537401836" datatype="html">
+        <source>If the address does not have a TIM account, a new account will be created for them.</source>
+        <target state="translated">Jos osoitetta ei löydy järjestelmästä, sille luodaan uusi käyttäjätunnus.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1583,1581</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6785769560062512577" datatype="html">
+        <source>Added <x id="PH" equiv-text="result.added.length"/> users:</source>
+        <target state="translated">Lisätty <x id="PH" equiv-text="result.added.length"/> käyttäjää:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1634</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="116165617457296609" datatype="html">
+        <source>Users already in group:</source>
+        <target state="translated">Käyttäjät jo ryhmässä:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1646</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4576508930871695312" datatype="html">
+        <source>Users not found in TIM or address was wrong:</source>
+        <target state="translated">TIM-käyttäjiä ei löydy tai annettu osoite on väärin:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
+          <context context-type="linenumber">1653</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="8149301268971106238" datatype="html">
         <source>My TIM settings</source>
         <target state="translated">Omat TIM asetukset</target>

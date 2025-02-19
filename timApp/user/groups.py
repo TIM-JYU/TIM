@@ -1,12 +1,11 @@
-import base64
-import time
-from enum import Flag
+import dataclasses
 from dataclasses import dataclass
+from enum import Flag
 from operator import attrgetter
 from typing import Any
 
-from flask import Response, request
-from sqlalchemy import select, delete
+from flask import Response, current_app
+from sqlalchemy import select
 
 from timApp.auth.accesshelper import (
     verify_admin,
@@ -23,19 +22,31 @@ from timApp.auth.sessioninfo import (
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
 from timApp.item.validation import ItemValidationRule
+from timApp.notification.send_email import multi_send_email
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.special_group_names import (
     SPECIAL_GROUPS,
     PRIVILEGED_GROUPS,
     SPECIAL_USERNAMES,
 )
-from timApp.user.user import User, view_access_set, edit_access_set
-from timApp.user.usergroup import UserGroup, get_groups_by_ids
+from timApp.user.user import (
+    User,
+    view_access_set,
+    edit_access_set,
+    UserInfo,
+    UserOrigin,
+)
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import remove_path_special_chars, get_current_time
-from timApp.util.logger import log_error
+from timApp.util.utils import (
+    remove_path_special_chars,
+    get_current_time,
+    is_valid_email,
+    partition,
+    render_raw_template_string,
+)
 from tim_common.marshmallow_dataclass import class_schema
 
 groups = TypedBlueprint("groups", __name__, url_prefix="/groups")
@@ -370,9 +381,19 @@ NamesModelSchema = class_schema(NamesModel)
 
 
 @groups.post("/addmember/<group_name>")
-def add_member(group_name: str) -> Response:
-    nm: NamesModel = load_data_from_req(NamesModelSchema)
-    mi = get_member_infos(group_name, nm.names)
+def add_member(
+    group_name: str,
+    names: list[str],
+    create_missing_users: bool = False,
+    notify_new: bool = False,
+) -> Response:
+    if (
+        create_missing_users
+        and not current_app.config["GROUPS_MISSING_USER_CREATE_ALLOW"]
+    ):
+        raise RouteException("Creating missing users is not allowed.")
+
+    mi = get_member_infos(group_name, names)
     found_user_names = {u.name for u in mi.users}
     if found_user_names & SPECIAL_USERNAMES:
         raise RouteException("Cannot add special users.")
@@ -380,11 +401,65 @@ def add_member(group_name: str) -> Response:
     already_exists = user_names & found_user_names
     added = []
     curr = get_current_user_object()
+
+    notify_add_created_users = []
+    notify_add_existing_users = []
+
+    if mi.not_exist and create_missing_users:
+        not_exist_emails, rest = partition(is_valid_email, mi.not_exist)
+        new_users = []
+        for email in not_exist_emails:
+            user_info = UserInfo(username=email, email=email, origin=UserOrigin.Email)
+            u, _ = User.create_with_group(user_info)
+            new_users.append(u)
+            notify_add_created_users.append(u.email)
+
+        mi = dataclasses.replace(mi, not_exist=list(rest), users=mi.users + new_users)
+
     for u in mi.users:
         if u.id not in mi.existing_ids:
             u.add_to_group(mi.group, added_by=curr)
             added.append(u.name)
+            if u.email not in notify_add_created_users:
+                notify_add_existing_users.append(u.email)
+
     db.session.commit()
+
+    def do_notify(emails: list[str], head_key: str, body_key: str) -> None:
+        ctx = {
+            "group_name": mi.group.human_name,
+            "host": current_app.config["TIM_HOST"],
+            "support_contact": current_app.config["HELP_EMAIL"],
+        }
+        subject_text = render_raw_template_string(
+            current_app.config[head_key],
+            **ctx,
+        )
+        body_text = render_raw_template_string(
+            current_app.config[body_key],
+            **ctx,
+        )
+        multi_send_email(
+            ";".join(emails),
+            subject_text,
+            body_text,
+            with_signature=True,
+        )
+
+    if notify_add_created_users and notify_new:
+        do_notify(
+            notify_add_created_users,
+            "GROUPS_MISSING_USER_ADD_NOTIFY_HEAD",
+            "GROUPS_MISSING_USER_ADD_NOTIFY_BODY",
+        )
+
+    if notify_add_existing_users and notify_new:
+        do_notify(
+            notify_add_existing_users,
+            "GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_HEAD",
+            "GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_BODY",
+        )
+
     return json_response(
         {
             "already_belongs": sorted(list(already_exists)),

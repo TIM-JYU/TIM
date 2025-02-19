@@ -4,8 +4,10 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Union, Any, Callable, TypedDict, Tuple, Sequence
 
+import filelock
 from flask import Response
 from flask import current_app
 from flask import request
@@ -146,6 +148,7 @@ from timApp.util.flask.responsehelper import (
     ok_response,
     to_dict,
     text_response,
+    to_json_str,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import (
@@ -636,6 +639,9 @@ def post_answer(
     """
     curr_user = get_current_user_object()
 
+    if current_app.config["ANSWER_LOG_FILE"]:
+        log_answer_request(curr_user, task_id_ext, input, abData, options)
+
     return json_response(
         post_answer_impl(
             task_id_ext,
@@ -665,6 +671,28 @@ def verify_ip_address(user: User) -> str | None:
     is_valid = verify_ip_ok(user=user, msg=blocked_msg)
 
     return blocked_msg if not is_valid else None
+
+
+def log_answer_request(
+    user: User,
+    task_id_ext: str,
+    input: InputAnswer,
+    abData: dict[str, Any],
+    options: dict[str, Any],
+):
+    p = Path(current_app.config["FILES_PATH"]) / current_app.config["ANSWER_LOG_FILE"]
+    j = {
+        "time": datetime.now(),
+        "user": user.name,
+        "ip": request.remote_addr,
+        "task_id_ext": task_id_ext,
+        "input": input,
+        "abData": abData,
+        "options": options,
+    }
+    with filelock.FileLock(f"/tmp/answer_log"):
+        with p.open("a") as f:
+            f.write(to_json_str(j) + "\n")
 
 
 @dataclass

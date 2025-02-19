@@ -1,8 +1,8 @@
 import {Component, Input} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {toPromise} from "tim/util/utils";
+import {splitItems, toPromise} from "tim/util/utils";
 
-interface IAddmemberResponse {
+export interface IAddmemberResponse {
     added: string[];
     already_belongs: string[];
     not_exist: string[];
@@ -67,10 +67,7 @@ export class AddMemberComponent {
             this.http.post<IAddmemberResponse>(
                 `/groups/addmember/${this.group}`,
                 {
-                    names: this.users
-                        .split("\n")
-                        .flatMap((n) => n.split(/,|;/))
-                        .map((n) => n.replace(/^ *- */, "").trim()),
+                    names: splitItems(this.users),
                 }
             )
         );
