@@ -1,17 +1,17 @@
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {FormsModule} from "@angular/forms";
 
 @Component({
-    selector: "app-badges",
-    templateUrl: "./badges.component.html",
-    styleUrls: ["./badges.component.scss"],
+    selector: "tim-badges",
+    template: "<p>Hello kitty :d</p>",
 })
+export class BadgesComponent implements OnInit {
+    ngOnInit() {}
+}
+
 @NgModule({
     declarations: [BadgesComponent],
-    imports: [CommonModule, FormsModule],
     exports: [BadgesComponent],
+    imports: [CommonModule],
 })
-export class BadgesComponent {}
-
-export class BadgesComponentModule {}
+export class BadgesModule {}
