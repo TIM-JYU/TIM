@@ -452,7 +452,7 @@ def check_field_filtering(
 @use_args(GenerateSpreadSheetSchema())
 def gen_csv_legacy(args: GenerateSpreadSheetModel) -> Response | str:
     """Legacy route for documents that have direct links to the route."""
-    return gen_spreadsheet(args)
+    return gen_spreadsheet_impl(args)
 
 
 @tableForm_plugin.get("/generateReport")
@@ -463,6 +463,10 @@ def gen_spreadsheet(args: GenerateSpreadSheetModel) -> Response | str:
     # TODO: generic, move
     :return: SpreadSheet in CSV or .xlsx format containing header row and rows for users and values
     """
+    return gen_spreadsheet_impl(args)
+
+
+def gen_spreadsheet_impl(args: GenerateSpreadSheetModel) -> Response | str:
     curr_user = get_current_user_object()
     (
         docid,
