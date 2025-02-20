@@ -92,7 +92,7 @@ const multisaveAll = t.intersection([
             [testOnly]="markup.testOnly"
             [group]="markup.group">
     </tim-sisu-assessment-export>
-    <div *ngIf="saveMessages" class="saveMessages">
+    <div *ngIf="saveMessages.length > 0" class="saveMessages">
         <div *ngFor="let m of saveMessages">{{m}}</div>
     </div>
     <div *ngIf="livefeed"> <!-- unsaved fields -->
