@@ -293,6 +293,7 @@ export class ToggleComponent {
                                     <button
                                             class="btn btn-danger btn-xs"
                                             title="Delete group"
+                                            i18n-title
                                             (click)="deleteGroup(group)"
                                     >
                                         <i class="glyphicon glyphicon-trash"></i>
@@ -600,7 +601,6 @@ export class ToggleComponent {
                                             <div i18n>End the exam for all except students with additional time</div>
                                             <div class="small" *ngIf="group.examState <= 4" i18n>
                                                 Press the toggle button to end the exam for the main student group.
-                                                <strong>Make sure students saved all their answers!</strong>
                                             </div>
                                             <strong class="small text-success" *ngIf="group.examState > 4" i18n>
                                                 Exam ended for main group! Students with additional time can continue
@@ -631,7 +631,6 @@ export class ToggleComponent {
                                             <div i18n>End the exam for all students</div>
                                             <div class="small" *ngIf="group.examState <= 5" i18n>
                                                 Press the toggle button to end the exam for all students
-                                                <strong>Make sure students saved all their answers!</strong>
                                             </div>
                                             <strong class="small text-success" *ngIf="group.examState > 5" i18n>
                                                 Exam ended for all students! Remember to disable the login codes.
@@ -715,12 +714,12 @@ export class ToggleComponent {
                             </p>
                             <h5 i18n>Guide</h5>
                             <ol>
-                                <li i18n>Make sure the exam is ended and login codes are disabled in section '3. Manage exams'</li>
-                                <li i18n>Press the 'Begin showing answers to students' button to allow students to review their answers for 1 hour.</li>
+                                <li i18n>Make sure the exam is ended and login codes are disabled in section <i>'3. Manage exams'</i></li>
+                                <li i18n>Press the <i>'Begin showing answers to students'</i> button to allow students to review their answers for 1 hour.</li>
                                 <li i18n>Ask students to log in to the exam page using their login codes: <a [href]="getExamUrl(examByDocId.get(group.examDocId!))"><code>{{ getExamUrl(examByDocId.get(group.examDocId!)) }}</code></a></li>
-                                <li i18n>Students can open the exam using the 'Open exam' button.</li>
+                                <li i18n>Students can open the exam using the <i>'Open exam'</i> button.</li>
                                 <li i18n>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</li>
-                                <li i18n>To end the view right, press the 'End showing answers to students button'. The right is automatically disabled in 1 hour.</li>
+                                <li i18n>To end the view right, press the <i>'End showing answers to students button'</i>. The right is automatically disabled in 1 hour.</li>
                             </ol>
                         </tab>
                     </tabset>

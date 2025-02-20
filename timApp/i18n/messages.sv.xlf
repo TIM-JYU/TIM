@@ -10322,22 +10322,6 @@ Please generate login codes first.</target>
           <context context-type="linenumber">706,707</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5092731290148917173" datatype="html">
-        <source>Make sure the exam is ended and login codes are disabled in section '3. Manage exams'</source>
-        <target state="new">Make sure the exam is ended and login codes are disabled in section '3. Manage exams'</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">708,709</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7462261835080950306" datatype="html">
-        <source>Press the 'Begin showing answers to students' button to allow students to review their answers for 1 hour.</source>
-        <target state="new">Press the 'Begin showing answers to students' button to allow students to review their answers for 1 hour.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">709,710</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
         <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></source>
         <target state="new">Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
@@ -10346,28 +10330,12 @@ Please generate login codes first.</target>
           <context context-type="linenumber">712,713</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2002757117959971790" datatype="html">
-        <source>Students can open the exam using the 'Open exam' button.</source>
-        <target state="new">Students can open the exam using the 'Open exam' button.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">711,712</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1229716178210207066" datatype="html">
         <source>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</source>
         <target state="new">Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">712,713</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4643789971977071249" datatype="html">
-        <source>To end the view right, press the 'End showing answers to students button'. The right is automatically disabled in 1 hour.</source>
-        <target state="new">To end the view right, press the 'End showing answers to students button'. The right is automatically disabled in 1 hour.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">713,714</context>
         </context-group>
       </trans-unit>
       <trans-unit id="9173480621811532307" datatype="html">
@@ -10384,22 +10352,6 @@ Please generate login codes first.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">697,699</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2757709715920465016" datatype="html">
-        <source> Press the toggle button to end the exam for the main student group. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></source>
-        <target state="new"> Press the toggle button to end the exam for the main student group. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">594,596</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8462627312597849727" datatype="html">
-        <source> Press the toggle button to end the exam for all students <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></source>
-        <target state="new"> Press the toggle button to end the exam for all students <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Make sure students saved all their answers!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">625,627</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3038653550894083290" datatype="html">
@@ -10506,6 +10458,62 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1209</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="989480357041643523" datatype="html">
+        <source>Delete group</source>
+        <target state="new">Delete group</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">295,296</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2909829712528039593" datatype="html">
+        <source> Press the toggle button to end the exam for the main student group. </source>
+        <target state="new"> Press the toggle button to end the exam for the main student group. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">603</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2040009335604991778" datatype="html">
+        <source> Press the toggle button to end the exam for all students </source>
+        <target state="new"> Press the toggle button to end the exam for all students </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">633</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8036091162175708988" datatype="html">
+        <source>Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;3. Manage exams&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/></source>
+        <target state="new">Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;3. Manage exams&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">717,718</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3550757413033906635" datatype="html">
+        <source>Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Open exam&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button.</source>
+        <target state="new">Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Open exam&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">720,721</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4189671442877791653" datatype="html">
+        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;End showing answers to students button&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. The right is automatically disabled in 1 hour.</source>
+        <target state="new">To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;End showing answers to students button&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. The right is automatically disabled in 1 hour.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">722,723</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6667488878974100003" datatype="html">
+        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Begin showing answers to students&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour.</source>
+        <target state="new">Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Begin showing answers to students&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">718,719</context>
         </context-group>
       </trans-unit>
     </body>
