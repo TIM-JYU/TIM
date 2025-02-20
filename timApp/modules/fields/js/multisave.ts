@@ -92,6 +92,9 @@ const multisaveAll = t.intersection([
             [testOnly]="markup.testOnly"
             [group]="markup.group">
     </tim-sisu-assessment-export>
+    <div *ngIf="saveMessages" class="saveMessages">
+        <div *ngFor="let m of saveMessages">{{m}}</div>
+    </div>
     <div *ngIf="livefeed"> <!-- unsaved fields -->
         <div *ngIf="!allSaved()">
             {{unsavedText}}
@@ -100,9 +103,6 @@ const multisaveAll = t.intersection([
                     <a (click)="scrollTo(tag.component); $event.preventDefault()">{{tag.alias}}</a>
                 </li>
             </ul>
-        </div>
-        <div *ngIf="saveMessages" class="saveMessages">
-            <div *ngFor="let m of saveMessages">{{m}}</div>
         </div>
         <div *ngIf="allSaved()">
             {{allSavedText}}
@@ -320,7 +320,7 @@ export class MultisaveComponent
         this.savedFields = 0;
         let savedIndex = 0;
         const fieldsToUpdate: string[] = [];
-        this.saveMessages = [];
+        const saveMessages: string[] = [];
         for (const p of promises) {
             const result = await p;
             if (result.saved) {
@@ -341,12 +341,13 @@ export class MultisaveComponent
                         }
                     }
                 }
-                if (!this.saveMessages.includes(msg)) {
-                    this.saveMessages.push(msg);
+                if (!saveMessages.includes(msg)) {
+                    saveMessages.push(msg);
                 }
             }
             savedIndex++;
         }
+        this.saveMessages = saveMessages;
         if (this.markup.timer && !this.allSaved()) {
             this.setTimer();
         }
