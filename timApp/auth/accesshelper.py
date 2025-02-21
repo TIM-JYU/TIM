@@ -7,6 +7,7 @@ from typing import Sequence
 
 from flask import flash, current_app
 from flask import request, g
+from flask_babel import gettext
 from marshmallow import missing
 from sqlalchemy import inspect, select
 
@@ -370,7 +371,7 @@ def abort_if_not_access_and_required(
                 raise ItemLockedException(ba, msg, next_doc)
     if require:
         raise AccessDenied(
-            message or "Sorry, you don't have permission to use this resource."
+            message or gettext("Sorry, you don't have permission to use this resource.")
         )
     return None
 

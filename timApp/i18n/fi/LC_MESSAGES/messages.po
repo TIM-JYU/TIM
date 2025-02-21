@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-11-27 11:44+0000\n"
-"PO-Revision-Date: 2024-11-27 14:01+0200\n"
+"POT-Creation-Date: 2025-02-21 11:41+0000\n"
+"PO-Revision-Date: 2025-02-21 13:44+0200\n"
 "Last-Translator: \n"
 "Language-Team: fi <LL@li.org>\n"
 "Language: fi\n"
@@ -17,13 +17,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.16.0\n"
-"X-Generator: Poedit 3.1\n"
+"X-Generator: Poedit 3.5\n"
 
-#: answer/routes.py:770
+#: answer/routes.py:798
 msgid "You cannot submit new answers to the document."
 msgstr "Et voi lähettää uusia vastauksia tähän dokumenttiin."
 
-#: plugin/examGroupManager/examGroupManager.py:693
+#: auth/accesshelper.py:374
+msgid "Sorry, you don't have permission to use this resource."
+msgstr "Pahoittelut, sinulla ei ole tarvittavia oikeuksia tähän kohteeseen."
+
+#: plugin/examGroupManager/examGroupManager.py:703
 #, python-format
 msgid ""
 "Invalid student row: %(data)s. Expected format: <grade> <surname> <given_names>"
@@ -31,11 +35,16 @@ msgstr ""
 "Vääränmuotoinen oppilasrivi: %(data)s. Odotettu muoto: <luokka> <sukunimi> "
 "<etunimet>"
 
-#: plugin/examGroupManager/examGroupManager.py:759
+#: plugin/examGroupManager/examGroupManager.py:783
 msgid "Practice exam not set in the plugin markup."
 msgstr "Harjoituskoe ei ole asetettu pluginin asetuksissa."
 
-#: plugin/examGroupManager/examGroupManager.py:836
+#: plugin/examGroupManager/examGroupManager.py:786
+#, fuzzy
+msgid "Exam info not found in the plugin markup."
+msgstr "Harjoituskoe ei ole asetettu pluginin asetuksissa."
+
+#: plugin/examGroupManager/examGroupManager.py:856
 msgid ""
 "No login codes found for the group. Generate login codes before starting the "
 "exam."
@@ -43,17 +52,17 @@ msgstr ""
 "Kirjautumiskoodeja ei löydetty koeryhmälle. Luo uudet kirjautumiskoodit ennen "
 "kuin aloitat kokeen."
 
-#: plugin/examGroupManager/examGroupManager.py:878
+#: plugin/examGroupManager/examGroupManager.py:898
 msgid "The group is currently not in an exam. Please set the exam document first."
 msgstr ""
 "Koeryhmällä ei ole tällä hetkellä koedokumenttia. Aseta ryhmälle sopiva "
 "koedokumentti."
 
-#: plugin/examGroupManager/examGroupManager.py:887
+#: plugin/examGroupManager/examGroupManager.py:907
 msgid "You do not have access to the exam document."
 msgstr "Sinulla ei ole pääsyä koedokumenttiin."
 
-#: plugin/examGroupManager/examGroupManager.py:1039
+#: plugin/examGroupManager/examGroupManager.py:1059
 msgid ""
 "Cannot change exam state while the answers are revealed. Disable answer reveal "
 "in section 4."
@@ -61,11 +70,11 @@ msgstr ""
 "Kokeen tilaa ei voi muuttaa, kun vastauksia näytetään. Lopeta vastausten "
 "näyttäminen osiossa 4."
 
-#: plugin/examGroupManager/examGroupManager.py:1063
+#: plugin/examGroupManager/examGroupManager.py:1083
 msgid "You do not have sufficient access to the exam document to set it."
 msgstr "Sinulla ei ole tarpeeksi korkeaa oikeutta koedokumenttiin."
 
-#: plugin/examGroupManager/examGroupManager.py:1121
+#: plugin/examGroupManager/examGroupManager.py:1141
 msgid ""
 "Cannot reveal answers while the exam is ongoing. Stop the exam and disable the "
 "login codes in the section 3."
@@ -73,7 +82,7 @@ msgstr ""
 "Vastauksia ei voi näyttää, kun koe on menossa. Lopeta koe ja ota "
 "kirjautumiskoodit pois käytöstä osiossa 3."
 
-#: plugin/quantum_circuit/quantumCircuit.py:261
+#: plugin/quantum_circuit/quantumCircuit.py:268
 msgid "Expand by moving mouse over the exercise or by clicking"
 msgstr "Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla"
 
