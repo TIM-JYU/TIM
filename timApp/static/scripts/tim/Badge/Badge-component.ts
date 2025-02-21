@@ -5,11 +5,34 @@ import {FormsModule} from "@angular/forms";
 
 @Component({
     selector: "tim-badge",
-    template: "<p>Hello world!</p>",
-    styleUrls: [],
+    template: `
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <div [class]="['badge', this.color]">
+      <div class="circle"> <span class="material-symbols-outlined">{{icon}}</span></div>
+      <div class="ribbon">{{title}}</div>
+    </div>
+    `,
+    styleUrls: ["badge.component.css"],
 })
 export class BadgeComponent implements OnInit {
-    ngOnInit() {}
+    id?: number;
+    title?: string;
+    color?: string;
+    shape?: string;
+    image?: number;
+    description?: string;
+    icon?: string;
+
+    ngOnInit() {
+        this.image = 1;
+
+        if (this.image == 1) {
+            this.icon = "diversity_3";
+        }
+        if (this.image == 2) {
+            this.icon = "code";
+        }
+    }
 }
 
 @NgModule({
