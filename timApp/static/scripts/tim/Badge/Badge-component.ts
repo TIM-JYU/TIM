@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 
@@ -15,12 +15,12 @@ import {FormsModule} from "@angular/forms";
     styleUrls: ["badge.component.css"],
 })
 export class BadgeComponent implements OnInit {
-    id?: number;
-    title?: string;
-    color?: string;
-    shape?: string;
-    image?: number;
-    description?: string;
+    @Input() id?: number;
+    @Input() title?: string;
+    @Input() color?: string;
+    @Input() shape?: string;
+    @Input() image?: number;
+    @Input() description?: string;
     icon?: string;
 
     ngOnInit() {
