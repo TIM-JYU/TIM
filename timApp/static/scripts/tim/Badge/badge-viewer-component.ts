@@ -4,7 +4,7 @@ import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -12,7 +12,7 @@ import {to2} from "tim/util/utils";
         <ng-container>
             <p>{{userName}}'s badges: </p>
             <div class="main-wrapper">
-              <div *ngFor='let badge of badges' class="{{badge.name}}">
+              <div *ngFor='let badge of testBadges' class="{{badge.name}}">
                 <div class="circle"> </div>
                 <div class="ribbon">{{badge.text}}</div>
               </div>
@@ -24,7 +24,7 @@ import {to2} from "tim/util/utils";
 export class BadgeViewerComponent implements OnInit {
     userName?: string;
     userID?: number;
-    badges = [
+    testBadges = [
         {name: "badge gold", text: "12"},
         {name: "badge silver", text: "11"},
         {name: "badge green-dark", text: "10"},
@@ -39,12 +39,22 @@ export class BadgeViewerComponent implements OnInit {
         {name: "badge yellow", text: "1"},
     ];
 
+    badges?: [];
+
     constructor(private http: HttpClient) {}
 
     private async getBadges() {
-        const result = await to2(this.http.get("/all_badges").toPromise());
+        const response = toPromise(this.http.get<[]>("/all_badges"));
+
+        const result = await response;
+
         if (result.ok) {
-            console.log(result.result);
+            const obj = result.result;
+            if (obj != undefined) {
+                for (const alkio of obj) {
+                    console.log(alkio);
+                }
+            }
         }
     }
 
