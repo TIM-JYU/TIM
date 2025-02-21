@@ -19,9 +19,9 @@ interface IBadge {
                 <button class="addBadgeButton" (click)="addBadge()">Lisää badge</button>
             </span>
         </div>
-        
+
     `,
-    styleUrls: [],
+    styleUrls: ["badge-test-component.scss"],
 })
 export class BadgeTestComponent implements OnInit {
     badges: IBadge[] = [{text: "badge1"}, {text: "badge2"}, {text: "badge3"}];
