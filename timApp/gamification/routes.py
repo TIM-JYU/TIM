@@ -86,16 +86,16 @@ def give_badge(group_id: int, badge_id: int) -> Response:
     return ok_response()
 
 
-@badges_blueprint.get("/withdraw_badge/<badge_given_id>")
-def withdraw_badge(badge_given_id: int) -> Response:
-    try:
-        badge_given = BadgeGiven(group_id=badge_given_id)
-        withdrawn_badge = run_sql(
-            select(BadgeGiven).filter(BadgeGiven.id == badge_given_id)
-        ).first()
-    except:
-        return
-    badge_given = BadgeGiven(group_id=group_id, badge_id=badge_id)
-    db.session.add(badge_given)
-    db.session.commit()
-    return ok_response()
+# @badges_blueprint.get("/withdraw_badge/<badge_given_id>")
+# def withdraw_badge(badge_given_id: int) -> Response:
+#     try:
+#         badge_given = BadgeGiven(group_id=badge_given_id)
+#         withdrawn_badge = run_sql(
+#             select(BadgeGiven).filter(BadgeGiven.id == badge_given_id)
+#         ).first()
+#     except:
+#         return
+#     badge_given = BadgeGiven(group_id=group_id, badge_id=badge_id)
+#     db.session.add(badge_given)
+#     db.session.commit()
+#     return ok_response()
