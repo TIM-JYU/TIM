@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from timApp.gamification.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
-from timApp.util.flask.responsehelper import ok_response, json_response
+from timApp.util.flask.responsehelper import ok_response, json_response, empty_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 badges_blueprint = TypedBlueprint("badges", __name__)
@@ -86,16 +86,8 @@ def give_badge(group_id: int, badge_id: int) -> Response:
     return ok_response()
 
 
-# @badges_blueprint.get("/withdraw_badge/<badge_given_id>")
-# def withdraw_badge(badge_given_id: int) -> Response:
-#     try:
-#         badge_given = BadgeGiven(group_id=badge_given_id)
-#         withdrawn_badge = run_sql(
-#             select(BadgeGiven).filter(BadgeGiven.id == badge_given_id)
-#         ).first()
-#     except:
-#         return
-#     badge_given = BadgeGiven(group_id=group_id, badge_id=badge_id)
-#     db.session.add(badge_given)
-#     db.session.commit()
-#     return ok_response()
+@badges_blueprint.get("/withdraw_badge/<badge_given_id>")
+def withdraw_badge(badge_given_id: int) -> Response:
+    BadgeGiven.query.filter(BadgeGiven.id == badge_given_id).delete()
+    db.session.commit()
+    return ok_response()
