@@ -6,15 +6,24 @@ import {Users} from "tim/user/userService";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 
+interface IBadge {
+    id: number;
+    title: string;
+    color: string;
+    image: number;
+    shape: string;
+    description: string;
+}
+
 @Component({
     selector: "tim-badge-viewer",
     template: `
         <ng-container>
             <p>{{userName}}'s badges: </p>
             <div class="main-wrapper">
-              <div *ngFor='let badge of testBadges' class="{{badge.name}}">
+              <div *ngFor='let badge of badges' class="badge yellow">
                 <div class="circle"> </div>
-                <div class="ribbon">{{badge.text}}</div>
+                <div class="ribbon">{{badge.title}}</div>
               </div>
             </div>
         </ng-container>
@@ -23,7 +32,7 @@ import {toPromise} from "tim/util/utils";
 })
 export class BadgeViewerComponent implements OnInit {
     userName?: string;
-    userID?: number;
+    userID: number;
     testBadges = [
         {name: "badge gold", text: "12"},
         {name: "badge silver", text: "11"},
@@ -39,22 +48,26 @@ export class BadgeViewerComponent implements OnInit {
         {name: "badge yellow", text: "1"},
     ];
 
-    badges?: [];
+    badges: IBadge[] = [];
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {
+        this.userID = 0;
+    }
 
-    private async getBadges() {
-        const response = toPromise(this.http.get<[]>("/all_badges"));
+    private async getBadges(id: number) {
+        const response = toPromise(this.http.get<[]>("/groups_badges/" + id));
 
         const result = await response;
 
         if (result.ok) {
-            const obj = result.result;
-            if (obj != undefined) {
-                for (const alkio of obj) {
-                    console.log(alkio);
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    const json = JSON.stringify(alkio);
+                    const obj = JSON.parse(json);
+                    this.badges.push(obj);
                 }
             }
+            console.log(this.badges);
         }
     }
 
@@ -63,7 +76,8 @@ export class BadgeViewerComponent implements OnInit {
             this.userName = Users.getCurrent().name;
             this.userID = Users.getCurrent().id;
         }
-        this.getBadges();
+        this.getBadges(this.userID);
+        console.log(this.userID);
     }
 }
 
