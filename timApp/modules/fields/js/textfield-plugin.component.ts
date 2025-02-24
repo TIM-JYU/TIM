@@ -644,6 +644,8 @@ export class TextfieldPluginComponent
                 defaultErrorMessage;
             this.redAlert = true;
             this.saveFailed = true;
+            this.saveResponse.saved = false;
+            this.saveResponse.message = this.errormessage;
         }
         return this.saveResponse;
     }

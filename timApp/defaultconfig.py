@@ -277,6 +277,8 @@ BACKUP_ANSWER_FILE = "answers.backup"
 # The hosts where to back up the answers. Every entry should start with "https://".
 BACKUP_ANSWER_HOSTS = None
 
+ANSWER_LOG_FILE = None
+
 SYNC_USER_GROUPS_SEND_SECRET = None
 """
 Secret to use to when syncing user group info. If None, no user group memberships.
@@ -590,4 +592,59 @@ RESTRICT_ROBOTS_METHODS = {
 PRINT_MAX_LATEX_MEMORY = 5000000
 """
 Maximum amount of memory that can be used by a single LaTeX process to typeset PDFs.
+"""
+
+# Group addition settings
+
+GROUPS_MISSING_USER_CREATE_ALLOW = False
+"""
+If True, yet non-existing users can be added to groups.
+In that case, a new user account is created with the email address of the user.
+"""
+
+GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_HEAD = (
+    "TIM: You’ve Been Added to '{{group_name}}'"
+)
+"""
+When notifying existing users about being added to the group,
+this will be the subject of the email.
+"""
+GROUPS_EXISTING_USER_ADD_NOTIFY_EXISTING_BODY = """
+Hi!
+
+You’ve been added to the TIM group '{{group_name}}'.
+As a member, you now have access to all group resources available at <{{host}}>.
+
+If you have any questions, please contact {{support_contact}}.
+"""
+"""
+When notifying existing users about being added to the group,
+this will be the body of the email.
+"""
+
+GROUPS_MISSING_USER_ADD_NOTIFY_HEAD = (
+    "TIM: You have been added to group '{{group_name}}' – Complete Your Sign-Up"
+)
+"""
+When notifying new users about being added to the group,
+this will be the subject of the email.
+"""
+GROUPS_MISSING_USER_ADD_NOTIFY_BODY = """
+Hi!
+
+You’ve been added to the TIM group '{{group_name}}' using this email address. 
+An account has been created for you, but a password was not set during the process.
+
+To complete your sign-up and access your account:
+1. Visit <{{host}}> and click Log in on the top of the page.
+2. Use email login with this email and use the "Forgot password" option to set your password.
+
+Once your password is set, you’ll have full access to the group’s resources.
+
+If you do not recognize this email, please ignore it.
+If you have any questions or need assistance, feel free to contact {{support_contact}}.
+"""
+"""
+When notifying new users about being added to the group,
+this will be the body of the email.
 """

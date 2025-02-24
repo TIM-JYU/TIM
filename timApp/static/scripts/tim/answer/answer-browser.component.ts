@@ -37,6 +37,7 @@ import type {
     IAnswerBrowserSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
+    IPointsLimiterSettings,
 } from "tim/plugin/attributes";
 import type {IUser} from "tim/user/IUser";
 import {sortByRealName} from "tim/user/IUser";
@@ -282,6 +283,8 @@ export class AnswerBrowserComponent
     reviewHtml?: string;
     private answerLoader?: AnswerLoadCallback;
     pointsStep: number = 0.01;
+    autosave: boolean = true;
+    limitPoints: IPointsLimiterSettings = {min: undefined, max: undefined};
     markupSettings: IAnswerBrowserSettings = DEFAULT_MARKUP_CONFIG;
     modelAnswer?: IModelAnswerSettings;
     private modelAnswerFetched = false;
@@ -344,7 +347,7 @@ export class AnswerBrowserComponent
                 if (pattern) {
                     displayAlert = !pattern.test(e);
                 }
-                if (displayAlert) {
+                if (displayAlert && !this.alerts.some((m) => m.msg === e)) {
                     this.alerts.push({msg: e, type: "warning"});
                 }
             }
@@ -441,6 +444,13 @@ export class AnswerBrowserComponent
         // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
         if (this.markupSettings.pointsStep) {
             this.pointsStep = this.markupSettings?.pointsStep;
+        }
+        // Save points for the answer when the points field loses focus
+        if (this.markupSettings.autosave != undefined) {
+            this.autosave = this.markupSettings.autosave;
+        }
+        if (this.markupSettings.limitPoints) {
+            this.limitPoints = this.markupSettings.limitPoints;
         }
         if (this.markupSettings.showValidOnly != undefined) {
             this.onlyValid = this.markupSettings.showValidOnly;
@@ -591,7 +601,10 @@ export class AnswerBrowserComponent
         this.selectedAnswer.valid = this.isValidAnswer;
     }
 
-    trySavePoints(updateAnswers: boolean = false) {
+    trySavePoints(
+        updateAnswers: boolean = false,
+        updatePointsState: boolean = true
+    ) {
         if (!this.selectedAnswer || !this.user) {
             return true;
         }
@@ -612,7 +625,7 @@ export class AnswerBrowserComponent
         }
 
         const doSavePoints = async () => {
-            await this.savePoints(false);
+            await this.savePoints(updatePointsState);
             if (updateAnswers) {
                 await this.getAnswersAndUpdate();
             }
@@ -933,7 +946,7 @@ export class AnswerBrowserComponent
      * @param dir -1 for older answer, 1 for newer answer
      */
     async changeAnswerTo(dir: -1 | 1) {
-        if (!this.trySavePoints(true)) {
+        if (!this.trySavePoints(true, false)) {
             return;
         }
         if (!(await this.checkUnsavedAnnotations())) {
@@ -955,7 +968,7 @@ export class AnswerBrowserComponent
     }
 
     async newTask() {
-        if (!this.trySavePoints(true)) {
+        if (!this.trySavePoints(true, false)) {
             return;
         }
 
@@ -1019,6 +1032,18 @@ export class AnswerBrowserComponent
         }
     }
 
+    /**
+     * Handle focus out event for the points field
+     * @param ev FocusEvent
+     */
+    handlePointsFocusOut(ev: FocusEvent) {
+        ev.preventDefault();
+        this.shouldFocus = false;
+        if (this.autosave && ev.type == "blur") {
+            this.trySavePoints(false, true);
+        }
+    }
+
     async checkKeyPress(e: KeyboardEvent) {
         if (this.loading > 0 || this.hidden) {
             return false;
@@ -1065,7 +1090,7 @@ export class AnswerBrowserComponent
         if (this.users.length <= 0) {
             return;
         }
-        if (!this.trySavePoints()) {
+        if (!this.trySavePoints(false, false)) {
             return;
         }
         const shouldRefocusPoints = this.shouldFocus;

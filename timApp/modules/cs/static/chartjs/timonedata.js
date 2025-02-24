@@ -8,7 +8,7 @@
  *
  * Mod by: vesal: accept also xy-data so works with scatter
  */
-var pluginTrendlineLinear = {
+let pluginTrendlineLinear = {
     beforeDraw: function(chartInstance) {
         let yScale;
         let xScale;
@@ -34,6 +34,7 @@ var pluginTrendlineLinear = {
         ctx.setLineDash([]);
     }
 };
+
 
 function addFitter(datasetMeta, ctx, dataset, xScale, yScale) {
     let style = dataset.trendlineLinear.style || dataset.borderColor;
@@ -75,6 +76,7 @@ function addFitter(datasetMeta, ctx, dataset, xScale, yScale) {
     ctx.stroke();
 }
 
+
 Chart.plugins.register(pluginTrendlineLinear);
 
 function LineFitter() {
@@ -86,6 +88,7 @@ function LineFitter() {
     this.minx = 1e100;
     this.maxx = -1e100;
 }
+
 
 LineFitter.prototype = {
     'add': function (x, y) {
@@ -105,6 +108,7 @@ LineFitter.prototype = {
     }
 };
 
+
 /**
  * Simple is object check.
  * @param item
@@ -114,10 +118,14 @@ function isObject(item) {
   return (item && typeof item === 'object' && !Array.isArray(item));
 }
 
+
 /**
  * Deep merge two objects.
+ * Forget the keys starting with _
+ * Remove forcechar from the start of the key
  * @param target object where to merge
  * @param source object where from merge
+ * @param forcechar what char to remove from beginning of key
  * @forcechar char for starting the attribute name when no deepcopy is done, instead object reference
  */
 function mergeDeep(target, source, forcechar) {
@@ -142,8 +150,9 @@ function mergeDeep(target, source, forcechar) {
   return target;
 }
 
+
 // TIM jsframe function for ChartJS
-var TIMJS = {};
+let TIMJS = {};
 
 TIMJS.basicoptions = {
     'type': 'bar',
@@ -187,6 +196,14 @@ TIMJS.COLORS = [
 ];
 
 TIMJS.color = Chart.helpers.color;
+TIMJS.baseDataOptions = {
+    lineTension: 0,
+    fill: false,
+    // borderDash: [3,10],
+    borderWidth: 1,
+};
+TIMJS.alpha = 0.5;
+
 
 function pros(od) {
     // return od;
@@ -199,6 +216,7 @@ function pros(od) {
     return a;
 }
 
+
 /**
  * Add dtata to datasets from datas-object
  * @param datasets where to add
@@ -209,13 +227,9 @@ function pros(od) {
 function addData(datasets, datas, keys, dopros) {
     let ci = 0;
     for (const v of keys) {
-       let d = 	{
-            lineTension: 0,
-            label: ''+v+  (dopros ? ' %' : ''),
-            fill: false,
-            // borderDash: [3,10],
-            borderWidth: 1,
-        };
+        let d = {};
+        mergeDeep(d, TIMJS.baseDataOptions);
+        d.label = ''+v+  (dopros ? ' %' : '');
         let od = datas[v];
         if ( !od ) continue;
         let odData = [];
@@ -243,8 +257,8 @@ function addData(datasets, datas, keys, dopros) {
             ci = datasets.length-1;
         }
         ci = ci % TIMJS.COLORS.length;
-        d.backgroundColor = TIMJS.color(TIMJS.COLORS[ci]).alpha(0.5).rgbString();
-        d.borderColor = TIMJS.COLORS[ci];
+        if (!d.backgroundColor) d.backgroundColor = TIMJS.color(TIMJS.COLORS[ci]).alpha(TIMJS.alpha).rgbString();
+        if (!d.borderColor) d.borderColor = TIMJS.COLORS[ci];
     }
 }
 
@@ -274,6 +288,7 @@ function ensureDataSets(datasets, n) {
        mergeDeep(datasets[i], datasets[i-1]);
    }
 }
+
 
 /**
  * Set chart data from data, needs global variables globaldata, chart, originaldata
@@ -430,9 +445,11 @@ TIMJS.setData = function(P, data) {
   }
 };
 
+
 function setData(data) {
     TIMJS.setData(TIMJS, data);
 }
+
 
 function getData() {
     return TIMJS.globaldata;

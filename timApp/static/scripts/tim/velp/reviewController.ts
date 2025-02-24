@@ -130,7 +130,12 @@ export class ReviewController {
         this.velpSelection = velpSelection;
 
         document.addEventListener("selectionchange", () => {
-            const range = getSelection()?.getRangeAt(0);
+            const maybeSelection = getSelection();
+            // WebKit-based browsers will throw errors if we do not check range count explicitly
+            const range =
+                maybeSelection && maybeSelection.rangeCount > 0
+                    ? maybeSelection.getRangeAt(0)
+                    : null;
 
             // Length check is important - we don't want to lose the previous selection in touch devices.
             if (range && range.toString().length > 0) {
