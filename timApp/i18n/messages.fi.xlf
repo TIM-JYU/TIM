@@ -9330,7 +9330,7 @@
       </trans-unit>
       <trans-unit id="5252506099102837481" datatype="html">
         <source>Duplicate group</source>
-        <target state="translated">Kopioi ryhmä</target>
+        <target state="translated">Kopioi koeryhmä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">253,254</context>
@@ -10043,7 +10043,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="8023863054421277417" datatype="html">
         <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link. </source>
-        <target state="translated"> Koe alkoi! Oppilaat voivat nyt avata kokeen. Soita kuuntelut "Tarkastele koedokumenttia ja video- ja audiomateriaaleja" -painikkeesta. </target>
+        <target state="translated"> Koe alkoi! Oppilaat voivat nyt avata kokeen. Löydät kuuntelut "Tarkastele koedokumenttia ja video- ja audiomateriaaleja" -painikkeesta. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">558</context>
