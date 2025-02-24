@@ -30,6 +30,20 @@ def get_badges() -> Response:
     return json_response(badges_json)
 
 
+@badges_blueprint.get("/badge/<badge_id>")
+def get_badge(badge_id: int) -> Response:
+    badge = run_sql(select(Badge).filter_by(id=badge_id)).first()
+    badge_json = {
+        "id": badge._data[0].id,
+        "title": badge._data[0].title,
+        "description": badge._data[0].description,
+        "color": badge._data[0].color,
+        "shape": badge._data[0].shape,
+        "image": badge._data[0].image,
+    }
+    return json_response(badge_json)
+
+
 @badges_blueprint.get("/create_badge_hard")
 def create_badge_hard():
     badge = Badge(
@@ -97,7 +111,7 @@ def get_groups_badges(group_id: int) -> Response:
 
 @badges_blueprint.get("/give_badge/<group_id>/<badge_id>")
 def give_badge(group_id: int, badge_id: int) -> Response:
-    badge_given = BadgeGiven(group_id=group_id, badge_id=badge_id)
+    badge_given = BadgeGiven(group_id=group_id, badge_id=badge_id, message="-")
     db.session.add(badge_given)
     db.session.commit()
     return ok_response()
