@@ -1,4 +1,4 @@
-from flask import Response
+from flask import Response, request
 from sqlalchemy import select
 
 from timApp.gamification.badges import Badge, BadgeGiven
@@ -30,8 +30,8 @@ def get_badges() -> Response:
     return json_response(badges_json)
 
 
-@badges_blueprint.get("/create_badge")
-def create_badge():
+@badges_blueprint.get("/create_badge_hard")
+def create_badge_hard():
     badge = Badge(
         title="Hard worker",
         description="You have worked really hard!",
@@ -44,8 +44,25 @@ def create_badge():
     return ok_response()
 
 
-# @badges_blueprint.get("/delete_badge")
-# def delete_badge():
+@badges_blueprint.get("/create_badge")
+def create_badge():
+    badge = Badge(
+        title=request.args.get("title"),
+        description=request.args.get("description"),
+        color=request.args.get("color"),
+        shape=request.args.get("shape"),
+        image=request.args.get("image"),
+    )
+    db.session.add(badge)
+    db.session.commit()
+    return ok_response()
+
+
+@badges_blueprint.get("/delete_badge/<badge_id>")
+def delete_badge(badge_id: int):
+    Badge.query.filter_by(id=badge_id).delete()
+    db.session.commit()
+    return ok_response()
 
 
 @badges_blueprint.get("/groups_badges/<group_id>")
@@ -88,6 +105,6 @@ def give_badge(group_id: int, badge_id: int) -> Response:
 
 @badges_blueprint.get("/withdraw_badge/<badge_given_id>")
 def withdraw_badge(badge_given_id: int) -> Response:
-    BadgeGiven.query.filter(BadgeGiven.id == badge_given_id).delete()
+    BadgeGiven.query.filter_by(id=badge_given_id).delete()
     db.session.commit()
     return ok_response()
