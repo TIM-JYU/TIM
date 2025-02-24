@@ -9618,7 +9618,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="3438605880625234523" datatype="html">
         <source>Ask students to log in to the exam page:</source>
-        <target state="translated">Pyydä oppilaita kirjautumaan koejärjestelmään:</target>
+        <target state="translated">Pyydä oppilaita kirjautumaan koejärjestelmään: </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">507</context>
