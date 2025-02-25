@@ -27,9 +27,11 @@ export class BadgeCreatorComponent implements OnInit {
         "gold",
     ];
 
+    availableImages = [1, 2, 3, 4, 5];
+
     badgeForm = new FormGroup({
         id: new FormControl(""),
-        image: new FormControl(""),
+        image: new FormControl(1),
         title: new FormControl(""),
         icon: new FormControl(""),
         description: new FormControl(""),

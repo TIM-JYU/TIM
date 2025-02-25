@@ -9,6 +9,12 @@
                 <input type="text" id="description" formControlName="description">
             </label>
 
+            <label for="image">Badge icon:
+                <select id="image" formControlName="image">
+                    <option *ngFor="let image of availableImages" [value]="image">{{ image }}</option>
+                </select>
+            </label>
+
             <!-- Colors are selected from the color list -->
             <label for="color">Badge color:
                 <select id="color" formControlName="color">
@@ -40,6 +46,7 @@
                 *ngIf="badgeForm.value.title"
                 [title]="badgeForm.value.title || ''"
                 [color]="badgeForm.value.color || ''"
+                [image]="badgeForm.value.image || 1"
                 [description]="badgeForm.value.description || ''"
                 [shape]="badgeForm.value.shape || ''">
             </tim-badge>
