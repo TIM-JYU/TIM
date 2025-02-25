@@ -26,10 +26,21 @@ input {
   height: 300px;
   border: #0B0A09;
   border: solid;
+  display: flex;
+  justify-content: center;  
+  align-items: center;
 }
 
 button {
   width: 20%;
   margin: 1em;
   padding: 1em;
+}
+
+.color-box {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  border: 1px solid #000;
+  border-radius: 50%;
 }
