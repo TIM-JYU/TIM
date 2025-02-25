@@ -6,10 +6,7 @@ import {Users} from "tim/user/userService";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {BadgeModule} from "tim/Badge/Badge-component";
-import {
-    BadgeTestComponent,
-    BadgeTestModule,
-} from "tim/Badge/badge-test-component";
+import {BadgeTestModule} from "tim/Badge/badge-test-component";
 
 interface IBadge {
     id: number;
@@ -23,16 +20,19 @@ interface IBadge {
 @Component({
     selector: "tim-badge-viewer",
     template: `
-        <ng-container *ngIf="badgeIDs.length == 0">
-            <p>{{userName}}'s badges: </p>
-            <tim-badge-test></tim-badge-test>
-        </ng-container>
         <ng-container *ngIf="badgeIDs.length > 0">
             <p>{{userName}}'s badges: </p>
+            
+            <div *ngFor="let badge of badges">
+                <tim-badge-test title="{{badge.title}}"></tim-badge-test>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="badgeIDs.length == 0">
+            <p>{{userName}}'s badges: </p>
             <div class="main-wrapper">
-                <div *ngFor="let badge of badges" class="badge yellow">
+                <div class="badge yellow">
                     <div class="circle"> <i class="fa fa-shield"></i></div>
-                    <div class="ribbon">{{badge.title}}</div>
+                    <div class="ribbon"> no badges </div>
                 </div>
             </div>
         </ng-container>
@@ -72,8 +72,6 @@ export class BadgeViewerComponent implements OnInit {
             this.userID = Users.getCurrent().id;
         }
         this.getBadges(this.userID);
-        const component = new BadgeTestComponent();
-        component.getBadge(this.badgeIDs);
     }
 }
 
