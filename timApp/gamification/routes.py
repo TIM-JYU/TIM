@@ -72,6 +72,20 @@ def create_badge():
     return ok_response()
 
 
+# @badges_blueprint.get("/modify_badge_hard/<badge_id>")
+# def modify_badge_hard(badge_id: int):
+#     badge = Badge(
+#         title="Constant worker",
+#         description="You have worked constantly!",
+#         color="green",
+#         shape="square",
+#         image=8,
+#     )
+#     Badge.query.filter_by(id=badge_id).update(badge)
+#     db.session.commit()
+#     return ok_response()
+
+
 @badges_blueprint.get("/delete_badge/<badge_id>")
 def delete_badge(badge_id: int):
     Badge.query.filter_by(id=badge_id).delete()
@@ -86,9 +100,11 @@ def get_groups_badges(group_id: int) -> Response:
     ).all()
 
     badge_ids_json = []
+    badge_ids_and_msgs_json = {}
 
     for badge in groups_badges_given:
         badge_ids_json.append(badge._data[0].badge_id)
+        badge_ids_and_msgs_json[badge._data[0].badge_id] = badge._data[0].message
 
     groups_badges = run_sql(select(Badge).filter(Badge.id.in_(badge_ids_json))).all()
 
@@ -103,15 +119,16 @@ def get_groups_badges(group_id: int) -> Response:
                 "color": badge._data[0].color,
                 "shape": badge._data[0].shape,
                 "image": badge._data[0].image,
+                "message": badge_ids_and_msgs_json[badge._data[0].id],
             }
         )
 
     return json_response(badges_json)
 
 
-@badges_blueprint.get("/give_badge/<group_id>/<badge_id>")
-def give_badge(group_id: int, badge_id: int) -> Response:
-    badge_given = BadgeGiven(group_id=group_id, badge_id=badge_id, message="-")
+@badges_blueprint.get("/give_badge/<group_id>/<badge_id>/<message>")
+def give_badge(group_id: int, badge_id: int, message: str) -> Response:
+    badge_given = BadgeGiven(group_id=group_id, badge_id=badge_id, message=message)
     db.session.add(badge_given)
     db.session.commit()
     return ok_response()
