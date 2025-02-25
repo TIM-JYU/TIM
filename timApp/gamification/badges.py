@@ -35,6 +35,7 @@ class BadgeGiven(db.Model):
     __tablename__ = "badgegiven"
 
     id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String, nullable=False)
     badge_id: Mapped[int] = mapped_column(ForeignKey("badge.id"))
     group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"))
 
