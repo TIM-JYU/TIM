@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import type {OnInit, OnChanges} from "@angular/core";
 import {Component, Input, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
@@ -14,7 +14,7 @@ import {FormsModule} from "@angular/forms";
     `,
     styleUrls: ["badge.component.css"],
 })
-export class BadgeComponent implements OnInit {
+export class BadgeComponent implements OnInit, OnChanges {
     @Input() id?: number;
     @Input() title?: string;
     @Input() color?: string;
@@ -23,14 +23,23 @@ export class BadgeComponent implements OnInit {
     @Input() description?: string;
     icon?: string;
 
-    ngOnInit() {
-        this.image = 1;
+    ngOnInit() {}
 
+    ngOnChanges() {
         if (this.image == 1) {
             this.icon = "diversity_3";
         }
         if (this.image == 2) {
             this.icon = "code";
+        }
+        if (this.image == 3) {
+            this.icon = "trophy";
+        }
+        if (this.image == 4) {
+            this.icon = "editor_choice";
+        }
+        if (this.image == 5) {
+            this.icon = "bug_report";
         }
     }
 }
