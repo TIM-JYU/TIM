@@ -1,0 +1,35 @@
+.badge-creator {
+  display: flex;
+  flex-direction: column;
+  border: 2px dashed black;
+  margin: 1em;
+  padding: 1em;
+}
+
+#badgeForm {
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  max-width: 100px;
+}
+
+.shape {
+  display: flex;
+  flex-direction: column;
+  float: right;
+}
+
+.preview {
+  width: 500px;
+  height: 300px;
+  border: #0B0A09;
+  border: solid;
+}
+
+button {
+  width: 20%;
+  margin: 1em;
+  padding: 1em;
+}
