@@ -5,6 +5,11 @@ import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
+import {BadgeModule} from "tim/Badge/Badge-component";
+import {
+    BadgeTestComponent,
+    BadgeTestModule,
+} from "tim/Badge/badge-test-component";
 
 interface IBadge {
     id: number;
@@ -18,13 +23,17 @@ interface IBadge {
 @Component({
     selector: "tim-badge-viewer",
     template: `
-        <ng-container>
+        <ng-container *ngIf="badgeIDs.length == 0">
+            <p>{{userName}}'s badges: </p>
+            <tim-badge-test></tim-badge-test>
+        </ng-container>
+        <ng-container *ngIf="badgeIDs.length > 0">
             <p>{{userName}}'s badges: </p>
             <div class="main-wrapper">
-              <div *ngFor='let badge of badges' class="badge yellow">
-                <div class="circle"> </div>
-                <div class="ribbon">{{badge.title}}</div>
-              </div>
+                <div *ngFor="let badge of badges" class="badge yellow">
+                    <div class="circle"> <i class="fa fa-shield"></i></div>
+                    <div class="ribbon">{{badge.title}}</div>
+                </div>
             </div>
         </ng-container>
         `,
@@ -33,22 +42,8 @@ interface IBadge {
 export class BadgeViewerComponent implements OnInit {
     userName?: string;
     userID: number;
-    testBadges = [
-        {name: "badge gold", text: "12"},
-        {name: "badge silver", text: "11"},
-        {name: "badge green-dark", text: "10"},
-        {name: "badge green", text: "9"},
-        {name: "badge blue-dark", text: "8"},
-        {name: "badge blue", text: "7"},
-        {name: "badge teal", text: "6"},
-        {name: "badge purple", text: "5"},
-        {name: "badge red", text: "4"},
-        {name: "badge pink", text: "3"},
-        {name: "badge orange", text: "2"},
-        {name: "badge yellow", text: "1"},
-    ];
-
     badges: IBadge[] = [];
+    badgeIDs: number[] = [];
 
     constructor(private http: HttpClient) {
         this.userID = 0;
@@ -65,9 +60,9 @@ export class BadgeViewerComponent implements OnInit {
                     const json = JSON.stringify(alkio);
                     const obj = JSON.parse(json);
                     this.badges.push(obj);
+                    this.badgeIDs.push(obj.id);
                 }
             }
-            console.log(this.badges);
         }
     }
 
@@ -77,13 +72,20 @@ export class BadgeViewerComponent implements OnInit {
             this.userID = Users.getCurrent().id;
         }
         this.getBadges(this.userID);
-        console.log(this.userID);
+        const component = new BadgeTestComponent();
+        component.getBadge(this.badgeIDs);
     }
 }
 
 @NgModule({
     declarations: [BadgeViewerComponent],
-    imports: [CommonModule, FormsModule, HttpClientModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+        HttpClientModule,
+        BadgeModule,
+        BadgeTestModule,
+    ],
     exports: [BadgeViewerComponent],
 })
 export class BadgeViewerModule {}
