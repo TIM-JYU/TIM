@@ -12,6 +12,21 @@ import {BadgeComponent, BadgeModule} from "./Badge-component";
 export class BadgeCreatorComponent implements OnInit {
     ngOnInit() {}
 
+    // color list for forms
+    availableColors = [
+        "yellow",
+        "orange",
+        "pink",
+        "red",
+        "purple",
+        "teal",
+        "blue",
+        "blue-dark",
+        "green",
+        "green-dark",
+        "gold",
+    ];
+
     badgeForm = new FormGroup({
         id: new FormControl(""),
         image: new FormControl(""),

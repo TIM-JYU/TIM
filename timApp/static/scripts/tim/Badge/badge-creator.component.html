@@ -1,28 +1,33 @@
 <div class="badge-creator" [formGroup]="badgeForm">
     <fieldset>
         <h2>Create a new badge:</h2>
-        <form action="submit" id="badgeForm">
+        <form (ngSubmit)="onSubmit()">
             <label for="title">Badge title:
-                <input type="text" id="title" formControlName="title">
+                <input type="text" id="title" name="title" formControlName="title">
             </label>
             <label for="description">Badge description:
                 <input type="text" id="description" formControlName="description">
             </label>
-            <label for="color"> Badge color:
-                <input type="color" id="color" formControlName="color">
+
+            <!-- Colors are selected from the color list -->
+            <label for="color">Badge color:
+                <select id="color" formControlName="color">
+                    <option *ngFor="let color of availableColors" [value]="color">{{ color }}</option>
+                </select>
             </label>
+
             <label>Badge shape:</label>
             <div class="shape">
                 <label>
-                    <input type="radio" formControlName="shape" id="circle" value="circle" checked> Circle
+                    <input type="radio" id="circle" formControlName="shape" value="circle" checked> Circle
                 </label><br>
 
                 <label>
-                    <input type="radio" formControlName="shape" id="rectangle" value="rectangle"> Rectangle
+                    <input type="radio" id="rectangle" formControlName="shape" value="rectangle"> Rectangle
                 </label><br>
 
                 <label>
-                    <input type="radio" formControlName="shape" id="triangle" value="triangle"> Triangle
+                    <input type="radio" id="triangle" formControlName="shape" value="triangle"> Triangle
                 </label><br>
             </div>
             <!--TODO: description -->
@@ -31,11 +36,12 @@
     </fieldset>
     <div class="preview">
         <fieldset>
-            <tim-badge *ngIf="newBadge"
-               [title]="newBadge.title"
-               [color]="newBadge.color"
-               [description]="newBadge.description"
-               [shape]="newBadge.shape">
+            <tim-badge
+                *ngIf="badgeForm.value.title"
+                [title]="badgeForm.value.title || ''"
+                [color]="badgeForm.value.color || ''"
+                [description]="badgeForm.value.description || ''"
+                [shape]="badgeForm.value.shape || ''">
             </tim-badge>
         </fieldset>
     </div>
