@@ -23,28 +23,28 @@ import {to2} from "tim/util/utils";
 })
 export class BadgeViewerComponent implements OnInit {
     userName?: string;
-    userID?: number;
-    badges = [
-        {name: "badge gold", text: "12"},
-        {name: "badge silver", text: "11"},
-        {name: "badge green-dark", text: "10"},
-        {name: "badge green", text: "9"},
-        {name: "badge blue-dark", text: "8"},
-        {name: "badge blue", text: "7"},
-        {name: "badge teal", text: "6"},
-        {name: "badge purple", text: "5"},
-        {name: "badge red", text: "4"},
-        {name: "badge pink", text: "3"},
-        {name: "badge orange", text: "2"},
-        {name: "badge yellow", text: "1"},
-    ];
+    userID: number;
+    badges: IBadge[] = [];
+    badgeIDs: number[] = [];
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {
+        this.userID = 0;
+    }
 
-    private async getBadges() {
-        const result = await to2(this.http.get("/all_badges").toPromise());
+    private async getBadges(id: number) {
+        const response = toPromise(this.http.get<[]>("/groups_badges/" + id));
+
+        const result = await response;
+
         if (result.ok) {
-            console.log(result.result);
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    const json = JSON.stringify(alkio);
+                    const obj = JSON.parse(json);
+                    this.badges.push(obj);
+                    this.badgeIDs.push(obj.id);
+                }
+            }
         }
     }
 
@@ -59,7 +59,13 @@ export class BadgeViewerComponent implements OnInit {
 
 @NgModule({
     declarations: [BadgeViewerComponent],
-    imports: [CommonModule, FormsModule, HttpClientModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+        HttpClientModule,
+        BadgeModule,
+        BadgeTestModule,
+    ],
     exports: [BadgeViewerComponent],
 })
 export class BadgeViewerModule {}
