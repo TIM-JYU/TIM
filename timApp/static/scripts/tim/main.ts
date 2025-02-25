@@ -30,7 +30,6 @@ import {AppModule} from "tim/app.module";
 import {TodoListComponent} from "tim/todo/todo-component";
 import {BadgeComponent} from "tim/Badge/Badge-component";
 import {BadgeTestComponent} from "tim/Badge/badge-test-component";
-import {BadgesComponent} from "tim/badges/badges.component";
 import {BadgeViewerComponent} from "tim/Badge/badge-viewer-component";
 import {HeaderComponent} from "tim/header/header.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
