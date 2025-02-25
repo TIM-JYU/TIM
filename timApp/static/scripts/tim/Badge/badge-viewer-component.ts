@@ -22,9 +22,12 @@ interface IBadge {
     template: `
         <ng-container *ngIf="badgeIDs.length > 0">
             <p>{{userName}}'s badges: </p>
-            
             <div *ngFor="let badge of badges">
-                <tim-badge-test title="{{badge.title}}"></tim-badge-test>
+                <tim-badge title="{{badge.title}}" 
+                           color="{{badge.color}}" 
+                           shape="{{badge.shape}}"
+                           description="{{badge.description}}">
+                </tim-badge>
             </div>
         </ng-container>
         <ng-container *ngIf="badgeIDs.length == 0">
