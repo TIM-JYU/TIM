@@ -138,6 +138,7 @@ def modify_badge():
 
 @badges_blueprint.get("/delete_badge/<badge_id>")
 def delete_badge(badge_id: int):
+    BadgeGiven.query.filter_by(badge_id=badge_id).delete()
     Badge.query.filter_by(id=badge_id).delete()
     db.session.commit()
     return ok_response()
