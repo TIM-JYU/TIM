@@ -1,8 +1,11 @@
-import {Component, NgModule, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {ReactiveFormsModule} from "@angular/forms";
 import {FormGroup, FormControl} from "@angular/forms";
-import {BadgeComponent, BadgeModule} from "./Badge-component";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
+import {toPromise} from "tim/util/utils";
 
 @Component({
     selector: "tim-badges",
@@ -10,6 +13,8 @@ import {BadgeComponent, BadgeModule} from "./Badge-component";
     styleUrls: ["./badge-creator.component.scss"],
 })
 export class BadgeCreatorComponent implements OnInit {
+    constructor(private http: HttpClient) {}
+
     ngOnInit() {}
 
     // color list for forms
@@ -49,14 +54,29 @@ export class BadgeCreatorComponent implements OnInit {
     newBadge: any = null;
     onSubmit() {
         this.newBadge = this.badgeForm.value;
-        //console.log(this.newBadge);
+        // console.log(this.newBadge);
         console.log("New badge: ", this.newBadge);
+
+        toPromise(
+            this.http.get<[]>(
+                "/create_badge_simple/" +
+                    this.newBadge.title +
+                    "/" +
+                    this.newBadge.color +
+                    "/" +
+                    this.newBadge.shape +
+                    "/" +
+                    this.newBadge.image +
+                    "/" +
+                    this.newBadge.description
+            )
+        );
     }
 }
 
 @NgModule({
     declarations: [BadgeCreatorComponent],
     exports: [BadgeCreatorComponent],
-    imports: [CommonModule, ReactiveFormsModule, BadgeModule],
+    imports: [CommonModule, ReactiveFormsModule, BadgeModule, HttpClientModule],
 })
 export class BadgeCreatorModule {}
