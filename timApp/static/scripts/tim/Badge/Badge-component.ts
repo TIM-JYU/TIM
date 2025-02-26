@@ -1,5 +1,5 @@
 import type {OnInit, OnChanges} from "@angular/core";
-import {Component, Input, NgModule} from "@angular/core";
+import {Component, Input, NgModule, SimpleChanges} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 
@@ -30,29 +30,28 @@ export class BadgeComponent implements OnInit, OnChanges {
     @Input() message?: string;
     icon?: string;
 
-    ngOnInit() {}
+    private readonly iconMap: Record<number, string> = {
+        1: "trophy",
+        2: "editor_choice",
+        3: "diversity_3",
+        4: "code",
+        5: "bug_report",
+    };
 
-    ngOnChanges() {
-        this.icon = "help";
+    ngOnInit(): void {
+        this.setIcon();
+    }
 
-        if (this.image == 1) {
-            this.icon = "diversity_3";
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.image) {
+            this.setIcon();
         }
-        if (this.image == 2) {
-            this.icon = "code";
-        }
-        if (this.image == 3) {
-            this.icon = "trophy";
-        }
-        if (this.image == 4) {
-            this.icon = "editor_choice";
-        }
-        if (this.image == 5) {
-            this.icon = "bug_report";
-        }
-        if (this.image == 6) {
-            this.icon = "liquor";
-        }
+    }
+
+    setIcon(): void {
+        this.icon = this.image
+            ? this.iconMap[this.image] || "question_mark"
+            : "question_mark";
     }
 }
 
