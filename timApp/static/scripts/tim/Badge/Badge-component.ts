@@ -7,11 +7,17 @@ import {FormsModule} from "@angular/forms";
     selector: "tim-badge",
     template: `
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-    <div [class]="['badge', this.color]">
-      <div class="circle"> <span class="material-symbols-outlined">{{icon}}</span></div>
-      <div class="ribbon">{{title}}</div>
+    <div class="badge-container" [ngClass]="['badge', color, shape]">
+    <div class="circle">
+        <span class="material-symbols-outlined">{{ icon }}</span>
     </div>
-    `,
+    <div class="ribbon">{{ title }}</div>
+    <!-- Tooltip for description -->
+    <div class="tooltip" *ngIf="description">{{ description }}</div>
+        <div class="tooltip" *ngIf="message">{{ message }}</div>
+</div>
+
+  `,
     styleUrls: ["badge.component.css"],
 })
 export class BadgeComponent implements OnInit, OnChanges {
@@ -21,11 +27,14 @@ export class BadgeComponent implements OnInit, OnChanges {
     @Input() shape?: string;
     @Input() image?: number;
     @Input() description?: string;
+    @Input() message?: string;
     icon?: string;
 
     ngOnInit() {}
 
     ngOnChanges() {
+        this.icon = "help";
+
         if (this.image == 1) {
             this.icon = "diversity_3";
         }
@@ -40,6 +49,9 @@ export class BadgeComponent implements OnInit, OnChanges {
         }
         if (this.image == 5) {
             this.icon = "bug_report";
+        }
+        if (this.image == 6) {
+            this.icon = "liquor";
         }
     }
 }
