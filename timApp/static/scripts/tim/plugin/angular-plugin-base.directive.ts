@@ -22,6 +22,7 @@ import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {ChangeType, ViewCtrl} from "tim/document/viewctrl";
+import {Users} from "tim/user/userService";
 
 /**
  * Plugin with initialization data passed from the server via JSON.
@@ -103,7 +104,7 @@ export abstract class AngularPluginBase<
         if (this.markup.readonly !== undefined) {
             return this.markup.readonly;
         }
-        return this.attrsall.access === "readonly";
+        return this.attrsall.access === "readonly" || Users.isInAnswerReview;
     }
 
     constructor(
