@@ -55,6 +55,7 @@ export interface IDocSettings {
     parAuthorOnlyEdit?: boolean;
     pollDocumentViewInfo?: number;
     pollDocumentViewInfoJitter?: number;
+    disable_answer?: string;
 }
 
 export interface ISlideDocSettings extends IDocSettings {
