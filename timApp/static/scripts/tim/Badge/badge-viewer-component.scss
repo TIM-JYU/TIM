@@ -28,7 +28,7 @@ body {
   background: inherit;
   content: "";
   top: 0;
-  left: 0;
+  left: -50;
   right: 0;
   bottom: 0;
   margin: auto;
@@ -70,11 +70,11 @@ body {
   width: 100px;
   z-index: 11;
   color: #fff;
-  bottom: 10px;
+  bottom: 12px;
   left: 50%;
-  margin-left: -52px;
-  height: 15px;
-  font-size: 8px;
+  margin-left: -50px;
+  height: 20px;
+  font-size: 10px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.27);
   text-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
   text-transform: uppercase;
@@ -143,7 +143,7 @@ body {
 }
 
 footer {
-  text-align: left;
+  text-align: center;
   margin: 5em auto;
 }
 footer a {
