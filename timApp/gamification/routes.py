@@ -20,10 +20,10 @@ def get_badges() -> Response:
             {
                 "id": badge._data[0].id,
                 "title": badge._data[0].title,
-                "description": badge._data[0].description,
                 "color": badge._data[0].color,
                 "shape": badge._data[0].shape,
                 "image": badge._data[0].image,
+                "description": badge._data[0].description,
             }
         )
 
@@ -36,10 +36,10 @@ def get_badge(badge_id: int) -> Response:
     badge_json = {
         "id": badge._data[0].id,
         "title": badge._data[0].title,
-        "description": badge._data[0].description,
         "color": badge._data[0].color,
         "shape": badge._data[0].shape,
         "image": badge._data[0].image,
+        "description": badge._data[0].description,
     }
     return json_response(badge_json)
 
@@ -48,10 +48,28 @@ def get_badge(badge_id: int) -> Response:
 def create_badge_hard():
     badge = Badge(
         title="Hard worker",
-        description="You have worked really hard!",
         color="red",
         shape="hexagon",
         image=6,
+        description="You have worked really hard!",
+    )
+    db.session.add(badge)
+    db.session.commit()
+    return ok_response()
+
+
+@badges_blueprint.get(
+    "/create_badge_simple/<title>/<color>/<shape>/<image>/<description>"
+)
+def create_badge_simple(
+    title: str, color: str, shape: str, image: int, description: str
+) -> Response:
+    badge = Badge(
+        title=title,
+        color=color,
+        shape=shape,
+        image=image,
+        description=description,
     )
     db.session.add(badge)
     db.session.commit()
@@ -62,28 +80,60 @@ def create_badge_hard():
 def create_badge():
     badge = Badge(
         title=request.args.get("title"),
-        description=request.args.get("description"),
         color=request.args.get("color"),
         shape=request.args.get("shape"),
         image=request.args.get("image"),
+        description=request.args.get("description"),
     )
     db.session.add(badge)
     db.session.commit()
     return ok_response()
 
 
-# @badges_blueprint.get("/modify_badge_hard/<badge_id>")
-# def modify_badge_hard(badge_id: int):
-#     badge = Badge(
-#         title="Constant worker",
-#         description="You have worked constantly!",
-#         color="green",
-#         shape="square",
-#         image=8,
-#     )
-#     Badge.query.filter_by(id=badge_id).update(badge)
-#     db.session.commit()
-#     return ok_response()
+@badges_blueprint.get("/modify_badge_hard/<badge_id>")
+def modify_badge_hard(badge_id: int):
+    badge = {
+        "title": "Constant worker",
+        "color": "green",
+        "shape": "square",
+        "image": 8,
+        "description": "You have worked constantly!",
+    }
+    Badge.query.filter_by(id=badge_id).update(badge)
+    db.session.commit()
+    return ok_response()
+
+
+@badges_blueprint.get(
+    "/modify_badge_simple/<badge_id>/<title>/<color>/<shape>/<image>/<description>"
+)
+def modify_badge_simple(
+    badge_id: int, title: str, color: str, shape: str, image: int, description: str
+) -> Response:
+    badge = {
+        "title": title,
+        "color": color,
+        "shape": shape,
+        "image": image,
+        "description": description,
+    }
+    Badge.query.filter_by(id=badge_id).update(badge)
+    db.session.commit()
+    return ok_response()
+
+
+@badges_blueprint.get("/modify_badge")
+def modify_badge():
+    badge = {
+        "title": request.args.get("title"),
+        "color": request.args.get("color"),
+        "shape": request.args.get("shape"),
+        "image": request.args.get("image"),
+        "description": request.args.get("description"),
+    }
+    Badge.query.filter_by(id=request.args.get("id")).update(badge)
+    db.session.commit()
+    return ok_response()
 
 
 @badges_blueprint.get("/delete_badge/<badge_id>")
@@ -115,10 +165,10 @@ def get_groups_badges(group_id: int) -> Response:
             {
                 "id": badge._data[0].id,
                 "title": badge._data[0].title,
-                "description": badge._data[0].description,
                 "color": badge._data[0].color,
                 "shape": badge._data[0].shape,
                 "image": badge._data[0].image,
+                "description": badge._data[0].description,
                 "message": badge_ids_and_msgs_json[badge._data[0].id],
             }
         )
