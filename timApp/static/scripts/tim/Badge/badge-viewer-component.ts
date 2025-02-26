@@ -15,22 +15,24 @@ interface IBadge {
     image: number;
     shape: string;
     description: string;
+    message: string;
 }
 
 @Component({
     selector: "tim-badge-viewer",
     template: `
-        <ng-container *ngIf="badgeIDs.length > 0">
+        <ng-container *ngIf="badges.length > 0">
             <p>{{userName}}'s badges: </p>
             <div *ngFor="let badge of badges">
                 <tim-badge title="{{badge.title}}" 
                            color="{{badge.color}}" 
                            shape="{{badge.shape}}"
+                           [image]="badge.image"
                            description="{{badge.description}}">
                 </tim-badge>
             </div>
         </ng-container>
-        <ng-container *ngIf="badgeIDs.length == 0">
+        <ng-container *ngIf="badges.length == 0">
             <p>{{userName}}'s badges: </p>
             <div class="main-wrapper">
                 <div class="badge yellow">
@@ -44,26 +46,21 @@ interface IBadge {
 })
 export class BadgeViewerComponent implements OnInit {
     userName?: string;
-    userID: number;
+    userID: number = 0;
     badges: IBadge[] = [];
-    badgeIDs: number[] = [];
 
-    constructor(private http: HttpClient) {
-        this.userID = 0;
-    }
+    constructor(private http: HttpClient) {}
 
     private async getBadges(id: number) {
         const response = toPromise(this.http.get<[]>("/groups_badges/" + id));
 
         const result = await response;
-
         if (result.ok) {
             if (result.result != undefined) {
                 for (const alkio of result.result) {
                     const json = JSON.stringify(alkio);
                     const obj = JSON.parse(json);
                     this.badges.push(obj);
-                    this.badgeIDs.push(obj.id);
                 }
             }
         }
