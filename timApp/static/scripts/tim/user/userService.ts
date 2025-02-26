@@ -163,7 +163,7 @@ export class UserService {
                 .map((tag) => tag.name)
         );
         const groupReviewTags = this.current.groups.map(
-            (g) => `answer_review_group:${g.name}`
+            (ug) => `answer_review_group:${ug.name}`
         );
         const res = groupReviewTags.some((tag) => activeTags.has(tag));
         // console.log(activeTags, groupReviewTags, res);
