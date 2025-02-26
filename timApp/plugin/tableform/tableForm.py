@@ -634,7 +634,7 @@ def save_workbook_to_memory(wb: Workbook) -> io.BytesIO:
 
 def parse_row(rd: list[str | float | None], regex_filter: re.Pattern) -> None:
     for i in range(len(rd)):
-        m = regex_filter.match(rd[i]) if rd[i] else None
+        m = regex_filter.match(str(rd[i])) if rd[i] is not None else None
         if m:
             val = m.group(0)
             val = val.replace(" ", "")
