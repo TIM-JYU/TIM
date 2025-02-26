@@ -27,6 +27,7 @@ class Arguments:
     from_email: str
     to_email: str
     smtp_server: str
+    ensure_once: bool
 
 
 def _now() -> str:
@@ -62,7 +63,25 @@ def handle_error(msg: str, current_interval: int, args: Arguments) -> int:
     return current_interval + 1
 
 
+LOCK_FD = -1
+
+
 def run(args: Arguments) -> None:
+    if args.ensure_once:
+        global LOCK_FD
+        import fcntl
+        import errno
+        import os
+
+        try:
+            LOCK_FD = os.open("/tmp/tim_healthcheck.lock", os.O_RDWR | os.O_CREAT)
+            fcntl.flock(LOCK_FD, fcntl.LOCK_EX | fcntl.LOCK_NB)  # type: ignore
+        except (IOError, OSError) as e:
+            if e.errno in (errno.EACCES, errno.EAGAIN):
+                log_info("Healthcheck watchdog is already running")
+                return
+        # No need to close the lock, it should be released when the process exits
+
     log_info("Starting healthcheck watchdog")
     try:
         interval = 1
@@ -114,4 +133,11 @@ def init(parser: ArgumentParser) -> None:
         help="The SMTP server to use for sending the healthcheck email",
         required=True,
         dest="smtp_server",
+    )
+    parser.add_argument(
+        "--ensure-once",
+        help="Exit if the watchdog is already running",
+        action="store_true",
+        default=False,
+        dest="ensure_once",
     )
