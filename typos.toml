@@ -63,6 +63,7 @@ Versio = "Versio"
 MATA280 = "MATA280"
 selectin = "selectin"
 braket = "braket"
+ND = "ND"
 
 [default.extend-words]
 # Custom corrections:
