@@ -9,6 +9,7 @@ extend-exclude = [
     "*.patch",
     "*.min.js",
     "*-min.js",
+    "timApp/templates/base.jinja2",
     "timApp/static/scripts/vendor/",
     "timApp/static/ohj1/",
     "timApp/modules/cs/static/ohj2/",
