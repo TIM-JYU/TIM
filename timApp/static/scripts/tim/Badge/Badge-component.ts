@@ -1,5 +1,5 @@
 import type {OnInit, OnChanges} from "@angular/core";
-import {Component, Input, NgModule} from "@angular/core";
+import {Component, Input, NgModule, SimpleChanges} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 
@@ -7,11 +7,17 @@ import {FormsModule} from "@angular/forms";
     selector: "tim-badge",
     template: `
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-    <div [class]="['badge', this.color]">
-      <div class="circle"> <span class="material-symbols-outlined">{{icon}}</span></div>
-      <div class="ribbon">{{title}}</div>
+    <div class="badge-container" [ngClass]="['badge', color, shape]">
+    <div class="circle">
+        <span class="material-symbols-outlined">{{ icon }}</span>
     </div>
-    `,
+    <div class="ribbon">{{ title }}</div>
+    <!-- Tooltip for description -->
+    <div class="tooltip" *ngIf="description">{{ description }}</div>
+        <div class="tooltip" *ngIf="message">{{ message }}</div>
+</div>
+
+  `,
     styleUrls: ["badge.component.css"],
 })
 export class BadgeComponent implements OnInit, OnChanges {
@@ -21,26 +27,31 @@ export class BadgeComponent implements OnInit, OnChanges {
     @Input() shape?: string;
     @Input() image?: number;
     @Input() description?: string;
+    @Input() message?: string;
     icon?: string;
 
-    ngOnInit() {}
+    private readonly iconMap: Record<number, string> = {
+        1: "trophy",
+        2: "editor_choice",
+        3: "diversity_3",
+        4: "code",
+        5: "bug_report",
+    };
 
-    ngOnChanges() {
-        if (this.image == 1) {
-            this.icon = "diversity_3";
+    ngOnInit(): void {
+        this.setIcon();
+    }
+
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.image) {
+            this.setIcon();
         }
-        if (this.image == 2) {
-            this.icon = "code";
-        }
-        if (this.image == 3) {
-            this.icon = "trophy";
-        }
-        if (this.image == 4) {
-            this.icon = "editor_choice";
-        }
-        if (this.image == 5) {
-            this.icon = "bug_report";
-        }
+    }
+
+    setIcon(): void {
+        this.icon = this.image
+            ? this.iconMap[this.image] || "question_mark"
+            : "question_mark";
     }
 }
 
