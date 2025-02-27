@@ -1,9 +1,3 @@
-{
-  servers {
-    trusted_proxies static private_ranges
-  }
-}
-
 (static) {
 	file_server * {
 		root /tim/timApp/static
