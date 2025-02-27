@@ -341,6 +341,7 @@ export class DropdownPluginComponent
     resetField(): undefined {
         return this.zone.run(() => {
             this.selectedWord = "";
+            this.styles = {};
             this.initialWord = this.selectedWord;
             this.changes = false;
             this.saveFailed = false;
