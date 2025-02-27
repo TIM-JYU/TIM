@@ -3,9 +3,20 @@ import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {ReactiveFormsModule} from "@angular/forms";
 import {FormGroup, FormControl} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
+import {HttpClientModule} from "@angular/common/http";
 import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
 import {toPromise} from "tim/util/utils";
+
+interface IBadge {
+    id: number;
+    title: string;
+    color: string;
+    image: number;
+    shape: string;
+    description: string;
+    message: string;
+}
 
 @Component({
     selector: "tim-badges",
@@ -15,7 +26,9 @@ import {toPromise} from "tim/util/utils";
 export class BadgeCreatorComponent implements OnInit {
     constructor(private http: HttpClient) {}
 
-    ngOnInit() {}
+    ngOnInit() {
+        this.getAllBadges();
+    }
 
     // color list for forms
     availableColors = [
@@ -34,6 +47,8 @@ export class BadgeCreatorComponent implements OnInit {
 
     availableImages = [1, 2, 3, 4, 5];
 
+    all_badges: IBadge[] = [];
+
     badgeForm = new FormGroup({
         id: new FormControl(""),
         image: new FormControl(1),
@@ -45,12 +60,12 @@ export class BadgeCreatorComponent implements OnInit {
     });
 
     newBadge: any = null;
-    onSubmit() {
+    async onSubmit() {
         this.newBadge = this.badgeForm.value;
         // console.log(this.newBadge);
         console.log("New badge: ", this.newBadge);
 
-        toPromise(
+        const response = toPromise(
             this.http.get<[]>(
                 "/create_badge_simple/" +
                     this.newBadge.title +
@@ -64,6 +79,29 @@ export class BadgeCreatorComponent implements OnInit {
                     this.newBadge.description
             )
         );
+        const result = await response;
+        if (result.ok) {
+            while (this.all_badges.length > 0) {
+                this.all_badges.pop();
+            }
+            this.getAllBadges();
+        }
+    }
+
+    private async getAllBadges() {
+        const response = toPromise(this.http.get<[]>("/all_badges"));
+
+        const result = await response;
+        if (result.ok) {
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    const json = JSON.stringify(alkio);
+                    const obj = JSON.parse(json);
+                    this.all_badges.push(obj);
+                }
+                this.all_badges.reverse();
+            }
+        }
     }
 }
 

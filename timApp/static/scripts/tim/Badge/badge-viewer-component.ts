@@ -23,8 +23,9 @@ interface IBadge {
     template: `
         <ng-container *ngIf="badges.length > 0">
             <p>{{userName}}'s badges: </p>
-            <div *ngFor="let badge of badges">
-                <tim-badge title="{{badge.title}}" 
+            <div class="user_badges">
+                <tim-badge *ngFor="let badge of badges" 
+                           title="{{badge.title}}" 
                            color="{{badge.color}}" 
                            shape="{{badge.shape}}"
                            [image]="badge.image"
