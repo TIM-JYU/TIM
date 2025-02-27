@@ -55,17 +55,17 @@
         </fieldset>
     </div>
     <button (click)="onSubmit()">Create</button>
-
-    <div class="something">
+    <div class="all_badges">
         <fieldset>
-            <tim-badge
-                *ngIf="newBadge"
-                [title]="newBadge.title || ''"
-                [color]="newBadge.color || ''"
-                [image]="newBadge.image || 0"
-                [description]="newBadge.description || ''"
-                [shape]="newBadge.shape || ''">
-            </tim-badge>
+            <ng-container *ngIf="all_badges.length > 0">
+                <tim-badge *ngFor="let badge of all_badges"
+                           title="{{badge.title}}"
+                           color="{{badge.color}}"
+                           shape="{{badge.shape}}"
+                           [image]="badge.image"
+                           description="{{badge.description}}">
+                </tim-badge>
+            </ng-container>
         </fieldset>
     </div>
 </div>
