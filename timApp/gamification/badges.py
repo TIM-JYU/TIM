@@ -1,6 +1,5 @@
 import json
 
-from docutils.nodes import title
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,6 +17,7 @@ class Badge(db.Model):
     shape = db.Column(db.String, nullable=False)
     image = db.Column(db.Integer, nullable=False)
     context_group = db.Column(db.String, nullable=False)
+    active = db.Column(db.Boolean, nullable=False)
 
     def to_json(self) -> dict:
         return {
@@ -39,6 +39,7 @@ class BadgeGiven(db.Model):
     message = db.Column(db.String)
     badge_id: Mapped[int] = mapped_column(ForeignKey("badge.id"))
     group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"))
+    active = db.Column(db.Boolean, nullable=False)
 
     badge: Mapped[Badge] = relationship()
     group: Mapped[UserGroup] = relationship()
