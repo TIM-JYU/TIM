@@ -9,6 +9,10 @@
                 <input type="text" id="description" formControlName="description">
             </label>
 
+            <label for="description">message:
+                <input type="text" id="message" formControlName="message">
+            </label>
+
             <label for="image">Badge icon:
                 <select id="image" formControlName="image">
                     <option *ngFor="let image of availableImages" [value]="image">{{ image }}</option>
@@ -31,6 +35,9 @@
 
             <!--TODO: description -->
             <!--TODO: image attachment -->
+            <div *ngIf="editingBadge">
+                <button type="button" (click)="deleteBadge()">Delete</button>
+            </div>
         </form>
     </fieldset>
     <div class="preview">
@@ -45,18 +52,21 @@
             </tim-badge>
         </fieldset>
     </div>
-    <button (click)="onSubmit()">Create</button>
-
-    <div class="something">
+    <button type="submit" (click)="editingBadge ? saveBadge() : onSubmit()">
+        {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
+    </button>
+    <div class="all_badges">
         <fieldset>
-            <tim-badge
-                *ngIf="newBadge"
-                [title]="newBadge.title || ''"
-                [color]="newBadge.color || ''"
-                [image]="newBadge.image || 0"
-                [description]="newBadge.description || ''"
-                [shape]="newBadge.shape || ''">
-            </tim-badge>
+            <ng-container *ngIf="all_badges.length > 0">
+                <tim-badge *ngFor="let badge of all_badges"
+                           title="{{badge.title}}"
+                           color="{{badge.color}}"
+                           shape="{{badge.shape}}"
+                           [image]="badge.image"
+                           description="{{badge.description}}"
+                (click)="editBadge(badge)">
+                </tim-badge>
+            </ng-container>
         </fieldset>
     </div>
 </div>
