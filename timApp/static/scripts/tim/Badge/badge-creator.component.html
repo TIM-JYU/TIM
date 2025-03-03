@@ -38,6 +38,9 @@
             </div>
             <!--TODO: description -->
             <!--TODO: image attachment -->
+            <div *ngIf="editingBadge">
+                <button type="button" (click)="deleteBadge()">Delete</button>
+            </div>
         </form>
     </fieldset>
     <div class="preview">
@@ -52,7 +55,9 @@
             </tim-badge>
         </fieldset>
     </div>
-    <button (click)="onSubmit()">Create</button>
+    <button type="submit" (click)="editingBadge ? saveBadge() : onSubmit()">
+        {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
+    </button>
     <div class="all_badges">
         <fieldset>
             <ng-container *ngIf="all_badges.length > 0">
@@ -61,7 +66,8 @@
                            color="{{badge.color}}"
                            shape="{{badge.shape}}"
                            [image]="badge.image"
-                           description="{{badge.description}}">
+                           description="{{badge.description}}"
+                (click)="editBadge(badge)">
                 </tim-badge>
             </ng-container>
         </fieldset>
