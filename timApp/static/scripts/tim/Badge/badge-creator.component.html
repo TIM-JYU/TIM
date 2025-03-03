@@ -9,6 +9,10 @@
                 <input type="text" id="description" formControlName="description">
             </label>
 
+            <label for="description">message:
+                <input type="text" id="message" formControlName="message">
+            </label>
+
             <label for="image">Badge icon:
                 <select id="image" formControlName="image">
                     <option *ngFor="let image of availableImages" [value]="image">{{ image }}</option>
@@ -25,13 +29,11 @@
             <label>Badge shape:</label>
             <div class="shape">
                 <label>
+                    <input type="radio" id="hexagon" formControlName="shape" value="hexagon"> hexagon
+                </label><br>
+                <label>
                     <input type="radio" id="circle" formControlName="shape" value="circle" checked> Circle
                 </label><br>
-
-                <label>
-                    <input type="radio" id="rectangle" formControlName="shape" value="rectangle"> Rectangle
-                </label><br>
-
                 <label>
                     <input type="radio" id="triangle" formControlName="shape" value="triangle"> Triangle
                 </label><br>
@@ -46,24 +48,24 @@
                 *ngIf="badgeForm.value.title"
                 [title]="badgeForm.value.title || ''"
                 [color]="badgeForm.value.color || ''"
-                [image]="badgeForm.value.image || 1"
+                [image]="badgeForm.value.image || 0"
                 [description]="badgeForm.value.description || ''"
                 [shape]="badgeForm.value.shape || ''">
             </tim-badge>
         </fieldset>
     </div>
     <button (click)="onSubmit()">Create</button>
-    <div class="all_badges">
+
+    <div class="something">
         <fieldset>
-            <ng-container *ngIf="all_badges.length > 0">
-                <tim-badge *ngFor="let badge of all_badges"
-                           title="{{badge.title}}"
-                           color="{{badge.color}}"
-                           shape="{{badge.shape}}"
-                           [image]="badge.image"
-                           description="{{badge.description}}">
-                </tim-badge>
-            </ng-container>
+            <tim-badge
+                *ngIf="newBadge"
+                [title]="newBadge.title || ''"
+                [color]="newBadge.color || ''"
+                [image]="newBadge.image || 0"
+                [description]="newBadge.description || ''"
+                [shape]="newBadge.shape || ''">
+            </tim-badge>
         </fieldset>
     </div>
 </div>

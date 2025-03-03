@@ -1,46 +1,82 @@
 .badge-creator {
   display: flex;
   flex-direction: column;
-  border: 2px dashed black;
-  margin: 1em;
+  border: 2px dashed #0F4096;
+  box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
   padding: 1em;
+  border-radius: 1em;
+  margin: 2em 0;
+  background-color: #fff;
+  z-index: 10;
 }
 
 #badgeForm {
   display: flex;
   flex-direction: column;
+  gap: 1em;
 }
 
 input {
   max-width: 100px;
+  padding: 0.3em;
+  border: 1px solid #0F4096;
+  border-radius: 0.5em;
+  background-color: #f0f4ff;
 }
 
 .shape {
   display: flex;
   flex-direction: column;
-  float: right;
+  align-items: flex-end;
+  margin-top: 1em;
 }
 
 .preview {
   width: 500px;
   height: 300px;
-  border: #0B0A09;
-  border: solid;
+  border: 2px solid #0F4096;
+  border-radius: 1em;
   display: flex;
   justify-content: center;  
   align-items: center;
+  background-color: #f0f4ff;
+  box-shadow: 0 10px 50px #0000cc38, 0 0 10px #0F0C0020;
+  margin-bottom: 1em;
 }
 
 button {
   width: 20%;
   margin: 1em;
-  padding: 1em;
+  padding: 0.5em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: #0F4096;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0D357A;
 }
 
 .color-box {
   width: 20px;
   height: 20px;
   margin-right: 10px;
-  border: 1px solid #000;
+  border: 1px solid #0F4096;
   border-radius: 50%;
+  background-color: #f0f4ff;
+}
+
+.color-box:hover {
+  background-color: #0F409620;
+}
+
+.corner-button {
+  align-self: end;
+}
+
+.justify-corner-button {
+  justify-content: end;
 }

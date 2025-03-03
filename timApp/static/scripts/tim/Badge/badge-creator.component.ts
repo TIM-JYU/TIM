@@ -45,18 +45,20 @@ export class BadgeCreatorComponent implements OnInit {
         "gold",
     ];
 
-    availableImages = [1, 2, 3, 4, 5];
+    availableImages = [1, 2, 3, 4, 5, 6, 100];
+    availableShapes = ["circle", "triangle", "hexagon"];
 
     all_badges: IBadge[] = [];
 
     badgeForm = new FormGroup({
         id: new FormControl(""),
-        image: new FormControl(1),
+        image: new FormControl(0),
         title: new FormControl(""),
         icon: new FormControl(""),
         description: new FormControl(""),
         color: new FormControl("#ff0000"),
         shape: new FormControl(""),
+        message: new FormControl(""),
     });
 
     newBadge: any = null;
