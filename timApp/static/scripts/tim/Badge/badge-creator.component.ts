@@ -145,11 +145,15 @@ export class BadgeCreatorComponent implements OnInit {
                 );
 
                 if (response.ok) {
-                    this.all_badges = this.all_badges.filter(
-                        (b) => b.id! == this.editingBadge.id
-                    );
+                    while (this.all_badges.length > 0) {
+                        this.all_badges.pop();
+                    }
+                    this.getAllBadges();
                     this.editingBadge = null;
-                    this.badgeForm.reset();
+                    this.badgeForm.reset({
+                        color: "gray",
+                        shape: "hexagon",
+                    });
                 } else {
                     console.log("Failed to delete badge");
                 }
