@@ -13,8 +13,8 @@ import {FormsModule} from "@angular/forms";
     </div>
     <div class="ribbon">{{ title }}</div>
     <!-- Tooltip for description -->
-    <div class="tooltip" *ngIf="description">{{ description }}</div>
-        <div class="tooltip" *ngIf="message">{{ message }}</div>
+        <div class="tooltip" *ngIf="description">{{ description }}</div>
+        <div class="tooltip" *ngIf="message">{{ message }}</div>   
 </div>
 
   `,

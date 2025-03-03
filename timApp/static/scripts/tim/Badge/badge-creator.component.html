@@ -9,10 +9,6 @@
                 <input type="text" id="description" formControlName="description">
             </label>
 
-            <label for="description">message:
-                <input type="text" id="message" formControlName="message">
-            </label>
-
             <label for="image">Badge icon:
                 <select id="image" formControlName="image">
                     <option *ngFor="let image of availableImages" [value]="image">{{ image }}</option>
@@ -28,16 +24,11 @@
 
             <label>Badge shape:</label>
             <div class="shape">
-                <label>
-                    <input type="radio" id="hexagon" formControlName="shape" value="hexagon"> hexagon
-                </label><br>
-                <label>
-                    <input type="radio" id="circle" formControlName="shape" value="circle" checked> Circle
-                </label><br>
-                <label>
-                    <input type="radio" id="triangle" formControlName="shape" value="triangle"> Triangle
-                </label><br>
+              <label *ngFor="let shape of shapes">
+                <input type="radio" [id]="shape.value" formControlName="shape" [value]="shape.value" [checked]="shape.value === 'round'"> {{ shape.label }}
+              </label><br>
             </div>
+
             <!--TODO: description -->
             <!--TODO: image attachment -->
         </form>
@@ -45,9 +36,9 @@
     <div class="preview">
         <fieldset>
             <tim-badge
-                *ngIf="badgeForm.value.title"
+                *ngIf="badgeForm.value.shape"
                 [title]="badgeForm.value.title || ''"
-                [color]="badgeForm.value.color || ''"
+                [color]="badgeForm.value.color || 'yellow'"
                 [image]="badgeForm.value.image || 0"
                 [description]="badgeForm.value.description || ''"
                 [shape]="badgeForm.value.shape || ''">

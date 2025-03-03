@@ -28,7 +28,13 @@ export class BadgeCreatorComponent implements OnInit {
     ];
 
     availableImages = [1, 2, 3, 4, 5, 6, 100];
-    availableShapes = ["circle", "triangle", "hexagon"];
+
+    shapes = [
+        {label: "Hexagon", value: "hexagon"},
+        {label: "Flower", value: "flower"},
+        {label: "Circle", value: "round"},
+        {label: "Square", value: "square"},
+    ];
 
     badgeForm = new FormGroup({
         id: new FormControl(""),
@@ -36,9 +42,8 @@ export class BadgeCreatorComponent implements OnInit {
         title: new FormControl(""),
         icon: new FormControl(""),
         description: new FormControl(""),
-        color: new FormControl("#ff0000"),
-        shape: new FormControl(""),
-        message: new FormControl(""),
+        color: new FormControl("gray"),
+        shape: new FormControl("hexagon"),
     });
 
     newBadge: any = null;
