@@ -143,7 +143,10 @@ export class BadgeCreatorComponent implements OnInit {
                 (b) => b !== this.editingBadge
             );
             this.editingBadge = null;
-            this.badgeForm.reset();
+            this.badgeForm.reset({
+                shape: "hexagon",
+                color: "gray",
+            });
         }
     }
 }
