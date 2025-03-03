@@ -1,7 +1,11 @@
-import {Component, NgModule, OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
+import type {OnInit} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {BadgeModule} from "tim/Badge/Badge-component";
+import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
+import {BadgeCreatorComponent} from "tim/Badge/badge-creator.component";
 import {BadgeService} from "tim/Badge/badge.service";
 
 interface Badge {
@@ -98,6 +102,13 @@ export class BadgeGiverComponent implements OnInit {
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [CommonModule, FormsModule],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        BadgeModule,
+        HttpClientModule,
+        BadgeViewerModule,
+        FormsModule,
+    ],
 })
 export class BadgeGiverModule {}
