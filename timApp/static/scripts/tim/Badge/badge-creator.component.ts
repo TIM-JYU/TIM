@@ -7,6 +7,8 @@ import {HttpClient} from "@angular/common/http";
 import {HttpClientModule} from "@angular/common/http";
 import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
 import {toPromise} from "tim/util/utils";
+import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
+import {BadgeGiverModule} from "tim/Badge/badge-giver.component";
 
 interface IBadge {
     id: number;
@@ -115,6 +117,13 @@ export class BadgeCreatorComponent implements OnInit {
 @NgModule({
     declarations: [BadgeCreatorComponent],
     exports: [BadgeCreatorComponent],
-    imports: [CommonModule, ReactiveFormsModule, BadgeModule, HttpClientModule],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        BadgeModule,
+        HttpClientModule,
+        BadgeViewerModule,
+        BadgeGiverModule,
+    ],
 })
 export class BadgeCreatorModule {}
