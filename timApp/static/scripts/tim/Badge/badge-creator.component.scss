@@ -37,7 +37,7 @@ input {
   border: 2px solid #0F4096;
   border-radius: 1em;
   display: flex;
-  justify-content: center;  
+  justify-content: center;
   align-items: center;
   background-color: #f0f4ff;
   box-shadow: 0 10px 50px #0000cc38, 0 0 10px #0F0C0020;
@@ -77,6 +77,69 @@ button:hover {
   align-self: end;
 }
 
+button[type="button"] {
+  background-color: #c31515;
+  width: 100%;
+  padding: 0.5em 1em;
+  margin-top: 1em;
+  cursor: pointer;
+}
+
+button[type="button"]:hover {
+  background-color: #9b1212;
+}
+
+#deleteButton[disabled], #cancelButton[disabled]{
+  background-color: #ccc;
+  color: #777;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+#createButton[disabled], #createButton[disabled]:hover {
+  background-color: #7A9BCD;
+}
+
+.delete-edit {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5em;
+}
+
+#cancelButton {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+#cancelButton[disabled]:hover {
+  background-color: #ccc;
+}
+
+
+#createButton:hover {
+  background-color: #0D357A;
+}
+
+#cancelButton:hover {
+  background-color: #5a6268;
+}
+
+
+.delete-edit .button-group {
+  flex: 1;  /* Asettaa kentän täyttämään jäljelle jäävän tilan */
+  max-width: 50%;  /* Kenttä täyttää 50% leveyksistä */
+}
+
+#createButton {
+  width: 100%;
+  padding: 0.8em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: #0F4096;
+  color: #fff;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 .justify-corner-button {
   justify-content: end;
 }
