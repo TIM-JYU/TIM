@@ -86,6 +86,7 @@ import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
 import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
+import {BadgeGiverComponent} from "tim/Badge/badge-giver.component";
 
 BackspaceDisabler.disable();
 
@@ -164,6 +165,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timBadgeTest", BadgeTestComponent);
     doDowngrade(dg, "timBadgeViewer", BadgeViewerComponent);
     doDowngrade(dg, "timBadges", BadgeCreatorComponent);
+    doDowngrade(dg, "badge-giver", BadgeGiverComponent);
     return dg;
 }
 
