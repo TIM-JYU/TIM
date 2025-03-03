@@ -17,6 +17,7 @@ class Badge(db.Model):
     color = db.Column(db.String, nullable=False)
     shape = db.Column(db.String, nullable=False)
     image = db.Column(db.Integer, nullable=False)
+    context_group = db.Column(db.String, nullable=False)
 
     def to_json(self) -> dict:
         return {
@@ -35,7 +36,7 @@ class BadgeGiven(db.Model):
     __tablename__ = "badgegiven"
 
     id = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.String, nullable=False)
+    message = db.Column(db.String)
     badge_id: Mapped[int] = mapped_column(ForeignKey("badge.id"))
     group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"))
 
