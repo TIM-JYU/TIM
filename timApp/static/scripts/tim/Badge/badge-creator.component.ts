@@ -123,6 +123,7 @@ export class BadgeCreatorComponent implements OnInit {
     }
 
     // Save changes
+    //TODO: ei tällä hetkellä koske itse databaseen
     saveBadge() {
         if (this.editingBadge) {
             Object.assign(this.editingBadge, this.badgeForm.value);
@@ -132,13 +133,26 @@ export class BadgeCreatorComponent implements OnInit {
     }
 
     // Delete badge
-    deleteBadge() {
+    //TODO: varoitus, haluatko todella poistaa?
+    async deleteBadge() {
         if (this.editingBadge) {
-            this.all_badges = this.all_badges.filter(
-                (b) => b !== this.editingBadge
-            );
-            this.editingBadge = null;
-            this.badgeForm.reset();
+            try {
+                const response = await toPromise(
+                    this.http.get(`/delete_badge/${this.editingBadge.id}`)
+                );
+
+                if (response.ok) {
+                    this.all_badges = this.all_badges.filter(
+                        (b) => b.id! == this.editingBadge.id
+                    );
+                    this.editingBadge = null;
+                    this.badgeForm.reset();
+                } else {
+                    console.log("Failed to delete badge");
+                }
+            } catch (error) {
+                console.error("Error deleting badge", error);
+            }
         }
     }
 }
