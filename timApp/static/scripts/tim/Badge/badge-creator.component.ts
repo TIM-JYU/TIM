@@ -112,6 +112,40 @@ export class BadgeCreatorComponent implements OnInit {
             }
         }
     }
+
+    editingBadge: any = null; // placeholder for selected badge
+
+    // Edit an existing badge, show attributes in input fields
+    editBadge(badge: IBadge) {
+        this.editingBadge = badge;
+        this.badgeForm.patchValue({
+            title: badge.title,
+            description: badge.description,
+            image: badge.image,
+            color: badge.color,
+            shape: badge.shape,
+        });
+    }
+
+    // Save changes
+    saveBadge() {
+        if (this.editingBadge) {
+            Object.assign(this.editingBadge, this.badgeForm.value);
+            this.editingBadge = null;
+            this.badgeForm.reset();
+        }
+    }
+
+    // Delete badge
+    deleteBadge() {
+        if (this.editingBadge) {
+            this.all_badges = this.all_badges.filter(
+                (b) => b !== this.editingBadge
+            );
+            this.editingBadge = null;
+            this.badgeForm.reset();
+        }
+    }
 }
 
 @NgModule({
