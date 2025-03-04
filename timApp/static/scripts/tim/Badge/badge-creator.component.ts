@@ -19,6 +19,7 @@ interface IBadge {
     shape: string;
     description: string;
     message: string;
+    context_group: string;
 }
 
 @Component({
@@ -55,6 +56,8 @@ export class BadgeCreatorComponent implements OnInit {
 
     availableImages = [1, 2, 3, 4, 5, 6, 100];
 
+    availableContext_groups = ["it_01", "it_02", "es_01"];
+
     shapes = [
         {label: "Hexagon", value: "hexagon"},
         {label: "Flower", value: "flower"},
@@ -72,17 +75,17 @@ export class BadgeCreatorComponent implements OnInit {
         description: new FormControl(""),
         color: new FormControl("gray"),
         shape: new FormControl("hexagon"),
+        context_group: new FormControl(""),
     });
 
     newBadge: any = null;
     async onSubmit() {
         this.newBadge = this.badgeForm.value;
-        // console.log(this.newBadge);
-        console.log("New badge: ", this.newBadge);
-
         const response = toPromise(
             this.http.get<[]>(
                 "/create_badge_simple/" +
+                    this.newBadge.context_group +
+                    "/" +
                     this.newBadge.title +
                     "/" +
                     this.newBadge.color +
@@ -132,6 +135,7 @@ export class BadgeCreatorComponent implements OnInit {
             image: badge.image,
             color: badge.color,
             shape: badge.shape,
+            context_group: badge.context_group,
         });
     }
 
@@ -152,6 +156,8 @@ export class BadgeCreatorComponent implements OnInit {
                 this.http.get<[]>(
                     "/modify_badge_simple/" +
                         this.editingBadge.id +
+                        "/" +
+                        this.editingBadge.context_group +
                         "/" +
                         this.editingBadge.title +
                         "/" +
@@ -180,7 +186,7 @@ export class BadgeCreatorComponent implements OnInit {
         if (this.editingBadge) {
             try {
                 const response = await toPromise(
-                    this.http.get(`/delete_badge/${this.editingBadge.id}`)
+                    this.http.get(`/deactivate_badge/${this.editingBadge.id}`)
                 );
 
                 if (response.ok) {

@@ -27,6 +27,13 @@
             <option *ngFor="let color of availableColors" [value]="color">{{ color }}</option>
           </select>
         </div>
+
+          <div class="form-group">
+          <label for="context_group">Context-group</label>
+            <select id="context_group" formControlName="context_group">
+                <option *ngFor="let context_group of availableContext_groups" [value]="context_group">{{ context_group }}</option>
+            </select>
+        </div>
       </div>
         <div class="shape-preview-group">
             <div class="form-group">
