@@ -8,6 +8,7 @@ from typing import Any, TypedDict, Sequence, Tuple
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from flask import render_template_string, Response, send_file
+from flask_babel import gettext
 from marshmallow.utils import missing
 from openpyxl import Workbook
 from openpyxl.writer.excel import ExcelWriter
@@ -516,11 +517,11 @@ def gen_spreadsheet_impl(args: GenerateSpreadSheetModel) -> Response | str:
     )
     data: list[list[str | float | None]] = [[]]
     if show_real_names:
-        data[0].append("Real name")
+        data[0].append(gettext("Real name"))
     if show_user_names:
-        data[0].append("Username")
+        data[0].append(gettext("Username"))
     if show_emails:
-        data[0].append("email")
+        data[0].append(gettext("Email"))
     tmp: Sequence[str | float | None] = r["fields"]
     data[0] = data[0] + list(tmp)
     if len(filter_fields) != len(filter_values):
