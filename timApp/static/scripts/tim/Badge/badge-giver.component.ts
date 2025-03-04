@@ -5,7 +5,6 @@ import {CommonModule} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {BadgeModule} from "tim/Badge/Badge-component";
 import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
-import {BadgeCreatorComponent} from "tim/Badge/badge-creator.component";
 
 interface Badge {
     id: number;
@@ -50,20 +49,20 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     fetchUsers() {
-        this.http.get<User[]>("/api/users").subscribe((data) => {
+        this.http.get<User[]>("/groups/").subscribe((data) => {
             this.users = data;
         });
     }
 
     fetchBadges() {
-        this.http.get<Badge[]>("/api/badges").subscribe((data) => {
+        this.http.get<Badge[]>("/badges/").subscribe((data) => {
             this.badges = data;
         });
     }
 
     fetchUserBadges(userId: number) {
         this.http
-            .get<BadgeGiven[]>(`/api/badge-given/${userId}`)
+            .get<BadgeGiven[]>(`/badge-given/${userId}`)
             .subscribe((data) => {
                 this.userBadges = data;
             });
@@ -75,7 +74,7 @@ export class BadgeGiverComponent implements OnInit {
                 badge_id: this.selectedBadge.id,
                 user_id: this.selectedUser.id,
             };
-            this.http.post("/api/badge-given", payload).subscribe(() => {
+            this.http.post("/badge-given/", payload).subscribe(() => {
                 this.fetchUserBadges(this.selectedUser!.id);
             });
         }
