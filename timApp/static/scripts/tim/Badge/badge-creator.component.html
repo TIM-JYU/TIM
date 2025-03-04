@@ -1,6 +1,7 @@
 <div class="badge-creator" [formGroup]="badgeForm">
   <fieldset class="form-fieldset">
-    <h2>Create a New Badge</h2>
+    <h2>{{ editingBadge ? 'Edit Badge' : 'Create a Badge' }}</h2>
+
     <form (ngSubmit)="onSubmit()" id="badgeForm">
       <div class="form-group">
         <label for="title">Title</label>
@@ -52,14 +53,18 @@
             </div>
         </div>
 
+        <button type="submit" (click)="editingBadge ? saveBadge() : onSubmit()">
+            {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
+        </button>
 
-      <div *ngIf="editingBadge">
-        <button type="button" (click)="deleteBadge()">Delete</button>
-      </div>
-
-      <button type="submit" (click)="editingBadge ? saveBadge() : onSubmit()">
-        {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
-      </button>
+        <div class="delete-edit">
+            <div class="button-group">
+                <button id="cancelButton" type="button" [disabled]="!isFormChanged"  (click)="emptyForm()">Cancel</button>
+            </div>
+            <div class="button-group">
+                <button id="deleteButton" type="button" [disabled]="!editingBadge" (click)="deleteBadge()">Delete</button>
+            </div>
+        </div>
     </form>
   </fieldset>
 
