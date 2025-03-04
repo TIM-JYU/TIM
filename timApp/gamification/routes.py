@@ -1,13 +1,43 @@
+# from dataclasses import dataclass
+
 from flask import Response, request
-from pylatex.config import active
 from sqlalchemy import select
 
 from timApp.gamification.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
-from timApp.util.flask.responsehelper import ok_response, json_response, empty_response
+from timApp.util.flask.responsehelper import (
+    ok_response,
+    json_response,
+    empty_response,
+    error_generic,
+)
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 badges_blueprint = TypedBlueprint("badges", __name__)
+
+
+# @dataclass
+# class BadgeModel:
+#     id: int
+#     active: bool
+#     context_group: str
+#     title: str
+#     color: str
+#     shape: str
+#     image: int
+#     description: str
+#
+#     def to_json(self) -> dict[str, int | bool | str]:
+#         return {
+#             "id": self._data[0].id,
+#             "active": self._data[0].active,
+#             "context_group": self._data[0].context_group,
+#             "title": self._data[0].title,
+#             "color": self._data[0].color,
+#             "shape": self._data[0].shape,
+#             "image": self._data[0].image,
+#             "description": self._data[0].description,
+#         }
 
 
 @badges_blueprint.get("/all_badges_including_nonactive")
@@ -73,6 +103,10 @@ def get_badges_in_context(context_group: str) -> Response:
 @badges_blueprint.get("/badge/<badge_id>")
 def get_badge(badge_id: int) -> Response:
     badge = run_sql(select(Badge).filter_by(id=badge_id)).first()
+    # return json_response(badge.to_json())
+    # Badge.to_json(badge)
+    if badge is None:
+        return error_generic("there's no badge with id: " + str(badge_id), 404)
     badge_json = {
         "id": badge._data[0].id,
         "active": badge._data[0].active,
@@ -86,7 +120,7 @@ def get_badge(badge_id: int) -> Response:
     return json_response(badge_json)
 
 
-# todo: Delete this in the final implementation
+# todo: Delete this in the final implementation.
 @badges_blueprint.get("/create_badge_hard")
 def create_badge_hard() -> Response:
     badge = Badge(
@@ -103,7 +137,7 @@ def create_badge_hard() -> Response:
     return ok_response()
 
 
-# todo: Delete this in the final implementation
+# todo: Delete this in the final implementation.
 @badges_blueprint.get(
     "/create_badge_simple/<context_group>/<title>/<color>/<shape>/<image>/<description>"
 )
@@ -124,7 +158,7 @@ def create_badge_simple(
     return ok_response()
 
 
-# todo: Make this work
+# todo: Make this work.
 @badges_blueprint.get("/create_badge")
 def create_badge() -> Response:
     badge = Badge(
@@ -141,7 +175,7 @@ def create_badge() -> Response:
     return ok_response()
 
 
-# todo: Delete this in the final implementation
+# todo: Delete this in the final implementation.
 @badges_blueprint.get("/modify_badge_hard/<badge_id>")
 def modify_badge_hard(badge_id: int) -> Response:
     badge = {
@@ -158,7 +192,7 @@ def modify_badge_hard(badge_id: int) -> Response:
     return ok_response()
 
 
-# todo: Delete this in the final implementation
+# todo: Delete this in the final implementation.
 @badges_blueprint.get(
     "/modify_badge_simple/<badge_id>/<context_group>/<title>/<color>/<shape>/<image>/<description>"
 )
@@ -185,7 +219,7 @@ def modify_badge_simple(
     return ok_response()
 
 
-# todo: Make this work
+# todo: Make this work.
 @badges_blueprint.get("/modify_badge")
 def modify_badge() -> Response:
     badge = {
@@ -202,7 +236,7 @@ def modify_badge() -> Response:
     return ok_response()
 
 
-# todo: Delete this in the final implementation
+# todo: Delete this in the final implementation.
 @badges_blueprint.get("/delete_badge/<badge_id>")
 def delete_badge(badge_id: int) -> Response:
     BadgeGiven.query.filter_by(badge_id=badge_id).delete()
@@ -237,6 +271,7 @@ def get_groups_badges(group_id: int) -> Response:
 
     badge_ids_and_msgs = {}
 
+    # todo: If badge_id is not supposed to be unique, refactor this to use str-key with some running number.
     for badge in groups_badges_given:
         badge_ids_and_msgs[badge._data[0].badge_id] = badge._data[0].message
 
@@ -263,6 +298,9 @@ def get_groups_badges(group_id: int) -> Response:
     return json_response(badges_json)
 
 
+# todo: If badge_id is supposed to be unique:
+#   - refactor this to handle multiple same badges given to same group.
+#   - there will be problems with active-column in withdraw_badge and undo_withdraw_badge.
 @badges_blueprint.get("/give_badge/<group_id>/<badge_id>/<message>")
 def give_badge(group_id: int, badge_id: int, message: str) -> Response:
     badge_given = BadgeGiven(

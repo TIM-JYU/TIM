@@ -26,10 +26,13 @@ class Badge(db.Model):
             "description": self.description,
             "color": self.color,
             "shape": self.shape,
+            "image": self.image,
+            "context_group": self.context_group,
+            "active": self.active,
         }
 
-    def get_badges(self):
-        return self
+    # def get_badges(self):
+    #     return self
 
 
 class BadgeGiven(db.Model):
@@ -44,8 +47,8 @@ class BadgeGiven(db.Model):
     badge: Mapped[Badge] = relationship()
     group: Mapped[UserGroup] = relationship()
 
-    def get_group_name(self):
-        return self.group.name
+    # def get_group_name(self):
+    #     return self.group.name
 
-    def get_badge_id(self):
-        return self.badge.id
+    # def get_badge_id(self):
+    #     return self.badge.id
