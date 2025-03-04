@@ -154,7 +154,7 @@ export class BadgeCreatorComponent implements OnInit {
             shape: "hexagon",
             context_group: this.selectedContextGroup,
         });
-        this.isFormChanged = false;
+        this.isFormChanged = false; // Reset the change flag
     }
 
     // Get all badges depending on if context group is selected
