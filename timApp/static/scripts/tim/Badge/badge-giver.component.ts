@@ -49,7 +49,7 @@ interface BadgeGiven {
 })
 export class BadgeGiverComponent implements OnInit {
     users: User[] = [];
-    badges: any = [];
+    badges: Badge[] = [];
     selectedUser?: User;
     userBadges: BadgeGiven[] = [];
     selectedBadge?: Badge;
@@ -86,7 +86,7 @@ export class BadgeGiverComponent implements OnInit {
 
     fetchUserBadges(userId: number) {
         this.http
-            .get<BadgeGiven[]>(`/api/badge-given/${userId}`)
+            .get<BadgeGiven[]>(`/badge-given/${userId}`)
             .subscribe((data) => {
                 this.userBadges = data;
             });
@@ -98,7 +98,7 @@ export class BadgeGiverComponent implements OnInit {
                 badge_id: this.selectedBadge.id,
                 user_id: this.selectedUser.id,
             };
-            this.http.post("/api/badge-given", payload).subscribe(() => {
+            this.http.post("/badge-given/", payload).subscribe(() => {
                 this.fetchUserBadges(this.selectedUser!.id);
             });
         }
