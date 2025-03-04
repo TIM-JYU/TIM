@@ -9,6 +9,7 @@ import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
 import {toPromise} from "tim/util/utils";
 import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {BadgeGiverModule} from "tim/Badge/badge-giver.component";
+import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
 interface IBadge {
     id: number;
@@ -28,8 +29,13 @@ interface IBadge {
 export class BadgeCreatorComponent implements OnInit {
     constructor(private http: HttpClient) {}
 
+    isFormChanged = false; // Flag to track form changes
+
     ngOnInit() {
         this.getAllBadges();
+        this.badgeForm.valueChanges.subscribe(() => {
+            this.isFormChanged = true; // Set flag to true when form changes
+        });
     }
 
     // color list for forms
@@ -93,7 +99,8 @@ export class BadgeCreatorComponent implements OnInit {
             while (this.all_badges.length > 0) {
                 this.all_badges.pop();
             }
-            this.getAllBadges();
+            await this.getAllBadges();
+            this.emptyForm();
         }
     }
 
@@ -119,6 +126,7 @@ export class BadgeCreatorComponent implements OnInit {
     editBadge(badge: IBadge) {
         this.editingBadge = badge;
         this.badgeForm.patchValue({
+            id: badge.id,
             title: badge.title,
             description: badge.description,
             image: badge.image,
@@ -127,12 +135,43 @@ export class BadgeCreatorComponent implements OnInit {
         });
     }
 
+    emptyForm() {
+        this.editingBadge = null;
+        this.badgeForm.reset({
+            color: "gray",
+            shape: "hexagon",
+        });
+        this.isFormChanged = false; // Reset the change flag
+    }
+
     // Save changes
     saveBadge() {
         if (this.editingBadge) {
             Object.assign(this.editingBadge, this.badgeForm.value);
-            this.editingBadge = null;
-            this.badgeForm.reset();
+            const response = toPromise(
+                this.http.get<[]>(
+                    "/modify_badge_simple/" +
+                        this.editingBadge.id +
+                        "/" +
+                        this.editingBadge.title +
+                        "/" +
+                        this.editingBadge.color +
+                        "/" +
+                        this.editingBadge.shape +
+                        "/" +
+                        this.editingBadge.image +
+                        "/" +
+                        this.editingBadge.description
+                )
+            );
+            const result = await response;
+            if (result.ok) {
+                while (this.all_badges.length > 0) {
+                    this.all_badges.pop();
+                }
+                this.emptyForm();
+                await this.getAllBadges();
+            }
         }
     }
 
@@ -154,6 +193,7 @@ export class BadgeCreatorComponent implements OnInit {
                         color: "gray",
                         shape: "hexagon",
                     });
+                    this.isFormChanged = false;
                 } else {
                     console.log("Failed to delete badge");
                 }
