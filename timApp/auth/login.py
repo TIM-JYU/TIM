@@ -580,7 +580,9 @@ def save_came_from() -> None:
 
 
 @login_page.get("/quickLogin/<username>")
-def quick_login(username: str, redirect: bool = True) -> Response:
+def quick_login(
+    username: str, redirect: bool = True, restore_on_logout: bool = True
+) -> Response:
     """Logs in as another user."""
     user = User.get_by_name(username)
     curr_user = get_restored_context_user()
@@ -608,7 +610,7 @@ def quick_login(username: str, redirect: bool = True) -> Response:
     else:
         verify_admin(user=curr_user)
 
-    set_single_user_to_session(user, restore_on_logout=True)
+    set_single_user_to_session(user, restore_on_logout=restore_on_logout)
     db.session.commit()
     flash(f"Temporarily logged in as: {username}")
 
