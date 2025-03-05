@@ -1,11 +1,8 @@
-import {Component, NgModule} from "@angular/core";
-import type {OnInit} from "@angular/core";
+import {Component, NgModule, OnInit} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {BadgeModule} from "tim/Badge/Badge-component";
-import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
-import {BadgeCreatorComponent} from "tim/Badge/badge-creator.component";
+import {BadgeService} from "tim/Badge/badge.service";
 
 interface Badge {
     id: number;
@@ -14,6 +11,17 @@ interface Badge {
     color: string;
     shape: string;
     image: number;
+}
+
+interface IBadge {
+    id: number;
+    title: string;
+    color: string;
+    image: number;
+    shape: string;
+    description: string;
+    message: string;
+    context_group: string;
 }
 
 interface User {
@@ -49,17 +57,9 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchBadges();
     }
 
-    fetchUsers() {
-        this.http.get<User[]>("/api/users").subscribe((data) => {
-            this.users = data;
-        });
-    }
+    fetchUsers() {}
 
-    fetchBadges() {
-        this.http.get<Badge[]>("/api/badges").subscribe((data) => {
-            this.badges = data;
-        });
-    }
+    fetchBadges() {}
 
     fetchUserBadges(userId: number) {
         this.http
@@ -98,13 +98,6 @@ export class BadgeGiverComponent implements OnInit {
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        BadgeModule,
-        HttpClientModule,
-        BadgeViewerModule,
-        FormsModule,
-    ],
+    imports: [CommonModule, FormsModule],
 })
 export class BadgeGiverModule {}
