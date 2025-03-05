@@ -10,6 +10,7 @@ import {toPromise} from "tim/util/utils";
 import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {BadgeGiverModule} from "tim/Badge/badge-giver.component";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
+import {getFormBehavior} from "tim/plugin/util";
 
 interface IBadge {
     id: number;
@@ -31,11 +32,24 @@ export class BadgeCreatorComponent implements OnInit {
     constructor(private http: HttpClient) {}
 
     isFormChanged = false; // Flag to track form changes
+    selectedContextGroup: string = "";
+    all_badges: IBadge[] = [];
 
     ngOnInit() {
-        this.getAllBadges();
+        // Track the previously selected context_group
+        let previousContextGroup = this.badgeForm.value.context_group;
+
+        this.getBadges();
         this.badgeForm.valueChanges.subscribe(() => {
             this.isFormChanged = true; // Set flag to true when form changes
+            // Only trigger onContextGroupChange if the context_group has changed
+            const currentContextGroup = this.badgeForm.value.context_group;
+            if (currentContextGroup !== previousContextGroup) {
+                previousContextGroup = currentContextGroup; // Update the previous value
+                if (currentContextGroup) {
+                    this.onContextGroupChange(currentContextGroup); // Trigger only if the context_group has changed
+                }
+            }
         });
     }
 
@@ -64,8 +78,6 @@ export class BadgeCreatorComponent implements OnInit {
         {label: "Circle", value: "round"},
         {label: "Square", value: "square"},
     ];
-
-    all_badges: IBadge[] = [];
 
     badgeForm = new FormGroup({
         id: new FormControl(""),
@@ -102,28 +114,18 @@ export class BadgeCreatorComponent implements OnInit {
             while (this.all_badges.length > 0) {
                 this.all_badges.pop();
             }
-            await this.getAllBadges();
+            await this.getBadges();
             this.emptyForm();
         }
     }
 
-    private async getAllBadges() {
-        const response = toPromise(this.http.get<[]>("/all_badges"));
-
-        const result = await response;
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    const json = JSON.stringify(alkio);
-                    const obj = JSON.parse(json);
-                    this.all_badges.push(obj);
-                }
-                this.all_badges.reverse();
-            }
-        }
+    onContextGroupChange(newContextGroup: string) {
+        console.log("Context group selected:", newContextGroup); // Debugging log
+        this.selectedContextGroup = newContextGroup;
+        this.getBadges();
     }
 
-    editingBadge: any = null; // placeholder for selected badge
+    editingBadge: any = null;
 
     // Edit an existing badge, show attributes in input fields
     editBadge(badge: IBadge) {
@@ -138,15 +140,37 @@ export class BadgeCreatorComponent implements OnInit {
             context_group: badge.context_group,
         });
     }
+    async onCancel() {
+        this.selectedContextGroup = "";
+        this.emptyForm();
+        await this.getBadges();
+    }
 
     emptyForm() {
         this.editingBadge = null;
         this.badgeForm.reset({
             color: "gray",
             shape: "hexagon",
+            context_group: this.selectedContextGroup,
         });
-        this.isFormChanged = false; // Reset the change flag
+        this.isFormChanged = false;
     }
+
+    // Get all badges depending on if context group is selected
+    private async getBadges() {
+        console.log("ollaan getbadgesis: ", this.selectedContextGroup);
+        let response;
+        if (this.selectedContextGroup) {
+            response = toPromise(
+                this.http.get<[]>(
+                    `/all_badges_in_context/${this.selectedContextGroup}`
+                )
+            );
+            console.log("Tän responsen pitäs näkyä: ", response);
+        } else {
+            response = toPromise(this.http.get<[]>("/all_badges"));
+            console.log("Kaikki badget, alussa pitäs näkyä: ", response);
+        }
 
     // Save changes
     saveBadge() {
@@ -176,35 +200,35 @@ export class BadgeCreatorComponent implements OnInit {
                     this.all_badges.pop();
                 }
                 this.emptyForm();
-                await this.getAllBadges();
+                await this.getBadges();
             }
         }
     }
 
     // Delete badge
-    deleteBadge() {
-        if (this.editingBadge) {
-            try {
-                const response = await toPromise(
-                    this.http.get(`/deactivate_badge/${this.editingBadge.id}`)
-                );
+    async deleteBadge() {
+        if (confirm("Are you sure you want to delete badge?")) {
+            if (this.editingBadge) {
+                try {
+                    const response = await toPromise(
+                        this.http.get(
+                            `/deactivate_badge/${this.editingBadge.id}`
+                        )
+                    );
 
-                if (response.ok) {
-                    while (this.all_badges.length > 0) {
-                        this.all_badges.pop();
+                    if (response.ok) {
+                        while (this.all_badges.length > 0) {
+                            this.all_badges.pop();
+                        }
+                        this.getBadges();
+                        this.emptyForm();
+                        this.isFormChanged = false;
+                    } else {
+                        console.log("Failed to delete badge");
                     }
-                    this.getAllBadges();
-                    this.editingBadge = null;
-                    this.badgeForm.reset({
-                        color: "gray",
-                        shape: "hexagon",
-                    });
-                    this.isFormChanged = false;
-                } else {
-                    console.log("Failed to delete badge");
+                } catch (error) {
+                    console.error("Error deleting badge", error);
                 }
-            } catch (error) {
-                console.error("Error deleting badge", error);
             }
         }
     }
