@@ -65,8 +65,12 @@
             </div>
         </div>
 
-        <button type="submit" (click)="editingBadge ? saveBadgeChanges() : onSubmit()">
-            {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
+        <button id="createButton"
+                type="submit"
+                [attr.title]="!badgeForm.valid ? 'Fill all the required fields' : null"
+                [disabled]="!badgeForm.valid"
+                (click)="editingBadge ? saveBadgeChanges() : onSubmit()">
+                {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
         </button>
 
         <div class="delete-edit">
