@@ -1,4 +1,5 @@
 # from dataclasses import dataclass
+import datetime
 
 from flask import Response, request
 from sqlalchemy import select
@@ -55,6 +56,14 @@ def all_badges_including_nonactive() -> Response:
                 "shape": badge._data[0].shape,
                 "image": badge._data[0].image,
                 "description": badge._data[0].description,
+                "created_by": badge._data[0].created_by,
+                "created": badge._data[0].created,
+                "modified_by": badge._data[0].modified_by,
+                "modified": badge._data[0].modified,
+                "deleted_by": badge._data[0].deleted_by,
+                "deleted": badge._data[0].deleted,
+                "restored_by": badge._data[0].restored_by,
+                "restored": badge._data[0].restored,
             }
         )
     return json_response(badges_json)
@@ -75,6 +84,14 @@ def get_badges() -> Response:
                 "shape": badge._data[0].shape,
                 "image": badge._data[0].image,
                 "description": badge._data[0].description,
+                "created_by": badge._data[0].created_by,
+                "created": badge._data[0].created,
+                "modified_by": badge._data[0].modified_by,
+                "modified": badge._data[0].modified,
+                "deleted_by": badge._data[0].deleted_by,
+                "deleted": badge._data[0].deleted,
+                "restored_by": badge._data[0].restored_by,
+                "restored": badge._data[0].restored,
             }
         )
     return json_response(badges_json)
@@ -82,7 +99,10 @@ def get_badges() -> Response:
 
 @badges_blueprint.get("/all_badges_in_context/<context_group>")
 def get_badges_in_context(context_group: str) -> Response:
-    badges = run_sql(select(Badge).filter_by(context_group=context_group)).all()
+    badges = run_sql(
+        select(Badge).filter(Badge.active).filter_by(context_group=context_group)
+    ).all()
+
     badges_json = []
     for badge in badges:
         badges_json.append(
@@ -95,6 +115,14 @@ def get_badges_in_context(context_group: str) -> Response:
                 "shape": badge._data[0].shape,
                 "image": badge._data[0].image,
                 "description": badge._data[0].description,
+                "created_by": badge._data[0].created_by,
+                "created": badge._data[0].created,
+                "modified_by": badge._data[0].modified_by,
+                "modified": badge._data[0].modified,
+                "deleted_by": badge._data[0].deleted_by,
+                "deleted": badge._data[0].deleted,
+                "restored_by": badge._data[0].restored_by,
+                "restored": badge._data[0].restored,
             }
         )
     return json_response(badges_json)
@@ -116,6 +144,14 @@ def get_badge(badge_id: int) -> Response:
         "shape": badge._data[0].shape,
         "image": badge._data[0].image,
         "description": badge._data[0].description,
+        "created_by": badge._data[0].created_by,
+        "created": badge._data[0].created,
+        "modified_by": badge._data[0].modified_by,
+        "modified": badge._data[0].modified,
+        "deleted_by": badge._data[0].deleted_by,
+        "deleted": badge._data[0].deleted,
+        "restored_by": badge._data[0].restored_by,
+        "restored": badge._data[0].restored,
     }
     return json_response(badge_json)
 
@@ -131,6 +167,8 @@ def create_badge_hard() -> Response:
         shape="hexagon",
         image=6,
         description="You have worked really hard!",
+        created_by=2,
+        created=datetime.datetime.now(),
     )
     db.session.add(badge)
     db.session.commit()
@@ -139,10 +177,16 @@ def create_badge_hard() -> Response:
 
 # todo: Delete this in the final implementation.
 @badges_blueprint.get(
-    "/create_badge_simple/<context_group>/<title>/<color>/<shape>/<image>/<description>"
+    "/create_badge_simple/<created_by>/<context_group>/<title>/<color>/<shape>/<image>/<description>"
 )
 def create_badge_simple(
-    context_group: str, title: str, color: str, shape: str, image: int, description: str
+    created_by: int,
+    context_group: str,
+    title: str,
+    color: str,
+    shape: str,
+    image: int,
+    description: str,
 ) -> Response:
     badge = Badge(
         active=True,
@@ -152,6 +196,8 @@ def create_badge_simple(
         shape=shape,
         image=image,
         description=description,
+        created_by=created_by,
+        created=datetime.datetime.now(),
     )
     db.session.add(badge)
     db.session.commit()
@@ -169,6 +215,8 @@ def create_badge() -> Response:
         shape=request.args.get("shape"),
         image=request.args.get("image"),
         description=request.args.get("description"),
+        created_by=request.args.get("created_by"),
+        created=datetime.datetime.now(),
     )
     db.session.add(badge)
     db.session.commit()
@@ -186,6 +234,8 @@ def modify_badge_hard(badge_id: int) -> Response:
         "shape": "circle",
         "image": 6,
         "description": "You have worked constantly!",
+        "modified_by": 3,
+        "modified": datetime.datetime.now(),
     }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
@@ -194,9 +244,10 @@ def modify_badge_hard(badge_id: int) -> Response:
 
 # todo: Delete this in the final implementation.
 @badges_blueprint.get(
-    "/modify_badge_simple/<badge_id>/<context_group>/<title>/<color>/<shape>/<image>/<description>"
+    "/modify_badge_simple/<badge_id>/<modified_by>/<context_group>/<title>/<color>/<shape>/<image>/<description>"
 )
 def modify_badge_simple(
+    modified_by: int,
     context_group: str,
     badge_id: int,
     title: str,
@@ -213,6 +264,8 @@ def modify_badge_simple(
         "shape": shape,
         "image": image,
         "description": description,
+        "modified_by": modified_by,
+        "modified": datetime.datetime.now(),
     }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
@@ -230,6 +283,8 @@ def modify_badge() -> Response:
         "shape": request.args.get("shape"),
         "image": request.args.get("image"),
         "description": request.args.get("description"),
+        "modified_by": request.args.get("modified_by"),
+        "modified": datetime.datetime.now(),
     }
     Badge.query.filter_by(id=request.args.get("id")).update(badge)
     db.session.commit()
@@ -245,17 +300,25 @@ def delete_badge(badge_id: int) -> Response:
     return ok_response()
 
 
-@badges_blueprint.get("/deactivate_badge/<badge_id>")
-def deactivate_badge(badge_id: int) -> Response:
-    badge = {"active": False}
+@badges_blueprint.get("/deactivate_badge/<badge_id>/<deleted_by>")
+def deactivate_badge(badge_id: int, deleted_by: int) -> Response:
+    badge = {
+        "active": False,
+        "deleted_by": deleted_by,
+        "deleted": datetime.datetime.now(),
+    }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
     return ok_response()
 
 
-@badges_blueprint.get("/reactivate_badge/<badge_id>")
-def reactivate_badge(badge_id: int) -> Response:
-    badge = {"active": True}
+@badges_blueprint.get("/reactivate_badge/<badge_id>/<restored_by>")
+def reactivate_badge(badge_id: int, restored_by: int) -> Response:
+    badge = {
+        "active": True,
+        "restored_by": restored_by,
+        "restored": datetime.datetime.now(),
+    }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
     return ok_response()
@@ -271,7 +334,7 @@ def get_groups_badges(group_id: int) -> Response:
 
     badge_ids_and_msgs = {}
 
-    # todo: If badge_id is not supposed to be unique, refactor this to use str-key with some running number.
+    # todo: If badge_id is not supposed to be unique for group_id, refactor this to use str-key with some running number.
     for badge in groups_badges_given:
         badge_ids_and_msgs[badge._data[0].badge_id] = badge._data[0].message
 
@@ -292,13 +355,21 @@ def get_groups_badges(group_id: int) -> Response:
                 "image": badge._data[0].image,
                 "description": badge._data[0].description,
                 "message": badge_ids_and_msgs[badge._data[0].id],
+                "created_by": badge._data[0].created_by,
+                "created": badge._data[0].created,
+                "modified_by": badge._data[0].modified_by,
+                "modified": badge._data[0].modified,
+                "deleted_by": badge._data[0].deleted_by,
+                "deleted": badge._data[0].deleted,
+                "restored_by": badge._data[0].restored_by,
+                "restored": badge._data[0].restored,
             }
         )
 
     return json_response(badges_json)
 
 
-# todo: If badge_id is supposed to be unique:
+# todo: If badge_id is supposed to be unique for group_id:
 #   - refactor this to handle multiple same badges given to same group.
 #   - there will be problems with active-column in withdraw_badge and undo_withdraw_badge.
 @badges_blueprint.get("/give_badge/<group_id>/<badge_id>/<message>")
