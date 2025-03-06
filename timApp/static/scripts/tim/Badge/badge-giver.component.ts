@@ -44,13 +44,13 @@ interface BadgeGiven {
 })
 export class BadgeGiverComponent implements OnInit {
     users: User[] = [];
-    badges: Badge[] = [];
+    badges: any = [];
     selectedUser?: User;
     userBadges: BadgeGiven[] = [];
     selectedBadge?: Badge;
-    message: any;
+    message = "";
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     ngOnInit() {
         this.fetchUsers();
@@ -59,7 +59,10 @@ export class BadgeGiverComponent implements OnInit {
 
     fetchUsers() {}
 
-    fetchBadges() {}
+    async fetchBadges() {
+        this.badges = await this.badgeService.getAllBadges();
+        console.log(this.badges);
+    }
 
     fetchUserBadges(userId: number) {
         this.http
