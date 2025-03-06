@@ -38,7 +38,6 @@ from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
-from timApp.util.logger import log_info
 from tim_common.marshmallow_dataclass import class_schema
 
 IDE_TASK_TAG = "ideTask"  # Identification tag for the TIDE-task
