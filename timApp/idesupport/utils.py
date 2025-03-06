@@ -746,7 +746,7 @@ def get_ide_user_plugin_data(
     max_points = None
     try:
         max_points = float(plugin.max_points())
-    except ValueError as e:
+    except (ValueError, TypeError):
         pass
 
     return TIDEPluginData(
