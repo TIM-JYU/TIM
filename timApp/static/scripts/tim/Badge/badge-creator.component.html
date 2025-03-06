@@ -1,69 +1,94 @@
 <div class="badge-creator" [formGroup]="badgeForm">
-    <fieldset>
-        <h2>Create a new badge:</h2>
-        <form (ngSubmit)="onSubmit()">
-            <label for="title">Badge title:
-                <input type="text" id="title" name="title" formControlName="title">
-            </label>
-            <label for="description">Badge description:
-                <input type="text" id="description" formControlName="description">
-            </label>
+  <fieldset class="form-fieldset">
+    <h2>{{ editingBadge ? 'Edit Badge' : 'Create a Badge' }}</h2>
 
-            <label for="image">Badge icon:
-                <select id="image" formControlName="image">
-                    <option *ngFor="let image of availableImages" [value]="image">{{ image }}</option>
-                </select>
-            </label>
+    <form (ngSubmit)="onSubmit()" id="badgeForm">
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input type="text" id="title" name="title" formControlName="title">
+      </div>
 
-            <!-- Colors are selected from the color list -->
-            <label for="color">Badge color:
-                <select id="color" formControlName="color">
-                    <option *ngFor="let color of availableColors" [value]="color">{{ color }}</option>
-                </select>
-            </label>
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea rows="3" cols="" id="description" formControlName="description"> </textarea>
+      </div>
 
-            <label>Badge shape:</label>
-            <div class="shape">
-                <label>
-                    <input type="radio" id="circle" formControlName="shape" value="circle" checked> Circle
-                </label><br>
+      <div class="icon-color-group">
+        <div class="form-group">
+          <label for="image">Icon</label>
+          <select id="image" formControlName="image">
+            <option *ngFor="let image of availableImages" [value]="image">{{ image }}</option>
+          </select>
+        </div>
 
-                <label>
-                    <input type="radio" id="rectangle" formControlName="shape" value="rectangle"> Rectangle
-                </label><br>
+        <div class="form-group">
+          <label for="color">Color</label>
+          <select id="color" formControlName="color">
+            <option *ngFor="let color of availableColors" [value]="color">{{ color }}</option>
+          </select>
+        </div>
 
-                <label>
-                    <input type="radio" id="triangle" formControlName="shape" value="triangle"> Triangle
-                </label><br>
+          <div class="form-group">
+          <label for="context_group">Context-group</label>
+            <select id="context_group" formControlName="context_group">
+                <option *ngFor="let context_group of availableContext_groups" [value]="context_group">{{ context_group }}</option>
+            </select>
+        </div>
+      </div>
+        <div class="shape-preview-group">
+            <div class="form-group">
+                <label>Shape</label>
+                <div class="shape">
+                  <label *ngFor="let shape of shapes">
+                    <input type="radio" [id]="shape.value" formControlName="shape" [value]="shape.value" [checked]="shape.value === 'hexagon'"> {{ shape.label }}
+                  </label>
+                </div>
+              </div>
+            <div class="form-group">
+                <label>Preview</label>
+                <div class="preview">
+                    <fieldset>
+                      <tim-badge
+                        [title]="badgeForm.value.title || ''"
+                        [color]="badgeForm.value.color || 'gray'"
+                        [image]="badgeForm.value.image || 0"
+                        [description]="badgeForm.value.description || ''"
+                        [shape]="badgeForm.value.shape || 'hexagon'">
+                      </tim-badge>
+                    </fieldset>
+                </div>
             </div>
-            <!--TODO: description -->
-            <!--TODO: image attachment -->
-        </form>
+        </div>
+
+        <button type="submit" (click)="editingBadge ? saveBadge() : onSubmit()">
+            {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
+        </button>
+
+        <div class="delete-edit">
+            <div class="button-group">
+                <button id="cancelButton" type="button" [disabled]="!isFormChanged"  (click)="emptyForm()">Cancel</button>
+            </div>
+            <div class="button-group">
+                <button id="deleteButton" type="button" [disabled]="!editingBadge" (click)="deleteBadge()">Delete</button>
+            </div>
+        </div>
+    </form>
+  </fieldset>
+
+
+
+  <div class="all_badges">
+    <fieldset>
+      <ng-container *ngIf="all_badges.length > 0">
+        <tim-badge *ngFor="let badge of all_badges"
+                   title="{{badge.title}}"
+                   color="{{badge.color}}"
+                   shape="{{badge.shape}}"
+                   [image]="badge.image"
+                   description="{{badge.description}}"
+                   (click)="editBadge(badge)">
+        </tim-badge>
+      </ng-container>
     </fieldset>
-    <div class="preview">
-        <fieldset>
-            <tim-badge
-                *ngIf="badgeForm.value.title"
-                [title]="badgeForm.value.title || ''"
-                [color]="badgeForm.value.color || ''"
-                [image]="badgeForm.value.image || 1"
-                [description]="badgeForm.value.description || ''"
-                [shape]="badgeForm.value.shape || ''">
-            </tim-badge>
-        </fieldset>
-    </div>
-    <button (click)="onSubmit()">Create</button>
-    <div class="all_badges">
-        <fieldset>
-            <ng-container *ngIf="all_badges.length > 0">
-                <tim-badge *ngFor="let badge of all_badges"
-                           title="{{badge.title}}"
-                           color="{{badge.color}}"
-                           shape="{{badge.shape}}"
-                           [image]="badge.image"
-                           description="{{badge.description}}">
-                </tim-badge>
-            </ng-container>
-        </fieldset>
-    </div>
+  </div>
 </div>
