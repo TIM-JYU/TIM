@@ -31,6 +31,7 @@ import {TodoListComponent} from "tim/todo/todo-component";
 import {BadgeComponent} from "tim/Badge/Badge-component";
 import {BadgeTestComponent} from "tim/Badge/badge-test-component";
 import {BadgeViewerComponent} from "tim/Badge/badge-viewer-component";
+import {BadgeCreatorComponent} from "tim/Badge/badge-creator.component";
 import {HeaderComponent} from "tim/header/header.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
@@ -85,7 +86,7 @@ import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
 import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
-import {BadgeCreatorComponent} from "tim/Badge/badge-creator.component";
+import {BadgeGiverComponent} from "tim/Badge/badge-giver.component";
 
 BackspaceDisabler.disable();
 
@@ -164,6 +165,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timBadgeTest", BadgeTestComponent);
     doDowngrade(dg, "timBadgeViewer", BadgeViewerComponent);
     doDowngrade(dg, "timBadges", BadgeCreatorComponent);
+    doDowngrade(dg, "badgeGiver", BadgeGiverComponent);
     return dg;
 }
 
