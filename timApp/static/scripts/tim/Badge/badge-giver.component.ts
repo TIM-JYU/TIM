@@ -48,7 +48,7 @@ interface BadgeGiven {
 })
 export class BadgeGiverComponent implements OnInit {
     users: User[] = [];
-    badges: Badge[] = [];
+    badges: any = [];
     selectedUser?: User;
     userBadges: BadgeGiven[] = [];
     selectedBadge?: Badge;
