@@ -82,7 +82,9 @@ def get_badges() -> Response:
 
 @badges_blueprint.get("/all_badges_in_context/<context_group>")
 def get_badges_in_context(context_group: str) -> Response:
-    badges = run_sql(select(Badge).filter_by(context_group=context_group)).all()
+    badges = run_sql(
+        select(Badge).filter(Badge.active).filter_by(context_group=context_group)
+    ).all()
     badges_json = []
     for badge in badges:
         badges_json.append(
