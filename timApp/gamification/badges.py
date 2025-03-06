@@ -5,34 +5,31 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from timApp.timdb.sqa import db
+from timApp.timdb.types import datetime_tz
 from timApp.user.usergroup import UserGroup
 
 
 class Badge(db.Model):
     __tablename__ = "badge"
 
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    title = db.Column(db.String, nullable=False)
-    description = db.Column(db.String, nullable=False)
-    color = db.Column(db.String, nullable=False)
-    shape = db.Column(db.String, nullable=False)
-    image = db.Column(db.Integer, nullable=False)
-    context_group = db.Column(db.String, nullable=False)
-    active = db.Column(db.Boolean, nullable=False)
-    # todo: useraccount or usergroup?
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+    color: Mapped[str] = mapped_column(nullable=False)
+    shape: Mapped[str] = mapped_column(nullable=False)
+    image: Mapped[int] = mapped_column(nullable=False)
+    context_group: Mapped[str] = mapped_column(nullable=False)
+    active: Mapped[bool] = mapped_column(nullable=False)
     created_by: Mapped[Optional[int]] = mapped_column(
         ForeignKey("usergroup.id"), nullable=False
     )
-    created = db.Column(db.DateTime, nullable=False)
-    # todo: useraccount or usergroup?
+    created: Mapped[datetime_tz] = mapped_column(nullable=False)
     modified_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
-    modified = db.Column(db.DateTime)
-    # todo: useraccount or usergroup?
+    modified: Mapped[Optional[datetime_tz]] = mapped_column()
     deleted_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
-    deleted = db.Column(db.DateTime)
-    # todo: useraccount or usergroup?
+    deleted: Mapped[Optional[datetime_tz]] = mapped_column()
     restored_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
-    restored = db.Column(db.DateTime)
+    restored: Mapped[Optional[datetime_tz]] = mapped_column()
 
     group_created: Mapped[Optional[UserGroup]] = relationship(foreign_keys=created_by)
     group_modified: Mapped[Optional[UserGroup]] = relationship(foreign_keys=modified_by)
@@ -49,6 +46,14 @@ class Badge(db.Model):
             "image": self.image,
             "context_group": self.context_group,
             "active": self.active,
+            "created_by": self.created_by,
+            "created": self.created,
+            "modified_by": self.modified_by,
+            "modified": self.modified,
+            "deleted_by": self.deleted_by,
+            "deleted": self.deleted,
+            "restored_by": self.restored_by,
+            "restored": self.restored,
         }
 
     # def get_badges(self):
@@ -63,13 +68,11 @@ class BadgeGiven(db.Model):
     message = db.Column(db.String)
     # todo: Add nullable=False
     badge_id: Mapped[int] = mapped_column(ForeignKey("badge.id"))
-    # todo: useraccount or usergroup?
     # todo: Add nullable=False
     group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"))
     active = db.Column(db.Boolean, nullable=False)
 
     badge: Mapped[Badge] = relationship()
-    # todo: useraccount or usergroup?
     group: Mapped[UserGroup] = relationship()
 
     # def get_group_name(self):

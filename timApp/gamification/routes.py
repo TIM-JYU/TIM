@@ -1,11 +1,13 @@
 # from dataclasses import dataclass
 import datetime
+from dataclasses import dataclass
 
 from flask import Response, request
 from sqlalchemy import select
 
 from timApp.gamification.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.types import datetime_tz
 from timApp.util.flask.responsehelper import (
     ok_response,
     json_response,
@@ -17,142 +19,65 @@ from timApp.util.flask.typedblueprint import TypedBlueprint
 badges_blueprint = TypedBlueprint("badges", __name__)
 
 
-# @dataclass
-# class BadgeModel:
-#     id: int
-#     active: bool
-#     context_group: str
-#     title: str
-#     color: str
-#     shape: str
-#     image: int
-#     description: str
-#
-#     def to_json(self) -> dict[str, int | bool | str]:
-#         return {
-#             "id": self._data[0].id,
-#             "active": self._data[0].active,
-#             "context_group": self._data[0].context_group,
-#             "title": self._data[0].title,
-#             "color": self._data[0].color,
-#             "shape": self._data[0].shape,
-#             "image": self._data[0].image,
-#             "description": self._data[0].description,
-#         }
+@dataclass
+class BadgeModel:
+    id: int
+    title: str
+    description: str
+    color: str
+    shape: str
+    image: int
+    context_group: int
+    active: bool
+    created_by: int
+    created: datetime_tz
+    modified_by: int | None
+    modified: datetime_tz | None
+    deleted_by: int | None
+    deleted: datetime_tz | None
+    restored_by: int | None
+    restored: datetime_tz | None
 
 
 @badges_blueprint.get("/all_badges_including_nonactive")
 def all_badges_including_nonactive() -> Response:
-    badges = run_sql(select(Badge)).all()
+    badges = run_sql(select(Badge)).scalars().all()
     badges_json = []
     for badge in badges:
-        badges_json.append(
-            {
-                "id": badge._data[0].id,
-                "active": badge._data[0].active,
-                "context_group": badge._data[0].context_group,
-                "title": badge._data[0].title,
-                "color": badge._data[0].color,
-                "shape": badge._data[0].shape,
-                "image": badge._data[0].image,
-                "description": badge._data[0].description,
-                "created_by": badge._data[0].created_by,
-                "created": badge._data[0].created,
-                "modified_by": badge._data[0].modified_by,
-                "modified": badge._data[0].modified,
-                "deleted_by": badge._data[0].deleted_by,
-                "deleted": badge._data[0].deleted,
-                "restored_by": badge._data[0].restored_by,
-                "restored": badge._data[0].restored,
-            }
-        )
+        badges_json.append(badge.to_json())
     return json_response(badges_json)
 
 
 @badges_blueprint.get("/all_badges")
 def get_badges() -> Response:
-    badges = run_sql(select(Badge).filter_by(active=True)).all()
+    badges = run_sql(select(Badge).filter_by(active=True)).scalars().all()
     badges_json = []
     for badge in badges:
-        badges_json.append(
-            {
-                "id": badge._data[0].id,
-                "active": badge._data[0].active,
-                "context_group": badge._data[0].context_group,
-                "title": badge._data[0].title,
-                "color": badge._data[0].color,
-                "shape": badge._data[0].shape,
-                "image": badge._data[0].image,
-                "description": badge._data[0].description,
-                "created_by": badge._data[0].created_by,
-                "created": badge._data[0].created,
-                "modified_by": badge._data[0].modified_by,
-                "modified": badge._data[0].modified,
-                "deleted_by": badge._data[0].deleted_by,
-                "deleted": badge._data[0].deleted,
-                "restored_by": badge._data[0].restored_by,
-                "restored": badge._data[0].restored,
-            }
-        )
+        badges_json.append(badge.to_json())
     return json_response(badges_json)
 
 
 @badges_blueprint.get("/all_badges_in_context/<context_group>")
 def get_badges_in_context(context_group: str) -> Response:
-    badges = run_sql(
-        select(Badge).filter(Badge.active).filter_by(context_group=context_group)
-    ).all()
-
+    badges = (
+        run_sql(
+            select(Badge).filter(Badge.active).filter_by(context_group=context_group)
+        )
+        .scalars()
+        .all()
+    )
     badges_json = []
     for badge in badges:
-        badges_json.append(
-            {
-                "id": badge._data[0].id,
-                "active": badge._data[0].active,
-                "context_group": badge._data[0].context_group,
-                "title": badge._data[0].title,
-                "color": badge._data[0].color,
-                "shape": badge._data[0].shape,
-                "image": badge._data[0].image,
-                "description": badge._data[0].description,
-                "created_by": badge._data[0].created_by,
-                "created": badge._data[0].created,
-                "modified_by": badge._data[0].modified_by,
-                "modified": badge._data[0].modified,
-                "deleted_by": badge._data[0].deleted_by,
-                "deleted": badge._data[0].deleted,
-                "restored_by": badge._data[0].restored_by,
-                "restored": badge._data[0].restored,
-            }
-        )
+        badges_json.append(badge.to_json())
     return json_response(badges_json)
 
 
 @badges_blueprint.get("/badge/<badge_id>")
 def get_badge(badge_id: int) -> Response:
-    badge = run_sql(select(Badge).filter_by(id=badge_id)).first()
-    # return json_response(badge.to_json())
-    # Badge.to_json(badge)
+    badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if badge is None:
         return error_generic("there's no badge with id: " + str(badge_id), 404)
-    badge_json = {
-        "id": badge._data[0].id,
-        "active": badge._data[0].active,
-        "context_group": badge._data[0].context_group,
-        "title": badge._data[0].title,
-        "color": badge._data[0].color,
-        "shape": badge._data[0].shape,
-        "image": badge._data[0].image,
-        "description": badge._data[0].description,
-        "created_by": badge._data[0].created_by,
-        "created": badge._data[0].created,
-        "modified_by": badge._data[0].modified_by,
-        "modified": badge._data[0].modified,
-        "deleted_by": badge._data[0].deleted_by,
-        "deleted": badge._data[0].deleted,
-        "restored_by": badge._data[0].restored_by,
-        "restored": badge._data[0].restored,
-    }
+    badge_json = badge.to_json()
     return json_response(badge_json)
 
 
@@ -168,7 +93,7 @@ def create_badge_hard() -> Response:
         image=6,
         description="You have worked really hard!",
         created_by=2,
-        created=datetime.datetime.now(),
+        created=datetime_tz.now(),
     )
     db.session.add(badge)
     db.session.commit()
@@ -205,7 +130,7 @@ def create_badge_simple(
 
 
 # todo: Make this work.
-@badges_blueprint.get("/create_badge")
+@badges_blueprint.post("/create_badge")
 def create_badge() -> Response:
     badge = Badge(
         active=True,
@@ -326,45 +251,32 @@ def reactivate_badge(badge_id: int, restored_by: int) -> Response:
 
 @badges_blueprint.get("/groups_badges/<group_id>")
 def get_groups_badges(group_id: int) -> Response:
-    groups_badges_given = run_sql(
-        select(BadgeGiven).filter(
-            BadgeGiven.active == True and BadgeGiven.group_id == group_id
+    groups_badges_given = (
+        run_sql(
+            select(BadgeGiven).filter(
+                BadgeGiven.active == True and BadgeGiven.group_id == group_id
+            )
         )
-    ).all()
+        .scalars()
+        .all()
+    )
 
     badge_ids_and_msgs = {}
 
     # todo: If badge_id is not supposed to be unique for group_id, refactor this to use str-key with some running number.
     for badge in groups_badges_given:
-        badge_ids_and_msgs[badge._data[0].badge_id] = badge._data[0].message
+        badge_ids_and_msgs[badge.badge_id] = badge.message
 
-    groups_badges = run_sql(
-        select(Badge).filter(Badge.id.in_(badge_ids_and_msgs.keys()))
-    ).all()
+    groups_badges = (
+        run_sql(select(Badge).filter(Badge.id.in_(badge_ids_and_msgs.keys())))
+        .scalars()
+        .all()
+    )
 
     badges_json = []
 
     for badge in groups_badges:
-        badges_json.append(
-            {
-                "id": badge._data[0].id,
-                "context_group": badge._data[0].context_group,
-                "title": badge._data[0].title,
-                "color": badge._data[0].color,
-                "shape": badge._data[0].shape,
-                "image": badge._data[0].image,
-                "description": badge._data[0].description,
-                "message": badge_ids_and_msgs[badge._data[0].id],
-                "created_by": badge._data[0].created_by,
-                "created": badge._data[0].created,
-                "modified_by": badge._data[0].modified_by,
-                "modified": badge._data[0].modified,
-                "deleted_by": badge._data[0].deleted_by,
-                "deleted": badge._data[0].deleted,
-                "restored_by": badge._data[0].restored_by,
-                "restored": badge._data[0].restored,
-            }
-        )
+        badges_json.append(badge.to_json())
 
     return json_response(badges_json)
 
