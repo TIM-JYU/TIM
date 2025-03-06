@@ -38,6 +38,7 @@ from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
+from timApp.util.logger import log_info
 from tim_common.marshmallow_dataclass import class_schema
 
 IDE_TASK_TAG = "ideTask"  # Identification tag for the TIDE-task
@@ -743,7 +744,11 @@ def get_ide_user_plugin_data(
         elif "source" in extra_file:
             supplementary_files.append(SupplementaryFileSchema.load(extra_file))
 
-    max_points = plugin.values.get("pointsRule", {}).get("maxPoints", None)
+    max_points = None
+    try:
+        max_points = float(plugin.max_points())
+    except ValueError as e:
+        pass
 
     return TIDEPluginData(
         task_files=json_ide_files,
