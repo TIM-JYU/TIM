@@ -29,7 +29,7 @@ interface BadgeGiven {
 }
 
 @Component({
-    selector: "badge-giver",
+    selector: "timBadgeGiver",
     templateUrl: "./badge-giver.component.html",
     styleUrls: ["./badge-giver.component.scss"],
 })
@@ -39,7 +39,7 @@ export class BadgeGiverComponent implements OnInit {
     selectedUser?: User;
     userBadges: BadgeGiven[] = [];
     selectedBadge?: Badge;
-    message: any;
+    message = "";
 
     constructor(private http: HttpClient) {}
 
