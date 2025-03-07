@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-02-21 11:41+0000\n"
-"PO-Revision-Date: 2025-02-21 13:44+0200\n"
+"POT-Creation-Date: 2025-03-04 10:26+0000\n"
+"PO-Revision-Date: 2025-03-04 12:28+0200\n"
 "Last-Translator: \n"
 "Language-Team: fi <LL@li.org>\n"
 "Language: fi\n"
@@ -40,7 +40,6 @@ msgid "Practice exam not set in the plugin markup."
 msgstr "Harjoituskoe ei ole asetettu pluginin asetuksissa."
 
 #: plugin/examGroupManager/examGroupManager.py:786
-#, fuzzy
 msgid "Exam info not found in the plugin markup."
 msgstr "Harjoituskoe ei ole asetettu pluginin asetuksissa."
 
@@ -85,6 +84,18 @@ msgstr ""
 #: plugin/quantum_circuit/quantumCircuit.py:268
 msgid "Expand by moving mouse over the exercise or by clicking"
 msgstr "Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla"
+
+#: plugin/tableform/tableForm.py:520
+msgid "Real name"
+msgstr "Koko nimi"
+
+#: plugin/tableform/tableForm.py:522
+msgid "Username"
+msgstr "Käyttäjätunnus"
+
+#: plugin/tableform/tableForm.py:524
+msgid "Email"
+msgstr "Sähköpostiosoite"
 
 #: templates/create_new.jinja2:2
 msgid "This page does not yet exist."
