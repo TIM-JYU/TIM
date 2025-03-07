@@ -28,8 +28,7 @@ class Badge(db.Model):
     restored_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     restored: Mapped[Optional[datetime_tz]] = mapped_column()
 
-    # TODO: Remove Optional from group_created?
-    group_created: Mapped[Optional[UserGroup]] = relationship(foreign_keys=created_by)
+    group_created: Mapped[UserGroup] = relationship(foreign_keys=created_by)
     group_modified: Mapped[Optional[UserGroup]] = relationship(foreign_keys=modified_by)
     group_deleted: Mapped[Optional[UserGroup]] = relationship(foreign_keys=deleted_by)
     group_restored: Mapped[Optional[UserGroup]] = relationship(foreign_keys=restored_by)
