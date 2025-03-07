@@ -10,6 +10,7 @@ import {BadgeCreatorComponent} from "tim/Badge/badge-creator.component";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
+import {Users} from "tim/user/userService";
 
 interface Badge {
     id: number;
@@ -59,9 +60,9 @@ export class BadgeGiverComponent implements OnInit {
     selectedUser?: User;
     userBadges: BadgeGiven[] = [];
     selectedBadge?: Badge;
-    message: any;
+    message = "";
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     ngOnInit() {
         // Tilataan updateBadgelist-tapahtuma BadgeService:ltä
@@ -84,10 +85,11 @@ export class BadgeGiverComponent implements OnInit {
                 }
             }
         }
-        console.log(this.users);
     }
 
-    fetchBadges() {}
+    async fetchBadges() {
+        this.badges = await this.badgeService.getAllBadges();
+    }
 
     fetchUserBadges(userId: number) {
         this.http
