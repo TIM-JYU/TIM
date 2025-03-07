@@ -327,8 +327,8 @@ def do_email_signup_or_password_reset(
 
 
 def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
-    # Temp passwords are always uppercase
-    oldpass = oldpass.upper()
+    # Temp passwords are always uppercase and have no spaces.
+    oldpass = oldpass.upper().strip()
     u = User.get_by_name(email_or_username)
     if u:
         name_filter = [u.name, u.email]
