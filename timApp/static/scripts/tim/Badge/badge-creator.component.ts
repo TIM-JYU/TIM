@@ -11,6 +11,7 @@ import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {BadgeGiverModule} from "tim/Badge/badge-giver.component";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 import {getFormBehavior} from "tim/plugin/util";
+import {BadgeService} from "tim/Badge/badge.service";
 
 interface IBadge {
     id: number;
@@ -21,6 +22,7 @@ interface IBadge {
     description: string;
     message: string;
     context_group: string;
+    created_by: string;
 }
 
 @Component({
@@ -29,7 +31,7 @@ interface IBadge {
     styleUrls: ["./badge-creator.component.scss"],
 })
 export class BadgeCreatorComponent implements OnInit {
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     isFormChanged = false; // Flag to track form changes
     all_badges: IBadge[] = [];
@@ -95,6 +97,8 @@ export class BadgeCreatorComponent implements OnInit {
             const response = toPromise(
                 this.http.get<[]>(
                     "/create_badge_simple/" +
+                        "1" + // tässä toistaiseksi kovakoodattuna
+                        "/" +
                         this.newBadge.context_group +
                         "/" +
                         this.newBadge.title +
@@ -115,6 +119,8 @@ export class BadgeCreatorComponent implements OnInit {
                 }
                 await this.getBadges();
                 this.emptyForm();
+                // Lähetetään signaali onnistuneesta luonnista
+                this.badgeService.triggerUpdateBadgeList(); // Lähetetään signaali BadgeService:lle
             }
         }
     }
@@ -192,6 +198,8 @@ export class BadgeCreatorComponent implements OnInit {
                     "/modify_badge_simple/" +
                         this.editingBadge.id +
                         "/" +
+                        "1" + // Toistaiseksi kovakoodattuna
+                        "/" +
                         this.editingBadge.context_group +
                         "/" +
                         this.editingBadge.title +
@@ -223,7 +231,7 @@ export class BadgeCreatorComponent implements OnInit {
                 try {
                     const response = await toPromise(
                         this.http.get(
-                            `/deactivate_badge/${this.editingBadge.id}`
+                            `/deactivate_badge/${this.editingBadge.id}/1` // Kovakoodattu toistaiseksi
                         )
                     );
 
@@ -231,9 +239,12 @@ export class BadgeCreatorComponent implements OnInit {
                         while (this.all_badges.length > 0) {
                             this.all_badges.pop();
                         }
+
                         this.getBadges();
                         this.emptyForm();
                         this.isFormChanged = false;
+                        // Lähetetään signaali onnistuneesta deletoinnista
+                        this.badgeService.triggerUpdateBadgeList(); // Lähetetään signaali BadgeService:lle
                     } else {
                         console.log("Failed to delete badge");
                     }
