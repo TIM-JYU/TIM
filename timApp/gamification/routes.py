@@ -268,28 +268,22 @@ def get_groups_badges(group_id: int) -> Response:
         .all()
     )
 
+    badge_ids = []
     badge_ids_and_msgs = {}
 
-    # TODO: If badge_id is not supposed to be unique for group_id, refactor this to use str-key with some running number.
-    #       Something like this:
-    # for badgeGiven in groups_badges_given:
-    #     key_extension = 0
-    #     while (
-    #         str(badgeGiven.badge_id) + "_" + str(key_extension)
-    #     ) in badge_ids_and_msgs.keys():
-    #         key_extension += 1
-    #     badge_ids_and_msgs[
-    #         str(badgeGiven.badge_id) + "_" + str(key_extension)
-    #     ] = badgeGiven.message
     for badgeGiven in groups_badges_given:
-        badge_ids_and_msgs[badgeGiven.badge_id] = badgeGiven.message
+        key_extension = 0
+        while (
+            str(badgeGiven.badge_id) + "_" + str(key_extension)
+        ) in badge_ids_and_msgs.keys():
+            key_extension += 1
+        badge_ids.append(badgeGiven.badge_id)
+        badge_ids_and_msgs[
+            str(badgeGiven.badge_id) + "_" + str(key_extension)
+        ] = badgeGiven.message
 
     groups_badges = (
-        run_sql(
-            select(Badge)
-            .filter_by(active=True)
-            .filter(Badge.id.in_(badge_ids_and_msgs.keys()))
-        )
+        run_sql(select(Badge).filter_by(active=True).filter(Badge.id.in_(badge_ids)))
         .scalars()
         .all()
     )
@@ -297,9 +291,15 @@ def get_groups_badges(group_id: int) -> Response:
     badges_json = []
 
     for badge in groups_badges:
-        badge_json = badge.to_json()
-        badge_json["message"] = badge_ids_and_msgs[badge.id]
-        badges_json.append(badge_json)
+        key_extension = 0
+        for badge_id in badge_ids:
+            if badge_id == badge.id:
+                badge_json = badge.to_json()
+                badge_json["message"] = badge_ids_and_msgs[
+                    str(badge.id) + "_" + str(key_extension)
+                ]
+                key_extension += 1
+                badges_json.append(badge_json)
 
     return json_response(badges_json)
 
