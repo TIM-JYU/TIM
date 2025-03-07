@@ -30,5 +30,5 @@
         <textarea [(ngModel)]="message" placeholder="Enter a message..."></textarea>
     </div>
 
-    <button (click)="assignBadge()" [disabled]="!selectedUser || !selectedBadge">Give Badge</button>
+    <button (click)="assignBadge(message)" [disabled]="!selectedUser || !selectedBadge">Give Badge</button>
 </div>

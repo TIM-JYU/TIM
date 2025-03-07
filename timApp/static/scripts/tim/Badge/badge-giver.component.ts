@@ -29,6 +29,8 @@ interface IBadge {
 interface User {
     id: number;
     name: string;
+    real_name: string;
+    email: string;
 }
 
 interface BadgeGiven {
@@ -60,13 +62,6 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     private async fetchUsers() {
-        // this.users = [
-        //     {id: 0, name: "test1"},
-        //     {id: 1, name: "test2"},
-        //     {id: 2, name: "test3"},
-        //     {id: 3, name: "test4"},
-        //     {id: 4, name: "test5"},
-        // ];
         const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
         const result = await response;
         if (result.ok) {
@@ -92,15 +87,15 @@ export class BadgeGiverComponent implements OnInit {
             });
     }
 
-    assignBadge() {
-        if (this.selectedUser && this.selectedBadge) {
-            const payload = {
-                badge_id: this.selectedBadge.id,
-                user_id: this.selectedUser.id,
-            };
-            this.http.post("/api/badge-given", payload).subscribe(() => {
-                this.fetchUserBadges(this.selectedUser!.id);
-            });
+    async assignBadge(message: string) {
+        const response = toPromise(
+            this.http.get<[]>("/give_badge/2/1/" + message)
+        );
+
+        const result = await response;
+        if (result.ok) {
+            if (result.result != undefined) {
+            }
         }
     }
 
