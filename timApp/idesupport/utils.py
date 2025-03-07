@@ -743,7 +743,11 @@ def get_ide_user_plugin_data(
         elif "source" in extra_file:
             supplementary_files.append(SupplementaryFileSchema.load(extra_file))
 
-    max_points = plugin.values.get("pointsRule", {}).get("maxPoints", None)
+    max_points = None
+    try:
+        max_points = float(plugin.max_points())
+    except (ValueError, TypeError):
+        pass
 
     return TIDEPluginData(
         task_files=json_ide_files,
