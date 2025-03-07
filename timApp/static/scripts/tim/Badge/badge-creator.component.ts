@@ -9,6 +9,7 @@ import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
 import {toPromise} from "tim/util/utils";
 import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {BadgeGiverModule} from "tim/Badge/badge-giver.component";
+import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
 interface IBadge {
     id: number;
@@ -18,6 +19,7 @@ interface IBadge {
     shape: string;
     description: string;
     message: string;
+    context_group: string;
 }
 
 @Component({
@@ -28,8 +30,13 @@ interface IBadge {
 export class BadgeCreatorComponent implements OnInit {
     constructor(private http: HttpClient) {}
 
+    isFormChanged = false; // Flag to track form changes
+
     ngOnInit() {
         this.getAllBadges();
+        this.badgeForm.valueChanges.subscribe(() => {
+            this.isFormChanged = true; // Set flag to true when form changes
+        });
     }
 
     // color list for forms
@@ -48,30 +55,37 @@ export class BadgeCreatorComponent implements OnInit {
     ];
 
     availableImages = [1, 2, 3, 4, 5, 6, 100];
-    availableShapes = ["circle", "triangle", "hexagon"];
+
+    availableContext_groups = ["it_01", "it_02", "es_01"];
+
+    shapes = [
+        {label: "Hexagon", value: "hexagon"},
+        {label: "Flower", value: "flower"},
+        {label: "Circle", value: "round"},
+        {label: "Square", value: "square"},
+    ];
 
     all_badges: IBadge[] = [];
 
     badgeForm = new FormGroup({
-        id: new FormControl(""),
+        id: new FormControl(0),
         image: new FormControl(0),
         title: new FormControl(""),
         icon: new FormControl(""),
         description: new FormControl(""),
-        color: new FormControl("#ff0000"),
-        shape: new FormControl(""),
-        message: new FormControl(""),
+        color: new FormControl("gray"),
+        shape: new FormControl("hexagon"),
+        context_group: new FormControl(""),
     });
 
     newBadge: any = null;
     async onSubmit() {
         this.newBadge = this.badgeForm.value;
-        // console.log(this.newBadge);
-        console.log("New badge: ", this.newBadge);
-
         const response = toPromise(
             this.http.get<[]>(
                 "/create_badge_simple/" +
+                    this.newBadge.context_group +
+                    "/" +
                     this.newBadge.title +
                     "/" +
                     this.newBadge.color +
@@ -88,7 +102,8 @@ export class BadgeCreatorComponent implements OnInit {
             while (this.all_badges.length > 0) {
                 this.all_badges.pop();
             }
-            this.getAllBadges();
+            await this.getAllBadges();
+            this.emptyForm();
         }
     }
 
@@ -114,39 +129,79 @@ export class BadgeCreatorComponent implements OnInit {
     editBadge(badge: IBadge) {
         this.editingBadge = badge;
         this.badgeForm.patchValue({
+            id: badge.id,
             title: badge.title,
             description: badge.description,
             image: badge.image,
             color: badge.color,
             shape: badge.shape,
+            context_group: badge.context_group,
         });
     }
 
+    emptyForm() {
+        this.editingBadge = null;
+        this.badgeForm.reset({
+            color: "gray",
+            shape: "hexagon",
+        });
+        this.isFormChanged = false; // Reset the change flag
+    }
+
     // Save changes
-    // TODO: ei tällä hetkellä koske itse databaseen
-    saveBadge() {
+    //TODO: ei tällä hetkellä koske itse databaseen
+    async saveBadge() {
         if (this.editingBadge) {
             Object.assign(this.editingBadge, this.badgeForm.value);
-            this.editingBadge = null;
-            this.badgeForm.reset();
+            const response = toPromise(
+                this.http.get<[]>(
+                    "/modify_badge_simple/" +
+                        this.editingBadge.id +
+                        "/" +
+                        this.editingBadge.context_group +
+                        "/" +
+                        this.editingBadge.title +
+                        "/" +
+                        this.editingBadge.color +
+                        "/" +
+                        this.editingBadge.shape +
+                        "/" +
+                        this.editingBadge.image +
+                        "/" +
+                        this.editingBadge.description
+                )
+            );
+            const result = await response;
+            if (result.ok) {
+                while (this.all_badges.length > 0) {
+                    this.all_badges.pop();
+                }
+                this.emptyForm();
+                await this.getAllBadges();
+            }
         }
     }
 
     // Delete badge
-    // TODO: varoitus, haluatko todella poistaa?
+    //TODO: varoitus, haluatko todella poistaa?
     async deleteBadge() {
         if (this.editingBadge) {
             try {
                 const response = await toPromise(
-                    this.http.get(`/delete_badge/${this.editingBadge.id}`)
+                    this.http.get(`/deactivate_badge/${this.editingBadge.id}`)
                 );
 
                 if (response.ok) {
-                    this.all_badges = this.all_badges.filter(
-                        (b) => b.id == this.editingBadge.id
-                    );
+                    while (this.all_badges.length > 0) {
+                        this.all_badges.pop();
+                    }
+                    this.getAllBadges();
                     this.editingBadge = null;
-                    this.badgeForm.reset();
+                    this.badgeForm.reset({
+                        color: "gray",
+                        shape: "hexagon",
+                    });
+                    this.isFormChanged = false;
                 } else {
                     console.log("Failed to delete badge");
                 }

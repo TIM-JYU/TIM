@@ -165,7 +165,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timBadgeTest", BadgeTestComponent);
     doDowngrade(dg, "timBadgeViewer", BadgeViewerComponent);
     doDowngrade(dg, "timBadges", BadgeCreatorComponent);
-    doDowngrade(dg, "timBadgeGiver", BadgeGiverComponent);
+    doDowngrade(dg, "badgeGiver", BadgeGiverComponent);
     return dg;
 }
 
