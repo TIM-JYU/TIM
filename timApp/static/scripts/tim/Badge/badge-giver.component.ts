@@ -1,10 +1,13 @@
 import type {OnInit} from "@angular/core";
+import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
+import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
+import {Users} from "tim/user/userService";
 
 interface Badge {
     id: number;
@@ -29,6 +32,8 @@ interface IBadge {
 interface User {
     id: number;
     name: string;
+    real_name: string;
+    email: string;
 }
 
 interface BadgeGiven {
@@ -40,7 +45,7 @@ interface BadgeGiven {
 }
 
 @Component({
-    selector: "badge-giver",
+    selector: "timBadgeGiver",
     templateUrl: "./badge-giver.component.html",
     styleUrls: ["./badge-giver.component.scss"],
 })
@@ -51,6 +56,7 @@ export class BadgeGiverComponent implements OnInit {
     userBadges: BadgeGiven[] = [];
     selectedBadge?: Badge;
     message = "";
+    badgeGiver = 0;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -60,13 +66,6 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     private async fetchUsers() {
-        // this.users = [
-        //     {id: 0, name: "test1"},
-        //     {id: 1, name: "test2"},
-        //     {id: 2, name: "test3"},
-        //     {id: 3, name: "test4"},
-        //     {id: 4, name: "test5"},
-        // ];
         const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
         const result = await response;
         if (result.ok) {
@@ -76,12 +75,10 @@ export class BadgeGiverComponent implements OnInit {
                 }
             }
         }
-        console.log(this.users);
     }
 
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
-        console.log(this.badges);
     }
 
     fetchUserBadges(userId: number) {
@@ -92,15 +89,33 @@ export class BadgeGiverComponent implements OnInit {
             });
     }
 
-    assignBadge() {
-        if (this.selectedUser && this.selectedBadge) {
-            const payload = {
-                badge_id: this.selectedBadge.id,
-                user_id: this.selectedUser.id,
-            };
-            this.http.post("/api/badge-given", payload).subscribe(() => {
-                this.fetchUserBadges(this.selectedUser!.id);
-            });
+    async assignBadge(message: string) {
+        if (Users.isLoggedIn()) {
+            this.badgeGiver = Users.getCurrent().id;
+        }
+        const response = toPromise(
+            this.http.get<[]>(
+                "/give_badge/" +
+                    this.badgeGiver +
+                    "/" +
+                    this.selectedUser?.id +
+                    "/" +
+                    this.selectedBadge?.id +
+                    "/" +
+                    message
+            )
+        );
+
+        const result = await response;
+        if (result.ok) {
+            if (result.result != undefined) {
+                console.log(
+                    "badge " +
+                        this.selectedBadge?.title +
+                        " annettu käyttäjälle: " +
+                        this.selectedUser?.name
+                );
+            }
         }
     }
 
@@ -116,11 +131,13 @@ export class BadgeGiverComponent implements OnInit {
             });
         }
     }
+
+    protected readonly console = console;
 }
 
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, BadgeViewerModule],
 })
 export class BadgeGiverModule {}
