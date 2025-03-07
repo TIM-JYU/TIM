@@ -8,6 +8,7 @@ import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {BadgeCreatorComponent} from "tim/Badge/badge-creator.component";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
+import {Subscription} from "rxjs";
 
 interface Badge {
     id: number;
@@ -48,6 +49,8 @@ interface BadgeGiven {
     styleUrls: ["./badge-giver.component.scss"],
 })
 export class BadgeGiverComponent implements OnInit {
+    private subscription: Subscription = new Subscription();
+
     users: User[] = [];
     badges: Badge[] = [];
     selectedUser?: User;
@@ -58,6 +61,12 @@ export class BadgeGiverComponent implements OnInit {
     constructor(private http: HttpClient) {}
 
     ngOnInit() {
+        // Tilataan updateBadgelist-tapahtuma BadgeService:ltä
+        this.subscription.add(
+            this.badgeService.updateBadgeList$.subscribe(() => {
+                this.fetchBadges(); // Kutsutaan fetchBadges-metodia updaten jälkeen
+            })
+        );
         this.fetchUsers();
         this.fetchBadges();
     }
