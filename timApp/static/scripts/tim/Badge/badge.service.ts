@@ -1,6 +1,7 @@
 import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {lastValueFrom} from "rxjs";
+import {Subject} from "rxjs";
 
 class Badge {}
 
@@ -9,6 +10,12 @@ class Badge {}
 })
 export class BadgeService {
     private all_badges: any[] = [];
+
+    // Subject, joka laukaisee updatesignaalin
+    private updateBadgeSubject = new Subject<void>();
+
+    // Observable updatetapahtuman kuunteluun
+    updateBadgeList$ = this.updateBadgeSubject.asObservable();
     constructor(private http: HttpClient) {}
 
     async getAllBadges(): Promise<Badge[]> {
@@ -26,5 +33,10 @@ export class BadgeService {
             // Return an empty array in case of an error
             return [];
         }
+    }
+
+    // Funktio updatetapahtuman lähettämiseen
+    triggerUpdateBadgeList() {
+        this.updateBadgeSubject.next();
     }
 }

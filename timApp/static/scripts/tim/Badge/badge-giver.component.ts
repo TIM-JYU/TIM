@@ -6,6 +6,7 @@ import {CommonModule} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
+import {Subscription} from "rxjs";
 import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {Users} from "tim/user/userService";
 
@@ -50,6 +51,8 @@ interface BadgeGiven {
     styleUrls: ["./badge-giver.component.scss"],
 })
 export class BadgeGiverComponent implements OnInit {
+    private subscription: Subscription = new Subscription();
+
     users: User[] = [];
     badges: any = [];
     selectedUser?: User;
@@ -61,6 +64,12 @@ export class BadgeGiverComponent implements OnInit {
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     ngOnInit() {
+        // Tilataan updateBadgelist-tapahtuma BadgeService:ltä
+        this.subscription.add(
+            this.badgeService.updateBadgeList$.subscribe(() => {
+                this.fetchBadges(); // Kutsutaan fetchBadges-metodia updaten jälkeen
+            })
+        );
         this.fetchUsers();
         this.fetchBadges();
     }
