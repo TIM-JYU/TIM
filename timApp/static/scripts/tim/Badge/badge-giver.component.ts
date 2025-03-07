@@ -89,12 +89,25 @@ export class BadgeGiverComponent implements OnInit {
 
     async assignBadge(message: string) {
         const response = toPromise(
-            this.http.get<[]>("/give_badge/2/1/" + message)
+            this.http.get<[]>(
+                "/give_badge/" +
+                    this.selectedUser?.id +
+                    "/" +
+                    this.selectedBadge?.id +
+                    "/" +
+                    message
+            )
         );
 
         const result = await response;
         if (result.ok) {
             if (result.result != undefined) {
+                console.log(
+                    "badge " +
+                        this.selectedBadge?.title +
+                        " annettu käyttäjälle: " +
+                        this.selectedUser?.name
+                );
             }
         }
     }
@@ -111,6 +124,8 @@ export class BadgeGiverComponent implements OnInit {
             });
         }
     }
+
+    protected readonly console = console;
 }
 
 @NgModule({
