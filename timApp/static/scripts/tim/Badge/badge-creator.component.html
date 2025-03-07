@@ -29,11 +29,16 @@
         </div>
 
           <div class="form-group">
-          <label for="context_group">Context-group</label>
+            <label for="context_group">Context Group</label>
             <select id="context_group" formControlName="context_group">
-                <option *ngFor="let context_group of availableContext_groups" [value]="context_group">{{ context_group }}</option>
+                <option *ngFor="let context_group of availableContext_groups" [value]="context_group">
+                    {{ context_group }}
+                </option>
             </select>
-        </div>
+          </div>
+
+
+
       </div>
         <div class="shape-preview-group">
             <div class="form-group">
@@ -60,13 +65,17 @@
             </div>
         </div>
 
-        <button type="submit" (click)="editingBadge ? saveBadge() : onSubmit()">
-            {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
+        <button id="createButton"
+                type="submit"
+                [attr.title]="!badgeForm.valid ? 'Fill all the required fields' : null"
+                [disabled]="!badgeForm.valid"
+                (click)="editingBadge ? saveBadgeChanges() : onSubmit()">
+                {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
         </button>
 
         <div class="delete-edit">
             <div class="button-group">
-                <button id="cancelButton" type="button" [disabled]="!isFormChanged"  (click)="emptyForm()">Cancel</button>
+                <button id="cancelButton" type="button" [disabled]="!isFormChanged"  (click)="onCancel()">Cancel</button>
             </div>
             <div class="button-group">
                 <button id="deleteButton" type="button" [disabled]="!editingBadge" (click)="deleteBadge()">Delete</button>
@@ -79,6 +88,7 @@
 
   <div class="all_badges">
     <fieldset>
+      <h2>{{ selectedContextGroup ? selectedContextGroup + "'s Badges" : "All Badges" }}</h2>
       <ng-container *ngIf="all_badges.length > 0">
         <tim-badge *ngFor="let badge of all_badges"
                    title="{{badge.title}}"

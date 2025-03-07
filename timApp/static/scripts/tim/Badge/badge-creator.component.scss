@@ -98,7 +98,7 @@ button:hover {
   width: 100%;
   height: 163px;
   border: 2px solid #0F4096;
-  border-radius: 1em;
+  border-radius: 0.5em;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -137,7 +137,7 @@ button:hover {
 }
 
 button[type="button"] {
-  background-color: #FF5C5C;
+  background-color: #c31515;
   width: 100%;
   padding: 0.5em 1em;
   margin-top: 1em;
@@ -145,14 +145,18 @@ button[type="button"] {
 }
 
 button[type="button"]:hover {
-  background-color: #D74040;
+  background-color: #9b1212;
 }
 
-#deleteButton[disabled], #cancelButton[disabled] {
+#deleteButton[disabled], #cancelButton[disabled]{
   background-color: #ccc;
   color: #777;
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+#createButton[disabled], #createButton[disabled]:hover {
+  background-color: #7A9BCD;
 }
 
 .delete-edit {
@@ -170,6 +174,10 @@ button[type="button"]:hover {
   background-color: #ccc;
 }
 
+#createButton:hover {
+  background-color: #0D357A;
+}
+
 #cancelButton:hover {
   background-color: #5a6268;
 }
@@ -178,4 +186,16 @@ button[type="button"]:hover {
 .delete-edit .button-group {
   flex: 1;  /* Asettaa kentän täyttämään jäljelle jäävän tilan */
   max-width: 50%;  /* Kenttä täyttää 50% leveyksistä */
+}
+
+#createButton {
+  width: 100%;
+  padding: 0.8em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: #0F4096;
+  color: #fff;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
