@@ -1,4 +1,3 @@
-import json
 from typing import Optional
 
 from sqlalchemy import ForeignKey
@@ -20,9 +19,7 @@ class Badge(db.Model):
     image: Mapped[int] = mapped_column(nullable=False)
     context_group: Mapped[str] = mapped_column(nullable=False)
     active: Mapped[bool] = mapped_column(nullable=False)
-    created_by: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("usergroup.id"), nullable=False
-    )
+    created_by: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), nullable=False)
     created: Mapped[datetime_tz] = mapped_column(nullable=False)
     modified_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     modified: Mapped[Optional[datetime_tz]] = mapped_column()
@@ -31,6 +28,7 @@ class Badge(db.Model):
     restored_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     restored: Mapped[Optional[datetime_tz]] = mapped_column()
 
+    # TODO: Remove Optional from group_created?
     group_created: Mapped[Optional[UserGroup]] = relationship(foreign_keys=created_by)
     group_modified: Mapped[Optional[UserGroup]] = relationship(foreign_keys=modified_by)
     group_deleted: Mapped[Optional[UserGroup]] = relationship(foreign_keys=deleted_by)
@@ -56,27 +54,28 @@ class Badge(db.Model):
             "restored": self.restored,
         }
 
-    # def get_badges(self):
-    #     return self
-
 
 class BadgeGiven(db.Model):
     __tablename__ = "badgegiven"
 
-    # todo: Add nullable=False
-    id = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.String)
-    # todo: Add nullable=False
-    badge_id: Mapped[int] = mapped_column(ForeignKey("badge.id"))
-    # todo: Add nullable=False
-    group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"))
-    active = db.Column(db.Boolean, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    message: Mapped[str] = mapped_column()
+    badge_id: Mapped[int] = mapped_column(ForeignKey("badge.id"), nullable=False)
+    group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), nullable=False)
+    active: Mapped[bool] = mapped_column(nullable=False)
+    given_by: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), nullable=False)
+    given: Mapped[datetime_tz] = mapped_column(nullable=False)
+    withdrawn_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
+    withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
+    undo_withdrawn_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
+    undo_withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
 
     badge: Mapped[Badge] = relationship()
-    group: Mapped[UserGroup] = relationship()
-
-    # def get_group_name(self):
-    #     return self.group.name
-
-    # def get_badge_id(self):
-    #     return self.badge.id
+    group: Mapped[UserGroup] = relationship(foreign_keys=group_id)
+    group_given: Mapped[UserGroup] = relationship(foreign_keys=given_by)
+    group_withdrawn: Mapped[Optional[UserGroup]] = relationship(
+        foreign_keys=withdrawn_by
+    )
+    group_undo_withdrawn: Mapped[Optional[UserGroup]] = relationship(
+        foreign_keys=undo_withdrawn_by
+    )
