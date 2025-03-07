@@ -271,6 +271,16 @@ def get_groups_badges(group_id: int) -> Response:
     badge_ids_and_msgs = {}
 
     # TODO: If badge_id is not supposed to be unique for group_id, refactor this to use str-key with some running number.
+    #       Something like this:
+    # for badgeGiven in groups_badges_given:
+    #     key_extension = 0
+    #     while (
+    #         str(badgeGiven.badge_id) + "_" + str(key_extension)
+    #     ) in badge_ids_and_msgs.keys():
+    #         key_extension += 1
+    #     badge_ids_and_msgs[
+    #         str(badgeGiven.badge_id) + "_" + str(key_extension)
+    #     ] = badgeGiven.message
     for badgeGiven in groups_badges_given:
         badge_ids_and_msgs[badgeGiven.badge_id] = badgeGiven.message
 
@@ -287,7 +297,9 @@ def get_groups_badges(group_id: int) -> Response:
     badges_json = []
 
     for badge in groups_badges:
-        badges_json.append(badge.to_json())
+        badge_json = badge.to_json()
+        badge_json["message"] = badge_ids_and_msgs[badge.id]
+        badges_json.append(badge_json)
 
     return json_response(badges_json)
 
