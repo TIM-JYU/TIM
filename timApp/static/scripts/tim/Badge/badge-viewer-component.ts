@@ -68,7 +68,6 @@ export class BadgeViewerComponent implements OnInit {
                 }
                 console.log("haettu käyttäjän " + id + " badget");
             }
-            console.log(this.badges);
         }
     }
 
@@ -76,7 +75,6 @@ export class BadgeViewerComponent implements OnInit {
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
             this.userID = Users.getCurrent().id;
-            console.log(this.id);
 
             if (this.id != undefined) {
                 this.getBadges(this.id);

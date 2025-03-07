@@ -7,6 +7,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
 import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
+import {Users} from "tim/user/userService";
 
 interface Badge {
     id: number;
@@ -55,6 +56,7 @@ export class BadgeGiverComponent implements OnInit {
     userBadges: BadgeGiven[] = [];
     selectedBadge?: Badge;
     message = "";
+    badgeGiver = 0;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -73,12 +75,10 @@ export class BadgeGiverComponent implements OnInit {
                 }
             }
         }
-        console.log(this.users);
     }
 
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
-        console.log(this.badges);
     }
 
     fetchUserBadges(userId: number) {
@@ -90,9 +90,14 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     async assignBadge(message: string) {
+        if (Users.isLoggedIn()) {
+            this.badgeGiver = Users.getCurrent().id;
+        }
         const response = toPromise(
             this.http.get<[]>(
                 "/give_badge/" +
+                    this.badgeGiver +
+                    "/" +
                     this.selectedUser?.id +
                     "/" +
                     this.selectedBadge?.id +
