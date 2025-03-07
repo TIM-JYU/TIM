@@ -1,5 +1,5 @@
-import {Component, NgModule} from "@angular/core";
 import type {OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
@@ -33,6 +33,8 @@ interface IBadge {
 interface User {
     id: number;
     name: string;
+    real_name: string;
+    email: string;
 }
 
 interface BadgeGiven {
@@ -72,13 +74,6 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     private async fetchUsers() {
-        // this.users = [
-        //     {id: 0, name: "test1"},
-        //     {id: 1, name: "test2"},
-        //     {id: 2, name: "test3"},
-        //     {id: 3, name: "test4"},
-        //     {id: 4, name: "test5"},
-        // ];
         const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
         const result = await response;
         if (result.ok) {
