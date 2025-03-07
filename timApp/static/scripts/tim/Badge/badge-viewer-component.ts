@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, Input} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
@@ -49,10 +49,13 @@ export class BadgeViewerComponent implements OnInit {
     userName?: string;
     userID: number = 0;
     badges: IBadge[] = [];
-
+    @Input() id?: number;
     constructor(private http: HttpClient) {}
 
     private async getBadges(id: number) {
+        while (this.badges.length > 0) {
+            this.badges.pop();
+        }
         const response = toPromise(this.http.get<[]>("/groups_badges/" + id));
 
         const result = await response;
@@ -63,7 +66,9 @@ export class BadgeViewerComponent implements OnInit {
                     const obj = JSON.parse(json);
                     this.badges.push(obj);
                 }
+                console.log("haettu käyttäjän " + id + " badget");
             }
+            console.log(this.badges);
         }
     }
 
@@ -71,6 +76,12 @@ export class BadgeViewerComponent implements OnInit {
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
             this.userID = Users.getCurrent().id;
+            console.log(this.id);
+
+            if (this.id != undefined) {
+                this.getBadges(this.id);
+                return;
+            }
         }
         this.getBadges(this.userID);
     }
