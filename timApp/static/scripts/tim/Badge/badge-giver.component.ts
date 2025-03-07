@@ -42,7 +42,7 @@ interface BadgeGiven {
 }
 
 @Component({
-    selector: "badge-giver",
+    selector: "timBadgeGiver",
     templateUrl: "./badge-giver.component.html",
     styleUrls: ["./badge-giver.component.scss"],
 })
