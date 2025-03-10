@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from pathlib import Path
 
-from flask import Response, request
+import filelock
+from flask import Response, request, current_app
 from sqlalchemy import select
 
 from timApp.gamification.badges import Badge, BadgeGiven
@@ -9,8 +11,8 @@ from timApp.timdb.types import datetime_tz
 from timApp.util.flask.responsehelper import (
     ok_response,
     json_response,
-    empty_response,
     error_generic,
+    to_json_str,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -35,6 +37,29 @@ class BadgeModel:
     deleted: datetime_tz | None
     restored_by: int | None
     restored: datetime_tz | None
+
+
+# log_info = {
+#     "event": event,
+#     "timestamp": timestamp,
+#     "id": id,
+#     "executor": executor,
+#     "active": active,
+#     "context_group": context_group,
+#     "title": title,
+#     "color": color,
+#     "shape": shape,
+#     "image": image,
+#     "description": description,
+#     "badge_id": badge_id,
+#     "group_id": group_id,
+#     "message": message,
+# }
+def log_badge_event(log_info: dict) -> None:
+    path = Path(current_app.config["FILES_PATH"]) / current_app.config["BADGE_LOG_FILE"]
+    with filelock.FileLock(f"/tmp/badge_log"):
+        with path.open("a") as f:
+            f.write(to_json_str(log_info) + "\n")
 
 
 @badges_blueprint.get("/all_badges_including_nonactive")
@@ -97,6 +122,23 @@ def create_badge_hard() -> Response:
     )
     db.session.add(badge)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "create_badge",
+                "timestamp": badge.created,
+                "executor": badge.created_by,
+                "active": badge.active,
+                "context_group": badge.context_group,
+                "title": badge.title,
+                "color": badge.color,
+                "shape": badge.shape,
+                "image": badge.image,
+                "description": badge.description,
+            }
+        )
+
     return ok_response()
 
 
@@ -126,6 +168,23 @@ def create_badge_simple(
     )
     db.session.add(badge)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "create_badge",
+                "timestamp": badge.created,
+                "executor": badge.created_by,
+                "active": badge.active,
+                "context_group": badge.context_group,
+                "title": badge.title,
+                "color": badge.color,
+                "shape": badge.shape,
+                "image": badge.image,
+                "description": badge.description,
+            }
+        )
+
     return ok_response()
 
 
@@ -145,6 +204,23 @@ def create_badge() -> Response:
     )
     db.session.add(badge)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "create_badge",
+                "timestamp": badge.created,
+                "executor": badge.created_by,
+                "active": badge.active,
+                "context_group": badge.context_group,
+                "title": badge.title,
+                "color": badge.color,
+                "shape": badge.shape,
+                "image": badge.image,
+                "description": badge.description,
+            }
+        )
+
     return ok_response()
 
 
@@ -153,7 +229,6 @@ def create_badge() -> Response:
 @badges_blueprint.get("/modify_badge_hard/<badge_id>")
 def modify_badge_hard(badge_id: int) -> Response:
     badge = {
-        "active": True,
         "context_group": "group1",
         "title": "Constant worker",
         "color": "teal",
@@ -165,6 +240,23 @@ def modify_badge_hard(badge_id: int) -> Response:
     }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "modify_badge",
+                "timestamp": badge["modified"],
+                "id": badge_id,
+                "executor": badge["modified_by"],
+                "context_group": badge["context_group"],
+                "title": badge["title"],
+                "color": badge["color"],
+                "shape": badge["shape"],
+                "image": badge["image"],
+                "description": badge["description"],
+            }
+        )
+
     return ok_response()
 
 
@@ -184,7 +276,6 @@ def modify_badge_simple(
     description: str,
 ) -> Response:
     badge = {
-        "active": True,
         "context_group": context_group,
         "title": title,
         "color": color,
@@ -196,6 +287,23 @@ def modify_badge_simple(
     }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "modify_badge",
+                "timestamp": badge["modified"],
+                "id": badge_id,
+                "executor": badge["modified_by"],
+                "context_group": badge["context_group"],
+                "title": badge["title"],
+                "color": badge["color"],
+                "shape": badge["shape"],
+                "image": badge["image"],
+                "description": badge["description"],
+            }
+        )
+
     return ok_response()
 
 
@@ -204,7 +312,6 @@ def modify_badge_simple(
 @badges_blueprint.get("/modify_badge")
 def modify_badge() -> Response:
     badge = {
-        "active": True,
         "context_group": request.args.get("context_group"),
         "title": request.args.get("title"),
         "color": request.args.get("color"),
@@ -216,6 +323,23 @@ def modify_badge() -> Response:
     }
     Badge.query.filter_by(id=request.args.get("id")).update(badge)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "modify_badge",
+                "timestamp": badge["modified"],
+                "id": request.args.get("id"),
+                "executor": badge["modified_by"],
+                "context_group": badge["context_group"],
+                "title": badge["title"],
+                "color": badge["color"],
+                "shape": badge["shape"],
+                "image": badge["image"],
+                "description": badge["description"],
+            }
+        )
+
     return ok_response()
 
 
@@ -239,6 +363,17 @@ def deactivate_badge(badge_id: int, deleted_by: int) -> Response:
     }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "delete_badge",
+                "timestamp": badge["deleted"],
+                "id": badge_id,
+                "executor": badge["deleted_by"],
+            }
+        )
+
     return ok_response()
 
 
@@ -252,6 +387,17 @@ def reactivate_badge(badge_id: int, restored_by: int) -> Response:
     }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "restore_badge",
+                "timestamp": badge["restored"],
+                "id": badge_id,
+                "executor": badge["restored_by"],
+            }
+        )
+
     return ok_response()
 
 
@@ -269,7 +415,7 @@ def get_groups_badges(group_id: int) -> Response:
     )
 
     badge_ids = []
-    badge_ids_and_msgs = {}
+    badge_ids_and_msgs: dict[str, str] = {}
 
     for badgeGiven in groups_badges_given:
         key_extension = 0
@@ -317,6 +463,20 @@ def give_badge(given_by: int, group_id: int, badge_id: int, message: str) -> Res
     )
     db.session.add(badge_given)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "give_badge",
+                "timestamp": badge_given.given,
+                "executor": badge_given.given_by,
+                "active": badge_given.active,
+                "badge_id": badge_given.badge_id,
+                "group_id": group_id,
+                "message": badge_given.message,
+            }
+        )
+
     return ok_response()
 
 
@@ -330,6 +490,18 @@ def withdraw_badge(badge_given_id: int, withdrawn_by: int) -> Response:
     }
     BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "withdraw_badge",
+                "timestamp": badge_given["withdrawn"],
+                "id": badge_given_id,
+                "executor": badge_given["withdrawn_by"],
+                "active": badge_given["active"],
+            }
+        )
+
     return ok_response()
 
 
@@ -343,4 +515,16 @@ def undo_withdraw_badge(badge_given_id: int, undo_withdrawn_by: int) -> Response
     }
     BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given)
     db.session.commit()
+
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "undo_withdraw_badge",
+                "timestamp": badge_given["undo_withdrawn"],
+                "id": badge_given_id,
+                "executor": badge_given["undo_withdrawn_by"],
+                "active": badge_given["active"],
+            }
+        )
+
     return ok_response()
