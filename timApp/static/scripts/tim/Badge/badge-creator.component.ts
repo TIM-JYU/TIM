@@ -10,18 +10,7 @@ import {toPromise} from "tim/util/utils";
 import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {BadgeGiverModule} from "tim/Badge/badge-giver.component";
 import {BadgeService} from "tim/Badge/badge.service";
-
-interface IBadge {
-    id: number;
-    title: string;
-    color: string;
-    image: number;
-    shape: string;
-    description: string;
-    message: string;
-    context_group: string;
-    created_by: string;
-}
+import {IBadge} from "tim/Badge/badge.interface";
 
 @Component({
     selector: "tim-badges",
