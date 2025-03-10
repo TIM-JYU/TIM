@@ -130,7 +130,6 @@ export class BadgeGiverComponent implements OnInit {
             });
         }
     }
-
     protected readonly console = console;
 }
 

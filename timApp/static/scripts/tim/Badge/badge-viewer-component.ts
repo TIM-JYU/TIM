@@ -1,5 +1,5 @@
-import type {OnInit} from "@angular/core";
-import {Component, NgModule, Input} from "@angular/core";
+import type {OnInit, SimpleChanges} from "@angular/core";
+import {Component, NgModule, Input, OnChanges} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
@@ -22,7 +22,7 @@ interface IBadge {
     selector: "tim-badge-viewer",
     template: `
         <ng-container *ngIf="badges.length > 0">
-            <p>{{userName}}'s badges: </p>
+<!--            <p>{{userName}}'s badges: </p>-->
             <div class="user_badges">
                 <tim-badge *ngFor="let badge of badges" 
                            title="{{badge.title}}" 
@@ -34,7 +34,7 @@ interface IBadge {
             </div>
         </ng-container>
         <ng-container *ngIf="badges.length == 0">
-            <p>{{userName}}'s badges: </p>
+<!--            <p>{{userName}}'s badges: </p>-->
             <div class="main-wrapper">
                 <div class="badge yellow">
                     <div class="circle"> <i class="fa fa-shield"></i></div>
@@ -82,6 +82,12 @@ export class BadgeViewerComponent implements OnInit {
             }
         }
         this.getBadges(this.userID);
+    }
+    ngOnChanges(changes: SimpleChanges) {
+        if (this.id != undefined) {
+            console.log("haettu badget id:llä: " + this.id);
+            this.getBadges(this.id);
+        }
     }
 }
 
