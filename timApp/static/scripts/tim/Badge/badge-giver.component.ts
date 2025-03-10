@@ -9,6 +9,7 @@ import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
 import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {Users} from "tim/user/userService";
+import {IBadge} from "tim/Badge/badge.interface";
 
 interface Badge {
     id: number;
@@ -17,17 +18,6 @@ interface Badge {
     color: string;
     shape: string;
     image: number;
-}
-
-interface IBadge {
-    id: number;
-    title: string;
-    color: string;
-    image: number;
-    shape: string;
-    description: string;
-    message: string;
-    context_group: string;
 }
 
 interface User {
