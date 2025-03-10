@@ -29,7 +29,9 @@ interface IBadge {
                            color="{{badge.color}}" 
                            shape="{{badge.shape}}"
                            [image]="badge.image"
-                           description="{{badge.description}}">
+                           description="{{badge.description}}"
+                           message="{{badge.message}}">
+                    
                 </tim-badge>
             </div>
         </ng-container>
