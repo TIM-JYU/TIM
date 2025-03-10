@@ -28,6 +28,7 @@ export class BadgeCreatorComponent implements OnInit {
     isFormChanged = false; // Flag to track form changes
     all_badges: IBadge[] = [];
     selectedContextGroup: string = "";
+    hasPermission = false;
 
     // Initializes the component by loading badges and subscribing to form value changes.
     // It tracks changes to the context_group field and triggers a handler when the value changes.
@@ -36,6 +37,10 @@ export class BadgeCreatorComponent implements OnInit {
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
             this.userID = Users.getCurrent().id;
+
+            if (Users.belongsToGroup("Administrators")) {
+                this.hasPermission = true;
+            }
         }
 
         this.getBadges();
