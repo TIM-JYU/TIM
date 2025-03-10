@@ -12,18 +12,7 @@ import {BadgeGiverModule} from "tim/Badge/badge-giver.component";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 import {getFormBehavior} from "tim/plugin/util";
 import {BadgeService} from "tim/Badge/badge.service";
-
-interface IBadge {
-    id: number;
-    title: string;
-    color: string;
-    image: number;
-    shape: string;
-    description: string;
-    message: string;
-    context_group: string;
-    created_by: string;
-}
+import {IBadge} from "tim/Badge/badge.interface";
 
 @Component({
     selector: "tim-badges",

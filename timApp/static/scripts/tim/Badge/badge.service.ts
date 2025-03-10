@@ -2,14 +2,13 @@ import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {lastValueFrom} from "rxjs";
 import {Subject} from "rxjs";
-
-class Badge {}
+import {IBadge} from "tim/Badge/badge.interface";
 
 @Injectable({
     providedIn: "root",
 })
 export class BadgeService {
-    private all_badges: any[] = [];
+    private all_badges: IBadge[] = [];
 
     // Subject, joka laukaisee updatesignaalin
     private updateBadgeSubject = new Subject<void>();
@@ -18,10 +17,10 @@ export class BadgeService {
     updateBadgeList$ = this.updateBadgeSubject.asObservable();
     constructor(private http: HttpClient) {}
 
-    async getAllBadges(): Promise<Badge[]> {
+    async getAllBadges(): Promise<IBadge[]> {
         try {
             // Create an HTTP request and wait for response
-            const response = this.http.get<Badge[]>("/all_badges");
+            const response = this.http.get<IBadge[]>("/all_badges");
 
             // Transform Observable to a Promise and wait for data
             const result = await lastValueFrom(response);
