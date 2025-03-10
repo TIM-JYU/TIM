@@ -11,6 +11,7 @@ import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {BadgeGiverModule} from "tim/Badge/badge-giver.component";
 import {BadgeService} from "tim/Badge/badge.service";
 import {IBadge} from "tim/Badge/badge.interface";
+import {Users} from "tim/user/userService";
 
 @Component({
     selector: "tim-badges",
@@ -18,6 +19,8 @@ import {IBadge} from "tim/Badge/badge.interface";
     styleUrls: ["./badge-creator.component.scss"],
 })
 export class BadgeCreatorComponent implements OnInit {
+    private userName?: string;
+    private userID?: number;
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     isFormChanged = false; // Flag to track form changes
@@ -28,6 +31,10 @@ export class BadgeCreatorComponent implements OnInit {
     // It tracks changes to the context_group field and triggers a handler when the value changes.
     ngOnInit() {
         let previousContextGroup = this.badgeForm.value.context_group;
+        if (Users.isLoggedIn()) {
+            this.userName = Users.getCurrent().name;
+            this.userID = Users.getCurrent().id;
+        }
 
         this.getBadges();
         this.badgeForm.valueChanges.subscribe(() => {
@@ -81,10 +88,11 @@ export class BadgeCreatorComponent implements OnInit {
     async onSubmit() {
         if (this.badgeForm.valid) {
             this.newBadge = this.badgeForm.value;
+            this.newBadge.created_by = this.userID;
             const response = toPromise(
                 this.http.get<[]>(
                     "/create_badge_simple/" +
-                        "1" + // tässä toistaiseksi kovakoodattuna
+                        this.newBadge.created_by +
                         "/" +
                         this.newBadge.context_group +
                         "/" +
