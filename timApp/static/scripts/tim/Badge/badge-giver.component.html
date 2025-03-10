@@ -7,7 +7,8 @@
             <option *ngFor="let user of users" [ngValue]="user">{{ user.name }}</option>
         </select>
     </div>
-
+    
+    <tim-badge-viewer [id]="selectedUser?.id"></tim-badge-viewer>
     <div class="user-badges" *ngIf="selectedUser">
         <h3>Assigned Badges</h3>
         <ul>
