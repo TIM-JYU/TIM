@@ -40,7 +40,7 @@ export class BadgeGiverComponent implements OnInit {
     badges: Badge[] = [];
     selectedUser?: User;
     userBadges: IBadge[] = [];
-    selectedBadge?: IBadge;
+    selectedBadge?: IBadge | null = null;
     message = "";
     badgeGiver = 0;
 
@@ -55,6 +55,15 @@ export class BadgeGiverComponent implements OnInit {
         );
         this.fetchUsers();
         this.fetchBadges();
+
+        // Subscribe to badge update events
+        this.subscription.add(
+            this.badgeService.updateBadgeList$.subscribe(() => {
+                if (this.selectedUser?.id != undefined) {
+                    this.fetchUserBadges(this.selectedUser.id); // Refresh badges
+                }
+            })
+        );
     }
 
     emptyForm() {
@@ -142,6 +151,10 @@ export class BadgeGiverComponent implements OnInit {
     selectBadge(badge?: IBadge) {
         this.selectedBadge = badge;
         this.showDeleteButton = true;
+    }
+
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
     }
 
     protected readonly console = console;

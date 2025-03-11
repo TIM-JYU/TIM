@@ -14,12 +14,8 @@ import {Subscription} from "rxjs";
 @Component({
     selector: "tim-badge-viewer",
     template: `
-        <ng-container *ngIf="selectedUserName && badges.length > 0">
-            <!-- Tämä otsikko näkyy vain, jos käyttäjä on valittu ja hänellä on badget -->
-            <label for="user-badges">{{selectedUserName}}'s badges</label>
-        </ng-container>
-        
         <ng-container *ngIf="badges.length > 0">
+            <p>{{this.userName}}'s badges</p>
             <div class="user_badges">
                 <tim-badge *ngFor="let badge of badges" 
                            title="{{badge.title}}" 
