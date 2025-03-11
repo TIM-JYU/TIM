@@ -21,8 +21,12 @@ interface IBadge {
 @Component({
     selector: "tim-badge-viewer",
     template: `
+        <ng-container *ngIf="selectedUserName && badges.length > 0">
+            <!-- Tämä otsikko näkyy vain, jos käyttäjä on valittu ja hänellä on badget -->
+            <label for="user-badges">{{selectedUserName}}'s badges</label>
+        </ng-container>
+        
         <ng-container *ngIf="badges.length > 0">
-            <p>{{selectedUserName}}'s badges</p>
             <div class="user_badges">
                 <div *ngIf="id != null">
                     <tim-badge *ngFor="let badge of badges" 
@@ -36,9 +40,6 @@ interface IBadge {
                     </tim-badge>
                 </div>
             </div>
-        </ng-container>
-        <ng-container *ngIf="badges.length == 0">
-         <p>{{selectedUserName}} has no badges</p>
         </ng-container>
         
         <!-- Delete button, only shown when a badge is selected -->
@@ -77,7 +78,7 @@ export class BadgeViewerComponent implements OnInit {
                 }
                 console.log("haettu käyttäjän " + id + " badget");
             }
-            console.log(this.badges);
+            console.log("Miks tätä kutsutaan kahdesti: ", this.badges);
         }
     }
 
@@ -85,13 +86,7 @@ export class BadgeViewerComponent implements OnInit {
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
             this.userID = Users.getCurrent().id;
-
-            if (this.id != undefined) {
-                this.getBadges(this.id);
-                return;
-            }
         }
-        this.getBadges(this.userID);
     }
     ngOnChanges(changes: SimpleChanges) {
         if (this.id != undefined) {

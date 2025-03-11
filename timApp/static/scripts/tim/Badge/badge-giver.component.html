@@ -8,7 +8,6 @@
         </select>
     </div>
 
-    <label for="user-badges">{{selectedUser ? selectedUser.name : 'User'}} Badges</label>
     <div id="user-badges">
         <tim-badge-viewer *ngIf="selectedUser"
             [id]="selectedUser!.id"
