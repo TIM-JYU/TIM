@@ -9,6 +9,7 @@ import {BadgeModule} from "tim/Badge/Badge-component";
 import {BadgeTestModule} from "tim/Badge/badge-test-component";
 import {BadgeService} from "tim/Badge/badge.service";
 import type {IBadge} from "tim/Badge/badge.interface";
+import {Subscription} from "rxjs";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -44,6 +45,8 @@ export class BadgeViewerComponent implements OnInit {
     userID: number;
     badges: IBadge[] = [];
 
+    private subscription: Subscription = new Subscription();
+
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     async getBadges(id: number) {
@@ -59,23 +62,43 @@ export class BadgeViewerComponent implements OnInit {
         this.getBadges();
     }
 
-    emptyBadges() {
-        while (this.badges.length > 0) {
-            this.badges.pop();
+        // Subscribe to badge update events
+        this.subscription.add(
+            this.badgeService.updateBadgeList$.subscribe(() => {
+                if (this.id != undefined) {
+                    this.getBadges(this.id); // Refresh badges
+                }
+            })
+        );
+    }
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes.id) {
+            if (this.id != undefined) {
+                this.getBadges(this.id);
+            }
         }
+    }
+
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
+    }
+
     // Select a badge to show the delete button
-    selectBadge(badge: IBadge) {
+    selectBadge(badge?: IBadge) {
         this.selectedBadge = badge;
         this.showDeleteButton = true;
     }
 
-    removeBadge() {
-        const response = toPromise(
-            this.http.get(
-                `/withdraw_badge/${this.selectedBadge}/${this.userID}`
-            )
+    async removeBadge(badgegivenID?: number) {
+        if (badgegivenID == undefined) {
+            console.error("badgegivenID was undefined");
+            return;
+        }
+        this.badgeService.withdrawBadge(badgegivenID, this.userID);
+        //Päivitetään badge-viewerin näkymä.
+        this.badges = this.badges.filter(
+            (badge) => badge.badgegiven_id !== badgegivenID
         );
-        console.log("badgeId: ", this.selectedBadge);
     }
 }
 

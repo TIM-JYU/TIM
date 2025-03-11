@@ -10,12 +10,18 @@ import {toPromise} from "tim/util/utils";
 })
 export class BadgeService {
     private all_badges: IBadge[] = [];
+    //private;
 
     // Subject, joka laukaisee updatesignaalin
     private updateBadgeSubject = new Subject<void>();
 
     // Observable updatetapahtuman kuunteluun
     updateBadgeList$ = this.updateBadgeSubject.asObservable();
+
+    notifyBadgeViewerUpdate() {
+        this.updateBadgeSubject.next();
+    }
+
     constructor(private http: HttpClient) {}
 
     async getAllBadges(): Promise<IBadge[]> {
