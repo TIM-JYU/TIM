@@ -8,7 +8,10 @@
         </select>
     </div>
     
-    <tim-badge-viewer [id]="selectedUser?.id" [selectedUserName]="selectedUser?.name"></tim-badge-viewer>
+    <tim-badge-viewer *ngIf="selectedUser"
+            [id]="selectedUser!.id"
+            [selectedUserName]="selectedUser!.name">
+    </tim-badge-viewer>
 
     <div class="badge-selection">
         <h3>Select a Badge to Assign</h3>
@@ -17,11 +20,25 @@
         </select>
     </div>
 
+    <!-- Preview of the selected badge -->
+    <div *ngIf="selectedBadge" class="badge-preview">
+        <h3>Selected Badge Preview</h3>
+        <tim-badge *ngIf="selectedBadge"
+                   title="{{ selectedBadge!.title  }}"
+                   color="{{ selectedBadge!.color }}"
+                   shape="{{ selectedBadge!.shape }}"
+                   [image]="selectedBadge!.image"
+                   description="{{ selectedBadge!.description }}"
+                   message="{{ message }}">
+        </tim-badge>
+    </div>
+
+
     <div class="message-box">
         <h3>Message to Student</h3>
         <textarea [(ngModel)]="message" placeholder="Enter a message..."></textarea>
     </div>
 
     <button (click)="assignBadge(message)" [disabled]="!selectedUser || !selectedBadge">Give Badge</button>
-    <button (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge">Cancel</button>
+    <button (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge && !message">Cancel</button>
 </div>

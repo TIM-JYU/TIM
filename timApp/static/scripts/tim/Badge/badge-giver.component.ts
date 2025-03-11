@@ -10,6 +10,7 @@ import {Subscription} from "rxjs";
 import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {Users} from "tim/user/userService";
 import {IBadge} from "tim/Badge/badge.interface";
+import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
 
 interface Badge {
     id: number;
@@ -45,9 +46,9 @@ export class BadgeGiverComponent implements OnInit {
 
     users: User[] = [];
     badges: any = [];
-    selectedUser?: User;
+    selectedUser?: User | null = null;
     userBadges: BadgeGiven[] = [];
-    selectedBadge?: Badge;
+    selectedBadge?: Badge | null = null;
     message = "";
     badgeGiver = 0;
 
@@ -64,7 +65,11 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchBadges();
     }
 
-    emptyForm() {}
+    emptyForm() {
+        this.selectedUser = null;
+        this.selectedBadge = null;
+        this.message = "";
+    }
 
     private async fetchUsers() {
         const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
@@ -80,7 +85,8 @@ export class BadgeGiverComponent implements OnInit {
 
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
-        console.log("NYT NE VITUYS DFNAS V:", this.badges);
+        console.log("näyttää kaikki badget: ", this.badges);
+        console.log("Selected Badge:", this.selectedBadge);
     }
 
     fetchUserBadges(userId: number) {
@@ -136,6 +142,6 @@ export class BadgeGiverComponent implements OnInit {
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [CommonModule, FormsModule, BadgeViewerModule],
+    imports: [CommonModule, FormsModule, BadgeViewerModule, BadgeModule],
 })
 export class BadgeGiverModule {}

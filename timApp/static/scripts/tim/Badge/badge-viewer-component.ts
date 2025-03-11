@@ -24,33 +24,22 @@ interface IBadge {
         <ng-container *ngIf="badges.length > 0">
             <p>{{selectedUserName}}'s badges</p>
             <div class="user_badges">
-                <tim-badge *ngFor="let badge of badges" 
-                           title="{{badge.title}}" 
-                           color="{{badge.color}}" 
-                           shape="{{badge.shape}}"
-                           [image]="badge.image"
-                           description="{{badge.description}}"
-                           message="{{badge.message}}"
-                           (click)="selectBadge(badge)">
-                    
-                    
-                </tim-badge>
+                <div *ngIf="id != null">
+                    <tim-badge *ngFor="let badge of badges" 
+                               title="{{badge.title}}" 
+                               color="{{badge.color}}" 
+                               shape="{{badge.shape}}"
+                               [image]="badge.image"
+                               description="{{badge.description}}"
+                               message="{{badge.message}}"
+                               (click)="selectBadge(badge)">
+                    </tim-badge>
+                </div>
             </div>
         </ng-container>
         <ng-container *ngIf="badges.length == 0">
          <p>{{selectedUserName}} has no badges</p>
         </ng-container>
-        
-        <!-- Preview of the selected badge -->
-        <div *ngIf="selectedBadge" class="badge-preview">
-            <h3>Selected Badge Preview</h3>
-            <div class="badge-info">
-                <h4>{{ selectedBadge.title }}</h4>
-                <p><strong>Description:</strong> {{ selectedBadge.description }}</p>
-                <p><strong>Message:</strong> {{ selectedBadge.message }}</p>
-                <img [src]="getBadgeImageUrl(selectedBadge.image)" alt="{{ selectedBadge.title }}" class="badge-image" />
-            </div>
-        </div>
         
         <!-- Delete button, only shown when a badge is selected -->
         <div *ngIf="showDeleteButton">
@@ -65,6 +54,7 @@ export class BadgeViewerComponent implements OnInit {
     badges: IBadge[] = [];
     @Input() id?: number;
     @Input() selectedUserName?: string;
+    //@Output() selectedBadge?: IBadge;
 
     // Track the selected badge and whether to show the delete button
     selectedBadge?: IBadge;
