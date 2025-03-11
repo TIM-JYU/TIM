@@ -95,6 +95,8 @@ export class BadgeGiverComponent implements OnInit {
         if (Users.isLoggedIn()) {
             this.badgeGiver = Users.getCurrent().id;
         }
+        const currentId = this.selectedUser?.id;
+
         const response = toPromise(
             this.http.get<[]>(
                 "/give_badge/" +
@@ -121,7 +123,10 @@ export class BadgeGiverComponent implements OnInit {
         }
         this.selectedBadge = undefined;
         this.message = "";
-        //update badge viewer here
+        if (currentId) {
+            this.badgeService.getUserBadges(currentId);
+            this.badgeService.notifyBadgeViewerUpdate();
+        }
     }
     removeBadge() {
         this.badgeGiver = Users.getCurrent().id;
