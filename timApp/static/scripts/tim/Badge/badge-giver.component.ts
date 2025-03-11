@@ -4,15 +4,22 @@ import {Component, NgModule} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {BadgeModule} from "tim/Badge/Badge-component";
-import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
-import {BadgeCreatorComponent} from "tim/Badge/badge-creator.component";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
 import type {IBadge} from "tim/Badge/badge.interface";
-import {BadgeModule} from "tim/Badge/Badge-component";
+import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
+
+interface Badge {
+    id: number;
+    title: string;
+    description: string;
+    color: string;
+    shape: string;
+    image: number;
+}
+
 
 interface User {
     id: number;
@@ -36,7 +43,6 @@ export class BadgeGiverComponent implements OnInit {
     selectedBadge?: IBadge;
     message = "";
     badgeGiver = 0;
-    showDeleteButton: boolean = false;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -51,7 +57,11 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchBadges();
     }
 
-    emptyForm() {}
+    emptyForm() {
+        this.selectedUser = null;
+        this.selectedBadge = null;
+        this.message = "";
+    }
 
     private async fetchUsers() {
         const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
@@ -67,7 +77,8 @@ export class BadgeGiverComponent implements OnInit {
 
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
-        console.log("NYT NE VITUYS DFNAS V:", this.badges);
+        console.log("näyttää kaikki badget: ", this.badges);
+        console.log("Selected Badge:", this.selectedBadge);
     }
 
     async fetchUserBadges(userId?: number) {
@@ -135,6 +146,6 @@ export class BadgeGiverComponent implements OnInit {
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [CommonModule, FormsModule, BadgeViewerModule, BadgeModule],
+    imports: [CommonModule, FormsModule, BadgeModule],
 })
 export class BadgeGiverModule {}
