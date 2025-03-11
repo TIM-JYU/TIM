@@ -406,9 +406,9 @@ def reactivate_badge(badge_id: int, restored_by: int) -> Response:
 def get_groups_badges(group_id: int) -> Response:
     groups_badges_given = (
         run_sql(
-            select(BadgeGiven).filter(
-                BadgeGiven.active and BadgeGiven.group_id == group_id
-            )
+            select(BadgeGiven)
+            .filter(BadgeGiven.active)
+            .filter(BadgeGiven.group_id == group_id)
         )
         .scalars()
         .all()
