@@ -8,15 +8,7 @@
         </select>
     </div>
 
-    <div class="user-badges" *ngIf="selectedUser">
-        <h3>Assigned Badges</h3>
-        <ul>
-            <li *ngFor="let badgeGiven of userBadges">
-                <span [style.color]="badgeGiven.badge.color">{{ badgeGiven.badge.title }}</span>
-                <button (click)="removeBadge(badgeGiven.badge.id)">Remove</button>
-            </li>
-        </ul>
-    </div>
+    <tim-badge-viewer [id]="selectedUser?.id" [selectedUserName]="selectedUser?.name"></tim-badge-viewer>
 
     <div class="badge-selection">
         <h3>Select a Badge to Assign</h3>
@@ -31,4 +23,5 @@
     </div>
 
     <button (click)="assignBadge(message)" [disabled]="!selectedUser || !selectedBadge">Give Badge</button>
+    <button (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge">Cancel</button>
 </div>
