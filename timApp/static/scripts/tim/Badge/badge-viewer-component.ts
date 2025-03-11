@@ -36,13 +36,7 @@ interface IBadge {
             </div>
         </ng-container>
         <ng-container *ngIf="badges.length == 0">
-<!--            <p>{{userName}}'s badges: </p>-->
-            <div class="main-wrapper">
-                <div class="badge yellow">
-                    <div class="circle"> <i class="fa fa-shield"></i></div>
-                    <div class="ribbon"> no badges </div>
-                </div>
-            </div>
+            <p>No badges</p>
         </ng-container>
         `,
     styleUrls: ["badge-viewer-component.scss"],

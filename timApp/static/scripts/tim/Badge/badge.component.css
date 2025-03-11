@@ -222,12 +222,13 @@
 }
 
 .tooltip {
+  width: 250px;
   visibility: hidden;
   position: absolute;
   top: 110%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.85);
   color: white;
   padding: 5px 10px;
   border-radius: 4px;
@@ -245,7 +246,7 @@
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: transparent transparent rgba(0, 0, 0, 0.7) transparent;
+    border-color: transparent transparent rgba(0, 0, 0, 0.85) transparent;
 }
 
 /* Show the tooltip when hovering over the badge */
