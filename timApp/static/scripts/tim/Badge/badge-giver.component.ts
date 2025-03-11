@@ -116,6 +116,9 @@ export class BadgeGiverComponent implements OnInit {
                 );
             }
         }
+        this.selectedBadge = undefined;
+        this.message = "";
+        //update badge viewer here
     }
 
     removeBadge(badgeId: number) {
