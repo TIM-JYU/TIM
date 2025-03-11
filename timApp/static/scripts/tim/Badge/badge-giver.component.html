@@ -4,11 +4,43 @@
     <div class="user-selection">
         <h3>Select a User</h3>
         <select [(ngModel)]="selectedUser">
-            <option *ngFor="let user of users" [ngValue]="user">{{ user.name }}</option>
+            <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(selectedUser?.id)">{{ user.name }}</option>
         </select>
     </div>
     
-    <tim-badge-viewer [id]="selectedUser?.id" [selectedUserName]="selectedUser?.name"></tim-badge-viewer>
+    <ng-container *ngIf="userBadges.length > 0">
+<!--            <p *ngIf="selectedUser?.name != undefined">{{selectedUser.name}}'s badges</p>-->
+            <div class="user_badges">
+                <tim-badge *ngFor="let badge of userBadges"
+                           title="{{badge.title}}"
+                           color="{{badge.color}}"
+                           shape="{{badge.shape}}"
+                           [image]="badge.image"
+                           description="{{badge.description}}"
+                           message="{{badge.message}}"
+                           (click)="selectBadge(badge)">
+                </tim-badge>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="userBadges.length == 0">
+         <p>user has no badges</p>
+        </ng-container>
+
+        <!-- Preview of the selected badge -->
+        <div *ngIf="selectedBadge" class="badge-preview">
+            <h3>Selected Badge Preview</h3>
+            <div class="badge-info">
+                <h4>{{ selectedBadge.title }}</h4>
+                <p><strong>Description:</strong> {{ selectedBadge.description }}</p>
+                <p><strong>Message:</strong> {{ selectedBadge.message }}</p>
+<!--                <img [src]="getBadgeImageUrl(selectedBadge.image)" alt="{{ selectedBadge.title }}" class="badge-image" />-->
+            </div>
+        </div>
+
+<!--         Delete button, only shown when a badge is selected -->
+        <div *ngIf="showDeleteButton">
+          <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
+        </div>
 
     <div class="badge-selection">
         <h3>Select a Badge to Assign</h3>
