@@ -53,40 +53,12 @@ export class BadgeViewerComponent implements OnInit {
             this.userID = Users.getCurrent().id;
         }
         this.getBadges(this.userID);
-
-        // Subscribe to badge update events
-        this.subscription.add(
-            this.badgeService.updateBadgeList$.subscribe(() => {
-                if (this.id != undefined) {
-                    this.getBadges(this.id); // Refresh badges
-                }
-            })
-        );
     }
 
     emptyBadges() {
         while (this.badges.length > 0) {
             this.badges.pop();
-    ngOnDestroy() {
-        this.subscription.unsubscribe();
-    }
-
-    // Select a badge to show the delete button
-    selectBadge(badge?: IBadge) {
-        this.selectedBadge = badge;
-        this.showDeleteButton = true;
-    }
-
-    async removeBadge(badgegivenID?: number) {
-        if (badgegivenID == undefined) {
-            console.error("badgegivenID was undefined");
-            return;
         }
-        this.badgeService.withdrawBadge(badgegivenID, this.userID);
-        //Päivitetään badge-viewerin näkymä.
-        this.badges = this.badges.filter(
-            (badge) => badge.badgegiven_id !== badgegivenID
-        );
     }
 }
 

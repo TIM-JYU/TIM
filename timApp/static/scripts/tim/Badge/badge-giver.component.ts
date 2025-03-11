@@ -7,7 +7,6 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
-import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {Users} from "tim/user/userService";
 import type {IBadge} from "tim/Badge/badge.interface";
 import {BadgeModule} from "tim/Badge/Badge-component";
@@ -29,9 +28,9 @@ export class BadgeGiverComponent implements OnInit {
 
     users: User[] = [];
     badges: any = [];
-    selectedUser?: User;
+    selectedUser?: User | null = null;
     userBadges: IBadge[] = [];
-    selectedBadge?: IBadge;
+    selectedBadge?: IBadge | null = null;
     message = "";
     badgeGiver = 0;
     showDeleteButton: boolean = false;
@@ -47,6 +46,15 @@ export class BadgeGiverComponent implements OnInit {
         );
         this.fetchUsers();
         this.fetchBadges();
+
+        // Subscribe to badge update events
+        this.subscription.add(
+            this.badgeService.updateBadgeList$.subscribe(() => {
+                if (this.selectedUser?.id != undefined) {
+                    this.fetchUserBadges(this.selectedUser.id); // Refresh badges
+                }
+            })
+        );
     }
 
     emptyForm() {
@@ -136,6 +144,10 @@ export class BadgeGiverComponent implements OnInit {
         this.showDeleteButton = true;
     }
 
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
+    }
+
     protected readonly console = console;
     protected readonly alert = alert;
 }
@@ -143,6 +155,6 @@ export class BadgeGiverComponent implements OnInit {
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [CommonModule, FormsModule, BadgeViewerModule, BadgeModule],
+    imports: [CommonModule, FormsModule, BadgeModule],
 })
 export class BadgeGiverModule {}
