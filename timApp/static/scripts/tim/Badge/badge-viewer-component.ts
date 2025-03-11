@@ -7,16 +7,8 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {BadgeModule} from "tim/Badge/Badge-component";
 import {BadgeTestModule} from "tim/Badge/badge-test-component";
-
-interface IBadge {
-    id: number;
-    title: string;
-    color: string;
-    image: number;
-    shape: string;
-    description: string;
-    message: string;
-}
+import {BadgeService} from "tim/Badge/badge.service";
+import type {IBadge} from "tim/Badge/badge.interface";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -32,8 +24,6 @@ interface IBadge {
                            description="{{badge.description}}"
                            message="{{badge.message}}"
                            (click)="selectBadge(badge)">
-                    
-                    
                 </tim-badge>
             </div>
         </ng-container>
@@ -48,13 +38,13 @@ interface IBadge {
                 <h4>{{ selectedBadge.title }}</h4>
                 <p><strong>Description:</strong> {{ selectedBadge.description }}</p>
                 <p><strong>Message:</strong> {{ selectedBadge.message }}</p>
-                <img [src]="getBadgeImageUrl(selectedBadge.image)" alt="{{ selectedBadge.title }}" class="badge-image" />
+<!--                <img [src]="getBadgeImageUrl(selectedBadge.image)" alt="{{ selectedBadge.title }}" class="badge-image" />-->
             </div>
         </div>
         
         <!-- Delete button, only shown when a badge is selected -->
         <div *ngIf="showDeleteButton">
-          <button (click)="removeBadge()">Delete</button>
+          <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
         </div>
         `,
     styleUrls: ["badge-viewer-component.scss"],
@@ -70,25 +60,13 @@ export class BadgeViewerComponent implements OnInit {
     selectedBadge?: IBadge;
     showDeleteButton: boolean = false;
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
-    private async getBadges(id: number) {
+    async getBadges(id: number) {
         while (this.badges.length > 0) {
             this.badges.pop();
         }
-        const response = toPromise(this.http.get<[]>("/groups_badges/" + id));
-        const result = await response;
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    const json = JSON.stringify(alkio);
-                    const obj = JSON.parse(json);
-                    this.badges.push(obj);
-                }
-                console.log("haettu käyttäjän " + id + " badget");
-            }
-            console.log(this.badges);
-        }
+        this.badges = await this.badgeService.getUserBadges(id);
     }
 
     ngOnInit() {
@@ -104,25 +82,25 @@ export class BadgeViewerComponent implements OnInit {
         this.getBadges(this.userID);
     }
     ngOnChanges(changes: SimpleChanges) {
-        if (this.id != undefined) {
-            console.log("haettu badget id:llä: " + this.id);
-            this.getBadges(this.id);
+        if (changes.id) {
+            if (this.id != undefined) {
+                this.getBadges(this.id);
+            }
         }
     }
 
     // Select a badge to show the delete button
-    selectBadge(badge: IBadge) {
+    selectBadge(badge?: IBadge) {
         this.selectedBadge = badge;
         this.showDeleteButton = true;
     }
 
-    removeBadge() {
-        const response = toPromise(
-            this.http.get(
-                `/withdraw_badge/${this.selectedBadge}/${this.userID}`
-            )
-        );
-        console.log("badgeId: ", this.selectedBadge);
+    removeBadge(badgegivenID?: number) {
+        if (badgegivenID == undefined) {
+            console.error("badgegivenID was undefined");
+            return;
+        }
+        this.badgeService.withdrawBadge(badgegivenID, this.userID);
     }
 }
 
