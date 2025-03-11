@@ -415,18 +415,18 @@ def get_groups_badges(group_id: int) -> Response:
     )
 
     badge_ids = []
-    badge_ids_and_msgs: dict[str, str] = {}
+    badge_ids_badgegiven_ids_and_msgs: dict[str, tuple] = {}
 
     for badgeGiven in groups_badges_given:
         key_extension = 0
         while (
             str(badgeGiven.badge_id) + "_" + str(key_extension)
-        ) in badge_ids_and_msgs.keys():
+        ) in badge_ids_badgegiven_ids_and_msgs.keys():
             key_extension += 1
         badge_ids.append(badgeGiven.badge_id)
-        badge_ids_and_msgs[
+        badge_ids_badgegiven_ids_and_msgs[
             str(badgeGiven.badge_id) + "_" + str(key_extension)
-        ] = badgeGiven.message
+        ] = (badgeGiven.id, badgeGiven.message)
 
     groups_badges = (
         run_sql(select(Badge).filter_by(active=True).filter(Badge.id.in_(badge_ids)))
@@ -441,9 +441,12 @@ def get_groups_badges(group_id: int) -> Response:
         for badge_id in badge_ids:
             if badge_id == badge.id:
                 badge_json = badge.to_json()
-                badge_json["message"] = badge_ids_and_msgs[
+                badge_json["badgegiven_id"] = badge_ids_badgegiven_ids_and_msgs[
                     str(badge.id) + "_" + str(key_extension)
-                ]
+                ][0]
+                badge_json["message"] = badge_ids_badgegiven_ids_and_msgs[
+                    str(badge.id) + "_" + str(key_extension)
+                ][1]
                 key_extension += 1
                 badges_json.append(badge_json)
 
