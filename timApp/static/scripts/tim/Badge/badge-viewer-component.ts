@@ -1,16 +1,20 @@
-import type {OnInit} from "@angular/core";
-import {Component, NgModule, Input} from "@angular/core";
+import type {OnInit, SimpleChanges} from "@angular/core";
+import {Component, NgModule, Input, OnChanges} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
+import {BadgeModule} from "tim/Badge/Badge-component";
+import {BadgeTestModule} from "tim/Badge/badge-test-component";
+import {BadgeService} from "tim/Badge/badge.service";
+import type {IBadge} from "tim/Badge/badge.interface";
 
 @Component({
     selector: "tim-badge-viewer",
     template: `
         <ng-container *ngIf="badges.length > 0">
-            <p>{{selectedUserName}}'s badges</p>
+            <p>{{this.userName}}'s badges</p>
             <div class="user_badges">
                 <tim-badge *ngFor="let badge of badges" 
                            title="{{badge.title}}" 
@@ -26,24 +30,8 @@ import {to2} from "tim/util/utils";
             </div>
         </ng-container>
         <ng-container *ngIf="badges.length == 0">
-         <p>{{selectedUserName}} has no badges</p>
+         <p>user has no badges</p>
         </ng-container>
-        
-        <!-- Preview of the selected badge -->
-        <div *ngIf="selectedBadge" class="badge-preview">
-            <h3>Selected Badge Preview</h3>
-            <div class="badge-info">
-                <h4>{{ selectedBadge.title }}</h4>
-                <p><strong>Description:</strong> {{ selectedBadge.description }}</p>
-                <p><strong>Message:</strong> {{ selectedBadge.message }}</p>
-                <img [src]="getBadgeImageUrl(selectedBadge.image)" alt="{{ selectedBadge.title }}" class="badge-image" />
-            </div>
-        </div>
-        
-        <!-- Delete button, only shown when a badge is selected -->
-        <div *ngIf="showDeleteButton">
-          <button (click)="removeBadge()">Delete</button>
-        </div>
         `,
     styleUrls: ["badge-viewer-component.scss"],
 })
@@ -51,21 +39,12 @@ export class BadgeViewerComponent implements OnInit {
     userName?: string;
     userID: number;
     badges: IBadge[] = [];
-    @Input() id?: number;
-    constructor(private http: HttpClient) {}
 
-    private async getBadges(id: number) {
-        const response = toPromise(this.http.get<[]>("/groups_badges/" + id));
-        const result = await response;
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    const json = JSON.stringify(alkio);
-                    const obj = JSON.parse(json);
-                    this.badges.push(obj);
-                }
-            }
-        }
+    constructor(private http: HttpClient, private badgeService: BadgeService) {}
+
+    async getBadges(id: number) {
+        this.emptyBadges();
+        this.badges = await this.badgeService.getUserBadges(id);
     }
 
     ngOnInit() {
@@ -76,6 +55,10 @@ export class BadgeViewerComponent implements OnInit {
         this.getBadges();
     }
 
+    emptyBadges() {
+        while (this.badges.length > 0) {
+            this.badges.pop();
+        }
     // Select a badge to show the delete button
     selectBadge(badge: IBadge) {
         this.selectedBadge = badge;

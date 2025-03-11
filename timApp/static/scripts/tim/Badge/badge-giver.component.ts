@@ -11,30 +11,14 @@ import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
-import {IBadge} from "tim/Badge/badge.interface";
-
-interface Badge {
-    id: number;
-    title: string;
-    description: string;
-    color: string;
-    shape: string;
-    image: number;
-}
+import type {IBadge} from "tim/Badge/badge.interface";
+import {BadgeModule} from "tim/Badge/Badge-component";
 
 interface User {
     id: number;
     name: string;
     real_name: string;
     email: string;
-}
-
-interface BadgeGiven {
-    id: number;
-    badge: Badge;
-    user_id: number;
-    removed: boolean;
-    message: string;
 }
 
 @Component({
@@ -48,9 +32,11 @@ export class BadgeGiverComponent implements OnInit {
     users: User[] = [];
     badges: Badge[] = [];
     selectedUser?: User;
-    userBadges: BadgeGiven[] = [];
-    selectedBadge?: Badge;
+    userBadges: IBadge[] = [];
+    selectedBadge?: IBadge;
     message = "";
+    badgeGiver = 0;
+    showDeleteButton: boolean = false;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -84,18 +70,26 @@ export class BadgeGiverComponent implements OnInit {
         console.log("NYT NE VITUYS DFNAS V:", this.badges);
     }
 
-    fetchUserBadges(userId: number) {
-        this.http
-            .get<BadgeGiven[]>(`/badge-given/${userId}`)
-            .subscribe((data) => {
-                this.userBadges = data;
-            });
+    async fetchUserBadges(userId?: number) {
+        if (userId == undefined) {
+            console.error("userid was undefined");
+            return;
+        }
+        while (this.userBadges.length > 0) {
+            this.userBadges.pop();
+        }
+        this.userBadges = await this.badgeService.getUserBadges(userId);
     }
 
     async assignBadge(message: string) {
+        if (Users.isLoggedIn()) {
+            this.badgeGiver = Users.getCurrent().id;
+        }
         const response = toPromise(
             this.http.get<[]>(
                 "/give_badge/" +
+                    this.badgeGiver +
+                    "/" +
                     this.selectedUser?.id +
                     "/" +
                     this.selectedBadge?.id +
@@ -115,14 +109,23 @@ export class BadgeGiverComponent implements OnInit {
                 );
             }
         }
+        this.selectedBadge = undefined;
+        this.message = "";
+        // update badge viewer here
     }
-    removeBadge() {
+    async removeBadge(badgegivenID?: number) {
         this.badgeGiver = Users.getCurrent().id;
-        const response = toPromise(
-            this.http.get(
-                `/withdraw_badge/${this.badges.id}/${this.badgeGiver}`
-            )
-        );
+        if (badgegivenID == undefined) {
+            console.error("badgegived id was undefined");
+            return;
+        }
+        await this.badgeService.withdrawBadge(badgegivenID, this.badgeGiver);
+        this.fetchUserBadges(this.selectedUser?.id);
+    }
+
+    selectBadge(badge?: IBadge) {
+        this.selectedBadge = badge;
+        this.showDeleteButton = true;
     }
 
     protected readonly console = console;
@@ -132,13 +135,6 @@ export class BadgeGiverComponent implements OnInit {
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        BadgeModule,
-        HttpClientModule,
-        BadgeViewerModule,
-        FormsModule,
-    ],
+    imports: [CommonModule, FormsModule, BadgeViewerModule, BadgeModule],
 })
 export class BadgeGiverModule {}
