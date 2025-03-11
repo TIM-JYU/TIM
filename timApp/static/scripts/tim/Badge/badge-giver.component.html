@@ -1,44 +1,31 @@
 <div class="badge-giver">
     <h2>Badge Giver</h2>
 
-    <div class="user-selection">
-        <h3>Select a User</h3>
-        <select [(ngModel)]="selectedUser">
+    <div class="form-group">
+        <label for="user">User</label>
+        <select id="user" [(ngModel)]="selectedUser">
             <option *ngFor="let user of users" [ngValue]="user">{{ user.name }}</option>
         </select>
     </div>
-    
-    <tim-badge-viewer *ngIf="selectedUser"
-            [id]="selectedUser!.id"
-            [selectedUserName]="selectedUser!.name">
-    </tim-badge-viewer>
 
-    <div class="badge-selection">
-        <h3>Select a Badge to Assign</h3>
-        <select [(ngModel)]="selectedBadge">
+    <label for="user-badges">{{selectedUser ? selectedUser.name : 'User'}} Badges</label>
+    <div id="user-badges">
+        <tim-badge-viewer [id]="selectedUser?.id"></tim-badge-viewer>
+    </div>
+
+    <div class="form-group">
+        <label for="badge_to_assign">Badge to Assign</label>
+        <select id="badge_to_assign" [(ngModel)]="selectedBadge">
             <option *ngFor="let badge of badges" [ngValue]="badge">{{ badge.title }}</option>
         </select>
     </div>
 
-    <!-- Preview of the selected badge -->
-    <div *ngIf="selectedBadge" class="badge-preview">
-        <h3>Selected Badge Preview</h3>
-        <tim-badge *ngIf="selectedBadge"
-                   title="{{ selectedBadge!.title  }}"
-                   color="{{ selectedBadge!.color }}"
-                   shape="{{ selectedBadge!.shape }}"
-                   [image]="selectedBadge!.image"
-                   description="{{ selectedBadge!.description }}"
-                   message="{{ message }}">
-        </tim-badge>
+    <div class="form-group">
+        <label for="message">Message</label>
+        <textarea id="message" rows="3" [(ngModel)]="message" placeholder="Enter a message..."></textarea>
     </div>
 
-
-    <div class="message-box">
-        <h3>Message to Student</h3>
-        <textarea [(ngModel)]="message" placeholder="Enter a message..."></textarea>
-    </div>
-
-    <button (click)="assignBadge(message)" [disabled]="!selectedUser || !selectedBadge">Give Badge</button>
-    <button (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge && !message">Cancel</button>
+    <button id="assignButton" (click)="assignBadge(message)" [disabled]="!selectedUser || !selectedBadge">
+        Give Badge
+    </button>
 </div>

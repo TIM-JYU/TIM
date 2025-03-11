@@ -30,7 +30,7 @@ import type {IBadge} from "tim/Badge/badge.interface";
             </div>
         </ng-container>
         <ng-container *ngIf="badges.length == 0">
-         <p>user has no badges</p>
+            <p>No badges</p>
         </ng-container>
         `,
     styleUrls: ["badge-viewer-component.scss"],
