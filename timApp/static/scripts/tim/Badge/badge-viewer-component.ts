@@ -7,16 +7,9 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {BadgeModule} from "tim/Badge/Badge-component";
 import {BadgeTestModule} from "tim/Badge/badge-test-component";
-
-interface IBadge {
-    id: number;
-    title: string;
-    color: string;
-    image: number;
-    shape: string;
-    description: string;
-    message: string;
-}
+import {BadgeService} from "tim/Badge/badge.service";
+import type {IBadge} from "tim/Badge/badge.interface";
+import {Subscription} from "rxjs";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -41,10 +34,11 @@ interface IBadge {
                 </div>
             </div>
         </ng-container>
+
         
         <!-- Delete button, only shown when a badge is selected -->
         <div *ngIf="showDeleteButton">
-          <button (click)="removeBadge()">Delete</button>
+          <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
         </div>
         `,
     styleUrls: ["badge-viewer-component.scss"],
@@ -61,9 +55,11 @@ export class BadgeViewerComponent implements OnInit {
     selectedBadge?: IBadge;
     showDeleteButton: boolean = false;
 
-    constructor(private http: HttpClient) {}
+    private subscription: Subscription = new Subscription();
 
-    private async getBadges(id: number) {
+    constructor(private http: HttpClient, private badgeService: BadgeService) {}
+
+    async getBadges(id: number) {
         while (this.badges.length > 0) {
             this.badges.pop();
         }
@@ -78,8 +74,8 @@ export class BadgeViewerComponent implements OnInit {
                 }
                 console.log("haettu käyttäjän " + id + " badget");
             }
-            console.log("Miks tätä kutsutaan kahdesti: ", this.badges);
         }
+        this.badges = await this.badgeService.getUserBadges(id);
     }
 
     ngOnInit() {
@@ -87,27 +83,45 @@ export class BadgeViewerComponent implements OnInit {
             this.userName = Users.getCurrent().name;
             this.userID = Users.getCurrent().id;
         }
+        this.getBadges(this.userID);
+
+        // Subscribe to badge update events
+        this.subscription.add(
+            this.badgeService.updateBadgeList$.subscribe(() => {
+                if (this.id != undefined) {
+                    this.getBadges(this.id); // Refresh badges
+                }
+            })
+        );
     }
     ngOnChanges(changes: SimpleChanges) {
-        if (this.id != undefined) {
-            console.log("haettu badget id:llä: " + this.id);
-            this.getBadges(this.id);
+        if (changes.id) {
+            if (this.id != undefined) {
+                this.getBadges(this.id);
+            }
         }
     }
 
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
+    }
+
     // Select a badge to show the delete button
-    selectBadge(badge: IBadge) {
+    selectBadge(badge?: IBadge) {
         this.selectedBadge = badge;
         this.showDeleteButton = true;
     }
 
-    removeBadge() {
-        const response = toPromise(
-            this.http.get(
-                `/withdraw_badge/${this.selectedBadge}/${this.userID}`
-            )
+    async removeBadge(badgegivenID?: number) {
+        if (badgegivenID == undefined) {
+            console.error("badgegivenID was undefined");
+            return;
+        }
+        this.badgeService.withdrawBadge(badgegivenID, this.userID);
+        //Päivitetään badge-viewerin näkymä.
+        this.badges = this.badges.filter(
+            (badge) => badge.badgegiven_id !== badgegivenID
         );
-        console.log("badgeId: ", this.selectedBadge);
     }
 }
 
