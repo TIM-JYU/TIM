@@ -190,16 +190,24 @@ def create_badge_simple(
 
 # TODO: Make this work.
 @badges_blueprint.post("/create_badge")
-def create_badge() -> Response:
+def create_badge(
+    created_by: int,
+    context_group: str,
+    title: str,
+    color: str,
+    shape: str,
+    image: int,
+    description: str,
+) -> Response:
     badge = Badge(
         active=True,
-        context_group=request.args.get("context_group"),
-        title=request.args.get("title"),
-        color=request.args.get("color"),
-        shape=request.args.get("shape"),
-        image=request.args.get("image"),
-        description=request.args.get("description"),
-        created_by=request.args.get("created_by"),
+        context_group=context_group,
+        title=title,
+        color=color,
+        shape=shape,
+        image=image,
+        description=description,
+        created_by=created_by,
         created=datetime_tz.now(),
     )
     db.session.add(badge)
@@ -309,19 +317,28 @@ def modify_badge_simple(
 
 # TODO: Make this work.
 # TODO: Handle errors.
-@badges_blueprint.get("/modify_badge")
-def modify_badge() -> Response:
+@badges_blueprint.post("/modify_badge")
+def modify_badge(
+    badge_id: int,
+    modified_by: int,
+    context_group: str,
+    title: str,
+    color: str,
+    shape: str,
+    image: int,
+    description: str,
+) -> Response:
     badge = {
-        "context_group": request.args.get("context_group"),
-        "title": request.args.get("title"),
-        "color": request.args.get("color"),
-        "shape": request.args.get("shape"),
-        "image": request.args.get("image"),
-        "description": request.args.get("description"),
-        "modified_by": request.args.get("modified_by"),
+        "context_group": context_group,
+        "title": title,
+        "color": color,
+        "shape": shape,
+        "image": image,
+        "description": description,
+        "modified_by": modified_by,
         "modified": datetime_tz.now(),
     }
-    Badge.query.filter_by(id=request.args.get("id")).update(badge)
+    Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
 
     if current_app.config["BADGE_LOG_FILE"]:
@@ -329,7 +346,7 @@ def modify_badge() -> Response:
             {
                 "event": "modify_badge",
                 "timestamp": badge["modified"],
-                "id": request.args.get("id"),
+                "id": badge_id,
                 "executor": badge["modified_by"],
                 "context_group": badge["context_group"],
                 "title": badge["title"],

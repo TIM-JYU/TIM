@@ -49,7 +49,11 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchBadges();
     }
 
-    emptyForm() {}
+    emptyForm() {
+        this.selectedUser = null;
+        this.selectedBadge = null;
+        this.message = "";
+    }
 
     private async fetchUsers() {
         const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
@@ -65,7 +69,8 @@ export class BadgeGiverComponent implements OnInit {
 
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
-        console.log("NYT NE VITUYS DFNAS V:", this.badges);
+        console.log("näyttää kaikki badget: ", this.badges);
+        console.log("Selected Badge:", this.selectedBadge);
     }
 
     async fetchUserBadges(userId?: number) {
@@ -83,6 +88,8 @@ export class BadgeGiverComponent implements OnInit {
         if (Users.isLoggedIn()) {
             this.badgeGiver = Users.getCurrent().id;
         }
+        const currentId = this.selectedUser?.id;
+
         const response = toPromise(
             this.http.get<[]>(
                 "/give_badge/" +
@@ -109,7 +116,10 @@ export class BadgeGiverComponent implements OnInit {
         }
         this.selectedBadge = undefined;
         this.message = "";
-        // update badge viewer here
+        if (currentId) {
+            this.badgeService.getUserBadges(currentId);
+            this.badgeService.notifyBadgeViewerUpdate();
+        }
     }
     async removeBadge(badgegivenID?: number) {
         this.badgeGiver = Users.getCurrent().id;

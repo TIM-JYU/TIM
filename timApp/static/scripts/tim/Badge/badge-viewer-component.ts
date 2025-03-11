@@ -9,6 +9,7 @@ import {BadgeModule} from "tim/Badge/Badge-component";
 import {BadgeTestModule} from "tim/Badge/badge-test-component";
 import {BadgeService} from "tim/Badge/badge.service";
 import type {IBadge} from "tim/Badge/badge.interface";
+import {Subscription} from "rxjs";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -37,6 +38,8 @@ export class BadgeViewerComponent implements OnInit {
     userID: number = 0;
     badges: IBadge[] = [];
 
+    private subscription: Subscription = new Subscription();
+
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     async getBadges(id: number) {
@@ -50,12 +53,40 @@ export class BadgeViewerComponent implements OnInit {
             this.userID = Users.getCurrent().id;
         }
         this.getBadges(this.userID);
+
+        // Subscribe to badge update events
+        this.subscription.add(
+            this.badgeService.updateBadgeList$.subscribe(() => {
+                if (this.id != undefined) {
+                    this.getBadges(this.id); // Refresh badges
+                }
+            })
+        );
     }
 
     emptyBadges() {
         while (this.badges.length > 0) {
             this.badges.pop();
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
+    }
+
+    // Select a badge to show the delete button
+    selectBadge(badge?: IBadge) {
+        this.selectedBadge = badge;
+        this.showDeleteButton = true;
+    }
+
+    async removeBadge(badgegivenID?: number) {
+        if (badgegivenID == undefined) {
+            console.error("badgegivenID was undefined");
+            return;
         }
+        this.badgeService.withdrawBadge(badgegivenID, this.userID);
+        //Päivitetään badge-viewerin näkymä.
+        this.badges = this.badges.filter(
+            (badge) => badge.badgegiven_id !== badgegivenID
+        );
     }
 }
 
