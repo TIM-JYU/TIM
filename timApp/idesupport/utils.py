@@ -306,6 +306,16 @@ class TIDEPluginData:
     TIDE-task id
     """
 
+    deadline: str | None = None
+    """
+    ISO8601 date string for the task deadline. Server time is UTC+0, so users of this property will need to account for the local offset.
+    """
+
+    answer_limit: int | None = None
+    """
+    Maximum number of answers that the user can save in the task.
+    """
+
 
 @dataclass
 class TIDETaskSetDoc:
@@ -749,6 +759,9 @@ def get_ide_user_plugin_data(
     except (ValueError, TypeError):
         pass
 
+    task_deadline = plugin.deadline()
+    task_answer_limit = plugin.answer_limit()
+
     return TIDEPluginData(
         task_files=json_ide_files,
         supplementary_files=supplementary_files,
@@ -762,6 +775,8 @@ def get_ide_user_plugin_data(
         par_id=par.id,
         ide_task_id=ide_task_id,
         max_points=max_points,
+        deadline=task_deadline,
+        answer_limit=task_answer_limit,
     )
 
 
