@@ -55,15 +55,6 @@ export class BadgeGiverComponent implements OnInit {
         );
         this.fetchUsers();
         this.fetchBadges();
-
-        // Subscribe to badge update events
-        this.subscription.add(
-            this.badgeService.updateBadgeList$.subscribe(() => {
-                if (this.selectedUser?.id != undefined) {
-                    this.fetchUserBadges(this.selectedUser.id); // Refresh badges
-                }
-            })
-        );
     }
 
     emptyForm() {
@@ -108,16 +99,12 @@ export class BadgeGiverComponent implements OnInit {
         const currentId = this.selectedUser?.id;
 
         const response = toPromise(
-            this.http.get<[]>(
-                "/give_badge/" +
-                    this.badgeGiver +
-                    "/" +
-                    this.selectedUser?.id +
-                    "/" +
-                    this.selectedBadge?.id +
-                    "/" +
-                    message
-            )
+            this.http.post<{ok: boolean}>("/give_badge", {
+                given_by: this.badgeGiver,
+                group_id: this.selectedUser?.id,
+                badge_id: this.selectedBadge?.id,
+                message: message,
+            })
         );
 
         const result = await response;
