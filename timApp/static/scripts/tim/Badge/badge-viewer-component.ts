@@ -14,34 +14,27 @@ import {Subscription} from "rxjs";
 @Component({
     selector: "tim-badge-viewer",
     template: `
-        <ng-container *ngIf="badges.length > 0">
-            <p>{{selectedUserName}}'s badges</p>
-            <div class="user_badges">
-                <tim-badge *ngFor="let badge of badges" 
-                           title="{{badge.title}}" 
-                           color="{{badge.color}}" 
-                           shape="{{badge.shape}}"
-                           [image]="badge.image"
-                           description="{{badge.description}}"
-                           message="{{badge.message}}"
-                           (click)="selectBadge(badge)">
-                </tim-badge>
-            </div>
-        </ng-container>
-        <ng-container *ngIf="badges.length == 0">
-         <p>{{selectedUserName}} has no badges</p>
+        <ng-container *ngIf="selectedUserName && badges.length > 0">
+            <!-- Tämä otsikko näkyy vain, jos käyttäjä on valittu ja hänellä on badget -->
+            <label for="user-badges">{{selectedUserName}}'s badges</label>
         </ng-container>
         
-        <!-- Preview of the selected badge -->
-        <div *ngIf="selectedBadge" class="badge-preview">
-            <h3>Selected Badge Preview</h3>
-            <div class="badge-info">
-                <h4>{{ selectedBadge.title }}</h4>
-                <p><strong>Description:</strong> {{ selectedBadge.description }}</p>
-                <p><strong>Message:</strong> {{ selectedBadge.message }}</p>
-<!--                <img [src]="getBadgeImageUrl(selectedBadge.image)" alt="{{ selectedBadge.title }}" class="badge-image" />-->
+        <ng-container *ngIf="badges.length > 0">
+            <div class="user_badges">
+                <div *ngIf="id != null">
+                    <tim-badge *ngFor="let badge of badges" 
+                               title="{{badge.title}}" 
+                               color="{{badge.color}}" 
+                               shape="{{badge.shape}}"
+                               [image]="badge.image"
+                               description="{{badge.description}}"
+                               message="{{badge.message}}"
+                               (click)="selectBadge(badge)">
+                    </tim-badge>
+                </div>
             </div>
-        </div>
+        </ng-container>
+
         
         <!-- Delete button, only shown when a badge is selected -->
         <div *ngIf="showDeleteButton">
@@ -56,6 +49,7 @@ export class BadgeViewerComponent implements OnInit {
     badges: IBadge[] = [];
     @Input() id?: number;
     @Input() selectedUserName?: string;
+    //@Output() selectedBadge?: IBadge;
 
     // Track the selected badge and whether to show the delete button
     selectedBadge?: IBadge;
@@ -69,6 +63,18 @@ export class BadgeViewerComponent implements OnInit {
         while (this.badges.length > 0) {
             this.badges.pop();
         }
+        const response = toPromise(this.http.get<[]>("/groups_badges/" + id));
+        const result = await response;
+        if (result.ok) {
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    const json = JSON.stringify(alkio);
+                    const obj = JSON.parse(json);
+                    this.badges.push(obj);
+                }
+                console.log("haettu käyttäjän " + id + " badget");
+            }
+        }
         this.badges = await this.badgeService.getUserBadges(id);
     }
 
@@ -76,11 +82,6 @@ export class BadgeViewerComponent implements OnInit {
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
             this.userID = Users.getCurrent().id;
-
-            if (this.id != undefined) {
-                this.getBadges(this.id);
-                return;
-            }
         }
         this.getBadges(this.userID);
 
