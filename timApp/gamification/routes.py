@@ -191,13 +191,13 @@ def create_badge_simple(
 # TODO: Make this work.
 @badges_blueprint.post("/create_badge")
 def create_badge(
+    created_by: int,
     context_group: str,
     title: str,
     color: str,
     shape: str,
     image: int,
     description: str,
-    created_by: int,
 ) -> Response:
     badge = Badge(
         active=True,
@@ -319,13 +319,14 @@ def modify_badge_simple(
 # TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
+    badge_id: int,
+    modified_by: int,
     context_group: str,
     title: str,
     color: str,
     shape: str,
     image: int,
     description: str,
-    modified_by: int,
 ) -> Response:
     badge = {
         "context_group": context_group,
@@ -337,7 +338,7 @@ def modify_badge(
         "modified_by": modified_by,
         "modified": datetime_tz.now(),
     }
-    Badge.query.filter_by(id=request.args.get("id")).update(badge)
+    Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
 
     if current_app.config["BADGE_LOG_FILE"]:
@@ -345,7 +346,7 @@ def modify_badge(
             {
                 "event": "modify_badge",
                 "timestamp": badge["modified"],
-                "id": request.args.get("id"),
+                "id": badge_id,
                 "executor": badge["modified_by"],
                 "context_group": badge["context_group"],
                 "title": badge["title"],
