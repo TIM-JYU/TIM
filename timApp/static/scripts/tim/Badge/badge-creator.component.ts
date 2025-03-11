@@ -97,22 +97,15 @@ export class BadgeCreatorComponent implements OnInit {
             this.newBadge = this.badgeForm.value;
             this.newBadge.created_by = this.userID;
             const response = toPromise(
-                this.http.get<[]>(
-                    "/create_badge_simple/" +
-                        this.newBadge.created_by +
-                        "/" +
-                        this.newBadge.context_group +
-                        "/" +
-                        this.newBadge.title +
-                        "/" +
-                        this.newBadge.color +
-                        "/" +
-                        this.newBadge.shape +
-                        "/" +
-                        this.newBadge.image +
-                        "/" +
-                        this.newBadge.description
-                )
+                this.http.post<{ok: boolean}>("/create_badge", {
+                    created_by: this.newBadge.created_by,
+                    context_group: this.newBadge.context_group,
+                    title: this.newBadge.title,
+                    color: this.newBadge.color,
+                    shape: this.newBadge.shape,
+                    image: this.newBadge.image,
+                    description: this.newBadge.description,
+                })
             );
             const result = await response;
             if (result.ok) {
@@ -196,24 +189,16 @@ export class BadgeCreatorComponent implements OnInit {
         if (this.editingBadge) {
             Object.assign(this.editingBadge, this.badgeForm.value);
             const response = toPromise(
-                this.http.get<[]>(
-                    "/modify_badge_simple/" +
-                        this.editingBadge.id +
-                        "/" +
-                        "1" + // Toistaiseksi kovakoodattuna
-                        "/" +
-                        this.editingBadge.context_group +
-                        "/" +
-                        this.editingBadge.title +
-                        "/" +
-                        this.editingBadge.color +
-                        "/" +
-                        this.editingBadge.shape +
-                        "/" +
-                        this.editingBadge.image +
-                        "/" +
-                        this.editingBadge.description
-                )
+                this.http.post<{ok: boolean}>("/modify_badge", {
+                    badge_id: this.editingBadge.id,
+                    modified_by: "1", // Toistaiseksi kovakoodattuna
+                    context_group: this.editingBadge.context_group,
+                    title: this.editingBadge.title,
+                    color: this.editingBadge.color,
+                    shape: this.editingBadge.shape,
+                    image: this.editingBadge.image,
+                    description: this.editingBadge.description,
+                })
             );
             const result = await response;
             if (result.ok) {
@@ -232,9 +217,10 @@ export class BadgeCreatorComponent implements OnInit {
             if (this.editingBadge) {
                 try {
                     const response = await toPromise(
-                        this.http.get(
-                            `/deactivate_badge/${this.editingBadge.id}/1` // Kovakoodattu toistaiseksi
-                        )
+                        this.http.post<{ok: boolean}>("/deactivate_badge", {
+                            badge_id: this.editingBadge.id,
+                            deleted_by: 1, // Kovakoodattu toistaiseksi
+                        })
                     );
 
                     if (response.ok) {

@@ -188,7 +188,6 @@ def create_badge_simple(
     return ok_response()
 
 
-# TODO: Make this work.
 @badges_blueprint.post("/create_badge")
 def create_badge(
     created_by: int,
@@ -315,7 +314,6 @@ def modify_badge_simple(
     return ok_response()
 
 
-# TODO: Make this work.
 # TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
@@ -395,7 +393,6 @@ def deactivate_badge_simple(badge_id: int, deleted_by: int) -> Response:
     return ok_response()
 
 
-# TODO: Make this work.
 # TODO: Handle errors.
 @badges_blueprint.post("/deactivate_badge")
 def deactivate_badge(badge_id: int, deleted_by: int) -> Response:
@@ -445,7 +442,6 @@ def reactivate_badge_simple(badge_id: int, restored_by: int) -> Response:
     return ok_response()
 
 
-# TODO: Make this work.
 # TODO: Handle errors.
 @badges_blueprint.post("/reactivate_badge>")
 def reactivate_badge(badge_id: int, restored_by: int) -> Response:
@@ -555,7 +551,6 @@ def give_badge_simple(
     return ok_response()
 
 
-# TODO: Make this work.
 # TODO: Handle errors.
 @badges_blueprint.post("/give_badge")
 def give_badge(given_by: int, group_id: int, badge_id: int, message: str) -> Response:
@@ -612,7 +607,6 @@ def withdraw_badge_simple(badge_given_id: int, withdrawn_by: int) -> Response:
     return ok_response()
 
 
-# TODO: Make this work.
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_badge")
 def withdraw_badge(badge_given_id: int, withdrawn_by: int) -> Response:
@@ -666,7 +660,6 @@ def undo_withdraw_badge_simple(badge_given_id: int, undo_withdrawn_by: int) -> R
     return ok_response()
 
 
-# TODO: Make this work.
 # TODO: Handle errors.
 @badges_blueprint.get("/undo_withdraw_badge")
 def undo_withdraw_badge(badge_given_id: int, undo_withdrawn_by: int) -> Response:

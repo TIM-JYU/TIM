@@ -96,16 +96,12 @@ export class BadgeGiverComponent implements OnInit {
             this.badgeGiver = Users.getCurrent().id;
         }
         const response = toPromise(
-            this.http.get<[]>(
-                "/give_badge/" +
-                    this.badgeGiver +
-                    "/" +
-                    this.selectedUser?.id +
-                    "/" +
-                    this.selectedBadge?.id +
-                    "/" +
-                    message
-            )
+            this.http.post<{ok: boolean}>("/give_badge", {
+                given_by: this.badgeGiver,
+                group_id: this.selectedUser?.id,
+                badge_id: this.selectedBadge?.id,
+                message: message,
+            })
         );
 
         const result = await response;
@@ -123,12 +119,14 @@ export class BadgeGiverComponent implements OnInit {
         this.message = "";
         //update badge viewer here
     }
+
     removeBadge() {
         this.badgeGiver = Users.getCurrent().id;
         const response = toPromise(
-            this.http.get(
-                `/withdraw_badge/${this.badges.id}/${this.badgeGiver}`
-            )
+            this.http.post<{ok: boolean}>("/withdraw_badge", {
+                badge_given_id: this.badges.id,
+                withdrawn_by: this.badgeGiver,
+            })
         );
     }
 

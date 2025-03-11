@@ -61,7 +61,12 @@ export class BadgeService {
      * @param giverID käyttäjän id, joka poistaa badgen käytöstä.
      */
     withdrawBadge(badgegivenID: number, giverID: number) {
-        toPromise(this.http.get(`/withdraw_badge/${badgegivenID}/${giverID}`));
+        toPromise(
+            this.http.post<{ok: boolean}>("/withdraw_badge", {
+                badge_given_id: badgegivenID,
+                withdrawn_by: giverID,
+            })
+        );
         console.log("Badge poistettu käytöstä id:llä: " + badgegivenID);
     }
 
