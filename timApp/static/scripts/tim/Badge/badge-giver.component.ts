@@ -64,6 +64,8 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchBadges();
     }
 
+    emptyForm() {}
+
     private async fetchUsers() {
         const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
         const result = await response;
@@ -78,6 +80,7 @@ export class BadgeGiverComponent implements OnInit {
 
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
+        console.log("NYT NE VITUYS DFNAS V:", this.badges);
     }
 
     fetchUserBadges(userId: number) {
@@ -120,20 +123,17 @@ export class BadgeGiverComponent implements OnInit {
         this.message = "";
         //update badge viewer here
     }
-
-    removeBadge(badgeId: number) {
-        if (this.selectedUser) {
-            const payload = {
-                user_id: this.selectedUser.id,
-                badge_id: badgeId,
-                removed: true,
-            };
-            this.http.put("/api/badge-given/remove", payload).subscribe(() => {
-                this.fetchUserBadges(this.selectedUser!.id);
-            });
-        }
+    removeBadge() {
+        this.badgeGiver = Users.getCurrent().id;
+        const response = toPromise(
+            this.http.get(
+                `/withdraw_badge/${this.badges.id}/${this.badgeGiver}`
+            )
+        );
     }
+
     protected readonly console = console;
+    protected readonly alert = alert;
 }
 
 @NgModule({

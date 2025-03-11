@@ -2,7 +2,8 @@ import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {lastValueFrom} from "rxjs";
 import {Subject} from "rxjs";
-import {IBadge} from "tim/Badge/badge.interface";
+import type {IBadge} from "tim/Badge/badge.interface";
+import {toPromise} from "tim/util/utils";
 
 @Injectable({
     providedIn: "root",
@@ -32,6 +33,36 @@ export class BadgeService {
             // Return an empty array in case of an error
             return [];
         }
+    }
+
+    /**
+     * Hakee käyttäjälle kuuluvat badget ID:n perusteella
+     * @param id käyttäjän ID
+     * @return palauttaa IBadge taulukon
+     */
+    async getUserBadges(id: number) {
+        const response = toPromise(this.http.get<[]>("/groups_badges/" + id));
+        const result = await response;
+        const userBadges: IBadge[] = [];
+        if (result.ok) {
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    userBadges.push(alkio);
+                }
+                console.log("haettu käyttäjän " + id + " badget");
+            }
+        }
+        return userBadges;
+    }
+
+    /**
+     * Ottaa valitun badgen pois käytöstä käyttäjältä.
+     * @param badgegivenID badgegiven -tietokantataulukon id, jonka avulla valittu badge poistetaan käytöstä
+     * @param giverID käyttäjän id, joka poistaa badgen käytöstä.
+     */
+    withdrawBadge(badgegivenID: number, giverID: number) {
+        toPromise(this.http.get(`/withdraw_badge/${badgegivenID}/${giverID}`));
+        console.log("Badge poistettu käytöstä id:llä: " + badgegivenID);
     }
 
     // Funktio updatetapahtuman lähettämiseen
