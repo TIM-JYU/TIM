@@ -217,6 +217,7 @@ export class BadgeCreatorComponent implements OnInit {
                 this.emptyForm();
                 await this.getBadges();
             }
+            this.badgeService.triggerUpdateBadgeList();
         }
     }
 

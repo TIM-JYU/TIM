@@ -41,6 +41,7 @@ import {EditorModule} from "./editor/module";
         ExtcheckComponent,
         GitRegComponent,
         CsErrorComponent,
+        CustomOutputDirective,
     ],
     imports: [
         EditorModule,
