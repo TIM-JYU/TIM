@@ -65,14 +65,17 @@ export class BadgeService {
      * @param badgegivenID badgegiven -tietokantataulukon id, jonka avulla valittu badge poistetaan käytöstä
      * @param giverID käyttäjän id, joka poistaa badgen käytöstä.
      */
-    withdrawBadge(badgegivenID: number, giverID: number) {
-        toPromise(
+    async withdrawBadge(badgegivenID: number, giverID: number) {
+        const response = toPromise(
             this.http.post<{ok: boolean}>("/withdraw_badge", {
                 badge_given_id: badgegivenID,
                 withdrawn_by: giverID,
             })
         );
-        console.log("Badge poistettu käytöstä id:llä: " + badgegivenID);
+        const result = await response;
+        if (result.ok) {
+            console.log("Badge poistettu käytöstä id:llä: " + badgegivenID);
+        }
     }
 
     // Funktio updatetapahtuman lähettämiseen

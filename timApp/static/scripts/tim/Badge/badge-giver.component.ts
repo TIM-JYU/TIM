@@ -9,17 +9,7 @@ import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
 import type {IBadge} from "tim/Badge/badge.interface";
-import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
-
-interface Badge {
-    id: number;
-    title: string;
-    description: string;
-    color: string;
-    shape: string;
-    image: number;
-}
-
+import {BadgeModule} from "tim/Badge/Badge-component";
 
 interface User {
     id: number;
@@ -125,6 +115,7 @@ export class BadgeGiverComponent implements OnInit {
             this.badgeService.notifyBadgeViewerUpdate();
         }
     }
+
     async removeBadge(badgegivenID?: number) {
         this.badgeGiver = Users.getCurrent().id;
         if (badgegivenID == undefined) {

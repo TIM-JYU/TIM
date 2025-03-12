@@ -9,7 +9,7 @@
     </div>
     
     <ng-container *ngIf="userBadges.length > 0">
-            <p *ngIf="selectedUser?.name != undefined">{{selectedUser.name}}'s badges</p>
+<!--            <p *ngIf="selectedUser?.name != undefined">{{selectedUser.name}}'s badges</p>-->
             <div class="user_badges">
                 <tim-badge *ngFor="let badge of userBadges"
                            title="{{badge.title}}"
