@@ -7,9 +7,18 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
+import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {Users} from "tim/user/userService";
-import type {IBadge} from "tim/Badge/badge.interface";
-import {BadgeModule} from "tim/Badge/Badge-component";
+import {IBadge} from "tim/Badge/badge.interface";
+
+interface Badge {
+    id: number;
+    title: string;
+    description: string;
+    color: string;
+    shape: string;
+    image: number;
+}
 
 interface User {
     id: number;
@@ -99,16 +108,12 @@ export class BadgeGiverComponent implements OnInit {
         const currentId = this.selectedUser?.id;
 
         const response = toPromise(
-            this.http.get<[]>(
-                "/give_badge/" +
-                    this.badgeGiver +
-                    "/" +
-                    this.selectedUser?.id +
-                    "/" +
-                    this.selectedBadge?.id +
-                    "/" +
-                    message
-            )
+            this.http.post<{ok: boolean}>("/give_badge", {
+                given_by: this.badgeGiver,
+                group_id: this.selectedUser?.id,
+                badge_id: this.selectedBadge?.id,
+                message: message,
+            })
         );
 
         const result = await response;
@@ -129,8 +134,16 @@ export class BadgeGiverComponent implements OnInit {
             this.badgeService.notifyBadgeViewerUpdate();
         }
     }
+
+    removeBadge() {
     async removeBadge(badgegivenID?: number) {
         this.badgeGiver = Users.getCurrent().id;
+        const response = toPromise(
+            this.http.post<{ok: boolean}>("/withdraw_badge", {
+                badge_given_id: this.badges.id,
+                withdrawn_by: this.badgeGiver,
+            })
+        );
         if (badgegivenID == undefined) {
             console.error("badgegived id was undefined");
             return;
