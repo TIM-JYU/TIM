@@ -1,3 +1,4 @@
+<ng-container *ngIf="this.hasPermission; else noPermissionView">
 <div class="badge-giver">
     <h2>Badge Giver</h2>
 
@@ -63,3 +64,7 @@
     </button>
         <button (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge && !message">Cancel</button>
     </div>
+</ng-container>
+<ng-template #noPermissionView>
+  <p>Access denied for students.</p>
+</ng-template>

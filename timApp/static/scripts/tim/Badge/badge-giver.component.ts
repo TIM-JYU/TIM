@@ -33,10 +33,20 @@ export class BadgeGiverComponent implements OnInit {
     selectedBadge?: IBadge | null = null;
     message = "";
     badgeGiver = 0;
+    hasPermission: boolean = false;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     ngOnInit() {
+        if (Users.isLoggedIn()) {
+            if (Users.belongsToGroup("Administrators")) {
+                this.hasPermission = true;
+                this.addListeners();
+            }
+        }
+    }
+
+    private addListeners() {
         // Tilataan updateBadgelist-tapahtuma BadgeService:ltä
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
@@ -45,6 +55,14 @@ export class BadgeGiverComponent implements OnInit {
         );
         this.fetchUsers();
         this.fetchBadges();
+        // Subscribe to badge update events
+        this.subscription.add(
+            this.badgeService.updateBadgeList$.subscribe(() => {
+                if (this.selectedUser?.id != undefined) {
+                    this.fetchUserBadges(this.selectedUser.id); // Refresh badges
+                }
+            })
+        );
     }
 
     emptyForm() {
