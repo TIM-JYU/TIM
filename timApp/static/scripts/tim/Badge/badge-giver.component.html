@@ -1,6 +1,7 @@
 <div class="badge-giver">
     <h2>Badge Giver</h2>
 
+
     <div class="form-group">
         <label for="user">User</label>
         <select id="user" [(ngModel)]="selectedUser">
@@ -8,14 +9,30 @@
             <option *ngFor="let user of users" [ngValue]="user">{{ user.name }}</option>
         </select>
     </div>
+    
+    <ng-container *ngIf="userBadges.length > 0">
+<!--            <p *ngIf="selectedUser?.name != undefined">{{selectedUser.name}}'s badges</p>-->
+            <div class="user_badges">
+                <tim-badge *ngFor="let badge of userBadges"
+                           title="{{badge.title}}"
+                           color="{{badge.color}}"
+                           shape="{{badge.shape}}"
+                           [image]="badge.image"
+                           description="{{badge.description}}"
+                           message="{{badge.message}}"
+                           (click)="selectBadge(badge)">
+                </tim-badge>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="userBadges.length == 0">
+         <p>user has no badges</p>
+        </ng-container>
 
-    <div id="user-badges">
-        <tim-badge-viewer *ngIf="selectedUser"
-            [id]="selectedUser!.id"
-            [selectedUserName]="selectedUser!.name">
-    </tim-badge-viewer>
-    </div>
 
+<!--         Delete button, only shown when a badge is selected -->
+        <div *ngIf="showDeleteButton">
+          <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
+        </div>
 
 
     <div class="form-group">
@@ -47,5 +64,6 @@
     <button id="assignButton" (click)="assignBadge(message)" [disabled]="!selectedUser || !selectedBadge">
         Give Badge
     </button>
-    <button (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge && !message">Cancel</button>
-</div>
+        <button (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge && !message">Cancel</button>
+    </div>
+

@@ -7,33 +7,15 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
-import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {Users} from "tim/user/userService";
-import {IBadge} from "tim/Badge/badge.interface";
-import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
-
-interface Badge {
-    id: number;
-    title: string;
-    description: string;
-    color: string;
-    shape: string;
-    image: number;
-}
+import type {IBadge} from "tim/Badge/badge.interface";
+import {BadgeModule} from "tim/Badge/Badge-component";
 
 interface User {
     id: number;
     name: string;
     real_name: string;
     email: string;
-}
-
-interface BadgeGiven {
-    id: number;
-    badge: Badge;
-    user_id: number;
-    removed: boolean;
-    message: string;
 }
 
 @Component({
@@ -47,10 +29,11 @@ export class BadgeGiverComponent implements OnInit {
     users: User[] = [];
     badges: any = [];
     selectedUser?: User | null = null;
-    userBadges: BadgeGiven[] = [];
-    selectedBadge?: Badge | null = null;
+    userBadges: IBadge[] = [];
+    selectedBadge?: IBadge | null = null;
     message = "";
     badgeGiver = 0;
+    showDeleteButton: boolean = false;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -63,6 +46,15 @@ export class BadgeGiverComponent implements OnInit {
         );
         this.fetchUsers();
         this.fetchBadges();
+
+        // Subscribe to badge update events
+        this.subscription.add(
+            this.badgeService.updateBadgeList$.subscribe(() => {
+                if (this.selectedUser?.id != undefined) {
+                    this.fetchUserBadges(this.selectedUser.id); // Refresh badges
+                }
+            })
+        );
     }
 
     emptyForm() {
@@ -89,12 +81,15 @@ export class BadgeGiverComponent implements OnInit {
         console.log("Selected Badge:", this.selectedBadge);
     }
 
-    fetchUserBadges(userId: number) {
-        this.http
-            .get<BadgeGiven[]>(`/api/badge-given/${userId}`)
-            .subscribe((data) => {
-                this.userBadges = data;
-            });
+    async fetchUserBadges(userId?: number) {
+        if (userId == undefined) {
+            console.error("userid was undefined");
+            return;
+        }
+        while (this.userBadges.length > 0) {
+            this.userBadges.pop();
+        }
+        this.userBadges = await this.badgeService.getUserBadges(userId);
     }
 
     async assignBadge(message: string) {
@@ -104,16 +99,12 @@ export class BadgeGiverComponent implements OnInit {
         const currentId = this.selectedUser?.id;
 
         const response = toPromise(
-            this.http.get<[]>(
-                "/give_badge/" +
-                    this.badgeGiver +
-                    "/" +
-                    this.selectedUser?.id +
-                    "/" +
-                    this.selectedBadge?.id +
-                    "/" +
-                    message
-            )
+            this.http.post<{ok: boolean}>("/give_badge", {
+                given_by: this.badgeGiver,
+                group_id: this.selectedUser?.id,
+                badge_id: this.selectedBadge?.id,
+                message: message,
+            })
         );
 
         const result = await response;
@@ -134,13 +125,24 @@ export class BadgeGiverComponent implements OnInit {
             this.badgeService.notifyBadgeViewerUpdate();
         }
     }
-    removeBadge() {
+
+    async removeBadge(badgegivenID?: number) {
         this.badgeGiver = Users.getCurrent().id;
-        const response = toPromise(
-            this.http.get(
-                `/withdraw_badge/${this.badges.id}/${this.badgeGiver}`
-            )
-        );
+        if (badgegivenID == undefined) {
+            console.error("badgegived id was undefined");
+            return;
+        }
+        await this.badgeService.withdrawBadge(badgegivenID, this.badgeGiver);
+        this.fetchUserBadges(this.selectedUser?.id);
+    }
+
+    selectBadge(badge?: IBadge) {
+        this.selectedBadge = badge;
+        this.showDeleteButton = true;
+    }
+
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
     }
 
     protected readonly console = console;
@@ -150,6 +152,6 @@ export class BadgeGiverComponent implements OnInit {
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [CommonModule, FormsModule, BadgeViewerModule, BadgeModule],
+    imports: [CommonModule, FormsModule, BadgeModule],
 })
 export class BadgeGiverModule {}
