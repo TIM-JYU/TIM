@@ -1,9 +1,8 @@
 import type {OnInit} from "@angular/core";
-import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
-import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {FormsModule} from "@angular/forms";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
@@ -42,7 +41,7 @@ export class BadgeGiverComponent implements OnInit {
     ngOnInit() {
         if (Users.isLoggedIn()) {
             if (Users.belongsToGroup("Administrators")) {
-                this.hasPermission = true;
+                this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.addListeners();
             }
         }
@@ -73,6 +72,9 @@ export class BadgeGiverComponent implements OnInit {
         this.message = "";
     }
 
+    /**
+     * Hakee käyttäjät, jotka kuuluu ryhmään "newgroup1"
+     */
     private async fetchUsers() {
         const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
         const result = await response;
@@ -85,12 +87,21 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    /**
+     * Kutsuu Badge-servicen metodia, joka hakee kaikki badget
+     */
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
         console.log("näyttää kaikki badget: ", this.badges);
         console.log("Selected Badge:", this.selectedBadge);
     }
 
+    /**
+     * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
+     * Tyhjentää this.userBadges -taulukon
+     * Kutsuu Badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
+     * @param userId käyttäjän id
+     */
     async fetchUserBadges(userId?: number) {
         if (userId == undefined) {
             console.error("userid was undefined");
@@ -102,6 +113,10 @@ export class BadgeGiverComponent implements OnInit {
         this.userBadges = await this.badgeService.getUserBadges(userId);
     }
 
+    /**
+     * Antaa valitulle käyttäjälle valitun badgen
+     * @param message viesti, joka antamisen yhteydessä voidaan antaa
+     */
     async assignBadge(message: string) {
         if (Users.isLoggedIn()) {
             this.badgeGiver = Users.getCurrent().id;
@@ -136,6 +151,10 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    /**
+     * Kutsuu Badge-servicen metodia, joka ottaa valitun badgen pois käyttäjältä.
+     * @param badgegivenID ID, jonka perustella badgesgiven taulukosta voidaan ottaa pois käyttäjälle annettu badge
+     */
     async removeBadge(badgegivenID?: number) {
         this.badgeGiver = Users.getCurrent().id;
         if (badgegivenID == undefined) {
