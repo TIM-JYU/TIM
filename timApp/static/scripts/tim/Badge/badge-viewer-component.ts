@@ -1,10 +1,9 @@
-import type {OnInit, SimpleChanges} from "@angular/core";
-import {Component, NgModule, Input, OnChanges} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {toPromise} from "tim/util/utils";
 import {BadgeModule} from "tim/Badge/Badge-component";
 import {BadgeTestModule} from "tim/Badge/badge-test-component";
 import {BadgeService} from "tim/Badge/badge.service";
@@ -45,6 +44,10 @@ export class BadgeViewerComponent implements OnInit {
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
+    /**
+     * Tyhjentää badge -taulukon ja kutsuu Badge-servicen metodia joka hakee käyttäjälle kuuluvat badget.
+     * @param id käyttäjän id (tällähetkellä käytetään sisäänkirjautuneen käyttäjän ID:tä)
+     */
     async getBadges(id: number) {
         this.emptyBadges();
         this.badges = await this.badgeService.getUserBadges(id);
@@ -79,22 +82,13 @@ export class BadgeViewerComponent implements OnInit {
         this.subscription.unsubscribe();
     }
 
-    // Select a badge to show the delete button
-    selectBadge(badge?: IBadge) {
-        this.selectedBadge = badge;
-        this.showDeleteButton = true;
-    }
-
-    async removeBadge(badgegivenID?: number) {
-        if (badgegivenID == undefined) {
-            console.error("badgegivenID was undefined");
-            return;
+    /**
+     * Tyhjentää this.badges -taulukon
+     */
+    emptyBadges() {
+        while (this.badges.length > 0) {
+            this.badges.pop();
         }
-        this.badgeService.withdrawBadge(badgegivenID, this.userID);
-        //Päivitetään badge-viewerin näkymä.
-        this.badges = this.badges.filter(
-            (badge) => badge.badgegiven_id !== badgegivenID
-        );
     }
 }
 
