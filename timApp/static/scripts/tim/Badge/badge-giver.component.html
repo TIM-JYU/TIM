@@ -1,10 +1,12 @@
 <div class="badge-giver">
     <h2>Badge Giver</h2>
 
-    <div class="user-selection">
-        <h3>Select a User</h3>
-        <select [(ngModel)]="selectedUser">
-            <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(selectedUser?.id)">{{ user.name }}</option>
+
+    <div class="form-group">
+        <label for="user">User</label>
+        <select id="user" [(ngModel)]="selectedUser">
+            <option [ngValue]="null" disabled selected>Select an user</option>
+            <option *ngFor="let user of users" [ngValue]="user">{{ user.name }}</option>
         </select>
     </div>
     
@@ -36,6 +38,7 @@
     <div class="form-group">
         <label for="badge_to_assign">Badge to Assign</label>
         <select id="badge_to_assign" [(ngModel)]="selectedBadge">
+            <option [ngValue]="null" disabled selected>Select a badge</option>
             <option *ngFor="let badge of badges" [ngValue]="badge">{{ badge.title }}</option>
         </select>
     </div>
