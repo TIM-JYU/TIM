@@ -4,6 +4,7 @@
     <div class="form-group">
         <label for="user">User</label>
         <select id="user" [(ngModel)]="selectedUser">
+            <option [ngValue]="null" disabled selected>Select an user</option>
             <option *ngFor="let user of users" [ngValue]="user">{{ user.name }}</option>
         </select>
     </div>
@@ -20,6 +21,7 @@
     <div class="form-group">
         <label for="badge_to_assign">Badge to Assign</label>
         <select id="badge_to_assign" [(ngModel)]="selectedBadge">
+            <option [ngValue]="null" disabled selected>Select a badge</option>
             <option *ngFor="let badge of badges" [ngValue]="badge">{{ badge.title }}</option>
         </select>
     </div>

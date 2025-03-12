@@ -127,7 +127,7 @@ export class BadgeGiverComponent implements OnInit {
                 );
             }
         }
-        this.selectedBadge = undefined;
+        this.selectedBadge = null;
         this.message = "";
         if (currentId) {
             this.badgeService.getUserBadges(currentId);

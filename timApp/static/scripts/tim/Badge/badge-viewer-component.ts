@@ -75,7 +75,7 @@ export class BadgeViewerComponent implements OnInit {
                 console.log("haettu käyttäjän " + id + " badget");
             }
         }
-        this.badges = await this.badgeService.getUserBadges(id);
+        //this.badges = await this.badgeService.getUserBadges(id);
     }
 
     ngOnInit() {
