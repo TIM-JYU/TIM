@@ -159,8 +159,8 @@
 }
 
 .orange {
-    background: linear-gradient(to bottom right, #ffc107 0%, #f57c00 100%);
-    color: #f68401;
+    background: linear-gradient(to bottom right, #ffc400 0%, #ff6f00 100%);
+    color: #ff8f00;
 }
 
 .pink {
@@ -211,6 +211,62 @@
 .gray {
     background: linear-gradient(to bottom right, #d3d3d3 0%, #a9a9a9 100%);
     color: #808080;
+}
+
+/* uudet värit */
+.cyan {
+    background: linear-gradient(to bottom right, #00bcd4 0%, #0097a7 100%);
+    color: #00838f;
+}
+
+.lime {
+    background: linear-gradient(to bottom right, #c6ff00 0%, #aeea00 100%);
+    color: #76ff03;
+}
+
+.indigo {
+    background: linear-gradient(to bottom right, #3f51b5 0%, #1a237e 100%);
+    color: #303f9f;
+}
+
+.brown {
+    background: linear-gradient(to bottom right, #8d6e63 0%, #3e2723 100%);
+    color: #5d4037;
+}
+
+.amber {
+    background: linear-gradient(to bottom right, #ffbf00 0%, #ff8f00 100%);
+    color: #ff6f00;
+}
+
+.violet {
+    background: linear-gradient(to bottom right, #9c27b0 0%, #6a1b9a 40%, #4a148c 100%);
+    color: #8e24aa;
+}
+
+.skyblue {
+    background: linear-gradient(to bottom right, #81d4fa 0%, #0288d1 100%);
+    color: #0277bd;
+}
+
+.mint {
+    background: linear-gradient(to bottom right, #a5d6a7 0%, #388e3c 100%);
+    color: #2c6e28;
+}
+
+.peach {
+    background: linear-gradient(to bottom right, #ffb74d 0%, #f57c00 100%);
+    color: #ff6f00;
+}
+
+.purple-dark {
+    background: linear-gradient(to bottom right, #7b1fa2 0%, #4a148c 40%, #311b92 100%);
+    color: #6a1b9a;
+}
+
+.wine {
+    background: linear-gradient(to bottom right, #d32f2f 0%, #7a0c1e 100%);
+    color: #9a1e26;
 }
 
 
