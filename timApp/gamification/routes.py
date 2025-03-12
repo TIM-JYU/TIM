@@ -1,3 +1,4 @@
+"""Badge-related routes."""
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -39,31 +40,25 @@ class BadgeModel:
     restored: datetime_tz | None
 
 
-# log_info = {
-#     "event": event,
-#     "timestamp": timestamp,
-#     "id": id,
-#     "executor": executor,
-#     "active": active,
-#     "context_group": context_group,
-#     "title": title,
-#     "color": color,
-#     "shape": shape,
-#     "image": image,
-#     "description": description,
-#     "badge_id": badge_id,
-#     "group_id": group_id,
-#     "message": message,
-# }
 def log_badge_event(log_info: dict) -> None:
+    """
+    Logs all events that modifies badge or badgegiven tables. Log file can be
+    found at ../timapp/tim_files/badge.log.
+    :param log_info: info that is about to be logged in badge.log file
+    :return:
+    """
     path = Path(current_app.config["FILES_PATH"]) / current_app.config["BADGE_LOG_FILE"]
     with filelock.FileLock(f"/tmp/badge_log"):
         with path.open("a") as f:
             f.write(to_json_str(log_info) + "\n")
 
 
-@badges_blueprint.get("/all_badges_including_nonactive")
-def all_badges_including_nonactive() -> Response:
+@badges_blueprint.get("/all_badges_including_inactive")
+def all_badges_including_inactive() -> Response:
+    """
+    Fetches all badges including the inactive badges.
+    :return: Badges in json response format
+    """
     badges = run_sql(select(Badge)).scalars().all()
     badges_json = []
     for badge in badges:
@@ -73,6 +68,10 @@ def all_badges_including_nonactive() -> Response:
 
 @badges_blueprint.get("/all_badges")
 def get_badges() -> Response:
+    """
+    Fetches all badges except the inactive badges.
+    :return: Badges in json response format
+    """
     badges = run_sql(select(Badge).filter_by(active=True)).scalars().all()
     badges_json = []
     for badge in badges:
@@ -83,6 +82,11 @@ def get_badges() -> Response:
 # TODO: Handle errors.
 @badges_blueprint.get("/all_badges_in_context/<context_group>")
 def get_badges_in_context(context_group: str) -> Response:
+    """
+    Fetches all badges in specific context_group.
+    :param context_group: Context group to get badges from
+    :return: Badges in json response format
+    """
     badges = (
         run_sql(
             select(Badge).filter(Badge.active).filter_by(context_group=context_group)
@@ -99,6 +103,11 @@ def get_badges_in_context(context_group: str) -> Response:
 # TODO: Handle errors.
 @badges_blueprint.get("/badge/<badge_id>")
 def get_badge(badge_id: int) -> Response:
+    """
+    Fetches a specific badge.
+    :param badge_id: ID of the badge to get
+    :return: Badge in json response format or error when there is no badge with that id
+    """
     badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if badge is None:
         return error_generic("there's no badge with id: " + str(badge_id), 404)
@@ -116,6 +125,17 @@ def create_badge(
     image: int,
     description: str,
 ) -> Response:
+    """
+    Creates a new badge.
+    :param created_by: ID of the usergroup who creates the badge
+    :param context_group: Context group where the badge will be included
+    :param title: Title of the badge
+    :param color: Color of the badge
+    :param shape: Shape of the badge
+    :param image: Image of the badge
+    :param description: Description of the badge
+    :return: ok response
+    """
     badge = Badge(
         active=True,
         context_group=context_group,
@@ -161,6 +181,18 @@ def modify_badge(
     image: int,
     description: str,
 ) -> Response:
+    """
+    Modifies a badge.
+    :param badge_id: ID of the badge
+    :param modified_by: ID of the usergroup who modifies the badge
+    :param context_group: Context group where the badge will be included
+    :param title: Title of the badge
+    :param color: Color of the badge
+    :param shape: Shape of the badge
+    :param image: Image of the badge
+    :param description: Description of the badge
+    :return: ok response
+    """
     badge = {
         "context_group": context_group,
         "title": title,
@@ -196,6 +228,12 @@ def modify_badge(
 # TODO: Handle errors.
 @badges_blueprint.post("/deactivate_badge")
 def deactivate_badge(badge_id: int, deleted_by: int) -> Response:
+    """
+    Deactivates a badge.
+    :param badge_id: ID of the badge
+    :param deleted_by: ID of the usergroup who deactivates the badge
+    :return: ok response
+    """
     badge = {
         "active": False,
         "deleted_by": deleted_by,
@@ -220,6 +258,12 @@ def deactivate_badge(badge_id: int, deleted_by: int) -> Response:
 # TODO: Handle errors.
 @badges_blueprint.post("/reactivate_badge>")
 def reactivate_badge(badge_id: int, restored_by: int) -> Response:
+    """
+    Reactivates a badge.
+    :param badge_id: ID of the badge
+    :param restored_by: ID of the usergroup who reactivates the badge
+    :return: ok response
+    """
     badge = {
         "active": True,
         "restored_by": restored_by,
@@ -244,6 +288,11 @@ def reactivate_badge(badge_id: int, restored_by: int) -> Response:
 # TODO: Handle errors.
 @badges_blueprint.get("/groups_badges/<group_id>")
 def get_groups_badges(group_id: int) -> Response:
+    """
+    Fetches badges that are given to a usergroup.
+    :param group_id: ID of the usergroup
+    :return: Badges in json response format
+    """
     groups_badges_given = (
         run_sql(
             select(BadgeGiven)
@@ -296,6 +345,14 @@ def get_groups_badges(group_id: int) -> Response:
 # TODO: Handle errors.
 @badges_blueprint.post("/give_badge")
 def give_badge(given_by: int, group_id: int, badge_id: int, message: str) -> Response:
+    """
+    Gives a badge to a usergroup.
+    :param given_by: ID of the usergroup who gives the badge
+    :param group_id: ID of the usergroup that the badge is given
+    :param badge_id: ID of the badge that is given to the usergroup
+    :param message: Message to give to the usergroup when the badge is given
+    :return: ok response
+    """
     badge_given = BadgeGiven(
         active=True,
         group_id=group_id,
@@ -326,6 +383,12 @@ def give_badge(given_by: int, group_id: int, badge_id: int, message: str) -> Res
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_badge")
 def withdraw_badge(badge_given_id: int, withdrawn_by: int) -> Response:
+    """
+    Withdraws a badge from a usergroup.
+    :param badge_given_id: ID of the badgegiven
+    :param withdrawn_by: ID of the usergroup that withdraws the badge
+    :return: ok response
+    """
     badge_given = {
         "active": False,
         "withdrawn_by": withdrawn_by,
@@ -351,6 +414,12 @@ def withdraw_badge(badge_given_id: int, withdrawn_by: int) -> Response:
 # TODO: Handle errors.
 @badges_blueprint.get("/undo_withdraw_badge")
 def undo_withdraw_badge(badge_given_id: int, undo_withdrawn_by: int) -> Response:
+    """
+    Undoes a badge withdrawal from a usergroup.
+    :param badge_given_id: ID of the badgegiven
+    :param undo_withdrawn_by: ID of the usergroup that undoes the badge withdrawal
+    :return: ok response
+    """
     badge_given = {
         "active": True,
         "undo_withdrawn_by": undo_withdrawn_by,
