@@ -144,6 +144,9 @@ export class BadgeGiverComponent implements OnInit {
         }
         await this.badgeService.withdrawBadge(badgegivenID, this.badgeGiver);
         this.fetchUserBadges(this.selectedUser?.id);
+        // Poistaa deletenapin näkyvistä deleten jälkeen
+        this.selectedBadge = null;
+        this.showDeleteButton = false;
     }
 
     selectBadge(badge?: IBadge) {
