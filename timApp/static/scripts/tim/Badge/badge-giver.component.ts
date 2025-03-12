@@ -7,18 +7,9 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {BadgeService} from "tim/Badge/badge.service";
 import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
-import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
 import {Users} from "tim/user/userService";
-import {IBadge} from "tim/Badge/badge.interface";
-
-interface Badge {
-    id: number;
-    title: string;
-    description: string;
-    color: string;
-    shape: string;
-    image: number;
-}
+import type {IBadge} from "tim/Badge/badge.interface";
+import {BadgeModule} from "tim/Badge/Badge-component";
 
 interface User {
     id: number;
@@ -135,15 +126,8 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
-    removeBadge() {
     async removeBadge(badgegivenID?: number) {
         this.badgeGiver = Users.getCurrent().id;
-        const response = toPromise(
-            this.http.post<{ok: boolean}>("/withdraw_badge", {
-                badge_given_id: this.badges.id,
-                withdrawn_by: this.badgeGiver,
-            })
-        );
         if (badgegivenID == undefined) {
             console.error("badgegived id was undefined");
             return;
