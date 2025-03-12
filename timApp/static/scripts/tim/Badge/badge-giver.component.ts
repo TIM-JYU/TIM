@@ -10,6 +10,7 @@ import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
 import type {IBadge} from "tim/Badge/badge.interface";
 import {BadgeModule} from "tim/Badge/Badge-component";
+import type {User} from "../../../../modules/jsrunner/server/servertypes";
 
 interface User {
     id: number;
@@ -34,10 +35,20 @@ export class BadgeGiverComponent implements OnInit {
     message = "";
     badgeGiver = 0;
     showDeleteButton: boolean = false;
+    hasPermission: boolean = false;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     ngOnInit() {
+        if (Users.isLoggedIn()) {
+            if (Users.belongsToGroup("Administrators")) {
+                this.hasPermission = true;
+                this.addListeners();
+            }
+        }
+    }
+
+    private addListeners() {
         // Tilataan updateBadgelist-tapahtuma BadgeService:ltä
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
@@ -46,7 +57,6 @@ export class BadgeGiverComponent implements OnInit {
         );
         this.fetchUsers();
         this.fetchBadges();
-
         // Subscribe to badge update events
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
