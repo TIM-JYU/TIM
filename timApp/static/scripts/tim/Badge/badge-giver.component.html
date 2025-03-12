@@ -3,8 +3,8 @@
     <h2>Badge Giver</h2>
 
     <div class="user-selection">
-        <h3>Select a User</h3>
-        <select [(ngModel)]="selectedUser">
+        <label for="select-user">User</label>
+        <select id="select-user" [(ngModel)]="selectedUser">
             <option [ngValue]="null" disabled selected>Select an user</option>
             <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(selectedUser?.id)">{{ user.name }}</option>
         </select>
@@ -43,8 +43,9 @@
 
     <!-- Preview of the selected badge -->
     <div *ngIf="selectedBadge" class="badge-preview">
-        <h3>Selected Badge Preview</h3>
-        <tim-badge *ngIf="selectedBadge"
+        <label for="selected-badge-preview">Selected Badge Preview</label>
+        <div id="selected-badge-preview">
+            <tim-badge *ngIf="selectedBadge"
                    title="{{ selectedBadge!.title  }}"
                    color="{{ selectedBadge!.color }}"
                    shape="{{ selectedBadge!.shape }}"
@@ -52,6 +53,7 @@
                    description="{{ selectedBadge!.description }}"
                    message="{{ message }}">
         </tim-badge>
+        </div>
     </div>
 
     <div class="form-group">
@@ -59,11 +61,13 @@
         <textarea id="message" rows="3" [(ngModel)]="message" placeholder="Enter a message..."></textarea>
     </div>
 
-    <button id="assignButton" (click)="assignBadge(message)" [disabled]="!selectedUser || !selectedBadge">
-        Give Badge
-    </button>
-        <button (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge && !message">Cancel</button>
+    <div class="button-container">
+        <button id="assignButton" (click)="assignBadge(message)" [disabled]="!selectedUser || !selectedBadge">
+            Give Badge
+        </button>
+        <button id="cancelButton" (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge && !message">Cancel</button>
     </div>
+</div>
 </ng-container>
 <ng-template #noPermissionView>
   <p>Access denied for students.</p>
