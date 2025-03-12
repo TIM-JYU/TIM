@@ -9,8 +9,6 @@ import {toPromise} from "tim/util/utils";
     providedIn: "root",
 })
 export class BadgeService {
-    private all_badges: IBadge[] = [];
-
     // Subject, joka laukaisee updatesignaalin
     private updateBadgeSubject = new Subject<void>();
 
@@ -75,6 +73,7 @@ export class BadgeService {
         const result = await response;
         if (result.ok) {
             console.log("Badge poistettu käytöstä id:llä: " + badgegivenID);
+            this.triggerUpdateBadgeList();
         }
     }
 
