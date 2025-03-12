@@ -53,6 +53,14 @@ export class BadgeViewerComponent implements OnInit {
             this.userID = Users.getCurrent().id;
         }
         this.getBadges(this.userID);
+
+        this.subscription = this.badgeService.updateBadgeList$.subscribe(() => {
+            this.getBadges(this.userID);
+        });
+    }
+
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
     }
 
     emptyBadges() {
