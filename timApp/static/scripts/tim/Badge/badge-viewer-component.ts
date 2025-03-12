@@ -13,8 +13,9 @@ import {Subscription} from "rxjs";
 @Component({
     selector: "tim-badge-viewer",
     template: `
-        <ng-container *ngIf="badges.length > 0">
-            <p>{{this.userName}}'s badges</p>
+        <div class="viewer-container">
+            <ng-container *ngIf="badges.length > 0">
+            <h2 class="badge-heading">{{this.userName}}'s badges</h2>
             <div class="user_badges">
                 <tim-badge *ngFor="let badge of badges" 
                            title="{{badge.title}}" 
@@ -25,10 +26,11 @@ import {Subscription} from "rxjs";
                            message="{{badge.message}}">
                 </tim-badge>
             </div>
-        </ng-container>
-        <ng-container *ngIf="badges.length == 0">
-         <p>{{this.userName}} has no badges</p>
-        </ng-container>
+            </ng-container>
+            <ng-container *ngIf="badges.length == 0">
+                <p>{{this.userName}} has no badges</p>
+            </ng-container>
+        </div>
         `,
     styleUrls: ["badge-viewer-component.scss"],
 })
