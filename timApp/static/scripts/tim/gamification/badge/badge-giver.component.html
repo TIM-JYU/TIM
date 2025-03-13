@@ -6,12 +6,14 @@
         <label for="select-user">User</label>
         <select id="select-user" [(ngModel)]="selectedUser">
             <option [ngValue]="null" disabled selected>Select an user</option>
-            <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(selectedUser?.id)">{{ user.name }}</option>
+            <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(user.id)">
+            {{ user.real_name }}
+        </option>
         </select>
     </div>
 
     <ng-container *ngIf="userBadges.length > 0">
-       <p *ngIf="selectedUser?.name != undefined">{{selectedUser?.name}}'s badges</p>
+       <p *ngIf="selectedUser?.name != undefined">{{selectedUser?.real_name}}'s badges</p>
             <div class="user_badges">
                 <tim-badge *ngFor="let badge of userBadges"
                            title="{{badge.title}}"

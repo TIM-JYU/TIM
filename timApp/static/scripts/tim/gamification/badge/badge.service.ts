@@ -2,8 +2,8 @@ import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {lastValueFrom} from "rxjs";
 import {Subject} from "rxjs";
-import type {IBadge} from "tim/Badge/badge.interface";
-import {toPromise} from "tim/util/utils";
+import type {IBadge} from "./badge.interface";
+import {toPromise} from "../../util/utils";
 
 @Injectable({
     providedIn: "root",
@@ -72,7 +72,7 @@ export class BadgeService {
         );
         const result = await response;
         if (result.ok) {
-            console.log("Badge poistettu käytöstä id:llä: " + badgegivenID);
+            console.log("badge poistettu käytöstä id:llä: " + badgegivenID);
             this.triggerUpdateBadgeList();
         }
     }

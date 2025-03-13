@@ -71,7 +71,7 @@ class Badge(db.Model):
     def to_json(self) -> dict:
         """
         Returns a JSON representation of the badge.
-        :return: Badge in json format
+        :return: badge in json format
         """
         return {
             "id": self.id,

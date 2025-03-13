@@ -28,11 +28,10 @@ import * as velpSelection from "tim/velp/velpSelection";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {AppModule} from "tim/app.module";
 import {TodoListComponent} from "tim/todo/todo-component";
-import {BadgeComponent} from "tim/Badge/Badge-component";
-import {BadgeTestComponent} from "tim/Badge/badge-test-component";
-import {BadgeViewerComponent} from "tim/Badge/badge-viewer-component";
-import {BadgeCreatorComponent} from "tim/Badge/badge-creator.component";
-import {BadgeGiverComponent} from "tim/Badge/badge-giver.component";
+import {BadgeComponent} from "tim/gamification/badge/badge.component";
+import {BadgeViewerComponent} from "tim/gamification/badge/badge-viewer.component";
+import {BadgeCreatorComponent} from "tim/gamification/badge/badge-creator.component";
+import {BadgeGiverComponent} from "tim/gamification/badge/badge-giver.component";
 import {HeaderComponent} from "tim/header/header.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
@@ -162,10 +161,9 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timCourseManager", CourseManagerComponent);
     doDowngrade(dg, "timTodo", TodoListComponent);
     doDowngrade(dg, "timBadge", BadgeComponent);
-    doDowngrade(dg, "timBadgeTest", BadgeTestComponent);
     doDowngrade(dg, "timBadgeViewer", BadgeViewerComponent);
-    doDowngrade(dg, "timBadges", BadgeCreatorComponent);
-    doDowngrade(dg, "badgeGiver", BadgeGiverComponent);
+    doDowngrade(dg, "timBadgeCreator", BadgeCreatorComponent);
+    doDowngrade(dg, "timBadgeGiver", BadgeGiverComponent);
     return dg;
 }
 

@@ -2,12 +2,11 @@ import type {OnInit} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {Users} from "tim/user/userService";
+import {Users} from "../../user/userService";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BadgeModule} from "tim/Badge/Badge-component";
-import {BadgeTestModule} from "tim/Badge/badge-test-component";
-import {BadgeService} from "tim/Badge/badge.service";
-import type {IBadge} from "tim/Badge/badge.interface";
+import {BadgeModule} from "./badge.component";
+import {BadgeService} from "./badge.service";
+import type {IBadge} from "./badge.interface";
 import {Subscription} from "rxjs";
 
 @Component({
@@ -15,7 +14,7 @@ import {Subscription} from "rxjs";
     template: `
         <div class="viewer-container">
             <ng-container *ngIf="badges.length > 0">
-            <h2 class="badge-heading">{{this.userName}}'s badges</h2>
+            <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
             <div class="user_badges">
                 <tim-badge *ngFor="let badge of badges" 
                            title="{{badge.title}}" 
@@ -32,10 +31,11 @@ import {Subscription} from "rxjs";
             </ng-container>
         </div>
         `,
-    styleUrls: ["badge-viewer-component.scss"],
+    styleUrls: ["badge-viewer.component.scss"],
 })
 export class BadgeViewerComponent implements OnInit {
     userName?: string;
+    fullname?: string | null;
     userID: number = 0;
     badges: IBadge[] = [];
 
@@ -44,7 +44,7 @@ export class BadgeViewerComponent implements OnInit {
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     /**
-     * Tyhjentää badge -taulukon ja kutsuu Badge-servicen metodia joka hakee käyttäjälle kuuluvat badget.
+     * Tyhjentää badge -taulukon ja kutsuu badge-servicen metodia joka hakee käyttäjälle kuuluvat badget.
      * @param id käyttäjän id (tällähetkellä käytetään sisäänkirjautuneen käyttäjän ID:tä)
      */
     async getBadges(id: number) {
@@ -55,6 +55,7 @@ export class BadgeViewerComponent implements OnInit {
     ngOnInit() {
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
+            this.fullname = Users.getCurrent().real_name;
             this.userID = Users.getCurrent().id;
         }
         this.getBadges(this.userID);
@@ -80,13 +81,7 @@ export class BadgeViewerComponent implements OnInit {
 
 @NgModule({
     declarations: [BadgeViewerComponent],
-    imports: [
-        CommonModule,
-        FormsModule,
-        HttpClientModule,
-        BadgeModule,
-        BadgeTestModule,
-    ],
+    imports: [CommonModule, FormsModule, HttpClientModule, BadgeModule],
     exports: [BadgeViewerComponent],
 })
 export class BadgeViewerModule {}
