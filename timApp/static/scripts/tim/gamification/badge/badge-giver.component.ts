@@ -14,7 +14,7 @@ import type {User} from "../../../../../modules/jsrunner/server/servertypes";
 interface User {
     id: number;
     name: string;
-    real_name: string;
+    real_name: string | null;
     email: string;
 }
 
