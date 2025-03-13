@@ -49,6 +49,14 @@ export class BadgeCreatorComponent implements OnInit {
         });
     }
 
+    showForm() {
+        this.badgeFormShowing = true;
+        this.isFormChanged = true;
+        this.editingBadge = null;
+        this.clickedBadge = null;
+        this.emptyForm();
+    }
+
     availableImages = [1, 2, 3, 4, 5];
     availableContext_groups = ["it_01", "it_02", "es_01"];
     shapes = [
