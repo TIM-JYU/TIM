@@ -5,18 +5,18 @@ import {ReactiveFormsModule, Validators} from "@angular/forms";
 import {FormGroup, FormControl} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
 import {HttpClientModule} from "@angular/common/http";
-import {BadgeComponent, BadgeModule} from "tim/Badge/Badge-component";
-import {toPromise} from "tim/util/utils";
-import {BadgeViewerModule} from "tim/Badge/badge-viewer-component";
-import {BadgeGiverModule} from "tim/Badge/badge-giver.component";
+import {BadgeComponent, BadgeModule} from "./badge.component";
+import {toPromise} from "../../util/utils";
+import {BadgeViewerModule} from "./badge-viewer.component";
+import {BadgeGiverModule} from "./badge-giver.component";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
-import {getFormBehavior} from "tim/plugin/util";
-import {BadgeService} from "tim/Badge/badge.service";
-import {IBadge} from "tim/Badge/badge.interface";
-import {Users} from "tim/user/userService";
+import {getFormBehavior} from "../../plugin/util";
+import {BadgeService} from "./badge.service";
+import {IBadge} from "./badge.interface";
+import {Users} from "../../user/userService";
 
 @Component({
-    selector: "tim-badges",
+    selector: "tim-badge-creator",
     templateUrl: "./badge-creator.component.html",
     styleUrls: ["./badge-creator.component.scss"],
 })

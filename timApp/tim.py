@@ -42,9 +42,8 @@ from timApp.document.editing.routes_clipboard import clipboard
 from timApp.document.minutes.routes import minutes_blueprint
 from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
-from timApp.gamification.badges import Badge
 from timApp.gamification.generateMap import generateMap
-from timApp.gamification.routes import badges_blueprint
+from timApp.gamification.badge.routes import badges_blueprint
 from timApp.item.distribute_rights import dist_bp
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page

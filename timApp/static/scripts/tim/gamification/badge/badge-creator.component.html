@@ -1,7 +1,7 @@
 <ng-container *ngIf="this.hasPermission; else noPermissionView">
     <div class="badge-creator" [formGroup]="badgeForm">
       <fieldset class="form-fieldset">
-        <h2>{{ editingBadge ? 'Edit Badge' : 'Create a Badge' }}</h2>
+        <h2>{{ editingBadge ? 'Edit badge' : 'Create a badge' }}</h2>
 
         <form (ngSubmit)="onSubmit()" id="badgeForm">
           <div class="form-group">
@@ -71,7 +71,7 @@
                     [attr.title]="!badgeForm.valid ? 'Fill all the required fields' : null"
                     [disabled]="!badgeForm.valid"
                     (click)="editingBadge ? saveBadgeChanges() : onSubmit()">
-                    {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
+                    {{ editingBadge ? 'Save Changes' : 'Create badge' }}
             </button>
 
             <div class="delete-edit">

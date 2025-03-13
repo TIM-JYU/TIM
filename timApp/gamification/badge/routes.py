@@ -1,4 +1,4 @@
-"""Badge-related routes."""
+"""badge-related routes."""
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -6,7 +6,7 @@ import filelock
 from flask import Response, current_app
 from sqlalchemy import select
 
-from timApp.gamification.badges import Badge, BadgeGiven
+from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
 from timApp.util.flask.responsehelper import (
@@ -106,7 +106,7 @@ def get_badge(badge_id: int) -> Response:
     """
     Fetches a specific badge.
     :param badge_id: ID of the badge to get
-    :return: Badge in json response format or error when there is no badge with that id
+    :return: badge in json response format or error when there is no badge with that id
     """
     badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if badge is None:

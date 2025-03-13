@@ -3,13 +3,13 @@ import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {BadgeService} from "tim/Badge/badge.service";
-import {toPromise} from "tim/util/utils";
+import {BadgeService} from "./badge.service";
+import {toPromise} from "../../util/utils";
 import {Subscription} from "rxjs";
-import {Users} from "tim/user/userService";
-import type {IBadge} from "tim/Badge/badge.interface";
-import {BadgeModule} from "tim/Badge/Badge-component";
-import type {User} from "../../../../modules/jsrunner/server/servertypes";
+import {Users} from "../../user/userService";
+import type {IBadge} from "./badge.interface";
+import {BadgeModule} from "./badge.component";
+import type {User} from "../../../../../modules/jsrunner/server/servertypes";
 
 interface User {
     id: number;
@@ -88,18 +88,18 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kutsuu Badge-servicen metodia, joka hakee kaikki badget
+     * Kutsuu badge-servicen metodia, joka hakee kaikki badget
      */
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
         console.log("näyttää kaikki badget: ", this.badges);
-        console.log("Selected Badge:", this.selectedBadge);
+        console.log("Selected badge:", this.selectedBadge);
     }
 
     /**
      * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
      * Tyhjentää this.userBadges -taulukon
-     * Kutsuu Badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
+     * Kutsuu badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
      * @param userId käyttäjän id
      */
     async fetchUserBadges(userId?: number) {
@@ -152,7 +152,7 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kutsuu Badge-servicen metodia, joka ottaa valitun badgen pois käyttäjältä.
+     * Kutsuu badge-servicen metodia, joka ottaa valitun badgen pois käyttäjältä.
      * @param badgegivenID ID, jonka perustella badgesgiven taulukosta voidaan ottaa pois käyttäjälle annettu badge
      */
     async removeBadge(badgegivenID?: number) {

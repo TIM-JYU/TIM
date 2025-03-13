@@ -27,7 +27,7 @@ import {FormsModule} from "@angular/forms";
 </div>
 
   `,
-    styleUrls: ["badge.component.css"],
+    styleUrls: ["badge.component.scss"],
 })
 export class BadgeComponent implements OnInit, OnChanges {
     @Input() id?: number;
