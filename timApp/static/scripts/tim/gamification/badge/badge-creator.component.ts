@@ -29,6 +29,8 @@ export class BadgeCreatorComponent implements OnInit {
     all_badges: IBadge[] = [];
     selectedContextGroup: string = "";
     hasPermission = false;
+    badgeFormShowing = false;
+    clickedBadge: any = null;
 
     // Initializes the component by loading badges and subscribing to form value changes.
     // It tracks changes to the context_group field and triggers a handler when the value changes.
@@ -54,6 +56,14 @@ export class BadgeCreatorComponent implements OnInit {
                 }
             }
         });
+    }
+
+    showForm() {
+        this.badgeFormShowing = true;
+        this.isFormChanged = true;
+        this.editingBadge = null;
+        this.clickedBadge = null;
+        this.emptyForm();
     }
 
     availableImages = [1, 2, 3, 4, 5];
@@ -123,8 +133,9 @@ export class BadgeCreatorComponent implements OnInit {
                 }
                 await this.getBadges();
                 this.emptyForm();
-                // Lähetetään signaali onnistuneesta luonnista
-                this.badgeService.triggerUpdateBadgeList(); // Lähetetään signaali BadgeService:lle
+
+                this.badgeService.triggerUpdateBadgeList();
+                this.badgeFormShowing = false;
             }
         }
     }
@@ -133,6 +144,7 @@ export class BadgeCreatorComponent implements OnInit {
     onContextGroupChange(newContextGroup: string) {
         this.selectedContextGroup = newContextGroup;
         this.getBadges();
+        this.clickedBadge = null;
     }
 
     editingBadge: any = null;
@@ -140,6 +152,16 @@ export class BadgeCreatorComponent implements OnInit {
     // Edit an existing badge, show attributes in input fields
     editBadge(badge: IBadge) {
         this.editingBadge = badge;
+
+        if (this.clickedBadge === badge) {
+            this.clickedBadge = null;
+            this.emptyForm();
+            this.badgeFormShowing = false;
+        } else {
+            this.clickedBadge = badge;
+            this.isFormChanged = true;
+            this.badgeFormShowing = true;
+        }
         this.badgeForm.patchValue({
             id: badge.id,
             title: badge.title,
@@ -156,6 +178,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.selectedContextGroup = "";
         this.emptyForm();
         await this.getBadges();
+        this.badgeFormShowing = false;
     }
 
     // Clears form information, except given values
@@ -218,12 +241,17 @@ export class BadgeCreatorComponent implements OnInit {
                 await this.getBadges();
             }
             this.badgeService.triggerUpdateBadgeList();
+            this.badgeFormShowing = false;
         }
     }
 
     // Delete badge
     async deleteBadge() {
-        if (confirm("Are you sure you want to delete badge?")) {
+        if (
+            confirm(
+                `Are you sure you want to delete ${this.editingBadge.title} badge?`
+            )
+        ) {
             if (this.editingBadge) {
                 try {
                     const response = await toPromise(

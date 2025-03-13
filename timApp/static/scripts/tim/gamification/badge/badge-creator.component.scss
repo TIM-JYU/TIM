@@ -10,6 +10,37 @@
   z-index: 10;
 }
 
+.selected-badge {
+  border: 2px solid #0F4096;
+  background: linear-gradient(135deg,
+                              #A8D0E6,
+                              #86C8D8,
+                              #70A9B7,
+                              #4F97A3,
+                              #7CC4D1,
+                              #B0D6E6,
+                              #66A8C4);
+  border-radius: 12px;
+  padding: 60px 0px;
+  font-size: 1.2em;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  font-weight: bold;
+  font-family: 'Arial', sans-serif;
+  margin: 5px;
+}
+
+.selected-badge:hover {
+  background-color: #cfe2ff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.selected-badge:active {
+  background-color: #aad4ff;
+  border-color: #0056b3;
+}
+
+
 h2 {
   color: black;
   margin-bottom: 1.2em;
@@ -174,7 +205,7 @@ button[type="button"]:hover {
   background-color: #ccc;
 }
 
-#createButton:hover {
+#createButton:hover{
   background-color: #0D357A;
 }
 
@@ -198,4 +229,25 @@ button[type="button"]:hover {
   font-size: 1.1em;
   cursor: pointer;
   transition: background-color 0.3s ease;
+}
+
+#showBadgeForm {
+    width: 2em;  /* Neliön leveys */
+    height: 2em;  /* Neliön korkeus */
+    background-color: #0F4096;  /* Taustaväri */
+    color: white;  /* Tekstin väri */
+    font-size: 3em;  /* Tekstin koko */
+    font-weight: bold;  /* Lihavoitu teksti */
+    border: none;  /* Ei reunaviivaa */
+    border-radius: 0.5em;  /* Pyöristetyt kulmat */
+    cursor: pointer;  /* Näyttää käden ikonin, kun hiiri menee napin päälle */
+    display: flex;
+    justify-content: center;  /* Keskittää tekstin vaakasuunnassa */
+    align-items: center;  /* Keskittää tekstin pystysuunnassa */
+    transition: background-color 0.2s ease;  /* Pehmeä taustavärin vaihto */
+}
+
+/* Hover-tila muuttaa napin taustaväriä */
+#showBadgeForm:hover {
+    background-color: #0D357A;  /* Tummempi väri hover-tilassa */
 }
