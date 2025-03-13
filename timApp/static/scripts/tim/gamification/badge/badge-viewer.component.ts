@@ -14,7 +14,7 @@ import {Subscription} from "rxjs";
     template: `
         <div class="viewer-container">
             <ng-container *ngIf="badges.length > 0">
-            <h2 class="badge-heading">{{this.userName}}'s badges</h2>
+            <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
             <div class="user_badges">
                 <tim-badge *ngFor="let badge of badges" 
                            title="{{badge.title}}" 
@@ -35,6 +35,7 @@ import {Subscription} from "rxjs";
 })
 export class BadgeViewerComponent implements OnInit {
     userName?: string;
+    fullname?: string | null;
     userID: number = 0;
     badges: IBadge[] = [];
 
@@ -54,6 +55,7 @@ export class BadgeViewerComponent implements OnInit {
     ngOnInit() {
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
+            this.fullname = Users.getCurrent().real_name;
             this.userID = Users.getCurrent().id;
         }
         this.getBadges(this.userID);
