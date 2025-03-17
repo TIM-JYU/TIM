@@ -208,8 +208,8 @@ export class BadgeGiverComponent implements OnInit {
 
         // Show confirmation dialog before removing the badge
         const confirmed = await showConfirm(
-            "Confirm event",
-            "Are you sure you want to give this badge?"
+            "Confirm badge assigning event",
+            "Are you sure you want to assign this badge?"
         );
 
         if (!confirmed) {
@@ -257,7 +257,7 @@ export class BadgeGiverComponent implements OnInit {
 
         // Show confirmation dialog before removing the badge
         const confirmed = await showConfirm(
-            "Confirm badge removal",
+            "Confirm badge removal event",
             "Are you sure you want to remove this badge?"
         );
         if (!confirmed) {
