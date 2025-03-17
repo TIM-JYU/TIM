@@ -248,13 +248,16 @@ button[type="button"]:hover {
   transition: background-color 0.3s ease;
 }
 
-.button-group {
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-
-.left-buttons {
+#showBadgeForm {
+    width: 5em;  /* Neliön leveys */
+    height: 5em;  /* Neliön korkeus */
+    background-color: #0F4096;  /* Taustaväri */
+    color: white;  /* Tekstin väri */
+    font-size: 1em;  /* Tekstin koko */
+    font-weight: bold;  /* Lihavoitu teksti */
+    border: none;  /* Ei reunaviivaa */
+    border-radius: 0.8em;  /* Pyöristetyt kulmat */
+    cursor: pointer;  /* Näyttää käden ikonin, kun hiiri menee napin päälle */
     display: flex;
     gap: 10px;
 }
