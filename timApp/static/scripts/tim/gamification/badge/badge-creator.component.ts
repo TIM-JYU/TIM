@@ -1,4 +1,5 @@
 import type {OnInit} from "@angular/core";
+import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {ReactiveFormsModule, Validators} from "@angular/forms";
@@ -32,7 +33,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                title="{{badge.title}}"
                                color="{{badge.color}}"
                                shape="{{badge.shape}}"
-                               [image]="badge.image.toString()"
+                               [image]="badge.image"
                                description="{{badge.description}}"
                                (click)="editBadge(badge);">
                     </tim-badge>
@@ -74,15 +75,6 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                       </select>
                     </div>
     
-                      <div class="form-group">
-                        <label for="context_group">Context Group</label>
-                        <select id="context_group" formControlName="context_group">
-                            <option *ngFor="let context_group of availableContext_groups" [value]="context_group">
-                                {{ context_group }}
-                            </option>
-                        </select>
-                      </div>
-    
                   </div>
                     <div class="shape-preview-group">
                         <div class="form-group">
@@ -100,7 +92,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                   <tim-badge
                                     [title]="badgeForm.value.title || ''"
                                     [color]="badgeForm.value.color || 'gray'"
-                                    [image]="badgeForm.value.image || 'question_mark'"
+                                    [image]="badgeForm.value.image || 0 "
                                     [description]="badgeForm.value.description || ''"
                                     [shape]="badgeForm.value.shape || 'hexagon'">
                                   </tim-badge>
@@ -150,11 +142,12 @@ export class BadgeCreatorComponent implements OnInit {
     clickedBadge: any = null;
     editingBadge: any = null;
     showCreateButton: any = null;
+    @Input() badgegroupContext?: string;
 
     // Initializes the component by loading badges and subscribing to form value changes.
     // It tracks changes to the context_group field and triggers a handler when the value changes.
     ngOnInit() {
-        let previousContextGroup = this.badgeForm.value.context_group;
+        this.selectedContextGroup = this.badgegroupContext || "";
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
             this.userID = Users.getCurrent().id;
@@ -167,13 +160,6 @@ export class BadgeCreatorComponent implements OnInit {
         this.getBadges();
         this.badgeForm.valueChanges.subscribe(() => {
             this.isFormChanged = true;
-            const currentContextGroup = this.badgeForm.value.context_group;
-            if (currentContextGroup !== previousContextGroup) {
-                previousContextGroup = currentContextGroup;
-                if (currentContextGroup) {
-                    this.onContextGroupChange(currentContextGroup);
-                }
-            }
         });
     }
 
@@ -218,7 +204,7 @@ export class BadgeCreatorComponent implements OnInit {
             id: badge.id,
             title: badge.title,
             description: badge.description,
-            image: badge.image.toString(),
+            image: badge.image,
             color: badge.color,
             shape: badge.shape,
             context_group: badge.context_group,
@@ -245,22 +231,8 @@ export class BadgeCreatorComponent implements OnInit {
     }
 
     // Titles instead of numbers in availableImages
-    availableImages = [
-        "Trophy",
-        "Winner",
-        "Teamwork",
-        "Code",
-        "Debug",
-        "On_fire",
-        "Rocket",
-        "Smile",
-        "Terminal",
-        "Deployed",
-        "Loop",
-        "Full_points",
-    ];
+    availableImages = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
-    availableContext_groups = ["it_01", "it_02", "es_01"];
     shapes = [
         {label: "Hexagon", value: "hexagon"},
         {label: "Flower", value: "flower"},
@@ -293,9 +265,7 @@ export class BadgeCreatorComponent implements OnInit {
 
     badgeForm = new FormGroup({
         id: new FormControl(0),
-        image: new FormControl("question_mark" as string | null, [
-            Validators.required,
-        ]),
+        image: new FormControl(0, [Validators.required]),
         title: new FormControl("", [Validators.required]),
         icon: new FormControl(""),
         description: new FormControl("", [Validators.required]),
@@ -313,15 +283,17 @@ export class BadgeCreatorComponent implements OnInit {
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/create_badge", {
                     created_by: this.newBadge.created_by,
-                    context_group: this.newBadge.context_group,
+                    context_group: this.selectedContextGroup,
                     title: this.newBadge.title,
                     color: this.newBadge.color,
                     shape: this.newBadge.shape,
-                    image: this.newBadge.image,
+                    image: this.newBadge.image.toString(),
                     description: this.newBadge.description,
                 })
             );
+            console.log("contextgroup: ", this.selectedContextGroup);
             const result = await response;
+            console.log("contextgroup: ", this.selectedContextGroup);
             if (result.ok) {
                 while (this.all_badges.length > 0) {
                     this.all_badges.pop();
@@ -335,16 +307,8 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
-    // Helps when context group is changed
-    onContextGroupChange(newContextGroup: string) {
-        this.selectedContextGroup = newContextGroup;
-        this.getBadges();
-        this.clickedBadge = null;
-    }
-
     // When cancelled, form information is cleared
     async onCancel() {
-        this.selectedContextGroup = "";
         this.emptyForm();
         await this.getBadges();
         this.badgeFormShowing = false;
