@@ -144,6 +144,7 @@ export class BadgeGiverComponent implements OnInit {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.addListeners();
                 this.fetchUsers();
+                this.fetchGroups();
                 this.fetchBadges();
             }
         }
@@ -185,6 +186,20 @@ export class BadgeGiverComponent implements OnInit {
             if (result.result != undefined) {
                 for (const alkio of result.result) {
                     this.users.push(alkio);
+                }
+            }
+        }
+    }
+
+    private async fetchGroups() {
+        const response = toPromise(
+            this.http.get<[]>("/subgroups/" + this.badgegroupContext)
+        );
+        const result = await response;
+        if (result.ok) {
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    this.groups.push(alkio);
                 }
             }
         }
