@@ -178,30 +178,18 @@ export class BadgeGiverComponent implements OnInit {
      * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
      */
     private async fetchUsers() {
-        const response = toPromise(
-            this.http.get<[]>("/groups/show/" + this.badgegroupContext)
-        );
-        const result = await response;
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    this.users.push(alkio);
-                }
-            }
+        if (this.badgegroupContext) {
+            this.users = await this.badgeService.getUsersFromGroup(
+                this.badgegroupContext
+            );
         }
     }
 
     private async fetchGroups() {
-        const response = toPromise(
-            this.http.get<[]>("/subgroups/" + this.badgegroupContext)
-        );
-        const result = await response;
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    this.groups.push(alkio);
-                }
-            }
+        if (this.badgegroupContext) {
+            this.groups = await this.badgeService.getSubGroups(
+                this.badgegroupContext
+            );
         }
     }
 
