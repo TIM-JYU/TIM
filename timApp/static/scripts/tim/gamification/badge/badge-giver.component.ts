@@ -3,12 +3,13 @@ import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {BadgeService} from "./badge.service";
-import {toPromise} from "../../util/utils";
 import {Subscription} from "rxjs";
-import {Users} from "../../user/userService";
-import type {IBadge} from "./badge.interface";
-import {BadgeModule} from "./badge.component";
+import {Users} from "tim/user/userService";
+import type {IBadge} from "tim/gamification/badge/badge.interface";
+import {BadgeModule} from "tim/gamification/badge/badge.component";
+import {toPromise} from "tim/util/utils";
+import {BadgeService} from "tim/gamification/badge/badge.service";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {User} from "../../../../../modules/jsrunner/server/servertypes";
 
 interface User {
@@ -200,6 +201,16 @@ export class BadgeGiverComponent implements OnInit {
         }
         const currentId = this.selectedUser?.id;
 
+        // Show confirmation dialog before removing the badge
+        const confirmed = await showConfirm(
+            "Confirm event",
+            "Are you sure you want to give this badge?"
+        );
+
+        if (!confirmed) {
+            return; // Exit if user cancels the confirmation dialog
+        }
+
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
                 given_by: this.badgeGiver,
@@ -238,6 +249,16 @@ export class BadgeGiverComponent implements OnInit {
             console.error("badgegived id was undefined");
             return;
         }
+
+        // Show confirmation dialog before removing the badge
+        const confirmed = await showConfirm(
+            "Confirm badge removal",
+            "Are you sure you want to remove this badge?"
+        );
+        if (!confirmed) {
+            return; // Exit if user cancels the confirmation dialog
+        }
+
         await this.badgeService.withdrawBadge(badgegivenID, this.badgeGiver);
         this.fetchUserBadges(this.selectedUser?.id);
         // Poistaa deletenapin näkyvistä deleten jälkeen
