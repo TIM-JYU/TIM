@@ -172,39 +172,44 @@ export class BadgeCreatorComponent implements OnInit {
             }
         });
     }
+
     clickCreate() {
+        // If user has selected a badge, set clicked to false and put showing form true
         if (this.clickedBadge) {
+            this.clickedBadge = false;
             this.badgeFormShowing = false;
         }
-        if (!this.badgeFormShowing) {
-            this.clickedBadge = null;
-            this.editingBadge = null;
-            this.showCreateButton = true;
-            this.showForm();
+        // Toggles the form visibility for creating a badge.
+        if (this.badgeFormShowing) {
+            this.resetForm();
         } else {
-            this.clickedBadge = null;
-            this.editingBadge = null;
-            this.showCreateButton = false;
-            this.badgeFormShowing = false;
-            this.isFormChanged = false;
+            this.showForm();
         }
     }
 
     // Edit an existing badge, show attributes in input fields
     editBadge(badge: IBadge) {
-        this.editingBadge = badge;
-
+        // If clicked badge is the same, reset and hide the form
         if (this.clickedBadge === badge) {
-            this.showCreateButton = false;
-            this.clickedBadge = null;
-            this.emptyForm();
-            this.badgeFormShowing = false;
+            this.resetForm();
         } else {
-            this.showCreateButton = false;
-            this.clickedBadge = badge;
-            this.isFormChanged = true;
-            this.badgeFormShowing = true;
+            this.showEditingForm(badge);
         }
+    }
+
+    showForm() {
+        this.showCreateButton = true;
+        this.badgeFormShowing = true;
+        this.isFormChanged = true;
+        this.emptyForm();
+    }
+
+    showEditingForm(badge: IBadge) {
+        this.editingBadge = badge;
+        this.clickedBadge = badge;
+        this.showCreateButton = false;
+        this.badgeFormShowing = true;
+        this.isFormChanged = true;
         this.badgeForm.patchValue({
             id: badge.id,
             title: badge.title,
@@ -216,11 +221,12 @@ export class BadgeCreatorComponent implements OnInit {
         });
     }
 
-    showForm() {
-        this.badgeFormShowing = true;
-        this.isFormChanged = true;
+    resetForm() {
         this.clickedBadge = null;
-        this.emptyForm();
+        this.editingBadge = null;
+        this.showCreateButton = !this.badgeFormShowing;
+        this.badgeFormShowing = false;
+        this.isFormChanged = false;
     }
 
     // Clears form information, except given values
