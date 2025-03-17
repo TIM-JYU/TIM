@@ -43,7 +43,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                    [image]="badge.image"
                                    description="{{badge.description}}"
                                    message="{{badge.message}}"
-                                   (click)="selectBadge(badge)">
+                                   (click)="selectBadge(badge, false)">
                         </tim-badge>
                     </div>
                 </ng-container>
@@ -51,7 +51,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
         
         
         <!--         Delete button, only shown when a badge is selected -->
-            <div *ngIf="showDeleteButton">
+            <div *ngIf="showDeleteButton && selectedUser">
               <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
             </div>
         
@@ -72,10 +72,13 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                [image]="badge.image"
                                description="{{badge.description}}"
                                message="{{badge.message}}"
-                               (click)="selectBadge(badge)">
+                               (click)="selectBadge(badge, true)">
                     </tim-badge>
                 </div>
             </ng-container>
+            <div *ngIf="showDeleteButton && selectedGroup">
+                <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
+            </div>
         
             <div class="form-group">
                 <label for="badge_to_assign">Badge to Assign</label>
@@ -175,6 +178,9 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedUser = null;
         this.selectedBadge = null;
         this.message = "";
+        this.showDeleteButton = false;
+        this.userBadges = [];
+        this.groupBadges = [];
     }
 
     /**
@@ -212,6 +218,10 @@ export class BadgeGiverComponent implements OnInit {
      * @param userId käyttäjän id
      */
     async fetchUserBadges(userId?: number) {
+        // Reset group selection and hide badges
+        this.selectedGroup = null;
+        this.groupBadges = [];
+
         if (userId == undefined) {
             console.error("userid was undefined");
             return;
@@ -223,6 +233,10 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     async fetchGroupBadges(groupId?: number) {
+        // Reset user selection and hide badges
+        this.selectedUser = null;
+        this.userBadges = [];
+
         if (groupId == undefined) {
             console.error("groupid was undefined");
             return;
@@ -311,9 +325,17 @@ export class BadgeGiverComponent implements OnInit {
         this.showDeleteButton = false;
     }
 
-    selectBadge(badge?: IBadge) {
+    selectBadge(badge?: IBadge, fromGroup: boolean = false) {
         this.selectedBadge = badge;
-        this.showDeleteButton = true;
+        this.showDeleteButton = badge !== undefined; // Nappi näkyy vain, jos badge on valittu
+
+        //TODO: Delete -nappi ei katoa, pitääkö kehittää mahdollisuus "deaktivoida" valittu badge?
+
+        if (fromGroup) {
+            this.selectedUser = null;
+        } else {
+            this.selectedGroup = null;
+        }
     }
 
     ngOnDestroy() {
