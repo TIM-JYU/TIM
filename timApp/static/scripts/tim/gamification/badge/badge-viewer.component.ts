@@ -20,7 +20,7 @@ import {Subscription} from "rxjs";
                            title="{{badge.title}}" 
                            color="{{badge.color}}" 
                            shape="{{badge.shape}}"
-                           image="{{badge.image}}"
+                           [image]="badge.image"
                            description="{{badge.description}}"
                            message="{{badge.message}}">
                 </tim-badge>
