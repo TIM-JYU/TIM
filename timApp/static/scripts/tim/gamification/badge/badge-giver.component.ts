@@ -6,19 +6,15 @@ import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
-import type {IBadge} from "tim/gamification/badge/badge.interface";
+import type {
+    IBadge,
+    IGroup,
+    IUser,
+} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {toPromise} from "tim/util/utils";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import type {User} from "../../../../../modules/jsrunner/server/servertypes";
-
-interface User {
-    id: number;
-    name: string;
-    real_name: string | null;
-    email: string;
-}
 
 @Component({
     selector: "timBadgeGiver",
@@ -55,10 +51,31 @@ interface User {
         
         
         <!--         Delete button, only shown when a badge is selected -->
-                <div *ngIf="showDeleteButton">
-                  <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
-                </div>
+            <div *ngIf="showDeleteButton">
+              <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
+            </div>
         
+            <div class="groups">
+                <label for="select_group">Group</label>
+                <select id="select_group" [(ngModel)]="selectedGroup">¨
+                    <option [ngValue]="null" disabled selected>Select a group</option>
+                    <option *ngFor="let group of groups" [ngValue]="group" (click)="fetchGroupBadges(group.id)">{{ group.name }}</option>
+                </select>
+            </div>
+            
+            <ng-container *ngIf="groupBadges.length > 0">
+                <div class="group_badges">
+                    <tim-badge *ngFor="let badge of groupBadges"
+                               title="{{badge.title}}"
+                               color="{{badge.color}}"
+                               shape="{{badge.shape}}"
+                               [image]="badge.image"
+                               description="{{badge.description}}"
+                               message="{{badge.message}}"
+                               (click)="selectBadge(badge)">
+                    </tim-badge>
+                </div>
+            </ng-container>
         
             <div class="form-group">
                 <label for="badge_to_assign">Badge to Assign</label>
@@ -89,7 +106,7 @@ interface User {
             </div>
         
             <div class="button-container">
-                <button id="assignButton" (click)="assignBadge(message)" [disabled]="!selectedUser || !selectedBadge">
+                <button id="assignButton" (click)="assignBadge(message)" [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
                     Give Badge
                 </button>
                 <button id="cancelButton" (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge && !message">Cancel</button>
@@ -105,9 +122,9 @@ interface User {
 export class BadgeGiverComponent implements OnInit {
     private subscription: Subscription = new Subscription();
 
-    users: User[] = [];
+    users: IUser[] = [];
     badges: any = [];
-    selectedUser?: User | null = null;
+    selectedUser?: IUser | null = null;
     userBadges: IBadge[] = [];
     selectedBadge?: IBadge | null = null;
     message = "";
@@ -115,6 +132,9 @@ export class BadgeGiverComponent implements OnInit {
     showDeleteButton: boolean = false;
     hasPermission: boolean = false;
     @Input() badgegroupContext?: string;
+    groups: IGroup[] = [];
+    selectedGroup?: IGroup | null = null;
+    groupBadges: IBadge[] = [];
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -154,7 +174,7 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Hakee käyttäjät, jotka kuuluu ryhmään "newgroup1"
+     * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
      */
     private async fetchUsers() {
         const response = toPromise(
@@ -196,6 +216,17 @@ export class BadgeGiverComponent implements OnInit {
         this.userBadges = await this.badgeService.getUserBadges(userId);
     }
 
+    async fetchGroupBadges(groupId?: number) {
+        if (groupId == undefined) {
+            console.error("groupid was undefined");
+            return;
+        }
+        while (this.groupBadges.length > 0) {
+            this.groupBadges.pop();
+        }
+        this.groupBadges = await this.badgeService.getUserBadges(groupId);
+    }
+
     /**
      * Antaa valitulle käyttäjälle valitun badgen
      * @param message viesti, joka antamisen yhteydessä voidaan antaa
@@ -204,7 +235,10 @@ export class BadgeGiverComponent implements OnInit {
         if (Users.isLoggedIn()) {
             this.badgeGiver = Users.getCurrent().id;
         }
-        const currentId = this.selectedUser?.id;
+        let currentId = this.selectedUser?.id;
+        if (this.selectedGroup != undefined) {
+            currentId = this.selectedGroup.id;
+        }
 
         // Show confirmation dialog before removing the badge
         const confirmed = await showConfirm(
@@ -219,7 +253,7 @@ export class BadgeGiverComponent implements OnInit {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
                 given_by: this.badgeGiver,
-                group_id: this.selectedUser?.id,
+                group_id: currentId,
                 badge_id: this.selectedBadge?.id,
                 message: message,
             })
