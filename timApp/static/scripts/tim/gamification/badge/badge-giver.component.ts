@@ -44,7 +44,7 @@ interface User {
                                    title="{{badge.title}}"
                                    color="{{badge.color}}"
                                    shape="{{badge.shape}}"
-                                   [image]="badge.image"
+                                   [image]="badge.image.toString()"
                                    description="{{badge.description}}"
                                    message="{{badge.message}}"
                                    (click)="selectBadge(badge)">
@@ -76,7 +76,7 @@ interface User {
                            title="{{ selectedBadge!.title  }}"
                            color="{{ selectedBadge!.color }}"
                            shape="{{ selectedBadge!.shape }}"
-                           [image]="selectedBadge!.image"
+                           [image]="selectedBadge!.image.toString()"
                            description="{{ selectedBadge!.description }}"
                            message="{{ message }}">
                 </tim-badge>
