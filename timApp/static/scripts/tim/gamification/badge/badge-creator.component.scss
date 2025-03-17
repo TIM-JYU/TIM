@@ -232,14 +232,14 @@ button[type="button"]:hover {
 }
 
 #showBadgeForm {
-    width: 2em;  /* Neliön leveys */
-    height: 2em;  /* Neliön korkeus */
+    width: 5em;  /* Neliön leveys */
+    height: 5em;  /* Neliön korkeus */
     background-color: #0F4096;  /* Taustaväri */
     color: white;  /* Tekstin väri */
-    font-size: 3em;  /* Tekstin koko */
+    font-size: 1em;  /* Tekstin koko */
     font-weight: bold;  /* Lihavoitu teksti */
     border: none;  /* Ei reunaviivaa */
-    border-radius: 0.5em;  /* Pyöristetyt kulmat */
+    border-radius: 0.8em;  /* Pyöristetyt kulmat */
     cursor: pointer;  /* Näyttää käden ikonin, kun hiiri menee napin päälle */
     display: flex;
     justify-content: center;  /* Keskittää tekstin vaakasuunnassa */
