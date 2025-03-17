@@ -1,14 +1,16 @@
 import type {OnInit} from "@angular/core";
+import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {BadgeService} from "./badge.service";
-import {toPromise} from "../../util/utils";
 import {Subscription} from "rxjs";
-import {Users} from "../../user/userService";
-import type {IBadge} from "./badge.interface";
-import {BadgeModule} from "./badge.component";
+import {Users} from "tim/user/userService";
+import type {IBadge} from "tim/gamification/badge/badge.interface";
+import {BadgeModule} from "tim/gamification/badge/badge.component";
+import {toPromise} from "tim/util/utils";
+import {BadgeService} from "tim/gamification/badge/badge.service";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {User} from "../../../../../modules/jsrunner/server/servertypes";
 
 interface User {
@@ -112,6 +114,7 @@ export class BadgeGiverComponent implements OnInit {
     badgeGiver = 0;
     showDeleteButton: boolean = false;
     hasPermission: boolean = false;
+    @Input() badgegroupContext?: string;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -120,6 +123,8 @@ export class BadgeGiverComponent implements OnInit {
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.addListeners();
+                this.fetchUsers();
+                this.fetchBadges();
             }
         }
     }
@@ -131,8 +136,7 @@ export class BadgeGiverComponent implements OnInit {
                 this.fetchBadges(); // Kutsutaan fetchBadges-metodia updaten jälkeen
             })
         );
-        this.fetchUsers();
-        this.fetchBadges();
+
         // Subscribe to badge update events
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
@@ -153,7 +157,9 @@ export class BadgeGiverComponent implements OnInit {
      * Hakee käyttäjät, jotka kuuluu ryhmään "newgroup1"
      */
     private async fetchUsers() {
-        const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
+        const response = toPromise(
+            this.http.get<[]>("/groups/show/" + this.badgegroupContext)
+        );
         const result = await response;
         if (result.ok) {
             if (result.result != undefined) {
@@ -200,6 +206,16 @@ export class BadgeGiverComponent implements OnInit {
         }
         const currentId = this.selectedUser?.id;
 
+        // Show confirmation dialog before removing the badge
+        const confirmed = await showConfirm(
+            "Confirm event",
+            "Are you sure you want to give this badge?"
+        );
+
+        if (!confirmed) {
+            return; // Exit if user cancels the confirmation dialog
+        }
+
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
                 given_by: this.badgeGiver,
@@ -238,6 +254,16 @@ export class BadgeGiverComponent implements OnInit {
             console.error("badgegived id was undefined");
             return;
         }
+
+        // Show confirmation dialog before removing the badge
+        const confirmed = await showConfirm(
+            "Confirm badge removal",
+            "Are you sure you want to remove this badge?"
+        );
+        if (!confirmed) {
+            return; // Exit if user cancels the confirmation dialog
+        }
+
         await this.badgeService.withdrawBadge(badgegivenID, this.badgeGiver);
         this.fetchUserBadges(this.selectedUser?.id);
         // Poistaa deletenapin näkyvistä deleten jälkeen
