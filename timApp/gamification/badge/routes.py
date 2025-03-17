@@ -446,12 +446,17 @@ def undo_withdraw_badge(badge_given_id: int, undo_withdrawn_by: int) -> Response
 @badges_blueprint.get("/subgroups/<group_name_prefix>")
 def get_subgroups(group_name_prefix: str) -> Response:
     """
-    Fetces usergroups that have a name that starts with the given prefix.
+    Fetces usergroups that have a name that starts with the given prefix but is not the exact prefix.
     :param group_name_prefix: prefix of the usergroups
     :return: list of usergroups
     """
     subgroups = (
-        run_sql(select(UserGroup).filter(UserGroup.name.like(group_name_prefix + "%")))
+        run_sql(
+            select(UserGroup).filter(
+                UserGroup.name.like(group_name_prefix + "%"),
+                UserGroup.name != group_name_prefix,
+            )
+        )
         .scalars()
         .all()
     )
