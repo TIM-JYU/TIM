@@ -26,7 +26,8 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
             <div class="all_badges">
                 <fieldset>
                   <h2>{{ selectedContextGroup ? selectedContextGroup + "'s Badges" : "All Badges" }}</h2>
-                  <ng-container *ngIf="all_badges.length > 0">
+                  <div class="badge_view">
+                      <ng-container *ngIf="all_badges.length > 0">
                     <tim-badge *ngFor="let badge of all_badges"
                        [ngClass]="{'selected-badge': clickedBadge === badge}"
                                title="{{badge.title}}"
@@ -37,6 +38,8 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                (click)="editBadge(badge);">
                     </tim-badge>
                   </ng-container>
+                  </div>
+                    
                 </fieldset>
                 <div class="button-group">
                     <button id="showBadgeForm" type="button" (click)="clickCreate()">{{ this.showCreateButton ? 'Cancel' : 'Create' }}</button>

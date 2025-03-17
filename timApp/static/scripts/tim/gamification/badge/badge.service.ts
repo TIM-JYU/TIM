@@ -2,8 +2,12 @@ import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {lastValueFrom} from "rxjs";
 import {Subject} from "rxjs";
-import type {IBadge} from "./badge.interface";
-import {toPromise} from "../../util/utils";
+import {toPromise} from "tim/util/utils";
+import type {
+    IBadge,
+    IUser,
+    IGroup,
+} from "tim/gamification/badge/badge.interface";
 
 @Injectable({
     providedIn: "root",
@@ -56,6 +60,42 @@ export class BadgeService {
             }
         }
         return userBadges;
+    }
+
+    /**
+     * Hakee kaikki käyttäjät, jotka kuuluvat parametrina annettuun ryhmään.
+     * @param group ryhmä, jonka käyttäjiä haetaan.
+     */
+    async getUsersFromGroup(group: string) {
+        const response = toPromise(this.http.get<[]>("/groups/show/" + group));
+        const users: IUser[] = [];
+        const result = await response;
+        if (result.ok) {
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    users.push(alkio);
+                }
+            }
+        }
+        return users;
+    }
+
+    /**
+     * Hakee kaikki "aliryhmät", jotka alkaa annetulla <group> parametrilla.
+     * @param group ryhmä, jonka avulla aliryhmät haetaan
+     */
+    async getSubGroups(group: string) {
+        const response = toPromise(this.http.get<[]>("/subgroups/" + group));
+        const subGroups: IGroup[] = [];
+        const result = await response;
+        if (result.ok) {
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    subGroups.push(alkio);
+                }
+            }
+        }
+        return subGroups;
     }
 
     /**
