@@ -34,17 +34,24 @@ export class BadgeComponent implements OnInit, OnChanges {
     @Input() title?: string;
     @Input() color?: string;
     @Input() shape?: string;
-    @Input() image?: number;
+    @Input() image?: string;
     @Input() description?: string;
     @Input() message?: string;
     icon?: string;
 
-    private readonly iconMap: Record<number, string> = {
-        1: "trophy",
-        2: "editor_choice",
-        3: "diversity_3",
-        4: "code",
-        5: "bug_report",
+    private readonly iconMap: Record<string, string> = {
+        Trophy: "trophy",
+        Winner: "editor_choice",
+        Teamwork: "diversity_3",
+        Code: "code",
+        Debug: "bug_report",
+        On_fire: "local_fire_department",
+        Rocket: "rocket_launch",
+        Smile: "sentiment_satisfied",
+        Terminal: "terminal",
+        Deployed: "deployed_code",
+        Loop: "loop",
+        Full_points: "money",
     };
 
     ngOnInit(): void {
@@ -58,9 +65,11 @@ export class BadgeComponent implements OnInit, OnChanges {
     }
 
     setIcon(): void {
-        this.icon = this.image
-            ? this.iconMap[this.image] || "question_mark"
-            : "question_mark";
+        if (this.image && this.iconMap[this.image]) {
+            this.icon = this.iconMap[this.image];
+        } else {
+            this.icon = "question_mark";
+        }
     }
 }
 
