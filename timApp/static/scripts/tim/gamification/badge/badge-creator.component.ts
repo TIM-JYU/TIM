@@ -1,4 +1,5 @@
 import type {OnInit} from "@angular/core";
+import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {ReactiveFormsModule, Validators} from "@angular/forms";
@@ -71,15 +72,6 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                       </select>
                     </div>
     
-                      <div class="form-group">
-                        <label for="context_group">Context Group</label>
-                        <select id="context_group" formControlName="context_group">
-                            <option *ngFor="let context_group of availableContext_groups" [value]="context_group">
-                                {{ context_group }}
-                            </option>
-                        </select>
-                      </div>
-    
                   </div>
                     <div class="shape-preview-group">
                         <div class="form-group">
@@ -147,11 +139,12 @@ export class BadgeCreatorComponent implements OnInit {
     clickedBadge: any = null;
     editingBadge: any = null;
     showCreateButton: any = null;
+    @Input() badgegroupContext?: string;
 
     // Initializes the component by loading badges and subscribing to form value changes.
     // It tracks changes to the context_group field and triggers a handler when the value changes.
     ngOnInit() {
-        let previousContextGroup = this.badgeForm.value.context_group;
+        this.selectedContextGroup = this.badgegroupContext || "";
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
             this.userID = Users.getCurrent().id;
@@ -164,13 +157,6 @@ export class BadgeCreatorComponent implements OnInit {
         this.getBadges();
         this.badgeForm.valueChanges.subscribe(() => {
             this.isFormChanged = true;
-            const currentContextGroup = this.badgeForm.value.context_group;
-            if (currentContextGroup !== previousContextGroup) {
-                previousContextGroup = currentContextGroup;
-                if (currentContextGroup) {
-                    this.onContextGroupChange(currentContextGroup);
-                }
-            }
         });
     }
 
@@ -330,13 +316,6 @@ export class BadgeCreatorComponent implements OnInit {
                 this.badgeFormShowing = false;
             }
         }
-    }
-
-    // Helps when context group is changed
-    onContextGroupChange(newContextGroup: string) {
-        this.selectedContextGroup = newContextGroup;
-        this.getBadges();
-        this.clickedBadge = null;
     }
 
     // When cancelled, form information is cleared

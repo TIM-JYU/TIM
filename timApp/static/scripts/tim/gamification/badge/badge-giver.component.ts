@@ -69,7 +69,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                title="{{badge.title}}"
                                color="{{badge.color}}"
                                shape="{{badge.shape}}"
-                               [image]="badge.image"
+                               [image]="badge.image.toString()"
                                description="{{badge.description}}"
                                message="{{badge.message}}"
                                (click)="selectBadge(badge)">
