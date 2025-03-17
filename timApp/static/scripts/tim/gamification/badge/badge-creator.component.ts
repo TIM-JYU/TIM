@@ -32,7 +32,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                title="{{badge.title}}"
                                color="{{badge.color}}"
                                shape="{{badge.shape}}"
-                               [image]="badge.image"
+                               [image]="badge.image.toString()"
                                description="{{badge.description}}"
                                (click)="editBadge(badge);">
                     </tim-badge>
@@ -100,7 +100,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                   <tim-badge
                                     [title]="badgeForm.value.title || ''"
                                     [color]="badgeForm.value.color || 'gray'"
-                                    [image]="badgeForm.value.image || 0"
+                                    [image]="badgeForm.value.image || 'question_mark'"
                                     [description]="badgeForm.value.description || ''"
                                     [shape]="badgeForm.value.shape || 'hexagon'">
                                   </tim-badge>
@@ -218,7 +218,7 @@ export class BadgeCreatorComponent implements OnInit {
             id: badge.id,
             title: badge.title,
             description: badge.description,
-            image: badge.image,
+            image: badge.image.toString(),
             color: badge.color,
             shape: badge.shape,
             context_group: badge.context_group,
@@ -244,7 +244,22 @@ export class BadgeCreatorComponent implements OnInit {
         this.isFormChanged = false;
     }
 
-    availableImages = [1, 2, 3, 4, 5];
+    // Titles instead of numbers in availableImages
+    availableImages = [
+        "Trophy",
+        "Winner",
+        "Teamwork",
+        "Code",
+        "Debug",
+        "On_fire",
+        "Rocket",
+        "Smile",
+        "Terminal",
+        "Deployed",
+        "Loop",
+        "Full_points",
+    ];
+
     availableContext_groups = ["it_01", "it_02", "es_01"];
     shapes = [
         {label: "Hexagon", value: "hexagon"},
@@ -278,7 +293,9 @@ export class BadgeCreatorComponent implements OnInit {
 
     badgeForm = new FormGroup({
         id: new FormControl(0),
-        image: new FormControl(0, [Validators.required]),
+        image: new FormControl("question_mark" as string | null, [
+            Validators.required,
+        ]),
         title: new FormControl("", [Validators.required]),
         icon: new FormControl(""),
         description: new FormControl("", [Validators.required]),

@@ -9,6 +9,7 @@ from sqlalchemy import select
 from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.responsehelper import (
     ok_response,
     json_response,
@@ -439,3 +440,27 @@ def undo_withdraw_badge(badge_given_id: int, undo_withdrawn_by: int) -> Response
         )
 
     return ok_response()
+
+
+# TODO: Handle errors.
+@badges_blueprint.get("/subgroups/<group_name_prefix>")
+def get_subgroups(group_name_prefix: str) -> Response:
+    """
+    Fetces usergroups that have a name that starts with the given prefix but is not the exact prefix.
+    :param group_name_prefix: prefix of the usergroups
+    :return: list of usergroups
+    """
+    subgroups = (
+        run_sql(
+            select(UserGroup).filter(
+                UserGroup.name.like(group_name_prefix + "%"),
+                UserGroup.name != group_name_prefix,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    subgroups_json = []
+    for subgroup in subgroups:
+        subgroups_json.append(subgroup.to_json())
+    return json_response(subgroups_json)
