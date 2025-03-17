@@ -43,14 +43,13 @@ class BadgeModel:
 def log_badge_event(log_info: dict) -> None:
     """
     Logs all events that modifies badge or badgegiven tables. Log file can be
-    found at ../timapp/tim_files/badge.log.
+    found at ../timapp/tim_logs/badge.log.
     :param log_info: info that is about to be logged in badge.log file
     :return:
     """
-    path = Path(current_app.config["FILES_PATH"]) / current_app.config["BADGE_LOG_FILE"]
-    with filelock.FileLock(f"/tmp/badge_log"):
-        with path.open("a") as f:
-            f.write(to_json_str(log_info) + "\n")
+    path = Path(current_app.config["BADGE_LOG_PATH"])
+    with path.open("a") as f:
+        f.write(to_json_str(log_info) + "\n")
 
 
 @badges_blueprint.get("/all_badges_including_inactive")
