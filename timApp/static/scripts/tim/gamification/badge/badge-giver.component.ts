@@ -1,4 +1,5 @@
 import type {OnInit} from "@angular/core";
+import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
@@ -113,6 +114,7 @@ export class BadgeGiverComponent implements OnInit {
     badgeGiver = 0;
     showDeleteButton: boolean = false;
     hasPermission: boolean = false;
+    @Input() badgegroupContext?: string;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -121,6 +123,8 @@ export class BadgeGiverComponent implements OnInit {
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.addListeners();
+                this.fetchUsers();
+                this.fetchBadges();
             }
         }
     }
@@ -132,8 +136,7 @@ export class BadgeGiverComponent implements OnInit {
                 this.fetchBadges(); // Kutsutaan fetchBadges-metodia updaten jälkeen
             })
         );
-        this.fetchUsers();
-        this.fetchBadges();
+
         // Subscribe to badge update events
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
@@ -154,7 +157,9 @@ export class BadgeGiverComponent implements OnInit {
      * Hakee käyttäjät, jotka kuuluu ryhmään "newgroup1"
      */
     private async fetchUsers() {
-        const response = toPromise(this.http.get<[]>("/groups/show/newgroup1"));
+        const response = toPromise(
+            this.http.get<[]>("/groups/show/" + this.badgegroupContext)
+        );
         const result = await response;
         if (result.ok) {
             if (result.result != undefined) {
