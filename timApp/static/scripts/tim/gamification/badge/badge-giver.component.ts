@@ -164,6 +164,9 @@ export class BadgeGiverComponent implements OnInit {
                 if (this.selectedUser?.id != undefined) {
                     this.fetchUserBadges(this.selectedUser.id); // Refresh badges
                 }
+                if (this.selectedGroup?.id != undefined) {
+                    this.fetchGroupBadges(this.selectedGroup.id); // Refresh group badges
+                }
             })
         );
     }
