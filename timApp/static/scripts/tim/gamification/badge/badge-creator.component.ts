@@ -37,10 +37,11 @@ import {Users} from "../../user/userService";
                   </ng-container>
                 </fieldset>
                 <div class="button-group">
-                        <button id="showBadgeForm" type="button" (click)="showForm()">+</button>
+                    <button id="showBadgeForm" type="button" (click)="clickCreate()">{{ this.showCreateButton ? 'Cancel' : 'Create' }}</button>
                 </div>
             </div>
-    
+              
+              
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
                 <h2>{{ editingBadge ? 'Edit ' + editingBadge.title + ' Badge' : 'Create a Badge' }}</h2>
                 <form (ngSubmit)="onSubmit()" id="badgeForm">
@@ -77,8 +78,6 @@ import {Users} from "../../user/userService";
                             </option>
                         </select>
                       </div>
-    
-    
     
                   </div>
                     <div class="shape-preview-group">
@@ -145,6 +144,8 @@ export class BadgeCreatorComponent implements OnInit {
     hasPermission = false;
     badgeFormShowing = false;
     clickedBadge: any = null;
+    editingBadge: any = null;
+    showCreateButton: any = null;
 
     // Initializes the component by loading badges and subscribing to form value changes.
     // It tracks changes to the context_group field and triggers a handler when the value changes.
@@ -171,13 +172,66 @@ export class BadgeCreatorComponent implements OnInit {
             }
         });
     }
+    clickCreate() {
+        if (this.clickedBadge) {
+            this.badgeFormShowing = false;
+        }
+        if (!this.badgeFormShowing) {
+            this.clickedBadge = null;
+            this.editingBadge = null;
+            this.showCreateButton = true;
+            this.showForm();
+        } else {
+            this.clickedBadge = null;
+            this.editingBadge = null;
+            this.showCreateButton = false;
+            this.badgeFormShowing = false;
+            this.isFormChanged = false;
+        }
+    }
+
+    // Edit an existing badge, show attributes in input fields
+    editBadge(badge: IBadge) {
+        this.editingBadge = badge;
+
+        if (this.clickedBadge === badge) {
+            this.showCreateButton = false;
+            this.clickedBadge = null;
+            this.emptyForm();
+            this.badgeFormShowing = false;
+        } else {
+            this.showCreateButton = false;
+            this.clickedBadge = badge;
+            this.isFormChanged = true;
+            this.badgeFormShowing = true;
+        }
+        this.badgeForm.patchValue({
+            id: badge.id,
+            title: badge.title,
+            description: badge.description,
+            image: badge.image,
+            color: badge.color,
+            shape: badge.shape,
+            context_group: badge.context_group,
+        });
+    }
 
     showForm() {
         this.badgeFormShowing = true;
         this.isFormChanged = true;
-        this.editingBadge = null;
         this.clickedBadge = null;
         this.emptyForm();
+    }
+
+    // Clears form information, except given values
+    emptyForm() {
+        this.editingBadge = null;
+        this.badgeForm.reset({
+            color: "gray",
+            shape: "hexagon",
+            context_group: this.selectedContextGroup,
+        });
+        this.isFormChanged = false;
     }
 
     availableImages = [1, 2, 3, 4, 5];
@@ -261,49 +315,12 @@ export class BadgeCreatorComponent implements OnInit {
         this.clickedBadge = null;
     }
 
-    editingBadge: any = null;
-
-    // Edit an existing badge, show attributes in input fields
-    editBadge(badge: IBadge) {
-        this.editingBadge = badge;
-
-        if (this.clickedBadge === badge) {
-            this.clickedBadge = null;
-            this.emptyForm();
-            this.badgeFormShowing = false;
-        } else {
-            this.clickedBadge = badge;
-            this.isFormChanged = true;
-            this.badgeFormShowing = true;
-        }
-        this.badgeForm.patchValue({
-            id: badge.id,
-            title: badge.title,
-            description: badge.description,
-            image: badge.image,
-            color: badge.color,
-            shape: badge.shape,
-            context_group: badge.context_group,
-        });
-    }
-
     // When cancelled, form information is cleared
     async onCancel() {
         this.selectedContextGroup = "";
         this.emptyForm();
         await this.getBadges();
         this.badgeFormShowing = false;
-    }
-
-    // Clears form information, except given values
-    emptyForm() {
-        this.editingBadge = null;
-        this.badgeForm.reset({
-            color: "gray",
-            shape: "hexagon",
-            context_group: this.selectedContextGroup,
-        });
-        this.isFormChanged = false;
     }
 
     // Get all badges depending on if context group is selected
