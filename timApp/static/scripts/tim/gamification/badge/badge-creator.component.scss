@@ -21,7 +21,7 @@
                               #B0D6E6,
                               #66A8C4);
   border-radius: 12px;
-  padding: 60px 0px;
+  padding: 10px 0px;
   font-size: 1.2em;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
@@ -152,6 +152,20 @@ button:hover {
 
 .shape label {
   margin-right: 10px;
+}
+
+.badge_view {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 2em;
+}
+
+.badge_view::after {
+    content: "";
+    flex: auto;
 }
 
 .all_badges {
