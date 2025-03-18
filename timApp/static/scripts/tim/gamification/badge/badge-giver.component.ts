@@ -220,6 +220,7 @@ export class BadgeGiverComponent implements OnInit {
     async fetchUserBadges(userId?: number) {
         // Reset group selection and hide badges
         this.selectedGroup = null;
+        this.selectedBadge = null;
         this.groupBadges = [];
         this.showDeleteButton = false;
 
@@ -236,6 +237,7 @@ export class BadgeGiverComponent implements OnInit {
     async fetchGroupBadges(groupId?: number) {
         // Reset user selection and hide badges
         this.selectedUser = null;
+        this.selectedBadge = null;
         this.userBadges = [];
         this.showDeleteButton = false;
 
