@@ -79,14 +79,16 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
             <div *ngIf="showDeleteButton && selectedGroup">
                 <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
             </div>
-        
-            <div class="form-group">
-                <label for="badge_to_assign">Badge to Assign</label>
-                <select id="badge_to_assign" [(ngModel)]="selectedBadge" (change)="selectBadge(selectedBadge, false, true)">
-                    <option [ngValue]="null" disabled selected>Select a badge</option>
-                    <option *ngFor="let badge of badges" [ngValue]="badge">{{ badge.title }}</option>
-                </select>
-            </div>
+            
+            <ng-container *ngIf="selectedUser !== null || selectedGroup !== null">
+                <div class="form-group">
+                    <label for="badge_to_assign">Badge to Assign</label>
+                    <select id="badge_to_assign" [(ngModel)]="selectedBadge" (change)="selectBadge(selectedBadge, false, true)">
+                        <option [ngValue]="null" disabled selected>Select a badge</option>
+                        <option *ngFor="let badge of badges" [ngValue]="badge">{{ badge.title }}</option>
+                    </select>
+                </div>
+            </ng-container>    
         
             <!-- Preview of the selected badge -->
             <div *ngIf="selectedBadge" class="badge-preview">
@@ -102,12 +104,12 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                 </tim-badge>
                 </div>
             </div>
-        
-            <div class="form-group">
-                <label for="message">Message</label>
-                <textarea id="message" rows="3" [(ngModel)]="message" placeholder="Enter a message..."></textarea>
-            </div>
-        
+            <ng-container *ngIf="selectedBadge !== null">
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" rows="3" [(ngModel)]="message" placeholder="Enter a message..."></textarea>
+                </div>
+            </ng-container>
             <div class="button-container">
                 <button id="assignButton" (click)="assignBadge(message)" [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
                     Give Badge
@@ -177,6 +179,7 @@ export class BadgeGiverComponent implements OnInit {
     emptyForm() {
         this.selectedUser = null;
         this.selectedBadge = null;
+        this.selectedGroup = null;
         this.message = "";
         this.showDeleteButton = false;
         this.userBadges = [];
