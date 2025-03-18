@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import {ElementRef, HostListener, OnInit, ViewChild} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
@@ -15,7 +15,7 @@ import {Subscription} from "rxjs";
         <div class="viewer-container">
             <ng-container *ngIf="badges.length > 0">
             <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
-            <div class="user_badges">
+            <div class="user_badges" #scrollableDiv>
                 <tim-badge *ngFor="let badge of badges" 
                            title="{{badge.title}}" 
                            color="{{badge.color}}" 
@@ -50,6 +50,17 @@ export class BadgeViewerComponent implements OnInit {
     async getBadges(id: number) {
         this.emptyBadges();
         this.badges = await this.badgeService.getUserBadges(id);
+    }
+
+    @ViewChild("scrollableDiv") scrollableDiv!: ElementRef;
+
+    @HostListener("wheel", ["$event"])
+    onScroll(event: WheelEvent) {
+        if (this.scrollableDiv) {
+            const scrollAmount = event.deltaY * 0.5;
+            this.scrollableDiv.nativeElement.scrollLeft += scrollAmount;
+            event.preventDefault();
+        }
     }
 
     ngOnInit() {
