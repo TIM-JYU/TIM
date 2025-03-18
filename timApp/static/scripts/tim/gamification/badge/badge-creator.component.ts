@@ -64,7 +64,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                     <div class="form-group">
                       <label for="image">Icon</label>
                       <select id="image" formControlName="image">
-                        <option *ngFor="let image of availableImages" [value]="image">{{ image }}</option>
+                        <option *ngFor="let image of availableImages" [value]="image.id">{{ image.name }}</option>
                       </select>
                     </div>
     
@@ -234,7 +234,20 @@ export class BadgeCreatorComponent implements OnInit {
     }
 
     // Titles instead of numbers in availableImages
-    availableImages = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    availableImages = [
+        {id: 1, name: "Trophy"},
+        {id: 2, name: "Winner"},
+        {id: 3, name: "Teamwork"},
+        {id: 4, name: "Code"},
+        {id: 5, name: "Debug"},
+        {id: 6, name: "On_fire"},
+        {id: 7, name: "Rocket"},
+        {id: 8, name: "Smile"},
+        {id: 9, name: "Terminal"},
+        {id: 10, name: "Deployed_code"},
+        {id: 11, name: "Loop"},
+        {id: 12, name: "100_points"},
+    ];
 
     shapes = [
         {label: "Hexagon", value: "hexagon"},
