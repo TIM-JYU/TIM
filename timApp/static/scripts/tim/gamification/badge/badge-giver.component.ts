@@ -218,16 +218,19 @@ export class BadgeGiverComponent implements OnInit {
      * @param userId käyttäjän id
      */
     async fetchUserBadges(userId?: number) {
-        // Reset group selection and hide badges
-        this.selectedGroup = null;
-        this.selectedBadge = null;
-        this.groupBadges = [];
-        this.showDeleteButton = false;
-
         if (userId == undefined) {
             console.error("userid was undefined");
             return;
         }
+
+        // Reset group selection and hide badges
+        if (this.selectedGroup) {
+            this.selectedBadge = null;
+        }
+        this.selectedGroup = null;
+        this.groupBadges = [];
+        this.showDeleteButton = false;
+
         while (this.userBadges.length > 0) {
             this.userBadges.pop();
         }
@@ -235,16 +238,19 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     async fetchGroupBadges(groupId?: number) {
-        // Reset user selection and hide badges
-        this.selectedUser = null;
-        this.selectedBadge = null;
-        this.userBadges = [];
-        this.showDeleteButton = false;
-
         if (groupId == undefined) {
             console.error("groupid was undefined");
             return;
         }
+
+        if (this.selectedUser) {
+            this.selectedBadge = null;
+        }
+        // Reset user selection and hide badges
+        this.selectedUser = null;
+        this.userBadges = [];
+        this.showDeleteButton = false;
+
         while (this.groupBadges.length > 0) {
             this.groupBadges.pop();
         }
@@ -339,10 +345,12 @@ export class BadgeGiverComponent implements OnInit {
             !fromAssignList && badge !== null && badge !== undefined; // Nappi näkyy vain, jos badge on valittu
 
         // Päivitetään badge-listat valinnasta riippuen
-        if (fromGroup) {
-            this.selectedUser = null;
-        } else {
-            this.selectedGroup = null;
+        if (!fromAssignList) {
+            if (fromGroup) {
+                this.selectedUser = null;
+            } else {
+                this.selectedGroup = null;
+            }
         }
     }
 
