@@ -28,15 +28,17 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                   <h2>{{ selectedContextGroup ? selectedContextGroup + "'s Badges" : "All Badges" }}</h2>
                   <div class="badge_view">
                       <ng-container *ngIf="all_badges.length > 0">
-                    <tim-badge *ngFor="let badge of all_badges"
-                       [ngClass]="{'selected-badge': clickedBadge === badge}"
-                               title="{{badge.title}}"
-                               color="{{badge.color}}"
-                               shape="{{badge.shape}}"
-                               [image]="badge.image"
-                               description="{{badge.description}}"
-                               (click)="editBadge(badge);">
-                    </tim-badge>
+                          <div class="badge-card" *ngFor="let badge of all_badges">
+                            <tim-badge
+                               [ngClass]="{'selected-badge': clickedBadge === badge}"
+                                       title="{{badge.title}}"
+                                       color="{{badge.color}}"
+                                       shape="{{badge.shape}}"
+                                       [image]="badge.image"
+                                       description="{{badge.description}}"
+                                       (click)="editBadge(badge);">
+                            </tim-badge>
+                          </div>
                   </ng-container>
                   </div>
                     

@@ -16,14 +16,16 @@ import {Subscription} from "rxjs";
             <ng-container *ngIf="badges.length > 0">
             <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
             <div class="user_badges" #scrollableDiv>
-                <tim-badge *ngFor="let badge of badges" 
-                           title="{{badge.title}}" 
-                           color="{{badge.color}}" 
-                           shape="{{badge.shape}}"
-                           [image]="badge.image"
-                           description="{{badge.description}}"
-                           message="{{badge.message}}">
-                </tim-badge>
+                <div class="badge-card" *ngFor="let badge of badges">
+                    <tim-badge
+                               title="{{badge.title}}" 
+                               color="{{badge.color}}" 
+                               shape="{{badge.shape}}"
+                               [image]="badge.image"
+                               description="{{badge.description}}"
+                               message="{{badge.message}}">
+                    </tim-badge>
+                </div>
             </div>
             </ng-container>
             <ng-container *ngIf="badges.length == 0">
