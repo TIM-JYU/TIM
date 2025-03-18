@@ -403,7 +403,7 @@ RUN bash -c "${APT_INSTALL} openscad && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} racket && ${APT_CLEANUP}"
 
 # Install Racket packages
-RUN raco pkg install -i sicp doc-coverage quickcheck
+RUN raco pkg install -i --deps search-auto sicp quickcheck
 
 # Install Guile 3
 RUN bash -c "${APT_INSTALL} guile-3.0 && ${APT_CLEANUP}"
