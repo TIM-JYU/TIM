@@ -221,6 +221,7 @@ export class BadgeGiverComponent implements OnInit {
         // Reset group selection and hide badges
         this.selectedGroup = null;
         this.groupBadges = [];
+        this.showDeleteButton = false;
 
         if (userId == undefined) {
             console.error("userid was undefined");
@@ -236,6 +237,7 @@ export class BadgeGiverComponent implements OnInit {
         // Reset user selection and hide badges
         this.selectedUser = null;
         this.userBadges = [];
+        this.showDeleteButton = false;
 
         if (groupId == undefined) {
             console.error("groupid was undefined");
@@ -329,8 +331,7 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedBadge = badge;
         this.showDeleteButton = badge !== undefined; // Nappi näkyy vain, jos badge on valittu
 
-        //TODO: Delete -nappi ei katoa, pitääkö kehittää mahdollisuus "deaktivoida" valittu badge?
-
+        // Päivitetään badge-listat valinnasta riippuen
         if (fromGroup) {
             this.selectedUser = null;
         } else {
