@@ -6,16 +6,19 @@ import {ReactiveFormsModule, Validators} from "@angular/forms";
 import {FormGroup, FormControl} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
 import {HttpClientModule} from "@angular/common/http";
-import {BadgeComponent, BadgeModule} from "./badge.component";
-import {toPromise} from "../../util/utils";
-import {BadgeViewerModule} from "./badge-viewer.component";
-import {BadgeGiverModule} from "./badge-giver.component";
+import {BadgeViewerModule} from "tim/gamification/badge/badge-viewer.component";
+import {BadgeGiverModule} from "tim/gamification/badge/badge-giver.component";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
-import {getFormBehavior} from "../../plugin/util";
-import {BadgeService} from "./badge.service";
-import {IBadge} from "./badge.interface";
-import {Users} from "../../user/userService";
+import {getFormBehavior} from "tim/plugin/util";
+import {BadgeService} from "tim/gamification/badge/badge.service";
+import type {IBadge} from "tim/gamification/badge/badge.interface";
+import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {toPromise} from "tim/util/utils";
+import {
+    BadgeComponent,
+    BadgeModule,
+} from "tim/gamification/badge/badge.component";
 
 @Component({
     selector: "tim-badge-creator",
@@ -50,7 +53,6 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                   </button>
                 </div>                
             </div>
-              
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
                 <h2>{{ editingBadge ? 'Edit ' + editingBadge.title + ' Badge' : 'Create a Badge' }}</h2>
@@ -151,13 +153,21 @@ export class BadgeCreatorComponent implements OnInit {
     @Input() badgegroupContext?: string;
 
     // Method called when a badge is clicked
-    selectBadge(badge: any) {
+    selectBadge(badge: IBadge) {
         if (this.clickedBadge === badge) {
             this.clickedBadge = null;
-        } else {
-            this.clickedBadge = badge;
-            this.showEditingForm(badge);
+            this.emptyForm();
+            this.badgeFormShowing = false;
+            this.toggleEditButtonText = false;
+            return;
         }
+        this.clickedBadge = badge;
+
+        this.showEditingForm(badge);
+        if (this.badgeFormShowing) {
+            this.toggleEditButtonText = true;
+        }
+
         this.toggleCreateButtonText = false;
     }
 
@@ -183,24 +193,24 @@ export class BadgeCreatorComponent implements OnInit {
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
     clickCreate() {
         this.clickedBadge = null;
-
-        // Toggles the form visibility for creating a badge.
         if (this.badgeFormShowing) {
+            this.resetForm();
             this.toggleCreateButtonText = false;
             this.toggleEditButtonText = false;
-            this.resetForm();
-        } else {
-            this.showForm();
-            this.emptyForm();
+            return;
         }
+
+        this.showForm();
+        this.emptyForm();
     }
 
     // Edit an existing badge, show attributes in input fields
     editBadge(badge: IBadge) {
         this.badgeFormShowing = !this.badgeFormShowing;
-        this.toggleEditButtonText = !this.toggleEditButtonText;
+        this.toggleEditButtonText = false;
         if (this.badgeFormShowing) {
             this.showEditingForm(badge);
+            this.toggleEditButtonText = true;
         }
     }
 
