@@ -11,20 +11,19 @@ class TestBadges(BrowserTest):
 ```
 auto_number_headings: 2
 form_mode: true
-#-{allowangular=true}
-```        
+```   
 """
         )
         dt = self.create_translation(d)
         tr_par = dt.document.get_paragraphs()[1]
         tr_par.set_markdown(
             """
-#-{allowangular=true}
+#- {allowangular=true}
 <tim-badge-creator></tim-badge-creator>
         """
         )
         tr_par.save()
         self.goto_document(d)
         self.wait_until_present_and_vis("#showBadgeForm")
-        open_sesame = self.find_element_and_move_to("#showBadgeForm")
-        open_sesame.click()
+        open_creator = self.find_element_and_move_to("#showBadgeForm")
+        open_creator.click()
