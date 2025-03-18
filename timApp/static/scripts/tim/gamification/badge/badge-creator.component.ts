@@ -151,7 +151,7 @@ export class BadgeCreatorComponent implements OnInit {
     isFormChanged = false; // Flag to track form changes
     all_badges: IBadge[] = [];
     selectedContextGroup: string = "";
-    hasPermission = false;
+    hasPermission = true;
     badgeFormShowing = false;
 
     clickedBadge: any = null;
@@ -368,7 +368,7 @@ export class BadgeCreatorComponent implements OnInit {
         if (this.selectedContextGroup) {
             response = toPromise(
                 this.http.get<[]>(
-                    `/all_badges_in_context/${this.selectedContextGroup}`
+                    `/all_badges_in_context/${this.userID}/${this.selectedContextGroup}`
                 )
             );
         } else {

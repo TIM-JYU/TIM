@@ -4,12 +4,14 @@ from pathlib import Path
 
 import filelock
 from flask import Response, current_app
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
+from timApp.auth.accesshelper import AccessDenied
 from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.responsehelper import (
     ok_response,
     json_response,
@@ -53,6 +55,7 @@ def log_badge_event(log_info: dict) -> None:
         f.write(to_json_str(log_info) + "\n")
 
 
+# TODO: Not in use. Remove?
 @badges_blueprint.get("/all_badges_including_inactive")
 def all_badges_including_inactive() -> Response:
     """
@@ -80,13 +83,43 @@ def get_badges() -> Response:
 
 
 # TODO: Handle errors.
-@badges_blueprint.get("/all_badges_in_context/<context_group>")
-def get_badges_in_context(context_group: str) -> Response:
+# TODO: Give access rights only for teachers. Do teacher check before context group check.
+@badges_blueprint.get("/all_badges_in_context/<user_id>/<context_group>")
+def all_badges_in_context(user_id: int, context_group: str) -> Response:
     """
     Fetches all badges in specific context_group.
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
+    context_usergroups = (
+        run_sql(select(UserGroup).filter(UserGroup.name == context_group))
+        .scalars()
+        .all()
+    )
+    context_group_ids = []
+    for context_usergroup in context_usergroups:
+        context_group_ids.append(context_usergroup.id)
+    allowed_member = (
+        run_sql(
+            select(UserGroupMember).filter(
+                UserGroupMember.user_id == user_id,
+                UserGroupMember.usergroup_id.in_(context_group_ids),
+                or_(
+                    UserGroupMember.membership_end > datetime_tz.now(),
+                    UserGroupMember.membership_end == None,
+                ),
+            )
+        )
+        .scalars()
+        .first()
+    )
+
+    # TODO: Handle this error in frontend.
+    if not allowed_member:
+        raise AccessDenied(f"You don't have access to context group {context_group}.")
+        # return error_generic("access denied", 403)
+    # verify_context_group_access()
+
     badges = (
         run_sql(
             select(Badge).filter(Badge.active).filter_by(context_group=context_group)
@@ -100,6 +133,7 @@ def get_badges_in_context(context_group: str) -> Response:
     return json_response(badges_json)
 
 
+# TODO: Not in use. Remove?
 # TODO: Handle errors.
 @badges_blueprint.get("/badge/<badge_id>")
 def get_badge(badge_id: int) -> Response:
@@ -255,6 +289,7 @@ def deactivate_badge(badge_id: int, deleted_by: int) -> Response:
     return ok_response()
 
 
+# TODO: Not yet in use.
 # TODO: Handle errors.
 @badges_blueprint.post("/reactivate_badge>")
 def reactivate_badge(badge_id: int, restored_by: int) -> Response:
@@ -411,6 +446,7 @@ def withdraw_badge(badge_given_id: int, withdrawn_by: int) -> Response:
     return ok_response()
 
 
+# TODO: Not yet in use.
 # TODO: Handle errors.
 @badges_blueprint.get("/undo_withdraw_badge")
 def undo_withdraw_badge(badge_given_id: int, undo_withdrawn_by: int) -> Response:

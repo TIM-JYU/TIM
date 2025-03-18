@@ -63,6 +63,7 @@ class Badge(db.Model):
     restored: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was restored."""
 
+    # TODO: Duplicates? Remove these 4 relationships and do database migration.
     group_created: Mapped[UserGroup] = relationship(foreign_keys=created_by)
     group_modified: Mapped[Optional[UserGroup]] = relationship(foreign_keys=modified_by)
     group_deleted: Mapped[Optional[UserGroup]] = relationship(foreign_keys=deleted_by)
@@ -91,6 +92,9 @@ class Badge(db.Model):
             "restored_by": self.restored_by,
             "restored": self.restored,
         }
+
+    # def verify_context_group_access(self):
+    #     pass
 
 
 class BadgeGiven(db.Model):
@@ -133,6 +137,7 @@ class BadgeGiven(db.Model):
     undo_withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge withdrawal was undoed."""
 
+    # TODO: Duplicates? Remove these 5 relationships and do database migration.
     badge: Mapped[Badge] = relationship()
     group: Mapped[UserGroup] = relationship(foreign_keys=group_id)
     group_given: Mapped[UserGroup] = relationship(foreign_keys=given_by)
