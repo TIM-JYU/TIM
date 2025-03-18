@@ -163,8 +163,8 @@ export class BadgeCreatorComponent implements OnInit {
         });
     }
 
+    // If user has pressed the create badge button, toggles the visibility of the badge creating form
     clickCreate() {
-        // If user has selected a badge, set clicked to false and put showing form true
         if (this.clickedBadge) {
             this.clickedBadge = false;
             this.badgeFormShowing = false;
@@ -187,6 +187,7 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
+    // when create button is pressed, shows empty form
     showForm() {
         this.showCreateButton = true;
         this.badgeFormShowing = true;
@@ -194,6 +195,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.emptyForm();
     }
 
+    // When existing badge is pressed, shows form with filled information of the badge
     showEditingForm(badge: IBadge) {
         this.editingBadge = badge;
         this.clickedBadge = badge;
@@ -211,6 +213,7 @@ export class BadgeCreatorComponent implements OnInit {
         });
     }
 
+    // toggles between showing and not showing form, happens when create or cancel button is pressed.
     resetForm() {
         this.clickedBadge = null;
         this.editingBadge = null;
