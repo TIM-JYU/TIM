@@ -43,7 +43,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                    [image]="badge.image"
                                    description="{{badge.description}}"
                                    message="{{badge.message}}"
-                                   (click)="selectBadge(badge, false)">
+                                   (click)="selectBadge(badge, false, false)">
                         </tim-badge>
                     </div>
                 </ng-container>
@@ -72,7 +72,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                [image]="badge.image"
                                description="{{badge.description}}"
                                message="{{badge.message}}"
-                               (click)="selectBadge(badge, true)">
+                               (click)="selectBadge(badge, true, false)">
                     </tim-badge>
                 </div>
             </ng-container>
@@ -82,7 +82,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
         
             <div class="form-group">
                 <label for="badge_to_assign">Badge to Assign</label>
-                <select id="badge_to_assign" [(ngModel)]="selectedBadge">¨
+                <select id="badge_to_assign" [(ngModel)]="selectedBadge" (change)="selectBadge(selectedBadge, false, true)">
                     <option [ngValue]="null" disabled selected>Select a badge</option>
                     <option *ngFor="let badge of badges" [ngValue]="badge">{{ badge.title }}</option>
                 </select>
@@ -327,9 +327,14 @@ export class BadgeGiverComponent implements OnInit {
         this.showDeleteButton = false;
     }
 
-    selectBadge(badge?: IBadge, fromGroup: boolean = false) {
-        this.selectedBadge = badge;
-        this.showDeleteButton = badge !== undefined; // Nappi näkyy vain, jos badge on valittu
+    selectBadge(
+        badge?: IBadge | null | undefined,
+        fromGroup: boolean = false,
+        fromAssignList: boolean = false
+    ) {
+        this.selectedBadge = badge ?? null;
+        this.showDeleteButton =
+            !fromAssignList && badge !== null && badge !== undefined; // Nappi näkyy vain, jos badge on valittu
 
         // Päivitetään badge-listat valinnasta riippuen
         if (fromGroup) {
