@@ -35,15 +35,20 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                shape="{{badge.shape}}"
                                [image]="badge.image"
                                description="{{badge.description}}"
-                               (click)="editBadge(badge);">
+                               (click)="selectBadge(badge);">
                     </tim-badge>
                   </ng-container>
                   </div>
                     
                 </fieldset>
                 <div class="button-group">
-                    <button id="showBadgeForm" type="button" (click)="clickCreate()">{{ this.showCreateButton ? 'Cancel' : 'Create' }}</button>
-                </div>
+                    <button id="showBadgeForm" type="button" (click)="clickCreate()">{{ this.toggleCreateButtonText ? 'Cancel' : 'Create' }}</button>
+                    <button id="createButton" type="button" (click)="editBadge(clickedBadge)" 
+                          [disabled]="!clickedBadge" 
+                          [ngClass]="{'disabled-btn': !clickedBadge}">
+                    {{ this.toggleEditButtonText ? 'Cancel' : 'Edit' }}
+                  </button>
+                </div>                
             </div>
               
               
@@ -141,8 +146,20 @@ export class BadgeCreatorComponent implements OnInit {
     badgeFormShowing = false;
     clickedBadge: any = null;
     editingBadge: any = null;
-    showCreateButton: any = null;
+    toggleCreateButtonText = false;
+    toggleEditButtonText = false;
     @Input() badgegroupContext?: string;
+
+    // Method called when a badge is clicked
+    selectBadge(badge: any) {
+        if (this.clickedBadge === badge) {
+            this.clickedBadge = null;
+        } else {
+            this.clickedBadge = badge;
+            this.showEditingForm(badge);
+        }
+        this.toggleCreateButtonText = false;
+    }
 
     // Initializes the component by loading badges and subscribing to form value changes.
     // It tracks changes to the context_group field and triggers a handler when the value changes.
@@ -165,42 +182,40 @@ export class BadgeCreatorComponent implements OnInit {
 
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
     clickCreate() {
-        if (this.clickedBadge) {
-            this.clickedBadge = false;
-            this.badgeFormShowing = false;
-        }
+        this.clickedBadge = null;
+
         // Toggles the form visibility for creating a badge.
         if (this.badgeFormShowing) {
+            this.toggleCreateButtonText = false;
+            this.toggleEditButtonText = false;
             this.resetForm();
         } else {
             this.showForm();
+            this.emptyForm();
         }
     }
 
     // Edit an existing badge, show attributes in input fields
     editBadge(badge: IBadge) {
-        // If clicked badge is the same, reset and hide the form
-        if (this.clickedBadge === badge) {
-            this.resetForm();
-        } else {
+        this.badgeFormShowing = !this.badgeFormShowing;
+        this.toggleEditButtonText = !this.toggleEditButtonText;
+        if (this.badgeFormShowing) {
             this.showEditingForm(badge);
         }
     }
 
     // when create button is pressed, shows empty form
     showForm() {
-        this.showCreateButton = true;
+        this.toggleCreateButtonText = true;
         this.badgeFormShowing = true;
         this.isFormChanged = true;
-        this.emptyForm();
     }
 
     // When existing badge is pressed, shows form with filled information of the badge
     showEditingForm(badge: IBadge) {
         this.editingBadge = badge;
         this.clickedBadge = badge;
-        this.showCreateButton = false;
-        this.badgeFormShowing = true;
+        this.toggleCreateButtonText = false;
         this.isFormChanged = true;
         this.badgeForm.patchValue({
             id: badge.id,
@@ -217,7 +232,6 @@ export class BadgeCreatorComponent implements OnInit {
     resetForm() {
         this.clickedBadge = null;
         this.editingBadge = null;
-        this.showCreateButton = !this.badgeFormShowing;
         this.badgeFormShowing = false;
         this.isFormChanged = false;
     }
@@ -319,6 +333,7 @@ export class BadgeCreatorComponent implements OnInit {
 
                 this.badgeService.triggerUpdateBadgeList();
                 this.badgeFormShowing = false;
+                this.toggleCreateButtonText = false;
             }
         }
     }
@@ -386,6 +401,7 @@ export class BadgeCreatorComponent implements OnInit {
                 }
                 this.badgeService.triggerUpdateBadgeList();
                 this.badgeFormShowing = false;
+                this.clickedBadge = null;
             }
         }
     }
@@ -414,6 +430,8 @@ export class BadgeCreatorComponent implements OnInit {
 
                         this.getBadges();
                         this.emptyForm();
+                        this.resetForm();
+                        this.clickedBadge = false;
                         this.isFormChanged = false;
                         // Lähetetään signaali onnistuneesta deletoinnista
                         this.badgeService.triggerUpdateBadgeList(); // Lähetetään signaali BadgeService:lle
