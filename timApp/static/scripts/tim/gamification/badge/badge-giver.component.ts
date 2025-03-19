@@ -19,8 +19,8 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 @Component({
     selector: "timBadgeGiver",
     template: `
-        <ng-container *ngIf="this.hasPermission; else noPermissionView">
-        <div class="badge-giver">
+        <ng-container *ngIf="hasPermission; else noPermissionView">
+        <div *ngIf="showComponent" class="badge-giver">
             <h2>Badge Giver</h2>
         
             <div class="user-selection">
@@ -79,16 +79,6 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
             <div *ngIf="showDeleteButton && selectedGroup">
                 <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
             </div>
-            
-            <ng-container *ngIf="selectedUser !== null || selectedGroup !== null">
-                <div class="form-group">
-                    <label for="badge_to_assign">Badge to Assign</label>
-                    <select id="badge_to_assign" [(ngModel)]="selectedBadge" (change)="selectBadge(selectedBadge, false, true)">
-                        <option [ngValue]="null" disabled selected>Select a badge to assign</option>
-                        <option *ngFor="let badge of badges" [ngValue]="badge">{{ badge.title }}</option>
-                    </select>
-                </div>
-            </ng-container>    
         
             <!-- Preview of the selected badge -->
             <div *ngIf="selectedBadge" class="badge-preview">
@@ -114,7 +104,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                 <button id="assignButton" (click)="assignBadge(message)" [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
                     Assign Badge
                 </button>
-                <button id="cancelButton" (click)="emptyForm()" [disabled]="!selectedUser && !selectedBadge && !message">Cancel</button>
+                <button id="cancelButton" (click)="emptyForm()">Cancel</button>
             </div>
         </div>
     </ng-container>
@@ -131,12 +121,13 @@ export class BadgeGiverComponent implements OnInit {
     badges: any = [];
     selectedUser?: IUser | null = null;
     userBadges: IBadge[] = [];
-    selectedBadge?: IBadge | null = null;
+    @Input() selectedBadge?: IBadge | null = null;
     message = "";
     badgeGiver = 0;
     showDeleteButton: boolean = false;
-    hasPermission: boolean = false;
-    @Input() badgegroupContext?: string;
+    hasPermission: boolean = true;
+    showComponent: boolean = true;
+    @Input() badgeGroup?: string;
     groups: IGroup[] = [];
     selectedGroup?: IGroup | null = null;
     groupBadges: IBadge[] = [];
@@ -145,12 +136,13 @@ export class BadgeGiverComponent implements OnInit {
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
+            this.addListeners();
+            this.fetchUsers();
+            this.fetchGroups();
+            this.fetchBadges();
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
-                this.addListeners();
-                this.fetchUsers();
-                this.fetchGroups();
-                this.fetchBadges();
+                this.showComponent = true;
             }
         }
     }
@@ -182,6 +174,7 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedGroup = null;
         this.message = "";
         this.showDeleteButton = false;
+        this.showComponent = false;
         this.userBadges = [];
         this.groupBadges = [];
     }
@@ -190,18 +183,16 @@ export class BadgeGiverComponent implements OnInit {
      * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
      */
     private async fetchUsers() {
-        if (this.badgegroupContext) {
+        if (this.badgeGroup) {
             this.users = await this.badgeService.getUsersFromGroup(
-                this.badgegroupContext
+                this.badgeGroup
             );
         }
     }
 
     private async fetchGroups() {
-        if (this.badgegroupContext) {
-            this.groups = await this.badgeService.getSubGroups(
-                this.badgegroupContext
-            );
+        if (this.badgeGroup) {
+            this.groups = await this.badgeService.getSubGroups(this.badgeGroup);
         }
     }
 
@@ -286,6 +277,7 @@ export class BadgeGiverComponent implements OnInit {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
                 given_by: this.badgeGiver,
+                context_group: this.badgeGroup,
                 group_id: currentId,
                 badge_id: this.selectedBadge?.id,
                 message: message,
@@ -331,7 +323,15 @@ export class BadgeGiverComponent implements OnInit {
             return; // Exit if user cancels the confirmation dialog
         }
 
-        await this.badgeService.withdrawBadge(badgegivenID, this.badgeGiver);
+        if (this.badgeGroup == undefined) {
+            console.error("group_context was undefined");
+            return;
+        }
+        await this.badgeService.withdrawBadge(
+            badgegivenID,
+            this.badgeGiver,
+            this.badgeGroup
+        );
         this.fetchUserBadges(this.selectedUser?.id);
         // Poistaa deletenapin näkyvistä deleten jälkeen
         this.selectedBadge = null;

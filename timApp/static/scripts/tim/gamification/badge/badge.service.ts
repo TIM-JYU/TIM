@@ -103,11 +103,16 @@ export class BadgeService {
      * @param badgegivenID badgegiven -tietokantataulukon id, jonka avulla valittu badge poistetaan käytöstä
      * @param giverID käyttäjän id, joka poistaa badgen käytöstä.
      */
-    async withdrawBadge(badgegivenID: number, giverID: number) {
+    async withdrawBadge(
+        badgegivenID: number,
+        giverID: number,
+        context_group: string
+    ) {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/withdraw_badge", {
                 badge_given_id: badgegivenID,
                 withdrawn_by: giverID,
+                context_group: context_group,
             })
         );
         const result = await response;

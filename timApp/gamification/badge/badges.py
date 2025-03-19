@@ -39,30 +39,35 @@ class Badge(db.Model):
     active: Mapped[bool] = mapped_column(nullable=False)
     """Active status of the badge. If the badge is deleted this turns to false."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     created_by: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), nullable=False)
     """Usergroup that created the badge"""
 
     created: Mapped[datetime_tz] = mapped_column(nullable=False)
     """Timestamp when the badge was created."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     modified_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that modified the badge"""
 
     modified: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was modified."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     deleted_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that deleted the badge"""
 
     deleted: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was deleted."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     restored_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that restored the badge"""
 
     restored: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was restored."""
 
+    # TODO: Duplicates? Remove these 4 relationships and do database migration.
     group_created: Mapped[UserGroup] = relationship(foreign_keys=created_by)
     group_modified: Mapped[Optional[UserGroup]] = relationship(foreign_keys=modified_by)
     group_deleted: Mapped[Optional[UserGroup]] = relationship(foreign_keys=deleted_by)
@@ -92,6 +97,9 @@ class Badge(db.Model):
             "restored": self.restored,
         }
 
+    # def verify_context_group_access(self):
+    #     pass
+
 
 class BadgeGiven(db.Model):
     """
@@ -115,24 +123,28 @@ class BadgeGiven(db.Model):
     active: Mapped[bool] = mapped_column(nullable=False)
     """Active status of the given badge. If the badge is withdrawn this turns to false."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     given_by: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), nullable=False)
     """Usergroup that gave the badge."""
 
     given: Mapped[datetime_tz] = mapped_column(nullable=False)
     """Timestamp when the badge was given."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     withdrawn_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that withdrew the badge."""
 
     withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was withdrawn."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     undo_withdrawn_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that undoed the badge withdrawal."""
 
     undo_withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge withdrawal was undoed."""
 
+    # TODO: Duplicates? Remove these 5 relationships and do database migration.
     badge: Mapped[Badge] = relationship()
     group: Mapped[UserGroup] = relationship(foreign_keys=group_id)
     group_given: Mapped[UserGroup] = relationship(foreign_keys=given_by)
