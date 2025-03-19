@@ -167,6 +167,7 @@ export class BadgeCreatorComponent implements OnInit {
             this.clickedBadge = null;
             this.emptyForm();
             this.badgeFormShowing = false;
+            this.showGiver = false;
             return;
         }
         this.clickedBadge = badge;
