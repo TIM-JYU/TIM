@@ -41,6 +41,8 @@ class NotifyTestBase(TimRouteTest):
                 "email_comment_modify": False,
                 "email_doc_modify": True,
                 "email_answer_add": False,
+                "email_annotation_add": False,
+                "email_annotation_modify": False,
             },
         )
         self.login_test1()
@@ -61,6 +63,8 @@ class NotifyTest(NotifyTestBase):
                 "email_comment_modify": False,
                 "email_doc_modify": False,
                 "email_answer_add": False,
+                "email_annotation_add": False,
+                "email_annotation_modify": False,
             },
             n,
         )
@@ -69,6 +73,8 @@ class NotifyTest(NotifyTestBase):
             "email_comment_modify": False,
             "email_doc_modify": True,
             "email_answer_add": False,
+            "email_annotation_add": True,
+            "email_annotation_modify": True,
         }
         self.update_notify_settings(d, new_settings)
         n = self.get(notify_url)
@@ -243,6 +249,8 @@ class NotifyFolderTest(NotifyTestBase):
                 "email_comment_modify": False,
                 "email_doc_modify": True,
                 "email_answer_add": False,
+                "email_annotation_add": False,
+                "email_annotation_modify": False,
             },
         )
         r = self.get("/notify/all")
@@ -266,6 +274,8 @@ class NotifyFolderTest(NotifyTestBase):
                 "email_comment_modify": False,
                 "email_doc_modify": True,
                 "email_answer_add": False,
+                "email_annotation_add": False,
+                "email_annotation_modify": False,
             },
         )
         r = self.get("/notify/all")
@@ -373,6 +383,8 @@ type: text
                 "email_comment_modify": False,
                 "email_doc_modify": False,
                 "email_answer_add": True,
+                "email_annotation_add": False,
+                "email_annotation_modify": False,
             },
         )
         self.login_test1()

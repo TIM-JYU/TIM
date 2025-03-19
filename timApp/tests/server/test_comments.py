@@ -138,6 +138,8 @@ class CommentTest(NotifyTestBase):
                 "email_comment_modify": True,
                 "email_doc_modify": True,
                 "email_answer_add": False,
+                "email_annotation_add": False,
+                "email_annotation_modify": False,
             },
         )
         process_pending_notifications()
