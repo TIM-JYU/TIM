@@ -276,6 +276,7 @@ TIM_SAFE_ATTRS = frozenset(
         "profile-id",
         "view-mode",
         "badgegroup-context",
+        "badge-group",
     ]
 )
 
