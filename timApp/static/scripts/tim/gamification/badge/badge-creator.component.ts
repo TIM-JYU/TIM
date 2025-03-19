@@ -6,16 +6,19 @@ import {ReactiveFormsModule, Validators} from "@angular/forms";
 import {FormGroup, FormControl} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
 import {HttpClientModule} from "@angular/common/http";
-import {BadgeComponent, BadgeModule} from "./badge.component";
-import {toPromise} from "../../util/utils";
-import {BadgeViewerModule} from "./badge-viewer.component";
-import {BadgeGiverModule} from "./badge-giver.component";
+import {BadgeViewerModule} from "tim/gamification/badge/badge-viewer.component";
+import {BadgeGiverModule} from "tim/gamification/badge/badge-giver.component";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
-import {getFormBehavior} from "../../plugin/util";
-import {BadgeService} from "./badge.service";
-import {IBadge} from "./badge.interface";
-import {Users} from "../../user/userService";
+import {getFormBehavior} from "tim/plugin/util";
+import {BadgeService} from "tim/gamification/badge/badge.service";
+import type {IBadge} from "tim/gamification/badge/badge.interface";
+import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {toPromise} from "tim/util/utils";
+import {
+    BadgeComponent,
+    BadgeModule,
+} from "tim/gamification/badge/badge.component";
 
 @Component({
     selector: "tim-badge-creator",
@@ -53,7 +56,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                 <h2>{{ editingBadge ? 'Edit ' + editingBadge.title + ' Badge' : 'Create a Badge' }}</h2>
                 <form (ngSubmit)="onSubmit()" id="badgeForm">
                   <div class="form-group">
-                    <label for="title">Title</label>
+                    <label for="title">Badge Title</label>
                     <input type="text" id="title" name="title" formControlName="title">
                   </div>
     
@@ -88,7 +91,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                             </div>
                           </div>
                         <div class="form-group">
-                            <label>Preview</label>
+                            <label>Preview of the badge</label>
                             <div class="preview">
                                 <fieldset>
                                   <tim-badge
