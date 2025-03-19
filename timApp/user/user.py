@@ -1673,6 +1673,7 @@ def has_no_higher_right(access_type: str | None, rights: UserItemRights) -> bool
         "edit": not rights["see_answers"],
         "see_answers": not rights["teacher"],
         "teacher": not rights["manage"],
+        "any": True,
     }.get(access_type, False)
 
 
