@@ -381,6 +381,12 @@ type StyleSelectionType =
                         <i *ngIf="isAnswerAdd(n)"
                            class="notification-icon glyphicon glyphicon-open-file"
                            title="Answer posts" i18n-title></i>
+                        <i *ngIf="isAnnotationAdd(n)"
+                           class="notification-icon glyphicon glyphicon-send"
+                           title="New velps" i18n-title></i>
+                        <i *ngIf="isAnnotationModify(n)"
+                           class="notification-icon glyphicon glyphicon-comment"
+                           title="Velp modifications" i18n-title></i>
                     </li>
                 </ul>
                 <button (click)="getAllNotifications()"
@@ -1359,6 +1365,17 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     isAnswerAdd(n: GroupedNotification) {
         return n.notificationTypes.has(NotificationType.AnswerAdded);
+    }
+
+    isAnnotationAdd(n: GroupedNotification) {
+        return n.notificationTypes.has(NotificationType.AnnotationAdded);
+    }
+
+    isAnnotationModify(n: GroupedNotification) {
+        return (
+            n.notificationTypes.has(NotificationType.AnnotationModified) ||
+            n.notificationTypes.has(NotificationType.AnnotationDeleted)
+        );
     }
 
     async getAllNotifications() {

@@ -164,6 +164,9 @@ export enum NotificationType {
     CommentModified = 6,
     CommentDeleted = 7,
     AnswerAdded = 8,
+    AnnotationAdded = 9,
+    AnnotationModified = 10,
+    AnnotationDeleted = 11,
 }
 
 export interface INotification {

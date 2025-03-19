@@ -27,6 +27,7 @@ from timApp.notification.pending_notification import (
     get_pending_notifications,
     GroupingKey,
     AnswerNotification,
+    AnnotationNotification,
 )
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
@@ -55,20 +56,24 @@ def get_notify_settings(doc_id):
 @notify.post("/<int:doc_id>")
 def set_notify_settings(
     doc_id: int,
-    email_comment_modify: bool,
-    email_comment_add: bool,
     email_doc_modify: bool,
+    email_comment_add: bool,
+    email_comment_modify: bool,
     email_answer_add: bool,
+    email_annotation_add: bool,
+    email_annotation_modify: bool,
 ):
     verify_logged_in()
     i = get_item_or_abort(doc_id)
     verify_view_access(i)
     get_current_user_object().set_notify_settings(
         i,
-        comment_modify=email_comment_modify,
-        comment_add=email_comment_add,
         doc_modify=email_doc_modify,
+        comment_add=email_comment_add,
+        comment_modify=email_comment_modify,
         answer_add=email_answer_add,
+        annotation_add=email_annotation_add,
+        annotation_modify=email_annotation_modify,
     )
     db.session.commit()
     return ok_response()
@@ -101,29 +106,26 @@ def notify_doc_watchers(
     doc: DocInfo,
     content_msg: str,
     notify_type: NotificationType,
-    par: DocParagraph | None = None,
+    par: DocParagraph | str | None = None,
     old_version: Version = None,
     curr_user: User = None,
     **kwargs,
 ):
     me = curr_user if curr_user else get_current_user_object()
     new_version = doc.document.get_version()
-    if notify_type.is_document_modification:
-        p = DocumentNotification(
-            user=me,
-            doc_id=doc.id,
-            par_id=par.get_id() if par else None,
-            text=content_msg,
-            version_change=f"{ver_to_str(old_version)}/{ver_to_str(new_version)}",
-            kind=notify_type,
-            **kwargs,
-        )
-    else:
-        if notify_type in (
-            NotificationType.CommentAdded,
-            NotificationType.CommentModified,
-            NotificationType.CommentDeleted,
-        ):
+
+    match notify_type:
+        case NotificationType.DocModified | NotificationType.ParAdded | NotificationType.ParDeleted | NotificationType.ParModified:
+            p = DocumentNotification(
+                user=me,
+                doc_id=doc.id,
+                par_id=par.get_id() if par else None,
+                text=content_msg,
+                version_change=f"{ver_to_str(old_version)}/{ver_to_str(new_version)}",
+                kind=notify_type,
+                **kwargs,
+            )
+        case NotificationType.CommentAdded | NotificationType.CommentModified | NotificationType.CommentDeleted:
             p = CommentNotification(
                 user=me,
                 doc_id=doc.id,
@@ -132,7 +134,7 @@ def notify_doc_watchers(
                 kind=notify_type,
                 **kwargs,
             )
-        elif notify_type == NotificationType.AnswerAdded:
+        case NotificationType.AnswerAdded:
             p = AnswerNotification(
                 user=me,
                 doc_id=doc.id,
@@ -141,7 +143,20 @@ def notify_doc_watchers(
                 kind=notify_type,
                 **kwargs,
             )
-    db.session.add(p)
+        case NotificationType.AnnotationAdded | NotificationType.AnnotationModified | NotificationType.AnnotationDeleted:
+            p = AnnotationNotification(
+                user=me,
+                doc_id=doc.id,
+                par_id=par,
+                text=content_msg,
+                kind=notify_type,
+                **kwargs,
+            )
+        case _:
+            p = None
+
+    if p is not None:
+        db.session.add(p)
 
 
 def get_name_string(users: list[User], show_names: bool):
@@ -169,6 +184,9 @@ NOTIFICATION_TITLE = {
     NotificationType.CommentModified: "Comment modified",
     NotificationType.CommentDeleted: "Comment deleted",
     NotificationType.AnswerAdded: "Answer posted",
+    NotificationType.AnnotationAdded: "Velp posted",
+    NotificationType.AnnotationModified: "Velp modified",
+    NotificationType.AnnotationDeleted: "Velp deleted",
 }
 
 
@@ -287,6 +305,13 @@ def get_answer_count_str(num_mods):
         return "an answer"
 
 
+def get_annotation_count_str(num_mods):
+    if num_mods > 1:
+        return f"{num_mods} velps"
+    else:
+        return "a velp"
+
+
 @dataclass(frozen=True, slots=True)
 class NotificationSubject:
     subject_template: str
@@ -330,6 +355,18 @@ NOTIFICATION_TITLE_SUBJECT: dict[NotificationType, NotificationSubject] = {
     NotificationType.AnswerAdded: NotificationSubject(
         subject_template="{user} posted {num_count} to the document {resource_title}",
         num_count_modifier=get_answer_count_str,
+    ),
+    NotificationType.AnnotationAdded: NotificationSubject(
+        subject_template="{user} posted {num_count} to the document {resource_title}",
+        num_count_modifier=get_annotation_count_str,
+    ),
+    NotificationType.AnnotationModified: NotificationSubject(
+        subject_template="{user} modified {num_count} in the document {resource_title}",
+        num_count_modifier=get_annotation_count_str,
+    ),
+    NotificationType.AnnotationDeleted: NotificationSubject(
+        subject_template="{user} deleted {num_count} from the document {resource_title}",
+        num_count_modifier=get_annotation_count_str,
     ),
 }
 
@@ -416,6 +453,17 @@ def process_pending_notifications():
             ), "Expected all notifications of type AnswerNotification"
             condition = Notification.notification_type.in_(
                 (NotificationType.AnswerAdded,)
+            )
+        elif t == "v":
+            assert all(
+                isinstance(p, AnnotationNotification) for p in ps
+            ), "Expected all notifications of type AnnotationNotification"
+            condition = Notification.notification_type.in_(
+                (
+                    NotificationType.AnnotationAdded,
+                    NotificationType.AnnotationModified,
+                    NotificationType.AnnotationDeleted,
+                )
             )
         else:
             assert False, "Unknown notification type"

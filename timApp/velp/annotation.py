@@ -27,6 +27,8 @@ from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
+from timApp.notification.notification import NotificationType
+from timApp.notification.notify import notify_doc_watchers
 from timApp.peerreview.util.peerreview_utils import (
     has_review_access,
     get_reviews_targeting_user,
@@ -114,6 +116,16 @@ def add_annotation(
     db.session.add(ann)
     ann.set_position_info(coord)
     db.session.commit()
+
+    # Only public annotations in the document (not in task answers) will trigger a notification
+    if ann.visible_to == AnnotationVisibility.everyone.value and not ann.answer_id:
+        notify_doc_watchers(
+            d,
+            ann.velp_content,
+            NotificationType.AnnotationAdded,
+            ann.paragraph_id_start,
+        )
+
     return json_response(ann, date_conversion=True)
 
 
@@ -203,6 +215,14 @@ def update_annotation(
     db.session.commit()
     if should_anonymize_annotations(d, user):
         anonymize_annotations([ann], user.id)
+
+    # Only public annotations in the document (not in task answers) will trigger a notification
+    if ann.visible_to == AnnotationVisibility.everyone.value and not ann.answer_id:
+        ann_text = f"{ann.velp_content}\n{ann.comments}"
+        notify_doc_watchers(
+            d, ann_text, NotificationType.AnnotationModified, ann.paragraph_id_start
+        )
+
     return json_response(ann, date_conversion=True)
 
 
@@ -222,13 +242,28 @@ def invalidate_annotation(id: int) -> Response:
     verify_logged_in()
     user = get_current_user_object()
     annotation = get_annotation_or_abort(id)
-    can_edit, _ = check_annotation_edit_access_and_maybe_get_doc(user, annotation)
+    can_edit, d = check_annotation_edit_access_and_maybe_get_doc(user, annotation)
     if not can_edit:
         raise AccessDenied(
             "Sorry, you don't have permission to delete this annotation."
         )
     annotation.valid_until = get_current_time()
     db.session.commit()
+
+    # Only public annotations in the document (not in task answers) will trigger a notification
+    if (
+        d
+        and annotation.visible_to == AnnotationVisibility.everyone.value
+        and not annotation.answer_id
+    ):
+        ann_text = f"{annotation.velp_content}\n{annotation.comments}"
+        notify_doc_watchers(
+            d,
+            ann_text,
+            NotificationType.AnnotationDeleted,
+            annotation.paragraph_id_start,
+        )
+
     return ok_response()
 
 
@@ -269,6 +304,14 @@ def add_comment_route(id: int, content: str) -> Response:
     db.session.commit()
     if should_anonymize_annotations(d, commenter):
         anonymize_annotations([a], commenter.id)
+
+    # Only public annotations in the document (not in task answers) will trigger a notification
+    if a and a.visible_to == AnnotationVisibility.everyone.value and not a.answer_id:
+        ann_text = f"{content}"
+        notify_doc_watchers(
+            d, ann_text, NotificationType.AnnotationModified, a.paragraph_id_start
+        )
+
     return json_response(a, date_conversion=True)
 
 

@@ -22,6 +22,9 @@ class NotificationType(enum.Enum):
     CommentModified = 6
     CommentDeleted = 7
     AnswerAdded = 8
+    AnnotationAdded = 9
+    AnnotationModified = 10
+    AnnotationDeleted = 11
 
     @property
     def is_document_modification(self) -> bool:
