@@ -1,4 +1,4 @@
-import enum
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from timApp.item.block import Block
 
 
-class NotificationType(enum.Enum):
+class NotificationType(Enum):
     DocModified = 1
     ParAdded = 2
     ParModified = 3

@@ -424,49 +424,51 @@ def process_pending_notifications():
         settings = doc.document.get_settings()
         show_only_diff = settings.send_basic_change_notifications()
         # Combine ps to a single mail (tailored for each subscriber) and send it
-        if t == "d":
-            assert all(
-                isinstance(p, DocumentNotification) for p in ps
-            ), "Expected all notifications of type DocumentNotification"
-            condition = Notification.notification_type.in_(
-                (
-                    NotificationType.DocModified,
-                    NotificationType.ParModified,
-                    NotificationType.ParAdded,
-                    NotificationType.ParDeleted,
+        match t:
+            case "d":
+                assert all(
+                    isinstance(p, DocumentNotification) for p in ps
+                ), "Expected all notifications of type DocumentNotification"
+                condition = Notification.notification_type.in_(
+                    (
+                        NotificationType.DocModified,
+                        NotificationType.ParModified,
+                        NotificationType.ParAdded,
+                        NotificationType.ParDeleted,
+                    )
                 )
-            )
-        elif t == "c":
-            assert all(
-                isinstance(p, CommentNotification) for p in ps
-            ), "Expected all notifications of type CommentNotification"
-            condition = Notification.notification_type.in_(
-                (
-                    NotificationType.CommentAdded,
-                    NotificationType.CommentDeleted,
-                    NotificationType.CommentModified,
+            case "c":
+                assert all(
+                    isinstance(p, CommentNotification) for p in ps
+                ), "Expected all notifications of type CommentNotification"
+                condition = Notification.notification_type.in_(
+                    (
+                        NotificationType.CommentAdded,
+                        NotificationType.CommentDeleted,
+                        NotificationType.CommentModified,
+                    )
                 )
-            )
-        elif t == "a":
-            assert all(
-                isinstance(p, AnswerNotification) for p in ps
-            ), "Expected all notifications of type AnswerNotification"
-            condition = Notification.notification_type.in_(
-                (NotificationType.AnswerAdded,)
-            )
-        elif t == "v":
-            assert all(
-                isinstance(p, AnnotationNotification) for p in ps
-            ), "Expected all notifications of type AnnotationNotification"
-            condition = Notification.notification_type.in_(
-                (
-                    NotificationType.AnnotationAdded,
-                    NotificationType.AnnotationModified,
-                    NotificationType.AnnotationDeleted,
+            case "a":
+                assert all(
+                    isinstance(p, AnswerNotification) for p in ps
+                ), "Expected all notifications of type AnswerNotification"
+                condition = Notification.notification_type.in_(
+                    (NotificationType.AnswerAdded,)
                 )
-            )
-        else:
-            assert False, "Unknown notification type"
+            case "v":
+                assert all(
+                    isinstance(p, AnnotationNotification) for p in ps
+                ), "Expected all notifications of type AnnotationNotification"
+                condition = Notification.notification_type.in_(
+                    (
+                        NotificationType.AnnotationAdded,
+                        NotificationType.AnnotationModified,
+                        NotificationType.AnnotationDeleted,
+                    )
+                )
+            case _:
+                assert False, "Unknown notification type"
+
         users_to_notify: set[User] = {n.user for n in doc.get_notifications(condition)}
         for user in users_to_notify:
             if (
