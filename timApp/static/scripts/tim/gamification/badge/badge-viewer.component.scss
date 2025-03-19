@@ -19,3 +19,18 @@
   padding: 1.5em 0;
 }
 
+.badge-card {
+  width: 150px; /* Aseta kortin koko */
+  height: 150px; /* Aseta kortin korkeus */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  text-align: center;
+}
+
+.badge-card tim-badge {
+  max-width: 100%;
+  max-height: 100%;
+}
+

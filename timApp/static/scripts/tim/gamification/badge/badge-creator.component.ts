@@ -31,15 +31,17 @@ import {
                   <h2>{{ selectedContextGroup ? selectedContextGroup + "'s Badges" : "All Badges" }}</h2>
                   <div class="badge_view">
                       <ng-container *ngIf="all_badges.length > 0">
-                    <tim-badge *ngFor="let badge of all_badges"
-                       [ngClass]="{'selected-badge': clickedBadge === badge}"
-                               title="{{badge.title}}"
-                               color="{{badge.color}}"
-                               shape="{{badge.shape}}"
-                               [image]="badge.image"
-                               description="{{badge.description}}"
-                               (click)="selectBadge(badge);">
-                    </tim-badge>
+                          <div class="badge-card" *ngFor="let badge of all_badges">
+                            <tim-badge
+                               [ngClass]="{'selected-badge': clickedBadge === badge}"
+                                       title="{{badge.title}}"
+                                       color="{{badge.color}}"
+                                       shape="{{badge.shape}}"
+                                       [image]="badge.image"
+                                       description="{{badge.description}}"
+                                       (click)="editBadge(badge);">
+                            </tim-badge>
+                          </div>
                   </ng-container>
                   </div>
                     
@@ -63,7 +65,7 @@ import {
                 <h2>{{ editingBadge ? 'Edit ' + editingBadge.title + ' Badge' : 'Create a Badge' }}</h2>
                 <form (ngSubmit)="onSubmit()" id="badgeForm">
                   <div class="form-group">
-                    <label for="title">Title</label>
+                    <label for="title">Badge Title</label>
                     <input type="text" id="title" name="title" formControlName="title">
                   </div>
     
@@ -98,7 +100,7 @@ import {
                             </div>
                           </div>
                         <div class="form-group">
-                            <label>Preview</label>
+                            <label>Preview of the badge</label>
                             <div class="preview">
                                 <fieldset>
                                   <tim-badge
@@ -120,7 +122,6 @@ import {
                             (click)="editingBadge ? saveBadgeChanges() : onSubmit()">
                             {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
                     </button>
-                    
     
                     <div class="delete-edit">
                         <div class="button-group">

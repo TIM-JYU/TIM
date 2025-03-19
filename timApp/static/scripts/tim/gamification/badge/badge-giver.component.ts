@@ -26,7 +26,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
             <div class="user-selection">
                 <label for="select-user">User</label>
                 <select id="select-user" [(ngModel)]="selectedUser">
-                    <option [ngValue]="null" disabled selected>Select an user</option>
+                    <option [ngValue]="null" disabled selected>Select an user to give a badge</option>
                     <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(user.id)">
                     {{ user.real_name }}
                 </option>
@@ -58,7 +58,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
             <div class="groups">
                 <label for="select_group">Group</label>
                 <select id="select_group" [(ngModel)]="selectedGroup">¨
-                    <option [ngValue]="null" disabled selected>Select a group</option>
+                    <option [ngValue]="null" disabled selected>Select a group to give a badge</option>
                     <option *ngFor="let group of groups" [ngValue]="group" (click)="fetchGroupBadges(group.id)">{{ group.name }}</option>
                 </select>
             </div>
@@ -102,7 +102,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
             </ng-container>
             <div class="button-container">
                 <button id="assignButton" (click)="assignBadge(message)" [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
-                    Give Badge
+                    Assign Badge
                 </button>
                 <button id="cancelButton" (click)="emptyForm()">Cancel</button>
             </div>
