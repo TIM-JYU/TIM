@@ -117,7 +117,19 @@ export class BadgeService {
         }
     }
 
-    // Funktio updatetapahtuman lähettämiseen
+    private dialogOpen = false;
+    private activeBadgeId: number | null = null;
+
+    // Tarkistetaan, onko dialogi-ikkuna auki
+    isDialogOpen(): boolean {
+        return this.dialogOpen;
+    }
+    // Asetetaan dialogin tila
+    setDialogOpen(isOpen: boolean): void {
+        this.dialogOpen = isOpen;
+    }
+
+    // Funktio updatetapahtuman lähettämiseen kun luodaan uusi badge creatorilla, se päivitetään giver listaan.
     triggerUpdateBadgeList() {
         this.updateBadgeSubject.next();
     }

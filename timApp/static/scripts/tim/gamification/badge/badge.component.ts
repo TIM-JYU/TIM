@@ -3,6 +3,8 @@ import {Component, Input, NgModule, SimpleChanges} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {cons} from "fp-ts/ReadonlyNonEmptyArray";
+import {BadgeService} from "tim/gamification/badge/badge.service";
 
 @Component({
     selector: "tim-badge",
@@ -27,6 +29,7 @@ export class BadgeComponent implements OnInit, OnChanges {
     @Input() description?: string;
     @Input() message?: string;
     icon?: string;
+    isDialogOpen = false;
 
     private readonly iconMap: Record<number, string> = {
         1: "trophy",
@@ -43,16 +46,24 @@ export class BadgeComponent implements OnInit, OnChanges {
         12: "money",
     };
 
+    // hakee dialogServicen BadgeServicesta
+    constructor(private dialogService: BadgeService) {}
+
+    // Avaa valitun badgen dialogin yksi ikkuna kerrallaan, josta näkee Descriptionin ja Messagen
     async openDialog(): Promise<void> {
-        if (this.message) {
-            await showMessageDialog(
-                `
-            <b>${this.title}</b><br><br>
-            <b>Description:</b> ${this.description}<br>
-            <b>Message:</b> ${this.message}
-            `
-            );
+        if (this.dialogService.isDialogOpen() || !this.message) {
+            return;
         }
+
+        this.dialogService.setDialogOpen(true);
+
+        await showMessageDialog(`
+          <b>${this.title}</b><br><br>
+          <b>Description:</b> ${this.description}<br>
+          <b>Message:</b> ${this.message}
+        `);
+
+        this.dialogService.setDialogOpen(false);
     }
 
     ngOnInit(): void {
