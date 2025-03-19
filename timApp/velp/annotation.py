@@ -119,9 +119,10 @@ def add_annotation(
 
     # Only public annotations in the document (not in task answers) will trigger a notification
     if ann.visible_to == AnnotationVisibility.everyone.value and not ann.answer_id:
+        text = ann.velp_content.content
         notify_doc_watchers(
             d,
-            ann.velp_content,
+            text if text is not None else "",
             NotificationType.AnnotationAdded,
             ann.paragraph_id_start,
         )
@@ -218,9 +219,12 @@ def update_annotation(
 
     # Only public annotations in the document (not in task answers) will trigger a notification
     if ann.visible_to == AnnotationVisibility.everyone.value and not ann.answer_id:
-        ann_text = f"{ann.velp_content}\n{ann.comments}"
+        ann_text = ann.velp_content.content
         notify_doc_watchers(
-            d, ann_text, NotificationType.AnnotationModified, ann.paragraph_id_start
+            d,
+            ann_text if ann_text is not None else "",
+            NotificationType.AnnotationModified,
+            ann.paragraph_id_start,
         )
 
     return json_response(ann, date_conversion=True)
@@ -256,10 +260,10 @@ def invalidate_annotation(id: int) -> Response:
         and annotation.visible_to == AnnotationVisibility.everyone.value
         and not annotation.answer_id
     ):
-        ann_text = f"{annotation.velp_content}\n{annotation.comments}"
+        ann_text = annotation.velp_content.content
         notify_doc_watchers(
             d,
-            ann_text,
+            ann_text if ann_text is not None else "",
             NotificationType.AnnotationDeleted,
             annotation.paragraph_id_start,
         )
@@ -307,7 +311,7 @@ def add_comment_route(id: int, content: str) -> Response:
 
     # Only public annotations in the document (not in task answers) will trigger a notification
     if a and a.visible_to == AnnotationVisibility.everyone.value and not a.answer_id:
-        ann_text = f"{content}"
+        ann_text = content
         notify_doc_watchers(
             d, ann_text, NotificationType.AnnotationModified, a.paragraph_id_start
         )
