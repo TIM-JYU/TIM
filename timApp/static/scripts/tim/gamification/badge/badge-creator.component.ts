@@ -45,14 +45,19 @@ import {
                     
                 </fieldset>
                 <div class="button-group">
-                    <button id="showBadgeForm" type="button" (click)="clickCreate()">{{ this.toggleCreateButtonText ? 'Cancel' : 'Create' }}</button>
+                    <button id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
                     <button id="createButton" type="button" (click)="editBadge(clickedBadge)" 
                           [disabled]="!clickedBadge" 
-                          [ngClass]="{'disabled-btn': !clickedBadge}">
-                    {{ this.toggleEditButtonText ? 'Cancel' : 'Edit' }}
-                  </button>
+                          [ngClass]="{'disabled-btn': !clickedBadge}">Edit</button>
+                    <button id="createButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
+                          [disabled]="!clickedBadge" 
+                          [ngClass]="{'disabled-btn': !clickedBadge}">Give badge</button>
                 </div>                
             </div>
+              
+              <ng-container *ngIf="showGiver">
+                  <timBadgeGiver [badgeGroup]="badgeGroup" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
+              </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
                 <h2>{{ editingBadge ? 'Edit ' + editingBadge.title + ' Badge' : 'Create a Badge' }}</h2>
@@ -115,6 +120,7 @@ import {
                             (click)="editingBadge ? saveBadgeChanges() : onSubmit()">
                             {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
                     </button>
+                    
     
                     <div class="delete-edit">
                         <div class="button-group">
@@ -146,11 +152,13 @@ export class BadgeCreatorComponent implements OnInit {
     selectedContextGroup: string = "";
     hasPermission = false;
     badgeFormShowing = false;
+
     clickedBadge: any = null;
     editingBadge: any = null;
-    toggleCreateButtonText = false;
-    toggleEditButtonText = false;
+
+    showGiver = false;
     @Input() badgegroupContext?: string;
+    @Input() badgeGroup?: string;
 
     // Method called when a badge is clicked
     selectBadge(badge: IBadge) {
@@ -158,17 +166,11 @@ export class BadgeCreatorComponent implements OnInit {
             this.clickedBadge = null;
             this.emptyForm();
             this.badgeFormShowing = false;
-            this.toggleEditButtonText = false;
             return;
         }
         this.clickedBadge = badge;
 
         this.showEditingForm(badge);
-        if (this.badgeFormShowing) {
-            this.toggleEditButtonText = true;
-        }
-
-        this.toggleCreateButtonText = false;
     }
 
     // Initializes the component by loading badges and subscribing to form value changes.
@@ -193,10 +195,10 @@ export class BadgeCreatorComponent implements OnInit {
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
     clickCreate() {
         this.clickedBadge = null;
+        this.showGiver = false;
+
         if (this.badgeFormShowing) {
             this.resetForm();
-            this.toggleCreateButtonText = false;
-            this.toggleEditButtonText = false;
             return;
         }
 
@@ -207,16 +209,21 @@ export class BadgeCreatorComponent implements OnInit {
     // Edit an existing badge, show attributes in input fields
     editBadge(badge: IBadge) {
         this.badgeFormShowing = !this.badgeFormShowing;
-        this.toggleEditButtonText = false;
+        this.showGiver = false;
         if (this.badgeFormShowing) {
             this.showEditingForm(badge);
-            this.toggleEditButtonText = true;
         }
+    }
+
+    showBadgeGiver(badge: IBadge) {
+        this.badgeFormShowing = false;
+        this.showGiver = !this.showGiver;
+
+        this.clickedBadge = badge;
     }
 
     // when create button is pressed, shows empty form
     showForm() {
-        this.toggleCreateButtonText = true;
         this.badgeFormShowing = true;
         this.isFormChanged = true;
     }
@@ -225,7 +232,6 @@ export class BadgeCreatorComponent implements OnInit {
     showEditingForm(badge: IBadge) {
         this.editingBadge = badge;
         this.clickedBadge = badge;
-        this.toggleCreateButtonText = false;
         this.isFormChanged = true;
         this.badgeForm.patchValue({
             id: badge.id,
@@ -343,7 +349,6 @@ export class BadgeCreatorComponent implements OnInit {
 
                 this.badgeService.triggerUpdateBadgeList();
                 this.badgeFormShowing = false;
-                this.toggleCreateButtonText = false;
             }
         }
     }
