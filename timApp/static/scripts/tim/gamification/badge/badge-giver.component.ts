@@ -125,7 +125,7 @@ export class BadgeGiverComponent implements OnInit {
     message = "";
     badgeGiver = 0;
     showDeleteButton: boolean = false;
-    hasPermission: boolean = false;
+    hasPermission: boolean = true;
     showComponent: boolean = true;
     @Input() badgeGroup?: string;
     groups: IGroup[] = [];
@@ -136,13 +136,13 @@ export class BadgeGiverComponent implements OnInit {
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
+            this.addListeners();
+            this.fetchUsers();
+            this.fetchGroups();
+            this.fetchBadges();
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.showComponent = true;
-                this.addListeners();
-                this.fetchUsers();
-                this.fetchGroups();
-                this.fetchBadges();
             }
         }
     }
@@ -277,6 +277,7 @@ export class BadgeGiverComponent implements OnInit {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
                 given_by: this.badgeGiver,
+                context_group: this.badgeGroup,
                 group_id: currentId,
                 badge_id: this.selectedBadge?.id,
                 message: message,
@@ -322,7 +323,15 @@ export class BadgeGiverComponent implements OnInit {
             return; // Exit if user cancels the confirmation dialog
         }
 
-        await this.badgeService.withdrawBadge(badgegivenID, this.badgeGiver);
+        if (this.badgeGroup == undefined) {
+            console.error("group_context was undefined");
+            return;
+        }
+        await this.badgeService.withdrawBadge(
+            badgegivenID,
+            this.badgeGiver,
+            this.badgeGroup
+        );
         this.fetchUserBadges(this.selectedUser?.id);
         // Poistaa deletenapin näkyvistä deleten jälkeen
         this.selectedBadge = null;
