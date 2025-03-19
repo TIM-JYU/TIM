@@ -399,7 +399,7 @@ export class BadgeCreatorComponent implements OnInit {
                 const response = toPromise(
                     this.http.post<{ok: boolean}>("/modify_badge", {
                         badge_id: this.editingBadge.id,
-                        modified_by: "1", // Toistaiseksi kovakoodattuna
+                        modified_by: this.userID,
                         context_group: this.editingBadge.context_group,
                         title: this.editingBadge.title,
                         color: this.editingBadge.color,
@@ -436,7 +436,8 @@ export class BadgeCreatorComponent implements OnInit {
                     const response = await toPromise(
                         this.http.post<{ok: boolean}>("/deactivate_badge", {
                             badge_id: this.editingBadge.id,
-                            deleted_by: 1, // Kovakoodattu toistaiseksi
+                            deleted_by: this.userID,
+                            context_group: this.selectedContextGroup,
                         })
                     );
 

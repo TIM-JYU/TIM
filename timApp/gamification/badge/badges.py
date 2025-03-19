@@ -39,24 +39,28 @@ class Badge(db.Model):
     active: Mapped[bool] = mapped_column(nullable=False)
     """Active status of the badge. If the badge is deleted this turns to false."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     created_by: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), nullable=False)
     """Usergroup that created the badge"""
 
     created: Mapped[datetime_tz] = mapped_column(nullable=False)
     """Timestamp when the badge was created."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     modified_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that modified the badge"""
 
     modified: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was modified."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     deleted_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that deleted the badge"""
 
     deleted: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was deleted."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     restored_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that restored the badge"""
 
@@ -119,18 +123,21 @@ class BadgeGiven(db.Model):
     active: Mapped[bool] = mapped_column(nullable=False)
     """Active status of the given badge. If the badge is withdrawn this turns to false."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     given_by: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), nullable=False)
     """Usergroup that gave the badge."""
 
     given: Mapped[datetime_tz] = mapped_column(nullable=False)
     """Timestamp when the badge was given."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     withdrawn_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that withdrew the badge."""
 
     withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was withdrawn."""
 
+    # TODO: Change usergroup.id to useraccount.id?
     undo_withdrawn_by: Mapped[Optional[int]] = mapped_column(ForeignKey("usergroup.id"))
     """Usergroup that undoed the badge withdrawal."""
 
