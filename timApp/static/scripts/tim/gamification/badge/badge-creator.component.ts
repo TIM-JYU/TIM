@@ -39,7 +39,7 @@ import {
                                        shape="{{badge.shape}}"
                                        [image]="badge.image"
                                        description="{{badge.description}}"
-                                       (click)="editBadge(badge);">
+                                       (click)="selectBadge(badge);">
                             </tim-badge>
                           </div>
                   </ng-container>
