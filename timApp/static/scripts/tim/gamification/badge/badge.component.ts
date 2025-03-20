@@ -29,7 +29,6 @@ export class BadgeComponent implements OnInit, OnChanges {
     @Input() description?: string;
     @Input() message?: string;
     icon?: string;
-    isDialogOpen = false;
 
     private readonly iconMap: Record<number, string> = {
         1: "trophy",

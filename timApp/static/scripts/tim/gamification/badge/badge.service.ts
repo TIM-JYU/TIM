@@ -123,7 +123,6 @@ export class BadgeService {
     }
 
     private dialogOpen = false;
-    private activeBadgeId: number | null = null;
 
     // Tarkistetaan, onko dialogi-ikkuna auki
     isDialogOpen(): boolean {

@@ -51,19 +51,25 @@ import {
                     
                 </fieldset>
                 <div class="button-group">
-                    <button id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
-                    <button id="editButton" type="button" (click)="editBadge(clickedBadge)" 
-                          [disabled]="!clickedBadge" 
-                          [ngClass]="{'disabled-btn': !clickedBadge}">Edit</button>
-                    <button id="editButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
-                          [disabled]="!clickedBadge" 
-                          [ngClass]="{'disabled-btn': !clickedBadge}">Give badge</button>
-                    <button id="deleteButton" type="button"
-                            [disabled]="!editingBadge" 
-                            (click)="deleteBadge()"
-                            [ngClass]="{'disabled-btn': !clickedBadge}">Delete</button>
-                    <button id="editButton" type="button" (click)="showBadgeWithdraw()">Withdraw</button>
-                </div>                
+                    <div class="left-buttons">
+                        <button id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
+                        <button id="editButton" type="button" (click)="editBadge(clickedBadge)" 
+                                [disabled]="!clickedBadge" 
+                                [ngClass]="{'disabled-btn': !clickedBadge}">Edit</button>
+                        <button id="giveBadgeButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
+                                [disabled]="!clickedBadge" 
+                                [ngClass]="{'disabled-btn': !clickedBadge}">Give badge</button>
+                    </div>
+                    <div class="right-buttons">
+                        <button id="deleteButton" type="button"
+                                [disabled]="!editingBadge" 
+                                (click)="deleteBadge()"
+                                class="right-button">Delete</button>
+                        <button id="editButton2" type="button" 
+                                (click)="showBadgeWithdraw()"
+                                class="right-button">Withdraw</button>
+                    </div>
+                </div>            
             </div>
               
               <ng-container *ngIf="showGiver">
