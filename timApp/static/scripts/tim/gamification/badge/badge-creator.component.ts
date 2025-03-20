@@ -57,6 +57,10 @@ import {
                     <button id="editButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
                           [disabled]="!clickedBadge" 
                           [ngClass]="{'disabled-btn': !clickedBadge}">Give badge</button>
+                    <button id="deleteButton" type="button"
+                            [disabled]="!editingBadge" 
+                            (click)="deleteBadge()"
+                            [ngClass]="{'disabled-btn': !clickedBadge}">Delete</button>
                 </div>                
             </div>
               
@@ -129,9 +133,6 @@ import {
                     <div class="delete-edit">
                         <div class="button-group">
                             <button id="cancelButton" type="button" [disabled]="!isFormChanged"  (click)="onCancel()">Cancel</button>
-                        </div>
-                        <div class="button-group">
-                            <button id="deleteButton" type="button" [disabled]="!editingBadge" (click)="deleteBadge()">Delete</button>
                         </div>
                     </div>
                 </form>
