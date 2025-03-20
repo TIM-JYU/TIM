@@ -32,6 +32,7 @@ import {BadgeComponent} from "tim/gamification/badge/badge.component";
 import {BadgeViewerComponent} from "tim/gamification/badge/badge-viewer.component";
 import {BadgeCreatorComponent} from "tim/gamification/badge/badge-creator.component";
 import {BadgeGiverComponent} from "tim/gamification/badge/badge-giver.component";
+import {BadgeWithdrawComponent} from "tim/gamification/badge/badge-withdraw.component";
 import {HeaderComponent} from "tim/header/header.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
@@ -164,6 +165,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timBadgeViewer", BadgeViewerComponent);
     doDowngrade(dg, "timBadgeCreator", BadgeCreatorComponent);
     doDowngrade(dg, "timBadgeGiver", BadgeGiverComponent);
+    doDowngrade(dg, "timBadgeWithdraw", BadgeWithdrawComponent);
     return dg;
 }
 

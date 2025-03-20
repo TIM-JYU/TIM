@@ -174,7 +174,7 @@ export class BadgeGiverComponent implements OnInit {
     showDeleteButton: boolean = false;
     hasPermission: boolean = true;
     showComponent: boolean = true;
-    @Input() badgeGroup?: string;
+    @Input() badgegroupContext?: string;
     groups: IGroup[] = [];
     selectedGroup?: IGroup | null = null;
     groupBadges: IBadge[] = [];
@@ -232,16 +232,18 @@ export class BadgeGiverComponent implements OnInit {
      * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
      */
     private async fetchUsers() {
-        if (this.badgeGroup) {
+        if (this.badgegroupContext) {
             this.users = await this.badgeService.getUsersFromGroup(
-                this.badgeGroup
+                this.badgegroupContext
             );
         }
     }
 
     private async fetchGroups() {
-        if (this.badgeGroup) {
-            this.groups = await this.badgeService.getSubGroups(this.badgeGroup);
+        if (this.badgegroupContext) {
+            this.groups = await this.badgeService.getSubGroups(
+                this.badgegroupContext
+            );
         }
     }
 
@@ -326,7 +328,7 @@ export class BadgeGiverComponent implements OnInit {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
                 given_by: this.badgeGiver,
-                context_group: this.badgeGroup,
+                context_group: this.badgegroupContext,
                 group_id: currentId,
                 badge_id: this.selectedBadge?.id,
                 message: message,
@@ -372,14 +374,14 @@ export class BadgeGiverComponent implements OnInit {
             return; // Exit if user cancels the confirmation dialog
         }
 
-        if (this.badgeGroup == undefined) {
+        if (this.badgegroupContext == undefined) {
             console.error("group_context was undefined");
             return;
         }
         await this.badgeService.withdrawBadge(
             badgegivenID,
             this.badgeGiver,
-            this.badgeGroup
+            this.badgegroupContext
         );
         this.fetchUserBadges(this.selectedUser?.id);
         // Poistaa deletenapin näkyvistä deleten jälkeen

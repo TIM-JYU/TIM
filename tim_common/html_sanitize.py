@@ -123,6 +123,7 @@ TIM_SAFE_TAGS = [
     "tim-badge-creator",
     "tim-badge-viewer",
     "tim-badge-giver",
+    "tim-badge-withdraw",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
@@ -276,7 +277,6 @@ TIM_SAFE_ATTRS = frozenset(
         "profile-id",
         "view-mode",
         "badgegroup-context",
-        "badge-group",
     ]
 )
 
