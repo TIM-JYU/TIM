@@ -25,6 +25,7 @@ from timApp.auth.accesshelper import (
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
 from timApp.notification.notification import NotificationType
@@ -116,18 +117,33 @@ def add_annotation(
     db.session.add(ann)
     ann.set_position_info(coord)
     db.session.commit()
-
-    # Only public annotations in the document (not in task answers) will trigger a notification
-    if ann.visible_to == AnnotationVisibility.everyone.value and not ann.answer_id:
-        text = ann.velp_content.content
-        notify_doc_watchers(
-            d,
-            text if text is not None else "",
-            NotificationType.AnnotationAdded,
-            ann.paragraph_id_start,
-        )
-
+    notify_annotation_subscribers(d, ann, NotificationType.AnnotationAdded)
     return json_response(ann, date_conversion=True)
+
+
+def notify_annotation_subscribers(
+    document: DocInfo | DocEntry,
+    annotation: Annotation,
+    notify_type: NotificationType,
+    alt_msg: str | None = None,
+) -> None:
+    # Only public annotations in the document (not in task answers) will trigger a notification
+    if (
+        document
+        and annotation.visible_to == AnnotationVisibility.everyone.value
+        and not annotation.answer_id
+    ):
+        text = alt_msg if alt_msg is not None else annotation.velp_content.content
+        ann_par = None
+        if annotation.paragraph_id_start is not None:
+            ann_par = document.document.get_paragraph(annotation.paragraph_id_start)
+        notify_doc_watchers(
+            doc=document,
+            content_msg=text if text is not None else "",
+            notify_type=notify_type,
+            par=ann_par,
+        )
+        db.session.commit()
 
 
 def validate_color(color: str | None) -> None:
@@ -216,17 +232,7 @@ def update_annotation(
     db.session.commit()
     if should_anonymize_annotations(d, user):
         anonymize_annotations([ann], user.id)
-
-    # Only public annotations in the document (not in task answers) will trigger a notification
-    if ann.visible_to == AnnotationVisibility.everyone.value and not ann.answer_id:
-        ann_text = ann.velp_content.content
-        notify_doc_watchers(
-            d,
-            ann_text if ann_text is not None else "",
-            NotificationType.AnnotationModified,
-            ann.paragraph_id_start,
-        )
-
+    notify_annotation_subscribers(d, ann, NotificationType.AnnotationModified)
     return json_response(ann, date_conversion=True)
 
 
@@ -253,21 +259,7 @@ def invalidate_annotation(id: int) -> Response:
         )
     annotation.valid_until = get_current_time()
     db.session.commit()
-
-    # Only public annotations in the document (not in task answers) will trigger a notification
-    if (
-        d
-        and annotation.visible_to == AnnotationVisibility.everyone.value
-        and not annotation.answer_id
-    ):
-        ann_text = annotation.velp_content.content
-        notify_doc_watchers(
-            d,
-            ann_text if ann_text is not None else "",
-            NotificationType.AnnotationDeleted,
-            annotation.paragraph_id_start,
-        )
-
+    notify_annotation_subscribers(d, annotation, NotificationType.AnnotationDeleted)
     return ok_response()
 
 
@@ -308,14 +300,7 @@ def add_comment_route(id: int, content: str) -> Response:
     db.session.commit()
     if should_anonymize_annotations(d, commenter):
         anonymize_annotations([a], commenter.id)
-
-    # Only public annotations in the document (not in task answers) will trigger a notification
-    if a and a.visible_to == AnnotationVisibility.everyone.value and not a.answer_id:
-        ann_text = content
-        notify_doc_watchers(
-            d, ann_text, NotificationType.AnnotationModified, a.paragraph_id_start
-        )
-
+    notify_annotation_subscribers(d, a, NotificationType.AnnotationModified, content)
     return json_response(a, date_conversion=True)
 
 

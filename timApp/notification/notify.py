@@ -106,7 +106,7 @@ def notify_doc_watchers(
     doc: DocInfo,
     content_msg: str,
     notify_type: NotificationType,
-    par: DocParagraph | str | None = None,
+    par: DocParagraph | None = None,
     old_version: Version = None,
     curr_user: User = None,
     **kwargs,
@@ -147,7 +147,7 @@ def notify_doc_watchers(
             p = AnnotationNotification(
                 user=me,
                 doc_id=doc.id,
-                par_id=par,
+                par_id=par.get_id() if par else None,
                 text=content_msg,
                 kind=notify_type,
                 **kwargs,
@@ -169,6 +169,7 @@ def get_name_string(users: list[User], show_names: bool):
 
 MIXED_DOC_MODIFY = "doc_modify"
 MIXED_COMMENT = "comment"
+MIXED_ANNOTATION = "velp"
 
 
 def get_diff_link(docentry: DocInfo, ver_before: Version, ver_after: Version):
@@ -389,6 +390,8 @@ def get_subject_for(ps: list[PendingNotification], d: DocInfo, show_names: bool)
             return f"{name_str} edited the document {d.title} {get_edit_count_str(num_mods)}"
         if type_of_all == MIXED_COMMENT:
             return f"{name_str} posted/modified/deleted {get_comment_count_str(num_mods)} in the document {d.title}"
+        if type_of_all == MIXED_ANNOTATION:
+            return f"{name_str} posted/modified/deleted {get_annotation_count_str(num_mods)} in the document {d.title}"
 
     return f"{name_str} triggered an event in {d.title}"
 
@@ -399,8 +402,10 @@ def get_type_of_notify(ps) -> NotificationType | str:
             return n
     if all(p.notify_type.is_document_modification for p in ps):
         return MIXED_DOC_MODIFY
-    elif all(not p.notify_type.is_document_modification for p in ps):
+    elif all(not p.notify_type.is_comment_notification for p in ps):
         return MIXED_COMMENT
+    elif all(not p.notify_type.is_velp_notification for p in ps):
+        return MIXED_ANNOTATION
     else:
         assert (
             False
@@ -494,8 +499,16 @@ def process_pending_notifications():
             if not ps_to_consider:
                 continue
 
+            is_annotation: bool = ps_to_consider[0].notify_type in [
+                NotificationType.AnnotationAdded,
+                NotificationType.AnnotationModified,
+                NotificationType.AnnotationDeleted,
+            ]
+
             # Poster identity should be hidden unless the user has teacher access to the document
-            subject = get_subject_for(ps_to_consider, doc, show_names=is_teacher)
+            subject = get_subject_for(
+                ps_to_consider, doc, show_names=is_annotation or is_teacher
+            )
             can_edit = (
                 user.has_edit_access(doc)
                 or not ps_to_consider[0].notify_type.is_document_modification
@@ -507,12 +520,14 @@ def process_pending_notifications():
                 doc,
                 show_text=show_text,
                 show_diff_link=can_edit,
-                show_names=is_teacher,
+                show_names=is_annotation or is_teacher,
             )
 
             is_unique_user = len({p.user for p in ps_to_consider}) == 1
             reply_to = (
-                ps_to_consider[0].user.email if is_teacher and is_unique_user else None
+                ps_to_consider[0].user.email
+                if (is_annotation or is_teacher) and is_unique_user
+                else None
             )
             result = send_email(
                 user.email,

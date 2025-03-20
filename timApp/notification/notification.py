@@ -35,6 +35,22 @@ class NotificationType(Enum):
             NotificationType.ParModified,
         )
 
+    @property
+    def is_comment_notification(self) -> bool:
+        return self in (
+            NotificationType.CommentAdded,
+            NotificationType.CommentModified,
+            NotificationType.CommentDeleted,
+        )
+
+    @property
+    def is_velp_notification(self) -> bool:
+        return self in (
+            NotificationType.AnnotationAdded,
+            NotificationType.AnnotationModified,
+            NotificationType.AnnotationDeleted,
+        )
+
 
 class Notification(db.Model):
     """Notification settings for a User for a block."""
