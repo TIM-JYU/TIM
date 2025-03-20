@@ -258,7 +258,7 @@ button[type="button"]:hover {
   transition: background-color 0.3s ease;
 }
 
-#showBadgeForm {
+#showBadgeForm, #editButton {
     width: 5em;  /* Neliön leveys */
     height: 5em;  /* Neliön korkeus */
     background-color: #0F4096;  /* Taustaväri */
@@ -277,4 +277,16 @@ button[type="button"]:hover {
 /* Hover-tila muuttaa napin taustaväriä */
 #showBadgeForm:hover {
     background-color: #0D357A;  /* Tummempi väri hover-tilassa */
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.disabled-btn {
+    background-color: #ccc;
+    color: #777;
+    cursor: not-allowed;
+    opacity: 0.6;
 }

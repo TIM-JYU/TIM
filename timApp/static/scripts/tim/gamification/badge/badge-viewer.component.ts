@@ -13,8 +13,8 @@ import {Subscription} from "rxjs";
     selector: "tim-badge-viewer",
     template: `
         <div class="viewer-container">
-            <ng-container *ngIf="badges.length > 0">
             <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
+            <ng-container *ngIf="badges.length > 0">
             <div class="user_badges" #scrollableDiv>
                 <div class="badge-card" *ngFor="let badge of badges">
                     <tim-badge
@@ -29,7 +29,7 @@ import {Subscription} from "rxjs";
             </div>
             </ng-container>
             <ng-container *ngIf="badges.length == 0">
-                <p>{{this.userName}} has no badges</p>
+                <p>No badges</p>
             </ng-container>
         </div>
         `,
