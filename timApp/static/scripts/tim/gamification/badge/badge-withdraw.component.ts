@@ -13,7 +13,6 @@ import type {
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import {toPromise} from "tim/util/utils";
 import {Subscription} from "rxjs";
 
 @Component({
