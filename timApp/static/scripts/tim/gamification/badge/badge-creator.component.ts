@@ -61,7 +61,7 @@ import {
             </div>
               
               <ng-container *ngIf="showGiver">
-                  <timBadgeGiver [badgeGroup]="badgeGroup" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
+                  <timBadgeGiver [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
               </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
@@ -162,7 +162,6 @@ export class BadgeCreatorComponent implements OnInit {
 
     showGiver = false;
     @Input() badgegroupContext?: string;
-    @Input() badgeGroup?: string;
 
     // Method called when a badge is clicked
     selectBadge(badge: IBadge) {
