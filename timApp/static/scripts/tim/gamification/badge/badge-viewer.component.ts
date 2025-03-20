@@ -1,13 +1,14 @@
-import {ElementRef, HostListener, OnInit, ViewChild} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {ElementRef, HostListener, ViewChild} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {Users} from "../../user/userService";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BadgeModule} from "./badge.component";
-import {BadgeService} from "./badge.service";
-import type {IBadge} from "./badge.interface";
+import {BadgeModule} from "tim/gamification/badge/badge.component";
+import {BadgeService} from "tim/gamification/badge/badge.service";
+import type {IBadge} from "tim/gamification/badge/badge.interface";
 import {Subscription} from "rxjs";
+import {Users} from "tim/user/userService";
 
 @Component({
     selector: "tim-badge-viewer",

@@ -8,7 +8,6 @@ import {HttpClient} from "@angular/common/http";
 import {HttpClientModule} from "@angular/common/http";
 import {BadgeViewerModule} from "tim/gamification/badge/badge-viewer.component";
 import {BadgeGiverModule} from "tim/gamification/badge/badge-giver.component";
-import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.component";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 import {getFormBehavior} from "tim/plugin/util";
 import {BadgeService} from "tim/gamification/badge/badge.service";
@@ -20,6 +19,7 @@ import {
     BadgeComponent,
     BadgeModule,
 } from "tim/gamification/badge/badge.component";
+import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.component";
 
 @Component({
     selector: "tim-badge-creator",
