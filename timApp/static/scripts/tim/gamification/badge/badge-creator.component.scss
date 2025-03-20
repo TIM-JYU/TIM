@@ -264,6 +264,12 @@ button[type="button"]:hover {
     margin-left: 10px;
 }
 
+.right-buttons {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;  /* This pushes the entire group to the right */
+}
+
 /* Style for the left three buttons */
 #showBadgeForm, #editButton, #giveBadgeButton {
     width: 5em;
@@ -283,15 +289,19 @@ button[type="button"]:hover {
 
 /* Style for the delete button on the right */
 .right-button {
-    width: 5em;
-    height: 5em;
+    width: 5.5em;
+    height: 5.5em;
     background-color: #c31515;
     cursor: pointer;
-    margin-left: auto;  /* This pushes it to the right */
-    margin-right: 10px;
-    padding: 0.5em 1em;
-    margin-top: 1em;  /* Adjust as needed */
+    padding: 0.5em 2em;
+    margin-top: 1em;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
 }
+
+
 
 /* Hover-tila muuttaa napin taustaväriä */
 #showBadgeForm:hover {
