@@ -1,32 +1,32 @@
 import type {OnInit} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {Subscription} from "rxjs";
-import {Users} from "tim/user/userService";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {BadgeModule} from "tim/gamification/badge/badge.component";
 import type {
     IBadge,
     IGroup,
     IUser,
 } from "tim/gamification/badge/badge.interface";
-import {BadgeModule} from "tim/gamification/badge/badge.component";
-import {toPromise} from "tim/util/utils";
 import {BadgeService} from "tim/gamification/badge/badge.service";
+import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {toPromise} from "tim/util/utils";
+import {Subscription} from "rxjs";
 
 @Component({
-    selector: "timBadgeGiver",
+    selector: "tim-badge-withdraw",
     template: `
         <ng-container *ngIf="hasPermission; else noPermissionView">
         <div *ngIf="showComponent" class="badge-giver">
-            <h2>Badge Giver</h2>
+            <h2>Badge Withdraw</h2>
         
             <div class="user-selection">
                 <label for="select-user">User</label>
                 <select id="select-user" [(ngModel)]="selectedUser">
-                    <option [ngValue]="null" disabled selected>Select an user to give a badge</option>
+                    <option [ngValue]="null" disabled selected>Select an user to withdraw badge</option>
                     <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(user.id)">
                     {{ user.real_name }}
                 </option>
@@ -48,11 +48,10 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                     </div>
                 </ng-container>
             
-        
             <div class="groups">
                 <label for="select_group">Group</label>
                 <select id="select_group" [(ngModel)]="selectedGroup">¨
-                    <option [ngValue]="null" disabled selected>Select a group to give a badge</option>
+                    <option [ngValue]="null" disabled selected>Select a group to withdraw a badge</option>
                     <option *ngFor="let group of groups" [ngValue]="group" (click)="fetchGroupBadges(group.id)">{{ group.name }}</option>
                 </select>
             </div>
@@ -71,29 +70,9 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                 </div>
             </ng-container>
             
-            <!-- Preview of the selected badge -->
-            <div *ngIf="selectedBadge" class="badge-preview">
-                <label for="selected-badge-preview">Selected Badge Preview</label>
-                <div id="selected-badge-preview">
-                    <tim-badge *ngIf="selectedBadge"
-                           title="{{ selectedBadge!.title  }}"
-                           color="{{ selectedBadge!.color }}"
-                           shape="{{ selectedBadge!.shape }}"
-                           [image]="selectedBadge!.image"
-                           description="{{ selectedBadge!.description }}"
-                           message="{{ message }}">
-                </tim-badge>
-                </div>
-            </div>
-            <ng-container *ngIf="selectedBadge !== null">
-                <div class="form-group">
-                    <label for="message">Message</label>
-                    <textarea id="message" rows="3" [(ngModel)]="message" placeholder="Enter a message..."></textarea>
-                </div>
-            </ng-container>
             <div class="button-container">
-                <button id="assignButton" (click)="assignBadge(message)" [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
-                    Assign Badge
+                <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)" [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
+                    Withdraw Badge
                 </button>
                 <button id="cancelButton" (click)="emptyForm()">Cancel</button>
             </div>
@@ -102,10 +81,10 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
     <ng-template #noPermissionView>
       <p>Access denied for students.</p>
     </ng-template>
-    `,
-    styleUrls: ["./badge-giver.component.scss"],
+        `,
+    styleUrls: ["badge-withdraw.component.scss"],
 })
-export class BadgeGiverComponent implements OnInit {
+export class BadgeWithdrawComponent implements OnInit {
     private subscription: Subscription = new Subscription();
 
     users: IUser[] = [];
@@ -113,9 +92,7 @@ export class BadgeGiverComponent implements OnInit {
     selectedUser?: IUser | null = null;
     userBadges: IBadge[] = [];
     @Input() selectedBadge?: IBadge | null = null;
-    message = "";
     badgeGiver = 0;
-    showDeleteButton: boolean = false;
     hasPermission: boolean = true;
     showComponent: boolean = true;
     @Input() badgegroupContext?: string;
@@ -163,8 +140,6 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedUser = null;
         this.selectedBadge = null;
         this.selectedGroup = null;
-        this.message = "";
-        this.showDeleteButton = false;
         this.showComponent = false;
         this.userBadges = [];
         this.groupBadges = [];
@@ -216,7 +191,6 @@ export class BadgeGiverComponent implements OnInit {
         }
         this.selectedGroup = null;
         this.groupBadges = [];
-        this.showDeleteButton = false;
 
         while (this.userBadges.length > 0) {
             this.userBadges.pop();
@@ -236,64 +210,11 @@ export class BadgeGiverComponent implements OnInit {
         // Reset user selection and hide badges
         this.selectedUser = null;
         this.userBadges = [];
-        this.showDeleteButton = false;
 
         while (this.groupBadges.length > 0) {
             this.groupBadges.pop();
         }
         this.groupBadges = await this.badgeService.getUserBadges(groupId);
-    }
-
-    /**
-     * Antaa valitulle käyttäjälle valitun badgen
-     * @param message viesti, joka antamisen yhteydessä voidaan antaa
-     */
-    async assignBadge(message: string) {
-        if (Users.isLoggedIn()) {
-            this.badgeGiver = Users.getCurrent().id;
-        }
-        let currentId = this.selectedUser?.id;
-        if (this.selectedGroup != undefined) {
-            currentId = this.selectedGroup.id;
-        }
-
-        // Show confirmation dialog before removing the badge
-        const confirmed = await showConfirm(
-            "Confirm badge assigning event",
-            "Are you sure you want to assign this badge?"
-        );
-
-        if (!confirmed) {
-            return; // Exit if user cancels the confirmation dialog
-        }
-
-        const response = toPromise(
-            this.http.post<{ok: boolean}>("/give_badge", {
-                given_by: this.badgeGiver,
-                context_group: this.badgegroupContext,
-                group_id: currentId,
-                badge_id: this.selectedBadge?.id,
-                message: message,
-            })
-        );
-
-        const result = await response;
-        if (result.ok) {
-            if (result.result != undefined) {
-                console.log(
-                    "badge " +
-                        this.selectedBadge?.title +
-                        " annettu käyttäjälle: " +
-                        this.selectedUser?.name
-                );
-            }
-        }
-        this.selectedBadge = null;
-        this.message = "";
-        if (currentId) {
-            this.badgeService.getUserBadges(currentId);
-            this.badgeService.notifyBadgeViewerUpdate();
-        }
     }
 
     /**
@@ -328,7 +249,6 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchUserBadges(this.selectedUser?.id);
         // Poistaa deletenapin näkyvistä deleten jälkeen
         this.selectedBadge = null;
-        this.showDeleteButton = false;
     }
 
     selectBadge(
@@ -337,9 +257,6 @@ export class BadgeGiverComponent implements OnInit {
         fromAssignList: boolean = false
     ) {
         this.selectedBadge = badge ?? null;
-        this.showDeleteButton =
-            !fromAssignList && badge !== null && badge !== undefined; // Nappi näkyy vain, jos badge on valittu
-
         // Päivitetään badge-listat valinnasta riippuen
         if (!fromAssignList) {
             if (fromGroup) {
@@ -359,8 +276,8 @@ export class BadgeGiverComponent implements OnInit {
 }
 
 @NgModule({
-    declarations: [BadgeGiverComponent],
-    exports: [BadgeGiverComponent],
-    imports: [CommonModule, FormsModule, BadgeModule],
+    declarations: [BadgeWithdrawComponent],
+    imports: [CommonModule, FormsModule, HttpClientModule, BadgeModule],
+    exports: [BadgeWithdrawComponent],
 })
-export class BadgeGiverModule {}
+export class BadgeWithdrawModule {}
