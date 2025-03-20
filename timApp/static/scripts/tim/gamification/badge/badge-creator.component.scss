@@ -194,13 +194,6 @@ button:hover {
   transform: scale(1.05);
 }
 
-button[type="button"] {
-  background-color: #c31515;
-  width: 100%;
-  padding: 0.5em 1em;
-  margin-top: 1em;
-  cursor: pointer;
-}
 
 button[type="button"]:hover {
   background-color: #9b1212;
@@ -258,30 +251,51 @@ button[type="button"]:hover {
   transition: background-color 0.3s ease;
 }
 
-#showBadgeForm, #editButton {
-    width: 5em;  /* Neliön leveys */
-    height: 5em;  /* Neliön korkeus */
-    background-color: #0F4096;  /* Taustaväri */
-    color: white;  /* Tekstin väri */
-    font-size: 1em;  /* Tekstin koko */
-    font-weight: bold;  /* Lihavoitu teksti */
-    border: none;  /* Ei reunaviivaa */
-    border-radius: 0.8em;  /* Pyöristetyt kulmat */
-    cursor: pointer;  /* Näyttää käden ikonin, kun hiiri menee napin päälle */
+
+.button-group {
     display: flex;
-    justify-content: center;  /* Keskittää tekstin vaakasuunnassa */
-    align-items: center;  /* Keskittää tekstin pystysuunnassa */
-    transition: background-color 0.2s ease;  /* Pehmeä taustavärin vaihto */
+    align-items: center;  /* Adjust as needed */
+    width: 100%;
+}
+
+.left-buttons {
+    display: flex;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+/* Style for the left three buttons */
+#showBadgeForm, #editButton, #giveBadgeButton {
+    width: 5em;
+    height: 5em;
+    background-color: #0F4096;
+    color: white;
+    font-size: 1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 0.8em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+
+/* Style for the delete button on the right */
+.right-button {
+    width: 5em;
+    height: 5em;
+    background-color: #c31515;
+    cursor: pointer;
+    margin-left: auto;  /* This pushes it to the right */
+    margin-right: 10px;
+    padding: 0.5em 1em;
+    margin-top: 1em;  /* Adjust as needed */
 }
 
 /* Hover-tila muuttaa napin taustaväriä */
 #showBadgeForm:hover {
     background-color: #0D357A;  /* Tummempi väri hover-tilassa */
-}
-
-.button-group {
-    display: flex;
-    gap: 10px;
 }
 
 .disabled-btn {

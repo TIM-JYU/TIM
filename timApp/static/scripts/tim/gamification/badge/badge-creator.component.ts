@@ -50,18 +50,20 @@ import {
                     
                 </fieldset>
                 <div class="button-group">
-                    <button id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
-                    <button id="editButton" type="button" (click)="editBadge(clickedBadge)" 
-                          [disabled]="!clickedBadge" 
-                          [ngClass]="{'disabled-btn': !clickedBadge}">Edit</button>
-                    <button id="editButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
-                          [disabled]="!clickedBadge" 
-                          [ngClass]="{'disabled-btn': !clickedBadge}">Give badge</button>
-                    <button id="deleteButton" type="button"
+                    <div class="left-buttons">
+                        <button id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
+                        <button id="editButton" type="button" (click)="editBadge(clickedBadge)" 
+                                [disabled]="!clickedBadge" 
+                                [ngClass]="{'disabled-btn': !clickedBadge}">Edit</button>
+                        <button id="giveBadgeButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
+                                [disabled]="!clickedBadge" 
+                                [ngClass]="{'disabled-btn': !clickedBadge}">Give badge</button>
+                    </div>
+                        <button id="deleteButton" type="button"
                             [disabled]="!editingBadge" 
                             (click)="deleteBadge()"
-                            [ngClass]="{'disabled-btn': !clickedBadge}">Delete</button>
-                </div>                
+                            class="right-button">Delete</button>
+                </div>            
             </div>
               
               <ng-container *ngIf="showGiver">
