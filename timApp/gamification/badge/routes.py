@@ -5,7 +5,8 @@ from pathlib import Path
 from flask import Response, current_app
 from sqlalchemy import select, or_
 
-from timApp.auth.accesshelper import AccessDenied
+from timApp.auth.accesshelper import AccessDenied, verify_teacher_access
+from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
@@ -54,7 +55,7 @@ def log_badge_event(log_info: dict) -> None:
         f.write(to_json_str(log_info) + "\n")
 
 
-def check_context_group_access(user_id: int, context_group: str):
+def check_context_group_access(user_id: int, context_group: str) -> None:
     """
     Checks whether a user has access to a context group.
     :param user_id: Current user's ID
@@ -128,6 +129,11 @@ def all_badges_in_context(user_id: int, context_group: str) -> Response:
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
+
+    # TODO: Hard coded at the moment
+    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    verify_teacher_access(d)
+
     check_context_group_access(user_id, context_group)
     badges = (
         run_sql(
@@ -180,6 +186,11 @@ def create_badge(
     :param description: Description of the badge
     :return: ok response
     """
+
+    # TODO: Hard coded at the moment
+    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    verify_teacher_access(d)
+
     check_context_group_access(created_by, context_group)
     badge = Badge(
         active=True,
@@ -237,6 +248,11 @@ def modify_badge(
     :param description: Description of the badge
     :return: ok response
     """
+
+    # TODO: Hard coded at the moment
+    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    verify_teacher_access(d)
+
     check_context_group_access(modified_by, context_group)
     badge = {
         "context_group": context_group,
@@ -250,7 +266,6 @@ def modify_badge(
     }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
-
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
@@ -266,7 +281,6 @@ def modify_badge(
                 "description": badge["description"],
             }
         )
-
     return ok_response()
 
 
@@ -281,6 +295,11 @@ def deactivate_badge(badge_id: int, deleted_by: int, context_group: str) -> Resp
     :param deleted_by: ID of the useraccount who deactivates the badge
     :return: ok response
     """
+
+    # TODO: Hard coded at the moment
+    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    verify_teacher_access(d)
+
     check_context_group_access(deleted_by, context_group)
     badge = {
         "active": False,
@@ -289,7 +308,6 @@ def deactivate_badge(badge_id: int, deleted_by: int, context_group: str) -> Resp
     }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
-
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
@@ -299,7 +317,6 @@ def deactivate_badge(badge_id: int, deleted_by: int, context_group: str) -> Resp
                 "executor": badge["deleted_by"],
             }
         )
-
     return ok_response()
 
 
@@ -315,6 +332,11 @@ def reactivate_badge(badge_id: int, restored_by: int, context_group: str) -> Res
     :param restored_by: ID of the useraccount who reactivates the badge
     :return: ok response
     """
+
+    # TODO: Hard coded at the moment
+    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    verify_teacher_access(d)
+
     check_context_group_access(restored_by, context_group)
     badge = {
         "active": True,
@@ -323,7 +345,6 @@ def reactivate_badge(badge_id: int, restored_by: int, context_group: str) -> Res
     }
     Badge.query.filter_by(id=badge_id).update(badge)
     db.session.commit()
-
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
@@ -333,7 +354,6 @@ def reactivate_badge(badge_id: int, restored_by: int, context_group: str) -> Res
                 "executor": badge["restored_by"],
             }
         )
-
     return ok_response()
 
 
@@ -354,10 +374,8 @@ def get_groups_badges(group_id: int) -> Response:
         .scalars()
         .all()
     )
-
     badge_ids = []
     badge_ids_badgegiven_ids_and_msgs: dict[str, tuple] = {}
-
     for badgeGiven in groups_badges_given:
         key_extension = 0
         while (
@@ -368,15 +386,12 @@ def get_groups_badges(group_id: int) -> Response:
         badge_ids_badgegiven_ids_and_msgs[
             str(badgeGiven.badge_id) + "_" + str(key_extension)
         ] = (badgeGiven.id, badgeGiven.message)
-
     groups_badges = (
         run_sql(select(Badge).filter_by(active=True).filter(Badge.id.in_(badge_ids)))
         .scalars()
         .all()
     )
-
     badges_json = []
-
     for badge in groups_badges:
         key_extension = 0
         for badge_id in badge_ids:
@@ -390,7 +405,6 @@ def get_groups_badges(group_id: int) -> Response:
                 ][1]
                 key_extension += 1
                 badges_json.append(badge_json)
-
     return json_response(badges_json)
 
 
@@ -413,6 +427,11 @@ def give_badge(
     :param message: Message to give to the usergroup when the badge is given
     :return: ok response
     """
+
+    # TODO: Hard coded at the moment
+    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    verify_teacher_access(d)
+
     check_context_group_access(given_by, context_group)
     badge_given = BadgeGiven(
         active=True,
@@ -424,7 +443,6 @@ def give_badge(
     )
     db.session.add(badge_given)
     db.session.commit()
-
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
@@ -437,7 +455,6 @@ def give_badge(
                 "message": badge_given.message,
             }
         )
-
     return ok_response()
 
 
@@ -454,6 +471,11 @@ def withdraw_badge(
     :param withdrawn_by: ID of the useraccount that withdraws the badge
     :return: ok response
     """
+
+    # TODO: Hard coded at the moment
+    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    verify_teacher_access(d)
+
     check_context_group_access(withdrawn_by, context_group)
     badge_given = {
         "active": False,
@@ -462,7 +484,6 @@ def withdraw_badge(
     }
     BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given)
     db.session.commit()
-
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
@@ -473,7 +494,6 @@ def withdraw_badge(
                 "active": badge_given["active"],
             }
         )
-
     return ok_response()
 
 
@@ -491,6 +511,11 @@ def undo_withdraw_badge(
     :param undo_withdrawn_by: ID of the useraccount that undoes the badge withdrawal
     :return: ok response
     """
+
+    # TODO: Hard coded at the moment
+    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    verify_teacher_access(d)
+
     check_context_group_access(undo_withdrawn_by, context_group)
     badge_given = {
         "active": True,
@@ -499,7 +524,6 @@ def undo_withdraw_badge(
     }
     BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given)
     db.session.commit()
-
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
@@ -510,7 +534,6 @@ def undo_withdraw_badge(
                 "active": badge_given["active"],
             }
         )
-
     return ok_response()
 
 
