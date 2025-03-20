@@ -10485,35 +10485,51 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         </context-group>
       </trans-unit>
       <trans-unit id="8036091162175708988" datatype="html">
-        <source>Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;3. Manage exams&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/></source>
-        <target state="new">Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;3. Manage exams&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/></target>
+        <source>Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'3. Manage exams'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/></source>
+        <target state="new">Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'3. Manage exams'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">717,718</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3550757413033906635" datatype="html">
-        <source>Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Open exam&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button.</source>
-        <target state="new">Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Open exam&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button.</target>
+        <source>Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Open exam'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button.</source>
+        <target state="new">Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Open exam'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">720,721</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4189671442877791653" datatype="html">
-        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;End showing answers to students button&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. The right is automatically disabled in 1 hour.</source>
-        <target state="new">To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;End showing answers to students button&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. The right is automatically disabled in 1 hour.</target>
+        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. The right is automatically disabled in 1 hour.</source>
+        <target state="new">To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. The right is automatically disabled in 1 hour.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">722,723</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6667488878974100003" datatype="html">
-        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Begin showing answers to students&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour.</source>
-        <target state="new">Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Begin showing answers to students&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour.</target>
+        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour.</source>
+        <target state="new">Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">718,719</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5769201915047199693" datatype="html">
+        <source>New velps</source>
+        <target state="translated">Nya velper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">386</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4823150464798164794" datatype="html">
+        <source>Velp modifications</source>
+        <target state="translated">Ändringar till velps</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">389</context>
         </context-group>
       </trans-unit>
     </body>

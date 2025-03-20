@@ -61,6 +61,8 @@ from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import remove_prefix
+from timApp.velp.annotation_model import AnnotationPosition
+from timApp.velp.annotations import AnnotationVisibility
 from tim_common.timjsonencoder import TimJsonEncoder
 
 
@@ -1168,6 +1170,87 @@ class TimRouteTestBase(TimDbTest):
                     "curr": glob_id,
                     "orig": glob_id,
                 },
+            },
+            **kwargs,
+        )
+
+    def post_annotation(
+        self,
+        doc_id: int,
+        velp_id: int,
+        visible_to: AnnotationVisibility | int,
+        coord: AnnotationPosition,
+        points: float | None = None,
+        color: str | None = None,
+        answer_id: int | None = None,
+        draw_data: list[dict] | None = None,
+        style: int | None = None,
+        **kwargs,
+    ):
+        return self.json_post(
+            "/add_annotation",
+            {
+                "coord": coord,
+                "doc_id": doc_id,
+                "points": points,
+                "velp_id": velp_id,
+                "visible_to": visible_to.value
+                if isinstance(visible_to, AnnotationVisibility)
+                else visible_to,
+                "color": color,
+                "answer_id": answer_id,
+                "draw_data": draw_data,
+                "style": style,
+            },
+            **kwargs,
+        )
+
+    def post_annotation_comment(
+        self,
+        annotation_id: int,
+        comment: str,
+        **kwargs,
+    ):
+        return self.json_post(
+            "/add_annotation_comment",
+            {"id": annotation_id, "content": comment},
+            **kwargs,
+        )
+
+    def delete_annotation(
+        self,
+        annotation_id: int,
+        **kwargs,
+    ):
+        return self.json_post(
+            "/invalidate_annotation",
+            {"id": annotation_id},
+            **kwargs,
+        )
+
+    def edit_annotation(
+        self,
+        annotation_id: int,
+        visible_to: AnnotationVisibility | int,
+        points: float | None = None,
+        color: str | None = None,
+        coord: AnnotationPosition | None = None,
+        draw_data: list[dict] | None = None,
+        style: int | None = None,
+        **kwargs,
+    ):
+        return self.json_post(
+            "/update_annotation",
+            {
+                "id": annotation_id,
+                "visible_to": visible_to.value
+                if isinstance(visible_to, AnnotationVisibility)
+                else visible_to,
+                "points": points,
+                "color": color,
+                "coord": coord,
+                "draw_data": draw_data,
+                "style": style,
             },
             **kwargs,
         )

@@ -1403,6 +1403,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             "email_comment_add": False,
             "email_comment_modify": False,
             "email_answer_add": False,
+            "email_annotation_add": False,
+            "email_annotation_modify": False,
         }
 
         for nn in n:
@@ -1422,6 +1424,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 result["email_comment_modify"] = True
             if nn.notification_type in (NotificationType.AnswerAdded,):
                 result["email_answer_add"] = True
+            if nn.notification_type in (NotificationType.AnnotationAdded,):
+                result["email_annotation_add"] = True
+            if nn.notification_type in (
+                NotificationType.AnnotationModified,
+                NotificationType.AnnotationDeleted,
+            ):
+                result["email_annotation_modify"] = True
 
         return result
 
@@ -1432,6 +1441,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         comment_add: bool,
         comment_modify: bool,
         answer_add: bool,
+        annotation_add: bool,
+        annotation_modify: bool,
     ):
         # TODO: Instead of conversion, expose all notification types in UI
         notification_types = []
@@ -1455,6 +1466,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             )
         if answer_add:
             notification_types.extend((NotificationType.AnswerAdded,))
+        if annotation_add:
+            notification_types.extend((NotificationType.AnnotationAdded,))
+        if annotation_modify:
+            notification_types.extend(
+                (
+                    NotificationType.AnnotationModified,
+                    NotificationType.AnnotationDeleted,
+                )
+            )
 
         self.notifications.filter((Notification.block_id == item.id)).delete(
             synchronize_session=False

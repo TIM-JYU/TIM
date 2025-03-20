@@ -79,6 +79,7 @@ from timApp.notification.pending_notification import (
     DocumentNotification,
     CommentNotification,
     AnswerNotification,
+    AnnotationNotification,
 )
 from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.calendar.models import (
@@ -144,6 +145,7 @@ all_models = (
     AccessTypeModel,
     Annotation,
     AnnotationComment,
+    AnnotationNotification,
     Answer,
     AnswerNotification,
     AnswerSaver,

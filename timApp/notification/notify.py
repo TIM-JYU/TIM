@@ -27,6 +27,7 @@ from timApp.notification.pending_notification import (
     get_pending_notifications,
     GroupingKey,
     AnswerNotification,
+    AnnotationNotification,
 )
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
@@ -55,20 +56,24 @@ def get_notify_settings(doc_id):
 @notify.post("/<int:doc_id>")
 def set_notify_settings(
     doc_id: int,
-    email_comment_modify: bool,
-    email_comment_add: bool,
     email_doc_modify: bool,
+    email_comment_add: bool,
+    email_comment_modify: bool,
     email_answer_add: bool,
+    email_annotation_add: bool,
+    email_annotation_modify: bool,
 ):
     verify_logged_in()
     i = get_item_or_abort(doc_id)
     verify_view_access(i)
     get_current_user_object().set_notify_settings(
         i,
-        comment_modify=email_comment_modify,
-        comment_add=email_comment_add,
         doc_modify=email_doc_modify,
+        comment_add=email_comment_add,
+        comment_modify=email_comment_modify,
         answer_add=email_answer_add,
+        annotation_add=email_annotation_add,
+        annotation_modify=email_annotation_modify,
     )
     db.session.commit()
     return ok_response()
@@ -108,22 +113,19 @@ def notify_doc_watchers(
 ):
     me = curr_user if curr_user else get_current_user_object()
     new_version = doc.document.get_version()
-    if notify_type.is_document_modification:
-        p = DocumentNotification(
-            user=me,
-            doc_id=doc.id,
-            par_id=par.get_id() if par else None,
-            text=content_msg,
-            version_change=f"{ver_to_str(old_version)}/{ver_to_str(new_version)}",
-            kind=notify_type,
-            **kwargs,
-        )
-    else:
-        if notify_type in (
-            NotificationType.CommentAdded,
-            NotificationType.CommentModified,
-            NotificationType.CommentDeleted,
-        ):
+
+    match notify_type:
+        case NotificationType.DocModified | NotificationType.ParAdded | NotificationType.ParDeleted | NotificationType.ParModified:
+            p = DocumentNotification(
+                user=me,
+                doc_id=doc.id,
+                par_id=par.get_id() if par else None,
+                text=content_msg,
+                version_change=f"{ver_to_str(old_version)}/{ver_to_str(new_version)}",
+                kind=notify_type,
+                **kwargs,
+            )
+        case NotificationType.CommentAdded | NotificationType.CommentModified | NotificationType.CommentDeleted:
             p = CommentNotification(
                 user=me,
                 doc_id=doc.id,
@@ -132,7 +134,7 @@ def notify_doc_watchers(
                 kind=notify_type,
                 **kwargs,
             )
-        elif notify_type == NotificationType.AnswerAdded:
+        case NotificationType.AnswerAdded:
             p = AnswerNotification(
                 user=me,
                 doc_id=doc.id,
@@ -141,7 +143,20 @@ def notify_doc_watchers(
                 kind=notify_type,
                 **kwargs,
             )
-    db.session.add(p)
+        case NotificationType.AnnotationAdded | NotificationType.AnnotationModified | NotificationType.AnnotationDeleted:
+            p = AnnotationNotification(
+                user=me,
+                doc_id=doc.id,
+                par_id=par.get_id() if par else None,
+                text=content_msg,
+                kind=notify_type,
+                **kwargs,
+            )
+        case _:
+            p = None
+
+    if p is not None:
+        db.session.add(p)
 
 
 def get_name_string(users: list[User], show_names: bool):
@@ -154,6 +169,7 @@ def get_name_string(users: list[User], show_names: bool):
 
 MIXED_DOC_MODIFY = "doc_modify"
 MIXED_COMMENT = "comment"
+MIXED_ANNOTATION = "velp"
 
 
 def get_diff_link(docentry: DocInfo, ver_before: Version, ver_after: Version):
@@ -169,6 +185,9 @@ NOTIFICATION_TITLE = {
     NotificationType.CommentModified: "Comment modified",
     NotificationType.CommentDeleted: "Comment deleted",
     NotificationType.AnswerAdded: "Answer posted",
+    NotificationType.AnnotationAdded: "Velp posted",
+    NotificationType.AnnotationModified: "Velp modified",
+    NotificationType.AnnotationDeleted: "Velp deleted",
 }
 
 
@@ -287,6 +306,13 @@ def get_answer_count_str(num_mods):
         return "an answer"
 
 
+def get_annotation_count_str(num_mods):
+    if num_mods > 1:
+        return f"{num_mods} velps"
+    else:
+        return "a velp"
+
+
 @dataclass(frozen=True, slots=True)
 class NotificationSubject:
     subject_template: str
@@ -331,6 +357,18 @@ NOTIFICATION_TITLE_SUBJECT: dict[NotificationType, NotificationSubject] = {
         subject_template="{user} posted {num_count} to the document {resource_title}",
         num_count_modifier=get_answer_count_str,
     ),
+    NotificationType.AnnotationAdded: NotificationSubject(
+        subject_template="{user} posted {num_count} to the document {resource_title}",
+        num_count_modifier=get_annotation_count_str,
+    ),
+    NotificationType.AnnotationModified: NotificationSubject(
+        subject_template="{user} modified {num_count} in the document {resource_title}",
+        num_count_modifier=get_annotation_count_str,
+    ),
+    NotificationType.AnnotationDeleted: NotificationSubject(
+        subject_template="{user} deleted {num_count} from the document {resource_title}",
+        num_count_modifier=get_annotation_count_str,
+    ),
 }
 
 
@@ -352,6 +390,8 @@ def get_subject_for(ps: list[PendingNotification], d: DocInfo, show_names: bool)
             return f"{name_str} edited the document {d.title} {get_edit_count_str(num_mods)}"
         if type_of_all == MIXED_COMMENT:
             return f"{name_str} posted/modified/deleted {get_comment_count_str(num_mods)} in the document {d.title}"
+        if type_of_all == MIXED_ANNOTATION:
+            return f"{name_str} posted/modified/deleted {get_annotation_count_str(num_mods)} in the document {d.title}"
 
     return f"{name_str} triggered an event in {d.title}"
 
@@ -362,8 +402,10 @@ def get_type_of_notify(ps) -> NotificationType | str:
             return n
     if all(p.notify_type.is_document_modification for p in ps):
         return MIXED_DOC_MODIFY
-    elif all(not p.notify_type.is_document_modification for p in ps):
+    elif all(not p.notify_type.is_comment_notification for p in ps):
         return MIXED_COMMENT
+    elif all(not p.notify_type.is_velp_notification for p in ps):
+        return MIXED_ANNOTATION
     else:
         assert (
             False
@@ -387,38 +429,51 @@ def process_pending_notifications():
         settings = doc.document.get_settings()
         show_only_diff = settings.send_basic_change_notifications()
         # Combine ps to a single mail (tailored for each subscriber) and send it
-        if t == "d":
-            assert all(
-                isinstance(p, DocumentNotification) for p in ps
-            ), "Expected all notifications of type DocumentNotification"
-            condition = Notification.notification_type.in_(
-                (
-                    NotificationType.DocModified,
-                    NotificationType.ParModified,
-                    NotificationType.ParAdded,
-                    NotificationType.ParDeleted,
+        match t:
+            case "d":
+                assert all(
+                    isinstance(p, DocumentNotification) for p in ps
+                ), "Expected all notifications of type DocumentNotification"
+                condition = Notification.notification_type.in_(
+                    (
+                        NotificationType.DocModified,
+                        NotificationType.ParModified,
+                        NotificationType.ParAdded,
+                        NotificationType.ParDeleted,
+                    )
                 )
-            )
-        elif t == "c":
-            assert all(
-                isinstance(p, CommentNotification) for p in ps
-            ), "Expected all notifications of type CommentNotification"
-            condition = Notification.notification_type.in_(
-                (
-                    NotificationType.CommentAdded,
-                    NotificationType.CommentDeleted,
-                    NotificationType.CommentModified,
+            case "c":
+                assert all(
+                    isinstance(p, CommentNotification) for p in ps
+                ), "Expected all notifications of type CommentNotification"
+                condition = Notification.notification_type.in_(
+                    (
+                        NotificationType.CommentAdded,
+                        NotificationType.CommentDeleted,
+                        NotificationType.CommentModified,
+                    )
                 )
-            )
-        elif t == "a":
-            assert all(
-                isinstance(p, AnswerNotification) for p in ps
-            ), "Expected all notifications of type AnswerNotification"
-            condition = Notification.notification_type.in_(
-                (NotificationType.AnswerAdded,)
-            )
-        else:
-            assert False, "Unknown notification type"
+            case "a":
+                assert all(
+                    isinstance(p, AnswerNotification) for p in ps
+                ), "Expected all notifications of type AnswerNotification"
+                condition = Notification.notification_type.in_(
+                    (NotificationType.AnswerAdded,)
+                )
+            case "v":
+                assert all(
+                    isinstance(p, AnnotationNotification) for p in ps
+                ), "Expected all notifications of type AnnotationNotification"
+                condition = Notification.notification_type.in_(
+                    (
+                        NotificationType.AnnotationAdded,
+                        NotificationType.AnnotationModified,
+                        NotificationType.AnnotationDeleted,
+                    )
+                )
+            case _:
+                assert False, "Unknown notification type"
+
         users_to_notify: set[User] = {n.user for n in doc.get_notifications(condition)}
         for user in users_to_notify:
             if (
@@ -444,8 +499,18 @@ def process_pending_notifications():
             if not ps_to_consider:
                 continue
 
-            # Poster identity should be hidden unless the user has teacher access to the document
-            subject = get_subject_for(ps_to_consider, doc, show_names=is_teacher)
+            is_annotation: bool = ps_to_consider[0].notify_type in [
+                NotificationType.AnnotationAdded,
+                NotificationType.AnnotationModified,
+                NotificationType.AnnotationDeleted,
+            ]
+
+            # Poster identity should be hidden unless:
+            #  - the user has teacher access to the document, or
+            #  - the notification concerns a public annotation in the document.
+            subject = get_subject_for(
+                ps_to_consider, doc, show_names=is_annotation or is_teacher
+            )
             can_edit = (
                 user.has_edit_access(doc)
                 or not ps_to_consider[0].notify_type.is_document_modification
@@ -457,12 +522,14 @@ def process_pending_notifications():
                 doc,
                 show_text=show_text,
                 show_diff_link=can_edit,
-                show_names=is_teacher,
+                show_names=is_annotation or is_teacher,
             )
 
             is_unique_user = len({p.user for p in ps_to_consider}) == 1
             reply_to = (
-                ps_to_consider[0].user.email if is_teacher and is_unique_user else None
+                ps_to_consider[0].user.email
+                if (is_annotation or is_teacher) and is_unique_user
+                else None
             )
             result = send_email(
                 user.email,

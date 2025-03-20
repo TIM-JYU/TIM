@@ -17,6 +17,8 @@ class ManageTest(TimRouteTest):
                 "email_comment_add": False,
                 "email_comment_modify": False,
                 "email_answer_add": False,
+                "email_annotation_add": False,
+                "email_annotation_modify": False,
             },
         )
 
@@ -25,11 +27,15 @@ class ManageTest(TimRouteTest):
             "email_comment_add": False,
             "email_comment_modify": False,
             "email_answer_add": False,
+            "email_annotation_add": False,
+            "email_annotation_modify": False,
         }, {
             "email_doc_modify": False,
             "email_comment_add": True,
             "email_comment_modify": True,
             "email_answer_add": True,
+            "email_annotation_add": True,
+            "email_annotation_modify": True,
         }:
             self.json_post(f"/notify/{d.id}", new_settings)
             self.get(f"/notify/{d.id}", expect_content=new_settings)

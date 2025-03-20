@@ -76,6 +76,18 @@ class CommentNotification(PendingNotification):
     }
 
 
+class AnnotationNotification(PendingNotification):
+    """A notification that an annotation/velp has been added, changed or deleted."""
+
+    @property
+    def grouping_key(self) -> GroupingKey:
+        return self.doc_id, "v"
+
+    __mapper_args__ = {
+        "polymorphic_identity": "v",
+    }
+
+
 class AnswerNotification(PendingNotification):
     """A notification that an answer has been added, changed or deleted."""
 
