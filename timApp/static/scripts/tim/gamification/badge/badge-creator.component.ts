@@ -28,8 +28,11 @@ import {
           <fieldset class="form-fieldset">
             <div class="all_badges">
                 <fieldset>
-                  <h2>{{ selectedContextGroup ? selectedContextGroup + "'s Badges" : "All Badges" }}</h2>
+                  <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
                   <div class="badge_view">
+                      <ng-container *ngIf="all_badges.length == 0">
+                          <p>No badges</p>
+                      </ng-container>
                       <ng-container *ngIf="all_badges.length > 0">
                           <div class="badge-card" *ngFor="let badge of all_badges">
                             <tim-badge
@@ -48,10 +51,10 @@ import {
                 </fieldset>
                 <div class="button-group">
                     <button id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
-                    <button id="createButton" type="button" (click)="editBadge(clickedBadge)" 
+                    <button id="editButton" type="button" (click)="editBadge(clickedBadge)" 
                           [disabled]="!clickedBadge" 
                           [ngClass]="{'disabled-btn': !clickedBadge}">Edit</button>
-                    <button id="createButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
+                    <button id="editButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
                           [disabled]="!clickedBadge" 
                           [ngClass]="{'disabled-btn': !clickedBadge}">Give badge</button>
                 </div>                
