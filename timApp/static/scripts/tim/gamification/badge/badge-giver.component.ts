@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import {ElementRef, HostListener, OnInit, ViewChild} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
@@ -20,97 +20,144 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
     selector: "timBadgeGiver",
     template: `
         <ng-container *ngIf="hasPermission; else noPermissionView">
-        <div *ngIf="showComponent" class="badge-giver">
-            <h2>Badge Giver</h2>
-        
-            <div class="user-selection">
-                <label for="select-user">User</label>
-                <select id="select-user" [(ngModel)]="selectedUser">
-                    <option [ngValue]="null" disabled selected>Select an user to give a badge</option>
-                    <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(user.id)">
-                    {{ user.real_name }}
-                </option>
-                </select>
-            </div>
-        
-            <ng-container *ngIf="userBadges.length > 0">
-               <p *ngIf="selectedUser?.name != undefined">{{selectedUser?.real_name}}'s badges</p>
-                    <div class="user_badges">
-                        <tim-badge *ngFor="let badge of userBadges"
-                                   title="{{badge.title}}"
-                                   color="{{badge.color}}"
-                                   shape="{{badge.shape}}"
-                                   [image]="badge.image"
-                                   description="{{badge.description}}"
-                                   message="{{badge.message}}"
-                                   (click)="selectBadge(badge, false, false)">
+            <div *ngIf="showComponent" class="badge-giver">
+                <h2>Badge Giver</h2>
+                
+                <!-- Preview of the selected badge -->
+                <div *ngIf="selectedBadge" class="badge-preview">
+                    <label for="preview">Preview</label>
+                    <div class="preview">
+                        <tim-badge *ngIf="selectedBadge"
+                                   [title]="selectedBadge!.title"
+                                   [color]="selectedBadge!.color"
+                                   [shape]="selectedBadge!.shape"
+                                   [image]="selectedBadge!.image"
+                                   [description]="selectedBadge!.description"
+                                   [message]="message">
                         </tim-badge>
                     </div>
-                </ng-container>
-        
-        
-        
-        <!--         Delete button, only shown when a badge is selected -->
-            <div *ngIf="showDeleteButton && selectedUser">
-              <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
-            </div>
-        
-            <div class="groups">
-                <label for="select_group">Group</label>
-                <select id="select_group" [(ngModel)]="selectedGroup">¨
-                    <option [ngValue]="null" disabled selected>Select a group to give a badge</option>
-                    <option *ngFor="let group of groups" [ngValue]="group" (click)="fetchGroupBadges(group.id)">{{ group.name }}</option>
-                </select>
-            </div>
-            
-            <ng-container *ngIf="groupBadges.length > 0">
-                <div class="group_badges">
-                    <tim-badge *ngFor="let badge of groupBadges"
-                               title="{{badge.title}}"
-                               color="{{badge.color}}"
-                               shape="{{badge.shape}}"
-                               [image]="badge.image"
-                               description="{{badge.description}}"
-                               message="{{badge.message}}"
-                               (click)="selectBadge(badge, true, false)">
-                    </tim-badge>
                 </div>
-            </ng-container>
-            <div *ngIf="showDeleteButton && selectedGroup">
-                <button (click)="removeBadge(selectedBadge?.badgegiven_id)">Delete</button>
+                
+                <div class="user-group-button-container">
+                    <button (click)="userAssign = true; groupAssign = false">
+                        Assign badge to a user
+                    </button>
+                    <button (click)="groupAssign = true; userAssign = false">
+                        Assign badge to a group
+                    </button>
+                </div>
+                
+                <div *ngIf="userAssign" class="form-group">
+                    <label for="select-user">User</label>
+                    <select id="select-user" [(ngModel)]="selectedUser">
+                        <option [ngValue]="null" disabled selected>Select a user to assign a badge</option>
+                        <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(user.id)">
+                            {{ user.real_name }}
+                        </option>
+                    </select>
+                </div>
+                
+                <div *ngIf="groupAssign" class="form-group">
+                    <label for="select_group">Group</label>
+                    <select id="select_group" [(ngModel)]="selectedGroup">
+                        <option [ngValue]="null" disabled selected>Select a group to assign a badge</option>
+                        <option *ngFor="let group of groups" [ngValue]="group" (click)="fetchGroupBadges(group.id)">
+                            {{ group.name }}
+                        </option>
+                    </select>
+                </div>
+                
+                <div *ngIf="groupAssign || userAssign">
+                    <div class="message-container">
+                        
+                        <!-- Message Box -->
+                        <div class="message-box">
+                            <label for="message">Message</label>
+                            <textarea id="message" rows="6" [(ngModel)]="message" placeholder="Enter a message..."></textarea>
+                        </div>
+                        
+                        <!-- Assigned Badges -->
+                        <!-- Group -->
+                        <div class="badges-box" *ngIf="groupAssign">
+                            <label for="user_badges">
+                                Assigned Badges {{selectedGroup ? selectedGroup.name : ''}}
+                            </label>
+                            <ng-container *ngIf="groupBadges.length > 0">
+                                <div class="user_badges_scroll">
+                                    <div class="badge-card" *ngFor="let badge of groupBadges">
+                                        <tim-badge
+                                                   [title]="badge.title"
+                                                   [color]="badge.color"
+                                                   [shape]="badge.shape"
+                                                   [image]="badge.image"
+                                                   [description]="badge.description"
+                                                   [message]="badge.message">
+                                        </tim-badge>
+                                    </div>
+                                </div>
+                            </ng-container>
+                        </div>
+                        
+                        <!-- User -->
+                        <div class="badges-box" *ngIf="userAssign">
+                            <label for="user_badges" *ngIf="selectedUser?.name != undefined">
+                                Assigned Badges {{ selectedUser?.real_name }}
+                            </label>
+                            <label for="user_badges" *ngIf="selectedUser?.name == undefined">
+                                Assigned Badges
+                            </label>
+                            <div class="viewer-container">
+                                <!-- Assigned group badges -->
+                                <ng-container *ngIf="groupBadges.length > 0">
+                                    <div class="user_badges_scroll">
+                                        <div class="badge-card" *ngFor="let badge of groupBadges">
+                                            <tim-badge
+                                                       [title]="badge.title"
+                                                       [color]="badge.color"
+                                                       [shape]="badge.shape"
+                                                       [image]="badge.image"
+                                                       [description]="badge.description"
+                                                       [message]="badge.message">
+                                            </tim-badge>
+                                        </div>
+                                    </div>
+                                </ng-container>
+                                
+                                <!-- Assigned user badges -->
+                                <ng-container *ngIf="userBadges.length > 0">
+                                <div class="user_badges_scroll">
+                                    <div class="badge-card" *ngFor="let badge of userBadges">
+                                        <tim-badge
+                                                   title="{{badge.title}}" 
+                                                   color="{{badge.color}}" 
+                                                   shape="{{badge.shape}}"
+                                                   [image]="badge.image"
+                                                   description="{{badge.description}}"
+                                                   message="{{badge.message}}">
+                                        </tim-badge>
+                                    </div>
+                                </div>
+                                </ng-container>
+                                <ng-container *ngIf="userBadges.length == 0">
+                                    <p>No badges</p>
+                                </ng-container>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-container">
+                        <button (click)="assignBadge(message)" [disabled]="!selectedUser && !selectedGroup || !selectedBadge">
+                            Assign Badge
+                        </button>
+                        <button (click)="emptyForm()">Cancel</button>
+                    </div>
+                </div>
             </div>
+        </ng-container>
         
-            <!-- Preview of the selected badge -->
-            <div *ngIf="selectedBadge" class="badge-preview">
-                <label for="selected-badge-preview">Selected Badge Preview</label>
-                <div id="selected-badge-preview">
-                    <tim-badge *ngIf="selectedBadge"
-                           title="{{ selectedBadge!.title  }}"
-                           color="{{ selectedBadge!.color }}"
-                           shape="{{ selectedBadge!.shape }}"
-                           [image]="selectedBadge!.image"
-                           description="{{ selectedBadge!.description }}"
-                           message="{{ message }}">
-                </tim-badge>
-                </div>
-            </div>
-            <ng-container *ngIf="selectedBadge !== null">
-                <div class="form-group">
-                    <label for="message">Message</label>
-                    <textarea id="message" rows="3" [(ngModel)]="message" placeholder="Enter a message..."></textarea>
-                </div>
-            </ng-container>
-            <div class="button-container">
-                <button id="assignButton" (click)="assignBadge(message)" [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
-                    Assign Badge
-                </button>
-                <button id="cancelButton" (click)="emptyForm()">Cancel</button>
-            </div>
-        </div>
-    </ng-container>
-    <ng-template #noPermissionView>
-      <p>Access denied for students.</p>
-    </ng-template>
+        <ng-template #noPermissionView>
+            <p>Access denied for students.</p>
+        </ng-template>
     `,
     styleUrls: ["./badge-giver.component.scss"],
 })
@@ -131,6 +178,8 @@ export class BadgeGiverComponent implements OnInit {
     groups: IGroup[] = [];
     selectedGroup?: IGroup | null = null;
     groupBadges: IBadge[] = [];
+    userAssign: boolean = false;
+    groupAssign: boolean = false;
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -218,9 +267,9 @@ export class BadgeGiverComponent implements OnInit {
         }
 
         // Reset group selection and hide badges
-        if (this.selectedGroup) {
-            this.selectedBadge = null;
-        }
+        //if (this.selectedGroup) {
+        //    this.selectedBadge = null;
+        //}
         this.selectedGroup = null;
         this.groupBadges = [];
         this.showDeleteButton = false;
@@ -237,9 +286,9 @@ export class BadgeGiverComponent implements OnInit {
             return;
         }
 
-        if (this.selectedUser) {
-            this.selectedBadge = null;
-        }
+        //if (this.selectedUser) {
+        //    this.selectedBadge = null;
+        //}
         // Reset user selection and hide badges
         this.selectedUser = null;
         this.userBadges = [];

@@ -52,6 +52,7 @@ export class BadgeViewerComponent implements OnInit {
     async getBadges(id: number) {
         this.emptyBadges();
         this.badges = await this.badgeService.getUserBadges(id);
+        this.badges.reverse();
     }
 
     @ViewChild("scrollableDiv") scrollableDiv!: ElementRef;
