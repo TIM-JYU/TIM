@@ -154,22 +154,29 @@ def validate_color(color: str | None) -> None:
 def check_visibility_and_maybe_get_doc(
     user: User, ann: Annotation
 ) -> tuple[bool, DocInfo | None]:
+    from timApp.util.flask.requesthelper import NotExist
+
     d = None
+    doc_id = ann.document_id
+    if doc_id is None:
+        doc_id = -1
+    try:
+        d = get_doc_or_abort(doc_id)
+    except NotExist:
+        pass
+
     if user.id == ann.annotator_id:
         return True, d
     if ann.visible_to == AnnotationVisibility.everyone.value:
         return True, d
-    doc_id = ann.document_id
-    if doc_id is None:
-        doc_id = -1
-    d = get_doc_or_abort(doc_id)
-    if (
-        ann.visible_to == AnnotationVisibility.teacher.value
-        and user.has_teacher_access(d)
-    ):
-        return True, d
-    if ann.visible_to == AnnotationVisibility.owner.value and user.has_ownership(d):
-        return True, d
+    if d:
+        if (
+            ann.visible_to == AnnotationVisibility.teacher.value
+            and user.has_teacher_access(d)
+        ):
+            return True, d
+        if ann.visible_to == AnnotationVisibility.owner.value and user.has_ownership(d):
+            return True, d
     return False, d
 
 
@@ -232,7 +239,12 @@ def update_annotation(
     db.session.commit()
     if should_anonymize_annotations(d, user):
         anonymize_annotations([ann], user.id)
-    notify_annotation_subscribers(d, ann, NotificationType.AnnotationModified)
+
+    notify_annotation_subscribers(
+        document=d,
+        annotation=ann,
+        notify_type=NotificationType.AnnotationModified,
+    )
     return json_response(ann, date_conversion=True)
 
 

@@ -505,7 +505,9 @@ def process_pending_notifications():
                 NotificationType.AnnotationDeleted,
             ]
 
-            # Poster identity should be hidden unless the user has teacher access to the document
+            # Poster identity should be hidden unless:
+            #  - the user has teacher access to the document, or
+            #  - the notification concerns a public annotation in the document.
             subject = get_subject_for(
                 ps_to_consider, doc, show_names=is_annotation or is_teacher
             )

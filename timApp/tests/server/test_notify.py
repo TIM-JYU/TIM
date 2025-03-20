@@ -1,7 +1,9 @@
 from sqlalchemy import select
 
 from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import random_id
 from timApp.notification.notification import NotificationType
 from timApp.notification.notify import (
@@ -15,6 +17,9 @@ from timApp.notification.pending_notification import (
 from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db, run_sql
+from timApp.velp.velp_models import Velp
+from timApp.velp.annotation import AnnotationVisibility
+from timApp.velp.annotation_model import AnnotationPosition, AnnotationCoordinate
 
 
 class NotifyTestBase(TimRouteTest):
@@ -53,6 +58,58 @@ class NotifyTestBase(TimRouteTest):
         if add_new_par:
             self.new_par(d.document, "test")
         return d, title, url
+
+    def prepare_annotation_doc(
+        self, annotation_visibility: AnnotationVisibility | None = None
+    ) -> tuple[DocEntry, Velp, AnnotationPosition, int, DocParagraph]:
+        self.login_test1()
+        initial_par = """
+                #- 
+                test text 1
+                """
+        d = self.create_doc(initial_par=initial_par)
+        self.test_user_2.grant_access(d, AccessType.view)
+        self.test_user_1.set_notify_settings(
+            d,
+            doc_modify=False,
+            comment_modify=False,
+            comment_add=False,
+            answer_add=False,
+            annotation_add=True,
+            annotation_modify=True,
+        )
+        self.test_user_2.set_notify_settings(
+            d,
+            doc_modify=False,
+            comment_modify=False,
+            comment_add=False,
+            answer_add=False,
+            annotation_add=True,
+            annotation_modify=True,
+        )
+        velp, velp_ver = create_new_velp(
+            self.test_user_1.id,
+            "test velp",
+            0,
+        )
+        db.session.commit()
+        par1 = d.document.get_paragraphs()[0]
+        ann_pos = AnnotationPosition(
+            start=AnnotationCoordinate(par_id=par1.id, offset=5),
+            end=AnnotationCoordinate(par_id=par1.id, offset=8),
+        )
+        ann_resp = self.post_annotation(
+            doc_id=d.id,
+            velp_id=velp.id,
+            coord=ann_pos,
+            points=None,
+            visible_to=annotation_visibility
+            if annotation_visibility
+            else AnnotationVisibility.everyone,
+            style=1,
+        )
+        ann_id: int = ann_resp.get("id")
+        return d, velp, ann_pos, ann_id, par1
 
 
 class NotifyTest(NotifyTestBase):
@@ -425,52 +482,8 @@ from timApp.velp.annotation_model import (
 
 
 class VelpNotifyTest(NotifyTestBase):
-    def test_annotation_notification(self):
-        self.login_test1()
-        initial_par = """
-        #- 
-        test text 1
-        """
-        d = self.create_doc(initial_par=initial_par)
-        self.test_user_2.grant_access(d, AccessType.view)
-        self.test_user_1.set_notify_settings(
-            d,
-            doc_modify=False,
-            comment_modify=False,
-            comment_add=False,
-            answer_add=False,
-            annotation_add=True,
-            annotation_modify=False,
-        )
-        self.test_user_2.set_notify_settings(
-            d,
-            doc_modify=False,
-            comment_modify=False,
-            comment_add=False,
-            answer_add=False,
-            annotation_add=True,
-            annotation_modify=False,
-        )
-        velp, velp_ver = create_new_velp(
-            self.test_user_1.id,
-            "test velp",
-            0,
-        )
-        db.session.commit()
-        par1 = d.document.get_paragraphs()[0]
-        ann_pos = AnnotationPosition(
-            start=AnnotationCoordinate(par_id=par1.id, offset=5),
-            end=AnnotationCoordinate(par_id=par1.id, offset=8),
-        )
-        ann_resp = self.post_annotation(
-            doc_id=d.id,
-            velp_id=velp.id,
-            coord=ann_pos,
-            points=None,
-            visible_to=AnnotationVisibility.everyone,
-            style=1,
-        )
-
+    def test_add_annotation_notification(self):
+        d, velp, ann_pos, ann_id, par1 = self.prepare_annotation_doc()
         process_pending_notifications()
         self.assertEqual(1, len(sent_mails_in_testing))
         mail_from = "no-reply@tim.jyu.fi"
@@ -486,77 +499,63 @@ class VelpNotifyTest(NotifyTestBase):
             sent_mails_in_testing[-1],
         )
 
-        ann_id = ann_resp.get("id")
+    def test_edit_annotation_notification(self):
+        d, velp, ann_pos, ann_id, par1 = self.prepare_annotation_doc()
+        process_pending_notifications()
+        sent_mails_in_testing.clear()
+        # Modifying the annotation
+        self.edit_annotation(
+            annotation_id=ann_id,
+            visible_to=AnnotationVisibility.everyone,
+            color="#FF0000",
+        )
+        process_pending_notifications()
+        self.assertEqual(1, len(sent_mails_in_testing))
+        mail_from = "no-reply@tim.jyu.fi"
+        self.assertEqual(
+            {
+                "mail_from": mail_from,
+                "msg": f"Velp modified by user 1 Test: "
+                f"http://localhost/view/{d.name}#{par1.id}\n\ntest velp",
+                "rcpt": "test2@example.com",
+                "reply_to": "test1@example.com",
+                "subject": f"user 1 Test modified a velp in the document {d.title}",
+            },
+            sent_mails_in_testing[-1],
+        )
+
+    def test_delete_annotation_notification(self):
+        d, velp, ann_pos, ann_id, par1 = self.prepare_annotation_doc()
+        process_pending_notifications()
+        sent_mails_in_testing.clear()
+        # Deleting the annotation
         self.delete_annotation(ann_id)
         process_pending_notifications()
         self.assertEqual(1, len(sent_mails_in_testing))
         mail_from = "no-reply@tim.jyu.fi"
-        # FIXME: msg and subject strings (should be 'deleted' instead of 'posted')
         self.assertEqual(
             {
                 "mail_from": mail_from,
-                "msg": f"Velp posted by user 1 Test: "
+                "msg": f"Velp deleted by user 1 Test: "
                 f"http://localhost/view/{d.name}#{par1.id}\n\ntest velp",
                 "rcpt": "test2@example.com",
                 "reply_to": "test1@example.com",
-                "subject": f"user 1 Test posted a velp to the document {d.title}",
+                "subject": f"user 1 Test deleted a velp from the document {d.title}",
             },
-            sent_mails_in_testing[0],
+            sent_mails_in_testing[-1],
         )
 
-    def test_annotation_comment(self):
-        self.login_test1()
-        initial_par = """
-        #- 
-        test text 1
-        """
-        d = self.create_doc(initial_par=initial_par)
-        self.test_user_2.grant_access(d, AccessType.view)
-        self.test_user_1.set_notify_settings(
-            d,
-            doc_modify=False,
-            comment_modify=False,
-            comment_add=False,
-            answer_add=False,
-            annotation_add=True,
-            annotation_modify=False,
-        )
-        self.test_user_2.set_notify_settings(
-            d,
-            doc_modify=False,
-            comment_modify=False,
-            comment_add=False,
-            answer_add=False,
-            annotation_add=True,
-            annotation_modify=False,
-        )
-        velp, velp_ver = create_new_velp(
-            self.test_user_1.id,
-            "test velp",
-            0,
-        )
-        db.session.commit()
-        par1 = d.document.get_paragraphs()[0]
-        ann_pos = AnnotationPosition(
-            start=AnnotationCoordinate(par_id=par1.id, offset=5),
-            end=AnnotationCoordinate(par_id=par1.id, offset=8),
-        )
-        ann_resp = self.post_annotation(
-            doc_id=d.id,
-            velp_id=velp.id,
-            coord=ann_pos,
-            points=None,
-            visible_to=AnnotationVisibility.everyone,
-            style=1,
-        )
+    def test_add_annotation_comment(self):
+        d, velp, ann_pos, ann_id, par1 = self.prepare_annotation_doc()
         process_pending_notifications()
 
+        sent_mails_in_testing.clear()
         comm_resp = self.post_annotation_comment(
-            annotation_id=ann_resp.get("id"), comment="test comment"
+            annotation_id=ann_id, comment="test comment"
         )
         process_pending_notifications()
 
-        self.assertEqual(2, len(sent_mails_in_testing))
+        self.assertEqual(1, len(sent_mails_in_testing))
         mail_from = "no-reply@tim.jyu.fi"
         self.assertEqual(
             {
@@ -569,3 +568,41 @@ class VelpNotifyTest(NotifyTestBase):
             },
             sent_mails_in_testing[-1],
         )
+
+    def test_nonpublic_annotation_notification(self):
+        d, velp, ann_pos, ann_id, par1 = self.prepare_annotation_doc(
+            annotation_visibility=AnnotationVisibility.teacher
+        )
+        process_pending_notifications()
+
+        # Non-public annotations will not trigger notifications
+        self.assertEqual(0, len(sent_mails_in_testing))
+
+        self.edit_annotation(
+            annotation_id=ann_id,
+            visible_to=AnnotationVisibility.everyone,
+        )
+        process_pending_notifications()
+        self.assertEqual(1, len(sent_mails_in_testing))
+        mail_from = "no-reply@tim.jyu.fi"
+        self.assertEqual(
+            {
+                "mail_from": mail_from,
+                "msg": f"Velp modified by user 1 Test: "
+                f"http://localhost/view/{d.name}#{par1.id}\n\ntest velp",
+                "rcpt": "test2@example.com",
+                "reply_to": "test1@example.com",
+                "subject": f"user 1 Test modified a velp in the document {d.title}",
+            },
+            sent_mails_in_testing[-1],
+        )
+
+        sent_mails_in_testing.clear()
+        # Test that setting annotation back to private does not send notification
+        self.edit_annotation(
+            annotation_id=ann_id,
+            visible_to=AnnotationVisibility.myself,
+        )
+        process_pending_notifications()
+        sent = sent_mails_in_testing
+        self.assertEqual(0, len(sent_mails_in_testing))
