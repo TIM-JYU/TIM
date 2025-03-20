@@ -8,6 +8,7 @@ import {HttpClient} from "@angular/common/http";
 import {HttpClientModule} from "@angular/common/http";
 import {BadgeViewerModule} from "tim/gamification/badge/badge-viewer.component";
 import {BadgeGiverModule} from "tim/gamification/badge/badge-giver.component";
+import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.component";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 import {getFormBehavior} from "tim/plugin/util";
 import {BadgeService} from "tim/gamification/badge/badge.service";
@@ -63,11 +64,18 @@ import {
                             [disabled]="!editingBadge" 
                             (click)="deleteBadge()"
                             class="right-button">Delete</button>
+                        <button id="editButton2" type="button" 
+                            (click)="showBadgeWithdraw()"
+                            class="right-button">Withdraw</button>
                 </div>            
             </div>
               
               <ng-container *ngIf="showGiver">
                   <timBadgeGiver [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
+              </ng-container>
+              
+              <ng-container *ngIf="showWithdraw">
+                  <tim-badge-withdraw [badgegroupContext]="badgegroupContext"></tim-badge-withdraw>                        
               </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
@@ -164,6 +172,7 @@ export class BadgeCreatorComponent implements OnInit {
     editingBadge: any = null;
 
     showGiver = false;
+    showWithdraw = false;
     @Input() badgegroupContext?: string;
 
     // Method called when a badge is clicked
@@ -173,6 +182,7 @@ export class BadgeCreatorComponent implements OnInit {
             this.emptyForm();
             this.badgeFormShowing = false;
             this.showGiver = false;
+            this.showWithdraw = false;
             return;
         }
         this.clickedBadge = badge;
@@ -203,7 +213,7 @@ export class BadgeCreatorComponent implements OnInit {
     clickCreate() {
         this.clickedBadge = null;
         this.showGiver = false;
-
+        this.showWithdraw = false;
         if (this.badgeFormShowing) {
             this.resetForm();
             return;
@@ -217,6 +227,7 @@ export class BadgeCreatorComponent implements OnInit {
     editBadge(badge: IBadge) {
         this.badgeFormShowing = !this.badgeFormShowing;
         this.showGiver = false;
+        this.showWithdraw = false;
         if (this.badgeFormShowing) {
             this.showEditingForm(badge);
         }
@@ -224,9 +235,17 @@ export class BadgeCreatorComponent implements OnInit {
 
     showBadgeGiver(badge: IBadge) {
         this.badgeFormShowing = false;
+        this.showWithdraw = false;
         this.showGiver = !this.showGiver;
 
         this.clickedBadge = badge;
+    }
+
+    showBadgeWithdraw() {
+        this.clickedBadge = null;
+        this.badgeFormShowing = false;
+        this.showGiver = false;
+        this.showWithdraw = !this.showWithdraw;
     }
 
     // when create button is pressed, shows empty form
@@ -479,6 +498,7 @@ export class BadgeCreatorComponent implements OnInit {
         HttpClientModule,
         BadgeViewerModule,
         BadgeGiverModule,
+        BadgeWithdrawModule,
     ],
 })
 export class BadgeCreatorModule {}
