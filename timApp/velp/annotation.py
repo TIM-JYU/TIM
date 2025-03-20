@@ -122,7 +122,7 @@ def add_annotation(
 
 
 def notify_annotation_subscribers(
-    document: DocInfo | DocEntry,
+    document: DocInfo | DocEntry | None,
     annotation: Annotation,
     notify_type: NotificationType,
     alt_msg: str | None = None,
