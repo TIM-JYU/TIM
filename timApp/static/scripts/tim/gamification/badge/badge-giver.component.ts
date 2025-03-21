@@ -22,6 +22,7 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {toPromise} from "tim/util/utils";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {documentglobals} from "tim/util/globals";
 
 @Component({
     selector: "timBadgeGiver",
@@ -157,6 +158,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 export class BadgeGiverComponent implements OnInit {
     private subscription: Subscription = new Subscription();
 
+    currentDocumentID = documentglobals().curr_item.id;
     users: IUser[] = [];
     badges: any = [];
     selectedUser?: IUser | null = null;
@@ -326,6 +328,7 @@ export class BadgeGiverComponent implements OnInit {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
                 given_by: this.badgeGiver,
+                doc_id: this.currentDocumentID,
                 context_group: this.badgegroupContext,
                 group_id: currentId,
                 badge_id: this.selectedBadge?.id,

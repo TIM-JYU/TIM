@@ -8,6 +8,7 @@ import type {
     IUser,
     IGroup,
 } from "tim/gamification/badge/badge.interface";
+import {documentglobals} from "tim/util/globals";
 
 @Injectable({
     providedIn: "root",
@@ -24,6 +25,8 @@ export class BadgeService {
     }
 
     constructor(private http: HttpClient) {}
+
+    currentDocumentID = documentglobals().curr_item.id;
 
     async getAllBadges(): Promise<IBadge[]> {
         try {
@@ -112,6 +115,7 @@ export class BadgeService {
             this.http.post<{ok: boolean}>("/withdraw_badge", {
                 badge_given_id: badgegivenID,
                 withdrawn_by: giverID,
+                doc_id: this.currentDocumentID,
                 context_group: context_group,
             })
         );
