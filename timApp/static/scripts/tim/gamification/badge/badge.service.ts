@@ -99,6 +99,26 @@ export class BadgeService {
     }
 
     /**
+     * Hakee kaikki "aliryhmät", johon käyttäjä kuuluu.
+     * @param group ryhmä, jonka avulla aliryhmät haetaan
+     * @param userid käyttäjän id
+     */
+    async getUserSubGroups(group: string, userid: number) {
+        const result = await toPromise(
+            this.http.get<[]>(`/usersubgroups/${group}/${userid}`)
+        );
+        const userSubGroups: IGroup[] = [];
+        if (result.ok) {
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    userSubGroups.push(alkio);
+                }
+            }
+        }
+        return userSubGroups;
+    }
+
+    /**
      * Ottaa valitun badgen pois käytöstä käyttäjältä.
      * @param badgegivenID badgegiven -tietokantataulukon id, jonka avulla valittu badge poistetaan käytöstä
      * @param giverID käyttäjän id, joka poistaa badgen käytöstä.
