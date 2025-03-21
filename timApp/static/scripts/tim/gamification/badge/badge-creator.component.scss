@@ -308,6 +308,16 @@ button[type="button"]:hover {
     border-radius: 0.8em;
 }
 
+.withdrawButton {
+    background-color: #FF8C00; /* Oranssi väri */
+    color: white; /* Tekstin väri */
+    transition: background-color 0.2s ease;
+}
+.withdrawButton:hover {
+    background-color: #FF6A00 !important; /* Hover-väri */
+
+}
+
 
 
 /* Hover-tila muuttaa napin taustaväriä */

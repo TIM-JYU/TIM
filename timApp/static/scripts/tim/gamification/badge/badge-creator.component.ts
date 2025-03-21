@@ -61,13 +61,13 @@ import {
                                 [ngClass]="{'disabled-btn': !clickedBadge}">Give badge</button>
                     </div>
                     <div class="right-buttons">
+                        <button id="withdrawButton" type="button"
+                                (click)="showBadgeWithdraw()"
+                                class="right-button withdrawButton">With- draw</button>
                         <button id="deleteButton" type="button"
                                 [disabled]="!editingBadge" 
                                 (click)="deleteBadge()"
                                 class="right-button">Delete</button>
-                        <button id="editButton2" type="button"
-                                (click)="showBadgeWithdraw()"
-                                class="right-button">With- draw</button>
                     </div>
                 </div>            
             </div>
