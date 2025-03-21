@@ -65,15 +65,15 @@ import {
                                 [disabled]="!editingBadge" 
                                 (click)="deleteBadge()"
                                 class="right-button">Delete</button>
-                        <button id="editButton2" type="button" 
+                        <button id="editButton2" type="button"
                                 (click)="showBadgeWithdraw()"
-                                class="right-button">Withdraw</button>
+                                class="right-button">With- draw</button>
                     </div>
                 </div>            
             </div>
               
               <ng-container *ngIf="showGiver">
-                  <timBadgeGiver [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
+                  <timBadgeGiver (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
               </ng-container>
               
               <ng-container *ngIf="showWithdraw">
@@ -208,6 +208,11 @@ export class BadgeCreatorComponent implements OnInit {
         this.badgeForm.valueChanges.subscribe(() => {
             this.isFormChanged = true;
         });
+    }
+
+    handleCancel() {
+        this.resetForm();
+        this.showGiver = false;
     }
 
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
@@ -385,6 +390,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.emptyForm();
         await this.getBadges();
         this.badgeFormShowing = false;
+        this.resetForm();
     }
 
     // Get all badges depending on if context group is selected

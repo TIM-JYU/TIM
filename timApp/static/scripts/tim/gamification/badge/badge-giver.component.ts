@@ -1,4 +1,11 @@
-import {ElementRef, HostListener, OnInit, ViewChild} from "@angular/core";
+import {
+    ElementRef,
+    EventEmitter,
+    HostListener,
+    OnInit,
+    Output,
+    ViewChild,
+} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
@@ -167,6 +174,8 @@ export class BadgeGiverComponent implements OnInit {
     userAssign: boolean = false;
     groupAssign: boolean = false;
 
+    @Output() cancelEvent = new EventEmitter<void>();
+
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     ngOnInit() {
@@ -212,6 +221,7 @@ export class BadgeGiverComponent implements OnInit {
         this.showComponent = false;
         this.userBadges = [];
         this.groupBadges = [];
+        this.cancelEvent.emit(); // Lähettää tiedon vanhemmalle
     }
 
     /**
