@@ -525,8 +525,8 @@ def undo_withdraw_badge(
 def get_subgroups(group_name_prefix: str) -> Response:
     """
     Fetces usergroups that have a name that starts with the given prefix but is not the exact prefix.
-    :param group_name_prefix: prefix of the usergroups
-    :return: list of usergroups
+    :param group_name_prefix: Prefix of the usergroups
+    :return: List of usergroups
     """
     subgroups = (
         run_sql(
@@ -542,3 +542,46 @@ def get_subgroups(group_name_prefix: str) -> Response:
     for subgroup in subgroups:
         subgroups_json.append(subgroup.to_json())
     return json_response(subgroups_json)
+
+
+# TODO: Handle errors.
+@badges_blueprint.get("/users_subgroups/<user_id>/<group_name_prefix>")
+def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
+    """
+    Fetches usergroups that user with given user_id belongs. Fetched usergroups also
+    have a name that starts with the given prefix but is not the exact prefix.
+    :param user_id: ID of the user
+    :param group_name_prefix: Prefix of the usergroups
+    :return: List of usergroups
+    """
+    usergroup_memberships = (
+        run_sql(
+            select(UserGroupMember).filter(
+                UserGroupMember.user_id == user_id,
+                or_(
+                    UserGroupMember.membership_end > datetime_tz.now(),
+                    UserGroupMember.membership_end == None,
+                ),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    users_usergroup_ids = []
+    for usergroup_membership in usergroup_memberships:
+        users_usergroup_ids.append(usergroup_membership.usergroup_id)
+    users_subgroups = (
+        run_sql(
+            select(UserGroup).filter(
+                UserGroup.id.in_(users_usergroup_ids),
+                UserGroup.name.like(group_name_prefix + "%"),
+                UserGroup.name != group_name_prefix,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    users_subgroups_json = []
+    for users_subgroup in users_subgroups:
+        users_subgroups_json.append(users_subgroup.to_json())
+    return json_response(users_subgroups_json)
