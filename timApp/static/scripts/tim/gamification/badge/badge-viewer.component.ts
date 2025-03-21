@@ -1,4 +1,5 @@
 import type {OnInit} from "@angular/core";
+import {Input} from "@angular/core";
 import {ElementRef, HostListener, ViewChild} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
@@ -6,29 +7,50 @@ import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
-import type {IBadge} from "tim/gamification/badge/badge.interface";
+import type {IBadge, IGroup} from "tim/gamification/badge/badge.interface";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
+import {toPromise} from "tim/util/utils";
 
 @Component({
     selector: "tim-badge-viewer",
     template: `
         <div class="viewer-container">
-            <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
+            
             <ng-container *ngIf="badges.length > 0">
-            <div class="user_badges" #scrollableDiv>
-                <div class="badge-card" *ngFor="let badge of badges">
-                    <tim-badge
+                <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
+                <div class="user_badges" #scrollableDiv>
+                    <div class="badge-card" *ngFor="let badge of badges">
+                        <tim-badge
                                title="{{badge.title}}" 
                                color="{{badge.color}}" 
                                shape="{{badge.shape}}"
                                [image]="badge.image"
                                description="{{badge.description}}"
                                message="{{badge.message}}">
-                    </tim-badge>
+                        </tim-badge>
+                    </div>
+                </div>
+            </ng-container>
+            
+            <ng-container *ngIf="userSubGroups.length > 0">
+            <div class="subgroups" *ngFor="let group of userSubGroups">
+                <h2 class="badge-heading">{{group.name}} badges</h2>
+                <div class="users_group_badges" #scrollableDiv>
+                    <div class="badge-card" *ngFor="let badge of myMap.get(group.id)">
+                        <tim-badge
+                               title="{{badge.title}}" 
+                               color="{{badge.color}}" 
+                               shape="{{badge.shape}}"
+                               [image]="badge.image"
+                               description="{{badge.description}}"
+                               message="{{badge.message}}">
+                        </tim-badge>
+                    </div>
                 </div>
             </div>
             </ng-container>
+
             <ng-container *ngIf="badges.length == 0">
                 <p>No badges</p>
             </ng-container>
@@ -41,8 +63,11 @@ export class BadgeViewerComponent implements OnInit {
     fullname?: string | null;
     userID: number = 0;
     badges: IBadge[] = [];
-
+    userSubGroups: IGroup[] = [];
+    groupBadges: IBadge[] = [];
+    @Input() badgegroupContext?: string;
     private subscription: Subscription = new Subscription();
+    myMap = new Map<number, IBadge[]>();
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
@@ -51,9 +76,27 @@ export class BadgeViewerComponent implements OnInit {
      * @param id käyttäjän id (tällähetkellä käytetään sisäänkirjautuneen käyttäjän ID:tä)
      */
     async getBadges(id: number) {
-        this.emptyBadges();
+        this.emptyBadges(this.badges);
         this.badges = await this.badgeService.getUserBadges(id);
-        this.badges.reverse();
+    }
+
+    async getUserSubGroups(groupContext: string, userid: number) {
+        this.userSubGroups = await this.badgeService.getUserSubGroups(
+            groupContext,
+            userid
+        );
+        this.getGroupBadges();
+    }
+
+    async getGroupBadges() {
+        this.myMap.clear();
+        for (const group of this.userSubGroups) {
+            this.myMap.set(
+                group.id,
+                await this.badgeService.getUserBadges(group.id)
+            );
+        }
+        console.log(this.myMap);
     }
 
     @ViewChild("scrollableDiv") scrollableDiv!: ElementRef;
@@ -72,6 +115,10 @@ export class BadgeViewerComponent implements OnInit {
             this.userName = Users.getCurrent().name;
             this.fullname = Users.getCurrent().real_name;
             this.userID = Users.getCurrent().id;
+
+            if (this.badgegroupContext != undefined) {
+                this.getUserSubGroups(this.badgegroupContext, this.userID);
+            }
         }
         this.getBadges(this.userID);
 
@@ -85,11 +132,11 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Tyhjentää this.badges -taulukon
+     * Tyhjentää attribuuttina annetun taulukon
      */
-    emptyBadges() {
-        while (this.badges.length > 0) {
-            this.badges.pop();
+    emptyBadges(badges: IBadge[]) {
+        while (badges.length > 0) {
+            badges.pop();
         }
     }
 }
