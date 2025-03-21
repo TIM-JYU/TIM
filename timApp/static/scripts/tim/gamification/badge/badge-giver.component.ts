@@ -89,7 +89,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                             <label for="user_badges">
                                 Assigned Badges {{selectedGroup ? selectedGroup.name : ''}}
                             </label>
-                            <ng-container *ngIf="groupBadges.length > 0">
+                            <ng-container *ngIf="groupBadges.length > 0 && selectedGroup">
                                 <div class="user_badges_scroll">
                                     <div class="badge-card" *ngFor="let badge of groupBadges">
                                         <tim-badge
@@ -103,7 +103,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                     </div>
                                 </div>
                             </ng-container>
-                            <ng-container *ngIf="groupBadges.length == 0">
+                            <ng-container *ngIf="groupBadges.length == 0 && selectedGroup">
                                 <p>No assigned badges</p>
                             </ng-container>
                         </div>
@@ -117,7 +117,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                 Assigned Badges
                             </label>
                             <div class="viewer-container">
-                                <ng-container *ngIf="userBadges.length > 0">
+                                <ng-container *ngIf="userBadges.length > 0 && selectedUser">
                                 <div class="user_badges_scroll">
                                     <div class="badge-card" *ngFor="let badge of userBadges">
                                         <tim-badge
@@ -131,7 +131,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                     </div>
                                 </div>
                                 </ng-container>
-                                <ng-container *ngIf="userBadges.length == 0">
+                                <ng-container *ngIf="selectedUser && userBadges.length == 0">
                                     <p>No assigned badges</p>
                                 </ng-container>
                             </div>
@@ -163,7 +163,7 @@ export class BadgeGiverComponent implements OnInit {
     userBadges: IBadge[] = [];
     @Input() selectedBadge?: IBadge | null = null;
     message = "";
-    badgeGiver = 0;
+    //badgeGiver = 0;
     showDeleteButton: boolean = false;
     hasPermission: boolean = true;
     showComponent: boolean = true;
@@ -173,6 +173,8 @@ export class BadgeGiverComponent implements OnInit {
     groupBadges: IBadge[] = [];
     userAssign: boolean = false;
     groupAssign: boolean = false;
+    badgeGiver = 0;
+    currentId = null;
 
     @Output() cancelEvent = new EventEmitter<void>();
 
@@ -342,12 +344,18 @@ export class BadgeGiverComponent implements OnInit {
                 );
             }
         }
-        this.selectedBadge = null;
         this.message = "";
         if (currentId) {
-            this.badgeService.getUserBadges(currentId);
+            //this.badgeService.getUserBadges(currentId);
             this.badgeService.notifyBadgeViewerUpdate();
         }
+        this.selectedUser = null;
+        this.selectedGroup = null;
+        this.userBadges = [];
+        this.groupBadges = [];
+        this.currentId = null;
+        this.userAssign = false;
+        this.groupAssign = false;
     }
 
     /**
