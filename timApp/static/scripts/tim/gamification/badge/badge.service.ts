@@ -108,7 +108,7 @@ export class BadgeService {
      */
     async getUserSubGroups(group: string, userid: number) {
         const result = await toPromise(
-            this.http.get<[]>(`/usersubgroups/${group}/${userid}`)
+            this.http.get<[]>(`/users_subgroups/${userid}/${group}`)
         );
         const userSubGroups: IGroup[] = [];
         if (result.ok) {
