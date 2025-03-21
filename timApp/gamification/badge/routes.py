@@ -120,20 +120,17 @@ def get_badges() -> Response:
 
 
 # TODO: Handle errors.
-# TODO: Give access rights only for teachers. Do teacher check before context group check.
-@badges_blueprint.get("/all_badges_in_context/<user_id>/<context_group>")
-def all_badges_in_context(user_id: int, context_group: str) -> Response:
+@badges_blueprint.get("/all_badges_in_context/<user_id>/<doc_id>/<context_group>")
+def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Response:
     """
     Fetches all badges in specific context_group.
+    :param doc_id: Current document's ID
     :param user_id: Current user's ID
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
-
-    # TODO: Hard coded at the moment
-    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    d = DocEntry.find_by_id(doc_id)
     verify_teacher_access(d)
-
     check_context_group_access(user_id, context_group)
     badges = (
         run_sql(
@@ -164,10 +161,10 @@ def get_badge(badge_id: int) -> Response:
     return json_response(badge_json)
 
 
-# TODO: Give access rights only for teachers. Do teacher check before context group check.
 @badges_blueprint.post("/create_badge")
 def create_badge(
     created_by: int,
+    doc_id: int,
     context_group: str,
     title: str,
     color: str,
@@ -177,6 +174,7 @@ def create_badge(
 ) -> Response:
     """
     Creates a new badge.
+    :param doc_id: Current document's ID
     :param created_by: ID of the useraccount who creates the badge
     :param context_group: Context group where the badge will be included
     :param title: Title of the badge
@@ -186,11 +184,8 @@ def create_badge(
     :param description: Description of the badge
     :return: ok response
     """
-
-    # TODO: Hard coded at the moment
-    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    d = DocEntry.find_by_id(doc_id)
     verify_teacher_access(d)
-
     check_context_group_access(created_by, context_group)
     badge = Badge(
         active=True,
@@ -224,11 +219,11 @@ def create_badge(
 
 
 # TODO: Handle errors.
-# TODO: Give access rights only for teachers. Do teacher check before context group check.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
     badge_id: int,
     modified_by: int,
+    doc_id: int,
     context_group: str,
     title: str,
     color: str,
@@ -238,6 +233,7 @@ def modify_badge(
 ) -> Response:
     """
     Modifies a badge.
+    :param doc_id: Current document's ID
     :param badge_id: ID of the badge
     :param modified_by: ID of the useraccount who modifies the badge
     :param context_group: Context group where the badge will be included
@@ -248,11 +244,8 @@ def modify_badge(
     :param description: Description of the badge
     :return: ok response
     """
-
-    # TODO: Hard coded at the moment
-    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    d = DocEntry.find_by_id(doc_id)
     verify_teacher_access(d)
-
     check_context_group_access(modified_by, context_group)
     badge = {
         "context_group": context_group,
@@ -285,21 +278,20 @@ def modify_badge(
 
 
 # TODO: Handle errors.
-# TODO: Give access rights only for teachers. Do teacher check before context group check.
 @badges_blueprint.post("/deactivate_badge")
-def deactivate_badge(badge_id: int, deleted_by: int, context_group: str) -> Response:
+def deactivate_badge(
+    badge_id: int, deleted_by: int, doc_id: int, context_group: str
+) -> Response:
     """
     Deactivates a badge.
+    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
     :param badge_id: ID of the badge
     :param deleted_by: ID of the useraccount who deactivates the badge
     :return: ok response
     """
-
-    # TODO: Hard coded at the moment
-    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    d = DocEntry.find_by_id(doc_id)
     verify_teacher_access(d)
-
     check_context_group_access(deleted_by, context_group)
     badge = {
         "active": False,
@@ -322,21 +314,20 @@ def deactivate_badge(badge_id: int, deleted_by: int, context_group: str) -> Resp
 
 # TODO: Not yet in use.
 # TODO: Handle errors.
-# TODO: Give access rights only for teachers. Do teacher check before context group check.
-@badges_blueprint.post("/reactivate_badge>")
-def reactivate_badge(badge_id: int, restored_by: int, context_group: str) -> Response:
+@badges_blueprint.post("/reactivate_badge")
+def reactivate_badge(
+    badge_id: int, restored_by: int, doc_id: int, context_group: str
+) -> Response:
     """
     Reactivates a badge.
+    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
     :param badge_id: ID of the badge
     :param restored_by: ID of the useraccount who reactivates the badge
     :return: ok response
     """
-
-    # TODO: Hard coded at the moment
-    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    d = DocEntry.find_by_id(doc_id)
     verify_teacher_access(d)
-
     check_context_group_access(restored_by, context_group)
     badge = {
         "active": True,
@@ -409,10 +400,10 @@ def get_groups_badges(group_id: int) -> Response:
 
 
 # TODO: Handle errors.
-# TODO: Give access rights only for teachers. Do teacher check before context group check.
 @badges_blueprint.post("/give_badge")
 def give_badge(
     given_by: int,
+    doc_id: int,
     context_group: str,
     group_id: int,
     badge_id: int,
@@ -420,6 +411,7 @@ def give_badge(
 ) -> Response:
     """
     Gives a badge to a usergroup.
+    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
     :param given_by: ID of the useraccount who gives the badge
     :param group_id: ID of the usergroup that the badge is given
@@ -427,11 +419,8 @@ def give_badge(
     :param message: Message to give to the usergroup when the badge is given
     :return: ok response
     """
-
-    # TODO: Hard coded at the moment
-    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    d = DocEntry.find_by_id(doc_id)
     verify_teacher_access(d)
-
     check_context_group_access(given_by, context_group)
     badge_given = BadgeGiven(
         active=True,
@@ -459,23 +448,20 @@ def give_badge(
 
 
 # TODO: Handle errors.
-# TODO: Give access rights only for teachers. Do teacher check before context group check.
 @badges_blueprint.post("/withdraw_badge")
 def withdraw_badge(
-    badge_given_id: int, withdrawn_by: int, context_group: str
+    badge_given_id: int, withdrawn_by: int, doc_id: int, context_group: str
 ) -> Response:
     """
     Withdraws a badge from a usergroup.
+    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
     :param badge_given_id: ID of the badgegiven
     :param withdrawn_by: ID of the useraccount that withdraws the badge
     :return: ok response
     """
-
-    # TODO: Hard coded at the moment
-    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    d = DocEntry.find_by_id(doc_id)
     verify_teacher_access(d)
-
     check_context_group_access(withdrawn_by, context_group)
     badge_given = {
         "active": False,
@@ -499,23 +485,20 @@ def withdraw_badge(
 
 # TODO: Not yet in use.
 # TODO: Handle errors.
-# TODO: Give access rights only for teachers. Do teacher check before context group check.
 @badges_blueprint.get("/undo_withdraw_badge")
 def undo_withdraw_badge(
-    badge_given_id: int, undo_withdrawn_by: int, context_group: str
+    badge_given_id: int, undo_withdrawn_by: int, doc_id: int, context_group: str
 ) -> Response:
     """
     Undoes a badge withdrawal from a usergroup.
+    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
     :param badge_given_id: ID of the badgegiven
     :param undo_withdrawn_by: ID of the useraccount that undoes the badge withdrawal
     :return: ok response
     """
-
-    # TODO: Hard coded at the moment
-    d = DocEntry.find_by_path("users/adminsson-admin/testing-badge-components")
+    d = DocEntry.find_by_id(doc_id)
     verify_teacher_access(d)
-
     check_context_group_access(undo_withdrawn_by, context_group)
     badge_given = {
         "active": True,

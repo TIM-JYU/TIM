@@ -20,6 +20,8 @@ import {
     BadgeComponent,
     BadgeModule,
 } from "tim/gamification/badge/badge.component";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {documentglobals} from "tim/util/globals";
 
 @Component({
     selector: "tim-badge-creator",
@@ -163,6 +165,7 @@ export class BadgeCreatorComponent implements OnInit {
     private userID?: number;
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
+    currentDocumentID = documentglobals().curr_item.id;
     isFormChanged = false; // Flag to track form changes
     all_badges: IBadge[] = [];
     selectedContextGroup: string = "";
@@ -361,6 +364,7 @@ export class BadgeCreatorComponent implements OnInit {
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/create_badge", {
                     created_by: this.newBadge.created_by,
+                    doc_id: this.currentDocumentID,
                     context_group: this.selectedContextGroup,
                     title: this.newBadge.title,
                     color: this.newBadge.color,
@@ -399,7 +403,7 @@ export class BadgeCreatorComponent implements OnInit {
         if (this.selectedContextGroup) {
             response = toPromise(
                 this.http.get<[]>(
-                    `/all_badges_in_context/${this.userID}/${this.selectedContextGroup}`
+                    `/all_badges_in_context/${this.userID}/${this.currentDocumentID}/${this.selectedContextGroup}`
                 )
             );
         } else {
@@ -431,6 +435,7 @@ export class BadgeCreatorComponent implements OnInit {
                     this.http.post<{ok: boolean}>("/modify_badge", {
                         badge_id: this.editingBadge.id,
                         modified_by: this.userID,
+                        doc_id: this.currentDocumentID,
                         context_group: this.editingBadge.context_group,
                         title: this.editingBadge.title,
                         color: this.editingBadge.color,
@@ -468,6 +473,7 @@ export class BadgeCreatorComponent implements OnInit {
                         this.http.post<{ok: boolean}>("/deactivate_badge", {
                             badge_id: this.editingBadge.id,
                             deleted_by: this.userID,
+                            doc_id: this.currentDocumentID,
                             context_group: this.selectedContextGroup,
                         })
                     );
