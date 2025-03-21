@@ -199,7 +199,13 @@ button[type="button"]:hover {
   background-color: #9b1212;
 }
 
-#deleteButton[disabled], #cancelButton[disabled]{
+#deleteButton[disabled] {
+  background-color: #E18A8A;
+  color: white;
+  cursor: not-allowed;
+}
+
+#cancelButton[disabled]{
   background-color: #ccc;
   color: #777;
   cursor: not-allowed;
@@ -261,7 +267,7 @@ button[type="button"]:hover {
 .left-buttons {
     display: flex;
     gap: 10px;
-    margin-left: 10px;
+    //margin-left: 10px;
 }
 
 .right-buttons {
@@ -289,16 +295,17 @@ button[type="button"]:hover {
 
 /* Style for the delete button on the right */
 .right-button {
-    width: 5.5em;
-    height: 5.5em;
+    font-size: medium;
+    font-weight: bold;
+    width: 5em;
+    height: 5em;
     background-color: #c31515;
     cursor: pointer;
-    padding: 0.5em 2em;
-    margin-top: 1em;
     display: flex;
     align-items: center;
     text-align: center;
     justify-content: center;
+    border-radius: 0.8em;
 }
 
 
@@ -313,4 +320,14 @@ button[type="button"]:hover {
     color: #777;
     cursor: not-allowed;
     opacity: 0.6;
+}
+
+#editButton:disabled, #giveBadgeButton:disabled {
+  cursor: not-allowed;
+}
+
+.button-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }

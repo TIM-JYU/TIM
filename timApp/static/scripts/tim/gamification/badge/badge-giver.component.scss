@@ -187,3 +187,12 @@ button:disabled {
   max-width: 100%;
   max-height: 100%;
 }
+
+#cancelGiveButton {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+#cancelGiveButton:hover {
+  background-color: #5a6268;
+}

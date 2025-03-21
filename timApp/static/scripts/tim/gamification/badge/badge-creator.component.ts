@@ -133,19 +133,18 @@ import {
                             </div>
                         </div>
                     </div>
-    
-                    <button id="createButton"
-                            type="submit"
-                            [attr.title]="!badgeForm.valid ? 'Fill all the required fields' : null"
-                            [disabled]="!badgeForm.valid"
-                            (click)="editingBadge ? saveBadgeChanges() : onSubmit()">
-                            {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
-                    </button>
-    
-                    <div class="delete-edit">
-                        <div class="button-group">
-                            <button id="cancelButton" type="button" [disabled]="!isFormChanged"  (click)="onCancel()">Cancel</button>
-                        </div>
+                    
+                    <div class="button-container">
+                      <button id="createButton"
+                              type="submit"
+                              [attr.title]="!badgeForm.valid ? 'Fill all the required fields' : null"
+                              [disabled]="!badgeForm.valid"
+                              (click)="editingBadge ? saveBadgeChanges() : onSubmit()">
+                          {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
+                      </button>
+                      <div class="button-group">
+                          <button id="cancelButton" type="button" [disabled]="!isFormChanged" (click)="onCancel()">Cancel</button>
+                      </div>
                     </div>
                 </form>
               </div>

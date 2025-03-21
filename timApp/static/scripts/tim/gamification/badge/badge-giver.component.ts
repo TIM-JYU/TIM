@@ -96,6 +96,9 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                     </div>
                                 </div>
                             </ng-container>
+                            <ng-container *ngIf="groupBadges.length == 0">
+                                <p>No assigned badges</p>
+                            </ng-container>
                         </div>
                         
                         <!-- User -->
@@ -107,23 +110,6 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                 Assigned Badges
                             </label>
                             <div class="viewer-container">
-                                <!-- Assigned group badges -->
-                                <ng-container *ngIf="groupBadges.length > 0">
-                                    <div class="user_badges_scroll">
-                                        <div class="badge-card" *ngFor="let badge of groupBadges">
-                                            <tim-badge
-                                                       [title]="badge.title"
-                                                       [color]="badge.color"
-                                                       [shape]="badge.shape"
-                                                       [image]="badge.image"
-                                                       [description]="badge.description"
-                                                       [message]="badge.message">
-                                            </tim-badge>
-                                        </div>
-                                    </div>
-                                </ng-container>
-                                
-                                <!-- Assigned user badges -->
                                 <ng-container *ngIf="userBadges.length > 0">
                                 <div class="user_badges_scroll">
                                     <div class="badge-card" *ngFor="let badge of userBadges">
@@ -139,7 +125,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                 </div>
                                 </ng-container>
                                 <ng-container *ngIf="userBadges.length == 0">
-                                    <p>No badges</p>
+                                    <p>No assigned badges</p>
                                 </ng-container>
                             </div>
                         </div>
@@ -149,7 +135,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                         <button (click)="assignBadge(message)" [disabled]="!selectedUser && !selectedGroup || !selectedBadge">
                             Assign Badge
                         </button>
-                        <button (click)="emptyForm()">Cancel</button>
+                        <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
                     </div>
                 </div>
             </div>
