@@ -17,8 +17,11 @@ import {toPromise} from "tim/util/utils";
     template: `
         <div class="viewer-container">
             
+            <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
+            <ng-container *ngIf="badges.length == 0">
+                <p>No user badges</p>
+            </ng-container>
             <ng-container *ngIf="badges.length > 0">
-                <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
                 <div class="user_badges" (wheel)="onScroll($event)">
                     <div class="badge-card" *ngFor="let badge of badges">
                         <tim-badge
@@ -36,24 +39,28 @@ import {toPromise} from "tim/util/utils";
             <ng-container *ngIf="userSubGroups.length > 0">
             <div class="subgroups" *ngFor="let group of userSubGroups">
                 <h2 class="badge-heading">{{group.name}} badges</h2>
-                <div class="users_group_badges" (wheel)="onScroll($event)">
-                    <div class="badge-card" *ngFor="let badge of myMap.get(group.id)">
-                        <tim-badge
-                               title="{{badge.title}}" 
-                               color="{{badge.color}}" 
-                               shape="{{badge.shape}}"
-                               [image]="badge.image"
-                               description="{{badge.description}}"
-                               message="{{badge.message}}">
-                        </tim-badge>
+                
+                <ng-container *ngIf="myMap.get(group.id)?.length == 0">
+                    <p>No group badges</p>
+                </ng-container>
+                
+                <ng-container *ngIf="myMap.get(group.id)?.length || 0 > 0">
+                    <div class="users_group_badges" (wheel)="onScroll($event)">
+                        <div class="badge-card" *ngFor="let badge of myMap.get(group.id)">
+                            <tim-badge
+                                   title="{{badge.title}}" 
+                                   color="{{badge.color}}" 
+                                   shape="{{badge.shape}}"
+                                   [image]="badge.image"
+                                   description="{{badge.description}}"
+                                   message="{{badge.message}}">
+                            </tim-badge>
+                        </div>
                     </div>
-                </div>
+                </ng-container>
             </div>
             </ng-container>
 
-            <ng-container *ngIf="badges.length == 0">
-                <p>No badges</p>
-            </ng-container>
         </div>
         `,
     styleUrls: ["badge-viewer.component.scss"],

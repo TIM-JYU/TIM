@@ -22,6 +22,7 @@ import {
 import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.component";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {documentglobals} from "tim/util/globals";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-badge-creator",
@@ -136,6 +137,10 @@ import {documentglobals} from "tim/util/globals";
                         </div>
                     </div>
                     
+                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                        <div [innerHTML]="alert.msg"></div>
+                    </tim-alert>
+                    
                     <div class="button-container">
                       <button id="createButton"
                               type="submit"
@@ -163,7 +168,10 @@ import {documentglobals} from "tim/util/globals";
 export class BadgeCreatorComponent implements OnInit {
     private userName?: string;
     private userID?: number;
-    constructor(private http: HttpClient, private badgeService: BadgeService) {}
+    constructor(
+        private http: HttpClient,
+        protected badgeService: BadgeService
+    ) {}
 
     currentDocumentID = documentglobals().curr_item.id;
     isFormChanged = false; // Flag to track form changes
@@ -178,6 +186,11 @@ export class BadgeCreatorComponent implements OnInit {
     showGiver = false;
     showWithdraw = false;
     @Input() badgegroupContext?: string;
+    alerts: Array<{
+        msg: string;
+        type: "warning" | "danger";
+        id?: string;
+    }> = [];
 
     // Method called when a badge is clicked
     selectBadge(badge: IBadge) {
@@ -373,9 +386,9 @@ export class BadgeCreatorComponent implements OnInit {
                     description: this.newBadge.description,
                 })
             );
-            console.log("contextgroup: ", this.selectedContextGroup);
+            //console.log("contextgroup: ", this.selectedContextGroup);
             const result = await response;
-            console.log("contextgroup: ", this.selectedContextGroup);
+            //console.log("contextgroup: ", this.selectedContextGroup);
             if (result.ok) {
                 while (this.all_badges.length > 0) {
                     this.all_badges.pop();
@@ -385,6 +398,14 @@ export class BadgeCreatorComponent implements OnInit {
 
                 this.badgeService.triggerUpdateBadgeList();
                 this.badgeFormShowing = false;
+            }
+            if (!result.ok) {
+                this.badgeService.showError(
+                    this.alerts,
+                    {data: {error: result.result.error.error}},
+                    "danger"
+                );
+                return;
             }
         }
     }
@@ -512,6 +533,7 @@ export class BadgeCreatorComponent implements OnInit {
         BadgeViewerModule,
         BadgeGiverModule,
         BadgeWithdrawModule,
+        TimUtilityModule,
     ],
 })
 export class BadgeCreatorModule {}
