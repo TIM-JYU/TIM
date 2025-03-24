@@ -122,6 +122,7 @@ export class BadgeViewerComponent implements OnInit {
 
         this.subscription = this.badgeService.updateBadgeList$.subscribe(() => {
             this.getBadges(this.userID);
+            this.getGroupBadges();
         });
     }
 
