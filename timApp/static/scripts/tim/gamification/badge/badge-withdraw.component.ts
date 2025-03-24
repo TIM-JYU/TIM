@@ -38,14 +38,17 @@ import {Subscription} from "rxjs";
 
                 <ng-container *ngIf="userBadges.length > 0">
                     <p *ngIf="selectedUser?.name != undefined">{{ selectedUser?.real_name }}'s badges</p>
-                    <div class="user_badges">
-                        <tim-badge *ngFor="let badge of userBadges"
-                                   title="{{badge.title}}"
-                                   color="{{badge.color}}"
-                                   shape="{{badge.shape}}"
-                                   [image]="badge.image"
-                                   (click)="selectBadge(badge, false, false)">
-                        </tim-badge>
+                    <div class="user_badges" (wheel)="onScroll($event)">
+                        <div class="badge-card" *ngFor="let badge of userBadges">
+                            <tim-badge 
+                                       [ngClass]="{'selected-badge': selectedBadge === badge}"
+                                       title="{{badge.title}}"
+                                       color="{{badge.color}}"
+                                       shape="{{badge.shape}}"
+                                       [image]="badge.image"
+                                       (click)="selectBadge(badge, false, false)">
+                            </tim-badge>
+                        </div>
                     </div>
                 </ng-container>
 
@@ -65,14 +68,17 @@ import {Subscription} from "rxjs";
 
                 <ng-container *ngIf="groupBadges.length > 0">
                     <p *ngIf="selectedGroup?.name != undefined">{{ selectedGroup?.name }} badges</p>
-                    <div class="group_badges">
-                        <tim-badge *ngFor="let badge of groupBadges"
-                                   title="{{badge.title}}"
-                                   color="{{badge.color}}"
-                                   shape="{{badge.shape}}"
-                                   [image]="badge.image"
-                                   (click)="selectBadge(badge, true, false)">
-                        </tim-badge>
+                    <div class="group_badges" (wheel)="onScroll($event)">
+                        <div class="badge-card" *ngFor="let badge of groupBadges">
+                            <tim-badge
+                                       [ngClass]="{'selected-badge': selectedBadge === badge}"
+                                       title="{{badge.title}}"
+                                       color="{{badge.color}}"
+                                       shape="{{badge.shape}}"
+                                       [image]="badge.image"
+                                       (click)="selectBadge(badge, true, false)">
+                            </tim-badge>
+                        </div>
                     </div>
                 </ng-container>
 
@@ -108,6 +114,13 @@ export class BadgeWithdrawComponent implements OnInit {
     groupBadges: IBadge[] = [];
 
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
+
+    onScroll(event: WheelEvent) {
+        const targetElement = event.currentTarget as HTMLElement;
+        const scrollAmount = event.deltaY * 0.5;
+        targetElement.scrollLeft += scrollAmount;
+        event.preventDefault();
+    }
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
