@@ -189,6 +189,8 @@ export class BadgeGiverComponent implements OnInit {
     }> = [];
 
     @Output() cancelEvent = new EventEmitter<void>();
+    private personalGroup: unknown;
+    private userName: string | undefined;
 
     constructor(
         private http: HttpClient,
@@ -197,10 +199,12 @@ export class BadgeGiverComponent implements OnInit {
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
+            this.userName = Users.getCurrent().name;
             this.addListeners();
             this.fetchUsers();
             this.fetchGroups();
             this.fetchBadges();
+            this.fetchPersonalGroup();
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.showComponent = true;
@@ -301,10 +305,6 @@ export class BadgeGiverComponent implements OnInit {
             return;
         }
 
-        //if (this.selectedUser) {
-        //    this.selectedBadge = null;
-        //}
-        // Reset user selection and hide badges
         this.selectedUser = null;
         this.userBadges = [];
         this.showDeleteButton = false;
@@ -315,6 +315,15 @@ export class BadgeGiverComponent implements OnInit {
         this.groupBadges = await this.badgeService.getUserBadges(groupId);
     }
 
+    async fetchPersonalGroup() {
+        this.personalGroup = await this.badgeService.getPersonalGroup(
+            this.userName
+        );
+        if (this.personalGroup) {
+            console.log("User's personal group:", this.personalGroup);
+        }
+    }
+
     /**
      * Antaa valitulle käyttäjälle valitun badgen
      * @param message viesti, joka antamisen yhteydessä voidaan antaa
@@ -323,12 +332,27 @@ export class BadgeGiverComponent implements OnInit {
         if (Users.isLoggedIn()) {
             this.badgeGiver = Users.getCurrent().id;
         }
+
         let currentId = this.selectedUser?.id;
-        if (this.selectedGroup != undefined) {
+
+        if (this.selectedGroup) {
             currentId = this.selectedGroup.id;
+        } else if (this.selectedUser) {
+            // Jos badge annetaan käyttäjälle, haetaan käyttäjän henk.koht groupin ID
+            const personalGroup = await this.badgeService.getPersonalGroup(
+                this.selectedUser.name
+            );
+            if (personalGroup) {
+                currentId = personalGroup.id;
+            } else {
+                console.error(
+                    "Failed to retrieve the user's personal group ID."
+                );
+                return;
+            }
         }
 
-        // Show confirmation dialog before removing the badge
+        // Show confirmation dialog before assigning the badge
         const confirmed = await showConfirm(
             "Confirm badge assigning event",
             "Are you sure you want to assign this badge?"
@@ -351,15 +375,11 @@ export class BadgeGiverComponent implements OnInit {
 
         const result = await response;
         if (result.ok) {
-            if (result.result != undefined) {
-                console.log(
-                    "badge " +
-                        this.selectedBadge?.title +
-                        " annettu käyttäjälle: " +
-                        this.selectedUser?.name
-                );
-            }
+            console.log(
+                `Badge '${this.selectedBadge?.title}' assigned to group/user ID: ${currentId}`
+            );
         }
+        // Reset values after assigning
 
         if (!result.ok) {
             this.badgeService.showError(
@@ -372,7 +392,6 @@ export class BadgeGiverComponent implements OnInit {
 
         this.message = "";
         if (currentId) {
-            //this.badgeService.getUserBadges(currentId);
             this.badgeService.notifyBadgeViewerUpdate();
         }
         this.selectedUser = null;
