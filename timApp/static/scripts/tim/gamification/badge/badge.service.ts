@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {lastValueFrom} from "rxjs";
+import {lastValueFrom, Observable} from "rxjs";
 import {Subject} from "rxjs";
 import {toPromise} from "tim/util/utils";
 import type {
@@ -143,6 +143,26 @@ export class BadgeService {
         if (result.ok) {
             console.log("badge poistettu käytöstä id:llä: " + badgegivenID);
             this.triggerUpdateBadgeList();
+        }
+    }
+
+    async getPersonalGroup(userName: string | undefined) {
+        const response = toPromise(
+            this.http.get<any>(`/users_personal_group/${userName}`)
+        );
+        const result = await response;
+
+        if (result.ok) {
+            console.log(
+                `Fetched personal group for user: ${userName}`,
+                result.result
+            );
+            return result.result;
+        } else {
+            console.error(
+                `Failed to fetch personal group for user: ${userName}`
+            );
+            return null;
         }
     }
 
