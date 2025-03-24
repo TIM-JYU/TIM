@@ -23,6 +23,7 @@ import {toPromise} from "tim/util/utils";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {documentglobals} from "tim/util/globals";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "timBadgeGiver",
@@ -139,6 +140,10 @@ import {documentglobals} from "tim/util/globals";
                         </div>
                     </div>
                     
+                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                        <div [innerHTML]="alert.msg"></div>
+                    </tim-alert>
+                    
                     <div class="button-container">
                         <button (click)="assignBadge(message)" [disabled]="!selectedUser && !selectedGroup || !selectedBadge">
                             Assign Badge
@@ -177,12 +182,20 @@ export class BadgeGiverComponent implements OnInit {
     groupAssign: boolean = false;
     badgeGiver = 0;
     currentId = null;
+    alerts: Array<{
+        msg: string;
+        type: "warning" | "danger";
+        id?: string;
+    }> = [];
 
     @Output() cancelEvent = new EventEmitter<void>();
     private personalGroup: unknown;
     private userName: string | undefined;
 
-    constructor(private http: HttpClient, private badgeService: BadgeService) {}
+    constructor(
+        private http: HttpClient,
+        protected badgeService: BadgeService
+    ) {}
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
@@ -256,8 +269,8 @@ export class BadgeGiverComponent implements OnInit {
      */
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
-        console.log("näyttää kaikki badget: ", this.badges);
-        console.log("Selected badge:", this.selectedBadge);
+        //console.log("näyttää kaikki badget: ", this.badges);
+        //console.log("Selected badge:", this.selectedBadge);
     }
 
     /**
@@ -366,8 +379,17 @@ export class BadgeGiverComponent implements OnInit {
                 `Badge '${this.selectedBadge?.title}' assigned to group/user ID: ${currentId}`
             );
         }
-
         // Reset values after assigning
+
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {data: {error: result.result.error.error}},
+                "danger"
+            );
+            return;
+        }
+
         this.message = "";
         if (currentId) {
             this.badgeService.notifyBadgeViewerUpdate();
@@ -446,6 +468,6 @@ export class BadgeGiverComponent implements OnInit {
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [CommonModule, FormsModule, BadgeModule],
+    imports: [CommonModule, FormsModule, BadgeModule, TimUtilityModule],
 })
 export class BadgeGiverModule {}

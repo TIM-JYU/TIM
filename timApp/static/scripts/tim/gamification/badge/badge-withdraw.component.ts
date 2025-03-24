@@ -15,6 +15,8 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
 import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {Subscription} from "rxjs";
+import answer from "../../../../../modules/jsrunner/server/routes/answer";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-badge-withdraw",
@@ -82,6 +84,10 @@ import {Subscription} from "rxjs";
                         </div>
                     </div>
                 </ng-container>
+                
+                <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                    <div [innerHTML]="alert.msg"></div>
+                </tim-alert>
 
                 <div class="button-container">
                     <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)"
@@ -113,9 +119,17 @@ export class BadgeWithdrawComponent implements OnInit {
     groups: IGroup[] = [];
     selectedGroup?: IGroup | null = null;
     groupBadges: IBadge[] = [];
+    alerts: Array<{
+        msg: string;
+        type: "warning" | "danger";
+        id?: string;
+    }> = [];
 
     @Output() cancelEvent = new EventEmitter<void>();
-    constructor(private http: HttpClient, private badgeService: BadgeService) {}
+    constructor(
+        private http: HttpClient,
+        protected badgeService: BadgeService
+    ) {}
 
     onScroll(event: WheelEvent) {
         const targetElement = event.currentTarget as HTMLElement;
@@ -192,8 +206,8 @@ export class BadgeWithdrawComponent implements OnInit {
      */
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
-        console.log("näyttää kaikki badget: ", this.badges);
-        console.log("Selected badge:", this.selectedBadge);
+        //console.log("näyttää kaikki badget: ", this.badges);
+        //console.log("Selected badge:", this.selectedBadge);
     }
 
     /**
@@ -264,11 +278,21 @@ export class BadgeWithdrawComponent implements OnInit {
             console.error("group_context was undefined");
             return;
         }
-        await this.badgeService.withdrawBadge(
-            badgegivenID,
-            this.badgeGiver,
-            this.badgegroupContext
-        );
+        await this.badgeService
+            .withdrawBadge(
+                badgegivenID,
+                this.badgeGiver,
+                this.badgegroupContext
+            )
+            .then((r) => {
+                if (!r.ok) {
+                    this.badgeService.showError(
+                        this.alerts,
+                        {data: {error: r.data?.result.error.error || ""}},
+                        "danger"
+                    );
+                }
+            });
         this.fetchUserBadges(this.selectedUser?.id);
         // Poistaa deletenapin näkyvistä deleten jälkeen
         this.selectedBadge = null;
@@ -300,7 +324,13 @@ export class BadgeWithdrawComponent implements OnInit {
 
 @NgModule({
     declarations: [BadgeWithdrawComponent],
-    imports: [CommonModule, FormsModule, HttpClientModule, BadgeModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+        HttpClientModule,
+        BadgeModule,
+        TimUtilityModule,
+    ],
     exports: [BadgeWithdrawComponent],
 })
 export class BadgeWithdrawModule {}

@@ -39,7 +39,7 @@ export class BadgeService {
             // Return fetched data or an empty array if database is empty
             return result ?? [];
         } catch (error) {
-            console.error("Error fetching badges:", error);
+            //console.error("Error fetching badges:", error);
             // Return an empty array in case of an error
             return [];
         }
@@ -59,7 +59,7 @@ export class BadgeService {
                 for (const alkio of result.result) {
                     userBadges.push(alkio);
                 }
-                console.log("haettu käyttäjän " + id + " badget");
+                //console.log("haettu käyttäjän " + id + " badget");
             }
         }
         return userBadges;
@@ -141,8 +141,11 @@ export class BadgeService {
         );
         const result = await response;
         if (result.ok) {
-            console.log("badge poistettu käytöstä id:llä: " + badgegivenID);
+            //console.log("badge poistettu käytöstä id:llä: " + badgegivenID);
             this.triggerUpdateBadgeList();
+            return {ok: true};
+        } else {
+            return {ok: false, data: result};
         }
     }
 
@@ -180,5 +183,23 @@ export class BadgeService {
     // Funktio updatetapahtuman lähettämiseen kun luodaan uusi badge creatorilla, se päivitetään giver listaan.
     triggerUpdateBadgeList() {
         this.updateBadgeSubject.next();
+    }
+
+    // Näyttää mahdolliset errorit
+    showError(
+        alerts: any,
+        response: {data: {error: string}},
+        type: "warning" | "danger"
+    ) {
+        const msg = `Error: ${response.data.error ?? response.data}`;
+        if (alerts.some((a: any) => a.msg === msg && a.type === type)) {
+            return;
+        }
+        alerts.push({msg, type});
+    }
+
+    // Poistaa error-viestin alerts-listasta
+    closeAlert(alerts: any, index: number) {
+        alerts.splice(index, 1);
     }
 }
