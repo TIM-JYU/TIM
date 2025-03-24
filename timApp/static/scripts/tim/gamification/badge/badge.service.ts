@@ -51,8 +51,9 @@ export class BadgeService {
      * @return palauttaa IBadge taulukon
      */
     async getUserBadges(id: number) {
-        const response = toPromise(this.http.get<[]>("/groups_badges/" + id));
-        const result = await response;
+        const result = await toPromise(
+            this.http.get<[]>(`/groups_badges/${id}`)
+        );
         const userBadges: IBadge[] = [];
         if (result.ok) {
             if (result.result != undefined) {
@@ -62,7 +63,7 @@ export class BadgeService {
                 console.log("haettu käyttäjän " + id + " badget");
             }
         }
-        return userBadges;
+        return userBadges.reverse();
     }
 
     /**
@@ -70,9 +71,10 @@ export class BadgeService {
      * @param group ryhmä, jonka käyttäjiä haetaan.
      */
     async getUsersFromGroup(group: string) {
-        const response = toPromise(this.http.get<[]>("/groups/show/" + group));
+        const result = await toPromise(
+            this.http.get<[]>(`/groups/show/${group}`)
+        );
         const users: IUser[] = [];
-        const result = await response;
         if (result.ok) {
             if (result.result != undefined) {
                 for (const alkio of result.result) {
@@ -88,9 +90,10 @@ export class BadgeService {
      * @param group ryhmä, jonka avulla aliryhmät haetaan
      */
     async getSubGroups(group: string) {
-        const response = toPromise(this.http.get<[]>("/subgroups/" + group));
+        const result = await toPromise(
+            this.http.get<[]>(`/subgroups/${group}`)
+        );
         const subGroups: IGroup[] = [];
-        const result = await response;
         if (result.ok) {
             if (result.result != undefined) {
                 for (const alkio of result.result) {
