@@ -296,7 +296,22 @@ export class BadgeGiverComponent implements OnInit {
         while (this.userBadges.length > 0) {
             this.userBadges.pop();
         }
-        this.userBadges = await this.badgeService.getUserBadges(userId);
+        let currentId = this.selectedUser?.id;
+        if (!this.selectedUser) {
+            return;
+        }
+        const personalGroup = await this.badgeService.getPersonalGroup(
+            this.selectedUser.name
+        );
+        if (personalGroup) {
+            currentId = personalGroup.id;
+        } else {
+            console.error("Failed to retrieve the user's personal group ID.");
+        }
+        if (!currentId) {
+            return;
+        }
+        this.userBadges = await this.badgeService.getUserBadges(currentId);
     }
 
     async fetchGroupBadges(groupId?: number) {
