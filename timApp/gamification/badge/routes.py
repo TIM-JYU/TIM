@@ -97,7 +97,7 @@ def check_context_group_access(user_id: int, context_group: str) -> None:
 @badges_blueprint.get("/all_badges_including_inactive")
 def all_badges_including_inactive() -> Response:
     """
-    Fetches all badges including the inactive badges. Sorted by created timestamp.
+    Fetches all badges including the inactive badges. Sorted by created-timestamp.
     :return: Badges in json response format
     """
     badges = run_sql(select(Badge).order_by(Badge.created)).scalars().all()
@@ -110,7 +110,7 @@ def all_badges_including_inactive() -> Response:
 @badges_blueprint.get("/all_badges")
 def get_badges() -> Response:
     """
-    Fetches all badges except the inactive badges. Sorted by created timestamp.
+    Fetches all badges except the inactive badges. Sorted by created-timestamp.
     :return: Badges in json response format
     """
     badges = (
@@ -128,7 +128,7 @@ def get_badges() -> Response:
 @badges_blueprint.get("/all_badges_in_context/<user_id>/<doc_id>/<context_group>")
 def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Response:
     """
-    Fetches all badges in specific context_group. Sorted by created timestamp.
+    Fetches all badges in specific context_group. Sorted by created-timestamp.
     :param doc_id: Current document's ID
     :param user_id: Current user's ID
     :param context_group: Context group to get badges from
@@ -370,7 +370,7 @@ def reactivate_badge(
 @badges_blueprint.get("/groups_badges/<group_id>")
 def get_groups_badges(group_id: int) -> Response:
     """
-    Fetches badges that are given to a usergroup.
+    Fetches badges that are given to a usergroup. Sorted by given-timestamp.
     :param group_id: ID of the usergroup
     :return: Badges in json response format
     """
@@ -385,6 +385,7 @@ def get_groups_badges(group_id: int) -> Response:
         .all()
     )
     badge_ids = []
+    badge_ids_unique = []
     badge_ids_badgegiven_ids_and_msgs: dict[str, tuple] = {}
     for badgeGiven in groups_badges_given:
         key_extension = 0
@@ -393,6 +394,7 @@ def get_groups_badges(group_id: int) -> Response:
         ) in badge_ids_badgegiven_ids_and_msgs.keys():
             key_extension += 1
         badge_ids.append(badgeGiven.badge_id)
+        badge_ids_unique.append((badgeGiven.badge_id, key_extension))
         badge_ids_badgegiven_ids_and_msgs[
             str(badgeGiven.badge_id) + "_" + str(key_extension)
         ] = (badgeGiven.id, badgeGiven.message)
@@ -410,9 +412,13 @@ def get_groups_badges(group_id: int) -> Response:
 
     badges_json = []
     for badge in groups_badges_ordered:
+        id_unique_extension = 0
         key_extension = 0
-        for badge_id in badge_ids:
-            if badge_id == badge.id:
+        for badge_id_unique in badge_ids_unique:
+            if (
+                badge_id_unique[0] == badge.id
+                and badge_id_unique[1] == id_unique_extension
+            ):
                 badge_json = badge.to_json()
                 badge_json["badgegiven_id"] = badge_ids_badgegiven_ids_and_msgs[
                     str(badge.id) + "_" + str(key_extension)
@@ -422,6 +428,7 @@ def get_groups_badges(group_id: int) -> Response:
                 ][1]
                 key_extension += 1
                 badges_json.append(badge_json)
+        id_unique_extension += 1
     return json_response(badges_json)
 
 
@@ -627,6 +634,11 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
 # TODO: Handle errors.
 @badges_blueprint.get("/users_personal_group/<name>")
 def users_personal_group(name: str) -> Response:
+    """
+    Fetches user's personal usergroup.
+    :param name: User's name
+    :return: usergroup
+    """
     personal_group = UserGroup.get_by_name(name)
     if personal_group:
         return json_response(personal_group)
