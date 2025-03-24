@@ -25,8 +25,11 @@ from timApp.auth.accesshelper import (
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
+from timApp.notification.notification import NotificationType
+from timApp.notification.notify import notify_doc_watchers
 from timApp.peerreview.util.peerreview_utils import (
     has_review_access,
     get_reviews_targeting_user,
@@ -114,7 +117,33 @@ def add_annotation(
     db.session.add(ann)
     ann.set_position_info(coord)
     db.session.commit()
+    notify_annotation_subscribers(d, ann, NotificationType.AnnotationAdded)
     return json_response(ann, date_conversion=True)
+
+
+def notify_annotation_subscribers(
+    document: DocInfo | DocEntry | None,
+    annotation: Annotation,
+    notify_type: NotificationType,
+    alt_msg: str | None = None,
+) -> None:
+    # Only public annotations in the document (not in task answers) will trigger a notification
+    if (
+        document
+        and annotation.visible_to == AnnotationVisibility.everyone.value
+        and not annotation.answer_id
+    ):
+        text = alt_msg if alt_msg is not None else annotation.velp_content.content
+        ann_par = None
+        if annotation.paragraph_id_start is not None:
+            ann_par = document.document.get_paragraph(annotation.paragraph_id_start)
+        notify_doc_watchers(
+            doc=document,
+            content_msg=text if text is not None else "",
+            notify_type=notify_type,
+            par=ann_par,
+        )
+        db.session.commit()
 
 
 def validate_color(color: str | None) -> None:
@@ -125,22 +154,29 @@ def validate_color(color: str | None) -> None:
 def check_visibility_and_maybe_get_doc(
     user: User, ann: Annotation
 ) -> tuple[bool, DocInfo | None]:
+    from timApp.util.flask.requesthelper import NotExist
+
     d = None
+    doc_id = ann.document_id
+    if doc_id is None:
+        doc_id = -1
+    try:
+        d = get_doc_or_abort(doc_id)
+    except NotExist:
+        pass
+
     if user.id == ann.annotator_id:
         return True, d
     if ann.visible_to == AnnotationVisibility.everyone.value:
         return True, d
-    doc_id = ann.document_id
-    if doc_id is None:
-        doc_id = -1
-    d = get_doc_or_abort(doc_id)
-    if (
-        ann.visible_to == AnnotationVisibility.teacher.value
-        and user.has_teacher_access(d)
-    ):
-        return True, d
-    if ann.visible_to == AnnotationVisibility.owner.value and user.has_ownership(d):
-        return True, d
+    if d:
+        if (
+            ann.visible_to == AnnotationVisibility.teacher.value
+            and user.has_teacher_access(d)
+        ):
+            return True, d
+        if ann.visible_to == AnnotationVisibility.owner.value and user.has_ownership(d):
+            return True, d
     return False, d
 
 
@@ -203,6 +239,12 @@ def update_annotation(
     db.session.commit()
     if should_anonymize_annotations(d, user):
         anonymize_annotations([ann], user.id)
+
+    notify_annotation_subscribers(
+        document=d,
+        annotation=ann,
+        notify_type=NotificationType.AnnotationModified,
+    )
     return json_response(ann, date_conversion=True)
 
 
@@ -222,13 +264,14 @@ def invalidate_annotation(id: int) -> Response:
     verify_logged_in()
     user = get_current_user_object()
     annotation = get_annotation_or_abort(id)
-    can_edit, _ = check_annotation_edit_access_and_maybe_get_doc(user, annotation)
+    can_edit, d = check_annotation_edit_access_and_maybe_get_doc(user, annotation)
     if not can_edit:
         raise AccessDenied(
             "Sorry, you don't have permission to delete this annotation."
         )
     annotation.valid_until = get_current_time()
     db.session.commit()
+    notify_annotation_subscribers(d, annotation, NotificationType.AnnotationDeleted)
     return ok_response()
 
 
@@ -269,6 +312,7 @@ def add_comment_route(id: int, content: str) -> Response:
     db.session.commit()
     if should_anonymize_annotations(d, commenter):
         anonymize_annotations([a], commenter.id)
+    notify_annotation_subscribers(d, a, NotificationType.AnnotationModified, content)
     return json_response(a, date_conversion=True)
 
 

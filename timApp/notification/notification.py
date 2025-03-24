@@ -1,4 +1,4 @@
-import enum
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from timApp.item.block import Block
 
 
-class NotificationType(enum.Enum):
+class NotificationType(Enum):
     DocModified = 1
     ParAdded = 2
     ParModified = 3
@@ -22,6 +22,9 @@ class NotificationType(enum.Enum):
     CommentModified = 6
     CommentDeleted = 7
     AnswerAdded = 8
+    AnnotationAdded = 9
+    AnnotationModified = 10
+    AnnotationDeleted = 11
 
     @property
     def is_document_modification(self) -> bool:
@@ -30,6 +33,22 @@ class NotificationType(enum.Enum):
             NotificationType.ParAdded,
             NotificationType.ParDeleted,
             NotificationType.ParModified,
+        )
+
+    @property
+    def is_comment_notification(self) -> bool:
+        return self in (
+            NotificationType.CommentAdded,
+            NotificationType.CommentModified,
+            NotificationType.CommentDeleted,
+        )
+
+    @property
+    def is_velp_notification(self) -> bool:
+        return self in (
+            NotificationType.AnnotationAdded,
+            NotificationType.AnnotationModified,
+            NotificationType.AnnotationDeleted,
         )
 
 

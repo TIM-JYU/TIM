@@ -9,8 +9,10 @@ import {HttpClient} from "@angular/common/http";
 interface INotificationSettings {
     email_doc_modify: boolean;
     email_comment_add: boolean;
-    email_comment_modify: boolean;
     email_answer_add: boolean;
+    email_comment_modify: boolean;
+    email_annotation_add: boolean;
+    email_annotation_modify: boolean;
 }
 
 @Component({
@@ -36,6 +38,14 @@ interface INotificationSettings {
                     <input name="email_answer_add" type="checkbox" [(ngModel)]="notifySettings.email_answer_add"
                            (ngModelChange)="notifyChanged()"/>New answers to tasks
                 </label></div>
+                <div class="checkbox"><label>
+                    <input name="email_annotation_add" type="checkbox" [(ngModel)]="notifySettings.email_annotation_add" 
+                           (ngModelChange)="notifyChanged()"/>New velps
+                </label></div>
+                <div class="checkbox"><label>
+                    <input name="email_annotation_modify" type="checkbox" [(ngModel)]="notifySettings.email_annotation_modify"
+                           (ngModelChange)="notifyChanged()"/>Edited velps
+                </label></div>
             </fieldset>
         </form>
     `,
@@ -47,8 +57,10 @@ export class NotificationOptionsComponent implements OnInit {
     notifySettings: INotificationSettings = {
         email_answer_add: false,
         email_comment_add: false,
-        email_comment_modify: false,
         email_doc_modify: false,
+        email_comment_modify: false,
+        email_annotation_add: false,
+        email_annotation_modify: false,
     };
 
     constructor(private http: HttpClient) {

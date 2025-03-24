@@ -10611,6 +10611,22 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">718,719</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5769201915047199693" datatype="html">
+        <source>New velps</source>
+        <target state="translated">Uudet velpit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">386</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4823150464798164794" datatype="html">
+        <source>Velp modifications</source>
+        <target state="translated">Velppien muutokset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">389</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
