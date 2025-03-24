@@ -1,4 +1,5 @@
 import type {OnInit} from "@angular/core";
+import {EventEmitter, Output} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
@@ -113,6 +114,7 @@ export class BadgeWithdrawComponent implements OnInit {
     selectedGroup?: IGroup | null = null;
     groupBadges: IBadge[] = [];
 
+    @Output() cancelEvent = new EventEmitter<void>();
     constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     onScroll(event: WheelEvent) {
@@ -163,6 +165,7 @@ export class BadgeWithdrawComponent implements OnInit {
         this.showComponent = false;
         this.userBadges = [];
         this.groupBadges = [];
+        this.cancelEvent.emit();
     }
 
     /**
