@@ -10,7 +10,7 @@
   z-index: 10;
 }
 
-.user_badges {
+.user_badges, .users_group_badges {
   display: flex;
   overflow-x: auto;
   overflow-y: hidden;
@@ -20,8 +20,8 @@
 }
 
 .badge-card {
-  width: 150px; /* Aseta kortin koko */
-  height: 150px; /* Aseta kortin korkeus */
+  width: 150px;
+  height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;

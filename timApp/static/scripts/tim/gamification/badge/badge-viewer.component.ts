@@ -19,7 +19,7 @@ import {toPromise} from "tim/util/utils";
             
             <ng-container *ngIf="badges.length > 0">
                 <h2 class="badge-heading">{{this.fullname}}'s badges</h2>
-                <div class="user_badges" #scrollableDiv>
+                <div class="user_badges" (wheel)="onScroll($event)">
                     <div class="badge-card" *ngFor="let badge of badges">
                         <tim-badge
                                title="{{badge.title}}" 
@@ -36,7 +36,7 @@ import {toPromise} from "tim/util/utils";
             <ng-container *ngIf="userSubGroups.length > 0">
             <div class="subgroups" *ngFor="let group of userSubGroups">
                 <h2 class="badge-heading">{{group.name}} badges</h2>
-                <div class="users_group_badges" #scrollableDiv>
+                <div class="users_group_badges" (wheel)="onScroll($event)">
                     <div class="badge-card" *ngFor="let badge of myMap.get(group.id)">
                         <tim-badge
                                title="{{badge.title}}" 
@@ -99,15 +99,13 @@ export class BadgeViewerComponent implements OnInit {
         console.log(this.myMap);
     }
 
-    @ViewChild("scrollableDiv") scrollableDiv!: ElementRef;
+    //@ViewChild("scrollableDiv") scrollableDiv!: ElementRef;
 
-    @HostListener("wheel", ["$event"])
     onScroll(event: WheelEvent) {
-        if (this.scrollableDiv) {
-            const scrollAmount = event.deltaY * 0.5;
-            this.scrollableDiv.nativeElement.scrollLeft += scrollAmount;
-            event.preventDefault();
-        }
+        const targetElement = event.currentTarget as HTMLElement;
+        const scrollAmount = event.deltaY * 0.5;
+        targetElement.scrollLeft += scrollAmount;
+        event.preventDefault();
     }
 
     ngOnInit() {

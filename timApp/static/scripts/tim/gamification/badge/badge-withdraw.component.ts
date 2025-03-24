@@ -19,68 +19,76 @@ import {Subscription} from "rxjs";
     selector: "tim-badge-withdraw",
     template: `
         <ng-container *ngIf="hasPermission; else noPermissionView">
-        <div *ngIf="showComponent" class="badge-giver">
-            <h2>Badge Withdraw</h2>
-        
-            <div class="user-selection">
-                <label for="select-user">User</label>
-                <select id="select-user" [(ngModel)]="selectedUser">
-                    <option [ngValue]="null" disabled selected>Select an user to withdraw badge</option>
-                    <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(user.id)">
-                    {{ user.real_name }}
-                </option>
-                </select>
-            </div>
-        
-            <ng-container *ngIf="userBadges.length > 0">
-               <p *ngIf="selectedUser?.name != undefined">{{selectedUser?.real_name}}'s badges</p>
+            <div *ngIf="showComponent" class="badge-giver">
+                <h2>Badge Withdraw</h2>
+
+                <div class="user-selection">
+                    <label for="select-user">User</label>
+                    <select id="select-user" [(ngModel)]="selectedUser">
+                        <option [ngValue]="null" disabled selected>Select an user to withdraw badge</option>
+                        <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(user.id)">
+                            {{ user.real_name }}
+                        </option>
+                    </select>
+                </div>
+                
+                <ng-container *ngIf="userBadges.length == 0 && selectedUser">
+                    <p>No assigned badges</p>
+                </ng-container>
+
+                <ng-container *ngIf="userBadges.length > 0">
+                    <p *ngIf="selectedUser?.name != undefined">{{ selectedUser?.real_name }}'s badges</p>
                     <div class="user_badges">
                         <tim-badge *ngFor="let badge of userBadges"
                                    title="{{badge.title}}"
                                    color="{{badge.color}}"
                                    shape="{{badge.shape}}"
                                    [image]="badge.image"
-                                   description="{{badge.description}}"
-                                   message="{{badge.message}}"
                                    (click)="selectBadge(badge, false, false)">
                         </tim-badge>
                     </div>
                 </ng-container>
-            
-            <div class="groups">
-                <label for="select_group">Group</label>
-                <select id="select_group" [(ngModel)]="selectedGroup">¨
-                    <option [ngValue]="null" disabled selected>Select a group to withdraw a badge</option>
-                    <option *ngFor="let group of groups" [ngValue]="group" (click)="fetchGroupBadges(group.id)">{{ group.name }}</option>
-                </select>
-            </div>
-            
-            <ng-container *ngIf="groupBadges.length > 0">
-                <div class="group_badges">
-                    <tim-badge *ngFor="let badge of groupBadges"
-                               title="{{badge.title}}"
-                               color="{{badge.color}}"
-                               shape="{{badge.shape}}"
-                               [image]="badge.image"
-                               description="{{badge.description}}"
-                               message="{{badge.message}}"
-                               (click)="selectBadge(badge, true, false)">
-                    </tim-badge>
+
+                <div class="groups">
+                    <label for="select_group">Group</label>
+                    <select id="select_group" [(ngModel)]="selectedGroup">
+                        <option [ngValue]="null" disabled selected>Select a group to withdraw a badge</option>
+                        <option *ngFor="let group of groups" [ngValue]="group"
+                                (click)="fetchGroupBadges(group.id)">{{ group.name }}
+                        </option>
+                    </select>
                 </div>
-            </ng-container>
-            
-            <div class="button-container">
-                <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)" [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
-                    Withdraw Badge
-                </button>
-                <button id="cancelButton" (click)="emptyForm()">Cancel</button>
+                
+                <ng-container *ngIf="groupBadges.length == 0 && selectedGroup">
+                    <p>No assigned badges</p>
+                </ng-container>
+
+                <ng-container *ngIf="groupBadges.length > 0">
+                    <p *ngIf="selectedGroup?.name != undefined">{{ selectedGroup?.name }} badges</p>
+                    <div class="group_badges">
+                        <tim-badge *ngFor="let badge of groupBadges"
+                                   title="{{badge.title}}"
+                                   color="{{badge.color}}"
+                                   shape="{{badge.shape}}"
+                                   [image]="badge.image"
+                                   (click)="selectBadge(badge, true, false)">
+                        </tim-badge>
+                    </div>
+                </ng-container>
+
+                <div class="button-container">
+                    <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)"
+                            [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
+                        Withdraw Badge
+                    </button>
+                    <button id="cancelButton" (click)="emptyForm()">Cancel</button>
+                </div>
             </div>
-        </div>
-    </ng-container>
-    <ng-template #noPermissionView>
-      <p>Access denied for students.</p>
-    </ng-template>
-        `,
+        </ng-container>
+        <ng-template #noPermissionView>
+            <p>Access denied for students.</p>
+        </ng-template>
+    `,
     styleUrls: ["badge-withdraw.component.scss"],
 })
 export class BadgeWithdrawComponent implements OnInit {
