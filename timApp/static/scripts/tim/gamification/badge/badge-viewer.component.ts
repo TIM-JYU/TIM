@@ -9,6 +9,7 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
 import type {IBadge, IGroup} from "tim/gamification/badge/badge.interface";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
+import {IUser} from "tim/user/IUser";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -66,6 +67,8 @@ export class BadgeViewerComponent implements OnInit {
     userName?: string;
     fullname?: string | null;
     userID: number = 0;
+    selectedUser?: IUser | null = null;
+    groupID = null;
     badges: IBadge[] = [];
     userSubGroups: IGroup[] = [];
     @Input() badgegroupContext?: string;
@@ -80,7 +83,20 @@ export class BadgeViewerComponent implements OnInit {
      */
     async getBadges(id: number) {
         this.emptyBadges(this.badges);
-        this.badges = await this.badgeService.getUserBadges(id);
+
+        let groupID = this.selectedUser?.id;
+        const personalGroup = await this.badgeService.getPersonalGroup(
+            this.userName
+        );
+        if (personalGroup) {
+            groupID = personalGroup.id;
+        } else {
+            console.error("Failed to retrieve the user's personal group ID.");
+        }
+        if (!groupID) {
+            return;
+        }
+        this.badges = await this.badgeService.getUserBadges(groupID);
     }
 
     async getUserSubGroups(groupContext: string, userid: number) {
