@@ -9,6 +9,7 @@ import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
 import {MessageListAdminComponent} from "tim/messaging/manage/message-list-admin.component";
 import {TimTableModule} from "tim/plugin/timTable/tim-table.component";
 import {BrowserModule} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 
 @NgModule({
     declarations: [MessageListAdminComponent],
@@ -16,6 +17,7 @@ import {BrowserModule} from "@angular/platform-browser";
     imports: [
         BrowserModule,
         FormsModule,
+        NoopAnimationsModule,
         TimUtilityModule,
         TimMessageSendModule,
         TimTableModule,
