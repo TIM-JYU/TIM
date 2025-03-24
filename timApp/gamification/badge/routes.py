@@ -97,10 +97,10 @@ def check_context_group_access(user_id: int, context_group: str) -> None:
 @badges_blueprint.get("/all_badges_including_inactive")
 def all_badges_including_inactive() -> Response:
     """
-    Fetches all badges including the inactive badges.
+    Fetches all badges including the inactive badges. Sorted by created timestamp.
     :return: Badges in json response format
     """
-    badges = run_sql(select(Badge)).scalars().all()
+    badges = run_sql(select(Badge).order_by(Badge.created)).scalars().all()
     badges_json = []
     for badge in badges:
         badges_json.append(badge.to_json())
@@ -110,10 +110,14 @@ def all_badges_including_inactive() -> Response:
 @badges_blueprint.get("/all_badges")
 def get_badges() -> Response:
     """
-    Fetches all badges except the inactive badges.
+    Fetches all badges except the inactive badges. Sorted by created timestamp.
     :return: Badges in json response format
     """
-    badges = run_sql(select(Badge).filter_by(active=True)).scalars().all()
+    badges = (
+        run_sql(select(Badge).filter_by(active=True).order_by(Badge.created))
+        .scalars()
+        .all()
+    )
     badges_json = []
     for badge in badges:
         badges_json.append(badge.to_json())
@@ -124,7 +128,7 @@ def get_badges() -> Response:
 @badges_blueprint.get("/all_badges_in_context/<user_id>/<doc_id>/<context_group>")
 def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Response:
     """
-    Fetches all badges in specific context_group.
+    Fetches all badges in specific context_group. Sorted by created timestamp.
     :param doc_id: Current document's ID
     :param user_id: Current user's ID
     :param context_group: Context group to get badges from
@@ -137,7 +141,10 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     check_context_group_access(user_id, context_group)
     badges = (
         run_sql(
-            select(Badge).filter(Badge.active).filter_by(context_group=context_group)
+            select(Badge)
+            .filter(Badge.active)
+            .filter_by(context_group=context_group)
+            .order_by(Badge.created)
         )
         .scalars()
         .all()
@@ -372,6 +379,7 @@ def get_groups_badges(group_id: int) -> Response:
             select(BadgeGiven)
             .filter(BadgeGiven.active)
             .filter(BadgeGiven.group_id == group_id)
+            .order_by(BadgeGiven.given)
         )
         .scalars()
         .all()
@@ -393,8 +401,15 @@ def get_groups_badges(group_id: int) -> Response:
         .scalars()
         .all()
     )
+
+    groups_badges_ordered = []
+    for badge_id in badge_ids:
+        for groups_badge in groups_badges:
+            if groups_badge.id == badge_id:
+                groups_badges_ordered.append(groups_badge)
+
     badges_json = []
-    for badge in groups_badges:
+    for badge in groups_badges_ordered:
         key_extension = 0
         for badge_id in badge_ids:
             if badge_id == badge.id:
@@ -542,15 +557,18 @@ def undo_withdraw_badge(
 def get_subgroups(group_name_prefix: str) -> Response:
     """
     Fetces usergroups that have a name that starts with the given prefix but is not the exact prefix.
+    Sorted by name.
     :param group_name_prefix: Prefix of the usergroups
     :return: List of usergroups
     """
     subgroups = (
         run_sql(
-            select(UserGroup).filter(
+            select(UserGroup)
+            .filter(
                 UserGroup.name.like(group_name_prefix + "%"),
                 UserGroup.name != group_name_prefix,
             )
+            .order_by(UserGroup.name)
         )
         .scalars()
         .all()
@@ -566,7 +584,7 @@ def get_subgroups(group_name_prefix: str) -> Response:
 def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     """
     Fetches usergroups that user with given user_id belongs. Fetched usergroups also
-    have a name that starts with the given prefix but is not the exact prefix.
+    have a name that starts with the given prefix but is not the exact prefix. Sorted by name.
     :param user_id: ID of the user
     :param group_name_prefix: Prefix of the usergroups
     :return: List of usergroups
@@ -589,11 +607,13 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
         users_usergroup_ids.append(usergroup_membership.usergroup_id)
     users_subgroups = (
         run_sql(
-            select(UserGroup).filter(
+            select(UserGroup)
+            .filter(
                 UserGroup.id.in_(users_usergroup_ids),
                 UserGroup.name.like(group_name_prefix + "%"),
                 UserGroup.name != group_name_prefix,
             )
+            .order_by(UserGroup.name)
         )
         .scalars()
         .all()
@@ -602,3 +622,12 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     for users_subgroup in users_subgroups:
         users_subgroups_json.append(users_subgroup.to_json())
     return json_response(users_subgroups_json)
+
+
+# TODO: Handle errors.
+@badges_blueprint.get("/users_personal_group/<name>")
+def users_personal_group(name: str) -> Response:
+    personal_group = UserGroup.get_by_name(name)
+    if personal_group:
+        return json_response(personal_group)
+    return error_generic("there's no user with name: " + name, 404)

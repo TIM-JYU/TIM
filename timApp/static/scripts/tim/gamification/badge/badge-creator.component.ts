@@ -68,7 +68,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                 (click)="showBadgeWithdraw()"
                                 class="right-button withdrawButton">With- draw</button>
                         <button id="deleteButton" type="button"
-                                [disabled]="!editingBadge" 
+                                [disabled]="!editingBadge || showWithdraw" 
                                 (click)="deleteBadge()"
                                 class="right-button">Delete</button>
                     </div>
@@ -80,7 +80,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
               </ng-container>
               
               <ng-container *ngIf="showWithdraw">
-                  <tim-badge-withdraw [badgegroupContext]="badgegroupContext"></tim-badge-withdraw>                        
+                  <tim-badge-withdraw (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext"></tim-badge-withdraw>             
               </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
@@ -194,16 +194,15 @@ export class BadgeCreatorComponent implements OnInit {
 
     // Method called when a badge is clicked
     selectBadge(badge: IBadge) {
+        this.showWithdraw = false;
         if (this.clickedBadge === badge) {
             this.clickedBadge = null;
             this.emptyForm();
             this.badgeFormShowing = false;
             this.showGiver = false;
-            this.showWithdraw = false;
             return;
         }
         this.clickedBadge = badge;
-
         this.showEditingForm(badge);
     }
 
@@ -228,6 +227,7 @@ export class BadgeCreatorComponent implements OnInit {
 
     handleCancel() {
         this.resetForm();
+        this.showWithdraw = false;
         this.showGiver = false;
     }
 
