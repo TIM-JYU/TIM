@@ -622,3 +622,12 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     for users_subgroup in users_subgroups:
         users_subgroups_json.append(users_subgroup.to_json())
     return json_response(users_subgroups_json)
+
+
+# TODO: Handle errors.
+@badges_blueprint.get("/users_personal_group/<name>")
+def users_personal_group(name: str) -> Response:
+    personal_group = UserGroup.get_by_name(name)
+    if personal_group:
+        return json_response(personal_group)
+    return error_generic("there's no user with name: " + name, 404)
