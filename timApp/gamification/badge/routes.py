@@ -1,5 +1,6 @@
 """badge-related routes."""
 from dataclasses import dataclass
+from operator import attrgetter
 from pathlib import Path
 
 from flask import Response, current_app
@@ -10,6 +11,7 @@ from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
+from timApp.user.groups import raise_group_not_found_if_none
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import NotExist
@@ -643,3 +645,21 @@ def users_personal_group(name: str) -> Response:
     if personal_group:
         return json_response(personal_group)
     return error_generic("there's no user with name: " + name, 404)
+
+
+# TODO: Handle errors.
+@badges_blueprint.get("/usergroups_members/<doc_id>/<usergroup_name>")
+def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
+    """
+    Fetches usergroup's members.
+    :param doc_id: Current document's ID
+    :param usergroup_name: usergroup's name
+    :return: List of users
+    """
+    usergroup = UserGroup.get_by_name(usergroup_name)
+    raise_group_not_found_if_none(usergroup_name, usergroup)
+    d = DocEntry.find_by_id(doc_id)
+    if not d:
+        raise NotExist()
+    verify_teacher_access(d)
+    return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))

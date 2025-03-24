@@ -72,7 +72,9 @@ export class BadgeService {
      */
     async getUsersFromGroup(group: string) {
         const result = await toPromise(
-            this.http.get<[]>(`/groups/show/${group}`)
+            this.http.get<[]>(
+                `/usergroups_members/${this.currentDocumentID}/${group}`
+            )
         );
         const users: IUser[] = [];
         if (result.ok) {
