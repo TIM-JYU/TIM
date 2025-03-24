@@ -1,11 +1,10 @@
 from typing import Optional
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from timApp.timdb.sqa import db
 from timApp.timdb.types import datetime_tz
-from timApp.user.usergroup import UserGroup
 
 
 class Badge(db.Model):
@@ -67,12 +66,6 @@ class Badge(db.Model):
     restored: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was restored."""
 
-    # TODO: Duplicates? Remove these 4 relationships and do database migration.
-    # group_created: Mapped[UserGroup] = relationship(foreign_keys=created_by)
-    # group_modified: Mapped[Optional[UserGroup]] = relationship(foreign_keys=modified_by)
-    # group_deleted: Mapped[Optional[UserGroup]] = relationship(foreign_keys=deleted_by)
-    # group_restored: Mapped[Optional[UserGroup]] = relationship(foreign_keys=restored_by)
-
     def to_json(self) -> dict:
         """
         Returns a JSON representation of the badge.
@@ -96,9 +89,6 @@ class Badge(db.Model):
             "restored_by": self.restored_by,
             "restored": self.restored,
         }
-
-    # def verify_context_group_access(self):
-    #     pass
 
 
 class BadgeGiven(db.Model):
@@ -142,14 +132,3 @@ class BadgeGiven(db.Model):
 
     undo_withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge withdrawal was undoed."""
-
-    # TODO: Duplicates? Remove these 5 relationships and do database migration.
-    # badge: Mapped[Badge] = relationship()
-    # group: Mapped[UserGroup] = relationship(foreign_keys=group_id)
-    # group_given: Mapped[UserGroup] = relationship(foreign_keys=given_by)
-    # group_withdrawn: Mapped[Optional[UserGroup]] = relationship(
-    #     foreign_keys=withdrawn_by
-    # )
-    # group_undo_withdrawn: Mapped[Optional[UserGroup]] = relationship(
-    #     foreign_keys=undo_withdrawn_by
-    # )
