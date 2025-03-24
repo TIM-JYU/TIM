@@ -12,6 +12,7 @@ from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
+from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import (
     ok_response,
     json_response,
@@ -130,6 +131,8 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     :return: Badges in json response format
     """
     d = DocEntry.find_by_id(doc_id)
+    if not d:
+        raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(user_id, context_group)
     badges = (
@@ -185,6 +188,8 @@ def create_badge(
     :return: ok response
     """
     d = DocEntry.find_by_id(doc_id)
+    if not d:
+        raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(created_by, context_group)
     badge = Badge(
@@ -245,6 +250,8 @@ def modify_badge(
     :return: ok response
     """
     d = DocEntry.find_by_id(doc_id)
+    if not d:
+        raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(modified_by, context_group)
     badge = {
@@ -291,6 +298,8 @@ def deactivate_badge(
     :return: ok response
     """
     d = DocEntry.find_by_id(doc_id)
+    if not d:
+        raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(deleted_by, context_group)
     badge = {
@@ -327,6 +336,8 @@ def reactivate_badge(
     :return: ok response
     """
     d = DocEntry.find_by_id(doc_id)
+    if not d:
+        raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(restored_by, context_group)
     badge = {
@@ -420,6 +431,8 @@ def give_badge(
     :return: ok response
     """
     d = DocEntry.find_by_id(doc_id)
+    if not d:
+        raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(given_by, context_group)
     badge_given = BadgeGiven(
@@ -461,6 +474,8 @@ def withdraw_badge(
     :return: ok response
     """
     d = DocEntry.find_by_id(doc_id)
+    if not d:
+        raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(withdrawn_by, context_group)
     badge_given = {
@@ -498,6 +513,8 @@ def undo_withdraw_badge(
     :return: ok response
     """
     d = DocEntry.find_by_id(doc_id)
+    if not d:
+        raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(undo_withdrawn_by, context_group)
     badge_given = {
