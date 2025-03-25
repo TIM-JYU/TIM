@@ -285,7 +285,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.isFormChanged = true;
         this.badgeForm.patchValue({
             id: badge.id,
-            //title: badge.title,
+            title: badge.title,
             description: badge.description,
             image: badge.image,
             color: badge.color,
