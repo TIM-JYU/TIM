@@ -20,7 +20,6 @@ from timApp.util.flask.responsehelper import (
     json_response,
     error_generic,
     to_json_str,
-    json_response_and_commit,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 

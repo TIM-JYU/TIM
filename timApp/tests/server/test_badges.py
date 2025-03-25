@@ -1,28 +1,8 @@
-from datetime import datetime
-from unittest.mock import patch
-
-from sqlalchemy import select
-
-from timApp import tim_celery
-from timApp.admin.answer_cli import delete_old_answers
-from timApp.answer.answer import Answer
-from timApp.answer.answers import (
-    get_users_for_tasks,
-    save_answer,
-    get_existing_answers_info,
-)
-from timApp.answer.backup import get_backup_answer_file
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
-from timApp.plugin.taskid import TaskId
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.tim_app import app
-from timApp.timdb.sqa import db, run_sql
-from timApp.timdb.types import datetime_tz
-from timApp.user.user import User
+from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.util.utils import read_json_lines
 
 
 class BadgeTest(TimRouteTest):
