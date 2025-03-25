@@ -333,6 +333,9 @@ export class AnswerBrowserComponent
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
         }
+        if (this.markupSettings.clearAlertsOnAnswer) {
+            this.alerts = [];
+        }
         if (args.errors) {
             const markup = this.pluginMarkup();
             const pattern = markup?.warningFilter

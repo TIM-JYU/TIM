@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-03-04 10:26+0000\n"
-"PO-Revision-Date: 2025-03-04 12:28+0200\n"
+"POT-Creation-Date: 2025-03-25 16:47+0000\n"
+"PO-Revision-Date: 2025-03-25 18:51+0200\n"
 "Last-Translator: \n"
 "Language-Team: fi <LL@li.org>\n"
 "Language: fi\n"
@@ -22,6 +22,14 @@ msgstr ""
 #: answer/routes.py:798
 msgid "You cannot submit new answers to the document."
 msgstr "Et voi lähettää uusia vastauksia tähän dokumenttiin."
+
+#: answer/routes.py:1161
+msgid ""
+"Your view access to this document has expired, so this answer was saved but "
+"marked as invalid."
+msgstr ""
+"Oikeutesi tähän kohteeseen umpeutui. Vastauksesi tallennettin, mutta sitä ei "
+"arvostella."
 
 #: auth/accesshelper.py:374
 msgid "Sorry, you don't have permission to use this resource."

@@ -1158,7 +1158,9 @@ def post_answer_impl(
                 )
                 if fixed_time > (vr.access.accessible_to or maxdate):
                     is_valid = False
-                    explanation = "Your view access to this document has expired, so this answer was saved but marked as invalid."
+                    explanation = gettext(
+                        "Your view access to this document has expired, so this answer was saved but marked as invalid."
+                    )
             points_given_by = None
             if answer_browser_data.get("giveCustomPoints"):
                 try:
