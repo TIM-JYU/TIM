@@ -285,7 +285,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.isFormChanged = true;
         this.badgeForm.patchValue({
             id: badge.id,
-            title: badge.title,
+            //title: badge.title,
             description: badge.description,
             image: badge.image,
             color: badge.color,
@@ -474,6 +474,14 @@ export class BadgeCreatorComponent implements OnInit {
                     }
                     this.emptyForm();
                     await this.getBadges();
+                }
+                if (!result.ok) {
+                    this.badgeService.showError(
+                        this.alerts,
+                        {data: {error: result.result.error.error}},
+                        "danger"
+                    );
+                    return;
                 }
                 this.badgeService.triggerUpdateBadgeList();
                 this.badgeFormShowing = false;
