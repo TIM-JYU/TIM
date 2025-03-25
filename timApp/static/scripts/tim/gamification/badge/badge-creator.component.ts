@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import {ElementRef, OnInit, ViewChild} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
@@ -28,7 +28,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
     selector: "tim-badge-creator",
     template: `
         <ng-container *ngIf="this.hasPermission; else noPermissionView">
-        <div class="badge-creator" [formGroup]="badgeForm">
+        <div class="badge-creator" [formGroup]="badgeForm" #allBadgesSection>
           <fieldset class="form-fieldset">
             <div class="all_badges">
                 <fieldset>
@@ -168,6 +168,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
     styleUrls: ["./badge-creator.component.scss"],
 })
 export class BadgeCreatorComponent implements OnInit {
+    @ViewChild("allBadgesSection") allBadgesSection!: ElementRef;
+
     private userName?: string;
     private userID?: number;
     constructor(
@@ -400,6 +402,7 @@ export class BadgeCreatorComponent implements OnInit {
 
                 this.badgeService.triggerUpdateBadgeList();
                 this.badgeFormShowing = false;
+                this.centerToComponent();
             }
             if (!result.ok) {
                 this.badgeService.showError(
@@ -418,6 +421,9 @@ export class BadgeCreatorComponent implements OnInit {
         await this.getBadges();
         this.badgeFormShowing = false;
         this.resetForm();
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // Get all badges depending on if context group is selected
@@ -478,6 +484,7 @@ export class BadgeCreatorComponent implements OnInit {
                 this.badgeService.triggerUpdateBadgeList();
                 this.badgeFormShowing = false;
                 this.clickedBadge = null;
+                this.centerToComponent();
             }
         }
     }
@@ -519,6 +526,32 @@ export class BadgeCreatorComponent implements OnInit {
                 } catch (error) {
                     console.error("Error deleting badge", error);
                 }
+            }
+        }
+    }
+
+    // Siirretään käyttäjän näkymä takasin komponentin alkuun
+    centerToComponent() {
+        if (this.allBadgesSection) {
+            const element = this.allBadgesSection.nativeElement;
+            const rect = element.getBoundingClientRect();
+
+            const isVisible =
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <=
+                    (window.innerHeight ||
+                        document.documentElement.clientHeight) &&
+                rect.right <=
+                    (window.innerWidth || document.documentElement.clientWidth);
+
+            if (!isVisible) {
+                const offset = -100;
+                const position = rect.top + window.scrollY + offset;
+                window.scrollTo({
+                    top: position,
+                    behavior: "smooth",
+                });
             }
         }
     }
