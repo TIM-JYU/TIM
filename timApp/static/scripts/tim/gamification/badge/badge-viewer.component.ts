@@ -118,10 +118,14 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     onScroll(event: WheelEvent) {
-        const targetElement = event.currentTarget as HTMLElement;
-        const scrollAmount = event.deltaY * 0.5;
-        targetElement.scrollLeft += scrollAmount;
-        event.preventDefault();
+        const element = event.currentTarget as HTMLElement;
+        const scrollable = element.scrollWidth > element.clientWidth;
+        if (scrollable) {
+            const targetElement = event.currentTarget as HTMLElement;
+            const scrollAmount = event.deltaY * 0.5;
+            targetElement.scrollLeft += scrollAmount;
+            event.preventDefault();
+        }
     }
 
     ngOnInit() {
