@@ -20,6 +20,7 @@ from timApp.util.flask.responsehelper import (
     json_response,
     error_generic,
     to_json_str,
+    json_response_and_commit,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -87,12 +88,8 @@ def check_context_group_access(user_id: int, context_group: str) -> None:
         .scalars()
         .first()
     )
-
-    # TODO: Handle this error in frontend.
     if not allowed_member:
         raise AccessDenied(f"You don't have access to context group {context_group}.")
-        # return error_generic("access denied", 403)
-    # verify_context_group_access()
 
 
 # TODO: Not in use. Remove?
@@ -158,7 +155,6 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
 
 
 # TODO: Not in use. Remove?
-# TODO: Handle errors.
 @badges_blueprint.get("/badge/<badge_id>")
 def get_badge(badge_id: int) -> Response:
     """
@@ -168,7 +164,8 @@ def get_badge(badge_id: int) -> Response:
     """
     badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if badge is None:
-        return error_generic("there's no badge with id: " + str(badge_id), 404)
+        raise NotExist()
+        # return error_generic("there's no badge with id: " + str(badge_id), 404)
     badge_json = badge.to_json()
     return json_response(badge_json)
 
@@ -229,7 +226,7 @@ def create_badge(
                 "description": badge.description,
             }
         )
-    return ok_response()
+    return json_response(badge.to_json(), 200)
 
 
 # TODO: Handle errors.
