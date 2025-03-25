@@ -42,7 +42,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                    [shape]="selectedBadge!.shape"
                                    [image]="selectedBadge!.image"
                                    [description]="selectedBadge!.description"
-                                   [message]="message">
+                                   [message]="message"
+                                   [preventDialog]="true">
                         </tim-badge>
                     </div>
                 </div>
@@ -100,7 +101,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                                    [shape]="badge.shape"
                                                    [image]="badge.image"
                                                    [description]="badge.description"
-                                                   [message]="badge.message">
+                                                   [message]="badge.message"
+                                                   [preventDialog]="true">
                                         </tim-badge>
                                     </div>
                                 </div>
@@ -128,7 +130,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                                    shape="{{badge.shape}}"
                                                    [image]="badge.image"
                                                    description="{{badge.description}}"
-                                                   message="{{badge.message}}">
+                                                   message="{{badge.message}}"
+                                                   [preventDialog]="true">
                                         </tim-badge>
                                     </div>
                                 </div>

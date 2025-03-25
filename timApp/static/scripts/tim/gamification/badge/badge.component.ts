@@ -28,6 +28,8 @@ export class BadgeComponent implements OnInit, OnChanges {
     @Input() image?: number;
     @Input() description?: string;
     @Input() message?: string;
+    @Input() preventDialog: boolean = false;
+
     icon?: string;
 
     private readonly iconMap: Record<number, string> = {
@@ -50,7 +52,7 @@ export class BadgeComponent implements OnInit, OnChanges {
 
     // Avaa valitun badgen dialogin yksi ikkuna kerrallaan, josta näkee Descriptionin ja Messagen
     async openDialog(): Promise<void> {
-        if (this.dialogService.isDialogOpen() || !this.message) {
+        if (this.dialogService.isDialogOpen() || this.preventDialog) {
             return;
         }
 

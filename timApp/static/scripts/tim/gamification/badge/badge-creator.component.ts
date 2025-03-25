@@ -46,6 +46,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                        shape="{{badge.shape}}"
                                        [image]="badge.image"
                                        description="{{badge.description}}"
+                                       [preventDialog]="true"
                                        (click)="selectBadge(badge);">
                             </tim-badge>
                           </div>
@@ -130,7 +131,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                     [color]="badgeForm.value.color || 'gray'"
                                     [image]="badgeForm.value.image || 0 "
                                     [description]="badgeForm.value.description || ''"
-                                    [shape]="badgeForm.value.shape || 'hexagon'">
+                                    [shape]="badgeForm.value.shape || 'hexagon'"
+                                    [preventDialog]="true">
                                   </tim-badge>
                                 </fieldset>
                             </div>
