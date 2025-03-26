@@ -388,37 +388,31 @@ export class BadgeGiverComponent implements OnInit {
             return; // Exit if user cancels the confirmation dialog
         }
 
-        for (const user of this.selectedUsers) {
-            const pGroup = await this.badgeService.getPersonalGroup(user.name);
-
-            const response = toPromise(
-                this.http.post<{ok: boolean}>("/give_badge", {
+        if (this.selectedUsers.length > 0) {
+            for (const user of this.selectedUsers) {
+                const pGroup = await this.badgeService.getPersonalGroup(
+                    user.name
+                );
+                await this.badgeService.assignBadges({
                     given_by: this.badgeGiver,
                     doc_id: this.currentDocumentID,
                     context_group: this.badgegroupContext,
                     group_id: pGroup.id,
                     badge_id: this.selectedBadge?.id,
                     message: message,
-                })
-            );
-
-            const result = await response;
-            if (result.ok) {
-                console.log(
-                    `Badge '${this.selectedBadge?.title}' assigned to group/user ID: ${pGroup.id}`
-                );
+                });
             }
-
-            if (!result.ok) {
-                this.badgeService.showError(
-                    this.alerts,
-                    {data: {error: result.result.error.error}},
-                    "danger"
-                );
-                return;
-            }
-            if (pGroup.id) {
-                this.badgeService.notifyBadgeViewerUpdate();
+        }
+        if (this.selectedGroups.length > 0) {
+            for (const group of this.selectedGroups) {
+                await this.badgeService.assignBadges({
+                    given_by: this.badgeGiver,
+                    doc_id: this.currentDocumentID,
+                    context_group: this.badgegroupContext,
+                    group_id: group.id,
+                    badge_id: this.selectedBadge?.id,
+                    message: message,
+                });
             }
         }
         this.emptyForm();
