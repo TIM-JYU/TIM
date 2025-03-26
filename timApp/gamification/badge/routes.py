@@ -59,8 +59,7 @@ def log_badge_event(log_info: dict) -> None:
         f.write(to_json_str(log_info) + "\n")
 
 
-# TODO: Fix context_group maybe.
-def check_context_group_access(user_id: int, context_group: str) -> None:
+def check_context_group_access(user_id: int, context_group: int) -> None:
     """
     Checks whether a user has access to a context group.
     :param user_id: Current user's ID
@@ -68,9 +67,7 @@ def check_context_group_access(user_id: int, context_group: str) -> None:
     :return:
     """
     context_usergroups = (
-        run_sql(select(UserGroup).filter(UserGroup.name == context_group))
-        .scalars()
-        .all()
+        run_sql(select(UserGroup).filter(UserGroup.id == context_group)).scalars().all()
     )
     context_group_ids = []
     for context_usergroup in context_usergroups:
@@ -90,7 +87,7 @@ def check_context_group_access(user_id: int, context_group: str) -> None:
         .first()
     )
     if not allowed_member:
-        raise AccessDenied(f"You don't have access to context group {context_group}.")
+        raise AccessDenied(f"You don't have access to this context group.")
 
 
 # TODO: Not in use. Remove?
@@ -124,7 +121,6 @@ def get_badges() -> Response:
     return json_response(badges_json)
 
 
-# TODO: Fix ordering.
 # TODO: Handle errors.
 @badges_blueprint.get("/all_badges_in_context/<user_id>/<doc_id>/<context_group>")
 def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Response:
@@ -139,13 +135,13 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     if not d:
         raise NotExist()
     verify_teacher_access(d)
-    check_context_group_access(user_id, context_group)
     context_usergroup = UserGroup.get_by_name(context_group)
+    check_context_group_access(user_id, context_usergroup.id)
     badges = (
         run_sql(
-            select(Badge).filter(Badge.active),
-            (Badge.context_group == context_usergroup.id)
-            # .order_by(Badge.created),
+            select(Badge)
+            .filter(Badge.active, (Badge.context_group == context_usergroup.id))
+            .order_by(Badge.created),
         )
         .scalars()
         .all()
@@ -200,8 +196,8 @@ def create_badge(
     if not d:
         raise NotExist()
     verify_teacher_access(d)
-    check_context_group_access(created_by, context_group)
     context_usergroup = UserGroup.get_by_name(context_group)
+    check_context_group_access(created_by, context_usergroup.id)
     badge = Badge(
         active=True,
         context_group=context_usergroup.id,
@@ -234,14 +230,13 @@ def create_badge(
     return ok_response()
 
 
-# TODO: Fix context_group.
 # TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
     badge_id: int,
     modified_by: int,
     doc_id: int,
-    context_group: str,
+    context_group: int,
     title: str,
     color: str,
     shape: str,
@@ -266,9 +261,8 @@ def modify_badge(
         raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(modified_by, context_group)
-    context_usergroup = UserGroup.get_by_name(context_group)
     badge = {
-        "context_group": context_usergroup.id,
+        "context_group": context_group,
         "title": title,
         "color": color,
         "shape": shape,
@@ -314,7 +308,8 @@ def deactivate_badge(
     if not d:
         raise NotExist()
     verify_teacher_access(d)
-    check_context_group_access(deleted_by, context_group)
+    context_usergroup = UserGroup.get_by_name(context_group)
+    check_context_group_access(deleted_by, context_usergroup.id)
     badge = {
         "active": False,
         "deleted_by": deleted_by,
@@ -352,7 +347,8 @@ def reactivate_badge(
     if not d:
         raise NotExist()
     verify_teacher_access(d)
-    check_context_group_access(restored_by, context_group)
+    context_usergroup = UserGroup.get_by_name(context_group)
+    check_context_group_access(restored_by, context_usergroup.id)
     badge = {
         "active": True,
         "restored_by": restored_by,
@@ -462,7 +458,8 @@ def give_badge(
     if not d:
         raise NotExist()
     verify_teacher_access(d)
-    check_context_group_access(given_by, context_group)
+    context_usergroup = UserGroup.get_by_name(context_group)
+    check_context_group_access(given_by, context_usergroup.id)
     badge_given = BadgeGiven(
         active=True,
         group_id=group_id,
@@ -505,7 +502,8 @@ def withdraw_badge(
     if not d:
         raise NotExist()
     verify_teacher_access(d)
-    check_context_group_access(withdrawn_by, context_group)
+    context_usergroup = UserGroup.get_by_name(context_group)
+    check_context_group_access(withdrawn_by, context_usergroup.id)
     badge_given = {
         "active": False,
         "withdrawn_by": withdrawn_by,
@@ -544,7 +542,8 @@ def undo_withdraw_badge(
     if not d:
         raise NotExist()
     verify_teacher_access(d)
-    check_context_group_access(undo_withdrawn_by, context_group)
+    context_usergroup = UserGroup.get_by_name(context_group)
+    check_context_group_access(undo_withdrawn_by, context_usergroup.id)
     badge_given = {
         "active": True,
         "undo_withdrawn_by": undo_withdrawn_by,
@@ -565,6 +564,7 @@ def undo_withdraw_badge(
     return ok_response()
 
 
+# TODO: Do verify_teacher_access maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/subgroups/<group_name_prefix>")
 def get_subgroups(group_name_prefix: str) -> Response:
