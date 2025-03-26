@@ -10,12 +10,27 @@ import type {
 } from "tim/gamification/badge/badge.interface";
 import {documentglobals} from "tim/util/globals";
 
+interface IData {
+    given_by: number;
+    doc_id: number;
+    context_group?: string;
+    group_id: number;
+    badge_id?: number;
+    message: string;
+}
+
 @Injectable({
     providedIn: "root",
 })
 export class BadgeService {
     // Subject, joka laukaisee updatesignaalin
     private updateBadgeSubject = new Subject<void>();
+
+    alerts: Array<{
+        msg: string;
+        type: "warning" | "danger";
+        id?: string;
+    }> = [];
 
     // Observable updatetapahtuman kuunteluun
     updateBadgeList$ = this.updateBadgeSubject.asObservable();
@@ -39,7 +54,7 @@ export class BadgeService {
             // Return fetched data or an empty array if database is empty
             return result ?? [];
         } catch (error) {
-            //console.error("Error fetching badges:", error);
+            // console.error("Error fetching badges:", error);
             // Return an empty array in case of an error
             return [];
         }
@@ -60,7 +75,7 @@ export class BadgeService {
                 for (const alkio of result.result) {
                     userBadges.push(alkio);
                 }
-                //console.log("haettu käyttäjän " + id + " badget");
+                // console.log("haettu käyttäjän " + id + " badget");
             }
         }
         return userBadges.reverse();
@@ -146,7 +161,7 @@ export class BadgeService {
         );
         const result = await response;
         if (result.ok) {
-            //console.log("badge poistettu käytöstä id:llä: " + badgegivenID);
+            // console.log("badge poistettu käytöstä id:llä: " + badgegivenID);
             this.triggerUpdateBadgeList();
             return {ok: true};
         } else {
@@ -171,6 +186,36 @@ export class BadgeService {
                 `Failed to fetch personal group for user: ${userName}`
             );
             return null;
+        }
+    }
+
+    async assignBadges(data: IData) {
+        const response = toPromise(
+            this.http.post<{ok: boolean}>("/give_badge", {
+                given_by: data.given_by,
+                doc_id: this.currentDocumentID,
+                context_group: data.context_group,
+                group_id: data.group_id,
+                badge_id: data.badge_id,
+                message: data.message,
+            })
+        );
+
+        const result = await response;
+        if (result.ok) {
+            console.log(`Badge assigned to group/user ID: ${data.group_id}`);
+        }
+
+        if (!result.ok) {
+            this.showError(
+                this.alerts,
+                {data: {error: result.result.error.error}},
+                "danger"
+            );
+            return;
+        }
+        if (data.group_id) {
+            this.notifyBadgeViewerUpdate();
         }
     }
 
