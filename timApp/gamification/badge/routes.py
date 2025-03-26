@@ -46,6 +46,7 @@ class BadgeModel:
     restored: datetime_tz | None
 
 
+# TODO: Fix context_group maybe.
 def log_badge_event(log_info: dict) -> None:
     """
     Logs all events that modifies badge or badgegiven tables. Log file can be
@@ -58,6 +59,7 @@ def log_badge_event(log_info: dict) -> None:
         f.write(to_json_str(log_info) + "\n")
 
 
+# TODO: Fix context_group maybe.
 def check_context_group_access(user_id: int, context_group: str) -> None:
     """
     Checks whether a user has access to a context group.
@@ -122,6 +124,7 @@ def get_badges() -> Response:
     return json_response(badges_json)
 
 
+# TODO: Fix ordering.
 # TODO: Handle errors.
 @badges_blueprint.get("/all_badges_in_context/<user_id>/<doc_id>/<context_group>")
 def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Response:
@@ -137,12 +140,12 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
         raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(user_id, context_group)
+    context_usergroup = UserGroup.get_by_name(context_group)
     badges = (
         run_sql(
-            select(Badge)
-            .filter(Badge.active)
-            .filter_by(context_group=context_group)
-            .order_by(Badge.created)
+            select(Badge).filter(Badge.active),
+            (Badge.context_group == context_usergroup.id)
+            # .order_by(Badge.created),
         )
         .scalars()
         .all()
@@ -169,6 +172,7 @@ def get_badge(badge_id: int) -> Response:
     return json_response(badge_json)
 
 
+# TODO: Fix return to make testable.
 @badges_blueprint.post("/create_badge")
 def create_badge(
     created_by: int,
@@ -197,9 +201,10 @@ def create_badge(
         raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(created_by, context_group)
+    context_usergroup = UserGroup.get_by_name(context_group)
     badge = Badge(
         active=True,
-        context_group=context_group,
+        context_group=context_usergroup.id,
         title=title,
         color=color,
         shape=shape,
@@ -225,9 +230,11 @@ def create_badge(
                 "description": badge.description,
             }
         )
-    return json_response(badge.to_json(), 200)
+    # return json_response(badge.to_json(), 200)
+    return ok_response()
 
 
+# TODO: Fix context_group.
 # TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
@@ -259,8 +266,9 @@ def modify_badge(
         raise NotExist()
     verify_teacher_access(d)
     check_context_group_access(modified_by, context_group)
+    context_usergroup = UserGroup.get_by_name(context_group)
     badge = {
-        "context_group": context_group,
+        "context_group": context_usergroup.id,
         "title": title,
         "color": color,
         "shape": shape,
