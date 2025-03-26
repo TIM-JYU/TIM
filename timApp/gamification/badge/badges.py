@@ -32,8 +32,8 @@ class Badge(db.Model):
     image: Mapped[int] = mapped_column(nullable=False)
     """Image of the badge"""
 
-    context_group: Mapped[str] = mapped_column(
-        ForeignKey("usergroup.name"), nullable=False
+    context_group: Mapped[int] = mapped_column(
+        ForeignKey("usergroup.id"), nullable=False
     )
     """Context group where the badge belongs to"""
 

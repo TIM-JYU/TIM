@@ -23,7 +23,7 @@ def upgrade():
     sa.Column('color', sa.Text(), nullable=False),
     sa.Column('shape', sa.Text(), nullable=False),
     sa.Column('image', sa.Integer(), nullable=False),
-    sa.Column('context_group', sa.Text(), nullable=False),
+    sa.Column('context_group', sa.Integer(), nullable=False),
     sa.Column('active', sa.Boolean(), nullable=False),
     sa.Column('created_by', sa.Integer(), nullable=False),
     sa.Column('created', sa.DateTime(timezone=True), nullable=False),
