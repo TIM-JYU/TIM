@@ -33,7 +33,7 @@ def upgrade():
     sa.Column('deleted', sa.DateTime(timezone=True), nullable=True),
     sa.Column('restored_by', sa.Integer(), nullable=True),
     sa.Column('restored', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['context_group'], ['usergroup.name'], ),
+    sa.ForeignKeyConstraint(['context_group'], ['usergroup.id'], ),
     sa.ForeignKeyConstraint(['created_by'], ['useraccount.id'], ),
     sa.ForeignKeyConstraint(['deleted_by'], ['useraccount.id'], ),
     sa.ForeignKeyConstraint(['modified_by'], ['useraccount.id'], ),
