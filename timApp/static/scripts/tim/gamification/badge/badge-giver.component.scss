@@ -1,3 +1,28 @@
+.option-item {
+    display: flex;
+    align-items: flex-start;
+}
+.option-item input{
+    width: 5%;
+}
+
+.option-name {
+    cursor: pointer;
+}
+
+.option-name:hover {
+    text-decoration: underline; /* Korostaa nimeä hoverilla */
+}
+
+.selected-option {
+    border: 2px solid blue;
+    background-color: rgba(0, 0, 255, 0.1);
+}
+
+.border {
+  border: 1px solid black;
+}
+
 .badge-giver {
   display: flex;
   flex-direction: column;

@@ -1,8 +1,8 @@
+import type {OnInit} from "@angular/core";
 import {
     ElementRef,
     EventEmitter,
     HostListener,
-    OnInit,
     Output,
     ViewChild,
 } from "@angular/core";
@@ -49,35 +49,43 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 </div>
                 
                 <div class="user-group-button-container">
-                    <button (click)="userAssign = true; groupAssign = false">
+                    <button (click)="userAssign = true; groupAssign = false; handleSwap()" [disabled]="userAssign === true">
                         Assign badge to a user
                     </button>
-                    <button (click)="groupAssign = true; userAssign = false">
+                    <button (click)="userAssign = false; groupAssign = true; handleSwap()" [disabled]="userAssign === false">
                         Assign badge to a group
                     </button>
                 </div>
                 
                 <div *ngIf="userAssign" class="form-group">
-                    <label for="select-user">User</label>
-                    <select id="select-user" [(ngModel)]="selectedUser">
-                        <option [ngValue]="null" disabled selected>Select a user to assign a badge</option>
-                        <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(user.id)">
-                            {{ user.real_name }}
-                        </option>
-                    </select>
+                    <label>Users</label>
+                    <div *ngFor="let user of users" class="option-item">
+                        <input 
+                            type="checkbox" 
+                            [value]="user" 
+                            (change)="toggleUserSelection(user, $event)"
+                        />
+                        <span class="option-name" (click)="selectedUser = user; fetchUserBadges(user)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                            {{user.name}}
+                        </span>
+                    </div>
                 </div>
                 
                 <div *ngIf="groupAssign" class="form-group">
-                    <label for="select_group">Group</label>
-                    <select id="select_group" [(ngModel)]="selectedGroup">
-                        <option [ngValue]="null" disabled selected>Select a group to assign a badge</option>
-                        <option *ngFor="let group of groups" [ngValue]="group" (click)="fetchGroupBadges(group.id)">
-                            {{ group.name }}
-                        </option>
-                    </select>
+                    <label>Groups</label>
+                    <div *ngFor="let group of groups" class="option-item">
+                        <input 
+                            type="checkbox" 
+                            [value]="group" 
+                            (change)="toggleGroupSelection(group, $event)"
+                        />
+                        <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                            {{group.name}}
+                        </span>
+                    </div>
                 </div>
                 
-                <div *ngIf="groupAssign || userAssign">
+                <div *ngIf="userAssign || groupAssign">
                     <div class="message-container">
                         
                         <!-- Message Box -->
@@ -148,7 +156,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                     </tim-alert>
                     
                     <div class="button-container">
-                        <button (click)="assignBadge(message)" [disabled]="!selectedUser && !selectedGroup || !selectedBadge">
+                        <button (click)="assignBadge(message)" [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
                             Assign Badge
                         </button>
                         <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
@@ -170,18 +178,19 @@ export class BadgeGiverComponent implements OnInit {
     users: IUser[] = [];
     badges: any = [];
     selectedUser?: IUser | null = null;
+    selectedUsers: IUser[] = [];
     userBadges: IBadge[] = [];
     @Input() selectedBadge?: IBadge | null = null;
     message = "";
-    //badgeGiver = 0;
     showDeleteButton: boolean = false;
     hasPermission: boolean = true;
     showComponent: boolean = true;
     @Input() badgegroupContext?: string;
     groups: IGroup[] = [];
     selectedGroup?: IGroup | null = null;
+    selectedGroups: IGroup[] = [];
     groupBadges: IBadge[] = [];
-    userAssign: boolean = false;
+    userAssign?: boolean;
     groupAssign: boolean = false;
     badgeGiver = 0;
     currentId = null;
@@ -227,7 +236,7 @@ export class BadgeGiverComponent implements OnInit {
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
                 if (this.selectedUser?.id != undefined) {
-                    this.fetchUserBadges(this.selectedUser.id); // Refresh badges
+                    this.fetchUserBadges(this.selectedUser); // Refresh badges
                 }
                 if (this.selectedGroup?.id != undefined) {
                     this.fetchGroupBadges(this.selectedGroup.id); // Refresh group badges
@@ -246,6 +255,34 @@ export class BadgeGiverComponent implements OnInit {
         this.userBadges = [];
         this.groupBadges = [];
         this.cancelEvent.emit(); // Lähettää tiedon vanhemmalle
+    }
+
+    toggleUserSelection(user: IUser, event: Event) {
+        const isChecked = (event.target as HTMLInputElement).checked;
+        if (isChecked) {
+            this.selectedUsers.push(user);
+            return;
+        }
+        this.selectedUsers = this.selectedUsers.filter((u) => u.id !== user.id);
+    }
+    toggleGroupSelection(group: IGroup, event: Event) {
+        const isChecked = (event.target as HTMLInputElement).checked;
+        if (isChecked) {
+            this.selectedGroups.push(group);
+            return;
+        }
+        this.selectedGroups = this.selectedGroups.filter(
+            (g) => g.id !== group.id
+        );
+    }
+
+    handleSwap() {
+        while (this.selectedUsers.length > 0) {
+            this.selectedUsers.pop();
+        }
+        while (this.selectedGroups.length > 0) {
+            this.selectedGroups.pop();
+        }
     }
 
     /**
@@ -272,26 +309,18 @@ export class BadgeGiverComponent implements OnInit {
      */
     async fetchBadges() {
         this.badges = await this.badgeService.getAllBadges();
-        //console.log("näyttää kaikki badget: ", this.badges);
-        //console.log("Selected badge:", this.selectedBadge);
+        // console.log("näyttää kaikki badget: ", this.badges);
+        // console.log("Selected badge:", this.selectedBadge);
     }
 
     /**
      * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
      * Tyhjentää this.userBadges -taulukon
      * Kutsuu badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
-     * @param userId käyttäjän id
+     * @param selectedUser valittu käyttäjä
+     *
      */
-    async fetchUserBadges(userId?: number) {
-        if (userId == undefined) {
-            console.error("userid was undefined");
-            return;
-        }
-
-        // Reset group selection and hide badges
-        //if (this.selectedGroup) {
-        //    this.selectedBadge = null;
-        //}
+    async fetchUserBadges(selectedUser: IUser) {
         this.selectedGroup = null;
         this.groupBadges = [];
         this.showDeleteButton = false;
@@ -299,22 +328,20 @@ export class BadgeGiverComponent implements OnInit {
         while (this.userBadges.length > 0) {
             this.userBadges.pop();
         }
-        let currentId = this.selectedUser?.id;
-        if (!this.selectedUser) {
+        if (!selectedUser) {
+            console.error("Selected user was undefined");
             return;
         }
         const personalGroup = await this.badgeService.getPersonalGroup(
-            this.selectedUser.name
+            selectedUser.name
         );
-        if (personalGroup) {
-            currentId = personalGroup.id;
-        } else {
+        if (!personalGroup) {
             console.error("Failed to retrieve the user's personal group ID.");
-        }
-        if (!currentId) {
             return;
         }
-        this.userBadges = await this.badgeService.getUserBadges(currentId);
+        this.userBadges = await this.badgeService.getUserBadges(
+            personalGroup.id
+        );
     }
 
     async fetchGroupBadges(groupId?: number) {
@@ -351,25 +378,6 @@ export class BadgeGiverComponent implements OnInit {
             this.badgeGiver = Users.getCurrent().id;
         }
 
-        let currentId = this.selectedUser?.id;
-
-        if (this.selectedGroup) {
-            currentId = this.selectedGroup.id;
-        } else if (this.selectedUser) {
-            // Jos badge annetaan käyttäjälle, haetaan käyttäjän henk.koht groupin ID
-            const personalGroup = await this.badgeService.getPersonalGroup(
-                this.selectedUser.name
-            );
-            if (personalGroup) {
-                currentId = personalGroup.id;
-            } else {
-                console.error(
-                    "Failed to retrieve the user's personal group ID."
-                );
-                return;
-            }
-        }
-
         // Show confirmation dialog before assigning the badge
         const confirmed = await showConfirm(
             "Confirm badge assigning event",
@@ -380,80 +388,40 @@ export class BadgeGiverComponent implements OnInit {
             return; // Exit if user cancels the confirmation dialog
         }
 
-        const response = toPromise(
-            this.http.post<{ok: boolean}>("/give_badge", {
-                given_by: this.badgeGiver,
-                doc_id: this.currentDocumentID,
-                context_group: this.badgegroupContext,
-                group_id: currentId,
-                badge_id: this.selectedBadge?.id,
-                message: message,
-            })
-        );
+        for (const user of this.selectedUsers) {
+            const pGroup = await this.badgeService.getPersonalGroup(user.name);
 
-        const result = await response;
-        if (result.ok) {
-            console.log(
-                `Badge '${this.selectedBadge?.title}' assigned to group/user ID: ${currentId}`
+            const response = toPromise(
+                this.http.post<{ok: boolean}>("/give_badge", {
+                    given_by: this.badgeGiver,
+                    doc_id: this.currentDocumentID,
+                    context_group: this.badgegroupContext,
+                    group_id: pGroup.id,
+                    badge_id: this.selectedBadge?.id,
+                    message: message,
+                })
             );
-        }
-        // Reset values after assigning
 
-        if (!result.ok) {
-            this.badgeService.showError(
-                this.alerts,
-                {data: {error: result.result.error.error}},
-                "danger"
-            );
-            return;
-        }
+            const result = await response;
+            if (result.ok) {
+                console.log(
+                    `Badge '${this.selectedBadge?.title}' assigned to group/user ID: ${pGroup.id}`
+                );
+            }
 
-        this.message = "";
-        if (currentId) {
-            this.badgeService.notifyBadgeViewerUpdate();
+            if (!result.ok) {
+                this.badgeService.showError(
+                    this.alerts,
+                    {data: {error: result.result.error.error}},
+                    "danger"
+                );
+                return;
+            }
+            if (pGroup.id) {
+                this.badgeService.notifyBadgeViewerUpdate();
+            }
         }
-        this.selectedUser = null;
-        this.selectedGroup = null;
-        this.userBadges = [];
-        this.groupBadges = [];
-        this.currentId = null;
-        this.userAssign = false;
-        this.groupAssign = false;
-    }
-
-    /**
-     * Kutsuu badge-servicen metodia, joka ottaa valitun badgen pois käyttäjältä.
-     * @param badgegivenID ID, jonka perustella badgesgiven taulukosta voidaan ottaa pois käyttäjälle annettu badge
-     */
-    async removeBadge(badgegivenID?: number) {
-        this.badgeGiver = Users.getCurrent().id;
-        if (badgegivenID == undefined) {
-            console.error("badgegived id was undefined");
-            return;
-        }
-
-        // Show confirmation dialog before removing the badge
-        const confirmed = await showConfirm(
-            "Confirm badge removal event",
-            "Are you sure you want to remove this badge?"
-        );
-        if (!confirmed) {
-            return; // Exit if user cancels the confirmation dialog
-        }
-
-        if (this.badgegroupContext == undefined) {
-            console.error("group_context was undefined");
-            return;
-        }
-        await this.badgeService.withdrawBadge(
-            badgegivenID,
-            this.badgeGiver,
-            this.badgegroupContext
-        );
-        this.fetchUserBadges(this.selectedUser?.id);
-        // Poistaa deletenapin näkyvistä deleten jälkeen
-        this.selectedBadge = null;
-        this.showDeleteButton = false;
+        this.emptyForm();
     }
 
     selectBadge(
