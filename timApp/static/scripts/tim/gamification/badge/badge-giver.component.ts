@@ -80,7 +80,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             (change)="toggleGroupSelection(group, $event)"
                         />
                         <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                            {{group.name}}
+                            {{ prettyGroupName(group.name) }}
                         </span>
                     </div>
                 </div>
@@ -425,6 +425,15 @@ export class BadgeGiverComponent implements OnInit {
                 this.selectedGroup = null;
             }
         }
+    }
+
+    // Removes context group (main group) from the group's name in group listing
+    prettyGroupName(groupName: string): string {
+        if (!groupName || !this.badgegroupContext) return groupName;
+
+        return groupName.startsWith(this.badgegroupContext + "-")
+            ? groupName.slice(this.badgegroupContext.length + 1)
+            : groupName;
     }
 
     ngOnDestroy() {
