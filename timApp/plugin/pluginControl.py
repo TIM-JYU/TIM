@@ -209,7 +209,9 @@ class PluginPlacement:
                     rnd_seed = SeedClass(rnd_seed, block.answer_nr)
                 else:  # try with length of answers
                     task_id = block.get_attr("taskId")
-                    doc_id = str(block.doc.doc_id)
+                    doc_id = str(
+                        block.ref_doc.doc_id if block.ref_doc else block.doc.doc_id
+                    )
                     if task_id:
                         answer_and_cnt = answer_map.get(doc_id + "." + task_id, None)
                         if answer_and_cnt:
