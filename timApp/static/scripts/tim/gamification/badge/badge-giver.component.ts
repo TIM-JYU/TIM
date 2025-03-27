@@ -378,16 +378,6 @@ export class BadgeGiverComponent implements OnInit {
             this.badgeGiver = Users.getCurrent().id;
         }
 
-        // Show confirmation dialog before assigning the badge
-        const confirmed = await showConfirm(
-            "Confirm badge assigning event",
-            "Are you sure you want to assign this badge?"
-        );
-
-        if (!confirmed) {
-            return; // Exit if user cancels the confirmation dialog
-        }
-
         if (this.selectedUsers.length > 0) {
             for (const user of this.selectedUsers) {
                 const pGroup = await this.badgeService.getPersonalGroup(
