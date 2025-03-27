@@ -12,7 +12,8 @@ export interface IBadge {
 }
 
 export interface IGroup {
-    id: number;
+    userid: number;
+    pgroup_id: number;
     name: string;
 }
 
