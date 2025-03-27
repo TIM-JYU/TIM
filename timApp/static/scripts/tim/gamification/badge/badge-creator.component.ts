@@ -233,6 +233,10 @@ export class BadgeCreatorComponent implements OnInit {
         this.resetForm();
         this.showWithdraw = false;
         this.showGiver = false;
+
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
@@ -302,6 +306,9 @@ export class BadgeCreatorComponent implements OnInit {
         this.editingBadge = null;
         this.badgeFormShowing = false;
         this.isFormChanged = false;
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // Clears form information, except given values
@@ -313,6 +320,9 @@ export class BadgeCreatorComponent implements OnInit {
             context_group: this.selectedContextGroup,
         });
         this.isFormChanged = false;
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // Titles instead of numbers in availableImages
