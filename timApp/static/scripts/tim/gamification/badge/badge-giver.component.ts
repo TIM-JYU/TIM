@@ -66,7 +66,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             (change)="toggleUserSelection(user, $event)"
                         />
                         <span class="option-name" (click)="selectedUser = user; fetchUserBadges(user)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                            {{user.name}}
+                            {{user.real_name}}
                         </span>
                     </div>
                 </div>
