@@ -201,7 +201,7 @@ export class BadgeGiverComponent implements OnInit {
     }> = [];
 
     @Output() cancelEvent = new EventEmitter<void>();
-    private personalGroup: unknown;
+    private userAndPersonalGroup: unknown;
     private userName: string | undefined;
 
     constructor(
@@ -332,15 +332,14 @@ export class BadgeGiverComponent implements OnInit {
             console.error("Selected user was undefined");
             return;
         }
-        const personalGroup = await this.badgeService.getPersonalGroup(
-            selectedUser.name
-        );
-        if (!personalGroup) {
+        const userAndPersonalGroup =
+            await this.badgeService.getUserAndPersonalGroup(selectedUser.name);
+        if (!userAndPersonalGroup) {
             console.error("Failed to retrieve the user's personal group ID.");
             return;
         }
         this.userBadges = await this.badgeService.getUserBadges(
-            personalGroup.id
+            userAndPersonalGroup[1].id
         );
     }
 
@@ -361,11 +360,10 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     async fetchPersonalGroup() {
-        this.personalGroup = await this.badgeService.getPersonalGroup(
-            this.userName
-        );
-        if (this.personalGroup) {
-            console.log("User's personal group:", this.personalGroup);
+        this.userAndPersonalGroup =
+            await this.badgeService.getUserAndPersonalGroup(this.userName);
+        if (this.userAndPersonalGroup) {
+            console.log("User and personal group:", this.userAndPersonalGroup);
         }
     }
 
@@ -380,14 +378,13 @@ export class BadgeGiverComponent implements OnInit {
 
         if (this.selectedUsers.length > 0) {
             for (const user of this.selectedUsers) {
-                const pGroup = await this.badgeService.getPersonalGroup(
-                    user.name
-                );
+                const userAndPersonalGroup =
+                    await this.badgeService.getUserAndPersonalGroup(user.name);
                 await this.badgeService.assignBadges({
                     given_by: this.badgeGiver,
                     doc_id: this.currentDocumentID,
                     context_group: this.badgegroupContext,
-                    group_id: pGroup.id,
+                    group_id: userAndPersonalGroup[1].id,
                     badge_id: this.selectedBadge?.id,
                     message: message,
                 });
