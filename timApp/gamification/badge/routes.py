@@ -435,6 +435,26 @@ def get_groups_badges(group_id: int) -> Response:
 
 
 # TODO: Handle errors.
+@badges_blueprint.get("/badge_holders/<badge_id>")
+def get_badge_holders(badge_id: int) -> Response:
+    """
+    Fetches holders of given badges.
+    :param badge_id: ID of the badge
+    :return: Badgegivens in json response format
+    """
+    badge_holders = (
+        run_sql(
+            select(BadgeGiven)
+            .filter(BadgeGiven.active)
+            .filter(BadgeGiven.badge_id == badge_id)
+        )
+        .scalars()
+        .all()
+    )
+    return json_response(badge_holders)
+
+
+# TODO: Handle errors.
 @badges_blueprint.post("/give_badge")
 def give_badge(
     given_by: int,
