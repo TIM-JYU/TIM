@@ -500,12 +500,28 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
+    async isBadgeAssigned() {
+        const response = await toPromise(
+            this.http.get<any>(`/badge_holders/${this.clickedBadge.id}`)
+        );
+        if (response.result.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     // Delete badge
     async deleteBadge() {
+        let confirmMessage = `Are you sure you want to delete "${this.editingBadge.title}" badge?`;
+
+        if (await this.isBadgeAssigned()) {
+            confirmMessage = `!!!WARNING!!! This badge has been assigned to users, are you sure you want to delete "${this.editingBadge.title}" badge?`;
+        }
         if (
             await showConfirm(
                 `Delete ${this.editingBadge.title}`,
-                `Are you sure you want to delete "${this.editingBadge.title}" badge?`
+                confirmMessage
             )
         ) {
             if (this.editingBadge) {
