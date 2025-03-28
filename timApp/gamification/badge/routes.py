@@ -406,32 +406,20 @@ def get_groups_badges(group_id: int) -> Response:
         .scalars()
         .all()
     )
-
     groups_badges_ordered = []
     for badge_id in badge_ids:
         for groups_badge in groups_badges:
             if groups_badge.id == badge_id:
                 groups_badges_ordered.append(groups_badge)
-
     badges_json = []
-    for badge in groups_badges_ordered:
-        id_unique_extension = 0
-        key_extension = 0
-        for badge_id_unique in badge_ids_unique:
-            if (
-                badge_id_unique[0] == badge.id
-                and badge_id_unique[1] == id_unique_extension
-            ):
-                badge_json = badge.to_json()
-                badge_json["badgegiven_id"] = badge_ids_badgegiven_ids_and_msgs[
-                    str(badge.id) + "_" + str(key_extension)
-                ][0]
-                badge_json["message"] = badge_ids_badgegiven_ids_and_msgs[
-                    str(badge.id) + "_" + str(key_extension)
-                ][1]
-                key_extension += 1
-                badges_json.append(badge_json)
-        id_unique_extension += 1
+    i = 0
+    for groups_badge in groups_badges_ordered:
+        groups_badge_json = groups_badge.to_json()
+        key = f"{badge_ids_unique[i][0]}_{badge_ids_unique[i][1]}"
+        groups_badge_json["badgegiven_id"] = badge_ids_badgegiven_ids_and_msgs[key][0]
+        groups_badge_json["message"] = badge_ids_badgegiven_ids_and_msgs[key][1]
+        badges_json.append(groups_badge_json)
+        i += 1
     return json_response(badges_json)
 
 
