@@ -502,11 +502,9 @@ export class BadgeCreatorComponent implements OnInit {
 
     async isBadgeAssigned() {
         const response = await toPromise(
-            this.http.post<{ok: boolean}>("/badge_holders", {
-                badge_id: this.clickedBadge.id,
-            })
+            this.http.get<any>(`/badge_holders/${this.clickedBadge.id}`)
         );
-        if (response) {
+        if (response.result.length > 0) {
             return true;
         } else {
             return false;
@@ -518,7 +516,7 @@ export class BadgeCreatorComponent implements OnInit {
         let confirmMessage = `Are you sure you want to delete "${this.editingBadge.title}" badge?`;
 
         if (await this.isBadgeAssigned()) {
-            confirmMessage = `This badge has been assigned to users, are you sure you want to delete "${this.editingBadge.title}" badge?`;
+            confirmMessage = `!!!WARNING!!! This badge has been assigned to users, are you sure you want to delete "${this.editingBadge.title}" badge?`;
         }
         if (
             await showConfirm(
