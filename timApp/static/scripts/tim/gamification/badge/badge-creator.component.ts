@@ -499,9 +499,10 @@ export class BadgeCreatorComponent implements OnInit {
             this.centerToComponent();
         }
     }
+
     async isBadgeAssigned() {
         const response = await toPromise(
-            this.http.post<{ok: boolean}>("linkki", {
+            this.http.post<{ok: boolean}>("/badge_holders", {
                 badge_id: this.clickedBadge.id,
             })
         );
