@@ -239,11 +239,12 @@ export class BadgeWithdrawComponent implements OnInit {
         if (!this.selectedUser) {
             return;
         }
-        const personalGroup = await this.badgeService.getPersonalGroup(
-            this.selectedUser.name
-        );
-        if (personalGroup) {
-            currentId = personalGroup.id;
+        const userAndPersonalGroup =
+            await this.badgeService.getUserAndPersonalGroup(
+                this.selectedUser.name
+            );
+        if (userAndPersonalGroup) {
+            currentId = userAndPersonalGroup[1].id;
         } else {
             console.error("Failed to retrieve the user's personal group ID.");
         }
