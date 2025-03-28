@@ -85,11 +85,10 @@ export class BadgeViewerComponent implements OnInit {
         this.emptyBadges(this.badges);
 
         let groupID = this.selectedUser?.id;
-        const personalGroup = await this.badgeService.getPersonalGroup(
-            this.userName
-        );
-        if (personalGroup) {
-            groupID = personalGroup.id;
+        const userAndPersonalGroup =
+            await this.badgeService.getUserAndPersonalGroup(this.userName);
+        if (userAndPersonalGroup) {
+            groupID = userAndPersonalGroup[1].id;
         } else {
             console.error("Failed to retrieve the user's personal group ID.");
         }
