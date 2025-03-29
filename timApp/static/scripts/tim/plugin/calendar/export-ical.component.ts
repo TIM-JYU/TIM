@@ -87,8 +87,15 @@ export class ExportIcalComponent extends AngularDialogComponent<
             }
             this.icsURL = urlObj.toString();
         } else {
+            const err: string = result.result.error as unknown as string;
+            let errObj: {error: string} | undefined;
+            try {
+                errObj = JSON.parse(err);
+            } catch (e) {}
             if (result.result.error.error) {
                 await showMessageDialog(result.result.error.error);
+            } else if (errObj?.error) {
+                await showMessageDialog(errObj.error);
             } else {
                 await showMessageDialog(defaultWuffMessage);
             }
