@@ -746,7 +746,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.eventBookState = {canBook: true, reason: undefined};
             return;
         }
-        if (!this.data.meta?.rights?.can_enroll) {
+        if (!Users.isLoggedIn()) {
+            this.eventBookState = {
+                canBook: false,
+                reason: $localize`You need to log in to book events`,
+            };
+        } else if (!this.data.meta?.rights?.can_enroll) {
             this.eventBookState = {
                 canBook: false,
                 reason: $localize`You do not have the right to book this event`,
