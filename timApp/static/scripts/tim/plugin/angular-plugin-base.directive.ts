@@ -1,3 +1,4 @@
+import type * as t from "io-ts";
 import type {AfterContentInit, OnInit} from "@angular/core";
 import {Directive, ElementRef, Input} from "@angular/core";
 import type {
@@ -7,7 +8,7 @@ import type {
 import type {Type} from "io-ts";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {AngularError, Failure} from "tim/util/utils";
-import {toPromise} from "tim/util/utils";
+import {toPromise, TimStorage} from "tim/util/utils";
 import type {PluginMarkupErrors} from "tim/plugin/util";
 import {getDefaults, PluginBaseCommon, PluginMeta} from "tim/plugin/util";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -55,6 +56,7 @@ export abstract class AngularPluginBase<
 
     markupError?: PluginMarkupErrors;
     protected pluginMeta: PluginMeta;
+    protected stateStorage?: TimStorage<any>;
 
     buttonText() {
         return this.markup.button ?? this.markup.buttonText;
@@ -163,6 +165,22 @@ export abstract class AngularPluginBase<
         }
     }
 
+    initStorage<TY extends t.Any>(type: TY) {
+        const tid = this.getTaskId()?.docTask().toString();
+        if (tid) {
+            this.stateStorage = new TimStorage(tid, type);
+        }
+    }
+
+    setStorage(value: unknown) {
+        this.stateStorage?.set(value);
+    }
+
+    clearStorage() {
+        console.log("CLEARING,storage", this.stateStorage);
+        this.stateStorage?.clear();
+    }
+
     async tryResetChanges(e?: Event) {
         if (e) {
             e.preventDefault();
@@ -179,6 +197,8 @@ export abstract class AngularPluginBase<
         }
         this.resetChanges();
     }
+
+    storeState() {}
 
     updateListeners(state: ChangeType) {
         if (!this.vctrl) {

@@ -14,6 +14,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {getFormBehavior, parseStyles} from "tim/plugin/util";
+import type {TimStorage} from "tim/util/utils";
 import {defaultErrorMessage, timeout, valueOr} from "tim/util/utils";
 import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -25,6 +26,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {DrawSaveOptions} from "tim/plugin/draw-canvas/draw-toolbar.component";
 
 const TextfieldMarkup = t.intersection([
     t.partial({
@@ -182,6 +184,7 @@ export class TextfieldPluginComponent
     styles: Record<string, string> = {};
     private saveCalledExternally = false;
     saveFailed = false;
+    stateStorage?: TimStorage<string>;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -261,6 +264,27 @@ export class TextfieldPluginComponent
             this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
+        // let prev: string | undefined;
+        // const tid = this.getTaskId()?.docTask().toString();
+        // console.log("TID", tid);
+
+        this.initStorage(t.string);
+        const prev = this.stateStorage?.get();
+        if (prev != undefined) {
+            this.userword = prev;
+            this.updateInput();
+        }
+        // prev = this.storage
+        // if (tid) {
+        //     this.storage = new TimStorage(tid, t.string);
+        //     console.log("STORAGE", this.storage);
+        //     prev = this.storage.get();
+        //     console.log("PREV", prev);
+        //     if (prev != undefined) {
+        //         this.userword = prev;
+        //         this.updateInput();
+        //     }
+        // }
         if (this.markup.showname) {
             this.initCode();
         }
@@ -322,6 +346,7 @@ export class TextfieldPluginComponent
             this.saveFailed = false;
             this.redAlert = false;
             this.updateListeners(ChangeType.Saved);
+            this.clearStorage();
         });
     }
 
@@ -560,11 +585,23 @@ export class TextfieldPluginComponent
             this.preventedAutosave = false;
             return;
         }
+        console.log("CALLING SET");
+        this.setStorage(this.userword);
         if (this.markup.autosave || this.markup.autosave === undefined) {
             // noinspection JSIgnoredPromiseFromCall
             this.saveText();
         }
     }
+
+    // storeState() {
+    //     console.log("SETTING,storage", this.stateStorage);
+    //     this.stateStorage?.set(this.userword);
+    // }
+    //
+    // clearStorage() {
+    //     console.log("CLEARING,storage", this.stateStorage);
+    //     this.stateStorage?.clear();
+    // }
 
     /**
      * Actual save method, called by different save alternatives implemented above.
@@ -611,6 +648,7 @@ export class TextfieldPluginComponent
             this.changes = false;
             this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
+            this.clearStorage();
             this.hideSavedText = false;
             this.redAlert = false;
             this.saveResponse.saved = true;

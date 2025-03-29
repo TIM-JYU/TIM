@@ -635,6 +635,10 @@ export function getTypedStorage<T, O = T>(
     }
 }
 
+function clearStorage(key: string) {
+    window.localStorage.removeItem(key);
+}
+
 export class TimStorage<T, O = T> {
     constructor(private key: string, private codec: t.Type<T, O>) {}
 
@@ -644,6 +648,10 @@ export class TimStorage<T, O = T> {
 
     get() {
         return getTypedStorage(this.key, this.codec);
+    }
+
+    clear() {
+        clearStorage(this.key);
     }
 }
 
