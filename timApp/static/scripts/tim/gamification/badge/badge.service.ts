@@ -7,6 +7,7 @@ import type {
     IBadge,
     IUser,
     IGroup,
+    IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {documentglobals} from "tim/util/globals";
 
@@ -169,9 +170,9 @@ export class BadgeService {
         }
     }
 
-    async getPersonalGroup(userName: string | undefined) {
+    async getUserAndPersonalGroup(userName: string | undefined) {
         const response = toPromise(
-            this.http.get<any>(`/users_personal_group/${userName}`)
+            this.http.get<any>(`/user_and_personal_group/${userName}`)
         );
         const result = await response;
 

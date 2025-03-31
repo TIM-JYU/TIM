@@ -233,6 +233,10 @@ export class BadgeCreatorComponent implements OnInit {
         this.resetForm();
         this.showWithdraw = false;
         this.showGiver = false;
+
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
@@ -302,6 +306,9 @@ export class BadgeCreatorComponent implements OnInit {
         this.editingBadge = null;
         this.badgeFormShowing = false;
         this.isFormChanged = false;
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // Clears form information, except given values
@@ -313,6 +320,9 @@ export class BadgeCreatorComponent implements OnInit {
             context_group: this.selectedContextGroup,
         });
         this.isFormChanged = false;
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // Titles instead of numbers in availableImages
@@ -490,12 +500,28 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
+    async isBadgeAssigned() {
+        const response = await toPromise(
+            this.http.get<any>(`/badge_holders/${this.clickedBadge.id}`)
+        );
+        if (response.result.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     // Delete badge
     async deleteBadge() {
+        let confirmMessage = `Are you sure you want to delete "${this.editingBadge.title}" badge?`;
+
+        if (await this.isBadgeAssigned()) {
+            confirmMessage = `!!!WARNING!!! This badge has been assigned to users, are you sure you want to delete "${this.editingBadge.title}" badge?`;
+        }
         if (
             await showConfirm(
                 `Delete ${this.editingBadge.title}`,
-                `Are you sure you want to delete "${this.editingBadge.title}" badge?`
+                confirmMessage
             )
         ) {
             if (this.editingBadge) {
