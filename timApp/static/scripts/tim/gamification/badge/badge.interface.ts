@@ -12,8 +12,7 @@ export interface IBadge {
 }
 
 export interface IGroup {
-    userid: number;
-    pgroup_id: number;
+    id: number;
     name: string;
 }
 
@@ -22,4 +21,9 @@ export interface IUser {
     name: string;
     real_name: string | null;
     email: string;
+}
+
+export interface IPersonalGroup {
+    0: IUser;
+    1: IGroup;
 }

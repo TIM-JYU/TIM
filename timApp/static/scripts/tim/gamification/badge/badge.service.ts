@@ -7,6 +7,7 @@ import type {
     IBadge,
     IUser,
     IGroup,
+    IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {documentglobals} from "tim/util/globals";
 

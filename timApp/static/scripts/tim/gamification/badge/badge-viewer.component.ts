@@ -6,7 +6,11 @@ import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
-import type {IBadge, IGroup} from "tim/gamification/badge/badge.interface";
+import type {
+    IBadge,
+    IGroup,
+    IPersonalGroup,
+} from "tim/gamification/badge/badge.interface";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
 import type {IUser} from "tim/user/IUser";
@@ -16,7 +20,7 @@ import type {IUser} from "tim/user/IUser";
     template: `
         <div class="viewer-container">
 
-            <h2 class="badge-heading">{{ this.personalGroup?.name }}'s badges</h2>
+            <h2 class="badge-heading">{{ this.personalGroup?.["0"].real_name }}'s badges</h2>
             <ng-container *ngIf="badges.length == 0">
                 <p>No user badges</p>
             </ng-container>
@@ -39,13 +43,13 @@ import type {IUser} from "tim/user/IUser";
                 <div class="subgroups" *ngFor="let group of userSubGroups">
                     <h2 class="badge-heading">{{ group.name }} badges</h2>
 
-                    <ng-container *ngIf="groupBadgesMap.get(group.pgroup_id)?.length == 0">
+                    <ng-container *ngIf="groupBadgesMap.get(group.id)?.length == 0">
                         <p>No group badges</p>
                     </ng-container>
 
-                    <ng-container *ngIf="groupBadgesMap.get(group.pgroup_id)?.length || 0 > 0">
+                    <ng-container *ngIf="groupBadgesMap.get(group.id)?.length || 0 > 0">
                         <div class="users_group_badges" (wheel)="onScroll($event)">
-                            <div class="badge-card" *ngFor="let badge of groupBadgesMap.get(group.pgroup_id)">
+                            <div class="badge-card" *ngFor="let badge of groupBadgesMap.get(group.id)">
                                 <tim-badge
                                         title="{{badge.title}}"
                                         color="{{badge.color}}"
@@ -64,7 +68,7 @@ import type {IUser} from "tim/user/IUser";
     styleUrls: ["badge-viewer.component.scss"],
 })
 export class BadgeViewerComponent implements OnInit {
-    personalGroup?: IGroup;
+    personalGroup?: IPersonalGroup;
     selectedUser?: IUser | null = null;
     badges: IBadge[] = [];
     userSubGroups: IGroup[] = [];
@@ -86,14 +90,14 @@ export class BadgeViewerComponent implements OnInit {
             return;
         }
         this.badges = await this.badgeService.getUserBadges(
-            this.personalGroup?.pgroup_id
+            this.personalGroup?.["1"].id
         );
     }
 
     async getUserSubGroups(groupContext: string, userid: number) {
         this.userSubGroups = await this.badgeService.getUserSubGroups(
             groupContext,
-            Users.getCurrent().id
+            userid
         );
         this.getGroupBadges();
     }
@@ -102,8 +106,8 @@ export class BadgeViewerComponent implements OnInit {
         this.groupBadgesMap.clear();
         for (const group of this.userSubGroups) {
             this.groupBadgesMap.set(
-                group.pgroup_id,
-                await this.badgeService.getUserBadges(group.pgroup_id)
+                group.id,
+                await this.badgeService.getUserBadges(group.id)
             );
         }
     }
@@ -143,7 +147,7 @@ export class BadgeViewerComponent implements OnInit {
         }
         this.getUserSubGroups(
             this.badgegroupContext,
-            this.personalGroup?.userid
+            this.personalGroup?.["0"].id
         );
     }
 
