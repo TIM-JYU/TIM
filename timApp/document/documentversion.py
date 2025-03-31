@@ -136,9 +136,15 @@ class DocumentVersion(Document):
     @staticmethod
     def get_diff(d1, d2):
         differ = HtmlDiff()
-        return differ.make_file(
+        diffhtml = differ.make_file(
             d1.export_markdown().splitlines(),
             d2.export_markdown().splitlines(),
             context=True,
             numlines=5,
         )
+        # Fix for https://github.com/python/cpython/issues/131204
+        # TODO: remove this if we update Python to version 3.14+
+        old_font_style = "table.diff {font-family:Courier; border:medium;}"
+        fixed_font_style = "table.diff {font-family: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace; border:medium;}"
+        diffhtml = diffhtml.replace(old_font_style, fixed_font_style)
+        return diffhtml
