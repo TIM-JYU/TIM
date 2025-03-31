@@ -28,7 +28,17 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 @Component({
     selector: "tim-badge-creator",
     template: `
-        <ng-container *ngIf="this.hasPermission; else noPermissionView">
+        <ng-container *ngIf="!teacherPermission">
+            <div class="badge-creator">
+                <div class="all_badges">
+                    <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
+                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                        <div [innerHTML]="alert.msg"></div>
+                    </tim-alert>
+                </div>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="teacherPermission">
         <div class="badge-creator" [formGroup]="badgeForm" #allBadgesSection>
           <fieldset class="form-fieldset">
             <div class="all_badges">
@@ -182,6 +192,7 @@ export class BadgeCreatorComponent implements OnInit {
     selectedContextGroup: string = "";
     hasPermission = true;
     badgeFormShowing = false;
+    teacherPermission = false;
 
     clickedBadge: any = null;
     editingBadge: any = null;
@@ -451,11 +462,26 @@ export class BadgeCreatorComponent implements OnInit {
         const result = await response;
 
         if (result.ok) {
+            this.teacherPermission = true;
             if (result.result !== undefined) {
                 const badges: IBadge[] = result.result;
                 this.all_badges = badges;
                 this.all_badges.reverse();
             }
+        }
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error:
+                            result.result.error.error +
+                            " If you are a teacher of this context-group, please contact TIM admin.",
+                    },
+                },
+                "danger"
+            );
+            return;
         }
     }
 

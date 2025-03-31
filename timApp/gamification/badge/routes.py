@@ -135,9 +135,9 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     d = DocEntry.find_by_path(f"groups/{context_group}")
     if not d:
         raise NotExist()
-    verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
     check_context_group_access(user_id, context_usergroup.id)
+    verify_teacher_access(d)
     badges = (
         run_sql(
             select(Badge)
