@@ -10,7 +10,6 @@
     font-weight: bolder;
     text-align: center;
     position: relative;
-    //margin: 1.5em 3em;
     display: inline-block;
     top: 0;
     transition: all 0.2s ease;
@@ -29,7 +28,6 @@
     border-radius: 10px;
     display: inline-block;
     transition: all 0.2s ease;
-    //margin: 0 2em;
 }
 
 .badge.hexagon:before, .badge.hexagon:after {
@@ -61,7 +59,6 @@
     display: inline-block;
     position: relative;
     transition: all 0.2s ease;
-    //margin: 0 1em;
 }
 
 .badge.square > .ribbon{
@@ -75,7 +72,6 @@
   border-radius: 229px;
   display: inline-block;
   transition: all 0.2s ease;
-  //margin: 0 2.5em;
 }
 
 
@@ -109,9 +105,7 @@
     border-radius: 50%;
     width: 90px;
     height: 90px;
-    //margin: 0 1em;
 }
-
 
 
 .badge:hover {
@@ -123,7 +117,6 @@
     width: 50px;
     height: 50px;
     position: absolute;
-    //background: #fff;
     z-index: 1;
     border-radius: 50%;
     top: 0;
