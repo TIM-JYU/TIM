@@ -66,7 +66,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             (change)="toggleUserSelection(user, $event)"
                         />
                         <span class="option-name" (click)="selectedUser = user; fetchUserBadges(user)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                            {{user.name}}
+                            {{user.real_name}}
                         </span>
                     </div>
                 </div>
@@ -80,7 +80,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             (change)="toggleGroupSelection(group, $event)"
                         />
                         <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                            {{group.name}}
+                            {{ prettyGroupName(group.name) }}
                         </span>
                     </div>
                 </div>
@@ -201,7 +201,7 @@ export class BadgeGiverComponent implements OnInit {
     }> = [];
 
     @Output() cancelEvent = new EventEmitter<void>();
-    private personalGroup: unknown;
+    private userAndPersonalGroup: unknown;
     private userName: string | undefined;
 
     constructor(
@@ -332,15 +332,14 @@ export class BadgeGiverComponent implements OnInit {
             console.error("Selected user was undefined");
             return;
         }
-        const personalGroup = await this.badgeService.getPersonalGroup(
-            selectedUser.name
-        );
-        if (!personalGroup) {
+        const userAndPersonalGroup =
+            await this.badgeService.getUserAndPersonalGroup(selectedUser.name);
+        if (!userAndPersonalGroup) {
             console.error("Failed to retrieve the user's personal group ID.");
             return;
         }
         this.userBadges = await this.badgeService.getUserBadges(
-            personalGroup.id
+            userAndPersonalGroup[1].id
         );
     }
 
@@ -361,11 +360,10 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     async fetchPersonalGroup() {
-        this.personalGroup = await this.badgeService.getPersonalGroup(
-            this.userName
-        );
-        if (this.personalGroup) {
-            console.log("User's personal group:", this.personalGroup);
+        this.userAndPersonalGroup =
+            await this.badgeService.getUserAndPersonalGroup(this.userName);
+        if (this.userAndPersonalGroup) {
+            console.log("User and personal group:", this.userAndPersonalGroup);
         }
     }
 
@@ -380,14 +378,13 @@ export class BadgeGiverComponent implements OnInit {
 
         if (this.selectedUsers.length > 0) {
             for (const user of this.selectedUsers) {
-                const pGroup = await this.badgeService.getPersonalGroup(
-                    user.name
-                );
+                const userAndPersonalGroup =
+                    await this.badgeService.getUserAndPersonalGroup(user.name);
                 await this.badgeService.assignBadges({
                     given_by: this.badgeGiver,
                     doc_id: this.currentDocumentID,
                     context_group: this.badgegroupContext,
-                    group_id: pGroup.id,
+                    group_id: userAndPersonalGroup[1].id,
                     badge_id: this.selectedBadge?.id,
                     message: message,
                 });
@@ -425,6 +422,15 @@ export class BadgeGiverComponent implements OnInit {
                 this.selectedGroup = null;
             }
         }
+    }
+
+    // Removes context group (main group) from the group's name in group listing
+    prettyGroupName(groupName: string): string {
+        if (!groupName || !this.badgegroupContext) return groupName;
+
+        return groupName.startsWith(this.badgegroupContext + "-")
+            ? groupName.slice(this.badgegroupContext.length + 1)
+            : groupName;
     }
 
     ngOnDestroy() {
