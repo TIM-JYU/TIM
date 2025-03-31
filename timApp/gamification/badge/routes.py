@@ -132,7 +132,7 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
-    d = DocEntry.find_by_id(doc_id)
+    d = DocEntry.find_by_path(f"groups/{context_group}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -193,7 +193,7 @@ def create_badge(
     :param description: Description of the badge
     :return: ok response
     """
-    d = DocEntry.find_by_id(doc_id)
+    d = DocEntry.find_by_path(f"groups/{context_group}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -257,7 +257,8 @@ def modify_badge(
     :param description: Description of the badge
     :return: ok response
     """
-    d = DocEntry.find_by_id(doc_id)
+    context_group_name = UserGroup.get_by_id(context_group).name
+    d = DocEntry.find_by_path(f"groups/{context_group_name}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -305,7 +306,7 @@ def deactivate_badge(
     :param deleted_by: ID of the useraccount who deactivates the badge
     :return: ok response
     """
-    d = DocEntry.find_by_id(doc_id)
+    d = DocEntry.find_by_path(f"groups/{context_group}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -344,7 +345,7 @@ def reactivate_badge(
     :param restored_by: ID of the useraccount who reactivates the badge
     :return: ok response
     """
-    d = DocEntry.find_by_id(doc_id)
+    d = DocEntry.find_by_path(f"groups/{context_group}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -463,7 +464,7 @@ def give_badge(
     :param message: Message to give to the usergroup when the badge is given
     :return: ok response
     """
-    d = DocEntry.find_by_id(doc_id)
+    d = DocEntry.find_by_path(f"groups/{context_group}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -507,7 +508,7 @@ def withdraw_badge(
     :param withdrawn_by: ID of the useraccount that withdraws the badge
     :return: ok response
     """
-    d = DocEntry.find_by_id(doc_id)
+    d = DocEntry.find_by_path(f"groups/{context_group}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -547,7 +548,7 @@ def undo_withdraw_badge(
     :param undo_withdrawn_by: ID of the useraccount that undoes the badge withdrawal
     :return: ok response
     """
-    d = DocEntry.find_by_id(doc_id)
+    d = DocEntry.find_by_path(f"groups/{context_group}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -573,7 +574,6 @@ def undo_withdraw_badge(
     return ok_response()
 
 
-# TODO: Do verify_teacher_access maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/subgroups/<group_name_prefix>")
 def get_subgroups(group_name_prefix: str) -> Response:
@@ -583,6 +583,10 @@ def get_subgroups(group_name_prefix: str) -> Response:
     :param group_name_prefix: Prefix of the usergroups
     :return: List of usergroups
     """
+    d = DocEntry.find_by_path(f"groups/{group_name_prefix}")
+    if not d:
+        raise NotExist()
+    verify_teacher_access(d)
     subgroups = (
         run_sql(
             select(UserGroup)
@@ -672,7 +676,7 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
     """
     usergroup = UserGroup.get_by_name(usergroup_name)
     raise_group_not_found_if_none(usergroup_name, usergroup)
-    d = DocEntry.find_by_id(doc_id)
+    d = DocEntry.find_by_path(f"groups/{usergroup_name}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
