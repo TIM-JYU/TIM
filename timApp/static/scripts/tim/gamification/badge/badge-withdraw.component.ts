@@ -170,8 +170,8 @@ export class BadgeWithdrawComponent implements OnInit {
         this.selectedBadge = null;
         this.selectedGroup = null;
         this.showComponent = false;
-        this.userBadges = [];
-        this.groupBadges = [];
+        this.emptyBadges(this.userBadges);
+        this.emptyBadges(this.userBadges);
         this.cancelEvent.emit();
     }
 
@@ -206,6 +206,9 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
 
+        this.selectedGroup = null;
+        this.selectedBadge = null;
+        this.emptyBadges(this.groupBadges);
         this.emptyBadges(this.userBadges);
 
         if (!this.selectedUser) {
@@ -225,7 +228,11 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
 
+        this.selectedUser = null;
+        this.selectedBadge = null;
+        this.emptyBadges(this.userBadges);
         this.emptyBadges(this.groupBadges);
+
         this.groupBadges = await this.badgeService.getUserBadges(groupId);
     }
 
