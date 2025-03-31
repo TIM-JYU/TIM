@@ -1,11 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {
-    ElementRef,
-    EventEmitter,
-    HostListener,
-    Output,
-    ViewChild,
-} from "@angular/core";
+import {EventEmitter, Output} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
@@ -16,12 +10,11 @@ import {Users} from "tim/user/userService";
 import type {
     IBadge,
     IGroup,
+    IPersonalGroup,
     IUser,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
-import {toPromise} from "tim/util/utils";
 import {BadgeService} from "tim/gamification/badge/badge.service";
-import {showConfirm} from "tim/ui/showConfirmDialog";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
@@ -169,37 +162,33 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
     styleUrls: ["./badge-giver.component.scss"],
 })
 export class BadgeGiverComponent implements OnInit {
-    private subscription: Subscription = new Subscription();
+    hasPermission: boolean = true;
+    showComponent: boolean = true;
+    message = "";
 
-    currentDocumentID = documentglobals().curr_item.id;
     users: IUser[] = [];
-    badges: any = [];
     selectedUser?: IUser | null = null;
     selectedUsers: IUser[] = [];
     userBadges: IBadge[] = [];
-    @Input() selectedBadge?: IBadge | null = null;
-    message = "";
-    showDeleteButton: boolean = false;
-    hasPermission: boolean = true;
-    showComponent: boolean = true;
-    @Input() badgegroupContext?: string;
+
     groups: IGroup[] = [];
     selectedGroup?: IGroup | null = null;
     selectedGroups: IGroup[] = [];
     groupBadges: IBadge[] = [];
+
+    @Input() selectedBadge?: IBadge | null = null;
+    @Input() badgegroupContext?: string;
+
     userAssign?: boolean;
     groupAssign: boolean = false;
-    badgeGiver = 0;
-    currentId = null;
+
     alerts: Array<{
         msg: string;
         type: "warning" | "danger";
         id?: string;
     }> = [];
-
+    private subscription: Subscription = new Subscription();
     @Output() cancelEvent = new EventEmitter<void>();
-    private userAndPersonalGroup: unknown;
-    private userName: string | undefined;
 
     constructor(
         private http: HttpClient,
@@ -208,12 +197,9 @@ export class BadgeGiverComponent implements OnInit {
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
-            this.userName = Users.getCurrent().name;
             this.addListeners();
             this.fetchUsers();
             this.fetchGroups();
-            this.fetchBadges();
-            this.fetchPersonalGroup();
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.showComponent = true;
@@ -222,13 +208,6 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     private addListeners() {
-        // Tilataan updateBadgelist-tapahtuma BadgeService:ltä
-        this.subscription.add(
-            this.badgeService.updateBadgeList$.subscribe(() => {
-                this.fetchBadges(); // Kutsutaan fetchBadges-metodia updaten jälkeen
-            })
-        );
-
         // Subscribe to badge update events
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
@@ -247,7 +226,6 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedBadge = null;
         this.selectedGroup = null;
         this.message = "";
-        this.showDeleteButton = false;
         this.showComponent = false;
         this.userBadges = [];
         this.groupBadges = [];
@@ -302,15 +280,6 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kutsuu badge-servicen metodia, joka hakee kaikki badget
-     */
-    async fetchBadges() {
-        this.badges = await this.badgeService.getAllBadges();
-        // console.log("näyttää kaikki badget: ", this.badges);
-        // console.log("Selected badge:", this.selectedBadge);
-    }
-
-    /**
      * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
      * Tyhjentää this.userBadges -taulukon
      * Kutsuu badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
@@ -318,26 +287,18 @@ export class BadgeGiverComponent implements OnInit {
      *
      */
     async fetchUserBadges(selectedUser: IUser) {
-        this.selectedGroup = null;
-        this.groupBadges = [];
-        this.showDeleteButton = false;
-
-        while (this.userBadges.length > 0) {
-            this.userBadges.pop();
-        }
+        this.emptyBadges(this.userBadges);
         if (!selectedUser) {
             console.error("Selected user was undefined");
             return;
         }
-        const userAndPersonalGroup =
+        const pGroup: IPersonalGroup =
             await this.badgeService.getUserAndPersonalGroup(selectedUser.name);
-        if (!userAndPersonalGroup) {
+        if (!pGroup) {
             console.error("Failed to retrieve the user's personal group ID.");
             return;
         }
-        this.userBadges = await this.badgeService.getUserBadges(
-            userAndPersonalGroup[1].id
-        );
+        this.userBadges = await this.badgeService.getUserBadges(pGroup["1"].id);
     }
 
     async fetchGroupBadges(groupId?: number) {
@@ -345,23 +306,8 @@ export class BadgeGiverComponent implements OnInit {
             console.error("groupid was undefined");
             return;
         }
-
-        this.selectedUser = null;
-        this.userBadges = [];
-        this.showDeleteButton = false;
-
-        while (this.groupBadges.length > 0) {
-            this.groupBadges.pop();
-        }
+        this.emptyBadges(this.groupBadges);
         this.groupBadges = await this.badgeService.getUserBadges(groupId);
-    }
-
-    async fetchPersonalGroup() {
-        this.userAndPersonalGroup =
-            await this.badgeService.getUserAndPersonalGroup(this.userName);
-        if (this.userAndPersonalGroup) {
-            console.log("User and personal group:", this.userAndPersonalGroup);
-        }
     }
 
     /**
@@ -369,19 +315,21 @@ export class BadgeGiverComponent implements OnInit {
      * @param message viesti, joka antamisen yhteydessä voidaan antaa
      */
     async assignBadge(message: string) {
+        let givenByID = 0;
+        const currentDocumentID = documentglobals().curr_item.id;
         if (Users.isLoggedIn()) {
-            this.badgeGiver = Users.getCurrent().id;
+            givenByID = Users.getCurrent().id;
         }
 
         if (this.selectedUsers.length > 0) {
             for (const user of this.selectedUsers) {
-                const userAndPersonalGroup =
+                const pGroup: IPersonalGroup =
                     await this.badgeService.getUserAndPersonalGroup(user.name);
                 await this.badgeService.assignBadges({
-                    given_by: this.badgeGiver,
-                    doc_id: this.currentDocumentID,
+                    given_by: givenByID,
+                    doc_id: currentDocumentID,
                     context_group: this.badgegroupContext,
-                    group_id: userAndPersonalGroup[1].id,
+                    group_id: pGroup["1"].id,
                     badge_id: this.selectedBadge?.id,
                     message: message,
                 });
@@ -390,8 +338,8 @@ export class BadgeGiverComponent implements OnInit {
         if (this.selectedGroups.length > 0) {
             for (const group of this.selectedGroups) {
                 await this.badgeService.assignBadges({
-                    given_by: this.badgeGiver,
-                    doc_id: this.currentDocumentID,
+                    given_by: givenByID,
+                    doc_id: currentDocumentID,
                     context_group: this.badgegroupContext,
                     group_id: group.id,
                     badge_id: this.selectedBadge?.id,
@@ -402,32 +350,24 @@ export class BadgeGiverComponent implements OnInit {
         this.emptyForm();
     }
 
-    selectBadge(
-        badge?: IBadge | null | undefined,
-        fromGroup: boolean = false,
-        fromAssignList: boolean = false
-    ) {
-        this.selectedBadge = badge ?? null;
-        this.showDeleteButton =
-            !fromAssignList && badge !== null && badge !== undefined; // Nappi näkyy vain, jos badge on valittu
-
-        // Päivitetään badge-listat valinnasta riippuen
-        if (!fromAssignList) {
-            if (fromGroup) {
-                this.selectedUser = null;
-            } else {
-                this.selectedGroup = null;
-            }
-        }
-    }
-
     // Removes context group (main group) from the group's name in group listing
     prettyGroupName(groupName: string): string {
-        if (!groupName || !this.badgegroupContext) return groupName;
+        if (!groupName || !this.badgegroupContext) {
+            return groupName;
+        }
 
         return groupName.startsWith(this.badgegroupContext + "-")
             ? groupName.slice(this.badgegroupContext.length + 1)
             : groupName;
+    }
+
+    /**
+     * Tyhjentää attribuuttina annetun taulukon
+     */
+    emptyBadges(badges: IBadge[]) {
+        while (badges.length > 0) {
+            badges.pop();
+        }
     }
 
     ngOnDestroy() {

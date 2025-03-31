@@ -9,14 +9,15 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
 import type {
     IBadge,
     IGroup,
+    IPersonalGroup,
     IUser,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {Subscription} from "rxjs";
-import answer from "../../../../../modules/jsrunner/server/routes/answer";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import answer from "../../../../../modules/jsrunner/server/routes/answer";
 
 @Component({
     selector: "tim-badge-withdraw",
@@ -143,7 +144,6 @@ export class BadgeWithdrawComponent implements OnInit {
             this.addListeners();
             this.fetchUsers();
             this.fetchGroups();
-            this.fetchBadges();
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.showComponent = true;
@@ -152,13 +152,6 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     private addListeners() {
-        // Tilataan updateBadgelist-tapahtuma BadgeService:ltä
-        this.subscription.add(
-            this.badgeService.updateBadgeList$.subscribe(() => {
-                this.fetchBadges(); // Kutsutaan fetchBadges-metodia updaten jälkeen
-            })
-        );
-
         // Subscribe to badge update events
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
@@ -202,15 +195,6 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Kutsuu badge-servicen metodia, joka hakee kaikki badget
-     */
-    async fetchBadges() {
-        this.badges = await this.badgeService.getAllBadges();
-        //console.log("näyttää kaikki badget: ", this.badges);
-        //console.log("Selected badge:", this.selectedBadge);
-    }
-
-    /**
      * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
      * Tyhjentää this.userBadges -taulukon
      * Kutsuu badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
@@ -222,34 +206,17 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
 
-        // Reset group selection and hide badges
-        if (this.selectedGroup) {
-            this.selectedBadge = null;
-        }
-        this.selectedGroup = null;
-        this.groupBadges = [];
+        this.emptyBadges(this.userBadges);
 
-        while (this.userBadges.length > 0) {
-            this.userBadges.pop();
-        }
-
-        let currentId = this.selectedUser?.id;
         if (!this.selectedUser) {
+            console.error("Failed to retrieve the user's personal group ID.");
             return;
         }
-        const userAndPersonalGroup =
+        const pGroup: IPersonalGroup =
             await this.badgeService.getUserAndPersonalGroup(
                 this.selectedUser.name
             );
-        if (userAndPersonalGroup) {
-            currentId = userAndPersonalGroup[1].id;
-        } else {
-            console.error("Failed to retrieve the user's personal group ID.");
-        }
-        if (!currentId) {
-            return;
-        }
-        this.userBadges = await this.badgeService.getUserBadges(currentId);
+        this.userBadges = await this.badgeService.getUserBadges(pGroup["1"].id);
     }
 
     async fetchGroupBadges(groupId?: number) {
@@ -258,16 +225,7 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
 
-        if (this.selectedUser) {
-            this.selectedBadge = null;
-        }
-        // Reset user selection and hide badges
-        this.selectedUser = null;
-        this.userBadges = [];
-
-        while (this.groupBadges.length > 0) {
-            this.groupBadges.pop();
-        }
+        this.emptyBadges(this.groupBadges);
         this.groupBadges = await this.badgeService.getUserBadges(groupId);
     }
 
@@ -311,7 +269,6 @@ export class BadgeWithdrawComponent implements OnInit {
                 }
             });
         this.fetchUserBadges(this.selectedUser?.id);
-        // Poistaa deletenapin näkyvistä deleten jälkeen
         this.selectedBadge = null;
     }
 
@@ -328,6 +285,12 @@ export class BadgeWithdrawComponent implements OnInit {
             } else {
                 this.selectedGroup = null;
             }
+        }
+    }
+
+    emptyBadges(badge: IBadge[]) {
+        while (badge.length > 0) {
+            badge.pop();
         }
     }
 

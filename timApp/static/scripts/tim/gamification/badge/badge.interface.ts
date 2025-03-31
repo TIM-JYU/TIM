@@ -22,3 +22,8 @@ export interface IUser {
     real_name: string | null;
     email: string;
 }
+
+export interface IPersonalGroup {
+    0: IUser;
+    1: IGroup;
+}
