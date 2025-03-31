@@ -21,10 +21,8 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
             <ng-container *ngIf="message">
                 <br><b>Message:</b><br>{{ message }}
             </ng-container>
-        </span>
-        
+        </span>        
     </div>
-
   `,
     styleUrls: ["badge.component.scss"],
 })
