@@ -1,18 +1,30 @@
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 
 @Component({
-    selector: "tim-group-name",
+    selector: "timGroupName",
     template: `
-    <ng-container>
-        <h2>Rename your group</h2>
-    </ng-container>
-  `,
+        <ng-container>
+            <fieldset>
+                <label>
+                    <button>Change name</button>
+                </label>
+            </fieldset>
+        </ng-container>
+    `,
     styleUrls: ["./group-name.component.scss"],
 })
+export class GroupNameComponent implements OnInit {
+    groupName: string | undefined;
+
+    ngOnInit(): void {
+        console.log("Group name tool");
+    }
+}
+
 @NgModule({
-    declarations: [GroupNameModule],
-    exports: [GroupNameModule],
+    declarations: [GroupNameComponent],
+    exports: [GroupNameComponent],
     imports: [CommonModule],
 })
 export class GroupNameModule {}
