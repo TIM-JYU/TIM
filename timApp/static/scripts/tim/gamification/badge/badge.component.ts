@@ -2,9 +2,6 @@ import type {OnInit, OnChanges} from "@angular/core";
 import {Component, Input, NgModule, SimpleChanges} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {cons} from "fp-ts/ReadonlyNonEmptyArray";
-import {BadgeService} from "tim/gamification/badge/badge.service";
 
 @Component({
     selector: "tim-badge",
