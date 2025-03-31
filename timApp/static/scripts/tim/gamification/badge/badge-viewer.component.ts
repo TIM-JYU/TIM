@@ -20,7 +20,7 @@ import type {IUser} from "tim/user/IUser";
     template: `
         <div class="viewer-container">
 
-            <h2 class="badge-heading">{{ this.personalGroup?.["0"].real_name }}'s badges</h2>
+            <h2 class="badge-heading">{{badgeuserContext}}'s badges</h2>
             <ng-container *ngIf="badges.length == 0">
                 <p>No user badges</p>
             </ng-container>
@@ -139,7 +139,7 @@ export class BadgeViewerComponent implements OnInit {
         if (!this.badgeuserContext || !this.badgegroupContext) {
             return;
         }
-        this.personalGroup = await this.badgeService.getPersonalGroup(
+        this.personalGroup = await this.badgeService.getUserAndPersonalGroup(
             this.badgeuserContext
         );
         if (!this.personalGroup) {
