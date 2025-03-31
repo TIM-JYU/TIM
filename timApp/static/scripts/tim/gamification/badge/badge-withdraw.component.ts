@@ -49,7 +49,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                        color="{{badge.color}}"
                                        shape="{{badge.shape}}"
                                        [image]="badge.image"
-                                       [preventDialog]="true"
                                        (click)="selectBadge(badge, false, false)">
                             </tim-badge>
                         </div>
@@ -80,7 +79,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                        color="{{badge.color}}"
                                        shape="{{badge.shape}}"
                                        [image]="badge.image"
-                                       [preventDialog]="true"
                                        (click)="selectBadge(badge, true, false)">
                             </tim-badge>
                         </div>
