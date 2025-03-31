@@ -2,15 +2,12 @@ import type {OnInit, OnChanges} from "@angular/core";
 import {Component, Input, NgModule, SimpleChanges} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {cons} from "fp-ts/ReadonlyNonEmptyArray";
-import {BadgeService} from "tim/gamification/badge/badge.service";
 
 @Component({
     selector: "tim-badge",
     template: `
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-    <div class="badge-container" [ngClass]="['badge', color, shape]" (click)="openDialog()">
+    <div class="badge-container" [ngClass]="['badge', color, shape]">
         <div class="circle">
             <span class="material-symbols-outlined">{{ icon }}</span>
         </div>
@@ -21,10 +18,8 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
             <ng-container *ngIf="message">
                 <br><b>Message:</b><br>{{ message }}
             </ng-container>
-        </span>
-        
+        </span>        
     </div>
-
   `,
     styleUrls: ["badge.component.scss"],
 })
@@ -36,7 +31,6 @@ export class BadgeComponent implements OnInit, OnChanges {
     @Input() image?: number;
     @Input() description?: string;
     @Input() message?: string;
-    @Input() preventDialog: boolean = false;
 
     icon?: string;
 
@@ -54,26 +48,6 @@ export class BadgeComponent implements OnInit, OnChanges {
         11: "loop",
         12: "money",
     };
-
-    // hakee dialogServicen BadgeServicesta
-    constructor(private dialogService: BadgeService) {}
-
-    // Avaa valitun badgen dialogin yksi ikkuna kerrallaan, josta näkee Descriptionin ja Messagen
-    async openDialog(): Promise<void> {
-        if (this.dialogService.isDialogOpen() || this.preventDialog) {
-            return;
-        }
-
-        this.dialogService.setDialogOpen(true);
-
-        await showMessageDialog(`
-          <b>${this.title}</b><br><br>
-          <b>Description:</b> ${this.description}<br>
-          <b>Message:</b> ${this.message}
-        `);
-
-        this.dialogService.setDialogOpen(false);
-    }
 
     ngOnInit(): void {
         this.setIcon();
