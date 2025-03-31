@@ -12,6 +12,7 @@ from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
 from timApp.user.groups import raise_group_not_found_if_none
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import NotExist
@@ -405,33 +406,41 @@ def get_groups_badges(group_id: int) -> Response:
         .scalars()
         .all()
     )
-
     groups_badges_ordered = []
     for badge_id in badge_ids:
         for groups_badge in groups_badges:
             if groups_badge.id == badge_id:
                 groups_badges_ordered.append(groups_badge)
-
     badges_json = []
-    for badge in groups_badges_ordered:
-        id_unique_extension = 0
-        key_extension = 0
-        for badge_id_unique in badge_ids_unique:
-            if (
-                badge_id_unique[0] == badge.id
-                and badge_id_unique[1] == id_unique_extension
-            ):
-                badge_json = badge.to_json()
-                badge_json["badgegiven_id"] = badge_ids_badgegiven_ids_and_msgs[
-                    str(badge.id) + "_" + str(key_extension)
-                ][0]
-                badge_json["message"] = badge_ids_badgegiven_ids_and_msgs[
-                    str(badge.id) + "_" + str(key_extension)
-                ][1]
-                key_extension += 1
-                badges_json.append(badge_json)
-        id_unique_extension += 1
+    i = 0
+    for groups_badge in groups_badges_ordered:
+        groups_badge_json = groups_badge.to_json()
+        key = f"{badge_ids_unique[i][0]}_{badge_ids_unique[i][1]}"
+        groups_badge_json["badgegiven_id"] = badge_ids_badgegiven_ids_and_msgs[key][0]
+        groups_badge_json["message"] = badge_ids_badgegiven_ids_and_msgs[key][1]
+        badges_json.append(groups_badge_json)
+        i += 1
     return json_response(badges_json)
+
+
+# TODO: Handle errors.
+@badges_blueprint.get("/badge_holders/<badge_id>")
+def get_badge_holders(badge_id: int) -> Response:
+    """
+    Fetches holders of given badges.
+    :param badge_id: ID of the badge
+    :return: Badgegivens in json response format
+    """
+    badge_holders = (
+        run_sql(
+            select(BadgeGiven)
+            .filter(BadgeGiven.active)
+            .filter(BadgeGiven.badge_id == badge_id)
+        )
+        .scalars()
+        .all()
+    )
+    return json_response(badge_holders)
 
 
 # TODO: Handle errors.
@@ -638,17 +647,18 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
 
 
 # TODO: Handle errors.
-@badges_blueprint.get("/users_personal_group/<name>")
+@badges_blueprint.get("/user_and_personal_group/<name>")
 def users_personal_group(name: str) -> Response:
     """
-    Fetches user's personal usergroup.
-    :param name: User's name
-    :return: usergroup
+    Fetches user and his/her personal usergroup.
+    :param name: User's username
+    :return: useraccount and usergroup in json format
     """
     personal_group = UserGroup.get_by_name(name)
-    if personal_group:
-        return json_response(personal_group)
-    return error_generic("there's no user with name: " + name, 404)
+    user_account = User.get_by_name(name)
+    if personal_group and user_account:
+        return json_response((user_account, personal_group))
+    return error_generic("there's no user with username: " + name, 404)
 
 
 # TODO: Handle errors.

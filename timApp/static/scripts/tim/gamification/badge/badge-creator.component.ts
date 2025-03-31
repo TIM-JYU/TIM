@@ -233,6 +233,10 @@ export class BadgeCreatorComponent implements OnInit {
         this.resetForm();
         this.showWithdraw = false;
         this.showGiver = false;
+
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
@@ -302,6 +306,9 @@ export class BadgeCreatorComponent implements OnInit {
         this.editingBadge = null;
         this.badgeFormShowing = false;
         this.isFormChanged = false;
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // Clears form information, except given values
@@ -313,6 +320,9 @@ export class BadgeCreatorComponent implements OnInit {
             context_group: this.selectedContextGroup,
         });
         this.isFormChanged = false;
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // Titles instead of numbers in availableImages
@@ -452,57 +462,66 @@ export class BadgeCreatorComponent implements OnInit {
 
     // Save changes on the badge that is being edited
     async saveBadgeChanges() {
-        if (
-            await showConfirm(
-                `Edit ${this.editingBadge.title}`,
-                "Are you sure you want to save the changes?"
-            )
-        ) {
-            if (this.editingBadge) {
-                Object.assign(this.editingBadge, this.badgeForm.value);
-                const response = toPromise(
-                    this.http.post<{ok: boolean}>("/modify_badge", {
-                        badge_id: this.editingBadge.id,
-                        modified_by: this.userID,
-                        doc_id: this.currentDocumentID,
-                        context_group: this.editingBadge.context_group,
-                        title: this.editingBadge.title,
-                        color: this.editingBadge.color,
-                        shape: this.editingBadge.shape,
-                        image: this.editingBadge.image,
-                        description: this.editingBadge.description,
-                    })
-                );
-                const result = await response;
-                if (result.ok) {
-                    while (this.all_badges.length > 0) {
-                        this.all_badges.pop();
-                    }
-                    this.emptyForm();
-                    await this.getBadges();
+        if (this.editingBadge) {
+            Object.assign(this.editingBadge, this.badgeForm.value);
+            const response = toPromise(
+                this.http.post<{ok: boolean}>("/modify_badge", {
+                    badge_id: this.editingBadge.id,
+                    modified_by: this.userID,
+                    doc_id: this.currentDocumentID,
+                    context_group: this.editingBadge.context_group,
+                    title: this.editingBadge.title,
+                    color: this.editingBadge.color,
+                    shape: this.editingBadge.shape,
+                    image: this.editingBadge.image,
+                    description: this.editingBadge.description,
+                })
+            );
+            const result = await response;
+            if (result.ok) {
+                while (this.all_badges.length > 0) {
+                    this.all_badges.pop();
                 }
-                if (!result.ok) {
-                    this.badgeService.showError(
-                        this.alerts,
-                        {data: {error: result.result.error.error}},
-                        "danger"
-                    );
-                    return;
-                }
-                this.badgeService.triggerUpdateBadgeList();
-                this.badgeFormShowing = false;
-                this.clickedBadge = null;
-                this.centerToComponent();
+                this.emptyForm();
+                await this.getBadges();
             }
+            if (!result.ok) {
+                this.badgeService.showError(
+                    this.alerts,
+                    {data: {error: result.result.error.error}},
+                    "danger"
+                );
+                return;
+            }
+            this.badgeService.triggerUpdateBadgeList();
+            this.badgeFormShowing = false;
+            this.clickedBadge = null;
+            this.centerToComponent();
+        }
+    }
+
+    async isBadgeAssigned() {
+        const response = await toPromise(
+            this.http.get<any>(`/badge_holders/${this.clickedBadge.id}`)
+        );
+        if (response.result.length > 0) {
+            return true;
+        } else {
+            return false;
         }
     }
 
     // Delete badge
     async deleteBadge() {
+        let confirmMessage = `Are you sure you want to delete "${this.editingBadge.title}" badge?`;
+
+        if (await this.isBadgeAssigned()) {
+            confirmMessage = `!!!WARNING!!! This badge has been assigned to users, are you sure you want to delete "${this.editingBadge.title}" badge?`;
+        }
         if (
             await showConfirm(
                 `Delete ${this.editingBadge.title}`,
-                `Are you sure you want to delete "${this.editingBadge.title}" badge?`
+                confirmMessage
             )
         ) {
             if (this.editingBadge) {
