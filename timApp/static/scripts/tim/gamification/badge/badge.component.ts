@@ -15,6 +15,14 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
             <span class="material-symbols-outlined">{{ icon }}</span>
         </div>
         <div class="ribbon">{{ title }}</div>
+        
+        <span class="tooltip">
+            <b>Description:</b><br>{{ description }} 
+            <ng-container *ngIf="message">
+                <br><b>Message:</b><br>{{ message }}
+            </ng-container>
+        </span>
+        
     </div>
 
   `,

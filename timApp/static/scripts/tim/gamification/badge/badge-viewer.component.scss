@@ -12,25 +12,59 @@
 
 .user_badges, .users_group_badges {
   display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
+  flex-wrap: wrap;
   gap: 20px;
-  align-items: center;
-  padding: 1.5em 0;
+  justify-content: flex-start;
 }
 
 .badge-card {
-  width: 150px;
-  height: 150px;
+  flex: 0 0 70px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
   text-align: center;
+  margin: 0 20px 0 20px;
 }
 
 .badge-card tim-badge {
-  max-width: 100%;
-  max-height: 100%;
+  transform: scale(clamp(0.4, 1, 1));
+  transition: transform 0.2s ease-in-out;
 }
 
+.badge-card tim-badge:hover {
+  transform: scale(1);
+  z-index: 10;
+}
+
+.user_badges::after {
+  content: "";
+  flex-grow: 9999;
+  min-width: 70px;
+}
+
+@media (max-width: 785px) {
+  .badge-card {
+    margin: 0 10px 0 10px;
+  }
+  .user_badges, .users_group_badges {
+    gap: 2px;
+  }
+  .badge-card tim-badge {
+    transform: scale(clamp(0.5, 0.7, 0.7));
+  }
+}
+
+@media (max-width: 550px) {
+  .user_badges, .users_group_badges {
+    gap: 0;
+  }
+  .badge-card {
+    margin: -10px 5px -10px 5px;
+  }
+  .badge-card tim-badge {
+    transform: scale(clamp(0.4, 0.6, 0.6));
+  }
+  .badge-card tim-badge:hover {
+    transform: scale(0.9);
+  }
+}

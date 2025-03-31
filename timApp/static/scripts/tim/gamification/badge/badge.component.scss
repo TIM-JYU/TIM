@@ -28,7 +28,7 @@
     border-radius: 10px;
     display: inline-block;
     transition: all 0.2s ease;
-    margin: 0 2em;
+    //margin: 0 2em;
 }
 
 .badge.hexagon:before, .badge.hexagon:after {
@@ -60,7 +60,7 @@
     display: inline-block;
     position: relative;
     transition: all 0.2s ease;
-    margin: 0 1em;
+    //margin: 0 1em;
 }
 
 .badge.square > .ribbon{
@@ -74,7 +74,7 @@
   border-radius: 229px;
   display: inline-block;
   transition: all 0.2s ease;
-  margin: 0 2.5em;
+  //margin: 0 2.5em;
 }
 
 
@@ -108,7 +108,7 @@
     border-radius: 50%;
     width: 90px;
     height: 90px;
-    margin: 0 1em;
+    //margin: 0 1em;
 }
 
 
@@ -300,6 +300,7 @@
   opacity: 0;
   transition: opacity 0.3s ease;
   white-space: normal;
+  z-index: 99999;
 }
 
 .tooltip::after {
