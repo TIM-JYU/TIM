@@ -1,4 +1,5 @@
-import {ElementRef, OnInit, ViewChild} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {ElementRef, ViewChild} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
@@ -35,7 +36,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                   <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
                   <div class="badge_view">
                       <ng-container *ngIf="all_badges.length == 0">
-                          <p>No badges</p>
+                          <p>This user/group does not have any badges yet.</p>
                       </ng-container>
                       <ng-container *ngIf="all_badges.length > 0">
                           <div class="badge-card" *ngFor="let badge of all_badges">
@@ -398,9 +399,9 @@ export class BadgeCreatorComponent implements OnInit {
                     description: this.newBadge.description,
                 })
             );
-            //console.log("contextgroup: ", this.selectedContextGroup);
+            // console.log("contextgroup: ", this.selectedContextGroup);
             const result = await response;
-            //console.log("contextgroup: ", this.selectedContextGroup);
+            // console.log("contextgroup: ", this.selectedContextGroup);
             if (result.ok) {
                 while (this.all_badges.length > 0) {
                     this.all_badges.pop();
