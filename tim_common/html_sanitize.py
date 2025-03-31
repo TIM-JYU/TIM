@@ -240,6 +240,7 @@ TIM_SAFE_ATTRS = frozenset(
         # tim-table
         "bind-data",
         # tim-add-member
+        # tim-group-name
         "group",
         # tim-goto-link
         "auto-open",
