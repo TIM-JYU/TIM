@@ -61,13 +61,14 @@ def log_badge_event(log_info: dict) -> None:
         f.write(to_json_str(log_info) + "\n")
 
 
-def check_context_group_access(user_id: int, context_group: int) -> bool:
+def check_context_group_access(context_group: int) -> bool:
     """
     Checks whether a user has access to a context group.
     :param user_id: Current user's ID
     :param context_group: Context group to check
     :return:
     """
+    current_user = get_current_user_object()
     context_usergroups = (
         run_sql(select(UserGroup).filter(UserGroup.id == context_group)).scalars().all()
     )
@@ -77,7 +78,7 @@ def check_context_group_access(user_id: int, context_group: int) -> bool:
     allowed_member = (
         run_sql(
             select(UserGroupMember).filter(
-                UserGroupMember.user_id == user_id,
+                UserGroupMember.user_id == current_user.id,
                 UserGroupMember.usergroup_id.in_(context_group_ids),
                 or_(
                     UserGroupMember.membership_end > datetime_tz.now(),
@@ -139,7 +140,7 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     if not d:
         raise NotExist()
     context_usergroup = UserGroup.get_by_name(context_group)
-    in_group = check_context_group_access(user_id, context_usergroup.id)
+    in_group = check_context_group_access(context_usergroup.id)
     if not in_group:
         raise AccessDenied(f"You don't have access to this context group.")
     verify_teacher_access(d)
@@ -203,7 +204,7 @@ def create_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    in_group = check_context_group_access(created_by, context_usergroup.id)
+    in_group = check_context_group_access(context_usergroup.id)
     if not in_group:
         raise AccessDenied(f"You don't have access to this context group.")
     badge = Badge(
@@ -269,7 +270,7 @@ def modify_badge(
     if not d:
         raise NotExist()
     verify_teacher_access(d)
-    in_group = check_context_group_access(modified_by, context_group)
+    in_group = check_context_group_access(context_group)
     if not in_group:
         raise AccessDenied(f"You don't have access to this context group.")
     badge = {
@@ -320,7 +321,7 @@ def deactivate_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    in_group = check_context_group_access(deleted_by, context_usergroup.id)
+    in_group = check_context_group_access(context_usergroup.id)
     if not in_group:
         raise AccessDenied(f"You don't have access to this context group.")
     badge = {
@@ -361,7 +362,7 @@ def reactivate_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    in_group = check_context_group_access(restored_by, context_usergroup.id)
+    in_group = check_context_group_access(context_usergroup.id)
     if not in_group:
         raise AccessDenied(f"You don't have access to this context group.")
     badge = {
@@ -392,8 +393,7 @@ def get_groups_badges(group_id: int) -> Response:
     :param group_id: ID of the usergroup
     :return: Badges in json response format
     """
-    # current_user = get_current_user_object()
-    # in_group = check_context_group_access(current_user.id, group_id)
+    # in_group = check_context_group_access(group_id)
     # if not in_group:
     #     group = UserGroup.get_by_id(group_id)
     #     # if group is a personal group
@@ -535,7 +535,7 @@ def give_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    in_group = check_context_group_access(given_by, context_usergroup.id)
+    in_group = check_context_group_access(context_usergroup.id)
     if not in_group:
         raise AccessDenied(f"You don't have access to this context group.")
     badge_given = BadgeGiven(
@@ -581,7 +581,7 @@ def withdraw_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    in_group = check_context_group_access(withdrawn_by, context_usergroup.id)
+    in_group = check_context_group_access(context_usergroup.id)
     if not in_group:
         raise AccessDenied(f"You don't have access to this context group.")
     badge_given = {
@@ -623,7 +623,7 @@ def undo_withdraw_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    in_group = check_context_group_access(undo_withdrawn_by, context_usergroup.id)
+    in_group = check_context_group_access(context_usergroup.id)
     if not in_group:
         raise AccessDenied(f"You don't have access to this context group.")
     badge_given = {
