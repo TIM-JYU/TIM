@@ -25,78 +25,89 @@ import answer from "../../../../../modules/jsrunner/server/routes/answer";
         <ng-container *ngIf="hasPermission; else noPermissionView">
             <div *ngIf="showComponent" class="badge-giver">
                 <h2>Badge Withdraw</h2>
-
-                <div class="user-selection">
-                    <label for="select-user">User</label>
-                    <select id="select-user" [(ngModel)]="selectedUser">
-                        <option [ngValue]="null" disabled selected>Select an user to withdraw badge</option>
-                        <option *ngFor="let user of users" [ngValue]="user" (click)="fetchUserBadges(user.id)">
-                            {{ user.real_name }}
-                        </option>
-                    </select>
-                </div>
                 
-                <ng-container *ngIf="userBadges.length == 0 && selectedUser">
-                    <p>No assigned badges</p>
-                </ng-container>
-
-                <ng-container *ngIf="userBadges.length > 0">
-                    <p *ngIf="selectedUser?.name != undefined">{{ selectedUser?.real_name }}'s badges</p>
-                    <div class="user_badges" (wheel)="onScroll($event)">
-                        <div class="badge-card" *ngFor="let badge of userBadges">
-                            <tim-badge 
-                                       [ngClass]="{'selected-badge': selectedBadge === badge}"
-                                       title="{{badge.title}}"
-                                       color="{{badge.color}}"
-                                       shape="{{badge.shape}}"
-                                       [image]="badge.image"
-                                       (click)="selectBadge(badge, false, false)">
-                            </tim-badge>
-                        </div>
-                    </div>
-                </ng-container>
-
-                <div class="groups">
-                    <label for="select_group">Group</label>
-                    <select id="select_group" [(ngModel)]="selectedGroup">
-                        <option [ngValue]="null" disabled selected>Select a group to withdraw a badge</option>
-                        <option *ngFor="let group of groups" [ngValue]="group"
-                                (click)="fetchGroupBadges(group.id)">{{ group.name }}
-                        </option>
-                    </select>
+                <div class="user-group-button-container">
+                    <button (click)="handleSwap(true)" [disabled]="userAssign">
+                        Withdraw badge from a user
+                    </button>
+                    <button (click)="handleSwap(false)" [disabled]="userAssign === false">
+                        Withdraw badge from a group
+                    </button>
                 </div>
-                
-                <ng-container *ngIf="groupBadges.length == 0 && selectedGroup">
-                    <p>No assigned badges</p>
-                </ng-container>
 
-                <ng-container *ngIf="groupBadges.length > 0">
-                    <p *ngIf="selectedGroup?.name != undefined">{{ selectedGroup?.name }} badges</p>
-                    <div class="group_badges" (wheel)="onScroll($event)">
-                        <div class="badge-card" *ngFor="let badge of groupBadges">
-                            <tim-badge
-                                       [ngClass]="{'selected-badge': selectedBadge === badge}"
-                                       title="{{badge.title}}"
-                                       color="{{badge.color}}"
-                                       shape="{{badge.shape}}"
-                                       [image]="badge.image"
-                                       (click)="selectBadge(badge, true, false)">
-                            </tim-badge>
-                        </div>
+                <div *ngIf="userAssign" class="form-group">
+                    <label>Users</label>
+                    <div *ngFor="let user of users" class="option-item">
+                        <span class="option-name" (click)="selectedUser = user; fetchUserBadges(user.id)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                            {{user.real_name}}
+                        </span>
                     </div>
-                </ng-container>
+                
+                
+                    <ng-container *ngIf="userBadges.length > 0">
+                        <p *ngIf="selectedUser?.name != undefined">{{ selectedUser?.real_name }}'s badges</p>
+                        <div class="user_badges" (wheel)="onScroll($event)">
+                            <div class="badge-card" *ngFor="let badge of userBadges">
+                                <tim-badge 
+                                           [ngClass]="{'selected-badge': selectedBadge === badge}"
+                                           title="{{badge.title}}"
+                                           color="{{badge.color}}"
+                                           shape="{{badge.shape}}"
+                                           [image]="badge.image"
+                                           (click)="selectBadge(badge, false, false)">
+                                </tim-badge>
+                            </div>
+                        </div>
+                    </ng-container>
+                    
+                    <ng-container *ngIf="userBadges.length === 0 && selectedUser">
+                        <p> no assigned badges </p>
+                    </ng-container>
+                </div>
+
+                <div *ngIf="userAssign === false" class="form-group">
+                    <label>Groups</label>
+                    <div *ngFor="let group of groups" class="option-item">
+                        <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                            {{ prettyGroupName(group.name) }}
+                        </span>
+                    </div>
+                    
+                    <ng-container *ngIf="groupBadges.length > 0">
+                        <p *ngIf="selectedGroup?.name != undefined">{{ selectedGroup?.name }} badges</p>
+                        <div class="group_badges" (wheel)="onScroll($event)">
+                            <div class="badge-card" *ngFor="let badge of groupBadges">
+                                <tim-badge
+                                           [ngClass]="{'selected-badge': selectedBadge === badge}"
+                                           title="{{badge.title}}"
+                                           color="{{badge.color}}"
+                                           shape="{{badge.shape}}"
+                                           [image]="badge.image"
+                                           (click)="selectBadge(badge, true, false)">
+                                </tim-badge>
+                            </div>
+                        </div>
+                    </ng-container>
+                    <ng-container *ngIf="groupBadges.length === 0 && selectedGroup">
+                        <p>No assigned badges</p>
+                    </ng-container>
+                </div>
                 
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                     <div [innerHTML]="alert.msg"></div>
                 </tim-alert>
 
-                <div class="button-container">
-                    <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)"
-                            [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
-                        Withdraw Badge
-                    </button>
-                    <button id="cancelButton" (click)="emptyForm()">Cancel</button>
-                </div>
+                
+
+                <ng-container *ngIf="userAssign != undefined">
+                    <div class="button-container">
+                            <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)" 
+                                    [disabled]="selectedUser && selectedGroup || !selectedGroup && !selectedUser || !selectedBadge">
+                                    Withdraw Badge
+                            </button>
+                        <button id="cancelButton" (click)="emptyForm()">Cancel</button>
+                    </div>
+                </ng-container>
             </div>
         </ng-container>
         <ng-template #noPermissionView>
@@ -107,6 +118,9 @@ import answer from "../../../../../modules/jsrunner/server/routes/answer";
 })
 export class BadgeWithdrawComponent implements OnInit {
     private subscription: Subscription = new Subscription();
+
+    userAssign?: boolean = undefined;
+    // groupAssign: boolean = false;
 
     users: IUser[] = [];
     badges: any = [];
@@ -173,6 +187,11 @@ export class BadgeWithdrawComponent implements OnInit {
         this.emptyBadges(this.userBadges);
         this.emptyBadges(this.userBadges);
         this.cancelEvent.emit();
+    }
+
+    handleSwap(bool: boolean) {
+        this.selectedBadge = null;
+        this.userAssign = bool;
     }
 
     /**
@@ -275,7 +294,7 @@ export class BadgeWithdrawComponent implements OnInit {
                     );
                 }
             });
-        this.fetchUserBadges(this.selectedUser?.id);
+
         this.selectedBadge = null;
     }
 
@@ -293,6 +312,16 @@ export class BadgeWithdrawComponent implements OnInit {
                 this.selectedGroup = null;
             }
         }
+    }
+
+    prettyGroupName(groupName: string): string {
+        if (!groupName || !this.badgegroupContext) {
+            return groupName;
+        }
+
+        return groupName.startsWith(this.badgegroupContext + "-")
+            ? groupName.slice(this.badgegroupContext.length + 1)
+            : groupName;
     }
 
     emptyBadges(badge: IBadge[]) {
