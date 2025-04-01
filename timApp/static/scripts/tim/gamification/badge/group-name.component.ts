@@ -61,7 +61,7 @@ export class GroupNameComponent implements OnInit {
         this.showInput = !this.showInput;
     }
 
-    saveName() {
+    async saveName() {
         if (this.newName.valid) {
             this.groupName = this.newName.value;
             this.showInput = false;
