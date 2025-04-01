@@ -1,3 +1,32 @@
+.user-group-button-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  margin-bottom: 1em;
+}
+
+.option-item {
+    display: flex;
+    align-items: flex-start;
+}
+.option-item input{
+    width: 5%;
+}
+
+.option-name {
+    cursor: pointer;
+}
+
+.option-name:hover {
+    text-decoration: underline; /* Korostaa nimeä hoverilla */
+}
+
+.selected-option {
+    border: 2px solid blue;
+    background-color: rgba(0, 0, 255, 0.1);
+}
+
+
 .badge-card {
   width: 150px; /* Aseta kortin koko */
   height: 150px; /* Aseta kortin korkeus */
@@ -56,6 +85,7 @@
   align-items: center;
   padding: 1.5em 0;
 }
+
 
 
 
