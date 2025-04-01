@@ -755,10 +755,20 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))
 
 
-# Get current group
 @badges_blueprint.get("/current_group_name/<name>")
 def group_name(name: str):
+    """
+    Fetches group name from the database.
+    :param name: Name of the group given in group changer
+    :return: group name
+    """
     group = UserGroup.get_by_name(name)
     if group:
         return json_response(group)
     return error_generic("there's no group with name: " + name, 404)
+
+
+@badges_blueprint.post("/new_group_name/<name>")
+def new_group_name(group_name: str, new_name: str):
+    # TODO: tuo vanha nimi ja uusi nimi frontista
+    return ""

@@ -42,6 +42,9 @@ export class GroupNameComponent implements OnInit {
 
     constructor(private badgeService: BadgeService) {}
 
+    /**
+     * TODO: Saven pitää toimia oikeasti; tee routes.py:n uusi reitti (tallenna block-taulukkoon description kohtaan
+     */
     async getGroupName() {
         console.log("fetching...");
         if (this.group) {
