@@ -273,6 +273,9 @@ export class BadgeCreatorComponent implements OnInit {
         if (this.badgeFormShowing) {
             this.showEditingForm(badge);
         }
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     showBadgeGiver(badge: IBadge) {
@@ -281,6 +284,9 @@ export class BadgeCreatorComponent implements OnInit {
         this.showGiver = !this.showGiver;
 
         this.clickedBadge = badge;
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     showBadgeWithdraw() {
@@ -288,6 +294,9 @@ export class BadgeCreatorComponent implements OnInit {
         this.badgeFormShowing = false;
         this.showGiver = false;
         this.showWithdraw = !this.showWithdraw;
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     // when create button is pressed, shows empty form
