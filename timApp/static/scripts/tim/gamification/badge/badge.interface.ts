@@ -9,6 +9,7 @@ export interface IBadge {
     context_group: string;
     created_by: string;
     badgegiven_id: number;
+    given: Date;
 }
 
 export interface IGroup {

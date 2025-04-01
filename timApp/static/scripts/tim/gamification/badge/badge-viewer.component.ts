@@ -4,7 +4,10 @@ import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BadgeModule} from "tim/gamification/badge/badge.component";
+import {
+    BadgeComponent,
+    BadgeModule,
+} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import type {
     IBadge,
@@ -14,6 +17,8 @@ import type {
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
 import type {IUser} from "tim/user/IUser";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {MessageDialogComponent} from "tim/ui/message-dialog.component";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -34,7 +39,8 @@ import type {IUser} from "tim/user/IUser";
                                 [image]="badge.image"
                                 description="{{badge.description}}"
                                 message="{{badge.message}}"
-                                [preventDialog]="true">
+                                [disableDialogWindow]="false"                                
+                                (click)="openDialog(badge)">
                         </tim-badge>
                     </div>
                 </div>
@@ -57,7 +63,9 @@ import type {IUser} from "tim/user/IUser";
                                         shape="{{badge.shape}}"
                                         [image]="badge.image"
                                         description="{{badge.description}}"
-                                        message="{{badge.message}}">
+                                        message="{{badge.message}}"
+                                        [disableDialogWindow]="false"
+                                        (click)="openDialog(badge)">
                                 </tim-badge>
                             </div>
                         </div>
@@ -77,8 +85,67 @@ export class BadgeViewerComponent implements OnInit {
     @Input() badgeuserContext?: string;
     private subscription: Subscription = new Subscription();
     groupBadgesMap = new Map<number, IBadge[]>();
+    disableDialogWindow?: boolean;
+    givenBy?: number;
+    given?: Date;
 
-    constructor(private http: HttpClient, private badgeService: BadgeService) {}
+    givenBadges?: IBadge[];
+
+    constructor(
+        private http: HttpClient,
+        private badgeService: BadgeService,
+        private dialogService: BadgeService,
+        private getUserBadges: BadgeService
+    ) {}
+
+    async showUserBadges() {
+        // Assuming you want to get the badges for a specific user, you can use `getUserBadges`
+        const badges = await this.badgeService.getUserBadges(1); // Pass the user ID as needed
+
+        // Optionally, you can filter out the badges that have the 'given' and 'givenBy' properties
+        this.givenBadges = badges.filter(
+            (badge) => badge.given && badge.badgegiven_id
+        );
+
+        // If you need to assign the first badge's given and givenBy as an example:
+        if (this.givenBadges.length > 0) {
+            const firstBadge = this.givenBadges[0];
+            this.given = firstBadge.given;
+            this.givenBy = firstBadge.badgegiven_id;
+        }
+    }
+
+    async openDialog(badge: IBadge): Promise<void> {
+        if (this.disableDialogWindow) {
+            this.dialogService.closeActiveDialog();
+            return;
+        }
+        await this.showUserBadges();
+        // Close any open dialog
+        this.dialogService.closeActiveDialog();
+
+        // Open a new dialog
+        this.dialogService.activeDialogRef = await angularDialog.open(
+            MessageDialogComponent,
+            {
+                message: `
+                <b>${badge.title}</b><br><br>
+                <b>Description:</b> ${badge.description}<br>
+                <b>Message:</b> ${badge.message}<br>
+                <b>Icon:</b>${badge.image}<br>
+                <b>Color:</b> ${badge.color}<br>
+                <b>Shape:</b> ${badge.shape}<br> 
+                <b>Given:</b> ${badge.given}<br> 
+                <b>GivenBy:</b> ${badge.badgegiven_id}<br> 
+            `,
+                modal: false,
+            }
+        );
+
+        // Wait for the dialog to close
+        await this.dialogService.activeDialogRef.result;
+        this.dialogService.activeDialogRef = null; // Reset the reference after closing
+    }
 
     /**
      * Tyhjentää badge -taulukon ja kutsuu badge-servicen metodia joka hakee käyttäjälle kuuluvat badget.
