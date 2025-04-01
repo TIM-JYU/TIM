@@ -1,17 +1,26 @@
-import {Component, Inject, NgModule, OnInit} from "@angular/core";
+import {
+    Component,
+    Inject,
+    Input,
+    NgModule,
+    OnInit,
+    SimpleChanges,
+} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormControl, ReactiveFormsModule, Validators} from "@angular/forms";
-import type {
-    IBadge,
-    IPersonalGroup,
-    IGroup,
-    IUser,
-} from "tim/gamification/badge/badge.interface";
+import {HttpClient} from "@angular/common/http";
+import {UserService} from "tim/user/userService";
+import {UserGroupDialogComponent} from "tim/user/user-group-dialog.component";
+import {BadgeService} from "./badge.service";
+import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
 @Component({
-    selector: "timGroupName",
+    selector: "tim-group-name",
     template: `
         <ng-container>
+            <div class="current">
+                <p>Current group name: <b>{{this.groupName}}</b></p>
+            </div>
             <div class="changeName">
                 <button (click)="toggleInput()">Change group name</button>
             </div>
@@ -20,20 +29,30 @@ import type {
                 <button (click)="saveName()" [disabled]="newName.invalid">Save</button>
                 <button (click)="toggleInput()">Cancel</button>
             </div>
-        </ng-container>
+        </ng-container> 
     `,
     styleUrls: ["./group-name.component.scss"],
 })
-/**
- * TODO: Tämä komponentti pitää siirtää "scripts/tim/ui/" kansioon toimiakseen groupin asetuksissa
- * TODO: template pitää wrapata vielä <tim-plugin-frame> -sisään
- */
 export class GroupNameComponent implements OnInit {
-    groupName: string | null | undefined;
+    @Input() group!: string;
+    @Input() username!: string;
+    groupName: string | null = null;
     newName = new FormControl("", [Validators.required]);
     showInput: boolean = false;
 
-    ngOnInit(): void {}
+    constructor(private badgeService: BadgeService) {}
+
+    async getGroupName() {
+        console.log("fetching...");
+        if (this.group) {
+            const fetchedGroupName = await this.badgeService.getCurrentGroup(
+                this.group
+            );
+            if (fetchedGroupName) {
+                this.groupName = fetchedGroupName.name;
+            }
+        }
+    }
 
     toggleInput() {
         this.showInput = !this.showInput;
@@ -44,6 +63,16 @@ export class GroupNameComponent implements OnInit {
             this.groupName = this.newName.value;
             this.showInput = false;
         }
+    }
+
+    ngOnInit(): void {
+        console.log(
+            "ngOnInit - group:",
+            this.group,
+            "username:",
+            this.username
+        );
+        this.getGroupName();
     }
 }
 
