@@ -10,6 +10,10 @@
   z-index: 10;
 }
 
+.otsikko {
+  display: flex;
+}
+
 .badge_view {
   display: flex;
   flex-wrap: wrap;
@@ -332,12 +336,11 @@ button[type="button"]:hover {
     background-color: #FF8C00; /* Oranssi väri */
     color: white; /* Tekstin väri */
     transition: background-color 0.2s ease;
+    margin-left: 10px;
 }
 .withdrawButton:hover {
     background-color: #FF6A00 !important; /* Hover-väri */
-
 }
-
 
 
 /* Hover-tila muuttaa napin taustaväriä */

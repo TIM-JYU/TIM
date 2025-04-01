@@ -34,7 +34,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                     <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                         <div [innerHTML]="alert.msg"></div>
-                    </tim-alert>
+                    </tim-alert>                    
                 </div>
             </div>
         </ng-container>
@@ -43,8 +43,16 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
           <fieldset class="form-fieldset">
             <div class="all_badges">
                 <fieldset>
-                  <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
-                  <div class="badge_view">
+                    <div class="otsikko">
+                        <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
+                        <div class="right-buttons"></div>                        
+                          <button id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
+                          <button id="withdrawButton" type="button"
+                                (click)="showBadgeWithdraw()"
+                                class="right-button withdrawButton">With- draw</button>                        
+                    </div>                 
+                    
+                    <div class="badge_view">
                       <ng-container *ngIf="all_badges.length == 0">
                           <p>This user/group does not have any badges yet.</p>
                       </ng-container>
@@ -72,17 +80,9 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                               </div>
                           </div>
                   </ng-container>
-                  </div>
+                </div>
                     
                 </fieldset>
-                <div class="button-group">
-                    <div class="left-buttons">
-                        <button id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
-                        <button id="withdrawButton" type="button"
-                                (click)="showBadgeWithdraw()"
-                                class="right-button withdrawButton">With- draw</button>
-                    </div>
-                </div>            
             </div>
               
               <ng-container *ngIf="showGiver">
