@@ -12,7 +12,7 @@ from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
-from timApp.user.groups import raise_group_not_found_if_none
+from timApp.user.groups import raise_group_not_found_if_none, groups
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
@@ -753,3 +753,12 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
         raise NotExist()
     verify_teacher_access(d)
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))
+
+
+# Get current group
+@badges_blueprint.get("/current_group_name/<name>")
+def group_name(name: str):
+    group = UserGroup.get_by_name(name)
+    if group:
+        return json_response(group)
+    return error_generic("there's no group with name: " + name, 404)

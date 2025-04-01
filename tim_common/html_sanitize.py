@@ -124,6 +124,7 @@ TIM_SAFE_TAGS = [
     "tim-badge-viewer",
     "tim-badge-giver",
     "tim-badge-withdraw",
+    "tim-group-name",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
@@ -239,6 +240,7 @@ TIM_SAFE_ATTRS = frozenset(
         # tim-table
         "bind-data",
         # tim-add-member
+        # tim-group-name
         "group",
         # tim-goto-link
         "auto-open",
