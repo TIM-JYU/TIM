@@ -1,8 +1,11 @@
 .material-symbols-outlined {
     font-size: 52px;
-    margin-top: -3px;
+    position: absolute;
+    margin-top: 8px;
     text-align: center;
     color: white;
+    margin-left: -26px;
+    z-index: 1;
 }
 
 .badge {
@@ -107,29 +110,10 @@
     height: 90px;
 }
 
-
 .badge:hover {
     top: -4px;
 }
 
-
-.badge .circle {
-    width: 50px;
-    height: 50px;
-    position: absolute;
-    z-index: 1;
-    border-radius: 50%;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: auto;
-}
-
-.badge .circle i.fa {
-    font-size: 2em;
-    margin-top: 8px;
-}
 
 .badge .font {
     display: inline-block;

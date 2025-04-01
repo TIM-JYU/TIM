@@ -8,7 +8,7 @@ import {FormsModule} from "@angular/forms";
     template: `
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <div class="badge-container" [ngClass]="['badge', color, shape]">
-        <div class="circle">
+        <div class="icon">
             <span class="material-symbols-outlined">{{ icon }}</span>
         </div>
         <div class="ribbon">{{ title }}</div>
