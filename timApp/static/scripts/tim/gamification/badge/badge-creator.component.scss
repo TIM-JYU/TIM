@@ -18,12 +18,16 @@
 }
 
 .badge-card {
-  width: 150px;
-  height: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+    position: relative;
+    width: 150px;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    margin-bottom: 40px;
 }
 
 .badge-card tim-badge {
@@ -40,35 +44,6 @@
   content: "";
   flex-grow: 9999;
   min-width: 70px;
-}
-
-@media (max-width: 785px) {
-  .badge-card {
-    margin: -15px -15px -15px -15px;
-  }
-  .badge_view {
-    gap: 2px;
-  }
-  .badge-card tim-badge {
-    transform: scale(clamp(0.5, 0.7, 0.7));
-  }
-}
-
-@media (max-width: 550px) {
-  .badge-card {
-    width: 130px;
-    height: 130px;
-    margin: -15px -15px -15px -15px;
-  }
-  .badge_view {
-    gap: 0;
-  }
-  .badge-card tim-badge {
-    transform: scale(clamp(0.4, 0.6, 0.6));
-  }
-  .badge-card tim-badge:hover {
-    transform: scale(0.9);
-  }
 }
 
 .selected-badge {
@@ -386,3 +361,65 @@ button[type="button"]:hover {
   align-items: center;
   gap: 15px;
 }
+
+.badge-buttons {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+}
+
+.badge-buttons button {
+  max-width: 35px;
+  max-height: 35px;
+}
+
+
+@media (max-width: 785px) {
+  .badge-card {
+    margin: -15px -15px 10px -15px;
+  }
+  .badge_view {
+    gap: 2px;
+  }
+  .badge-card tim-badge {
+    transform: scale(clamp(0.5, 0.7, 0.7));
+  }
+  .badge-card tim-badge:hover {
+    transform: scale(0.8);
+  }
+  .badge-buttons {
+    bottom: -20px;
+  }
+  .badge-buttons button {
+    max-width: 30px;
+    max-height: 30px;
+  }
+}
+
+@media (max-width: 550px) {
+  .badge-card {
+    width: 130px;
+    height: 130px;
+    margin: -15px -15px 10px -15px;
+  }
+  .badge_view {
+    gap: 0;
+  }
+  .badge-card tim-badge {
+    transform: scale(clamp(0.4, 0.6, 0.6));
+  }
+  .badge-card tim-badge:hover {
+    transform: scale(0.7);
+  }
+  .badge-buttons {
+    bottom: -10px;
+  }
+  .badge-buttons button {
+    max-width: 25px;
+    max-height: 25px;
+  }
+}
+
