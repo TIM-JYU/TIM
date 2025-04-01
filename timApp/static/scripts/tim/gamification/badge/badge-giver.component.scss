@@ -1,3 +1,12 @@
+.group-users{
+  margin-left: 1em;
+  margin-top: 1em;
+}
+.user-name {
+  display: block;
+  margin-top: 1px;
+}
+
 .option-item {
     display: flex;
     align-items: flex-start;
@@ -7,6 +16,8 @@
 }
 
 .option-name {
+    margin-top: 1px;
+    display: block;
     cursor: pointer;
 }
 
