@@ -41,29 +41,37 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 </div>
                 
                 <div class="user-group-button-container">
-                    <button (click)="userAssign = true; groupAssign = false; handleSwap()" [disabled]="userAssign === true">
+                    <button (click)="handleSwap(true)" [disabled]="userAssign === true">
                         Assign badge to a user
                     </button>
-                    <button (click)="userAssign = false; groupAssign = true; handleSwap()" [disabled]="userAssign === false">
+                    <button (click)="handleSwap(false)" [disabled]="userAssign === false">
                         Assign badge to a group
                     </button>
                 </div>
                 
-                <div *ngIf="userAssign" class="form-group">
+                <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
-                    <div *ngFor="let user of users" class="option-item">
-                        <input 
-                            type="checkbox" 
-                            [value]="user" 
-                            (change)="toggleUserSelection(user, $event)"
-                        />
-                        <span class="option-name" (click)="selectedUser = user; fetchUserBadges(user)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                            {{user.real_name}}
+                    <div *ngFor="let group of groups" class="option-item">
+                        <span class="option-name" (click)="handleGroupSelection(group)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                            {{ prettyGroupName(group.name) }}
                         </span>
+                        <div class="group-users" *ngIf="selectedGroup === group">
+                            <div *ngFor="let user of users" class="option-item">
+                                <input 
+                                    type="checkbox" 
+                                    [value]="user" 
+                                    (change)="toggleUserSelection(user, $event)"
+                                />
+                                <div class="option-name" (click)="handleUserSelection(user)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                    {{user.real_name}}
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
                 </div>
                 
-                <div *ngIf="groupAssign" class="form-group">
+                <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
                     <div *ngFor="let group of groups" class="option-item">
                         <input 
@@ -71,13 +79,18 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             [value]="group" 
                             (change)="toggleGroupSelection(group, $event)"
                         />
-                        <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                        <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                             {{ prettyGroupName(group.name) }}
                         </span>
+                        <div class="group-users" *ngIf="selectedGroup === group">
+                            <div *ngFor="let user of users">
+                                <div class="user-name">{{user.real_name}}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div *ngIf="userAssign || groupAssign">
+                <div *ngIf="userAssign != undefined">
                     <div class="message-container">
                         
                         <!-- Message Box -->
@@ -88,7 +101,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                         
                         <!-- Assigned Badges -->
                         <!-- Group -->
-                        <div class="badges-box" *ngIf="groupAssign">
+                        <div class="badges-box" *ngIf="userAssign === false">
                             <label for="user_badges">
                                 Assigned Badges {{selectedGroup ? selectedGroup.name : ''}}
                             </label>
@@ -112,7 +125,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                         </div>
                         
                         <!-- User -->
-                        <div class="badges-box" *ngIf="userAssign">
+                        <div class="badges-box" *ngIf="userAssign === true">
                             <label for="user_badges" *ngIf="selectedUser?.name != undefined">
                                 Assigned Badges {{ selectedUser?.real_name }}
                             </label>
@@ -179,8 +192,7 @@ export class BadgeGiverComponent implements OnInit {
     @Input() selectedBadge?: IBadge | null = null;
     @Input() badgegroupContext?: string;
 
-    userAssign?: boolean;
-    groupAssign: boolean = false;
+    userAssign?: boolean = undefined;
 
     alerts: Array<{
         msg: string;
@@ -198,7 +210,7 @@ export class BadgeGiverComponent implements OnInit {
     ngOnInit() {
         if (Users.isLoggedIn()) {
             this.addListeners();
-            this.fetchUsers();
+            this.fetchUsers(this.badgegroupContext);
             this.fetchGroups();
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
@@ -251,7 +263,9 @@ export class BadgeGiverComponent implements OnInit {
         );
     }
 
-    handleSwap() {
+    handleSwap(bool: boolean) {
+        this.userAssign = bool;
+        this.selectedGroup = null;
         while (this.selectedUsers.length > 0) {
             this.selectedUsers.pop();
         }
@@ -260,18 +274,37 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    handleUserSelection(user: IUser) {
+        if (this.selectedUser === user) {
+            this.selectedUser = null;
+            return;
+        }
+        this.selectedUser = user;
+        this.fetchUserBadges(user);
+    }
+
+    handleGroupSelection(group: IGroup) {
+        this.selectedUser = null;
+        if (this.selectedGroup === group) {
+            this.selectedGroup = null;
+            return;
+        }
+        this.selectedGroup = group;
+        this.fetchUsers(group.name);
+    }
+
     /**
      * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
      */
-    private async fetchUsers() {
-        if (this.badgegroupContext) {
+    async fetchUsers(groupContext?: string) {
+        if (groupContext) {
             this.users = await this.badgeService.getUsersFromGroup(
-                this.badgegroupContext
+                groupContext
             );
         }
     }
 
-    private async fetchGroups() {
+    async fetchGroups() {
         if (this.badgegroupContext) {
             this.groups = await this.badgeService.getSubGroups(
                 this.badgegroupContext
