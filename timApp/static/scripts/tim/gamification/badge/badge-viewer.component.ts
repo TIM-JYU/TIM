@@ -33,7 +33,8 @@ import type {IUser} from "tim/user/IUser";
                                 shape="{{badge.shape}}"
                                 [image]="badge.image"
                                 description="{{badge.description}}"
-                                message="{{badge.message}}">
+                                message="{{badge.message}}"
+                                [preventDialog]="true">
                         </tim-badge>
                     </div>
                 </div>
