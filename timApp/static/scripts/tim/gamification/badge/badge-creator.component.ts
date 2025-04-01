@@ -46,15 +46,15 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                     <div class="otsikko">
                         <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
                         <div class="right-buttons"></div>                        
-                          <button id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
-                          <button id="withdrawButton" type="button"
+                          <button title="Create Badge" id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
+                          <button title="Withdraw Badge" id="withdrawButton" type="button"
                                 (click)="showBadgeWithdraw()"
                                 class="right-button withdrawButton">With- draw</button>                        
                     </div>                 
                     
                     <div class="badge_view">
                       <ng-container *ngIf="all_badges.length == 0">
-                          <p>This user/group does not have any badges yet.</p>
+                          <p class="no-badges-txt">This user/group does not have any badges yet.</p>
                       </ng-container>
                       <ng-container *ngIf="all_badges.length > 0">
                           <div class="badge-card" *ngFor="let badge of all_badges">
@@ -67,13 +67,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                        (click)="selectBadge(badge);">
                             </tim-badge>
                               <div *ngIf="clickedBadge === badge" class="badge-buttons">
-                                <button id="giveBadgeButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
+                                <button title="Assign Badge" id="giveBadgeButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}">+</button>
-                                <button id="editButton" type="button" (click)="editBadge(clickedBadge)" 
+                                <button title="Edit Badge" id="editButton" type="button" (click)="editBadge(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
-                                        [ngClass]="{'disabled-btn': !clickedBadge}">⚙</button>
-                                <button id="deleteButton" type="button"
+                                        [ngClass]="{'disabled-btn': !clickedBadge}">✍</button>
+                                <button title="Delete Badge" id="deleteButton" type="button"
                                         [disabled]="!editingBadge || showWithdraw" 
                                         (click)="deleteBadge()"
                                         class="right-button">-</button>
@@ -83,6 +83,9 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 </div>
                     
                 </fieldset>
+                <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                    <div [innerHTML]="alert.msg"></div>
+                </tim-alert>
             </div>
               
               <ng-container *ngIf="showGiver">
@@ -582,7 +585,12 @@ export class BadgeCreatorComponent implements OnInit {
                         // Lähetetään signaali onnistuneesta deletoinnista
                         this.badgeService.triggerUpdateBadgeList(); // Lähetetään signaali BadgeService:lle
                     } else {
-                        console.log("Failed to delete badge");
+                        this.badgeService.showError(
+                            this.alerts,
+                            {data: {error: "Failed to delete badge"}},
+                            "danger"
+                        );
+                        return;
                     }
                 } catch (error) {
                     console.error("Error deleting badge", error);

@@ -20,9 +20,9 @@ import type {IUser} from "tim/user/IUser";
     template: `
         <div class="viewer-container">
 
-            <h2 class="badge-heading">{{badgeuserContext}}'s badges</h2>
+            <h2 class="badge-heading">User Badges ({{badgeuserContext}})</h2>
             <ng-container *ngIf="badges.length == 0">
-                <p>No user badges</p>
+                <p class="no-badges-txt">No user badges</p>
             </ng-container>
             <ng-container *ngIf="badges.length > 0">
                 <div class="user_badges" (wheel)="onScroll($event)">
@@ -41,10 +41,10 @@ import type {IUser} from "tim/user/IUser";
 
             <ng-container *ngIf="userSubGroups.length > 0">
                 <div class="subgroups" *ngFor="let group of userSubGroups">
-                    <h2 class="badge-heading">{{ group.name }} badges</h2>
+                    <h2 class="badge-heading">Group Badges ({{ group.name }})</h2>
 
                     <ng-container *ngIf="groupBadgesMap.get(group.id)?.length == 0">
-                        <p>No group badges</p>
+                        <p class="no-badges-txt">No group badges</p>
                     </ng-container>
 
                     <ng-container *ngIf="groupBadgesMap.get(group.id)?.length || 0 > 0">
