@@ -7,6 +7,7 @@ from flask import Response, current_app
 from sqlalchemy import select, or_
 
 from timApp.auth.accesshelper import AccessDenied, verify_teacher_access
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
@@ -60,7 +61,7 @@ def log_badge_event(log_info: dict) -> None:
         f.write(to_json_str(log_info) + "\n")
 
 
-def check_context_group_access(user_id: int, context_group: int) -> None:
+def check_context_group_access(user_id: int, context_group: int) -> bool:
     """
     Checks whether a user has access to a context group.
     :param user_id: Current user's ID
@@ -87,8 +88,10 @@ def check_context_group_access(user_id: int, context_group: int) -> None:
         .scalars()
         .first()
     )
-    if not allowed_member:
-        raise AccessDenied(f"You don't have access to this context group.")
+    if allowed_member:
+        return True
+    else:
+        return False
 
 
 # TODO: Not in use. Remove?
@@ -136,7 +139,9 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     if not d:
         raise NotExist()
     context_usergroup = UserGroup.get_by_name(context_group)
-    check_context_group_access(user_id, context_usergroup.id)
+    in_group = check_context_group_access(user_id, context_usergroup.id)
+    if not in_group:
+        raise AccessDenied(f"You don't have access to this context group.")
     verify_teacher_access(d)
     badges = (
         run_sql(
@@ -198,7 +203,9 @@ def create_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    check_context_group_access(created_by, context_usergroup.id)
+    in_group = check_context_group_access(created_by, context_usergroup.id)
+    if not in_group:
+        raise AccessDenied(f"You don't have access to this context group.")
     badge = Badge(
         active=True,
         context_group=context_usergroup.id,
@@ -262,7 +269,9 @@ def modify_badge(
     if not d:
         raise NotExist()
     verify_teacher_access(d)
-    check_context_group_access(modified_by, context_group)
+    in_group = check_context_group_access(modified_by, context_group)
+    if not in_group:
+        raise AccessDenied(f"You don't have access to this context group.")
     badge = {
         "context_group": context_group,
         "title": title,
@@ -311,7 +320,9 @@ def deactivate_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    check_context_group_access(deleted_by, context_usergroup.id)
+    in_group = check_context_group_access(deleted_by, context_usergroup.id)
+    if not in_group:
+        raise AccessDenied(f"You don't have access to this context group.")
     badge = {
         "active": False,
         "deleted_by": deleted_by,
@@ -350,7 +361,9 @@ def reactivate_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    check_context_group_access(restored_by, context_usergroup.id)
+    in_group = check_context_group_access(restored_by, context_usergroup.id)
+    if not in_group:
+        raise AccessDenied(f"You don't have access to this context group.")
     badge = {
         "active": True,
         "restored_by": restored_by,
@@ -370,6 +383,7 @@ def reactivate_badge(
     return ok_response()
 
 
+# TODO: Check access rights.
 # TODO: Handle errors.
 @badges_blueprint.get("/groups_badges/<group_id>")
 def get_groups_badges(group_id: int) -> Response:
@@ -378,6 +392,41 @@ def get_groups_badges(group_id: int) -> Response:
     :param group_id: ID of the usergroup
     :return: Badges in json response format
     """
+    # current_user = get_current_user_object()
+    # in_group = check_context_group_access(current_user.id, group_id)
+    # if not in_group:
+    #     group = UserGroup.get_by_id(group_id)
+    #     # if group is a personal group
+    #     if group.is_personal_group:
+    #         user = User.get_by_name(group.name)
+    #         # fetch group memberships where user belongs
+    #         users_group_memberships = (
+    #             run_sql(
+    #                 select(UserGroupMember).filter(
+    #                     UserGroupMember.user_id == user.id,
+    #                     or_(
+    #                         UserGroupMember.membership_end > datetime_tz.now(),
+    #                         UserGroupMember.membership_end == None,
+    #                     ),
+    #                 )
+    #             )
+    #             .scalars()
+    #             .all()
+    #         )
+    #         # if there is at least one group in users_group_memberships
+    #         # where current user has teacher rights, then approve
+    #         for users_group_membership in users_group_memberships:
+    #             usergroup = UserGroup.get_by_id(users_group_membership.usergroup_id)
+    #             d = DocEntry.find_by_path(f"groups/{usergroup.name}")
+    #             if not d:
+    #                 raise NotExist()
+    #             verify_teacher_access(d) # TODO: There is a problem because of abort_if_not_access_and_required.
+    #     # if group is not a personal group
+    #     else:
+    #         d = DocEntry.find_by_path(f"groups/{group.name}")
+    #         if not d:
+    #             raise NotExist()
+    #         verify_teacher_access(d)
     groups_badges_given = (
         run_sql(
             select(BadgeGiven)
@@ -401,7 +450,16 @@ def get_groups_badges(group_id: int) -> Response:
         badge_ids_unique.append((badgeGiven.badge_id, key_extension))
         badge_ids_badgegiven_ids_and_msgs[
             str(badgeGiven.badge_id) + "_" + str(key_extension)
-        ] = (badgeGiven.id, badgeGiven.message)
+        ] = (
+            badgeGiven.id,
+            badgeGiven.message,
+            badgeGiven.given_by,
+            badgeGiven.given,
+            badgeGiven.withdrawn_by,
+            badgeGiven.withdrawn,
+            badgeGiven.undo_withdrawn_by,
+            badgeGiven.undo_withdrawn,
+        )
     groups_badges = (
         run_sql(select(Badge).filter_by(active=True).filter(Badge.id.in_(badge_ids)))
         .scalars()
@@ -419,6 +477,14 @@ def get_groups_badges(group_id: int) -> Response:
         key = f"{badge_ids_unique[i][0]}_{badge_ids_unique[i][1]}"
         groups_badge_json["badgegiven_id"] = badge_ids_badgegiven_ids_and_msgs[key][0]
         groups_badge_json["message"] = badge_ids_badgegiven_ids_and_msgs[key][1]
+        groups_badge_json["given_by"] = badge_ids_badgegiven_ids_and_msgs[key][2]
+        groups_badge_json["given"] = badge_ids_badgegiven_ids_and_msgs[key][3]
+        groups_badge_json["withdrawn_by"] = badge_ids_badgegiven_ids_and_msgs[key][4]
+        groups_badge_json["withdrawn"] = badge_ids_badgegiven_ids_and_msgs[key][5]
+        groups_badge_json["undo_withdrawn_by"] = badge_ids_badgegiven_ids_and_msgs[key][
+            6
+        ]
+        groups_badge_json["undo_withdrawn"] = badge_ids_badgegiven_ids_and_msgs[key][7]
         badges_json.append(groups_badge_json)
         i += 1
     return json_response(badges_json)
@@ -469,7 +535,9 @@ def give_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    check_context_group_access(given_by, context_usergroup.id)
+    in_group = check_context_group_access(given_by, context_usergroup.id)
+    if not in_group:
+        raise AccessDenied(f"You don't have access to this context group.")
     badge_given = BadgeGiven(
         active=True,
         group_id=group_id,
@@ -513,7 +581,9 @@ def withdraw_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    check_context_group_access(withdrawn_by, context_usergroup.id)
+    in_group = check_context_group_access(withdrawn_by, context_usergroup.id)
+    if not in_group:
+        raise AccessDenied(f"You don't have access to this context group.")
     badge_given = {
         "active": False,
         "withdrawn_by": withdrawn_by,
@@ -553,7 +623,9 @@ def undo_withdraw_badge(
         raise NotExist()
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
-    check_context_group_access(undo_withdrawn_by, context_usergroup.id)
+    in_group = check_context_group_access(undo_withdrawn_by, context_usergroup.id)
+    if not in_group:
+        raise AccessDenied(f"You don't have access to this context group.")
     badge_given = {
         "active": True,
         "undo_withdrawn_by": undo_withdrawn_by,
