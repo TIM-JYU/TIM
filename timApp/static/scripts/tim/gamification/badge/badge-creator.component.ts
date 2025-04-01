@@ -64,29 +64,26 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                        color="{{badge.color}}"
                                        shape="{{badge.shape}}"
                                        [image]="badge.image"
-                                       description="{{badge.description}}"
                                        (click)="selectBadge(badge);">
                             </tim-badge>
+                              <div *ngIf="clickedBadge === badge" class="badge-buttons">
+                                <button id="giveBadgeButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
+                                        [disabled]="!clickedBadge" 
+                                        [ngClass]="{'disabled-btn': !clickedBadge}">+</button>
+                                <button id="editButton" type="button" (click)="editBadge(clickedBadge)" 
+                                        [disabled]="!clickedBadge" 
+                                        [ngClass]="{'disabled-btn': !clickedBadge}">⚙</button>
+                                <button id="deleteButton" type="button"
+                                        [disabled]="!editingBadge || showWithdraw" 
+                                        (click)="deleteBadge()"
+                                        class="right-button">-</button>
+                              </div>
                           </div>
                   </ng-container>
                 </div>
                     
-                </fieldset>                
-                    <div class="button-group">
-                        <div class="right-buttons">
-                            <button id="editButton" type="button" (click)="editBadge(clickedBadge)" 
-                                    [disabled]="!clickedBadge" 
-                                    [ngClass]="{'disabled-btn': !clickedBadge}">Edit</button>
-                            <button id="giveBadgeButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
-                                    [disabled]="!clickedBadge" 
-                                    [ngClass]="{'disabled-btn': !clickedBadge}">Give badge</button>
-                            <button id="deleteButton" type="button"
-                                    [disabled]="!editingBadge || showWithdraw" 
-                                    (click)="deleteBadge()"
-                                    class="right-button">Delete</button>
-                        </div>                  
-                    </div>                          
-                </div>
+                </fieldset>
+            </div>
               
               <ng-container *ngIf="showGiver">
                   <timBadgeGiver (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
